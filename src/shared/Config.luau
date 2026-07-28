@@ -89,6 +89,13 @@ Config.Childhood = {
 	-- Must line up with the last bounded band below. Safe range: 3-8.
 	EndAge = 5,
 
+	-- Quiet real seconds between a childhood event ending the year and the next
+	-- one being offered. Without it the years chain nose-to-tail and childhood
+	-- reads as a questionnaire; this is the room to look around in between.
+	-- Real seconds rather than game time: it is a pacing beat for the person
+	-- playing, not a duration in the world. Safe range: 5-45.
+	NextEventDelaySeconds = 15,
+
 	-- walkSpeed/jumpPower are Roblox defaults of 16 and 50 at the grown end.
 	-- headScale stays high relative to bodyScale on purpose — small children are
 	-- mostly head, and it reads instantly as "young" without any custom art.

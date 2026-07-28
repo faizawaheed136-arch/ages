@@ -201,7 +201,26 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 
 	-- Last, so a year that killed the player never also hands them a prompt.
 	-- Skipped years pass unlived by definition, so they don't offer one either.
-	if cause ~= "Skip" then
+	if cause == "Skip" then
+		return
+	end
+
+	if cause == "Event" then
+		-- This birthday was caused by answering an event, so offering the next
+		-- one immediately would chain prompt straight into prompt. Wait, and let
+		-- the player be a child for a moment. OfferForAge re-reads the profile,
+		-- so dying, leaving or rejoining inside the gap all resolve correctly.
+		task.delay(Config.Childhood.NextEventDelaySeconds, function()
+			-- Re-read rather than closing over ageYears: a death and respawn, or
+			-- the auto safety net, can move the age inside the gap, and the offer
+			-- has to match the age the player actually is when it lands.
+			local current = DataService.GetProfile(player)
+			if current == nil then
+				return
+			end
+			EventService.OfferForAge(player, ageYearsOf(current.Data))
+		end)
+	else
 		EventService.OfferForAge(player, ageYears)
 	end
 end

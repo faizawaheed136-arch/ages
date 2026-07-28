@@ -47,9 +47,8 @@ export type ChildhoodBand = {
 -- modes arriving with step 3 (NPCApproach / Letter / PhoneCall / Location) can
 -- be added here without touching content or selection logic.
 --
--- Memory is deliberately permanent rather than a placeholder: a toddler has no
--- world to walk around, so early childhood is presented as a first-person
--- recollection no matter what the rest of the game grows into.
+-- Memory is how childhood reads until the toddler world exists. Once it does,
+-- those entries move to a world delivery and only this field changes on them.
 export type EventDelivery = "Memory" | "Direct"
 
 export type EventChoice = {
