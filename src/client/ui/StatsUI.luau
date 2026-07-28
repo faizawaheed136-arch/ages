@@ -170,7 +170,7 @@ function StatsUI.new(): StatsUIHandle
 	progressCaption.TextSize = 11
 	progressCaption.TextXAlignment = Enum.TextXAlignment.Left
 	progressCaption.TextColor3 = Color3.fromRGB(140, 140, 155)
-	progressCaption.Text = "Next year in --:--"
+	progressCaption.Text = "Growing up"
 	progressCaption.Parent = progressRow
 
 	local progressTrack = Instance.new("Frame")
@@ -297,8 +297,10 @@ function StatsUI.SetAgeUpProgress(self: StatsUIHandle, seconds: number, threshol
 	-- Through the early years the year is something happening to the player
 	-- rather than something they end — true whether or not a skip is on offer.
 	local childhood = state == "Hidden" or state == "SkipChildhood"
-	local verb = if childhood then "Growing up in" else "Next year in"
-	self.progressCaption.Text = `{verb} {formatDuration(thresholdSeconds - seconds)}`
+	-- The bar names what it fills toward but never how long that takes. The
+	-- threshold is a real-world duration, so showing it both broke the fiction
+	-- and told the player the game would advance itself if they sat still.
+	self.progressCaption.Text = if childhood then "Growing up" else "Next year"
 
 	self.ageUpButton.Visible = state ~= "Hidden"
 	if state == "SkipChildhood" then
