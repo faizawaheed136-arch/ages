@@ -57,13 +57,22 @@ local function toOffered(event: LifeEvent): OfferedEvent
 	}
 end
 
+-- The single eligibility rule, so a world object offering an event by name and
+-- a birthday rolling for one can never disagree about what may fire.
+local function isEligible(data: ProfileData, event: LifeEvent, ageYears: number): boolean
+	return ageYears >= event.minAge and ageYears <= event.maxAge and not data.seenEventIds[event.id]
+end
+
 local function pickForAge(data: ProfileData, ageYears: number): LifeEvent?
 	local candidates: { LifeEvent } = {}
 	local weights: { number } = {}
 	local totalWeight = 0
 
 	for _, event in LifeEvents.All do
-		if ageYears >= event.minAge and ageYears <= event.maxAge and not data.seenEventIds[event.id] then
+		-- Interact events are reached by going to them, so handing one out on a
+		-- birthday would announce "you walked here" to a player who did not.
+		-- They are only ever offered by the world.
+		if event.delivery ~= "Interact" and isEligible(data, event, ageYears) then
 			local weight = event.weight or 1
 			table.insert(candidates, event)
 			table.insert(weights, weight)
@@ -124,6 +133,37 @@ function EventService.ForceOffer(player: Player, eventId: string): boolean
 		return false
 	end
 	offer(player, profile.Data, event)
+	return true
+end
+
+-- Offers a *named* event, but only if the engine would have allowed it anyway.
+-- This is what a tagged object in the world calls: the object says where the
+-- event lives, this decides whether the player may have it. Returns false for
+-- every ordinary reason an object is inert right now — wrong age, already
+-- lived, a prompt still open, dead — so callers must not treat false as a
+-- fault. A missing id is the one real error and warns on the caller's side.
+function EventService.OfferIfEligible(player: Player, eventId: string): boolean
+	local profile = DataService.GetProfile(player)
+	if profile == nil or not profile.Data.alive then
+		return false
+	end
+
+	local data = profile.Data
+	if data.pendingEventId ~= nil then
+		return false
+	end
+
+	local event = LifeEvents.ById[eventId]
+	if event == nil then
+		return false
+	end
+
+	local ageYears = data.ageMonths // Config.Time.MonthsPerYear
+	if not isEligible(data, event, ageYears) then
+		return false
+	end
+
+	offer(player, data, event)
 	return true
 end
 

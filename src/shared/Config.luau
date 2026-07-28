@@ -111,6 +111,34 @@ Config.Childhood = {
 	},
 }
 
+-- The seam between hand-authored geometry and code. An object in the Studio
+-- world becomes an event by being tagged and told which event id it carries, so
+-- the house can be rebuilt or redressed without a line of code moving.
+--
+-- The tag never decides *whether* an event fires — the engine still owns
+-- eligibility. A tagged object only says where an event may be reached.
+Config.World = {
+	-- CollectionService tag added in the Studio Tag Editor.
+	InteractTag = "AgesEvent",
+
+	-- Attribute on the tagged instance holding the event id it offers, e.g.
+	-- "childhood_first_morning". Missing or unknown ids warn rather than
+	-- failing quietly, because a mistyped id looks exactly like a dead object.
+	InteractEventAttribute = "EventId",
+
+	-- Studs from the object's center that count as reaching it. Generous on
+	-- purpose: a toddler at walkSpeed 4 aiming at a flat rug should not have to
+	-- be precise, and the alternative (a Touched event) misses objects the
+	-- character never physically collides with.
+	-- Safe range: 3-12. Above ~12 objects in one room start overlapping.
+	InteractRadius = 6,
+
+	-- How often the server checks players against tagged objects. Cheap at this
+	-- scale: a handful of objects against a handful of players. Safe range:
+	-- 0.1-1. Above ~1 a toddler can cross a small object between checks.
+	InteractTickSeconds = 0.25,
+}
+
 Config.Stats = {
 	Min = 0,
 	Max = 100,

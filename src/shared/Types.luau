@@ -43,13 +43,15 @@ export type ChildhoodBand = {
 }
 
 -- How an event reaches the player. The engine decides *which* event fires;
--- delivery decides *how*, and the two are kept separate so the world-based
--- modes arriving with step 3 (NPCApproach / Letter / PhoneCall / Location) can
--- be added here without touching content or selection logic.
+-- delivery decides *how*, and the two are kept separate so the remaining
+-- world-based modes (NPCApproach / Letter / PhoneCall) can be added here
+-- without touching content or selection logic.
 --
 -- Memory is how childhood reads until the toddler world exists. Once it does,
--- those entries move to a world delivery and only this field changes on them.
-export type EventDelivery = "Memory" | "Direct"
+-- those entries move to Interact and only this field changes on them. Interact
+-- means the player reached the event by walking to a tagged object rather than
+-- having it handed to them, so it is the only delivery the world can start.
+export type EventDelivery = "Memory" | "Direct" | "Interact"
 
 export type EventChoice = {
 	id: string,

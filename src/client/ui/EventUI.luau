@@ -29,7 +29,7 @@ type DeliveryStyle = {
 	accent: Color3,
 }
 
-local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle } = {
+local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle, Interact: DeliveryStyle } = {
 	-- Early childhood. Dimmer, wider, quieter — a recollection surfacing rather
 	-- than a decision being demanded. Held until the toddler house exists and
 	-- these entries can be reached by walking to the thing instead.
@@ -55,6 +55,20 @@ local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle } = {
 		choiceFont = Enum.Font.GothamMedium,
 		choiceColor = Color3.fromRGB(225, 225, 235),
 		accent = Color3.fromRGB(110, 160, 220),
+	},
+	-- The player walked to this. Narrow, bright and barely dimmed, because the
+	-- room they crossed to get here is the point and should stay visible behind
+	-- it — the opposite of Memory, which wants the world to fall away.
+	Interact = {
+		width = 400,
+		backdropTransparency = 0.8,
+		panelTransparency = 0.02,
+		promptFont = Enum.Font.GothamMedium,
+		promptSize = 18,
+		promptColor = Color3.fromRGB(255, 252, 245),
+		choiceFont = Enum.Font.GothamMedium,
+		choiceColor = Color3.fromRGB(238, 234, 226),
+		accent = Color3.fromRGB(245, 205, 120),
 	},
 }
 

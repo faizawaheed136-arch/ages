@@ -46,8 +46,12 @@ local Childhood: { LifeEvent } = {
 		id = "childhood_across_the_rug",
 		minAge = 0,
 		maxAge = 1,
-		delivery = "Memory",
-		prompt = "There is something bright on the far side of the rug. The rug has never seemed so wide.",
+		-- The first entry to become a place rather than a recollection: the rug
+		-- is a tagged object in the house, and the prompt only appears once you
+		-- have crossed to it. Being world-only, it is deliberately absent from
+		-- the birthday pool — this one you have to go and find.
+		delivery = "Interact",
+		prompt = "The bright thing is right here, on the far side of a rug that has never seemed so wide.",
 		choices = {
 			{
 				id = "crawl",

@@ -7,6 +7,7 @@
 -- Commands accept either prefix, e.g. "/ageup 5" or "!ageup 5". The "!" form
 -- is a fallback for setups where the chat system swallows unknown "/" commands.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -25,6 +26,11 @@ type StatName = Types.StatName
 
 local PREFIXES = { "/", "!" }
 local MAX_AGE_UPS_PER_COMMAND = 200
+
+-- A flat pad dropped in front of the player, sized and placed to read as
+-- something on the floor you walk onto rather than an obstacle you bump into.
+local ANCHOR_DISTANCE = 8
+local ANCHOR_SIZE = Vector3.new(4, 0.2, 4)
 
 local VALID_STATS: { [string]: boolean } = {
 	health = true,
@@ -131,6 +137,48 @@ Commands.events = function(player: Player, _args: { string }): string
 	return `age {ageYears}: {table.concat(eligible, ", ")} ({seenCount} seen)`
 end
 
+-- Drops a tagged pad in front of the player, which is the only way to exercise
+-- world-triggered events until the house exists in Studio. It is a real anchor,
+-- not a simulation of one: same tag, same attribute, same code path, so testing
+-- here proves the thing the authored world will rely on.
+Commands.anchor = function(player: Player, args: { string }): string
+	local eventId = args[1]
+	if eventId == nil then
+		return "usage: /anchor <id> (see /events)"
+	end
+	if LifeEvents.ById[eventId] == nil then
+		return `no event with id "{eventId}"`
+	end
+
+	local character = player.Character
+	if character == nil then
+		return "no character spawned"
+	end
+
+	local pivot = character:GetPivot()
+	local pad = Instance.new("Part")
+	pad.Name = `AgesDebugAnchor_{eventId}`
+	pad.Size = ANCHOR_SIZE
+	pad.Anchored = true
+	pad.CanCollide = false
+	pad.Material = Enum.Material.Neon
+	pad.Color = Color3.fromRGB(245, 205, 120)
+	pad.Transparency = 0.35
+	-- Dropped to the character's feet so the pad sits on the floor the player is
+	-- standing on, whatever height a toddler's pivot happens to be at.
+	pad.Position = (pivot * CFrame.new(0, 0, -ANCHOR_DISTANCE)).Position
+		- Vector3.new(0, character:GetExtentsSize().Y / 2, 0)
+
+	pad:SetAttribute(Config.World.InteractEventAttribute, eventId)
+	pad.Parent = workspace
+	-- Tagged last: the anchor is only live once it is in the world and carrying
+	-- an id, and tagging first would briefly register an anchor that offers
+	-- nothing and warns about it.
+	CollectionService:AddTag(pad, Config.World.InteractTag)
+
+	return `anchored "{eventId}" {ANCHOR_DISTANCE} studs ahead — walk onto it`
+end
+
 -- Clears the per-life seen list so the same content can be replayed without
 -- dying first.
 Commands.reevents = function(player: Player, _args: { string }): string
@@ -191,7 +239,7 @@ Commands.band = function(player: Player, _args: { string }): string
 end
 
 local HELP_TEXT =
-	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, /event <id>, /events, /reevents"
+	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, /event <id>, /anchor <id>, /events, /reevents"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT
