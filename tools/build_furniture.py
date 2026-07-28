@@ -9,21 +9,32 @@ Furniture lives in its own model, separate from assets/House.rbxmx, because the
 house is re-exported from Studio by hand: anything sharing that file would be
 overwritten every time the building gets redecorated.
 
-Everything here is deliberately blocky and cheap to replace. The one piece that
-matters structurally is the rug's event anchor, and even that is a separate
-invisible part, so swapping the rug art later cannot break the event.
+Everything here is deliberately blocky and cheap to replace. Each piece is its
+own Model, so real art can be swapped in one object at a time. The one piece
+that matters structurally is the rug's event anchor, and even that is a
+separate invisible part, so swapping the rug art later cannot break the event.
 
-Coordinates come from measuring the house: floor surface sits at Y=1.037, and
-the room holding the spawn is open from x=-12..29, z=-27..-16.
+
+How placement works
+-------------------
+Rooms come from house_plan.py, transcribed from the house itself, rather than
+guessed from open floor — open floor does not know where the building ends, and
+an earlier pass put a whole kitchen on the lawn. `tools/read_house.py plan`
+prints the geometry those numbers were read off.
+
+Every wall-standing builder is authored once, facing +Z, with its local origin
+on its BACK face and centred across X. Placing it against a wall is then just a
+matter of which quarter turn to apply, so a sofa never has to be re-measured to
+move from one wall to another. Free-standing builders are authored around their
+centre and say so.
 """
 
 import base64
 import struct
 from contextlib import contextmanager
-from pathlib import Path
 
-FLOOR = 1.037
-OUT = Path(__file__).resolve().parent.parent / "assets" / "Furniture.rbxmx"
+from house_plan import FURNITURE as OUT
+from house_plan import A, B, C, D, U1, U2, U3
 
 # Enum.Material tokens.
 PLASTIC, SMOOTH, WOOD, PLANKS, FABRIC, METAL, NEON, MARBLE = 256, 272, 512, 528, 1312, 1088, 288, 784
@@ -43,6 +54,84 @@ BRASS = (198, 160, 96)
 
 _items = []
 _ref = 0
+_parts = 0
+
+# (pivot_x, pivot_z, quarter_turns, floor_y) for whatever is being emitted.
+_ctx = (0.0, 0.0, 0, 0.0)
+
+# Quarter turns about Y, applied to a local offset. One turn sends x to z.
+_TURN_OFFSET = {
+    0: lambda dx, dz: (dx, dz),
+    1: lambda dx, dz: (dz, -dx),
+    2: lambda dx, dz: (-dx, -dz),
+    3: lambda dx, dz: (-dz, dx),
+}
+_TURN_MATRIX = {
+    0: "<R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>",
+    1: "<R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22>",
+    2: "<R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22>",
+    3: "<R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22>",
+}
+
+# Which quarter turn puts a piece's back against which wall. Named for the wall
+# rather than the direction it faces, because that is how a room gets laid out.
+_BACK = {"north": 0, "west": 1, "south": 2, "east": 3}
+
+
+@contextmanager
+def against(room, side, along):
+    """Emit a wall-standing builder with its back on `side` of `room`."""
+    global _ctx
+    previous = _ctx
+    px, pz = room.wall(side, along)
+    _ctx = (px, pz, _BACK[side], room.floor)
+    try:
+        yield
+    finally:
+        _ctx = previous
+
+
+@contextmanager
+def free(room, x, z, side="north"):
+    """Emit a builder at an explicit spot in the room, for the pieces that stand
+    away from every wall."""
+    global _ctx
+    previous = _ctx
+    _ctx = (x, z, _BACK[side], room.floor)
+    try:
+        yield
+    finally:
+        _ctx = previous
+
+
+def piece(label):
+    """Wraps a builder so everything it emits lands in one Model.
+
+    The grouping is not cosmetic. It is what lets the checker tell a sink set
+    into a counter — parts of one object, allowed to share space — from a plant
+    standing inside a sofa, which is a mistake. It also means each blocky
+    stand-in is one selectable object, so it can be swapped for real art
+    without disturbing anything around it.
+    """
+
+    def decorate(build):
+        def wrapped(*args, **kwargs):
+            start = len(_items)
+            build(*args, **kwargs)
+            children = _items[start:]
+            del _items[start:]
+            _items.append(f'''<Item class="Model" referent="{_next_ref()}">
+<Properties>
+<string name="Name">{label}</string>
+</Properties>
+{"".join(children)}
+</Item>''')
+
+        wrapped.__name__ = build.__name__
+        wrapped.__doc__ = build.__doc__
+        return wrapped
+
+    return decorate
 
 
 def _next_ref():
@@ -77,52 +166,29 @@ def _attributes_blob(attrs):
     return base64.b64encode(out).decode()
 
 
-_turn = None
-
-
-@contextmanager
-def turned(px, pz):
-    """Emits everything inside a quarter turn about (px, pz).
-
-    The rooms here are long corridors rather than squares, so the same sofa has
-    to be able to run along either axis. Rotating at placement time keeps each
-    builder written once, in its own natural orientation, instead of every piece
-    needing a width-and-depth argument it would then have to interpret."""
-    global _turn
-    previous = _turn
-    _turn = (px, pz)
-    try:
-        yield
-    finally:
-        _turn = previous
-
-
-def part(name, center, size, color, material=SMOOTH, transparency=0.0,
+def part(name, offset, size, color, material=SMOOTH, transparency=0.0,
          collide=True, shape=1, upright_cylinder=False, tags=None, attrs=None,
          children=""):
-    """center is (x, y, z) with y being the BOTTOM of the part, so furniture is
-    placed by what it stands on rather than by its middle."""
-    x, ybase, z = center
+    """offset is (dx, dy, dz) in the builder's own space: dx across, dz forward
+    from its back face, and dy up from the floor to the part's underside."""
+    global _parts
+    _parts += 1
+    dx, dy, dz = offset
     sx, sy, sz = size
-    y = ybase + sy / 2
+    px, pz, turns, floor = _ctx
 
-    turn = _turn
-    if turn is not None:
-        px, pz = turn
-        # Quarter turn about Y: x' = z, z' = -x. Size is left alone because the
-        # CFrame carries the rotation, which is also why discs need no special
-        # case here — they are circular about the axis being turned.
-        x, z = px + (z - pz), pz - (x - px)
+    ox, oz = _TURN_OFFSET[turns](dx, dz)
+    x, z = px + ox, pz + oz
+    y = floor + dy + sy / 2
 
     if upright_cylinder:
         # Cylinder parts run along their X axis, so a disc lying flat needs X
         # rotated onto Y. sx becomes thickness; sy/sz become the diameter.
+        # Discs are circular about that axis, so the room turn does not apply.
         rot = "<R00>0</R00><R01>-1</R01><R02>0</R02><R10>1</R10><R11>0</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>"
-        y = ybase + sx / 2
-    elif turn is not None:
-        rot = "<R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22>"
+        y = floor + dy + sx / 2
     else:
-        rot = "<R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>"
+        rot = _TURN_MATRIX[turns]
 
     extra = ""
     if tags:
@@ -163,388 +229,445 @@ def point_light(color, brightness, rng):
 
 
 # --------------------------------------------------------------------------
-# The nursery, west end of the room.
+# Wall pieces. Local origin sits on the back face, centred across X, so depth
+# runs 0..d forward and the piece can be stood against any wall unchanged.
 # --------------------------------------------------------------------------
 
-def rug(cx, cz):
-    """The rug from childhood_across_the_rug. Ten studs across, which at a
-    crawler's walkSpeed of 4 is a genuine journey and at sixteen is one step —
-    the same object measuring the body that crosses it."""
-    part("Rug", (cx, FLOOR, cz), (0.08, 10, 10), ROSE, FABRIC, collide=False,
-         shape=2, upright_cylinder=True)
-    part("RugInner", (cx, FLOOR + 0.08, cz), (0.06, 7, 7), CREAM, FABRIC,
-         collide=False, shape=2, upright_cylinder=True)
-    part("RugCenter", (cx, FLOOR + 0.14, cz), (0.05, 3, 3), SAGE, FABRIC,
-         collide=False, shape=2, upright_cylinder=True)
-
-    # Kept separate from the art on purpose: the rug can be replaced with a
-    # nicer model without touching the thing that makes the event fire.
-    part("RugEventAnchor", (cx, FLOOR, cz), (2, 2, 2), WHITE, PLASTIC,
-         transparency=1, collide=False,
-         tags=["AgesEvent"], attrs={"EventId": "childhood_across_the_rug"})
-
-
-def crib(cx, cz):
-    w, l, h = 3.0, 5.5, 3.2
-    part("CribBase", (cx, FLOOR + 1.0, cz), (w, 0.3, l), OAK, WOOD)
-    part("CribMattress", (cx, FLOOR + 1.3, cz), (w - 0.5, 0.5, l - 0.5), WHITE, FABRIC)
-    part("CribBlanket", (cx, FLOOR + 1.8, cz + 1.0), (w - 0.6, 0.12, l / 2), SKY, FABRIC, collide=False)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("CribPost", (cx + dx * (w / 2 - 0.15), FLOOR, cz + dz * (l / 2 - 0.15)),
-             (0.3, h, 0.3), OAK, WOOD)
+@piece("Crib")
+def crib(length=5.5, depth=3.0, height=3.2):
+    part("CribBase", (0, 1.0, depth / 2), (length, 0.3, depth), OAK, WOOD)
+    part("CribMattress", (0, 1.3, depth / 2), (length - 0.5, 0.5, depth - 0.5), WHITE, FABRIC)
+    part("CribBlanket", (1.0, 1.8, depth / 2), (length / 2, 0.12, depth - 0.6), SKY, FABRIC, collide=False)
+    for sx in (-1, 1):
+        for sz in (0.15, depth - 0.15):
+            part("CribPost", (sx * (length / 2 - 0.15), 0, sz), (0.3, height, 0.3), OAK, WOOD)
     # Bars: the view out of the first place a life is kept.
     n = 9
     for i in range(n):
-        z = cz - l / 2 + 0.5 + i * (l - 1.0) / (n - 1)
-        for dx in (-1, 1):
-            part("CribBar", (cx + dx * (w / 2 - 0.15), FLOOR + 1.3, z),
-                 (0.16, h - 1.5, 0.16), OAK, WOOD, collide=False)
-    for dx in (-1, 1):
-        part("CribRail", (cx + dx * (w / 2 - 0.15), FLOOR + h - 0.25, cz), (0.34, 0.25, l), OAK, WOOD)
+        x = -length / 2 + 0.5 + i * (length - 1.0) / (n - 1)
+        for dz in (0.15, depth - 0.15):
+            part("CribBar", (x, 1.3, dz), (0.16, height - 1.5, 0.16), OAK, WOOD, collide=False)
+    for dz in (0.15, depth - 0.15):
+        part("CribRail", (0, height - 0.25, dz), (length, 0.25, 0.34), OAK, WOOD)
 
 
-def dresser(cx, cz):
-    w, l, h = 2.4, 4.5, 3.0
-    part("DresserBody", (cx, FLOOR, cz), (w, h, l), WALNUT, WOOD)
-    for i, dz in enumerate((-1.1, 0.0, 1.1)):
-        part("DresserDrawer", (cx + w / 2 - 0.05, FLOOR + 0.35 + i * 0.85, cz + dz),
-             (0.12, 0.7, l - 0.6), LINEN, SMOOTH, collide=False)
-    part("DresserTop", (cx, FLOOR + h, cz), (w + 0.3, 0.2, l + 0.3), WALNUT, WOOD)
+@piece("Dresser")
+def dresser(length=4.5, depth=2.4, height=3.0):
+    part("DresserBody", (0, 0, depth / 2), (length, height, depth), WALNUT, WOOD)
+    for i in range(3):
+        dy = 0.35 + i * 0.85
+        part("DresserDrawer", (0, dy, depth - 0.05), (length - 0.4, 0.7, 0.12), LINEN, SMOOTH, collide=False)
+        part("DresserPull", (0, dy + 0.28, depth + 0.03), (0.8, 0.12, 0.12), BRASS, METAL, collide=False)
+    part("DresserTop", (0, height, depth / 2 + 0.15), (length + 0.3, 0.2, depth + 0.3), WALNUT, WOOD)
 
 
-def toy_chest(cx, cz):
-    part("ToyChest", (cx, FLOOR, cz), (2.6, 1.8, 3.2), SAGE, WOOD)
-    part("ToyChestLid", (cx, FLOOR + 1.8, cz), (2.8, 0.3, 3.4), CREAM, WOOD)
-    for i, (dx, dz, col) in enumerate(((-0.6, 1.9, ROSE), (0.5, 2.2, SKY), (0.0, 2.7, BRASS))):
-        part("Block", (cx + dx, FLOOR, cz + dz), (0.9, 0.9, 0.9), col, PLASTIC)
+@piece("ToyChest")
+def toy_chest(length=3.2, depth=2.6):
+    part("ToyChest", (0, 0, depth / 2), (length, 1.8, depth), SAGE, WOOD)
+    part("ToyChestLid", (0, 1.8, depth / 2 + 0.1), (length + 0.2, 0.3, depth + 0.2), CREAM, WOOD)
+    for dx, dz, col in ((-1.9, depth + 0.6, ROSE), (-2.2, depth + 1.5, SKY), (-2.7, depth + 0.9, BRASS)):
+        part("Block", (dx, 0, dz), (0.9, 0.9, 0.9), col, PLASTIC)
 
 
-def rocker(cx, cz):
-    part("ChairSeat", (cx, FLOOR + 1.2, cz), (2.6, 0.5, 2.6), LINEN, FABRIC)
-    part("ChairBack", (cx - 1.05, FLOOR + 1.7, cz), (0.5, 2.4, 2.6), LINEN, FABRIC)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("ChairLeg", (cx + dx * 1.0, FLOOR, cz + dz * 1.0), (0.28, 1.2, 0.28), WALNUT, WOOD)
+@piece("RockingChair")
+def rocker(depth=2.8):
+    part("ChairSeat", (0, 1.2, depth / 2 + 0.2), (2.6, 0.5, 2.6), LINEN, FABRIC)
+    part("ChairBack", (0, 1.7, 0.25), (2.6, 2.4, 0.5), LINEN, FABRIC)
+    for sx in (-1, 1):
+        for dz in (0.6, depth - 0.4):
+            part("ChairLeg", (sx * 1.0, 0, dz), (0.28, 1.2, 0.28), WALNUT, WOOD)
 
 
-# --------------------------------------------------------------------------
-# The living room, east end.
-# --------------------------------------------------------------------------
-
-def sofa(cx, cz):
-    part("SofaBase", (cx, FLOOR + 0.6, cz), (3.4, 1.0, 8.5), SAGE, FABRIC)
-    part("SofaBack", (cx + 1.3, FLOOR + 1.6, cz), (0.8, 2.0, 8.5), SAGE, FABRIC)
-    for dz in (-1, 1):
-        part("SofaArm", (cx, FLOOR + 1.6, cz + dz * 4.0), (3.4, 1.2, 0.8), SAGE, FABRIC)
-    for dz in (-2.2, 0.0, 2.2):
-        part("Cushion", (cx - 0.2, FLOOR + 1.6, cz + dz), (2.8, 0.4, 2.0), LINEN, FABRIC, collide=False)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("SofaLeg", (cx + dx * 1.4, FLOOR, cz + dz * 3.8), (0.3, 0.6, 0.3), WALNUT, WOOD)
-
-
-def coffee_table(cx, cz):
-    part("TableTop", (cx, FLOOR + 1.2, cz), (3.6, 0.25, 5.0), OAK, WOOD)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("TableLeg", (cx + dx * 1.5, FLOOR, cz + dz * 2.1), (0.3, 1.2, 0.3), WALNUT, WOOD)
-    part("Bowl", (cx, FLOOR + 1.45, cz), (0.5, 1.6, 1.6), SKY, MARBLE, collide=False,
-         shape=2, upright_cylinder=True)
+@piece("Sofa")
+def sofa(length=8.5, seat=3.4):
+    depth = seat + 0.8
+    part("SofaBack", (0, 0.6, 0.4), (length, 3.0, 0.8), SAGE, FABRIC)
+    part("SofaBase", (0, 0.6, 0.8 + seat / 2), (length, 1.0, seat), SAGE, FABRIC)
+    for sx in (-1, 1):
+        part("SofaArm", (sx * (length / 2 - 0.4), 1.6, 0.8 + seat / 2), (0.8, 1.2, seat), SAGE, FABRIC)
+    for dx in (-2.2, 0.0, 2.2):
+        part("Cushion", (dx, 1.6, 0.8 + seat / 2 - 0.2), (2.0, 0.4, seat - 0.6), LINEN, FABRIC, collide=False)
+    for sx in (-1, 1):
+        for dz in (1.0, depth - 0.4):
+            part("SofaLeg", (sx * (length / 2 - 0.6), 0, dz), (0.3, 0.6, 0.3), WALNUT, WOOD)
 
 
-def tv_unit(cx, cz):
-    part("TVStand", (cx, FLOOR, cz), (1.8, 1.6, 6.5), WALNUT, WOOD)
-    part("TVScreen", (cx, FLOOR + 1.6, cz), (0.25, 3.4, 5.8), CHARCOAL, SMOOTH)
-    part("TVGlass", (cx + 0.15, FLOOR + 1.75, cz), (0.05, 3.0, 5.4), (24, 26, 32), SMOOTH, collide=False)
+@piece("Television")
+def tv_unit(length=6.5, depth=1.8):
+    part("TVStand", (0, 0, depth / 2), (length, 1.6, depth), WALNUT, WOOD)
+    part("TVScreen", (0, 1.6, depth / 2), (length - 0.7, 3.4, 0.25), CHARCOAL, SMOOTH)
+    part("TVGlass", (0, 1.75, depth / 2 + 0.15), (length - 1.1, 3.0, 0.05), (24, 26, 32), SMOOTH, collide=False)
 
 
-def bookshelf(cx, cz):
-    w, l, h = 1.4, 5.0, 7.0
-    part("ShelfBack", (cx, FLOOR, cz), (0.3, h, l), WALNUT, WOOD)
+@piece("Bookshelf")
+def bookshelf(length=5.0, depth=1.4, height=7.0):
+    part("ShelfBack", (0, 0, 0.15), (length, height, 0.3), WALNUT, WOOD)
     for i in range(4):
-        part("Shelf", (cx - 0.5, FLOOR + 0.6 + i * 1.9, cz), (w, 0.2, l), WALNUT, WOOD)
+        part("Shelf", (0, 0.6 + i * 1.9, 0.3 + depth / 2), (length, 0.2, depth), WALNUT, WOOD)
         for j, col in enumerate((ROSE, SKY, SAGE, CREAM, BRASS)):
-            part("Book", (cx - 0.5, FLOOR + 0.8 + i * 1.9, cz - 1.8 + j * 0.9),
-                 (0.9, 1.2, 0.25), col, SMOOTH, collide=False)
-    for dz in (-1, 1):
-        part("ShelfSide", (cx - 0.5, FLOOR, cz + dz * (l / 2)), (w, h, 0.2), WALNUT, WOOD)
+            part("Book", (-1.8 + j * 0.9, 0.8 + i * 1.9, 0.3 + depth / 2),
+                 (0.25, 1.2, 0.9), col, SMOOTH, collide=False)
+    for sx in (-1, 1):
+        part("ShelfSide", (sx * (length / 2), 0, 0.3 + depth / 2), (0.2, height, depth), WALNUT, WOOD)
 
 
-def floor_lamp(cx, cz):
-    part("LampBase", (cx, FLOOR, cz), (1.4, 0.3, 1.4), BRASS, METAL, shape=2, upright_cylinder=True)
-    part("LampPole", (cx, FLOOR + 0.3, cz), (0.2, 5.4, 0.2), BRASS, METAL)
-    part("LampShade", (cx, FLOOR + 5.4, cz), (2.0, 1.6, 2.0), CREAM, FABRIC,
-         collide=False, children=point_light((255, 226, 180), 1.4, 22))
-
-
-def pendant(cx, cz, ceiling):
-    part("PendantCord", (cx, ceiling - 1.6, cz), (0.12, 1.6, 0.12), CHARCOAL, METAL, collide=False)
-    part("PendantShade", (cx, ceiling - 2.4, cz), (2.4, 0.9, 2.4), WHITE, SMOOTH,
-         collide=False, children=point_light((255, 236, 205), 1.8, 30))
-    part("PendantBulb", (cx, ceiling - 2.6, cz), (0.6, 0.4, 0.6), (255, 240, 210), NEON, collide=False)
-
-
-def plant(cx, cz):
-    part("PotBody", (cx, FLOOR, cz), (1.6, 1.6, 1.6), ROSE, MARBLE, shape=2, upright_cylinder=True)
-    part("Stem", (cx, FLOOR + 1.6, cz), (0.25, 2.4, 0.25), (96, 118, 82), PLASTIC, collide=False)
-    for i, (dx, dz, s) in enumerate(((0.9, 0.3, 1.8), (-0.8, 0.6, 1.6), (0.2, -0.9, 1.7))):
-        part("Leaf", (cx + dx, FLOOR + 2.6 + i * 0.5, cz + dz), (s, 0.16, s * 0.7),
-             (110, 140, 92), PLASTIC, collide=False)
-
-
-# --------------------------------------------------------------------------
-# Kitchen and dining, the big room to the south.
-# --------------------------------------------------------------------------
-
-def counter_run(x0, x1, cz, depth=2.4, sink_at=None, stove_at=None):
-    """A straight run of cabinets between two x positions, drawn as one solid
-    body with fronts laid on it. Appliances are cut into the run by position
+@piece("KitchenCounter")
+def counter_run(length, depth=2.4, sink_at=None, stove_at=None):
+    """A straight run of cabinets. Appliances are cut into the run by position
     rather than placed as separate furniture, so a counter can never end up
     with a stove floating beside it."""
-    length = x1 - x0
-    cx = (x0 + x1) / 2
-    part("CounterBody", (cx, FLOOR, cz), (length, 2.9, depth), LINEN, WOOD)
-    part("CounterTop", (cx, FLOOR + 2.9, cz), (length + 0.2, 0.3, depth + 0.2), CHARCOAL, MARBLE)
+    part("CounterBody", (0, 0, depth / 2), (length, 2.9, depth), LINEN, WOOD)
+    part("CounterTop", (0, 2.9, depth / 2 + 0.1), (length + 0.2, 0.3, depth + 0.2), CHARCOAL, MARBLE)
     n = max(1, int(length // 2.4))
     for i in range(n):
-        x = x0 + (i + 0.5) * length / n
-        part("CabinetDoor", (x, FLOOR + 0.3, cz - depth / 2 - 0.05),
-             (length / n - 0.2, 2.3, 0.1), CREAM, WOOD, collide=False)
-        part("CabinetPull", (x, FLOOR + 2.3, cz - depth / 2 - 0.15),
-             (0.6, 0.12, 0.12), BRASS, METAL, collide=False)
+        dx = -length / 2 + (i + 0.5) * length / n
+        part("CabinetDoor", (dx, 0.3, depth - 0.05), (length / n - 0.2, 2.3, 0.1), CREAM, WOOD, collide=False)
+        part("CabinetPull", (dx, 2.3, depth + 0.05), (0.6, 0.12, 0.12), BRASS, METAL, collide=False)
     if sink_at is not None:
-        part("SinkBasin", (sink_at, FLOOR + 2.5, cz), (3.0, 0.7, 1.6), (208, 212, 214), METAL)
-        part("SinkTap", (sink_at, FLOOR + 3.2, cz + 0.7), (0.18, 1.4, 0.18), BRASS, METAL, collide=False)
+        part("SinkBasin", (sink_at, 2.5, depth / 2), (3.0, 0.7, depth - 0.8), (208, 212, 214), METAL)
+        part("SinkTap", (sink_at, 3.2, 0.5), (0.18, 1.4, 0.18), BRASS, METAL, collide=False)
     if stove_at is not None:
-        part("StoveTop", (stove_at, FLOOR + 3.2, cz), (3.4, 0.1, depth - 0.4), CHARCOAL, METAL, collide=False)
+        part("StoveTop", (stove_at, 3.2, depth / 2), (3.4, 0.1, depth - 0.4), CHARCOAL, METAL, collide=False)
         for dx in (-0.8, 0.8):
             for dz in (-0.5, 0.5):
-                part("Burner", (stove_at + dx, FLOOR + 3.3, cz + dz), (1.0, 0.08, 1.0),
+                part("Burner", (stove_at + dx, 3.3, depth / 2 + dz), (1.0, 0.08, 1.0),
                      (40, 40, 44), SMOOTH, collide=False, shape=2, upright_cylinder=True)
-        part("OvenDoor", (stove_at, FLOOR + 0.4, cz - depth / 2 - 0.08),
-             (3.2, 2.0, 0.16), CHARCOAL, METAL, collide=False)
+        part("OvenDoor", (stove_at, 0.4, depth - 0.08), (3.2, 2.0, 0.16), CHARCOAL, METAL, collide=False)
 
 
-def fridge(cx, cz):
-    part("FridgeBody", (cx, FLOOR, cz), (3.0, 7.0, 2.6), (222, 224, 226), METAL)
-    part("FridgeDoorUpper", (cx, FLOOR + 2.6, cz - 1.4), (2.9, 4.3, 0.2), (232, 234, 236), METAL, collide=False)
-    part("FridgeDoorLower", (cx, FLOOR + 0.1, cz - 1.4), (2.9, 2.4, 0.2), (232, 234, 236), METAL, collide=False)
-    part("FridgeHandle", (cx + 1.1, FLOOR + 3.0, cz - 1.6), (0.14, 3.4, 0.14), BRASS, METAL, collide=False)
+@piece("Fridge")
+def fridge(length=3.0, depth=2.6, height=7.0):
+    part("FridgeBody", (0, 0, depth / 2), (length, height, depth), (222, 224, 226), METAL)
+    part("FridgeDoorUpper", (0, 2.6, depth - 0.1), (length - 0.1, 4.3, 0.2), (232, 234, 236), METAL, collide=False)
+    part("FridgeDoorLower", (0, 0.1, depth - 0.1), (length - 0.1, 2.4, 0.2), (232, 234, 236), METAL, collide=False)
+    part("FridgeHandle", (length / 2 - 0.4, 3.0, depth + 0.05), (0.14, 3.4, 0.14), BRASS, METAL, collide=False)
 
 
-def island(cx, cz):
-    part("IslandBody", (cx, FLOOR, cz), (4.0, 2.9, 8.0), SAGE, WOOD)
-    part("IslandTop", (cx, FLOOR + 2.9, cz), (5.2, 0.35, 9.0), CREAM, MARBLE)
-    for dz in (-2.6, 0.0, 2.6):
-        stool(cx + 3.2, cz + dz)
-    part("FruitBowl", (cx, FLOOR + 3.25, cz + 2.8), (0.5, 1.8, 1.8), OAK, WOOD,
-         collide=False, shape=2, upright_cylinder=True)
+@piece("Wardrobe")
+def wardrobe(length=7.0, depth=2.6, height=8.0):
+    part("WardrobeBody", (0, 0, depth / 2), (length, height, depth), WALNUT, WOOD)
+    for sx in (-1, 1):
+        part("WardrobeDoor", (sx * (length / 4), 0.2, depth + 0.06),
+             (length / 2 - 0.2, height - 0.4, 0.12), OAK, WOOD, collide=False)
+    for sx in (-1, 1):
+        part("WardrobePull", (sx * 0.35, height / 2, depth + 0.18), (0.14, 1.6, 0.14), BRASS, METAL, collide=False)
 
 
-def stool(cx, cz):
-    part("StoolSeat", (cx, FLOOR + 2.4, cz), (1.6, 0.3, 1.6), OAK, WOOD, shape=2, upright_cylinder=True)
-    part("StoolPole", (cx, FLOOR, cz), (0.25, 2.4, 0.25), CHARCOAL, METAL)
-    part("StoolFoot", (cx, FLOOR, cz), (1.2, 0.15, 1.2), CHARCOAL, METAL, shape=2, upright_cylinder=True)
+@piece("Bed")
+def bed(length=6.5, depth=8.0):
+    part("Headboard", (0, 0, 0.2), (length, 5.0, 0.4), WALNUT, WOOD)
+    part("BedFrame", (0, 0.5, 0.4 + depth / 2), (length, 1.2, depth), WALNUT, WOOD)
+    part("Mattress", (0, 1.7, 0.4 + depth / 2), (length - 0.4, 1.4, depth - 0.4), WHITE, FABRIC)
+    part("Duvet", (0, 3.1, 0.4 + depth / 2 + 1.2), (length - 0.2, 0.35, depth - 3.0), SAGE, FABRIC, collide=False)
+    for sx in (-1, 1):
+        part("Pillow", (sx * 1.5, 3.1, 1.8), (2.4, 0.6, 1.6), LINEN, FABRIC, collide=False)
+    for sx in (-1, 1):
+        for dz in (0.8, depth):
+            part("BedLeg", (sx * (length / 2 - 0.4), 0, dz), (0.4, 0.5, 0.4), WALNUT, WOOD)
 
 
-def chair(cx, cz, back):
-    """back is a unit (dx, dz) pointing at the side the backrest sits on, so a
-    ring of chairs around a table can all be told to face inward."""
-    bx, bz = back
-    part("ChairSeat", (cx, FLOOR + 1.5, cz), (2.0, 0.35, 2.0), OAK, WOOD)
-    part("ChairRest", (cx + bx * 0.85, FLOOR + 1.85, cz + bz * 0.85),
-         (0.35 if bx else 2.0, 2.4, 0.35 if bz else 2.0), OAK, WOOD)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("ChairLeg", (cx + dx * 0.8, FLOOR, cz + dz * 0.8), (0.25, 1.5, 0.25), WALNUT, WOOD)
-
-
-def dining_table(cx, cz):
-    w, l = 5.0, 10.0
-    part("DiningTop", (cx, FLOOR + 2.5, cz), (w, 0.35, l), WALNUT, WOOD)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("DiningLeg", (cx + dx * (w / 2 - 0.5), FLOOR, cz + dz * (l / 2 - 0.6)),
-             (0.45, 2.5, 0.45), WALNUT, WOOD)
-    for dz in (-3.0, 0.0, 3.0):
-        chair(cx - 3.6, cz + dz, (-1, 0))
-        chair(cx + 3.6, cz + dz, (1, 0))
-    for i, dz in enumerate((-2.0, 2.0)):
-        part("Plate", (cx, FLOOR + 2.85, cz + dz), (0.12, 1.6, 1.6), WHITE, MARBLE,
-             collide=False, shape=2, upright_cylinder=True)
-
-
-# --------------------------------------------------------------------------
-# Bedroom, bathroom, study, hall.
-# --------------------------------------------------------------------------
-
-def bed(cx, cz, head_dz=-1):
-    """head_dz says which way the headboard points, because a bed is the one
-    piece whose orientation a room is read from."""
-    w, l = 6.5, 8.0
-    part("BedFrame", (cx, FLOOR + 0.5, cz), (w, 1.2, l), WALNUT, WOOD)
-    part("Mattress", (cx, FLOOR + 1.7, cz), (w - 0.4, 1.4, l - 0.4), WHITE, FABRIC)
-    part("Duvet", (cx, FLOOR + 3.1, cz - head_dz * 1.2), (w - 0.2, 0.35, l - 3.0), SAGE, FABRIC, collide=False)
-    part("Headboard", (cx, FLOOR, cz + head_dz * (l / 2)), (w, 5.0, 0.4), WALNUT, WOOD)
-    for dx in (-1, 1):
-        part("Pillow", (cx + dx * 1.5, FLOOR + 3.1, cz + head_dz * (l / 2 - 1.4)),
-             (2.4, 0.6, 1.6), LINEN, FABRIC, collide=False)
-    for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
-        part("BedLeg", (cx + dx * (w / 2 - 0.4), FLOOR, cz + dz * (l / 2 - 0.4)),
-             (0.4, 0.5, 0.4), WALNUT, WOOD)
-
-
-def nightstand(cx, cz):
-    part("NightstandBody", (cx, FLOOR, cz), (2.0, 2.2, 2.0), WALNUT, WOOD)
-    part("NightstandTop", (cx, FLOOR + 2.2, cz), (2.2, 0.2, 2.2), WALNUT, WOOD)
-    part("TableLampBase", (cx, FLOOR + 2.4, cz), (0.6, 0.9, 0.6), BRASS, METAL)
-    part("TableLampShade", (cx, FLOOR + 3.3, cz), (1.4, 1.1, 1.4), CREAM, FABRIC,
+@piece("Nightstand")
+def nightstand(depth=2.0):
+    part("NightstandBody", (0, 0, depth / 2), (2.0, 2.2, depth), WALNUT, WOOD)
+    part("NightstandTop", (0, 2.2, depth / 2 + 0.1), (2.2, 0.2, depth + 0.2), WALNUT, WOOD)
+    part("TableLampBase", (0, 2.4, depth / 2), (0.6, 0.9, 0.6), BRASS, METAL)
+    part("TableLampShade", (0, 3.3, depth / 2), (1.4, 1.1, 1.4), CREAM, FABRIC,
          collide=False, children=point_light((255, 224, 176), 1.1, 14))
 
 
-def wardrobe(cx, cz):
-    w, l, h = 2.6, 7.0, 8.0
-    part("WardrobeBody", (cx, FLOOR, cz), (w, h, l), WALNUT, WOOD)
-    for dz in (-1, 1):
-        part("WardrobeDoor", (cx - w / 2 - 0.06, FLOOR + 0.2, cz + dz * (l / 4)),
-             (0.12, h - 0.4, l / 2 - 0.2), OAK, WOOD, collide=False)
-    for dz in (-0.35, 0.35):
-        part("WardrobePull", (cx - w / 2 - 0.18, FLOOR + h / 2, cz + dz),
-             (0.14, 1.6, 0.14), BRASS, METAL, collide=False)
+@piece("Desk")
+def desk(length=6.0, depth=3.0):
+    part("DeskTop", (0, 2.4, depth / 2), (length, 0.3, depth), OAK, WOOD)
+    for sx in (-1, 1):
+        part("DeskLeg", (sx * (length / 2 - 0.4), 0, depth / 2), (0.3, 2.4, depth - 0.4), WALNUT, WOOD)
+    part("Monitor", (0, 2.7, 0.9), (3.6, 2.2, 0.2), CHARCOAL, SMOOTH, collide=False)
+    part("MonitorStand", (0, 2.7, 0.9), (1.2, 0.4, 1.2), CHARCOAL, SMOOTH, collide=False)
+    part("Keyboard", (0, 2.7, depth - 0.7), (2.6, 0.15, 1.0), LINEN, SMOOTH, collide=False)
 
 
-def desk(cx, cz):
-    part("DeskTop", (cx, FLOOR + 2.4, cz), (3.0, 0.3, 6.0), OAK, WOOD)
-    for dz in (-1, 1):
-        part("DeskLeg", (cx, FLOOR, cz + dz * 2.6), (2.8, 2.4, 0.3), WALNUT, WOOD)
-    part("Monitor", (cx - 0.4, FLOOR + 2.7, cz), (0.2, 2.2, 3.6), CHARCOAL, SMOOTH, collide=False)
-    part("MonitorStand", (cx - 0.4, FLOOR + 2.7, cz), (1.2, 0.4, 1.2), CHARCOAL, SMOOTH, collide=False)
-    part("Keyboard", (cx + 0.7, FLOOR + 2.7, cz), (1.0, 0.15, 2.6), LINEN, SMOOTH, collide=False)
-
-
-def bathtub(cx, cz):
-    w, l = 4.0, 7.0
-    part("TubOuter", (cx, FLOOR, cz), (w, 2.6, l), WHITE, MARBLE)
-    part("TubInner", (cx, FLOOR + 0.6, cz), (w - 0.9, 2.2, l - 0.9), (218, 232, 236), SMOOTH, collide=False)
-    part("TubTap", (cx, FLOOR + 2.6, cz - l / 2 + 0.5), (0.2, 1.2, 0.2), BRASS, METAL, collide=False)
-
-
-def toilet(cx, cz):
-    part("ToiletBase", (cx, FLOOR, cz), (2.0, 1.4, 2.6), WHITE, MARBLE)
-    part("ToiletSeat", (cx, FLOOR + 1.4, cz + 0.2), (2.0, 0.25, 2.2), WHITE, SMOOTH)
-    part("ToiletCistern", (cx, FLOOR + 1.4, cz - 1.4), (2.0, 2.6, 0.9), WHITE, MARBLE)
-
-
-def basin(cx, cz):
-    part("BasinPedestal", (cx, FLOOR, cz), (1.2, 2.6, 1.2), WHITE, MARBLE)
-    part("BasinBowl", (cx, FLOOR + 2.6, cz), (2.6, 0.9, 2.2), WHITE, MARBLE)
-    part("BasinTap", (cx - 0.9, FLOOR + 3.5, cz), (0.18, 1.1, 0.18), BRASS, METAL, collide=False)
-    part("Mirror", (cx - 1.4, FLOOR + 4.6, cz), (0.12, 3.4, 2.6), (206, 220, 226), SMOOTH, collide=False)
-
-
-def console_table(cx, cz):
-    part("ConsoleTop", (cx, FLOOR + 2.6, cz), (1.8, 0.28, 7.0), WALNUT, WOOD)
-    for dz in (-1, 1):
-        part("ConsoleLeg", (cx, FLOOR, cz + dz * 3.0), (1.6, 2.6, 0.3), WALNUT, WOOD)
-    part("HallBowl", (cx, FLOOR + 2.88, cz), (0.4, 1.4, 1.4), BRASS, METAL,
+@piece("ConsoleTable")
+def console_table(length=7.0, depth=1.8):
+    part("ConsoleTop", (0, 2.6, depth / 2), (length, 0.28, depth), WALNUT, WOOD)
+    for sx in (-1, 1):
+        part("ConsoleLeg", (sx * (length / 2 - 0.4), 0, depth / 2), (0.3, 2.6, depth - 0.2), WALNUT, WOOD)
+    part("HallBowl", (0, 2.88, depth / 2), (0.4, 1.4, 1.4), BRASS, METAL,
          collide=False, shape=2, upright_cylinder=True)
 
 
-def flat_rug(cx, cz, w, l, color=ROSE):
-    part("Rug", (cx, FLOOR, cz), (w, 0.08, l), color, FABRIC, collide=False)
-    part("RugBorder", (cx, FLOOR + 0.08, cz), (w - 1.6, 0.06, l - 1.6), CREAM, FABRIC, collide=False)
+@piece("Bathtub")
+def bathtub(length=7.0, depth=4.0):
+    part("TubOuter", (0, 0, depth / 2), (length, 2.6, depth), WHITE, MARBLE)
+    part("TubInner", (0, 0.6, depth / 2), (length - 0.9, 2.2, depth - 0.9), (218, 232, 236), SMOOTH, collide=False)
+    part("TubTap", (-length / 2 + 0.5, 2.6, depth / 2), (0.2, 1.2, 0.2), BRASS, METAL, collide=False)
 
 
-def chandelier(cx, cz, ceiling):
-    """The hall is double height, so the fitting has to be long enough to read
-    from the floor rather than a pendant lost in the ceiling."""
-    part("ChandelierCord", (cx, ceiling - 9.0, cz), (0.16, 9.0, 0.16), BRASS, METAL, collide=False)
-    part("ChandelierHub", (cx, ceiling - 10.2, cz), (2.0, 1.2, 2.0), BRASS, METAL, collide=False)
-    for dx, dz in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-        part("ChandelierArm", (cx + dx * 1.6, ceiling - 10.6, cz + dz * 1.6),
-             (1.2, 0.9, 1.2), CREAM, FABRIC, collide=False,
-             children=point_light((255, 232, 196), 1.5, 26))
+@piece("Toilet")
+def toilet(depth=2.6):
+    part("ToiletCistern", (0, 1.4, 0.45), (2.0, 2.6, 0.9), WHITE, MARBLE)
+    part("ToiletBase", (0, 0, 1.7), (2.0, 1.4, 1.8), WHITE, MARBLE)
+    part("ToiletSeat", (0, 1.4, 1.7), (2.0, 0.25, 1.8), WHITE, SMOOTH)
+
+
+@piece("Basin")
+def basin(depth=2.2):
+    part("BasinPedestal", (0, 0, depth / 2), (1.2, 2.6, 1.2), WHITE, MARBLE)
+    part("BasinBowl", (0, 2.6, depth / 2), (2.6, 0.9, depth), WHITE, MARBLE)
+    part("BasinTap", (0, 3.5, 0.3), (0.18, 1.1, 0.18), BRASS, METAL, collide=False)
+    part("Mirror", (0, 4.6, 0.06), (2.6, 3.4, 0.12), (206, 220, 226), SMOOTH, collide=False)
 
 
 # --------------------------------------------------------------------------
+# Free-standing pieces. Local origin is the centre of the footprint.
+# --------------------------------------------------------------------------
 
-CEILING = 14.0
+@piece("Rug")
+def rug(diameter=10.0, event_id=None):
+    """The rug from childhood_across_the_rug. Ten studs across, which at a
+    crawler's walkSpeed of 4 is a genuine journey and at sixteen is one step —
+    the same object measuring the body that crosses it."""
+    part("Rug", (0, 0, 0), (0.08, diameter, diameter), ROSE, FABRIC, collide=False,
+         shape=2, upright_cylinder=True)
+    part("RugInner", (0, 0.08, 0), (0.06, diameter * 0.7, diameter * 0.7), CREAM, FABRIC,
+         collide=False, shape=2, upright_cylinder=True)
+    part("RugCenter", (0, 0.14, 0), (0.05, diameter * 0.3, diameter * 0.3), SAGE, FABRIC,
+         collide=False, shape=2, upright_cylinder=True)
+    if event_id:
+        # Kept separate from the art on purpose: the rug can be replaced with a
+        # nicer model without touching the thing that makes the event fire.
+        part("RugEventAnchor", (0, 0, 0), (2, 2, 2), WHITE, PLASTIC,
+             transparency=1, collide=False,
+             tags=["AgesEvent"], attrs={"EventId": event_id})
 
-# This room is forty studs wide but only ten deep, so every long piece is
-# turned to run along it. Left unturned, the sofa alone reaches wall to wall
-# and the room stops being somewhere a crawler can cross.
-#
-# Nursery west, living room east, and a clear middle between them: the toddler
-# can see where it is going long before it can get there, which is the point.
-rug(-2.0, -21.5)
-with turned(-8.0, -23.8):
-    crib(-8.0, -23.8)
-with turned(-7.5, -18.6):
-    dresser(-7.5, -18.6)
-toy_chest(3.0, -24.8)
-rocker(-9.5, -20.0)
-plant(-10.0, -17.5)
 
-# Sofa on one wall, television on the other, and nothing between them. A
-# coffee table would fit the room and close the only way through it, so the
-# one that would have gone here stands in the hall instead.
-with turned(24.0, -23.8):
-    sofa(24.0, -23.8)
-with turned(24.0, -17.9):
-    tv_unit(24.0, -17.9)
-with turned(15.5, -24.8):
-    bookshelf(15.5, -24.8)
-floor_lamp(28.2, -18.5)
-plant(28.2, -24.5)
+@piece("Rug")
+def flat_rug(w, l, color=ROSE):
+    part("Rug", (0, 0, 0), (w, 0.08, l), color, FABRIC, collide=False)
+    part("RugBorder", (0, 0.08, 0), (w - 1.6, 0.06, l - 1.6), CREAM, FABRIC, collide=False)
 
-pendant(-3.0, -21.5, CEILING)
-pendant(24.0, -21.5, CEILING)
 
-# Kitchen and dining, x -6..28 by z 25..52. Counters hug the north wall so the
-# middle of the room stays walkable; the island splits cooking from eating
-# without a wall, which is what makes the two ends readable as one place.
-KITCHEN_CEILING = 13.5
-counter_run(-4.0, 14.0, 26.4, sink_at=2.0, stove_at=10.0)
-fridge(17.5, 26.4)
-island(6.0, 34.0)
-dining_table(12.0, 45.0)
-bookshelf(27.0, 40.0)
-plant(-4.0, 50.0)
-plant(25.0, 28.0)
-floor_lamp(-4.0, 38.0)
-pendant(6.0, 34.0, KITCHEN_CEILING)
-pendant(12.0, 45.0, KITCHEN_CEILING)
+@piece("CoffeeTable")
+def coffee_table(length=5.0, depth=3.6):
+    part("TableTop", (0, 1.2, 0), (length, 0.25, depth), OAK, WOOD)
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            part("TableLeg", (sx * (length / 2 - 0.4), 0, sz * (depth / 2 - 0.4)),
+                 (0.3, 1.2, 0.3), WALNUT, WOOD)
+    part("Bowl", (0, 1.45, 0), (0.5, 1.6, 1.6), SKY, MARBLE, collide=False,
+         shape=2, upright_cylinder=True)
 
-# Bedroom, x 6..23 by z -9..4. Bed against the north wall, everything else
-# arranged around the walk from the door to it.
-bed(14.0, -3.0, head_dz=-1)
-nightstand(9.5, -6.0)
-nightstand(18.5, -6.0)
-wardrobe(21.6, 0.0)
-flat_rug(14.0, 2.0, 9.0, 6.0, SKY)
-plant(7.5, 2.5)
-pendant(14.0, -2.0, CEILING)
 
-# Bathroom, x 21..29 by z 5..17. Narrow, so the three fixtures go one per wall
-# and the middle is left clear.
-bathtub(25.0, 8.0)
-toilet(27.0, 13.5)
-basin(23.0, 14.5)
-pendant(25.0, 12.0, CEILING)
+@piece("Chair")
+def chair(back=(0, -1)):
+    """back is a unit (dx, dz) pointing at the side the backrest sits on, so a
+    ring of chairs around a table can all be told to face inward."""
+    bx, bz = back
+    part("ChairSeat", (0, 1.5, 0), (2.0, 0.35, 2.0), OAK, WOOD)
+    part("ChairRest", (bx * 0.85, 1.85, bz * 0.85),
+         (0.35 if bx else 2.0, 2.4, 0.35 if bz else 2.0), OAK, WOOD)
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            part("ChairLeg", (sx * 0.8, 0, sz * 0.8), (0.25, 1.5, 0.25), WALNUT, WOOD)
 
-# Study, x 5..17 by z 10..18.
-desk(7.5, 14.0)
-chair(10.0, 14.0, (1, 0))
-bookshelf(16.0, 13.0)
-plant(6.5, 17.0)
-floor_lamp(15.5, 17.0)
-pendant(11.0, 14.0, CEILING)
 
-# Entry hall, x -24..0 by z -10..5. Double height at 31 studs, so it is
-# deliberately underfurnished: the volume is the thing you notice, and a
-# toddler at bodyScale 0.30 should feel small standing in it.
-HALL_CEILING = 31.0
-flat_rug(-12.0, -2.5, 14.0, 10.0, ROSE)
-coffee_table(-12.0, -2.5)
-console_table(-22.5, -2.5)
-plant(-22.0, 3.0)
-plant(-22.0, -8.0)
-chandelier(-12.0, -2.5, HALL_CEILING)
+@piece("DiningTable")
+def dining_table(length=10.0, depth=5.0):
+    part("DiningTop", (0, 2.5, 0), (length, 0.35, depth), WALNUT, WOOD)
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            part("DiningLeg", (sx * (length / 2 - 0.6), 0, sz * (depth / 2 - 0.5)),
+                 (0.45, 2.5, 0.45), WALNUT, WOOD)
+    for dx in (-3.0, 0.0, 3.0):
+        part("Plate", (dx, 2.85, 0), (0.12, 1.6, 1.6), WHITE, MARBLE,
+             collide=False, shape=2, upright_cylinder=True)
+
+
+@piece("KitchenIsland")
+def island(length=6.0, depth=3.4):
+    part("IslandBody", (0, 0, 0), (length, 2.9, depth), SAGE, WOOD)
+    part("IslandTop", (0, 2.9, 0), (length + 1.0, 0.35, depth + 1.0), CREAM, MARBLE)
+    part("FruitBowl", (-length / 4, 3.25, 0), (0.5, 1.8, 1.8), OAK, WOOD,
+         collide=False, shape=2, upright_cylinder=True)
+
+
+@piece("Stool")
+def stool():
+    part("StoolSeat", (0, 2.4, 0), (1.6, 0.3, 1.6), OAK, WOOD, shape=2, upright_cylinder=True)
+    part("StoolPole", (0, 0, 0), (0.25, 2.4, 0.25), CHARCOAL, METAL)
+    part("StoolFoot", (0, 0, 0), (1.2, 0.15, 1.2), CHARCOAL, METAL, shape=2, upright_cylinder=True)
+
+
+@piece("FloorLamp")
+def floor_lamp():
+    part("LampBase", (0, 0, 0), (1.4, 0.3, 1.4), BRASS, METAL, shape=2, upright_cylinder=True)
+    part("LampPole", (0, 0.3, 0), (0.2, 5.4, 0.2), BRASS, METAL)
+    part("LampShade", (0, 5.4, 0), (2.0, 1.6, 2.0), CREAM, FABRIC,
+         collide=False, children=point_light((255, 226, 180), 1.4, 22))
+
+
+@piece("Plant")
+def plant():
+    part("PotBody", (0, 0, 0), (1.6, 1.6, 1.6), ROSE, MARBLE, shape=2, upright_cylinder=True)
+    part("Stem", (0, 1.6, 0), (0.25, 2.4, 0.25), (96, 118, 82), PLASTIC, collide=False)
+    for i, (dx, dz, s) in enumerate(((0.9, 0.3, 1.8), (-0.8, 0.6, 1.6), (0.2, -0.9, 1.7))):
+        part("Leaf", (dx, 2.6 + i * 0.5, dz), (s, 0.16, s * 0.7), (110, 140, 92), PLASTIC, collide=False)
+
+
+@piece("CeilingLight")
+def pendant(drop):
+    """drop is how far below the ceiling the shade hangs. The upper floor is
+    vaulted to the roof, so the same fitting needs a much longer cord up there
+    than it does downstairs."""
+    part("PendantCord", (0, -drop, 0), (0.12, drop, 0.12), CHARCOAL, METAL, collide=False)
+    part("PendantShade", (0, -drop - 0.9, 0), (2.4, 0.9, 2.4), WHITE, SMOOTH,
+         collide=False, children=point_light((255, 236, 205), 1.8, 30))
+    part("PendantBulb", (0, -drop - 1.1, 0), (0.6, 0.4, 0.6), (255, 240, 210), NEON, collide=False)
+
+
+def ceiling_light(room, x, z, drop=3.0):
+    # dy is measured up from whatever the context calls the floor, so hanging a
+    # fitting is a matter of calling the ceiling the floor and going down.
+    global _ctx
+    previous = _ctx
+    _ctx = (x, z, 0, room.ceiling)
+    try:
+        pendant(drop)
+    finally:
+        _ctx = previous
+
+
+# --------------------------------------------------------------------------
+# The layout. Rooms A..U3 come from house_plan.py, which carries their walls,
+# floor heights and the windows and doorways each one has to work around —
+# those spans are the reason a piece sits where it does rather than somewhere
+# more obvious. Run `python3 tools/read_house.py check` after editing.
+# --------------------------------------------------------------------------
+
+# Room A holds both ends of the toddler years: the nursery it starts in and the
+# living room it is growing toward, with the middle left open so one can be
+# seen from the other. The doorway at x 4..16 in the south wall is the only way
+# out and stays clear.
+with against(A, "south", -8.0):
+    crib()
+with against(A, "north", 0.0):
+    dresser()
+with against(A, "south", -1.0):
+    rocker()
+with free(A, -4.0, -21.5):
+    rug(10.0, event_id="childhood_across_the_rug")
+with free(A, 4.5, -25.5):
+    plant()
+
+# Living end: the television takes the unglazed east wall and the sofa faces it
+# across the room, so the group sits in x 19..29.5 and the rest stays walkable.
+with against(A, "east", -21.5):
+    tv_unit()
+with free(A, 19.0, -21.5, side="west"):
+    sofa()
+with free(A, 25.5, -21.5, side="west"):
+    coffee_table(4.0, 2.6)
+with against(A, "north", 27.5):
+    bookshelf(4.0)
+with free(A, 26.5, -17.0):
+    floor_lamp()
+with free(A, 26.5, -24.5):
+    plant()
+ceiling_light(A, -4.0, -21.5)
+ceiling_light(A, 22.0, -21.5)
+
+# Hall and dining. The table sits west of the staircase; the west wall can only
+# take something short between the door and the window.
+with free(B, 13.0, -1.0):
+    dining_table()
+for dx in (-3.0, 0.0, 3.0):
+    with free(B, 13.0 + dx, -4.2):
+        chair(back=(0, -1))
+    with free(B, 13.0 + dx, 2.2):
+        chair(back=(0, 1))
+with against(B, "west", -8.2):
+    console_table(3.5)
+with against(B, "north", 17.0):
+    dresser()
+with against(B, "east", -7.8):
+    bookshelf(4.0)
+with free(B, 7.0, -7.5):
+    plant()
+with free(B, 7.0, 4.5):
+    plant()
+ceiling_light(B, 13.0, -1.0, drop=4.0)
+ceiling_light(B, 26.0, -8.0, drop=4.0)
+
+# Kitchen. Counters take the two walls the doorway is not in, so the way in
+# from the hall stays clear.
+with against(C, "south", 10.5):
+    counter_run(12.0, sink_at=-3.0, stove_at=3.0)
+with against(C, "east", 13.0):
+    counter_run(6.0)
+with against(C, "west", 11.0):
+    fridge()
+with free(C, 10.0, 13.0):
+    island()
+for dz in (-1.6, 1.6):
+    with free(C, 13.4, 13.0 + dz):
+        stool()
+ceiling_light(C, 10.0, 13.0)
+
+# Bathroom.
+with against(D, "south", 25.0):
+    bathtub()
+with against(D, "east", 11.0):
+    toilet()
+with against(D, "west", 13.0):
+    basin()
+with free(D, 25.0, 11.0):
+    plant()
+ceiling_light(D, 25.0, 13.0)
+
+# Main bedroom. The house already stands something of its own in the north-west
+# corner, x 4.2..7.7 by z -10.7..-7.4, so the bed is pushed east of it.
+with against(U1, "north", 13.5):
+    bed()
+with against(U1, "north", 8.9):
+    nightstand()
+with against(U1, "north", 18.0):
+    nightstand()
+with against(U1, "south", 8.0):
+    wardrobe()
+with free(U1, 13.0, 3.0):
+    flat_rug(9.0, 5.0, SKY)
+with free(U1, 16.5, 5.0):
+    plant()
+ceiling_light(U1, 13.0, -1.0, drop=9.0)
+
+# Landing: a short gallery, so it gets a runner and little else.
+with free(U2, -2.0, -1.0):
+    flat_rug(6.0, 12.0, ROSE)
+with against(U2, "west", -1.0):
+    console_table(5.0)
+with against(U2, "east", 3.5):
+    bookshelf(4.0)
+with free(U2, -3.5, 4.0):
+    plant()
+ceiling_light(U2, -2.0, -1.0, drop=9.0)
+
+# Child's room, with the desk it grows into at the far end.
+with against(U3, "south", 9.0):
+    bed()
+with against(U3, "south", 13.5):
+    nightstand()
+with against(U3, "north", 18.0):
+    desk()
+with free(U3, 18.0, 13.0):
+    chair(back=(0, -1))
+with against(U3, "north", 26.0):
+    wardrobe()
+with against(U3, "east", 15.0):
+    bookshelf()
+with against(U3, "south", 22.5):
+    toy_chest()
+with free(U3, 9.0, 13.5):
+    flat_rug(8.0, 5.0, SAGE)
+ceiling_light(U3, 11.0, 14.0, drop=9.0)
+ceiling_light(U3, 24.0, 14.0, drop=9.0)
 
 body = "\n".join(_items)
 OUT.write_text(f'''<roblox version="4">
@@ -556,4 +679,4 @@ OUT.write_text(f'''<roblox version="4">
 </Item>
 </roblox>
 ''')
-print(f"wrote {OUT} ({len(_items)} parts)")
+print(f"wrote {OUT} ({_parts} parts in {len(_items)} pieces)")
