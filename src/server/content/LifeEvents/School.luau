@@ -16,18 +16,18 @@ local School: { LifeEvent } = {
 		minAge = 6,
 		maxAge = 9,
 		delivery = "Direct",
-		prompt = "The stabilisers are off. Someone is holding the back of the saddle and promising not to let go.",
+		prompt = "The training wheels are off. Someone is holding the back of the seat and promising not to let go.",
 		choices = {
 			{
 				id = "pedal",
 				label = "Pedal and don't look back",
-				outcome = "They let go about four seconds in. You were halfway down the road before you realised, and you stayed up.",
+				outcome = "They let go about four seconds in. You were halfway down the road before you realized, and you stayed up.",
 				effects = { health = 5, happiness = 4 },
 			},
 			{
 				id = "check",
 				label = "Keep checking they're still there",
-				outcome = "You looked back, saw nobody, and went straight into a hedge. You were riding properly by the weekend anyway.",
+				outcome = "You looked back, saw nobody, and went straight into the bushes. You were riding properly by the weekend anyway.",
 				effects = { health = -3, happiness = 2, smarts = 3 },
 			},
 			{
@@ -54,7 +54,7 @@ local School: { LifeEvent } = {
 			{
 				id = "invite",
 				label = "Wave them over to your table",
-				outcome = "You called across the hall, which was mortifying for both of you, but they came over and stayed.",
+				outcome = "You called across the cafeteria, which was mortifying for both of you, but they came over and stayed.",
 				effects = { happiness = 4, looks = 1 },
 			},
 			{
@@ -70,7 +70,7 @@ local School: { LifeEvent } = {
 		minAge = 8,
 		maxAge = 12,
 		delivery = "Direct",
-		prompt = "You didn't revise. The person in front has left their paper at a very readable angle.",
+		prompt = "You didn't study. The person in front has left their paper at a very readable angle.",
 		choices = {
 			{
 				id = "copy",
@@ -81,7 +81,7 @@ local School: { LifeEvent } = {
 			{
 				id = "guess",
 				label = "Guess your way through it",
-				outcome = "You guessed, badly, and got a talking-to. You revised for the next one out of pure embarrassment.",
+				outcome = "You guessed, badly, and got a talking-to. You studied for the next one out of pure embarrassment.",
 				effects = { smarts = 4, happiness = -2 },
 			},
 			{

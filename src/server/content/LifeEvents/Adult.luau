@@ -14,7 +14,7 @@ local Adult: { LifeEvent } = {
 		minAge = 18,
 		maxAge = 55,
 		delivery = "Direct",
-		prompt = "You've signed up to something that involves getting up early and hurting on purpose.",
+		prompt = "You've signed up for something that involves getting up early and hurting on purpose.",
 		choices = {
 			{
 				id = "stick",
@@ -25,7 +25,7 @@ local Adult: { LifeEvent } = {
 			{
 				id = "twice",
 				label = "Go twice and quietly stop",
-				outcome = "You went twice. The direct debit ran for another fourteen months before you noticed.",
+				outcome = "You went twice. The charge kept coming out for another fourteen months before you noticed.",
 				effects = { happiness = -2, health = 1 },
 			},
 			{
@@ -44,8 +44,8 @@ local Adult: { LifeEvent } = {
 		prompt = "There's a course you keep reading about. It runs on Tuesday evenings and you are, technically, free on Tuesday evenings.",
 		choices = {
 			{
-				id = "enrol",
-				label = "Enrol",
+				id = "enroll",
+				label = "Enroll",
 				outcome = "You were the least experienced person in the room for about a month, and then you weren't.",
 				effects = { smarts = 7, happiness = 3, health = -1 },
 			},
@@ -104,15 +104,15 @@ local Adult: { LifeEvent } = {
 				effects = { health = 8, happiness = -1 },
 			},
 			{
-				id = "rebook",
-				label = "Rebook it for a better week",
-				outcome = "You rebooked it twice and went in the end. It was fine, and you'd spent four months not knowing that.",
+				id = "reschedule",
+				label = "Reschedule it for a better week",
+				outcome = "You rescheduled it twice and went in the end. It was fine, and you'd spent four months not knowing that.",
 				effects = { health = 3, happiness = -2 },
 			},
 			{
-				id = "bin",
-				label = "Bin it, you feel fine",
-				outcome = "You binned it. You did feel fine, right up until the point that stopped being the relevant question.",
+				id = "throw_out",
+				label = "Throw it out, you feel fine",
+				outcome = "You threw it out. You did feel fine, right up until the point that stopped being the relevant question.",
 				effects = { health = -6, happiness = 2 },
 			},
 		},

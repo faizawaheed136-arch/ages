@@ -49,7 +49,7 @@ local Childhood: { LifeEvent } = {
 			{
 				id = "crawl",
 				label = "Go and get it yourself",
-				outcome = "You made it. The carpet burn on your knees was worth it.",
+				outcome = "You made it. The rug burn on your knees was worth it.",
 				effects = { health = 4, happiness = 2 },
 			},
 			{
@@ -71,7 +71,7 @@ local Childhood: { LifeEvent } = {
 		minAge = 1,
 		maxAge = 2,
 		delivery = "Memory",
-		prompt = "You are upright, holding the edge of the sofa. Someone is crouched a few feet away with their arms out.",
+		prompt = "You are upright, holding the edge of the couch. Someone is crouched a few feet away with their arms out.",
 		choices = {
 			{
 				id = "let_go",
@@ -81,8 +81,8 @@ local Childhood: { LifeEvent } = {
 			},
 			{
 				id = "hold_on",
-				label = "Keep hold of the sofa and edge along it",
-				outcome = "You walked the entire length of the sofa without letting go once. Slower, but you never fell.",
+				label = "Keep hold of the couch and edge along it",
+				outcome = "You walked the entire length of the couch without letting go once. Slower, but you never fell.",
 				effects = { smarts = 4, health = 1 },
 			},
 			{
@@ -121,22 +121,22 @@ local Childhood: { LifeEvent } = {
 		},
 	},
 	{
-		id = "childhood_sandpit",
+		id = "childhood_sandbox",
 		minAge = 2,
 		maxAge = 4,
 		delivery = "Memory",
-		prompt = "There is another child in the sandpit. They have a red spade. You have no spade.",
+		prompt = "There is another child in the sandbox. They have a red shovel. You have no shovel.",
 		choices = {
 			{
 				id = "ask",
-				label = "Ask to share the spade",
+				label = "Ask to share the shovel",
 				outcome = "They handed it over without looking up. You dug together until it got dark. That was your first friend.",
 				effects = { happiness = 6, smarts = 2 },
 			},
 			{
 				id = "dig_hands",
 				label = "Dig with your hands and out-build them",
-				outcome = "No spade, no problem. By the end you had a hole deep enough to sit in and they asked to join you.",
+				outcome = "No shovel, no problem. By the end you had a hole deep enough to sit in and they asked to join you.",
 				effects = { health = 3, happiness = 3, smarts = 1 },
 			},
 			{
@@ -148,16 +148,16 @@ local Childhood: { LifeEvent } = {
 		},
 	},
 	{
-		id = "childhood_end_of_garden",
+		id = "childhood_end_of_yard",
 		minAge = 2,
 		maxAge = 5,
 		delivery = "Memory",
-		prompt = "The garden has a gap in the hedge at the far end. You have never been through it.",
+		prompt = "The yard has a gap in the hedge at the far end. You have never been through it.",
 		choices = {
 			{
 				id = "go_through",
 				label = "Go through the gap",
-				outcome = "It was another garden, almost the same as yours, with a cat in it. You were found twenty minutes later, filthy and delighted.",
+				outcome = "It was another yard, almost the same as yours, with a cat in it. You were found twenty minutes later, filthy and delighted.",
 				effects = { happiness = 6, health = -2, smarts = 3 },
 			},
 			{
@@ -196,17 +196,17 @@ local Childhood: { LifeEvent } = {
 			{
 				id = "under_covers",
 				label = "Hide under the covers until it stops",
-				outcome = "You stayed under there until it passed. In the morning it was just a wet garden and you felt a bit silly.",
+				outcome = "You stayed under there until it passed. In the morning it was just a wet yard and you felt a bit silly.",
 				effects = { happiness = -2, smarts = 2, health = 1 },
 			},
 		},
 	},
 	{
-		id = "childhood_last_biscuit",
+		id = "childhood_last_cookie",
 		minAge = 3,
 		maxAge = 5,
 		delivery = "Memory",
-		prompt = "There is one biscuit left on the plate and two of you looking at it.",
+		prompt = "There is one cookie left on the plate and two of you looking at it.",
 		choices = {
 			{
 				id = "split",
@@ -217,7 +217,7 @@ local Childhood: { LifeEvent } = {
 			{
 				id = "take",
 				label = "Take it",
-				outcome = "You took it. It was a very good biscuit and you have thought about it more than you'd like to admit.",
+				outcome = "You took it. It was a very good cookie and you have thought about it more than you'd like to admit.",
 				effects = { happiness = 3, looks = -1, smarts = 1 },
 			},
 			{

@@ -18,7 +18,7 @@ local Teen: { LifeEvent } = {
 			{
 				id = "all_night",
 				label = "Stay up and do the rest",
-				outcome = "You got through it all by three in the morning and sat the exam on four hours' sleep. You passed, and you felt terrible for two days.",
+				outcome = "You got through it all by three in the morning and took the exam on four hours' sleep. You passed, and you felt terrible for two days.",
 				effects = { smarts = 6, health = -4, looks = -2 },
 			},
 			{
@@ -78,7 +78,7 @@ local Teen: { LifeEvent } = {
 			{
 				id = "go_with",
 				label = "Only go if someone goes with you",
-				outcome = "You found someone to walk in with. You spent most of it talking to them in a corridor, which turned out to be the good bit.",
+				outcome = "You found someone to walk in with. You spent most of it talking to them in a hallway, which turned out to be the good bit.",
 				effects = { happiness = 4, looks = 1 },
 			},
 			{
@@ -94,7 +94,7 @@ local Teen: { LifeEvent } = {
 		minAge = 13,
 		maxAge = 17,
 		delivery = "Direct",
-		prompt = "Your friends are walking out of the shop with things they haven't paid for. One of them is holding the door for you.",
+		prompt = "Your friends are walking out of the store with things they haven't paid for. One of them is holding the door for you.",
 		choices = {
 			{
 				id = "walk_out",
@@ -105,7 +105,7 @@ local Teen: { LifeEvent } = {
 			{
 				id = "pay",
 				label = "Pay for yours and leave",
-				outcome = "You queued up like an idiot while they waited outside laughing. Two of them got caught the following month.",
+				outcome = "You stood in line like an idiot while they waited outside laughing. Two of them got caught the following month.",
 				effects = { smarts = 5, happiness = -1 },
 			},
 			{
