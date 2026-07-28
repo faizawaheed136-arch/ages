@@ -16,6 +16,48 @@
     "ReplicatedStorage": {
       "$path": "src/shared"
     },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "GlobalShadows": true,
+        "ClockTime": 15.5,
+        "GeographicLatitude": 41.7,
+        "Brightness": 2.4,
+        "ExposureCompensation": 0.15,
+        "Ambient": [0.16862, 0.17254, 0.19607],
+        "OutdoorAmbient": [0.42352, 0.43921, 0.47843],
+        "EnvironmentDiffuseScale": 0.55,
+        "EnvironmentSpecularScale": 0.4,
+        "FogEnd": 4000
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.32,
+          "Offset": 0.15,
+          "Haze": 1.2,
+          "Glare": 0.25,
+          "Color": [0.79607, 0.80784, 0.81960],
+          "Decay": [0.42352, 0.44705, 0.50196]
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.5,
+          "Size": 20,
+          "Threshold": 1.6
+        }
+      },
+      "SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.06,
+          "Spread": 0.7
+        }
+      }
+    },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
@@ -30,6 +72,9 @@
       },
       "House": {
         "$path": "assets/House.rbxmx"
+      },
+      "Furniture": {
+        "$path": "assets/Furniture.rbxmx"
       },
       "SpawnLocation": {
         "$className": "SpawnLocation",
