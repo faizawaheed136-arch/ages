@@ -21,6 +21,14 @@ type DeliveryStyle = {
 	width: number,
 	backdropTransparency: number,
 	panelTransparency: number,
+	-- The panel itself. A field rather than a constant because Letter is paper:
+	-- dark ink on a pale page, where every other delivery is light text on dark.
+	-- Without this the letter's prompt color would be unreadable on its own card.
+	panelColor: Color3,
+	-- Where the panel's center sits vertically, 0 top to 1 bottom. Only the
+	-- visitor moves off center, and only because the person who walked in to say
+	-- this is standing where a centered panel would cover them.
+	anchorY: number,
 	promptFont: Enum.Font,
 	promptSize: number,
 	promptColor: Color3,
@@ -29,7 +37,24 @@ type DeliveryStyle = {
 	accent: Color3,
 }
 
-local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle, Interact: DeliveryStyle } = {
+-- What every delivery that isn't paper uses.
+local PANEL_DARK = Color3.fromRGB(18, 18, 22)
+local PANEL_CENTER = 0.5
+
+-- How far the outcome line is pulled back toward the panel behind it. Derived
+-- from the prompt color rather than authored per style, so it stays readable on
+-- the pale letter page and the dark cards alike without six more colors to keep
+-- in step with each other. Safe range: 0.2-0.5.
+local OUTCOME_MUTE = 0.35
+
+local DELIVERY_STYLES: {
+	Memory: DeliveryStyle,
+	Direct: DeliveryStyle,
+	Interact: DeliveryStyle,
+	Letter: DeliveryStyle,
+	PhoneCall: DeliveryStyle,
+	NPCApproach: DeliveryStyle,
+} = {
 	-- Early childhood. Dimmer, wider, quieter — a recollection surfacing rather
 	-- than a decision being demanded. Held until the toddler house exists and
 	-- these entries can be reached by walking to the thing instead.
@@ -37,6 +62,8 @@ local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle, Interact:
 		width = 520,
 		backdropTransparency = 0.25,
 		panelTransparency = 1,
+		panelColor = PANEL_DARK,
+		anchorY = PANEL_CENTER,
 		promptFont = Enum.Font.Gotham,
 		promptSize = 20,
 		promptColor = Color3.fromRGB(240, 236, 228),
@@ -49,6 +76,8 @@ local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle, Interact:
 		width = 460,
 		backdropTransparency = 0.55,
 		panelTransparency = 0.05,
+		panelColor = PANEL_DARK,
+		anchorY = PANEL_CENTER,
 		promptFont = Enum.Font.GothamMedium,
 		promptSize = 17,
 		promptColor = Color3.fromRGB(240, 240, 245),
@@ -63,12 +92,63 @@ local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle, Interact:
 		width = 400,
 		backdropTransparency = 0.8,
 		panelTransparency = 0.02,
+		panelColor = PANEL_DARK,
+		anchorY = PANEL_CENTER,
 		promptFont = Enum.Font.GothamMedium,
 		promptSize = 18,
 		promptColor = Color3.fromRGB(255, 252, 245),
 		choiceFont = Enum.Font.GothamMedium,
 		choiceColor = Color3.fromRGB(238, 234, 226),
 		accent = Color3.fromRGB(245, 205, 120),
+	},
+	-- Something the player picked up and is now reading, so the panel is the
+	-- page: opaque, warm, serif, and the widest of the world deliveries because
+	-- the fiction is a sheet of paper rather than a card floating over a room.
+	Letter = {
+		width = 470,
+		backdropTransparency = 0.6,
+		panelTransparency = 0,
+		panelColor = Color3.fromRGB(240, 233, 216),
+		anchorY = PANEL_CENTER,
+		promptFont = Enum.Font.Merriweather,
+		promptSize = 17,
+		promptColor = Color3.fromRGB(48, 42, 34),
+		choiceFont = Enum.Font.GothamMedium,
+		choiceColor = Color3.fromRGB(228, 224, 214),
+		accent = Color3.fromRGB(196, 158, 92),
+	},
+	-- A voice, not a document. Narrow and tall-feeling, barely dimmed so the room
+	-- the player is standing in stays behind it, because they are still standing
+	-- in it holding a phone.
+	PhoneCall = {
+		width = 360,
+		backdropTransparency = 0.75,
+		panelTransparency = 0.04,
+		panelColor = PANEL_DARK,
+		anchorY = PANEL_CENTER,
+		promptFont = Enum.Font.GothamMedium,
+		promptSize = 17,
+		promptColor = Color3.fromRGB(236, 244, 250),
+		choiceFont = Enum.Font.GothamMedium,
+		choiceColor = Color3.fromRGB(214, 226, 236),
+		accent = Color3.fromRGB(120, 190, 235),
+	},
+	-- Someone is standing in front of the player saying this. The least dimming
+	-- of any style on purpose: the visitor took the trouble to walk in, and a
+	-- backdrop that hides them would throw away the entire delivery.
+	NPCApproach = {
+		width = 420,
+		backdropTransparency = 0.88,
+		panelTransparency = 0.06,
+		panelColor = PANEL_DARK,
+		-- Low enough that a visitor's head and shoulders clear the panel.
+		anchorY = 0.68,
+		promptFont = Enum.Font.GothamMedium,
+		promptSize = 18,
+		promptColor = Color3.fromRGB(252, 250, 246),
+		choiceFont = Enum.Font.GothamMedium,
+		choiceColor = Color3.fromRGB(234, 230, 224),
+		accent = Color3.fromRGB(232, 168, 140),
 	},
 }
 
@@ -238,6 +318,10 @@ function EventUI.Show(self: EventUIHandle, offered: OfferedEvent)
 	self.backdrop.BackgroundTransparency = style.backdropTransparency
 	self.panel.Size = UDim2.new(0, style.width, 0, 0)
 	self.panel.BackgroundTransparency = style.panelTransparency
+	self.panel.BackgroundColor3 = style.panelColor
+	self.panel.Position = UDim2.new(0.5, 0, style.anchorY, 0)
+
+	self.outcomeLabel.TextColor3 = style.promptColor:Lerp(style.panelColor, OUTCOME_MUTE)
 
 	self.promptLabel.Font = style.promptFont
 	self.promptLabel.TextSize = style.promptSize

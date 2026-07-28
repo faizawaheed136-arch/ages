@@ -20,6 +20,7 @@ local StatService = require(script.Parent.StatService)
 local LifeService = require(script.Parent.LifeService)
 local EventService = require(script.Parent.EventService)
 local BodyService = require(script.Parent.BodyService)
+local DeliveryService = require(script.Parent.DeliveryService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 
 type StatName = Types.StatName
@@ -179,6 +180,42 @@ Commands.anchor = function(player: Player, args: { string }): string
 	return `anchored "{eventId}" {ANCHOR_DISTANCE} studs ahead — walk onto it`
 end
 
+-- Stages an ambient delivery immediately, skipping the countdown and the
+-- per-year cap but nothing else. The real staging path, so what appears here is
+-- what appears when the scheduler does it -- including the walk-in, the head
+-- tracking and the expiry clock.
+Commands.deliver = function(player: Player, args: { string }): string
+	local eventId = args[1]
+	if eventId == nil then
+		return "usage: /deliver <id> (any Letter/PhoneCall/NPCApproach event; see /events)"
+	end
+	if LifeEvents.ById[eventId] == nil then
+		return `no event with id "{eventId}"`
+	end
+	if not DeliveryService.ForceStage(player, eventId) then
+		return `could not stage "{eventId}" — not a world delivery, or the house has no point for it`
+	end
+	return `staged "{eventId}" — go find it`
+end
+
+-- The one command for "why has nothing arrived", which is the question this
+-- system will generate more than any other. Prints both halves of the two-phase
+-- state, so a profile that thinks something is out there while the room is empty
+-- is visible at a glance rather than inferred.
+Commands.deliveries = function(player: Player, _args: { string }): string
+	return DeliveryService.Describe(player)
+end
+
+-- Silences the ambient scheduler so an unrelated test isn't interrupted by mail.
+Commands.ambient = function(_player: Player, args: { string }): string
+	local mode = string.lower(args[1] or "")
+	if mode ~= "on" and mode ~= "off" then
+		return `usage: /ambient <on|off> (currently {if DeliveryService.IsEnabled() then "on" else "off"})`
+	end
+	DeliveryService.SetEnabled(mode == "on")
+	return `ambient deliveries {mode}`
+end
+
 -- Clears the per-life seen list so the same content can be replayed without
 -- dying first.
 Commands.reevents = function(player: Player, _args: { string }): string
@@ -203,7 +240,7 @@ Commands.life = function(player: Player, _args: { string }): string
 		data.secondsSinceAgeUp,
 		data.livesLived,
 		data.pendingEventId or "none"
-	)
+	) .. ` delivering={data.deliveringEventId or "none"}`
 end
 
 -- Reads back what the age ladder actually did to the character, so a band that
@@ -238,8 +275,8 @@ Commands.band = function(player: Player, _args: { string }): string
 	)
 end
 
-local HELP_TEXT =
-	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, /event <id>, /anchor <id>, /events, /reevents"
+local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, "
+	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

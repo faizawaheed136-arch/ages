@@ -43,15 +43,56 @@ export type ChildhoodBand = {
 }
 
 -- How an event reaches the player. The engine decides *which* event fires;
--- delivery decides *how*, and the two are kept separate so the remaining
--- world-based modes (NPCApproach / Letter / PhoneCall) can be added here
--- without touching content or selection logic.
+-- delivery decides *how*, and the two are kept separate so a mode can be added
+-- here without touching content or selection logic.
 --
 -- Memory is how childhood reads until the toddler world exists. Once it does,
 -- those entries move to Interact and only this field changes on them. Interact
 -- means the player reached the event by walking to a tagged object rather than
--- having it handed to them, so it is the only delivery the world can start.
-export type EventDelivery = "Memory" | "Direct" | "Interact"
+-- having it handed to them.
+--
+-- Letter, PhoneCall and NPCApproach are the world coming to *you*: something is
+-- staged in the house and the prompt only opens once you go to it. Which route
+-- each mode takes -- and therefore which system is allowed to pick it -- lives
+-- in Delivery.luau, so no system has to hardcode the list.
+export type EventDelivery = "Memory" | "Direct" | "Interact" | "Letter" | "PhoneCall" | "NPCApproach"
+
+-- One person the world can send to your door. Built from body scales and colors
+-- rather than from a catalog bundle on purpose: those need no asset ids at all,
+-- so the cast exists and reads as a person before a single id has been picked in
+-- Studio. The id fields are polish layered on top, and 0 means "not chosen yet"
+-- because that is what HumanoidDescription itself uses for an empty slot.
+--
+-- The cast is fixed rather than randomized so that the neighbor who turns up at
+-- nine is the same neighbor at forty. That continuity is the whole reason these
+-- are authored people instead of generated ones.
+export type CastMember = {
+	id: string,
+	-- Shown over their head. Kept out of the event text so a line can be reused
+	-- by a different visitor without being rewritten.
+	name: string,
+	skinColor: Color3,
+	heightScale: number,
+	widthScale: number,
+	headScale: number,
+	proportionScale: number,
+	bodyTypeScale: number,
+	shirtAssetId: number,
+	pantsAssetId: number,
+	hairAssetId: number,
+}
+
+-- What a staged delivery actually put in the world. `anchor` is the thing the
+-- player has to reach, and it may move -- a visitor's is their own root part, so
+-- reaching them means reaching where they now are rather than where they came
+-- in. `dismiss` owns *all* teardown including the anchor, which is what lets a
+-- presentation end gracefully instead of blinking out of existence.
+export type DeliveryPresentation = {
+	anchor: BasePart,
+	-- `collected` distinguishes the player arriving from the delivery giving up,
+	-- because those two endings should not look the same.
+	dismiss: (collected: boolean) -> (),
+}
 
 export type EventChoice = {
 	id: string,
@@ -70,6 +111,11 @@ export type LifeEvent = {
 	choices: { EventChoice },
 	-- Relative selection weight among eligible events. Defaults to 1.
 	weight: number?,
+	-- For NPCApproach events, which member of the cast turns up. Ignored by every
+	-- other delivery. Nil is allowed and falls back to the first cast member, so
+	-- writing a visitor event is never blocked on casting it -- but an id that
+	-- doesn't exist is a content error and throws at start.
+	cast: string?,
 }
 
 -- What the client is told about an offered event. Effects and outcome lines are
@@ -96,6 +142,22 @@ export type ProfileData = {
 	-- The event offered but not yet answered. Persisted so it survives a rejoin,
 	-- and so re-joining can't be used to reroll an unwanted prompt.
 	pendingEventId: string?,
+	-- The event picked and physically placed in the world but not yet reached:
+	-- a letter on the mat, a phone ringing in the hall. Deliberately a separate
+	-- field from pendingEventId rather than a flag on it, because the two mean
+	-- different things to every check that reads them -- "there is something to
+	-- find" versus "there is a question open". Persisted, so the letter is still
+	-- on the mat after a rejoin instead of vanishing with the session that
+	-- staged it.
+	deliveringEventId: string?,
+	-- Real seconds until the ambient scheduler next tries to stage something.
+	-- Counts down only while the player is in a server, so logging out neither
+	-- banks quiet time nor resets it. Reset to a fresh random gap after each
+	-- staging, which is what keeps ambient events from arriving on a metronome.
+	deliveryCountdown: number,
+	-- Ambient deliveries staged in the current year, against Ambient.MaxPerYear.
+	-- Without this a player who lingers in one year would be buried in mail.
+	deliveriesThisYear: number,
 }
 
 return Types

@@ -16,6 +16,7 @@ local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
 local EventService = require(script.Parent.EventService)
 local BodyService = require(script.Parent.BodyService)
+local DeliveryService = require(script.Parent.DeliveryService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
@@ -118,6 +119,10 @@ function LifeService.Die(player: Player)
 
 	profile.Data.alive = false
 	profile.Data.stage = "Death"
+	-- Whatever the world was holding out for this person goes with them, rather
+	-- than sitting in the house through the death screen waiting for a collector
+	-- who is never coming.
+	DeliveryService.ResetForNewLife(player)
 	pushProgress(player, profile.Data)
 	PlayerDiedRemote:FireClient(player, ageYearsOf(profile.Data))
 
@@ -135,6 +140,7 @@ function LifeService.Die(player: Player)
 
 		StatService.ResetToStarting(player)
 		EventService.ResetSeen(player)
+		DeliveryService.ResetForNewLife(player)
 		-- Back to a newborn body; respawning does not itself reload the character.
 		BodyService.Apply(player)
 		PlayerRespawnedRemote:FireClient(player)
@@ -187,6 +193,11 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- A birthday is a change of body as much as a change of number: through
 	-- childhood each year buys speed, height and eventually the ability to jump.
 	BodyService.Apply(player)
+
+	-- Anything the world was still holding out belonged to the year that just
+	-- ended, so it goes with it -- and this is also what refills the year's
+	-- allowance of ambient deliveries.
+	DeliveryService.OnAgeUp(player)
 
 	AgeUpdatedRemote:FireClient(player, ageYears, cause)
 	pushProgress(player, data)

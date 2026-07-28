@@ -91,3 +91,22 @@ KEEP_CLEAR = {
 # Mirrors Config.InteractRadius; read_house.py uses it to measure the crawl.
 EVENT_ANCHOR = (-4.0, -21.5)
 INTERACT_RADIUS = 6.0
+
+# Where the world is allowed to put something it brings you: the mat the post
+# lands on, the phone that rings, the doorstep a caller stands on. These mirror
+# Config.World.DeliveryPointTag / DeliveryPointAttribute and the Ambient modes in
+# Types.EventDelivery.
+#
+# Mirrored rather than shared because one side is Luau and the other is Python.
+# The cost of that is what read_house.py buys back: it fails when a mode has
+# nowhere in the house to happen, so a missing doormat is a failed check rather
+# than a warning nobody reads in the output window an hour into a play session.
+DELIVERY_TAG = "AgesDeliveryPoint"
+DELIVERY_MODE_ATTRIBUTE = "DeliveryMode"
+DELIVERY_MODES = ("Letter", "PhoneCall", "NPCApproach")
+
+# Mirrors Config.NPC.ApproachStuds. A visitor spawns on the doorstep marker and
+# walks this far straight along its facing before stopping, so where they end up
+# is decided by turning the marker rather than by anything in code — which means
+# the spot they stop on is a property of the house and can be checked here.
+NPC_APPROACH_STUDS = 6.0

@@ -14,15 +14,28 @@ sofa that sealed a doorway; both would have been caught here.
 `check` exits non-zero when anything is wrong, so it can gate a commit.
 """
 
+import base64
 import json
 import math
+import struct
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 
 import house_plan
-from house_plan import EVENT_ANCHOR, FURNITURE, HOUSE, INTERACT_RADIUS, KEEP_CLEAR, ROOMS
+from house_plan import (
+    DELIVERY_MODE_ATTRIBUTE,
+    DELIVERY_MODES,
+    DELIVERY_TAG,
+    EVENT_ANCHOR,
+    FURNITURE,
+    HOUSE,
+    INTERACT_RADIUS,
+    KEEP_CLEAR,
+    NPC_APPROACH_STUDS,
+    ROOMS,
+)
 
 PROJECT = Path(__file__).resolve().parent.parent / "default.project.json"
 
@@ -32,6 +45,14 @@ _SOLID_MIN_THICKNESS = 0.4
 # How far two boxes have to interpenetrate before it reads as a mistake instead
 # of parts of one piece of furniture sharing a seam.
 _CLIP_TOLERANCE = 0.3
+# Half the width of a body, in studs. Floor with less than this to spare on
+# every side cannot actually be stood on, which is the measure both the space
+# sweep and the visitor's waiting spot are held to.
+_BODY_RADIUS = 1.4
+# Half the width to insist on along a walk, as opposed to at rest. Lower than
+# _BODY_RADIUS on purpose: people turn sideways past a chair, and holding a
+# corridor to standing-room width fails routes that are perfectly walkable.
+_WALK_RADIUS = 1.1
 
 
 _SOLID_CLASSES = {"Part", "MeshPart", "UnionOperation", "WedgePart", "TrussPart"}
@@ -53,6 +74,45 @@ def _named(props, tag, name):
     return None
 
 
+def _tags(props):
+    """CollectionService tags: the names joined by NULs, base64'd."""
+    node = _named(props, "BinaryString", "Tags")
+    if node is None or not node.text:
+        return ()
+    return tuple(t for t in base64.b64decode(node.text).decode().split("\0") if t)
+
+
+def _attributes(props):
+    """Roblox's attribute blob: a u32 count, then per entry a length-prefixed
+    name, a one-byte type id and the value.
+
+    Only strings (0x02) are decoded. Every attribute the generator writes is
+    one, and any other type has a width this does not know, so the parse stops
+    there rather than reading a later entry out of a misaligned offset and
+    reporting confident nonsense.
+    """
+    node = _named(props, "BinaryString", "AttributesSerialize")
+    if node is None or not node.text:
+        return {}
+
+    blob = base64.b64decode(node.text)
+    out = {}
+    at = 4
+    for _ in range(struct.unpack_from("<I", blob, 0)[0]):
+        (name_len,) = struct.unpack_from("<I", blob, at)
+        at += 4
+        name = blob[at:at + name_len].decode()
+        at += name_len
+        kind, at = blob[at], at + 1
+        if kind != 0x02:
+            break
+        (value_len,) = struct.unpack_from("<I", blob, at)
+        at += 4
+        out[name] = blob[at:at + value_len].decode()
+        at += value_len
+    return out
+
+
 def load(path):
     """Every part in a .rbxmx, as an axis-aligned box in world space.
 
@@ -64,6 +124,10 @@ def load(path):
     Each box also carries the Model it sits in. That is the difference between
     a sink recessed into a counter and a plant standing inside a sofa: the
     geometry is identical, only the grouping says which one is a mistake.
+
+    Tags, attributes and facing come along too. For most parts they are noise,
+    but a delivery point is nothing *but* those three — an invisible box whose
+    entire content is which mode it serves and which way it points.
     """
     parts = []
 
@@ -88,6 +152,10 @@ def load(path):
                             x0=px - ext[0], x1=px + ext[0],
                             y0=py - ext[1], y1=py + ext[1],
                             z0=pz - ext[2], z1=pz + ext[2],
+                            tags=_tags(props), attrs=_attributes(props),
+                            # A CFrame's front face is -Z, so the direction it
+                            # looks is the negated third column of its rotation.
+                            look=(-rot[0][2], -rot[1][2], -rot[2][2]),
                         )
                     )
 
@@ -125,6 +193,70 @@ def room_of(box):
         if room.contains(box["x0"], box["x1"], box["z0"], box["z1"], box["y0"]):
             return room
     return None
+
+
+# ---------------------------------------------------------------------------
+# clearance — how much room a body has, shared by `check` and `spawn`
+# ---------------------------------------------------------------------------
+
+def _clearance_field(level_y):
+    """Obstacles and standable floor at one storey, as flat rectangles.
+
+    Only geometry in the band a body occupies counts: the floor underfoot and
+    the roof overhead are not obstacles, but a sofa is. Tagged furniture parts
+    are skipped wholesale — every one the generator emits is an invisible,
+    non-colliding marker that exists to be read rather than walked into, and a
+    doorstep that reported itself as an obstacle would fail its own check.
+    """
+    parts = load(HOUSE) + [p for p in load(FURNITURE) if not p["tags"]]
+    obstacles = [
+        (p["x0"], p["x1"], p["z0"], p["z1"])
+        for p in parts
+        if p["y0"] < level_y + 3.0 and p["y1"] > level_y + 0.3
+    ]
+    floors = [
+        (p["x0"], p["x1"], p["z0"], p["z1"])
+        for p in load(HOUSE)
+        if abs(p["y1"] - level_y) < 0.6 and p["ext"][0] * p["ext"][2] > 20 and p["ext"][1] < 3
+    ]
+    return obstacles, floors
+
+
+def clearance(obstacles, x, z):
+    """Distance from a spot to the nearest thing standing at body height."""
+    best = 99.0
+    for x0, x1, z0, z1 in obstacles:
+        dx = max(x0 - x, 0.0, x - x1)
+        dz = max(z0 - z, 0.0, z - z1)
+        best = min(best, math.hypot(dx, dz))
+    return best
+
+
+def standable(floors, x, z):
+    return any(x0 <= x <= x1 and z0 <= z <= z1 for x0, x1, z0, z1 in floors)
+
+
+def walk_clear(obstacles, start, end, width, stop_within=0.0):
+    """Whether a body of `width` fits the whole way along a straight line.
+
+    Straight because that is what actually happens: both walks this measures —
+    a toddler crossing to the rug, a visitor coming in from the door — are aimed
+    at a point with no pathfinding behind them, so a chair halfway along is not
+    routed around, it is walked into. `stop_within` is how close to the end the
+    walk stops mattering, for the cases that finish on arrival rather than at
+    the exact spot.
+    """
+    (sx, sz), (ex, ez) = start, end
+    distance = math.hypot(ex - sx, ez - sz)
+    steps = max(int(distance * 2), 1)
+    for i in range(steps + 1):
+        t = i / steps
+        px, pz = sx + (ex - sx) * t, sz + (ez - sz) * t
+        if math.hypot(px - ex, pz - ez) <= stop_within:
+            break
+        if clearance(obstacles, px, pz) < width:
+            return False
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +392,74 @@ def command_check():
          for (a, b), v in sorted(collisions.items(), key=lambda kv: -kv[1])],
     )
 
+    # Delivery points. The game warns about a missing one, but only at the
+    # moment it first tries to stage something there — which is minutes into a
+    # session, in the output window, long after whoever moved the furniture has
+    # stopped looking. It is a fact about the house, so it is checked here.
+    points = [p for p in furniture if DELIVERY_TAG in p["tags"]]
+    faults, served = [], defaultdict(int)
+    fields = {}
+
+    for point in points:
+        mode = point["attrs"].get(DELIVERY_MODE_ATTRIBUTE)
+        room = home[id(point)]
+
+        if mode is None:
+            faults.append("%-16s carries no %s attribute" % (point["name"], DELIVERY_MODE_ATTRIBUTE))
+        elif mode not in DELIVERY_MODES:
+            faults.append('%-16s serves "%s", which is not a delivery mode' % (point["name"], mode))
+        else:
+            served[mode] += 1
+
+        if room is None:
+            # Already reported as homeless above, but repeated here because a
+            # delivery point outside the house is a different kind of wrong: it
+            # is somewhere the world will put a letter you cannot reach.
+            faults.append("%-16s is not in any room" % point["name"])
+            continue
+
+        if mode != "NPCApproach":
+            continue
+
+        # A doorstep is only as good as the spot it sends a visitor to. The walk
+        # is a straight MoveTo with no pathfinding, so a wait spot behind a
+        # dining chair is a visitor who never arrives and times out in the hall.
+        if room.floor not in fields:
+            fields[room.floor] = _clearance_field(room.floor)
+        obstacles, floors = fields[room.floor]
+
+        px, pz = point["p"][0], point["p"][2]
+        wx = px + point["look"][0] * NPC_APPROACH_STUDS
+        wz = pz + point["look"][2] * NPC_APPROACH_STUDS
+        room_at_wait = any(r.contains(wx, wx, wz, wz, room.floor) for r in ROOMS)
+        space = clearance(obstacles, wx, wz)
+
+        if not room_at_wait:
+            faults.append(
+                "%-16s sends a visitor to (%.1f, %.1f), which is outside every room"
+                % (point["name"], wx, wz)
+            )
+        elif not standable(floors, wx, wz):
+            faults.append(
+                "%-16s sends a visitor to (%.1f, %.1f), which has no floor under it"
+                % (point["name"], wx, wz)
+            )
+        elif space < _BODY_RADIUS:
+            faults.append(
+                "%-16s waiting spot (%.1f, %.1f) has %.2f studs of room, needs %.2f"
+                % (point["name"], wx, wz, space, _BODY_RADIUS)
+            )
+        elif not walk_clear(obstacles, (px, pz), (wx, wz), _WALK_RADIUS):
+            faults.append(
+                "%-16s cannot walk straight from (%.1f, %.1f) to (%.1f, %.1f)"
+                % (point["name"], px, pz, wx, wz)
+            )
+
+    for mode in DELIVERY_MODES:
+        if served[mode] == 0:
+            faults.append('nothing in the house serves "%s" deliveries' % mode)
+    report("delivery points (%d)" % len(points), faults)
+
     counts = defaultdict(int)
     for part in furniture:
         room = home[id(part)]
@@ -275,6 +475,18 @@ def command_check():
     if not anchors:
         failures.append("no event anchor")
 
+    print("\ndelivery points:")
+    for point in sorted(points, key=lambda p: p["attrs"].get(DELIVERY_MODE_ATTRIBUTE, "")):
+        mode = point["attrs"].get(DELIVERY_MODE_ATTRIBUTE, "?")
+        extra = ""
+        if mode == "NPCApproach":
+            extra = "   visitor waits at (%.1f, %.1f)" % (
+                point["p"][0] + point["look"][0] * NPC_APPROACH_STUDS,
+                point["p"][2] + point["look"][2] * NPC_APPROACH_STUDS,
+            )
+        print("   %-12s %-14s at (%.1f, %.1f)%s"
+              % (mode, point["name"], point["p"][0], point["p"][2], extra))
+
     if failures:
         print("\nFAILED: " + ", ".join(failures))
         return 1
@@ -286,64 +498,23 @@ def command_check():
 # spawn
 # ---------------------------------------------------------------------------
 
-def _clearance_field(level_y):
-    """Obstacles and standable floor at one storey, as flat rectangles.
-
-    Only geometry in the band a body occupies counts: the floor underfoot and
-    the roof overhead are not obstacles, but a sofa is.
-    """
-    parts = load(HOUSE) + [p for p in load(FURNITURE) if p["name"] != "RugEventAnchor"]
-    obstacles = [
-        (p["x0"], p["x1"], p["z0"], p["z1"])
-        for p in parts
-        if p["y0"] < level_y + 3.0 and p["y1"] > level_y + 0.3
-    ]
-    floors = [
-        (p["x0"], p["x1"], p["z0"], p["z1"])
-        for p in load(HOUSE)
-        if abs(p["y1"] - level_y) < 0.6 and p["ext"][0] * p["ext"][2] > 20 and p["ext"][1] < 3
-    ]
-    return obstacles, floors
-
-
 def command_spawn():
     room = house_plan.A
     obstacles, floors = _clearance_field(room.floor)
     ax, az = EVENT_ANCHOR
 
-    def clearance(x, z):
-        best = 99.0
-        for x0, x1, z0, z1 in obstacles:
-            dx = max(x0 - x, 0.0, x - x1)
-            dz = max(z0 - z, 0.0, z - z1)
-            best = min(best, math.hypot(dx, dz))
-        return best
-
-    def standable(x, z):
-        return any(x0 <= x <= x1 and z0 <= z <= z1 for x0, x1, z0, z1 in floors)
-
-    def path_clear(x, z, width=1.1):
-        """Walk the straight line to the anchor and make sure a body fits the
-        whole way. Clearance at the spawn alone is not enough — the point of
-        the spawn is the crawl, and the crawl has to be possible."""
-        distance = math.hypot(ax - x, az - z)
-        steps = max(int(distance * 2), 1)
-        for i in range(steps + 1):
-            t = i / steps
-            px, pz = x + (ax - x) * t, z + (az - z) * t
-            if math.hypot(px - ax, pz - az) <= INTERACT_RADIUS:
-                break
-            if clearance(px, pz) < width:
-                return False
-        return True
+    def path_clear(x, z):
+        # Clearance at the spawn alone is not enough — the point of the spawn
+        # is the crawl, and the crawl has to be possible.
+        return walk_clear(obstacles, (x, z), (ax, az), _WALK_RADIUS, INTERACT_RADIUS)
 
     project = json.loads(PROJECT.read_text())
     current = project["tree"]["Workspace"]["SpawnLocation"]["$properties"]["Position"]
     cx, cz = current[0], current[2]
     crawl = math.hypot(cx - ax, cz - az) - INTERACT_RADIUS
     print("spawn in default.project.json: (%.1f, %.1f)" % (cx, cz))
-    print("   clearance %.2f studs" % clearance(cx, cz))
-    print("   standable: %s" % ("yes" if standable(cx, cz) else "NO — not over a floor"))
+    print("   clearance %.2f studs" % clearance(obstacles, cx, cz))
+    print("   standable: %s" % ("yes" if standable(floors, cx, cz) else "NO — not over a floor"))
     print("   crawl to the anchor: %.1f studs before it fires" % crawl)
     print("   path to the anchor: %s" % ("clear" if path_clear(cx, cz) else "BLOCKED"))
 
@@ -353,8 +524,8 @@ def command_spawn():
     while x < room.x1 - 1.0:
         z = room.z0 + 1.0
         while z < room.z1 - 1.0:
-            if standable(x, z):
-                c = clearance(x, z)
+            if standable(floors, x, z):
+                c = clearance(obstacles, x, z)
                 d = math.hypot(x - ax, z - az) - INTERACT_RADIUS
                 if c >= 2.6 and 9.0 <= d <= 15.0 and path_clear(x, z):
                     candidates.append((c, d, x, z))
@@ -375,9 +546,6 @@ def command_spawn():
 # Resolution of the floor sampling grid, in studs. Half a stud is finer than any
 # gap that matters and still cheap to sweep.
 _GRID = 0.5
-# Half the width of a body, in studs. Open floor narrower than this on both
-# sides cannot actually be walked through, so it does not count as space.
-_BODY_RADIUS = 1.4
 # How much of a room's walkable floor has to be in one connected piece. Short of
 # this the room has a pocket you can see but not reach, which is what a sofa
 # spanning a room does — and what raw floor area completely fails to notice.

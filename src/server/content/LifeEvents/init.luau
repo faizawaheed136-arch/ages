@@ -6,6 +6,10 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Delivery = require(ReplicatedStorage:WaitForChild("Delivery"))
+
+local Cast = require(script.Parent.Cast)
 
 type LifeEvent = Types.LifeEvent
 
@@ -14,6 +18,7 @@ local SOURCES: { { LifeEvent } } = {
 	require(script.School),
 	require(script.Teen),
 	require(script.Adult),
+	require(script.Ambient),
 }
 
 -- One option is not a choice.
@@ -31,6 +36,28 @@ local function validate(event: LifeEvent)
 	end
 	if #event.choices < MIN_CHOICES then
 		error(`[AGES content] event "{event.id}" needs at least {MIN_CHOICES} choices`)
+	end
+
+	-- Casting only means anything for a visitor, so an id on anything else is a
+	-- copy-paste that would silently do nothing.
+	if event.cast ~= nil then
+		if event.delivery ~= "NPCApproach" then
+			error(`[AGES content] event "{event.id}" casts "{event.cast}" but is delivered by {event.delivery}`)
+		end
+		if Cast.ById[event.cast] == nil then
+			error(`[AGES content] event "{event.id}" casts "{event.cast}", who is not in the cast`)
+		end
+	end
+
+	-- An ambient event below this age could never fire, because the scheduler
+	-- will not stage one there -- and it must not, since resolving an event at
+	-- that age advances the year. Caught here rather than at runtime, where it
+	-- would look like an event that simply never came up.
+	if Delivery.RouteOf(event.delivery) == "Ambient" and event.minAge < Config.Ambient.MinAge then
+		error(
+			`[AGES content] ambient event "{event.id}" starts at age {event.minAge}, `
+				.. `below Ambient.MinAge ({Config.Ambient.MinAge}); it could never be staged`
+		)
 	end
 
 	local seenChoiceIds: { [string]: boolean } = {}

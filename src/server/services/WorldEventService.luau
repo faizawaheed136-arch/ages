@@ -67,6 +67,33 @@ local function anchorEventId(instance: Instance): string?
 	return raw
 end
 
+-- Who a tagged object belongs to, or nil for the hand-placed geometry that
+-- belongs to everyone. Public is the default because it is what the house is
+-- full of: anyone who crawls to the rug may have the rug's event. Staged
+-- deliveries set it, because a letter addressed to one player must not pay out
+-- for whoever else wanders past the doormat first.
+local function anchorOwner(instance: Instance): number?
+	local raw = instance:GetAttribute(Config.World.InteractOwnerAttribute)
+	if raw == nil then
+		return nil
+	end
+	if typeof(raw) ~= "number" then
+		warnOnce(instance, `has a non-number "{Config.World.InteractOwnerAttribute}" attribute; treating it as public`)
+		return nil
+	end
+	return raw
+end
+
+-- DeliveryService injects this so it learns the moment one of its staged
+-- objects pays out and can take the object away. Injected rather than required
+-- to keep the dependency one-way: DeliveryService already requires this service.
+type CollectedHandler = (player: Player, instance: Instance, eventId: string) -> ()
+local collectedHandler: CollectedHandler? = nil
+
+function WorldEventService.SetCollectedHandler(handler: CollectedHandler)
+	collectedHandler = handler
+end
+
 local function characterPosition(player: Player): Vector3?
 	local character = player.Character
 	if character == nil then
@@ -95,10 +122,26 @@ local function tick()
 			continue
 		end
 
+		local owner = anchorOwner(instance)
 		for _, player in players do
+			if owner ~= nil and player.UserId ~= owner then
+				continue
+			end
+
 			local here = characterPosition(player)
 			if here ~= nil and (here - position).Magnitude <= radius then
-				EventService.OfferIfEligible(player, eventId)
+				local offered = EventService.OfferIfEligible(player, eventId)
+				-- An owned anchor is single-use by construction: it exists only
+				-- because something was staged for this player, and it has now
+				-- been reached. Hand it back to whoever staged it and stop
+				-- looking -- the instance is about to stop existing. Clearing
+				-- the current key mid-traversal is safe; nothing else is.
+				if offered and owner ~= nil then
+					if collectedHandler ~= nil then
+						collectedHandler(player, instance, eventId)
+					end
+					break
+				end
 			end
 		end
 	end

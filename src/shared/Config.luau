@@ -137,6 +137,140 @@ Config.World = {
 	-- scale: a handful of objects against a handful of players. Safe range:
 	-- 0.1-1. Above ~1 a toddler can cross a small object between checks.
 	InteractTickSeconds = 0.25,
+
+	-- Attribute holding the UserId of the one player a tagged object belongs to.
+	-- Hand-placed geometry leaves it off and is public: anyone who walks to the
+	-- rug may have the rug's event. A staged delivery sets it, because a letter
+	-- addressed to one player must not pay out for whoever else wanders past the
+	-- doormat first.
+	InteractOwnerAttribute = "OwnerUserId",
+
+	-- Where staged deliveries appear. A point is an empty part in the house
+	-- tagged with DeliveryPointTag and told which mode it serves, so the mat,
+	-- the phone and the doorstep can be moved in Studio without code moving.
+	DeliveryPointTag = "AgesDeliveryPoint",
+
+	-- Attribute on a delivery point naming the mode it serves, matching a
+	-- Types.EventDelivery value: "Letter", "PhoneCall" or "NPCApproach".
+	DeliveryPointAttribute = "DeliveryMode",
+}
+
+-- The world bringing an event to you, rather than a birthday handing it over or
+-- you walking into it. Every number here is in *real* seconds: these are pacing
+-- beats for the person playing, not durations in the world, so they must not
+-- move when the day length is re-tuned. Same reasoning as NextEventDelaySeconds.
+Config.Ambient = {
+	-- Ambient events start the year *after* childhood ends, and the offset is
+	-- derived rather than typed twice. This is not a taste call: below and at
+	-- Childhood.EndAge, answering any event advances the year (see EventService),
+	-- so an ambient event down there would burn years two at a time and wreck
+	-- the one-event-per-year rhythm the toddler slice is built on.
+	MinAge = Config.Childhood.EndAge + 1,
+
+	-- The gap before the next ambient delivery is picked uniformly from this
+	-- window each time, so the world never arrives on a metronome. At these
+	-- values a player aging quickly meets one roughly every year and a half,
+	-- while one who lingers gets MaxPerYear and then quiet.
+	-- Safe range: 45-600, and Min must stay below Max.
+	MinSecondsBetween = 90,
+	MaxSecondsBetween = 240,
+
+	-- Ceiling per year of life. The auto age-up net is 50 real minutes, so
+	-- without a cap a single unhurried year could carry a dozen of these.
+	-- Safe range: 1-5. Above ~5 a year stops having any quiet in it.
+	MaxPerYear = 2,
+
+	-- How often the scheduler counts down and considers staging. Coarse on
+	-- purpose: this decides when something *starts*, not whether the player has
+	-- reached it, so it does not need the interact loop's resolution.
+	-- Safe range: 0.5-5.
+	TickSeconds = 1,
+
+	-- How long a staged delivery waits before giving up, per mode. Expiry is
+	-- silent and the event is *not* marked seen, so a missed one can come back
+	-- later in the life -- missing a phone call should feel like missing a phone
+	-- call, not like a penalty screen.
+	--
+	-- 0 means it never expires on a timer. A letter on the mat is patient; it is
+	-- cleared at the next birthday instead, along with the year it belonged to.
+	-- Safe range: 0, or 20-180. Below ~20 nothing in another room is reachable.
+	ExpirySeconds = {
+		Letter = 0,
+		PhoneCall = 45,
+		NPCApproach = 60,
+	},
+}
+
+-- Roblox asset ids, kept together because they are the one class of value that
+-- cannot be decided from here: an id has to be picked in Studio or uploaded to
+-- an account, and a wrong one fails at runtime rather than at build.
+--
+-- An empty string means "not chosen yet" and is handled everywhere it is read --
+-- the phone simply rings silently rather than erroring on a made-up id. That is
+-- deliberate: a placeholder id that happens to resolve to someone else's asset
+-- is far worse than no sound. Fill these in from the Studio asset picker.
+Config.Assets = {
+	Sounds = {
+		PhoneRing = "",
+		LetterArrive = "",
+		DoorKnock = "",
+	},
+
+	-- Animation ids for visitors. Empty means the rig falls back to standing
+	-- still, which looks wrong on purpose -- a visibly unfinished NPC is better
+	-- than one that silently never animates and is assumed to be working.
+	-- Greet and Talk are one-shot; Idle and Walk are looped and cross-faded.
+	Animations = {
+		NPCIdle = "",
+		NPCWalk = "",
+		NPCGreet = "",
+		NPCTalk = "",
+	},
+}
+
+-- Visitors: the people the world can send to your door. Movement is a straight
+-- walk from the doorstep to a waiting spot, with no pathfinding graph -- the
+-- simplest version that is honest about what it does, flagged here because the
+-- moment a visitor has to cross a cluttered room it will need replacing with
+-- PathfindingService.
+Config.NPC = {
+	-- How far in from the door a visitor comes before waiting. Far enough to be
+	-- indoors and clear of the door swing, close enough that they are not
+	-- standing in the middle of the room. Safe range: 3-10.
+	ApproachStuds = 6,
+
+	-- Slower than a player on purpose: someone arriving at your door is not in a
+	-- hurry, and it gives the walk time to read. Safe range: 6-16.
+	WalkSpeed = 9,
+
+	-- Seconds allowed for a walk in or out before the rig is removed regardless.
+	-- Movement can stall against geometry, and a visitor frozen in the hallway
+	-- forever is worse than one who quietly gives up. Safe range: 4-20.
+	WalkTimeoutSeconds = 8,
+
+	-- Head tracking. This is the whole difference between a mannequin and a
+	-- person and it costs no assets at all, so it runs even before a single
+	-- animation id has been filled in above.
+	-- LookTickSeconds safe range: 0.03-0.2 -- above ~0.2 the head visibly steps.
+	LookTickSeconds = 0.06,
+	-- Past these a real person turns their body rather than their neck, so the
+	-- head clamps instead of swivelling like an owl. Degrees.
+	-- Safe range: 40-90 and 15-40.
+	LookMaxYawDegrees = 70,
+	LookMaxPitchDegrees = 25,
+	-- How much of the remaining angle the head closes each tick, 0-1. Low is
+	-- languid, 1 snaps instantly. Safe range: 0.05-0.4.
+	LookResponsiveness = 0.18,
+
+	-- How far away a visitor bothers tracking the player at all. Beyond this
+	-- they face front. Safe range: 10-60.
+	LookMaxDistance = 30,
+
+	-- How long a visitor stays talking after the player reaches them, before
+	-- turning to leave. Runs underneath the prompt the player is reading, so it
+	-- wants to be close to how long that takes -- see UI.EventOutcomeSeconds.
+	-- Safe range: 0-8. At 0 they turn on their heel mid-sentence.
+	TalkBeatSeconds = 3,
 }
 
 Config.Stats = {

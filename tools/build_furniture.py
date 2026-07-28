@@ -33,6 +33,7 @@ import base64
 import struct
 from contextlib import contextmanager
 
+from house_plan import DELIVERY_MODE_ATTRIBUTE, DELIVERY_TAG
 from house_plan import FURNITURE as OUT
 from house_plan import A, B, C, D, U1, U2, U3
 
@@ -519,6 +520,82 @@ def ceiling_light(room, x, z, height=LIGHT_HEIGHT):
 
 
 # --------------------------------------------------------------------------
+# Delivery points. The world can bring an event to you — post on the mat, the
+# phone ringing in the hall, someone at the door — and each of those modes needs
+# somewhere in the house to happen. That somewhere is an invisible marker rather
+# than a coordinate in code, so the mat can be moved, re-dressed or replaced
+# entirely and the post still lands on it.
+#
+# Same split as the rug's event anchor, and for the same reason: the visible
+# object is a stand-in that will be swapped for real art, and the thing that
+# makes the delivery work must not go with it. Each marker is emitted inside the
+# piece it belongs to so the two move together.
+#
+# The marker is what the game reads, so its *pose* is content: the letter is
+# placed at the point's centre, and a visitor walks straight along the point's
+# facing. Both are noted where they matter below.
+# --------------------------------------------------------------------------
+
+# Deliberately shorter than 0.4 studs and sitting low: read_house.py treats
+# anything taller as something a body would walk into, and a marker nobody can
+# see is not an obstacle. Keeping it under the threshold means these cost the
+# room no walkable floor rather than needing to be special-cased by name the way
+# RugEventAnchor is.
+_MARKER_HEIGHT = 0.2
+
+
+def delivery_point(name, offset, mode, size=None):
+    """An invisible spot the world may put a delivery at.
+
+    offset follows the same convention as part(): dy is the underside, so a
+    marker's centre — which is where a letter actually lands — sits half its
+    height above whatever surface it is standing on.
+    """
+    part(name, offset, size or (1.6, _MARKER_HEIGHT, 1.2), WHITE, PLASTIC,
+         transparency=1, collide=False,
+         tags=[DELIVERY_TAG], attrs={DELIVERY_MODE_ATTRIBUTE: mode})
+
+
+@piece("Doormat")
+def doormat(length=3.4, depth=2.2):
+    """Where the post lands. Wall piece: back on the wall, depth running in."""
+    part("MatCloth", (0, 0, depth / 2), (length, 0.08, depth), WALNUT, FABRIC, collide=False)
+    part("MatBorder", (0, 0.08, depth / 2), (length - 0.7, 0.06, depth - 0.7), OAK, FABRIC, collide=False)
+    # Standing on the mat's border rather than sunk into it: the envelope is
+    # centred on this marker and lifts itself a hair further, so an envelope
+    # half-buried in a rug is not a thing that can happen.
+    delivery_point("LetterPoint", (0, 0.14, depth / 2), "Letter", size=(1.2, 0.04, 0.9))
+
+
+@piece("Telephone")
+def telephone(dx=0.0, top=2.9, depth=0.9):
+    """A hall phone standing on whatever surface it is handed. `top` is that
+    surface's height above the floor and dx/depth place it across and along —
+    all in the surface's own local frame, so the phone is authored inside the
+    same `with` block as the table it stands on and moves when the table does."""
+    part("PhoneBase", (dx, top, depth), (0.9, 0.35, 0.9), CHARCOAL, SMOOTH, collide=False)
+    part("PhoneHandset", (dx, top + 0.35, depth - 0.18), (1.0, 0.26, 0.34), CHARCOAL, SMOOTH, collide=False)
+    part("PhoneDial", (dx, top + 0.35, depth + 0.2), (0.06, 0.5, 0.5), BRASS, METAL,
+         collide=False, shape=2, upright_cylinder=True)
+    # Inside the phone, not beside it. The presenter outlines the Model the
+    # point sits in, so a marker standing on its own would highlight nothing and
+    # a call would ring from an empty patch of table.
+    delivery_point("PhonePoint", (dx, top, depth), "PhoneCall", size=(1.0, 0.9, 0.9))
+
+
+@piece("Doorstep")
+def doorstep():
+    """Where a caller arrives and where they stop. Nothing visible: the doorstep
+    is the front door, which the house already has.
+
+    Free-standing, so the origin is the marker itself. Its facing is the whole
+    piece — a visitor spawns here and walks NPC_APPROACH_STUDS straight along
+    it before waiting, so `side` in the placement below is what decides where
+    they end up standing, and read_house.py measures that spot."""
+    delivery_point("VisitorPoint", (0, 0.05, 0), "NPCApproach", size=(1.8, _MARKER_HEIGHT, 1.8))
+
+
+# --------------------------------------------------------------------------
 # The layout. Rooms A..U3 come from house_plan.py, which carries their walls,
 # floor heights and the windows and doorways each one has to work around —
 # those spans are the reason a piece sits where it does rather than somewhere
@@ -559,16 +636,37 @@ ceiling_light(A, 22.0, -21.5)
 
 # Hall and dining. The table sits west of the staircase; the west wall can only
 # take something short between the door and the window.
-with free(B, 13.0, -1.0):
+#
+# Set two studs south of centre so the line straight in from the front door at
+# z -4.9 stays open. Centred, the near row of chairs backed onto that line and
+# left 1.7 studs to squeeze through — walkable, but the only way in from the
+# street was sideways past a chair, and a visitor walking in from the doorstep
+# stopped inside one.
+with free(B, 13.0, 1.0):
     dining_table()
 for dx in (-3.0, 0.0, 3.0):
-    with free(B, 13.0 + dx, -4.2):
+    with free(B, 13.0 + dx, -2.2):
         chair(back=(0, -1))
-    with free(B, 13.0 + dx, 2.2):
+    with free(B, 13.0 + dx, 4.2):
         chair(back=(0, 1))
 with against(B, "west", -8.2):
     console_table(3.5)
-ceiling_light(B, 13.0, -1.0)
+    # On the table rather than beside it, and authored in the table's own frame:
+    # -1.15 puts it at the door end of the top, clear of the bowl in the middle.
+    telephone(dx=-1.15, top=2.88)
+
+# The front hall is also where the world reaches you: post on the mat, the
+# phone on the hall table, callers on the doorstep. All three cluster around the
+# door at z -4.9 because that is where all three actually arrive.
+with against(B, "west", -4.9):
+    doormat()
+# On the mat, facing east into the hall, so a visitor walks in rather than into
+# the wall. Straight down the middle of the line the dining set was moved to
+# keep open, which is the same line the player walks in on.
+with free(B, 5.2, -4.9, side="east"):
+    doorstep()
+
+ceiling_light(B, 13.0, 1.0)
 ceiling_light(B, 26.0, -8.0)
 
 # Kitchen. Counters take the two walls the doorway is not in, so the way in

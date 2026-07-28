@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local Delivery = require(ReplicatedStorage:WaitForChild("Delivery"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
@@ -63,16 +64,27 @@ local function isEligible(data: ProfileData, event: LifeEvent, ageYears: number)
 	return ageYears >= event.minAge and ageYears <= event.maxAge and not data.seenEventIds[event.id]
 end
 
-local function pickForAge(data: ProfileData, ageYears: number): LifeEvent?
+-- Weighted pick among the events eligible right now whose delivery takes the
+-- given route. Routing by table rather than by name is what keeps a birthday
+-- from ever handing over a letter: a mode is only reachable from the one system
+-- that owns its route, and adding a mode without classifying it fails to compile
+-- in Delivery.luau rather than leaking into the wrong pool here.
+local function pickForRoute(
+	data: ProfileData,
+	ageYears: number,
+	route: Delivery.Route,
+	filter: ((LifeEvent) -> boolean)?
+): LifeEvent?
 	local candidates: { LifeEvent } = {}
 	local weights: { number } = {}
 	local totalWeight = 0
 
 	for _, event in LifeEvents.All do
-		-- Interact events are reached by going to them, so handing one out on a
-		-- birthday would announce "you walked here" to a player who did not.
-		-- They are only ever offered by the world.
-		if event.delivery ~= "Interact" and isEligible(data, event, ageYears) then
+		-- The filter is how a caller says "and I can actually present this one".
+		-- Applied during selection rather than after it so an event the world has
+		-- nowhere to put never wins the roll and silently wastes the slot.
+		local presentable = filter == nil or filter(event)
+		if presentable and Delivery.RouteOf(event.delivery) == route and isEligible(data, event, ageYears) then
 			local weight = event.weight or 1
 			table.insert(candidates, event)
 			table.insert(weights, weight)
@@ -98,6 +110,13 @@ end
 
 local function offer(player: Player, data: ProfileData, event: LifeEvent)
 	data.pendingEventId = event.id
+	-- Whatever the world was holding has now been reached, so the world stops
+	-- holding it. Cleared here, at the moment the prompt opens, rather than by
+	-- the delivery layer afterwards: that makes "a prompt is open while the
+	-- letter is still on the mat" unrepresentable instead of merely unlikely.
+	if data.deliveringEventId == event.id then
+		data.deliveringEventId = nil
+	end
 	EventOfferedRemote:FireClient(player, toOffered(event))
 end
 
@@ -115,10 +134,37 @@ function EventService.OfferForAge(player: Player, ageYears: number)
 		return
 	end
 
-	local event = pickForAge(data, ageYears)
+	-- Immediate only. A birthday hands over the events that have nowhere to be:
+	-- staging a letter here would announce mail the player never went to fetch.
+	local event = pickForRoute(data, ageYears, "Immediate")
 	if event ~= nil then
 		offer(player, data, event)
 	end
+end
+
+-- Picks something the world could stage right now *without* offering it, and
+-- without writing anything to the profile. The ambient scheduler has to know
+-- what it is staging before the player has reached it -- a letter and a ringing
+-- phone are different objects -- so selection and offering are two steps here in
+-- a way they never are for a birthday. The caller is responsible for the profile
+-- write, and OfferIfEligible re-checks everything when the player arrives.
+function EventService.PickStageable(
+	player: Player,
+	route: Delivery.Route,
+	filter: ((LifeEvent) -> boolean)?
+): LifeEvent?
+	local profile = DataService.GetProfile(player)
+	if profile == nil or not profile.Data.alive then
+		return nil
+	end
+
+	local data = profile.Data
+	if data.pendingEventId ~= nil or data.deliveringEventId ~= nil then
+		return nil
+	end
+
+	local ageYears = data.ageMonths // Config.Time.MonthsPerYear
+	return pickForRoute(data, ageYears, route, filter)
 end
 
 -- Public so the Studio harness can force a specific event without rolling for
@@ -175,11 +221,15 @@ function EventService.ClearPending(player: Player)
 end
 
 -- A new life may live the same moments again, so the seen list is per-life.
+-- deliveringEventId goes with it: a letter addressed to the person who just died
+-- is not still on the mat for the child who replaces them. The physical object
+-- is DeliveryService's to remove -- this clears the state that authorizes it.
 function EventService.ResetSeen(player: Player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		profile.Data.seenEventIds = {}
 		profile.Data.pendingEventId = nil
+		profile.Data.deliveringEventId = nil
 	end
 end
 

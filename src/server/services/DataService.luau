@@ -38,9 +38,16 @@ local PROFILE_TEMPLATE: ProfileData = {
 	},
 	livesLived = 0,
 	secondsSinceAgeUp = 0,
-	-- pendingEventId is intentionally absent: Reconcile cannot fill a nil field,
-	-- and "no event outstanding" is exactly what its absence means.
+	-- pendingEventId and deliveringEventId are intentionally absent: Reconcile
+	-- cannot fill a nil field, and "nothing outstanding" / "nothing staged in the
+	-- world" is exactly what their absence means.
 	seenEventIds = {},
+	-- Starts at the top of the window rather than 0, so the first ambient
+	-- delivery of a life is a wait and not an ambush the moment the player is
+	-- old enough for one. The countdown only runs while they are that old, so
+	-- this is not silently spent during childhood.
+	deliveryCountdown = Config.Ambient.MaxSecondsBetween,
+	deliveriesThisYear = 0,
 }
 
 local playerStore = ProfileStoreModule.New("PlayerData", PROFILE_TEMPLATE)
