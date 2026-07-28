@@ -31,8 +31,8 @@ type DeliveryStyle = {
 
 local DELIVERY_STYLES: { Memory: DeliveryStyle, Direct: DeliveryStyle } = {
 	-- Early childhood. Dimmer, wider, quieter — a recollection surfacing rather
-	-- than a decision being demanded. There is no world for a toddler to walk
-	-- around, so this presentation is permanent, not a stand-in.
+	-- than a decision being demanded. Held until the toddler house exists and
+	-- these entries can be reached by walking to the thing instead.
 	Memory = {
 		width = 520,
 		backdropTransparency = 0.25,
