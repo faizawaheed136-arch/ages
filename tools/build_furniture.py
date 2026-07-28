@@ -19,6 +19,7 @@ the room holding the spawn is open from x=-12..29, z=-27..-16.
 
 import base64
 import struct
+from contextlib import contextmanager
 from pathlib import Path
 
 FLOOR = 1.037
@@ -76,6 +77,26 @@ def _attributes_blob(attrs):
     return base64.b64encode(out).decode()
 
 
+_turn = None
+
+
+@contextmanager
+def turned(px, pz):
+    """Emits everything inside a quarter turn about (px, pz).
+
+    The rooms here are long corridors rather than squares, so the same sofa has
+    to be able to run along either axis. Rotating at placement time keeps each
+    builder written once, in its own natural orientation, instead of every piece
+    needing a width-and-depth argument it would then have to interpret."""
+    global _turn
+    previous = _turn
+    _turn = (px, pz)
+    try:
+        yield
+    finally:
+        _turn = previous
+
+
 def part(name, center, size, color, material=SMOOTH, transparency=0.0,
          collide=True, shape=1, upright_cylinder=False, tags=None, attrs=None,
          children=""):
@@ -85,11 +106,21 @@ def part(name, center, size, color, material=SMOOTH, transparency=0.0,
     sx, sy, sz = size
     y = ybase + sy / 2
 
+    turn = _turn
+    if turn is not None:
+        px, pz = turn
+        # Quarter turn about Y: x' = z, z' = -x. Size is left alone because the
+        # CFrame carries the rotation, which is also why discs need no special
+        # case here — they are circular about the axis being turned.
+        x, z = px + (z - pz), pz - (x - px)
+
     if upright_cylinder:
         # Cylinder parts run along their X axis, so a disc lying flat needs X
         # rotated onto Y. sx becomes thickness; sy/sz become the diameter.
         rot = "<R00>0</R00><R01>-1</R01><R02>0</R02><R10>1</R10><R11>0</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>"
         y = ybase + sx / 2
+    elif turn is not None:
+        rot = "<R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22>"
     else:
         rot = "<R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>"
 
@@ -434,26 +465,35 @@ def chandelier(cx, cz, ceiling):
 
 CEILING = 14.0
 
-# Nursery: everything a life's first year happens on or in, kept to the west
-# half so the rug has clear floor around it in every direction.
+# This room is forty studs wide but only ten deep, so every long piece is
+# turned to run along it. Left unturned, the sofa alone reaches wall to wall
+# and the room stops being somewhere a crawler can cross.
+#
+# Nursery west, living room east, and a clear middle between them: the toddler
+# can see where it is going long before it can get there, which is the point.
 rug(-2.0, -21.5)
-crib(-10.0, -24.0)
-dresser(-10.2, -18.0)
-toy_chest(2.5, -25.6)
-rocker(-9.8, -21.0)
-plant(1.5, -17.2)
+with turned(-8.0, -23.8):
+    crib(-8.0, -23.8)
+with turned(-7.5, -18.6):
+    dresser(-7.5, -18.6)
+toy_chest(3.0, -24.8)
+rocker(-9.5, -20.0)
+plant(-10.0, -17.5)
 
-# Living room: the world the toddler is growing toward, on the far side of the
-# same room, which is the point — you can see it long before you can reach it.
-sofa(25.0, -21.0)
-coffee_table(19.5, -21.0)
-tv_unit(13.0, -21.0)
-bookshelf(28.6, -25.5)
-floor_lamp(27.4, -17.2)
-plant(11.8, -25.8)
+# Sofa on one wall, television on the other, and nothing between them. A
+# coffee table would fit the room and close the only way through it, so the
+# one that would have gone here stands in the hall instead.
+with turned(24.0, -23.8):
+    sofa(24.0, -23.8)
+with turned(24.0, -17.9):
+    tv_unit(24.0, -17.9)
+with turned(15.5, -24.8):
+    bookshelf(15.5, -24.8)
+floor_lamp(28.2, -18.5)
+plant(28.2, -24.5)
 
 pendant(-3.0, -21.5, CEILING)
-pendant(20.0, -21.0, CEILING)
+pendant(24.0, -21.5, CEILING)
 
 # Kitchen and dining, x -6..28 by z 25..52. Counters hug the north wall so the
 # middle of the room stays walkable; the island splits cooking from eating
@@ -500,6 +540,7 @@ pendant(11.0, 14.0, CEILING)
 # toddler at bodyScale 0.30 should feel small standing in it.
 HALL_CEILING = 31.0
 flat_rug(-12.0, -2.5, 14.0, 10.0, ROSE)
+coffee_table(-12.0, -2.5)
 console_table(-22.5, -2.5)
 plant(-22.0, 3.0)
 plant(-22.0, -8.0)
