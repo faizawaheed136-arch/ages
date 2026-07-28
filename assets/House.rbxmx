@@ -1,0 +1,7 @@
+<roblox version="4">
+	<Item class="Model" referent="RBX0">
+		<Properties>
+			<string name="Name">House</string>
+		</Properties>
+	</Item>
+</roblox>
