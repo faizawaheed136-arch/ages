@@ -14,7 +14,7 @@ Roblox life-sim. Rojo project. See project spec for full design.
 1. From this directory: `rojo serve`
 2. In Studio, open/create a place, open the Rojo plugin panel, and connect
    (default port 34872).
-3. Press Play. You'll see a grey baseplate and a HUD in the top-left corner
+3. Press Play. You'll see a grey baseplate and a HUD in the top-right corner
    showing Age, Life Stage, progress toward the next year, an Age Up button,
    and the four stats.
 
@@ -47,8 +47,46 @@ minutes, so ages 0-4 take about 10 real minutes total). From age 5 the player
 takes the wheel, since that's the point they could plausibly be choosing things
 for themselves.
 
-Both routes call `LifeService.AgeUp`, so stat decay, stage transitions and the
+Those early years are content, not a wait — see Events below — so a first life
+plays them through. From the second life on (`Config.SkipChildhoodMinLives`) the
+button appears as **Skip Childhood** instead, crossing them in one press. It
+still runs the ordinary per-year path, so skipped years decay stats and cross
+stages exactly as if they'd been lived; they just don't offer events.
+
+All routes call `LifeService.AgeUp`, so stat decay, stage transitions and the
 mortality roll can't drift apart between them.
+
+## Events
+
+One life event is offered per birthday, drawn at random (by `weight`) from the
+entries eligible for that age and not yet answered this life. The seen list is
+per-life: a new life may live the same moments again.
+
+The engine decides *which* event fires; it does not decide how it looks. Each
+event names a `delivery`, and the client keys its presentation off that:
+
+- **Memory** — ages 0-5. Dim, wide, quiet; a recollection surfacing. This one is
+  permanent, not a placeholder: a toddler has no world to walk around.
+- **Direct** — everything else, pending a world. In step 3 these become
+  `NPCApproach` / `Letter` / `PhoneCall` / `Location`, which are new entries in
+  `EventUI.DELIVERY_STYLES` — the server, the engine and the content don't move.
+
+`DELIVERY_STYLES` is a closed record rather than a loose map, so adding a variant
+to `Types.EventDelivery` fails type-checking until it has been given a
+presentation.
+
+Server-authoritative throughout: the client is sent prompt and choice labels
+only (never the effects or outcome lines), and the only answer accepted is one
+belonging to the exact event that player was offered. The pending event lives in
+the profile, so an unanswered prompt survives a rejoin — and rejoining can't be
+used to reroll one you don't like.
+
+### Adding events
+
+Drop an entry into any module under `src/server/content/LifeEvents/`. No code
+changes. The aggregator validates on server start and throws loudly on a
+duplicate id, a backwards age range, fewer than two choices, or a choice that
+moves no stat — per the spec, a choice that doesn't move a stat should be cut.
 
 ## Debug commands (Studio only)
 
@@ -61,13 +99,16 @@ Type these in chat. `!` works too, in case the chat system swallows `/`.
 | `/die` | Force death and restart |
 | `/stat <name> <value>` | Set health / happiness / smarts / looks |
 | `/bank <seconds>` | Fast-forward the automatic age-up timer |
-| `/life` | Print age, stage, alive, banked seconds, lives lived |
+| `/life` | Print age, stage, alive, banked seconds, lives lived, pending event |
+| `/event <id>` | Force a specific event on screen, ignoring age and seen list |
+| `/events` | List what's eligible at the current age, and how many are seen |
+| `/reevents` | Clear the seen list for this life so content can be replayed |
 
 `/bank` is the quick way to verify the safety net: at the default threshold of
 3000 seconds, `/bank 2990` puts you a few seconds away from an automatic age-up
 without editing Config and restarting.
 
-## What's here (Build Order step 1: Skeleton)
+## What's here (Build Order steps 1-2)
 
 - `vendor/ProfileStore` — vendored from
   [MadStudioRoblox/ProfileStore](https://github.com/MadStudioRoblox/ProfileStore)
@@ -78,16 +119,21 @@ without editing Config and restarting.
   age 60.
 - `src/server/services/LifeService.luau` — aging, life stage transitions
   (Childhood / Adolescence / Adulthood / Elder), death (health hits 0, or an
-  age-based natural mortality roll past 65), and restart.
+  age-based natural mortality roll past 65), restart, and Skip Childhood.
+- `src/server/services/EventService.luau` — event selection and answer
+  validation. Decides *which* event fires, never how it's presented.
+- `src/server/content/LifeEvents/` — the event content, as plain data tables.
 - `src/server/services/DebugService.luau` — Studio-only chat commands for
   triggering edge cases without waiting on real time. No-ops outside Studio.
 - `src/shared/Config.luau` — every tunable number. No magic numbers elsewhere.
 - `src/shared/Types.luau` — shared type definitions, including the profile schema.
 - `src/shared/Remotes.luau` — single source of truth for remote events.
-- `src/client/` — minimal HUD only. No world content yet.
+- `src/client/ui/StatsUI.luau` — the HUD.
+- `src/client/ui/EventUI.luau` — the delivery layer: how an event looks.
 
-No world content, careers, events, or crime yet — those are later Build Order
-steps. This step is just "grey baseplate + working numbers."
+No world, careers, money or crime yet — those are later Build Order steps.
+Events currently arrive as panels because there is nowhere yet for them to
+happen; `delivery` is the seam that fixes that without rewriting them.
 
 ## Type-checking
 
@@ -104,8 +150,10 @@ luau-lsp analyze --defs=globalTypes.d.luau --sourcemap=sourcemap.json \
 `vendor/**` is ignored because the vendored ProfileStore reports type errors of
 its own; everything under `src/` must stay clean.
 
-## Next up (Build Order step 2)
+## Next up (Build Order step 3)
 
-Event engine: data-driven life events that spawn as world interactions
-(NPCApproach / Letter / PhoneCall / Location) rather than popups. Target ~20
-test events before moving to step 3 (Modern world v1).
+Modern world v1. That's when events stop being panels: the world-based
+deliveries get written as new `EventUI` handlers and existing content switches
+over by changing one field. Game currency arrives with it, since that's the
+first build where there's both something to earn it from and something to spend
+it on.

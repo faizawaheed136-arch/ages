@@ -38,6 +38,9 @@ local PROFILE_TEMPLATE: ProfileData = {
 	},
 	livesLived = 0,
 	secondsSinceAgeUp = 0,
+	-- pendingEventId is intentionally absent: Reconcile cannot fill a nil field,
+	-- and "no event outstanding" is exactly what its absence means.
+	seenEventIds = {},
 }
 
 local playerStore = ProfileStoreModule.New("PlayerData", PROFILE_TEMPLATE)

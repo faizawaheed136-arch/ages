@@ -44,6 +44,13 @@ Config.ChildAutoAgeUpGameHours = 4
 -- Safe range: 0-12. At 0 there is no automatic-only stretch at all.
 Config.ManualAgeUpMinAge = 5
 
+-- Completed lives before the "Skip Childhood" button appears in the years below
+-- ManualAgeUpMinAge. A first life always plays childhood through, because it is
+-- content rather than a wait; from the second life on it is opt-in. At 0 the
+-- skip exists immediately and most players would never see those years at all.
+-- Safe range: 1-3.
+Config.SkipChildhoodMinLives = 1
+
 -- Minimum active seconds between two manual age-ups. Deliberately in *real*
 -- seconds, not game time: this is an input rate limit, not a world duration, so
 -- it shouldn't move when the day length is re-tuned. It is the "once per year"
@@ -97,6 +104,16 @@ Config.UI = {
 	-- how long it takes to fade in/out. Safe range: 2-8 and 0.2-1.
 	NoticeSeconds = 4.5,
 	NoticeFadeSeconds = 0.4,
+
+	-- How long the outcome of a choice stays up before the panel clears. Long
+	-- enough to read two sentences without rushing. Safe range: 3-10.
+	EventOutcomeSeconds = 5.5,
+
+	-- The server answers every accepted choice, so silence means it was refused
+	-- or dropped in flight. After this the choices come back rather than leaving
+	-- a dead panel on screen. Safe range: 2-10 — long enough that a slow server
+	-- doesn't re-enable a choice that is about to resolve.
+	EventResponseTimeoutSeconds = 5,
 }
 
 Config.Death = {

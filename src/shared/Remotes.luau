@@ -6,11 +6,21 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
--- RequestAgeUp is the only client -> server remote; everything else is a
--- one-way state push. It carries no payload precisely so there is nothing for
--- a hostile client to forge — the server decides whether the request is legal.
+-- RequestAgeUp and RequestEventChoice are the only client -> server remotes;
+-- everything else is a one-way state push. RequestAgeUp carries no payload at
+-- all, and RequestEventChoice carries only two ids that the server checks
+-- against the event it actually offered — so there is nothing useful to forge.
 export type RemoteName =
-	"StatsUpdated" | "AgeUpdated" | "AgeUpProgress" | "LifeStageChanged" | "PlayerDied" | "PlayerRespawned" | "RequestAgeUp"
+	"StatsUpdated"
+	| "AgeUpdated"
+	| "AgeUpProgress"
+	| "LifeStageChanged"
+	| "PlayerDied"
+	| "PlayerRespawned"
+	| "RequestAgeUp"
+	| "EventOffered"
+	| "EventResolved"
+	| "RequestEventChoice"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -20,6 +30,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"PlayerDied",
 	"PlayerRespawned",
 	"RequestAgeUp",
+	"EventOffered",
+	"EventResolved",
+	"RequestEventChoice",
 }
 
 local FOLDER_NAME = "RemoteEvents"

@@ -14,6 +14,7 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
+local EventService = require(script.Parent.EventService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
@@ -72,9 +73,21 @@ end
 -- returns rather than re-deriving the rule, so the button can never offer an
 -- action the server would refuse.
 local function manualState(data: ProfileData): ManualAgeUpState
-	if not data.alive or not isSelfDirected(data) then
+	if not data.alive then
 		return "Hidden"
 	end
+
+	if not isSelfDirected(data) then
+		-- Childhood is content, not a wait, so a first life plays it through.
+		-- Once it has been lived at least once, skipping it becomes the
+		-- player's call. No cooldown applies: the counter is at zero on a fresh
+		-- life, which is exactly when a returning player wants this button.
+		if data.livesLived >= Config.SkipChildhoodMinLives then
+			return "SkipChildhood"
+		end
+		return "Hidden"
+	end
+
 	if data.secondsSinceAgeUp < Config.ManualAgeUpCooldownSeconds then
 		return "Cooldown"
 	end
@@ -120,10 +133,14 @@ function LifeService.Die(player: Player)
 		profile.Data.secondsSinceAgeUp = 0
 
 		StatService.ResetToStarting(player)
+		EventService.ResetSeen(player)
 		PlayerRespawnedRemote:FireClient(player)
 		LifeStageChangedRemote:FireClient(player, "Childhood")
 		AgeUpdatedRemote:FireClient(player, 0, "Sync" :: AgeUpCause)
 		pushProgress(player, profile.Data)
+
+		-- A new life opens on its first moment rather than on an empty year.
+		EventService.OfferForAge(player, 0)
 	end)
 end
 
@@ -172,6 +189,36 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	end
 	if rollNaturalDeath(ageYears) then
 		LifeService.Die(player)
+		return
+	end
+
+	-- Last, so a year that killed the player never also hands them a prompt.
+	-- Skipped years pass unlived by definition, so they don't offer one either.
+	if cause ~= "Skip" then
+		EventService.OfferForAge(player, ageYears)
+	end
+end
+
+-- Crosses the yearless early years in one action, for players who have already
+-- lived them at least once. It runs the ordinary per-year path rather than
+-- writing ageMonths directly, so the skipped years still decay stats and cross
+-- stage boundaries exactly as if they had been played. Bounded by construction:
+-- at most one iteration per year being skipped.
+local function skipChildhood(player: Player, data: ProfileData)
+	for _ = 1, Config.ManualAgeUpMinAge do
+		if not data.alive or isSelfDirected(data) then
+			break
+		end
+		LifeService.AgeUp(player, "Skip")
+	end
+
+	-- Anything offered at the start of this life belonged to the years just
+	-- skipped, so it goes with them.
+	EventService.ClearPending(player)
+	pushProgress(player, data)
+
+	if data.alive then
+		EventService.OfferForAge(player, ageYearsOf(data))
 	end
 end
 
@@ -209,7 +256,14 @@ local function onAgeUpRequested(player: Player)
 	end
 
 	local data = profile.Data
-	if manualState(data) ~= "Ready" then
+	local state = manualState(data)
+
+	if state == "SkipChildhood" then
+		skipChildhood(player, data)
+		return
+	end
+
+	if state ~= "Ready" then
 		-- Refused: dead, too young for the button, or inside the cooldown.
 		-- Re-push the
 		-- authoritative state so a desynced or hostile client's button

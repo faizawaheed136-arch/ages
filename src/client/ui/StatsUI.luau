@@ -24,6 +24,7 @@ local STAT_ORDER: { { name: StatName, label: string } } = {
 }
 
 local READY_COLOR = Color3.fromRGB(235, 190, 90)
+local SKIP_COLOR = Color3.fromRGB(70, 70, 82)
 local COOLDOWN_COLOR = Color3.fromRGB(52, 52, 60)
 local PROGRESS_COLOR = Color3.fromRGB(110, 160, 220)
 local GOOD_STAT_COLOR = Color3.fromRGB(90, 200, 120)
@@ -107,7 +108,8 @@ function StatsUI.new(): StatsUIHandle
 	-- years doesn't leave a hole in the panel.
 	panel.Size = UDim2.new(0, 220, 0, 0)
 	panel.AutomaticSize = Enum.AutomaticSize.Y
-	panel.Position = UDim2.new(0, 16, 0, 16)
+	panel.AnchorPoint = Vector2.new(1, 0)
+	panel.Position = UDim2.new(1, -16, 0, 16)
 	panel.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
 	panel.BackgroundTransparency = 0.15
 	panel.BorderSizePixel = 0
@@ -292,13 +294,21 @@ function StatsUI.SetAgeUpProgress(self: StatsUIHandle, seconds: number, threshol
 	local fraction = if thresholdSeconds > 0 then math.clamp(seconds / thresholdSeconds, 0, 1) else 0
 	self.progressFill.Size = UDim2.new(fraction, 0, 1, 0)
 
-	-- Before the player has a button, the year is something happening to them
-	-- rather than something they end.
-	local verb = if state == "Hidden" then "Growing up in" else "Next year in"
+	-- Through the early years the year is something happening to the player
+	-- rather than something they end — true whether or not a skip is on offer.
+	local childhood = state == "Hidden" or state == "SkipChildhood"
+	local verb = if childhood then "Growing up in" else "Next year in"
 	self.progressCaption.Text = `{verb} {formatDuration(thresholdSeconds - seconds)}`
 
 	self.ageUpButton.Visible = state ~= "Hidden"
-	if state == "Ready" then
+	if state == "SkipChildhood" then
+		-- Offered only on a life after the first. Muted rather than gold: it is
+		-- an escape hatch for someone who has been here before, not the thing
+		-- the screen is inviting a new player to press.
+		self.ageUpButton.Text = "Skip Childhood"
+		self.ageUpButton.BackgroundColor3 = SKIP_COLOR
+		self.ageUpButton.TextColor3 = Color3.fromRGB(215, 215, 225)
+	elseif state == "Ready" then
 		self.ageUpButton.Text = "Age Up"
 		self.ageUpButton.BackgroundColor3 = READY_COLOR
 		self.ageUpButton.TextColor3 = Color3.fromRGB(30, 25, 10)

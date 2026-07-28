@@ -17,6 +17,8 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
 local LifeService = require(script.Parent.LifeService)
+local EventService = require(script.Parent.EventService)
+local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 
 type StatName = Types.StatName
 
@@ -89,6 +91,55 @@ Commands.bank = function(player: Player, args: { string }): string
 	return `banked {seconds}s -> {string.format("%.1f", profile.Data.secondsSinceAgeUp)}s toward auto age-up`
 end
 
+-- Forces a specific event on screen without waiting for its age band to come
+-- round, which is the only practical way to proof-read a new content entry.
+Commands.event = function(player: Player, args: { string }): string
+	local eventId = args[1]
+	if eventId == nil then
+		return "usage: /event <id> (see /events)"
+	end
+	if not EventService.ForceOffer(player, eventId) then
+		return `no event with id "{eventId}"`
+	end
+	return `offered "{eventId}"`
+end
+
+-- Lists what is eligible right now, which is usually the question being asked
+-- when an expected event doesn't fire.
+Commands.events = function(player: Player, _args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+
+	local ageYears = profile.Data.ageMonths // Config.Time.MonthsPerYear
+	local eligible: { string } = {}
+	local seenCount = 0
+
+	for _, event in LifeEvents.All do
+		if profile.Data.seenEventIds[event.id] then
+			seenCount += 1
+		elseif ageYears >= event.minAge and ageYears <= event.maxAge then
+			table.insert(eligible, event.id)
+		end
+	end
+
+	if #eligible == 0 then
+		return `age {ageYears}: nothing eligible ({seenCount} seen, {#LifeEvents.All} total)`
+	end
+	return `age {ageYears}: {table.concat(eligible, ", ")} ({seenCount} seen)`
+end
+
+-- Clears the per-life seen list so the same content can be replayed without
+-- dying first.
+Commands.reevents = function(player: Player, _args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+	EventService.ResetSeen(player)
+	return "cleared seen events for this life"
+end
+
 Commands.life = function(player: Player, _args: { string }): string
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
@@ -96,16 +147,18 @@ Commands.life = function(player: Player, _args: { string }): string
 	end
 	local data = profile.Data
 	return string.format(
-		"age=%d stage=%s alive=%s banked=%.1fs lives=%d",
+		"age=%d stage=%s alive=%s banked=%.1fs lives=%d pending=%s",
 		data.ageMonths // Config.Time.MonthsPerYear,
 		data.stage,
 		tostring(data.alive),
 		data.secondsSinceAgeUp,
-		data.livesLived
+		data.livesLived,
+		data.pendingEventId or "none"
 	)
 end
 
-local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life"
+local HELP_TEXT =
+	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /event <id>, /events, /reevents"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT
