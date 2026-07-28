@@ -31,6 +31,16 @@
       "House": {
         "$path": "assets/House.rbxmx"
       },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Locked": true,
+          "Transparency": 1,
+          "Position": [70, 0.5, 9],
+          "Size": [12, 1, 12]
+        }
+      },
       "Baseplate": {
         "$className": "Part",
         "$properties": {
