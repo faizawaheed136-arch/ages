@@ -1,0 +1,43 @@
+{
+  "name": "ages",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "ProfileStore": {
+        "$path": "vendor/ProfileStore"
+      }
+    },
+    "ReplicatedStorage": {
+      "$path": "src/shared"
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": true
+      },
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Locked": true,
+          "Color": [0.38823, 0.37254, 0.38823],
+          "Position": [0, -10, 0],
+          "Size": [512, 20, 512]
+        }
+      }
+    }
+  }
+}
