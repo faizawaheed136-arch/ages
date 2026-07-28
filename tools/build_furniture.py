@@ -476,7 +476,7 @@ def dining_table(length=10.0, depth=5.0):
         for sz in (-1, 1):
             part("DiningLeg", (sx * (length / 2 - 0.6), 0, sz * (depth / 2 - 0.5)),
                  (0.45, 2.5, 0.45), WALNUT, WOOD)
-    for dx in (-3.0, 0.0, 3.0):
+    for dx in (-2.2, 2.2):
         part("Plate", (dx, 2.85, 0), (0.12, 1.6, 1.6), WHITE, MARBLE,
              collide=False, shape=2, upright_cylinder=True)
 
@@ -523,14 +523,23 @@ def pendant(drop):
     part("PendantBulb", (0, -drop - 1.1, 0), (0.6, 0.4, 0.6), (255, 240, 210), NEON, collide=False)
 
 
-def ceiling_light(room, x, z, drop=3.0):
+# How far above the floor the lowest part of a light fitting hangs. Set from the
+# floor rather than from the ceiling because the upper storey is vaulted to the
+# roof: a drop that looks right downstairs left the upstairs lights hanging at
+# 3.4 studs, head height, right where you walk. Safe range 7.0-9.5 — below 7 a
+# character walks into it, above 9.5 it stops lighting the room.
+LIGHT_HEIGHT = 7.8
+
+
+def ceiling_light(room, x, z, height=LIGHT_HEIGHT):
     # dy is measured up from whatever the context calls the floor, so hanging a
-    # fitting is a matter of calling the ceiling the floor and going down.
+    # fitting is a matter of calling the ceiling the floor and going down. The
+    # 1.1 is how far the bulb sits below the cord's top in pendant().
     global _ctx
     previous = _ctx
     _ctx = (x, z, 0, room.ceiling)
     try:
-        pendant(drop)
+        pendant(room.ceiling - room.floor - height - 1.1)
     finally:
         _ctx = previous
 
@@ -548,29 +557,27 @@ def ceiling_light(room, x, z, drop=3.0):
 # out and stays clear.
 with against(A, "south", -8.0):
     crib()
-with against(A, "north", 0.0):
+with against(A, "north", 6.0):
     dresser()
 with against(A, "south", -1.0):
     rocker()
 with free(A, -4.0, -21.5):
     rug(10.0, event_id="childhood_across_the_rug")
-with free(A, 4.5, -25.5):
-    plant()
 
-# Living end: the television takes the unglazed east wall and the sofa faces it
-# across the room, so the group sits in x 19..29.5 and the rest stays walkable.
+# Living end: the television takes the unglazed east wall, and the sofa sits
+# around the corner from it against the north wall rather than facing it head
+# on. Facing it meant an 8.5-stud sofa lying across a room only twelve deep,
+# which left 1.7 studs at either end — you could see the floor in front of the
+# television and never reach it.
 with against(A, "east", -21.5):
     tv_unit()
-with free(A, 19.0, -21.5, side="west"):
+# Stood half a stud off the wall rather than flush to it: the curtain over
+# x 21..25.5 hangs 0.3 studs proud of the wall face, and a sofa pushed right
+# back into it clipped the cloth.
+with free(A, 23.0, -27.0, side="north"):
     sofa()
-with free(A, 25.5, -21.5, side="west"):
-    coffee_table(4.0, 2.6)
-with against(A, "north", 27.5):
-    bookshelf(4.0)
-with free(A, 26.5, -17.0):
+with free(A, 17.0, -26.0):
     floor_lamp()
-with free(A, 26.5, -24.5):
-    plant()
 ceiling_light(A, -4.0, -21.5)
 ceiling_light(A, 22.0, -21.5)
 
@@ -585,41 +592,26 @@ for dx in (-3.0, 0.0, 3.0):
         chair(back=(0, 1))
 with against(B, "west", -8.2):
     console_table(3.5)
-with against(B, "north", 17.0):
-    dresser()
-with against(B, "east", -7.8):
-    bookshelf(4.0)
-with free(B, 7.0, -7.5):
-    plant()
-with free(B, 7.0, 4.5):
-    plant()
-ceiling_light(B, 13.0, -1.0, drop=4.0)
-ceiling_light(B, 26.0, -8.0, drop=4.0)
+ceiling_light(B, 13.0, -1.0)
+ceiling_light(B, 26.0, -8.0)
 
 # Kitchen. Counters take the two walls the doorway is not in, so the way in
 # from the hall stays clear.
 with against(C, "south", 10.5):
     counter_run(12.0, sink_at=-3.0, stove_at=3.0)
-with against(C, "east", 13.0):
-    counter_run(6.0)
+with against(C, "east", 12.0):
+    counter_run(4.0)
 with against(C, "west", 11.0):
     fridge()
-with free(C, 10.0, 13.0):
-    island()
-for dz in (-1.6, 1.6):
-    with free(C, 13.4, 13.0 + dz):
-        stool()
 ceiling_light(C, 10.0, 13.0)
 
 # Bathroom.
 with against(D, "south", 25.0):
-    bathtub()
+    bathtub(6.0, 3.4)
 with against(D, "east", 11.0):
     toilet()
 with against(D, "west", 13.0):
     basin()
-with free(D, 25.0, 11.0):
-    plant()
 ceiling_light(D, 25.0, 13.0)
 
 # Main bedroom. The house already stands something of its own in the north-west
@@ -628,46 +620,35 @@ with against(U1, "north", 13.5):
     bed()
 with against(U1, "north", 8.9):
     nightstand()
-with against(U1, "north", 18.0):
-    nightstand()
 with against(U1, "south", 8.0):
     wardrobe()
 with free(U1, 13.0, 3.0):
     flat_rug(9.0, 5.0, SKY)
-with free(U1, 16.5, 5.0):
-    plant()
-ceiling_light(U1, 13.0, -1.0, drop=9.0)
+ceiling_light(U1, 13.0, -1.0)
 
 # Landing: a short gallery, so it gets a runner and little else.
 with free(U2, -2.0, -1.0):
     flat_rug(6.0, 12.0, ROSE)
 with against(U2, "west", -1.0):
     console_table(5.0)
-with against(U2, "east", 3.5):
-    bookshelf(4.0)
-with free(U2, -3.5, 4.0):
-    plant()
-ceiling_light(U2, -2.0, -1.0, drop=9.0)
+ceiling_light(U2, -2.0, -1.0)
 
-# Child's room, with the desk it grows into at the far end.
-with against(U3, "south", 9.0):
+# Child's room, with the desk it grows into at the far end. The room is 26 by
+# 10, so the bed stands against the west wall with its length running into the
+# room: laid against a long wall its 8 studs of depth left a two-stud passage,
+# which is the same mistake that once sealed the living room.
+with against(U3, "west", 14.0):
     bed()
-with against(U3, "south", 13.5):
-    nightstand()
-with against(U3, "north", 18.0):
+with against(U3, "north", 20.0):
     desk()
-with free(U3, 18.0, 13.0):
-    chair(back=(0, -1))
-with against(U3, "north", 26.0):
+with against(U3, "south", 20.0):
     wardrobe()
-with against(U3, "east", 15.0):
-    bookshelf()
-with against(U3, "south", 22.5):
+with against(U3, "south", 27.0):
     toy_chest()
-with free(U3, 9.0, 13.5):
+with free(U3, 17.0, 14.0):
     flat_rug(8.0, 5.0, SAGE)
-ceiling_light(U3, 11.0, 14.0, drop=9.0)
-ceiling_light(U3, 24.0, 14.0, drop=9.0)
+ceiling_light(U3, 10.0, 14.0)
+ceiling_light(U3, 24.0, 14.0)
 
 body = "\n".join(_items)
 OUT.write_text(f'''<roblox version="4">

@@ -368,7 +368,138 @@ def command_spawn():
     return 0
 
 
-COMMANDS = {"plan": command_plan, "check": command_check, "spawn": command_spawn}
+# ---------------------------------------------------------------------------
+# space
+# ---------------------------------------------------------------------------
+
+# Resolution of the floor sampling grid, in studs. Half a stud is finer than any
+# gap that matters and still cheap to sweep.
+_GRID = 0.5
+# Half the width of a body, in studs. Open floor narrower than this on both
+# sides cannot actually be walked through, so it does not count as space.
+_BODY_RADIUS = 1.4
+# How much of a room's walkable floor has to be in one connected piece. Short of
+# this the room has a pocket you can see but not reach, which is what a sofa
+# spanning a room does — and what raw floor area completely fails to notice.
+_MIN_REACHABLE = 0.97
+
+
+def command_space():
+    """How much of each room you can actually walk, and what is taking it up.
+
+    `check` only proves nothing overlaps. A room can pass that and still be
+    miserable, so this measures the two things you feel: how much floor is left,
+    and whether that floor is one connected space or several pockets separated
+    by furniture you cannot squeeze past.
+
+    Floor area alone is the wrong target — a bedroom is mostly bed and a galley
+    kitchen is mostly counter, and neither is a problem. Reachability is the
+    part that actually breaks a room.
+    """
+    furniture = load(FURNITURE)
+    problems = 0
+
+    for room in ROOMS:
+        # Only things at body height take space away. A rug is floor you can
+        # walk on and a pendant is over your head; neither crowds the room.
+        standing = [
+            p for p in furniture
+            if room.contains(p["x0"], p["x1"], p["z0"], p["z1"], p["y0"])
+            and p["y1"] > room.floor + 0.4
+            and p["y0"] < room.floor + 4.0
+        ]
+
+        nx = max(int((room.x1 - room.x0) / _GRID), 1)
+        nz = max(int((room.z1 - room.z0) / _GRID), 1)
+        solid = [[False] * nz for _ in range(nx)]
+        for ix in range(nx):
+            x = room.x0 + (ix + 0.5) * _GRID
+            for iz in range(nz):
+                z = room.z0 + (iz + 0.5) * _GRID
+                solid[ix][iz] = any(
+                    p["x0"] <= x <= p["x1"] and p["z0"] <= z <= p["z1"] for p in standing
+                )
+
+        open_cells = sum(1 for ix in range(nx) for iz in range(nz) if not solid[ix][iz])
+        clear = open_cells / (nx * nz)
+
+        # Erode by a body's width. What survives is floor you can stand on
+        # without clipping a wall or a wardrobe.
+        reach = int(math.ceil(_BODY_RADIUS / _GRID))
+        walkable = set()
+        for ix in range(nx):
+            for iz in range(nz):
+                if solid[ix][iz]:
+                    continue
+                # Outside the grid counts as solid: that is the room's wall.
+                if ix < reach or iz < reach or ix >= nx - reach or iz >= nz - reach:
+                    continue
+                if all(
+                    not solid[ix + dx][iz + dz]
+                    for dx in range(-reach, reach + 1)
+                    for dz in range(-reach, reach + 1)
+                ):
+                    walkable.add((ix, iz))
+
+        # Flood fill the walkable floor. More than one region means somewhere in
+        # this room is cut off from somewhere else in it.
+        seen, regions = set(), []
+        for start in walkable:
+            if start in seen:
+                continue
+            stack, region = [start], 0
+            seen.add(start)
+            while stack:
+                cx, cz = stack.pop()
+                region += 1
+                for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nxt = (cx + dx, cz + dz)
+                    if nxt in walkable and nxt not in seen:
+                        seen.add(nxt)
+                        stack.append(nxt)
+            regions.append(region)
+        regions.sort(reverse=True)
+        reachable = regions[0] / len(walkable) if walkable else 0.0
+
+        footprint = defaultdict(float)
+        for p in standing:
+            footprint[p["group"]] = max(
+                footprint[p["group"]],
+                (p["x1"] - p["x0"]) * (p["z1"] - p["z0"]),
+            )
+
+        broken = not walkable or reachable < _MIN_REACHABLE
+        problems += broken
+        print(
+            "%-16s %5.0f sq studs   %3.0f%% clear   walkable in %d piece%s%s"
+            % (
+                room.name,
+                (room.x1 - room.x0) * (room.z1 - room.z0),
+                clear * 100,
+                len(regions),
+                "" if len(regions) == 1 else "s",
+                "   <- SPLIT" if broken else "",
+            )
+        )
+        pieces = sorted(footprint.items(), key=lambda kv: -kv[1])
+        print("      %d pieces: %s" % (
+            len(pieces),
+            ", ".join("%s %.0f" % (n, a) for n, a in pieces[:10]) or "none",
+        ))
+
+    print(
+        "\n%d room(s) with floor you cannot walk between (body width %.1f studs)"
+        % (problems, _BODY_RADIUS * 2)
+    )
+    return 1 if problems else 0
+
+
+COMMANDS = {
+    "plan": command_plan,
+    "check": command_check,
+    "spawn": command_spawn,
+    "space": command_space,
+}
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "check"
