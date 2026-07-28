@@ -17,7 +17,9 @@ export type LifeStageId = "Childhood" | "Adolescence" | "Adulthood" | "Elder" | 
 -- Why a year ended. The client only announces "Auto" — the others are either
 -- the player's own doing or a silent state resync on join/respawn. "Skip" marks
 -- the years crossed by Skip Childhood, which pass without offering an event.
-export type AgeUpCause = "Manual" | "Auto" | "Sync" | "Skip"
+-- "Event" is a childhood year ended by answering its event: silent, because the
+-- outcome the player is already reading is the announcement.
+export type AgeUpCause = "Manual" | "Auto" | "Sync" | "Skip" | "Event"
 
 -- Server's verdict on the Age Up button, so the HUD never invents its own
 -- gating rule: Hidden (dead, or a first life still in childhood), Cooldown
@@ -27,6 +29,18 @@ export type ManualAgeUpState = "Hidden" | "Cooldown" | "Ready" | "SkipChildhood"
 
 -- A partial map: a choice names only the stats it moves.
 export type StatDelta = { [StatName]: number }
+
+-- One rung of the childhood body ladder. Matched by the first band whose maxAge
+-- the player's age falls under, so Config.Childhood.Bands must stay sorted.
+export type ChildhoodBand = {
+	id: string,
+	maxAge: number,
+	walkSpeed: number,
+	jumpPower: number,
+	bodyScale: number,
+	headScale: number,
+	cameraOffsetY: number,
+}
 
 -- How an event reaches the player. The engine decides *which* event fires;
 -- delivery decides *how*, and the two are kept separate so the world-based

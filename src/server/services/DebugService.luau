@@ -18,6 +18,7 @@ local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
 local LifeService = require(script.Parent.LifeService)
 local EventService = require(script.Parent.EventService)
+local BodyService = require(script.Parent.BodyService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 
 type StatName = Types.StatName
@@ -157,8 +158,40 @@ Commands.life = function(player: Player, _args: { string }): string
 	)
 end
 
+-- Reads back what the age ladder actually did to the character, so a band that
+-- failed to apply (an R6 rig, a missing Humanoid) is visible without guessing
+-- from how the character feels to walk around.
+Commands.band = function(player: Player, _args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+
+	local ageYears = profile.Data.ageMonths // Config.Time.MonthsPerYear
+	local band = BodyService.BandForAge(ageYears)
+
+	local character = player.Character
+	local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+	if humanoid == nil then
+		return string.format("age=%d band=%s (no character spawned)", ageYears, band.id)
+	end
+
+	local height = humanoid:FindFirstChild("BodyHeightScale")
+	return string.format(
+		"age=%d band=%s | want speed=%.1f jump=%.1f scale=%.2f | live speed=%.1f jump=%.1f scale=%s",
+		ageYears,
+		band.id,
+		band.walkSpeed,
+		band.jumpPower,
+		band.bodyScale,
+		humanoid.WalkSpeed,
+		humanoid.JumpPower,
+		if height ~= nil and height:IsA("NumberValue") then string.format("%.2f", height.Value) else "n/a (R6 rig?)"
+	)
+end
+
 local HELP_TEXT =
-	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /event <id>, /events, /reevents"
+	"commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, /event <id>, /events, /reevents"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

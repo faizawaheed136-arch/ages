@@ -77,6 +77,10 @@ export type EventUIHandle = typeof(setmetatable(
 		activeEventId: string?,
 		onChoice: ((eventId: string, choiceId: string) -> ())?,
 		hideToken: number,
+		-- Held while an outcome is still on screen. In childhood a resolved event
+		-- ends the year, and the birthday immediately offers the next one, so
+		-- without this the answer to what just happened is wiped mid-sentence.
+		queuedOffer: OfferedEvent?,
 	},
 	EventUI
 ))
@@ -175,6 +179,7 @@ function EventUI.new(): EventUIHandle
 		outcomeLabel = outcomeLabel,
 		choiceButtons = {},
 		activeEventId = nil,
+		queuedOffer = nil,
 		onChoice = nil,
 		hideToken = 0,
 	}, EventUI)
@@ -194,12 +199,22 @@ end
 function EventUI.Hide(self: EventUIHandle)
 	self.hideToken += 1
 	self.activeEventId = nil
+	-- Hide is only called on death or after an outcome has run its course, and
+	-- both of those outrank anything still waiting behind them.
+	self.queuedOffer = nil
 	self.backdrop.Visible = false
 	self.outcomeLabel.Visible = false
 	clearChoices(self)
 end
 
 function EventUI.Show(self: EventUIHandle, offered: OfferedEvent)
+	-- An outcome on screen is still being read. Hold the new prompt rather than
+	-- overwriting it; ShowOutcome hands over once it has finished.
+	if self.outcomeLabel.Visible then
+		self.queuedOffer = offered
+		return
+	end
+
 	self.hideToken += 1
 	clearChoices(self)
 
@@ -325,7 +340,15 @@ function EventUI.ShowOutcome(self: EventUIHandle, eventId: string, outcome: stri
 				return
 			end
 			self.outcomeLabel.TextTransparency = 0
-			self:Hide()
+
+			local queued = self.queuedOffer
+			self.queuedOffer = nil
+			if queued ~= nil then
+				self.outcomeLabel.Visible = false
+				self:Show(queued)
+			else
+				self:Hide()
+			end
 		end)
 	end)
 end

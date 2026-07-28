@@ -15,6 +15,7 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
 local EventService = require(script.Parent.EventService)
+local BodyService = require(script.Parent.BodyService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
@@ -134,6 +135,8 @@ function LifeService.Die(player: Player)
 
 		StatService.ResetToStarting(player)
 		EventService.ResetSeen(player)
+		-- Back to a newborn body; respawning does not itself reload the character.
+		BodyService.Apply(player)
 		PlayerRespawnedRemote:FireClient(player)
 		LifeStageChangedRemote:FireClient(player, "Childhood")
 		AgeUpdatedRemote:FireClient(player, 0, "Sync" :: AgeUpCause)
@@ -180,6 +183,10 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 		data.stage = newStage
 		LifeStageChangedRemote:FireClient(player, newStage)
 	end
+
+	-- A birthday is a change of body as much as a change of number: through
+	-- childhood each year buys speed, height and eventually the ability to jump.
+	BodyService.Apply(player)
 
 	AgeUpdatedRemote:FireClient(player, ageYears, cause)
 	pushProgress(player, data)
@@ -288,6 +295,9 @@ end
 
 function LifeService:Init()
 	RequestAgeUpRemote.OnServerEvent:Connect(onAgeUpRequested)
+	-- Handed over rather than required the other way around: EventService cannot
+	-- require this module without closing a dependency cycle.
+	EventService.SetAgeUpHandler(LifeService.AgeUp)
 end
 
 function LifeService:Start()

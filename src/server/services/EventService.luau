@@ -12,6 +12,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
@@ -30,6 +31,16 @@ local EventResolvedRemote = Remotes.Get("EventResolved")
 local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
 
 local EventService = {}
+
+-- LifeService injects its AgeUp here at Init. Requiring it directly would be a
+-- cycle, since LifeService already requires this service to offer an event once
+-- a birthday has resolved.
+type AgeUpHandler = (player: Player, cause: Types.AgeUpCause) -> ()
+local ageUpHandler: AgeUpHandler? = nil
+
+function EventService.SetAgeUpHandler(handler: AgeUpHandler)
+	ageUpHandler = handler
+end
 
 -- Outcome lines and stat effects are withheld until a choice is made, so the
 -- best answer can't be read straight off the payload.
@@ -189,6 +200,16 @@ local function onChoiceRequested(player: Player, eventId: any, choiceId: any)
 	-- tick, so a choice that empties it is lethal within the second without
 	-- this service needing to reach into the life cycle.
 	EventResolvedRemote:FireClient(player, event.id, choice.outcome)
+
+	-- In the toddler years answering an event *is* the year passing, so a child
+	-- grows by living rather than by waiting out a timer. Deliberately not true
+	-- above EndAge: from there a year holds many events, and advancing on each
+	-- would burn a whole life in minutes. The age-up offers the next year's
+	-- event in turn, which is what chains childhood together.
+	local ageYears = data.ageMonths // Config.Time.MonthsPerYear
+	if ageYears <= Config.Childhood.EndAge and ageUpHandler ~= nil then
+		ageUpHandler(player, "Event")
+	end
 end
 
 -- Re-offers whatever was left unanswered when the player last left.

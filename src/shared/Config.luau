@@ -74,6 +74,36 @@ Config.LifeStages = {
 	{ id = "Elder", minAge = 65, maxAge = math.huge },
 }
 
+-- The toddler years are playable rather than narrated, and the thing that
+-- progresses through them is the body itself: what you can do, how fast you can
+-- do it, and how tall you are to the world. The house never changes — you do.
+--
+-- Bands are matched in order by the first maxAge the player's age falls under,
+-- so they must stay sorted. The last band is the grown body and is deliberately
+-- unbounded, which is what everyone past childhood gets.
+Config.Childhood = {
+	-- Last age of the playable toddler slice. Resolving an event advances the
+	-- year at or below this age and nowhere else: childhood has roughly one
+	-- event per year, but from age 6 the count per year climbs steeply and the
+	-- same rule would fire a player through a whole life in minutes.
+	-- Must line up with the last bounded band below. Safe range: 3-8.
+	EndAge = 5,
+
+	-- walkSpeed/jumpPower are Roblox defaults of 16 and 50 at the grown end.
+	-- headScale stays high relative to bodyScale on purpose — small children are
+	-- mostly head, and it reads instantly as "young" without any custom art.
+	-- jumpPower 0 removes jumping entirely, which is the honest version of a
+	-- body that cannot yet do it.
+	Bands = {
+		{ id = "Crawl", maxAge = 0, walkSpeed = 4, jumpPower = 0, bodyScale = 0.30, headScale = 0.55, cameraOffsetY = 0 },
+		{ id = "Toddle", maxAge = 1, walkSpeed = 6, jumpPower = 0, bodyScale = 0.38, headScale = 0.60, cameraOffsetY = 0 },
+		{ id = "Walk", maxAge = 2, walkSpeed = 8, jumpPower = 0, bodyScale = 0.46, headScale = 0.66, cameraOffsetY = 0 },
+		{ id = "Steady", maxAge = 4, walkSpeed = 11, jumpPower = 25, bodyScale = 0.58, headScale = 0.74, cameraOffsetY = 0 },
+		{ id = "Run", maxAge = 5, walkSpeed = 13, jumpPower = 35, bodyScale = 0.68, headScale = 0.80, cameraOffsetY = 0 },
+		{ id = "Grown", maxAge = math.huge, walkSpeed = 16, jumpPower = 50, bodyScale = 1, headScale = 1, cameraOffsetY = 0 },
+	},
+}
+
 Config.Stats = {
 	Min = 0,
 	Max = 100,
