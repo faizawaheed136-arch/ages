@@ -37,8 +37,9 @@
           "Anchored": true,
           "Locked": true,
           "Transparency": 1,
-          "Position": [70, 0.5, 9],
-          "Size": [12, 1, 12]
+          "CanCollide": false,
+          "Position": [5, 1.387, -21.485],
+          "Size": [4, 0.2, 4]
         }
       },
       "Baseplate": {
