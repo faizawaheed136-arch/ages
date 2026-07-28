@@ -445,17 +445,6 @@ def flat_rug(w, l, color=ROSE):
     part("RugBorder", (0, 0.08, 0), (w - 1.6, 0.06, l - 1.6), CREAM, FABRIC, collide=False)
 
 
-@piece("CoffeeTable")
-def coffee_table(length=5.0, depth=3.6):
-    part("TableTop", (0, 1.2, 0), (length, 0.25, depth), OAK, WOOD)
-    for sx in (-1, 1):
-        for sz in (-1, 1):
-            part("TableLeg", (sx * (length / 2 - 0.4), 0, sz * (depth / 2 - 0.4)),
-                 (0.3, 1.2, 0.3), WALNUT, WOOD)
-    part("Bowl", (0, 1.45, 0), (0.5, 1.6, 1.6), SKY, MARBLE, collide=False,
-         shape=2, upright_cylinder=True)
-
-
 @piece("Chair")
 def chair(back=(0, -1)):
     """back is a unit (dx, dz) pointing at the side the backrest sits on, so a
@@ -479,21 +468,6 @@ def dining_table(length=10.0, depth=5.0):
     for dx in (-2.2, 2.2):
         part("Plate", (dx, 2.85, 0), (0.12, 1.6, 1.6), WHITE, MARBLE,
              collide=False, shape=2, upright_cylinder=True)
-
-
-@piece("KitchenIsland")
-def island(length=6.0, depth=3.4):
-    part("IslandBody", (0, 0, 0), (length, 2.9, depth), SAGE, WOOD)
-    part("IslandTop", (0, 2.9, 0), (length + 1.0, 0.35, depth + 1.0), CREAM, MARBLE)
-    part("FruitBowl", (-length / 4, 3.25, 0), (0.5, 1.8, 1.8), OAK, WOOD,
-         collide=False, shape=2, upright_cylinder=True)
-
-
-@piece("Stool")
-def stool():
-    part("StoolSeat", (0, 2.4, 0), (1.6, 0.3, 1.6), OAK, WOOD, shape=2, upright_cylinder=True)
-    part("StoolPole", (0, 0, 0), (0.25, 2.4, 0.25), CHARCOAL, METAL)
-    part("StoolFoot", (0, 0, 0), (1.2, 0.15, 1.2), CHARCOAL, METAL, shape=2, upright_cylinder=True)
 
 
 @piece("FloorLamp")
@@ -578,6 +552,8 @@ with free(A, 23.0, -27.0, side="north"):
     sofa()
 with free(A, 17.0, -26.0):
     floor_lamp()
+with free(A, -11.0, -26.0):
+    plant()
 ceiling_light(A, -4.0, -21.5)
 ceiling_light(A, 22.0, -21.5)
 
@@ -624,6 +600,8 @@ with against(U1, "south", 8.0):
     wardrobe()
 with free(U1, 13.0, 3.0):
     flat_rug(9.0, 5.0, SKY)
+with free(U1, 16.5, 5.0):
+    plant()
 ceiling_light(U1, 13.0, -1.0)
 
 # Landing: a short gallery, so it gets a runner and little else.
@@ -631,6 +609,8 @@ with free(U2, -2.0, -1.0):
     flat_rug(6.0, 12.0, ROSE)
 with against(U2, "west", -1.0):
     console_table(5.0)
+with against(U2, "east", 3.5):
+    bookshelf(4.0)
 ceiling_light(U2, -2.0, -1.0)
 
 # Child's room, with the desk it grows into at the far end. The room is 26 by
