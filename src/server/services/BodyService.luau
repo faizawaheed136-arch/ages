@@ -20,6 +20,13 @@ type ChildhoodBand = Types.ChildhoodBand
 
 local warnedAboutRig = false
 
+-- How long to wait on a spawning character for the parts this service needs.
+-- Generous because both are waits on Roblox's own spawn sequence rather than on
+-- anything here: exceeding either means something is wrong with the rig, which
+-- is worth a warning rather than a longer wait.
+local HUMANOID_TIMEOUT = 10
+local SCALE_VALUE_TIMEOUT = 5
+
 local BodyService = {}
 
 function BodyService.BandForAge(ageYears: number): ChildhoodBand
@@ -69,8 +76,13 @@ local function applyToHumanoid(humanoid: Humanoid, band: ChildhoodBand)
 end
 
 -- Applies the band for a player's current age to their current character.
--- Safe to call when they have no character or no profile yet: both simply mean
--- there is nothing to size, and the next spawn will apply it.
+--
+-- Does nothing without a profile or a character, which is correct for the
+-- callers that re-apply a band to a life already underway -- aging up, dying --
+-- since both of those hold one already. It is *not* a safe way to size a body
+-- for the first time: the spawn path above waits for both rather than calling
+-- this and hoping, because a miss there is a player who stays adult-sized for
+-- their whole childhood.
 function BodyService.Apply(player: Player)
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
@@ -92,13 +104,39 @@ function BodyService.Apply(player: Player)
 end
 
 local function onCharacterAdded(player: Player, character: Model)
-	-- The Humanoid and its scale values are not guaranteed to exist on the frame
-	-- the model appears, so wait for the Humanoid before reading either.
-	local humanoid = character:WaitForChild("Humanoid", 10)
+	local humanoid = character:WaitForChild("Humanoid", HUMANOID_TIMEOUT)
 	if humanoid == nil or not humanoid:IsA("Humanoid") then
 		warn(`[AGES] {player.Name} spawned without a Humanoid; body band not applied`)
 		return
 	end
+
+	-- The scale values are created when the avatar's description is applied,
+	-- which lands after the Humanoid itself does. Reading them on the frame the
+	-- character appears therefore finds nothing on a perfectly good R15 rig, and
+	-- the code below reports that as "this rig is R6" -- a wrong diagnosis that
+	-- sends whoever reads it to change a setting that was never the problem.
+	--
+	-- Waiting on one is enough: they are created together, so if the first is
+	-- there the rest are, and if it never comes the rig really has none.
+	humanoid:WaitForChild("BodyHeightScale", SCALE_VALUE_TIMEOUT)
+
+	-- The profile is what says how old this body is, and on a fresh join it is
+	-- still loading from ProfileStore when the character spawns. Without this the
+	-- player spawns adult-sized and stays that way for the whole first life,
+	-- because nothing spawns them again to put it right -- which is exactly the
+	-- silent no-op the old comment here mistook for a safe one.
+	if DataService.WaitForProfile(player) == nil then
+		warn(`[AGES] {player.Name} spawned before their profile loaded; body band not applied`)
+		return
+	end
+
+	-- Both waits above yield, and a life can end or a player leave inside them.
+	-- Applying a band to a character that has since been replaced would size the
+	-- wrong body, or resurrect a stale one.
+	if player.Character ~= character then
+		return
+	end
+
 	BodyService.Apply(player)
 end
 
