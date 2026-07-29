@@ -8,6 +8,14 @@
 -- become world interactions and only the delivery field changes. The writing
 -- already assumes a real place — a rug, a hedge, a plate — for that reason.
 -- Adding an entry needs no code: copy the shape below.
+--
+-- Every entry here is answered by *doing* it rather than by picking off a panel
+-- — see the stamp at the bottom of the file, which is why no entry carries a
+-- `resolution` field of its own. This is where enactment earns the most: a
+-- toddler is already walking around a room, and a card appearing over that room
+-- is the thing that most obviously breaks it. Labels are therefore written to be
+-- read off a marker on the floor at a glance, which is what
+-- Config.Enact.MaxLabelLength enforces.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -614,5 +622,16 @@ local Childhood: { LifeEvent } = {
 		},
 	},
 }
+
+-- Stamped rather than written on every entry, because it is true of the whole
+-- file and always will be: this is the age band the player spends on their feet
+-- in one room, and there is no toddler event that would be better as a card.
+-- Left as an override rather than a blanket assignment so one entry can opt out
+-- later without unpicking this.
+for _, event in Childhood do
+	if event.resolution == nil then
+		event.resolution = "Enacted"
+	end
+end
 
 return Childhood

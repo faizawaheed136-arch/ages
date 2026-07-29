@@ -201,6 +201,73 @@ Config.Ambient = {
 	},
 }
 
+-- Answering an event by doing it. An enacted event puts its choices on the floor
+-- in front of the player as places to stand, and walking onto one is the answer.
+-- The prompt stays on screen, but as a banner: no dimming, no buttons, nothing
+-- that takes the room away, because the room is now how the question is answered.
+--
+-- The markers are fanned around the player at the moment the prompt opens rather
+-- than authored into the house. That is the simplest version that works for every
+-- event at once, and it is flagged as such: the ambitious version places each
+-- choice on a specific real thing -- the crib, the door, the far side of the rug
+-- -- and that needs a per-event authoring pass this deliberately does not block.
+Config.Enact = {
+	-- Studs from the player each marker is placed. Far enough that walking to one
+	-- is a decision rather than a step, close enough to fit indoors alongside
+	-- furniture. Must stay above MarkerRadius or the markers overlap the player.
+	-- Safe range: 4-10.
+	MarkerSpread = 7,
+
+	-- The largest a marker may be drawn, in studs from its center, which is also
+	-- what counts as standing on it. Kept near World.InteractRadius' reasoning --
+	-- a toddler at walkSpeed 4 should not have to be precise -- but smaller,
+	-- because here the markers must not overlap each other.
+	--
+	-- A ceiling rather than the size: at the spread and fan below, three markers
+	-- sit about 5.9 studs apart, so a 3-stud radius has them just touching, and
+	-- the retry spread would have them overlapping outright. EnactService shrinks
+	-- them to whatever the spread it actually used will hold. Raising this past
+	-- half the gap therefore changes nothing. Safe range: 1.5-4.
+	MarkerRadius = 3,
+
+	-- How far above or below a marker still counts as reaching it. Guards against
+	-- answering an event through a floor: the storeys of this house are ~16 studs
+	-- apart, so anything well under that is safe. Safe range: 3-8.
+	ReachHeightStuds = 5,
+
+	-- Total angle the choices are spread across, centered on the way the player is
+	-- facing. Wide enough that the choices are visibly different directions,
+	-- narrow enough that they all start on screen. Safe range: 60-160.
+	FanDegrees = 100,
+
+	-- A room is not an open field, so a fan that doesn't fit is retried once drawn
+	-- in toward the player by this factor. Below ~0.4 the markers crowd each other
+	-- and the choice stops reading as a choice. Safe range: 0.4-0.9.
+	RetrySpreadScale = 0.6,
+
+	-- How long the markers stand before the event gives up and becomes a panel.
+	-- This is the anti-softlock: a player who cannot find the markers, cannot
+	-- reach them, or simply does not want to walk still gets their choice.
+	-- Long enough to cross a room at a toddler's walkSpeed 4 several times over.
+	-- Safe range: 30-180. 0 disables the fallback, which is only safe in testing.
+	SecondsToChoose = 75,
+
+	-- How often the server checks players against their own markers. Matches
+	-- World.InteractTickSeconds' reasoning and is deliberately no finer: the
+	-- markers are larger than a tagged object and the player is slower than the
+	-- tick. Safe range: 0.1-1.
+	TickSeconds = 0.25,
+
+	-- Content limits, enforced at server start rather than discovered in play.
+	-- More markers than this crowd the fan until each one shrinks below a size
+	-- worth walking at, and a label longer than this cannot be read off a floor
+	-- marker at a glance -- both are authoring mistakes that would otherwise look
+	-- like a bad-feeling event rather than like a mistake.
+	-- Safe range: 2-5 and 24-64.
+	MaxChoices = 4,
+	MaxLabelLength = 48,
+}
+
 -- Roblox asset ids, kept together because they are the one class of value that
 -- cannot be decided from here: an id has to be picked in Studio or uploaded to
 -- an account, and a wrong one fails at runtime rather than at build.

@@ -7,6 +7,14 @@
 -- has been given a presentation. When step 3 brings a world, NPCApproach /
 -- Letter / PhoneCall / Location are added here, and nothing on the server or in
 -- the content modules has to move.
+--
+-- `resolution` is the second axis and it cuts across all of those. A Panel event
+-- is the card this file has always drawn. An Enacted one is answered by walking
+-- onto a marker in the room, so the card becomes a banner: same words, same
+-- style, but nothing dimmed, nothing to click, and nothing standing between the
+-- player and the room they are about to answer the question in. The styles
+-- below are shared by both, which is what keeps a letter reading as paper
+-- whichever way it is answered.
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -156,6 +164,23 @@ local CHOICE_HEIGHT = 38
 local CHOICE_IDLE = Color3.fromRGB(38, 38, 44)
 local CHOICE_HOVER = Color3.fromRGB(54, 54, 62)
 
+-- An enacted event's banner sits high, out of the way of both the character and
+-- the markers fanned in front of them. Narrower than any panel: it is one or two
+-- sentences to glance at, not something to sit and read.
+local BANNER_ANCHOR_Y = 0.13
+local BANNER_WIDTH = 440
+-- Barely there. The banner must not become the thing the player is looking at --
+-- the room is, and the room is where the answer is.
+local BANNER_BACKDROP_TRANSPARENCY = 1
+local BANNER_PANEL_TRANSPARENCY = 0.25
+
+-- Said once, in the banner, because "walk onto one" is not discoverable from
+-- three glowing discs alone the first time a player sees them. Muted against the
+-- prompt so it reads as an instruction rather than as part of the fiction.
+local BANNER_HINT = "Walk to your answer."
+local BANNER_HINT_SIZE = 14
+local BANNER_HINT_MUTE = 0.45
+
 local EventUI = {}
 EventUI.__index = EventUI
 
@@ -166,6 +191,7 @@ export type EventUIHandle = typeof(setmetatable(
 		panel: Frame,
 		promptLabel: TextLabel,
 		choicesFrame: Frame,
+		hintLabel: TextLabel,
 		outcomeLabel: TextLabel,
 		choiceButtons: { TextButton },
 		activeEventId: string?,
@@ -195,6 +221,11 @@ function EventUI.new(): EventUIHandle
 	backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	backdrop.BorderSizePixel = 0
 	backdrop.Visible = false
+	-- Load-bearing for enacted events, and set explicitly rather than left to the
+	-- default: an inactive frame passes mouse input through to the world, so a
+	-- fully transparent backdrop covering the screen costs the player nothing.
+	-- Active would silently make the room unclickable behind an invisible sheet.
+	backdrop.Active = false
 	backdrop.Parent = screenGui
 
 	local panel = Instance.new("Frame")
@@ -247,6 +278,22 @@ function EventUI.new(): EventUIHandle
 	choicesLayout.Padding = UDim.new(0, 8)
 	choicesLayout.Parent = choicesFrame
 
+	local hintLabel = Instance.new("TextLabel")
+	hintLabel.Name = "Hint"
+	hintLabel.Size = UDim2.new(1, 0, 0, 0)
+	hintLabel.AutomaticSize = Enum.AutomaticSize.Y
+	hintLabel.BackgroundTransparency = 1
+	hintLabel.TextWrapped = true
+	hintLabel.TextXAlignment = Enum.TextXAlignment.Left
+	hintLabel.Font = Enum.Font.Gotham
+	hintLabel.TextSize = BANNER_HINT_SIZE
+	-- Between the choices and the outcome, so the banner reads prompt-then-hint
+	-- and the outcome still lands at the bottom when the choice is made.
+	hintLabel.LayoutOrder = 2
+	hintLabel.Visible = false
+	hintLabel.Text = BANNER_HINT
+	hintLabel.Parent = panel
+
 	local outcomeLabel = Instance.new("TextLabel")
 	outcomeLabel.Name = "Outcome"
 	outcomeLabel.Size = UDim2.new(1, 0, 0, 0)
@@ -257,7 +304,7 @@ function EventUI.new(): EventUIHandle
 	outcomeLabel.Font = Enum.Font.Gotham
 	outcomeLabel.TextSize = 16
 	outcomeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
-	outcomeLabel.LayoutOrder = 2
+	outcomeLabel.LayoutOrder = 3
 	outcomeLabel.Visible = false
 	outcomeLabel.Text = ""
 	outcomeLabel.Parent = panel
@@ -270,6 +317,7 @@ function EventUI.new(): EventUIHandle
 		panel = panel,
 		promptLabel = promptLabel,
 		choicesFrame = choicesFrame,
+		hintLabel = hintLabel,
 		outcomeLabel = outcomeLabel,
 		choiceButtons = {},
 		activeEventId = nil,
@@ -298,13 +346,19 @@ function EventUI.Hide(self: EventUIHandle)
 	self.queuedOffer = nil
 	self.backdrop.Visible = false
 	self.outcomeLabel.Visible = false
+	self.hintLabel.Visible = false
 	clearChoices(self)
 end
 
 function EventUI.Show(self: EventUIHandle, offered: OfferedEvent)
 	-- An outcome on screen is still being read. Hold the new prompt rather than
 	-- overwriting it; ShowOutcome hands over once it has finished.
-	if self.outcomeLabel.Visible then
+	--
+	-- Except when the new prompt is enacted, which cannot wait: its markers are
+	-- already standing in the room and already answerable, so holding the banner
+	-- back would leave a window in which the player can walk onto a question they
+	-- have not been shown. Cutting an outcome short is the lesser of those two.
+	if self.outcomeLabel.Visible and offered.resolution ~= "Enacted" then
 		self.queuedOffer = offered
 		return
 	end
@@ -313,13 +367,20 @@ function EventUI.Show(self: EventUIHandle, offered: OfferedEvent)
 	clearChoices(self)
 
 	local style = DELIVERY_STYLES[offered.delivery]
+	local enacted = offered.resolution == "Enacted"
 
 	self.activeEventId = offered.id
-	self.backdrop.BackgroundTransparency = style.backdropTransparency
-	self.panel.Size = UDim2.new(0, style.width, 0, 0)
-	self.panel.BackgroundTransparency = style.panelTransparency
+	-- An enacted event overrides the style's framing but keeps its voice. The
+	-- colors, fonts and sizes are the delivery's; only the things that would come
+	-- between the player and the room -- the dimming, the width, the position --
+	-- are replaced.
+	self.backdrop.BackgroundTransparency = if enacted
+		then BANNER_BACKDROP_TRANSPARENCY
+		else style.backdropTransparency
+	self.panel.Size = UDim2.new(0, if enacted then BANNER_WIDTH else style.width, 0, 0)
+	self.panel.BackgroundTransparency = if enacted then BANNER_PANEL_TRANSPARENCY else style.panelTransparency
 	self.panel.BackgroundColor3 = style.panelColor
-	self.panel.Position = UDim2.new(0.5, 0, style.anchorY, 0)
+	self.panel.Position = UDim2.new(0.5, 0, if enacted then BANNER_ANCHOR_Y else style.anchorY, 0)
 
 	self.outcomeLabel.TextColor3 = style.promptColor:Lerp(style.panelColor, OUTCOME_MUTE)
 
@@ -328,8 +389,20 @@ function EventUI.Show(self: EventUIHandle, offered: OfferedEvent)
 	self.promptLabel.TextColor3 = style.promptColor
 	self.promptLabel.Text = offered.prompt
 
+	self.hintLabel.Visible = enacted
+	self.hintLabel.TextColor3 = style.promptColor:Lerp(style.panelColor, BANNER_HINT_MUTE)
+
 	self.outcomeLabel.Visible = false
 	self.outcomeLabel.Text = ""
+
+	-- No buttons at all when the choices are standing in the room. Not disabled
+	-- buttons -- absent ones, so there is exactly one way to answer and no chance
+	-- of a greyed-out row implying the panel is the real interface and the markers
+	-- are decoration.
+	if enacted then
+		self.backdrop.Visible = true
+		return
+	end
 
 	for index, choice in offered.choices do
 		local button = Instance.new("TextButton")
@@ -423,6 +496,8 @@ function EventUI.ShowOutcome(self: EventUIHandle, eventId: string, outcome: stri
 	local token = self.hideToken
 
 	clearChoices(self)
+	-- The question has been answered, so "walk to your answer" stops being true.
+	self.hintLabel.Visible = false
 	self.outcomeLabel.Text = outcome
 	self.outcomeLabel.Visible = true
 

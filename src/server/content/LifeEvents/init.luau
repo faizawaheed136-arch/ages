@@ -60,6 +60,32 @@ local function validate(event: LifeEvent)
 		)
 	end
 
+	-- An enacted event's choices become markers on the floor with their labels
+	-- floating over them, and both of those have limits a panel does not: more
+	-- markers than MaxChoices cannot be fanned around the player without
+	-- overlapping each other, and a label past MaxLabelLength cannot be read off
+	-- the floor at a glance.
+	--
+	-- Caught here rather than at runtime, where the symptom would be an event that
+	-- merely feels bad -- markers on top of each other, or a wall of text over a
+	-- disc -- which is exactly the kind of fault that ships.
+	if event.resolution == "Enacted" then
+		if #event.choices > Config.Enact.MaxChoices then
+			error(
+				`[AGES content] enacted event "{event.id}" has {#event.choices} choices; `
+					.. `more than {Config.Enact.MaxChoices} cannot be fanned around the player`
+			)
+		end
+		for _, choice in event.choices do
+			if #choice.label > Config.Enact.MaxLabelLength then
+				error(
+					`[AGES content] choice "{choice.id}" in enacted event "{event.id}" has a `
+						.. `{#choice.label}-character label; a floor marker carries {Config.Enact.MaxLabelLength}`
+				)
+			end
+		end
+	end
+
 	local seenChoiceIds: { [string]: boolean } = {}
 	for _, choice in event.choices do
 		if seenChoiceIds[choice.id] then

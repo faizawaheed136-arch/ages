@@ -21,6 +21,7 @@ local LifeService = require(script.Parent.LifeService)
 local EventService = require(script.Parent.EventService)
 local BodyService = require(script.Parent.BodyService)
 local DeliveryService = require(script.Parent.DeliveryService)
+local EnactService = require(script.Parent.EnactService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 
 type StatName = Types.StatName
@@ -216,6 +217,43 @@ Commands.ambient = function(_player: Player, args: { string }): string
 	return `ambient deliveries {mode}`
 end
 
+-- The three questions enactment generates, on one command.
+--
+-- "/enact <id>" forces an event into the room whatever its content says, which is
+-- the only practical way to proof-read a new one: the markers have to be walked
+-- between to know whether the fan is too wide, the labels too long, or the spot
+-- the player happens to be standing in too tight.
+--
+-- "/enact off" is the other half, and it matters as much. It forces every event
+-- back onto a panel, which both tests the fallback path deliberately instead of
+-- waiting out SecondsToChoose, and gets enactment out of the way while something
+-- unrelated is being tested.
+Commands.enact = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return EnactService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		EnactService.SetEnabled(arg == "on")
+		return `enactment {arg}`
+	end
+
+	-- Not lowercased: event ids are case-sensitive, and only the switch words
+	-- above are matched loosely.
+	local eventId = args[1] :: string
+	if LifeEvents.ById[eventId] == nil then
+		return `no event with id "{eventId}" (see /events, or /enact <on|off>)`
+	end
+	if not EventService.ForceOffer(player, eventId, "Enacted") then
+		return "no profile loaded yet"
+	end
+	-- Deliberately reports what actually happened rather than what was asked for.
+	-- A room too tight to hold the markers answers with a panel, and that is the
+	-- single most useful thing this command can tell you.
+	return `offered "{eventId}" — {EnactService.Describe(player)}`
+end
+
 -- Clears the per-life seen list so the same content can be replayed without
 -- dying first.
 Commands.reevents = function(player: Player, _args: { string }): string
@@ -276,7 +314,8 @@ Commands.band = function(player: Player, _args: { string }): string
 end
 
 local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, "
-	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>"
+	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>, "
+	.. "/enact [id|on|off]"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

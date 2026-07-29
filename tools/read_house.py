@@ -28,6 +28,11 @@ from house_plan import (
     DELIVERY_MODE_ATTRIBUTE,
     DELIVERY_MODES,
     DELIVERY_TAG,
+    ENACT_CHOICES,
+    ENACT_FAN_DEGREES,
+    ENACT_HEADINGS,
+    ENACT_MARKER_SPREAD,
+    ENACT_RETRY_SPREAD_SCALE,
     EVENT_ANCHOR,
     FURNITURE,
     HOUSE,
@@ -259,6 +264,108 @@ def walk_clear(obstacles, start, end, width, stop_within=0.0):
     return True
 
 
+def _fan_fits(obstacles, floors, x, z, heading, spread):
+    """Whether every choice of a fan facing `heading` has somewhere to stand.
+
+    All or nothing, like EnactService: two markers out of three is not a reduced
+    choice, it is a broken one, so a fan that loses any of its spots is not a fan.
+    """
+    step = ENACT_FAN_DEGREES / (ENACT_CHOICES - 1)
+    for index in range(ENACT_CHOICES):
+        angle = math.radians(heading - ENACT_FAN_DEGREES / 2 + index * step)
+        mx = x + math.sin(angle) * spread
+        mz = z + math.cos(angle) * spread
+        if not standable(floors, mx, mz):
+            return False
+        if clearance(obstacles, mx, mz) < _BODY_RADIUS:
+            return False
+        # The game only rays for line of sight here; this insists a body fits the
+        # whole way. Stricter on purpose: a choice you can see but have to squeeze
+        # past a chair to reach is a choice the player will read as broken, and
+        # the cost of being wrong is one spot reported tighter than it plays.
+        if not walk_clear(obstacles, (x, z), (mx, mz), _WALK_RADIUS):
+            return False
+    return True
+
+
+def _any_heading(obstacles, floors, x, z):
+    """Whether a player standing at (x, z) could be fanned a set of choices.
+
+    The fan is centered on whichever way they happen to be facing, which nothing
+    at build time knows, so this sweeps the circle and takes any facing that
+    works — the same thing the player does when they turn around.
+    """
+    for i in range(ENACT_HEADINGS):
+        heading = i * 360.0 / ENACT_HEADINGS
+        # Full spread first, then drawn in once — the same two attempts, in the
+        # same order, that EnactService.begin makes.
+        if _fan_fits(obstacles, floors, x, z, heading, ENACT_MARKER_SPREAD) or _fan_fits(
+            obstacles, floors, x, z, heading, ENACT_MARKER_SPREAD * ENACT_RETRY_SPREAD_SCALE
+        ):
+            return True
+    return False
+
+
+def _standing_spots(obstacles, floors, x, z, radius, rings=3, bearings=8):
+    """Where a player might be when an event fires at (x, z).
+
+    Not (x, z) itself. An event fires when the player comes within
+    InteractRadius of its anchor, and the anchor is a doormat or a phone on a
+    hall table — places you stand *beside*, not on. Measuring the fan from the
+    anchor asks whether a fan fits inside the furniture, which is the wrong
+    question and always answers no.
+    """
+    spots = []
+    for ring in range(rings + 1):
+        r = radius * ring / rings
+        # The center is one spot, not `bearings` copies of itself.
+        for b in range(bearings if ring > 0 else 1):
+            angle = math.radians(b * 360.0 / bearings)
+            px, pz = x + math.sin(angle) * r, z + math.cos(angle) * r
+            if standable(floors, px, pz) and clearance(obstacles, px, pz) >= _BODY_RADIUS:
+                spots.append((px, pz))
+    return spots
+
+
+def _near(obstacles, x, z, reach):
+    """Obstacles close enough to matter to a fan raised anywhere near (x, z).
+
+    Purely a speed cut — every check below is a full sweep over every obstacle
+    in the storey, and doing that thousands of times per spot is the difference
+    between this check running and this check being skipped.
+    """
+    return [
+        (x0, x1, z0, z1)
+        for x0, x1, z0, z1 in obstacles
+        if x0 - reach <= x <= x1 + reach and z0 - reach <= z <= z1 + reach
+    ]
+
+
+def enact_reach(obstacles, floors, x, z):
+    """(workable, total) places to stand near (x, z) that can hold a fan.
+
+    Zero workable is a fault: it means every event that happens here falls back
+    to a panel, which is the one outcome the whole feature exists to avoid.
+    """
+    near = _near(obstacles, x, z, INTERACT_RADIUS + ENACT_MARKER_SPREAD + _BODY_RADIUS)
+    spots = _standing_spots(near, floors, x, z, INTERACT_RADIUS)
+    workable = sum(1 for px, pz in spots if _any_heading(near, floors, px, pz))
+    return workable, len(spots)
+
+
+def _facings(facings, part):
+    """The enactable note for a spot in the informational listing.
+
+    Printed even when every standing spot works, because the number falling is
+    the warning: a spot that drops from most to one still passes the check but
+    is one more chair away from only ever producing panels.
+    """
+    counts = facings.get(id(part))
+    if counts is None:
+        return ""
+    return "   %d/%d standing spots enact" % counts
+
+
 # ---------------------------------------------------------------------------
 # plan
 # ---------------------------------------------------------------------------
@@ -460,6 +567,39 @@ def command_check():
             faults.append('nothing in the house serves "%s" deliveries' % mode)
     report("delivery points (%d)" % len(points), faults)
 
+    # Enactment. An enacted event fans its choices around the player as places to
+    # stand; where they cannot be fanned it falls back to a panel, which works —
+    # but a house where they can never be fanned is a house in which the feature
+    # does not exist. The spots checked are the ones the player is actually
+    # standing on when a prompt opens: the rug the toddler crawls to, and every
+    # delivery point, since collecting a letter is what opens its event.
+    anchors = [p for p in furniture if p["name"] == "RugEventAnchor"]
+    faults, facings = [], {}
+    for spot in anchors + points:
+        room = home[id(spot)]
+        if room is None:
+            continue  # already reported above as somewhere the player cannot go
+        if room.floor not in fields:
+            fields[room.floor] = _clearance_field(room.floor)
+        obstacles, floors = fields[room.floor]
+
+        sx, sz = spot["p"][0], spot["p"][2]
+        workable, total = enact_reach(obstacles, floors, sx, sz)
+        facings[id(spot)] = (workable, total)
+        if total == 0:
+            # Nowhere to stand within reach at all, which is a worse fault than an
+            # unenactable one: the event cannot be triggered either.
+            faults.append(
+                "%-16s at (%.1f, %.1f) has nowhere to stand within %.0f studs"
+                % (spot["name"], sx, sz, INTERACT_RADIUS)
+            )
+        elif workable == 0:
+            faults.append(
+                "%-16s at (%.1f, %.1f) cannot fan %d choices from any of %d standing spots"
+                % (spot["name"], sx, sz, ENACT_CHOICES, total)
+            )
+    report("enactable spots (%d)" % len(facings), faults)
+
     counts = defaultdict(int)
     for part in furniture:
         room = home[id(part)]
@@ -468,10 +608,9 @@ def command_check():
     for room in ROOMS:
         print("   %-16s %3d" % (room.name, counts[room.name]))
 
-    anchors = [p for p in furniture if p["name"] == "RugEventAnchor"]
     print("\nevent anchors: %d" % len(anchors))
     for part in anchors:
-        print("   at (%.1f, %.1f)" % (part["p"][0], part["p"][2]))
+        print("   at (%.1f, %.1f)%s" % (part["p"][0], part["p"][2], _facings(facings, part)))
     if not anchors:
         failures.append("no event anchor")
 
@@ -484,8 +623,9 @@ def command_check():
                 point["p"][0] + point["look"][0] * NPC_APPROACH_STUDS,
                 point["p"][2] + point["look"][2] * NPC_APPROACH_STUDS,
             )
-        print("   %-12s %-14s at (%.1f, %.1f)%s"
-              % (mode, point["name"], point["p"][0], point["p"][2], extra))
+        print("   %-12s %-14s at (%.1f, %.1f)%s%s"
+              % (mode, point["name"], point["p"][0], point["p"][2],
+                 extra, _facings(facings, point)))
 
     if failures:
         print("\nFAILED: " + ", ".join(failures))

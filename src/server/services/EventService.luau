@@ -26,6 +26,7 @@ type EventChoice = Types.EventChoice
 type StatName = Types.StatName
 type OfferedEvent = Types.OfferedEvent
 type ProfileData = Types.ProfileData
+type EventResolution = Types.EventResolution
 
 local EventOfferedRemote = Remotes.Get("EventOffered")
 local EventResolvedRemote = Remotes.Get("EventResolved")
@@ -43,9 +44,23 @@ function EventService.SetAgeUpHandler(handler: AgeUpHandler)
 	ageUpHandler = handler
 end
 
+-- EnactService injects this at Init, for the same reason as above: it calls
+-- ResolveChoice below, so it must be the one that knows about this service and
+-- not the other way round.
+--
+-- Returning false is the *normal* answer, not a failure -- it means the room
+-- could not hold the choices, which is common and always recoverable. This
+-- service never learns why, only that the event is a panel after all.
+type EnactHandler = (player: Player, event: LifeEvent) -> boolean
+local enactHandler: EnactHandler? = nil
+
+function EventService.SetEnactHandler(handler: EnactHandler)
+	enactHandler = handler
+end
+
 -- Outcome lines and stat effects are withheld until a choice is made, so the
 -- best answer can't be read straight off the payload.
-local function toOffered(event: LifeEvent): OfferedEvent
+local function toOffered(event: LifeEvent, resolution: EventResolution): OfferedEvent
 	local choices: { { id: string, label: string } } = {}
 	for _, choice in event.choices do
 		table.insert(choices, { id = choice.id, label = choice.label })
@@ -55,7 +70,23 @@ local function toOffered(event: LifeEvent): OfferedEvent
 		delivery = event.delivery,
 		prompt = event.prompt,
 		choices = choices,
+		resolution = resolution,
 	}
+end
+
+-- Puts the choices in the room if the event asked for that and the room can hold
+-- them. Returns what the client should actually be told, which is the only thing
+-- any caller needs -- "Panel" covers both an event that never wanted enacting and
+-- one that wanted it and could not have it.
+--
+-- Deliberately called *before* the offer is sent rather than after. The markers
+-- are up by the time the banner appears, so there is no window in which the
+-- player is told to walk to choices that are not there yet.
+local function beginResolution(player: Player, event: LifeEvent, wanted: EventResolution?): EventResolution
+	if wanted ~= "Enacted" or enactHandler == nil then
+		return "Panel"
+	end
+	return if enactHandler(player, event) then "Enacted" else "Panel"
 end
 
 -- The single eligibility rule, so a world object offering an event by name and
@@ -108,7 +139,10 @@ local function pickForRoute(
 	return candidates[#candidates]
 end
 
-local function offer(player: Player, data: ProfileData, event: LifeEvent)
+-- `resolution` overrides what the event asked for, and exists for the Studio
+-- harness: forcing an event to enact is how a new one is proof-read, and forcing
+-- it to a panel is how the fallback is tested without waiting out the clock.
+local function offer(player: Player, data: ProfileData, event: LifeEvent, resolution: EventResolution?)
 	data.pendingEventId = event.id
 	-- Whatever the world was holding has now been reached, so the world stops
 	-- holding it. Cleared here, at the moment the prompt opens, rather than by
@@ -117,7 +151,39 @@ local function offer(player: Player, data: ProfileData, event: LifeEvent)
 	if data.deliveringEventId == event.id then
 		data.deliveringEventId = nil
 	end
-	EventOfferedRemote:FireClient(player, toOffered(event))
+	-- Written to the profile before the choices go anywhere near the room. The
+	-- enactment watches pendingEventId to know it is still wanted, so setting it
+	-- second would give it a tick in which it believed it had already been
+	-- superseded.
+	local actual = beginResolution(player, event, resolution or event.resolution)
+	EventOfferedRemote:FireClient(player, toOffered(event, actual))
+end
+
+-- Re-sends a prompt that is already open, as a panel. This is the one way out of
+-- an enactment that was never completed -- a player who cannot find the markers,
+-- cannot reach them, or simply does not want to walk -- and it is deliberately
+-- not a cancellation: the same event, the same choices, nothing consumed, only a
+-- different way of answering.
+--
+-- Guarded on the id so a fallback that arrives late, after the player answered
+-- some other way, cannot reopen a question that is already settled.
+function EventService.FallBackToPanel(player: Player, eventId: string)
+	local profile = DataService.GetProfile(player)
+	if profile == nil or not profile.Data.alive then
+		return
+	end
+	if profile.Data.pendingEventId ~= eventId then
+		return
+	end
+
+	local event = LifeEvents.ById[eventId]
+	if event == nil then
+		warn(`[AGES] pending event "{eventId}" no longer exists; dropping it`)
+		profile.Data.pendingEventId = nil
+		return
+	end
+
+	EventOfferedRemote:FireClient(player, toOffered(event, "Panel"))
 end
 
 -- Called by LifeService once a birthday has finished resolving.
@@ -169,7 +235,9 @@ end
 
 -- Public so the Studio harness can force a specific event without rolling for
 -- it. Returns false when the id doesn't exist so the caller can say so.
-function EventService.ForceOffer(player: Player, eventId: string): boolean
+-- `resolution` overrides how it is answered, which is how /enact proof-reads an
+-- event that is not authored Enacted.
+function EventService.ForceOffer(player: Player, eventId: string, resolution: EventResolution?): boolean
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
 		return false
@@ -178,7 +246,7 @@ function EventService.ForceOffer(player: Player, eventId: string): boolean
 	if event == nil then
 		return false
 	end
-	offer(player, profile.Data, event)
+	offer(player, profile.Data, event, resolution)
 	return true
 end
 
@@ -242,24 +310,24 @@ local function findChoice(event: LifeEvent, choiceId: string): EventChoice?
 	return nil
 end
 
--- Both arguments arrive from the client and are therefore untrusted, including
--- their types. The only answer accepted is one belonging to the exact event
--- this player was offered.
-local function onChoiceRequested(player: Player, eventId: any, choiceId: any)
-	if typeof(eventId) ~= "string" or typeof(choiceId) ~= "string" then
-		return
-	end
-
+-- The one place a choice is ever applied. Both the panel's remote and a player
+-- walking onto a marker land here, which is what keeps enactment from becoming a
+-- second way to pay out an event -- and, more to the point, a second set of rules
+-- about when that is allowed. Every guard below protects both paths at once.
+--
+-- Returns whether the answer was taken, so a caller that has just torn its
+-- markers down can tell a real answer from one that arrived too late.
+function EventService.ResolveChoice(player: Player, eventId: string, choiceId: string): boolean
 	local profile = DataService.GetProfile(player)
 	if profile == nil or not profile.Data.alive then
-		return
+		return false
 	end
 
 	local data = profile.Data
 	if data.pendingEventId == nil or data.pendingEventId ~= eventId then
 		-- Already answered, never offered, or forged. A duplicate press lands
 		-- here too, which is what stops one prompt paying out twice.
-		return
+		return false
 	end
 
 	local event = LifeEvents.ById[eventId]
@@ -267,12 +335,12 @@ local function onChoiceRequested(player: Player, eventId: any, choiceId: any)
 		-- The pending id survived in a profile but the content is gone.
 		warn(`[AGES] pending event "{eventId}" no longer exists; dropping it`)
 		data.pendingEventId = nil
-		return
+		return false
 	end
 
 	local choice = findChoice(event, choiceId)
 	if choice == nil then
-		return
+		return false
 	end
 
 	-- Consumed before any stat is written, so a retry arriving behind this one
@@ -300,6 +368,18 @@ local function onChoiceRequested(player: Player, eventId: any, choiceId: any)
 	if ageYears <= Config.Childhood.EndAge and ageUpHandler ~= nil then
 		ageUpHandler(player, "Event")
 	end
+
+	return true
+end
+
+-- Both arguments arrive from the client and are therefore untrusted, including
+-- their types. Everything past the type check is the shared path above, so the
+-- remote adds no rule of its own -- it only proves it was handed two strings.
+local function onChoiceRequested(player: Player, eventId: any, choiceId: any)
+	if typeof(eventId) ~= "string" or typeof(choiceId) ~= "string" then
+		return
+	end
+	EventService.ResolveChoice(player, eventId, choiceId)
 end
 
 -- Re-offers whatever was left unanswered when the player last left.
@@ -322,7 +402,17 @@ local function pushPending(player: Player)
 		return
 	end
 
-	EventOfferedRemote:FireClient(player, toOffered(event))
+	-- Re-enacted rather than restored: the markers were fanned around wherever the
+	-- player was standing when the prompt first opened, and they are somewhere else
+	-- now. Placing them again around where they *are* is both simpler and more
+	-- correct than remembering where they used to be.
+	--
+	-- If the character has not spawned yet this lands on the panel, which is the
+	-- honest outcome -- a fan of choices around a body that does not exist has
+	-- nowhere to go. The profile has already been waited on above, which is a
+	-- DataStore round trip, so in practice the character is nearly always there.
+	local actual = beginResolution(player, event, event.resolution)
+	EventOfferedRemote:FireClient(player, toOffered(event, actual))
 end
 
 function EventService:Init()

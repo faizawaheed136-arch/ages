@@ -110,3 +110,33 @@ DELIVERY_MODES = ("Letter", "PhoneCall", "NPCApproach")
 # is decided by turning the marker rather than by anything in code — which means
 # the spot they stop on is a property of the house and can be checked here.
 NPC_APPROACH_STUDS = 6.0
+
+# Mirrors Config.Enact. An enacted event fans its choices around the player as
+# places to stand, and answers the event by walking onto one. A room too tight to
+# hold the fan falls back to a panel, which works — but a panel is the thing the
+# whole feature exists to get rid of, so a house that can only ever produce panels
+# is a broken house rather than a working one.
+#
+# Nothing is placed at build time, so unlike the delivery points there is no fixed
+# spot to check. What can be checked is whether the places events actually happen
+# have room for a fan at all: the rug the toddler crawls to, the mat, the phone,
+# the doorstep. Those are exactly where the player is standing when a prompt opens.
+#
+# Config.Enact.MarkerRadius is deliberately not mirrored. What decides whether a
+# choice can be taken is whether a body fits where it stands, not how wide the
+# disc under it is drawn -- a marker may overhang a table leg, since the player
+# stands in its middle. So the check measures the same body clearance everything
+# else here measures, and the drawn size is left to the game.
+ENACT_MARKER_SPREAD = 7.0
+ENACT_FAN_DEGREES = 100.0
+# Mirrors Config.Enact.RetrySpreadScale. A room that cannot hold the fan at full
+# spread gets one more attempt with it drawn in, so a check that only tried the
+# full spread would report a fallback where the game does not take one.
+ENACT_RETRY_SPREAD_SCALE = 0.6
+# The fan is centered on whichever way the player happens to be facing, which is
+# not knowable here — so the check sweeps headings and reports how many of them
+# work. Twelve is every 30 degrees, fine enough not to step over a workable one.
+ENACT_HEADINGS = 12
+# Choices per event. Every authored event has three, so this checks the real case
+# rather than Config.Enact.MaxChoices, which nothing currently uses.
+ENACT_CHOICES = 3

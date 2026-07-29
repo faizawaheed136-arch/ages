@@ -57,6 +57,21 @@ export type ChildhoodBand = {
 -- in Delivery.luau, so no system has to hardcode the list.
 export type EventDelivery = "Memory" | "Direct" | "Interact" | "Letter" | "PhoneCall" | "NPCApproach"
 
+-- How an event is *answered*, which is a separate question from how it reached
+-- the player. A Panel event is read and clicked. An Enacted one puts its choices
+-- in the room as places to stand, and you answer it by walking to one -- the
+-- prompt stays on screen as a banner and the world stays live behind it.
+--
+-- The two axes are independent on purpose: a letter can be read off a panel or
+-- walked away from, and which it is should be a content decision rather than a
+-- consequence of how the letter arrived.
+--
+-- Enacted is always a *request*. If the room cannot hold the markers -- no floor,
+-- a wall in the way, furniture where a choice would have to stand -- the event
+-- falls back to a panel rather than becoming unanswerable. That means the field
+-- is never a guarantee and no caller may treat it as one.
+export type EventResolution = "Panel" | "Enacted"
+
 -- One person the world can send to your door. Built from body scales and colors
 -- rather than from a catalog bundle on purpose: those need no asset ids at all,
 -- so the cast exists and reads as a person before a single id has been picked in
@@ -109,6 +124,9 @@ export type LifeEvent = {
 	delivery: EventDelivery,
 	prompt: string,
 	choices: { EventChoice },
+	-- How the player answers. Nil means "Panel", so an event written before
+	-- enactment existed keeps behaving exactly as it did.
+	resolution: EventResolution?,
 	-- Relative selection weight among eligible events. Defaults to 1.
 	weight: number?,
 	-- For NPCApproach events, which member of the cast turns up. Ignored by every
@@ -125,6 +143,11 @@ export type OfferedEvent = {
 	delivery: EventDelivery,
 	prompt: string,
 	choices: { { id: string, label: string } },
+	-- What the *server actually did*, not what the content asked for. An event
+	-- authored Enacted arrives here as "Panel" whenever the markers could not be
+	-- placed, so the client renders what exists rather than what was intended and
+	-- a fallback needs no second message to announce itself.
+	resolution: EventResolution,
 }
 
 export type ProfileData = {
