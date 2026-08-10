@@ -52,6 +52,7 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Stations = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("Stations"))
+local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Mastery"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
@@ -79,6 +80,23 @@ local SCIENCE = SCHOOL.Science
 -- there is exactly one procedure subject; the day there is a second, this becomes an
 -- argument and nothing else here changes.
 local SUBJECT_ID = "science"
+
+-- The two ladders have to be the same length, and this is the only place that can
+-- notice. School.Mastery.Levels says how many rungs there are; RevealedStepsByLevel says
+-- what each rung shows you. A sixth rung added to one and not the other is a promotion
+-- the verb has no answer for -- the player is told they levelled up and the board does
+-- not change -- which is exactly the numbers-only progression this whole rebuild exists
+-- to get rid of, arriving by accident.
+--
+-- Loud at require time rather than clamped quietly, because clamping is what hides it:
+-- the level would work, the board would not, and nothing would ever say so.
+if #SCIENCE.RevealedStepsByLevel ~= Mastery.Levels then
+	error(
+		`[AGES config] School.Science.RevealedStepsByLevel has {#SCIENCE.RevealedStepsByLevel} entries but`
+			.. ` School.Mastery.Levels is {Mastery.Levels}. Every mastery rung has to say how much of the board`
+			.. ` it shows, so the list must have exactly one number per level. Add or remove one.`
+	)
+end
 
 -- One bench, mid-draft.
 type Bench = {
@@ -163,27 +181,22 @@ end
 -- How many steps of the board this level shows at once. Clamped rather than indexed
 -- blind: a stored level from a build with a longer ladder must not index off the end of
 -- a shorter one, and the honest reading of "level 9 on a five-rung ladder" is the top
--- rung.
+-- rung. The check above makes that unreachable from Config; this covers the profile.
 local function revealCountFor(level: number): number
 	local ladder = SCIENCE.RevealedStepsByLevel
 	local rung = math.clamp(math.floor(level), 1, #ladder)
 	return ladder[rung]
 end
 
+-- Both of these used to read and clamp the profile tables here. They are Mastery's now,
+-- kept as one-line wrappers because the rest of this file reads better saying "the
+-- level" than "the level of this subject on this life" fourteen times over.
 local function levelOf(data: LifeData): number
-	local stored = data.subjectMastery[SUBJECT_ID]
-	if stored == nil then
-		return 1
-	end
-	return math.clamp(math.floor(stored), 1, #SCIENCE.RevealedStepsByLevel)
+	return Mastery.LevelOf(data, SUBJECT_ID)
 end
 
 local function passesOf(data: LifeData): number
-	local stored = data.subjectPasses[SUBJECT_ID]
-	if stored == nil then
-		return 0
-	end
-	return math.max(0, math.floor(stored))
+	return Mastery.PassesOf(data, SUBJECT_ID)
 end
 
 -- How much of the procedure this stack actually contains, in order, as a 0-1 share.
@@ -336,9 +349,9 @@ local function stateFor(player: Player): LabState?
 		charges = session.charges,
 		chargesMax = SCIENCE.SupplyCharges,
 		level = session.level,
-		levelMax = #SCIENCE.RevealedStepsByLevel,
+		levelMax = Mastery.Levels,
 		passes = session.passes,
-		passesPerLevel = SCIENCE.PassesPerLevel,
+		passesPerLevel = Mastery.PassesPerLevel,
 		atBoard = session.atBoard,
 		atBench = session.atBench,
 		atCupboard = session.atCupboard,
@@ -410,7 +423,13 @@ local function drawProcedure(session: Session): Procedure?
 end
 
 -- Scores a bench and closes it. The one irreversible act in the whole verb.
-local function commitBench(session: Session, bench: Bench, spoiled: boolean)
+--
+-- Takes the life data because a committed bench banks toward mastery, and mastery is one
+-- ladder shared with every other subject rather than a private pair of numbers on the
+-- session. The session still carries `level` and `passes`, but only as a mirror for the
+-- panel to draw -- they are re-read off the profile immediately below, so the profile is
+-- the single writer and the two can never drift.
+local function commitBench(data: LifeData, session: Session, bench: Bench, spoiled: boolean)
 	if bench.committed then
 		return
 	end
@@ -429,24 +448,17 @@ local function commitBench(session: Session, bench: Bench, spoiled: boolean)
 		elseif spoiled then `Time. {verdictFor(bench, matched)}`
 		else verdictFor(bench, matched)
 
-	-- A pass banks toward the next mastery level. Measured on the ordered match rather
-	-- than the speed-adjusted score, because mastery is about knowing the procedure and
-	-- charging for the walk twice would make the ladder a test of running.
-	if matched >= SCHOOL.GoodShare then
-		session.passes += 1
-		if session.passes >= SCIENCE.PassesPerLevel then
-			local ceiling = #SCIENCE.RevealedStepsByLevel
-			if session.level < ceiling then
-				session.level += 1
-				session.passes = 0
-			else
-				-- Held at the ceiling rather than reset, so a topped-out player does not
-				-- see their progress bar cycle forever against a level that will never
-				-- arrive. See the note on the report card in part 2.
-				session.passes = SCIENCE.PassesPerLevel
-			end
-		end
-	end
+	-- Banks toward the next mastery level. Measured on the ordered match rather than the
+	-- speed-adjusted score, because mastery is about knowing the procedure and charging
+	-- for the walk twice would make the ladder a test of running.
+	--
+	-- Written to the profile here rather than held on the session until the lab ends. A
+	-- committed bench is already the irreversible act -- there is nothing left to unpick
+	-- -- so deferring the write would only create a window where the player has provably
+	-- earned a rung and the save does not know it.
+	Mastery.Record(data, SUBJECT_ID, matched)
+	session.level = levelOf(data)
+	session.passes = passesOf(data)
 
 	if session.active == bench.index then
 		session.active = nil
@@ -459,7 +471,7 @@ end
 local function finish(player: Player, data: LifeData, session: Session, reason: string)
 	for _, bench in session.benches do
 		if not bench.committed then
-			commitBench(session, bench, true)
+			commitBench(data, session, bench, true)
 		end
 	end
 
@@ -482,12 +494,10 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 		StatService.AddStat(player, "smarts", gained)
 	end
 
-	-- Written back once, at the end, rather than on every level-up. The session holds the
-	-- working copy and the profile takes it whole, which means a server that dies
-	-- mid-procedure costs the player the run and nothing else -- there is no half-applied
-	-- mastery to reconcile.
-	data.subjectMastery[SUBJECT_ID] = session.level
-	data.subjectPasses[SUBJECT_ID] = session.passes
+	-- Mastery is deliberately not written here. Every bench that could bank one has been
+	-- committed by the loop above, and commitBench writes as it goes -- so a lab that ends
+	-- has already recorded everything it earned, and a second write from a session mirror
+	-- would only be a chance for the two to disagree.
 
 	-- Counted however it ended, including walked out of, for the reason a lesson is:
 	-- otherwise a player could start, leave, and start again until they drew a procedure
@@ -717,7 +727,16 @@ local function onCommitRequested(player: Player, benchIndex: unknown)
 		return
 	end
 
-	commitBench(session, bench, false)
+	-- Fetched here rather than carried on the session, because committing banks toward
+	-- mastery and mastery lives on the profile. A player whose profile has gone -- left
+	-- between the click arriving and this line -- simply does not commit; there is nobody
+	-- left to record it against.
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+
+	commitBench(Lives.Active(profile.Data), session, bench, false)
 	push(player)
 end
 
@@ -829,7 +848,7 @@ local function tickPlayer(player: Player, elapsed: number)
 		if bench.secondsLeft <= 0 then
 			-- Spoiled: scored where it stands, with no speed credit. Not a failure state
 			-- -- a stack that was five steps of six right is still five steps right.
-			commitBench(session, bench, true)
+			commitBench(data, session, bench, true)
 			running -= 1
 		end
 	end
@@ -894,9 +913,7 @@ function ScienceService.ResetForNewLife(player: Player)
 	forget(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		local data = Lives.Active(profile.Data)
-		data.subjectMastery[SUBJECT_ID] = nil
-		data.subjectPasses[SUBJECT_ID] = nil
+		Mastery.Clear(Lives.Active(profile.Data), SUBJECT_ID)
 	end
 	LabUpdatedRemote:FireClient(player, nil)
 end
@@ -941,10 +958,9 @@ function ScienceService.SetLevel(player: Player, level: number): boolean
 	if profile == nil then
 		return false
 	end
-	local clamped = math.clamp(math.floor(level), 1, #SCIENCE.RevealedStepsByLevel)
 	local data = Lives.Active(profile.Data)
-	data.subjectMastery[SUBJECT_ID] = clamped
-	data.subjectPasses[SUBJECT_ID] = 0
+	Mastery.Set(data, SUBJECT_ID, level)
+	local clamped = levelOf(data)
 
 	-- Applied to a session in progress too, so the command can be run while standing at
 	-- the board and the effect read off it immediately. That is the whole point of being
@@ -952,7 +968,7 @@ function ScienceService.SetLevel(player: Player, level: number): boolean
 	local session = sessions[player]
 	if session ~= nil then
 		session.level = clamped
-		session.passes = 0
+		session.passes = passesOf(data)
 		push(player)
 	end
 	return true
@@ -999,8 +1015,9 @@ function ScienceService.Describe(player: Player): string
 	end
 
 	local level = levelOf(data)
-	local mastery = `level {level}/{#SCIENCE.RevealedStepsByLevel}, {revealCountFor(level)} steps shown,`
-		.. ` {passesOf(data)}/{SCIENCE.PassesPerLevel} passes`
+	local mastery = `level {level}/{Mastery.Levels}, {revealCountFor(level)} steps shown,`
+		.. ` {passesOf(data)}/{Mastery.PassesPerLevel} passes`
+		.. if Mastery.IsTopped(data, SUBJECT_ID) then " (topped out -- can skip)" else ""
 
 	local running = "no session"
 	local session = sessions[player]

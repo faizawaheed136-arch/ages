@@ -1026,12 +1026,14 @@ end
 -- Nil is the ordinary state here too, and for longer: most of a life is not spent in a
 -- lesson. Same rule as the task row -- nothing to say, nothing on screen.
 --
--- Three things arrive through this one channel and they are told apart by the state
+-- Four things arrive through this one channel and they are told apart by the state
 -- itself rather than by a flag, because each distinction is already visible in the
 -- numbers. A live question has a clock and no verdict. A verdict has a clock's worth of
 -- context but no time left on it. A notice -- a lesson's closing summary, or the door
 -- refusing you -- has `count` of zero, which is the server saying this is not a question
--- and has no position in anything.
+-- and has no position in anything. And the skip offer at the door has no clock and no
+-- verdict either: it is a question about the afternoon rather than about a subject, and
+-- the only thing this row draws for it is the line saying what is on.
 function StatsUI.SetLesson(self: StatsUIHandle, state: LessonState?)
 	if state == nil then
 		self.lessonRow.Visible = false
@@ -1061,6 +1063,22 @@ function StatsUI.SetLesson(self: StatsUIHandle, state: LessonState?)
 		return
 	end
 	self.lessonCaption.TextColor3 = TASK_CAPTION_COLOR
+
+	-- A push with no clock and nothing to explain: the skip offer at the school door,
+	-- which is a question about the day rather than a question in a lesson. The row says
+	-- what is on and the panel underneath carries the two answers, so a caption here would
+	-- have to invent something -- and the arithmetic below invents "0 right · 0s left",
+	-- which reads as a lesson already lost before it has started.
+	--
+	-- Guarded on the clock rather than on the answers, because "there is no time running"
+	-- is the honest test and it is the same signal the bar is already documented as
+	-- reading. See LessonState.secondsTotal.
+	if state.secondsTotal <= 0 then
+		self.lessonCaption.Text = ""
+		self.lessonFill.Size = UDim2.new(0, 0, 1, 0)
+		self.lessonFill.BackgroundColor3 = TASK_COLOR
+		return
+	end
 
 	local total = math.max(state.secondsTotal, 1)
 	local share = math.clamp(math.max(state.secondsLeft, 0) / total, 0, 1)

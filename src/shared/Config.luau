@@ -1651,6 +1651,36 @@ Config.School = {
 	-- reason to attend.
 	SmartsPerYearMissed = -2,
 
+	-- The mastery ladder, and it is per subject rather than per school: being good at
+	-- Science says nothing about Music, and one number over the whole timetable would let
+	-- a player master the one subject with a real verb and skip the five they had never
+	-- touched.
+	--
+	-- This is the Bully rule, and it is the reason school has an end rather than just a
+	-- last year. Attending a subject you have already beaten is the purest version of the
+	-- unskilled-dead-time anti-pattern: the same lesson, the same clock, and nothing left
+	-- in it to learn. So passing enough of a subject buys the right to stop sitting it --
+	-- see School.Mastery.Levels for what "enough" is -- and the afternoon it hands back is
+	-- the reward. Not a number: an hour of childhood you get to spend somewhere else.
+	Mastery = {
+		-- Rungs on the ladder, shared by every subject. Five because it has to be reachable
+		-- inside a childhood and still cost something: at PassesPerLevel = 2 that is eight
+		-- good lessons to top a subject out, against thirty-six lessons in a whole school
+		-- career -- so a player can master two or three subjects by graduation and not all
+		-- six, which is the shape that makes it a choice about what you are good at.
+		--
+		-- Science's RevealedStepsByLevel must be exactly this long. It is the one verb that
+		-- currently gives a level a meaning of its own, and a ladder with a rung the verb
+		-- has no answer for is a promotion that visibly does nothing.
+		-- Safe range: 3-6. Above ~6 the top rung arrives after school has ended.
+		Levels = 5,
+
+		-- Lessons at or above GoodShare that buy a rung. Two so a single lucky lesson does
+		-- not promote and a single bad one does not feel like it undid anything.
+		-- Safe range: 2-4.
+		PassesPerLevel = 2,
+	},
+
 	-- Content limits, enforced at server start rather than found in play. The answer
 	-- count is Enact's, because these are Enact's pads and a fifth of them crowds the
 	-- fan the same way whoever is asking -- and the question length is longer than a
@@ -1747,11 +1777,12 @@ Config.School.Science = {
 	-- errand walks past five machines it never touches, which is also what a school lab
 	-- actually looks like.
 
-	-- Procedures scored at or above School.GoodShare that count toward the next level,
-	-- and how many of them a level costs. Two so a single lucky run does not promote and
-	-- a single bad one does not feel like it undid anything.
-	-- Safe range: 2-4.
-	PassesPerLevel = 2,
+	-- What a pass is and how many buy a level both live on School.Mastery now, because
+	-- every subject climbs the same ladder and two ladders drifting apart would mean a
+	-- procedure and a quiz disagreeing about what "mastered" is. What is still Science's
+	-- own is what a level *buys*, which is RevealedStepsByLevel above -- and the length of
+	-- that list must equal School.Mastery.Levels, which ScienceService asserts at require
+	-- time rather than trusting.
 
 	-- Room and reach. The board is read from further away than a station is clicked from,
 	-- because reading is not an interaction and standing in the doorway squinting is a

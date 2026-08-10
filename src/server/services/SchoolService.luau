@@ -54,6 +54,7 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local ChoiceMarkers = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("ChoiceMarkers"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
+local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Mastery"))
 
 local DataService = require(script.Parent.DataService)
 local PlaceService = require(script.Parent.PlaceService)
@@ -102,6 +103,13 @@ type Lesson = {
 	-- The lesson is anchored to the room it began in, so a place point that streams out
 	-- mid-lesson does not silently move the walls in around the player.
 	room: Vector3,
+
+	-- Which subject is being taught. Held on the lesson rather than recomputed at the end
+	-- from `subjectFor(data)`, because that function reads `lessonsThisYear` -- which the
+	-- lesson itself increments -- so asking it twice can honestly return two different
+	-- subjects, and the pass would be banked against whatever is on next.
+	subjectId: string,
+
 	questions: { LessonQuestion },
 	-- Which question is in front of the player, from 1. Runs one past #questions for
 	-- the instant between the last answer and the lesson closing.
@@ -152,6 +160,21 @@ local pushed: { [Player]: string } = {}
 type Notice = { text: string, good: boolean, secondsLeft: number }
 local notices: { [Player]: Notice } = {}
 
+-- A player standing at the school with a subject they have already finished with, being
+-- asked whether they want to sit it anyway.
+--
+-- This is the whole of what mastery buys, and it is deliberately a *question* rather
+-- than an automatic pass. A subject that silently stopped happening once you were good
+-- at it would read as the game running out of content; being asked, every time, is what
+-- makes it a thing you achieved. It also leaves the door open to sitting it anyway,
+-- which a player chasing the last few points of smarts has a real reason to do.
+--
+-- Held per player rather than on the lesson because there is no lesson yet -- that is
+-- the point of it. Cleared the moment the player answers or walks away, so the panel is
+-- never up for a building they are not standing in.
+type Door = { subjectId: string }
+local doors: { [Player]: Door } = {}
+
 
 local function characterPosition(player: Player): Vector3?
 	local character = player.Character
@@ -167,6 +190,15 @@ end
 
 local function ageYearsOf(data: LifeData): number
 	return data.ageMonths // Config.Time.MonthsPerYear
+end
+
+-- A subject's name for a sentence, falling back to its id. The fallback is the case
+-- that matters: a saved life can hold mastery in a subject that has since been taken off
+-- the timetable, and a report card reading "you finished with woodwork" is better than
+-- one that errors or silently drops the row.
+local function subjectNameOf(subjectId: string): string
+	local subject = Curriculum.Get(subjectId)
+	return if subject ~= nil then subject.name else subjectId
 end
 
 -- The teacher in the classroom. One per player with a lesson, built from the
@@ -712,6 +744,46 @@ local function stateFor(player: Player): LessonState?
 		}
 	end
 
+	-- The skip offer. Rendered as a lesson state with two answers and no clock, because
+	-- it is the same panel asking the same shape of question and inventing a second
+	-- remote for it would be a second surface to keep in step. Index zero is what marks
+	-- it out from a real question: a lesson counts from one, so an answer coming back
+	-- against zero can only be this.
+	local door = doors[player]
+	if door ~= nil then
+		local name = subjectNameOf(door.subjectId)
+		return {
+			ask = `{name} today, and you have finished with it.`,
+			answers = {
+				-- The costs are in the notes rather than the labels, so the two payouts sit
+				-- in one column and can be read against each other at a glance. That
+				-- comparison is the entire decision.
+				{
+					id = "sit",
+					label = "Sit the lesson anyway",
+					cost = nil,
+					note = `up to +{SCHOOL.SmartsPerGoodLesson} smarts`,
+					locked = false,
+				},
+				{
+					id = "skip",
+					label = "Skip it",
+					cost = nil,
+					note = `+{SCHOOL.SmartsPerOkLesson} smarts, no lesson`,
+					locked = false,
+				},
+			},
+			index = 0,
+			count = 0,
+			right = 0,
+			secondsLeft = 0,
+			secondsTotal = 0,
+			verdict = nil,
+			wasRight = false,
+			physical = false,
+		}
+	end
+
 	local notice = notices[player]
 	if notice ~= nil then
 		return {
@@ -845,13 +917,42 @@ local function finish(player: Player, data: LifeData, lesson: Lesson, reason: st
 	-- would be able to re-roll the questions until they got an easy five.
 	data.lessonsThisYear += 1
 
+	-- Banks toward this subject's mastery on the same ladder Science climbs. Quiz
+	-- subjects had no ladder at all until now, which meant five of the six could never be
+	-- finished with -- you sat Music at seventeen exactly as you sat it at six.
+	--
+	-- What a rung buys inside a quiz is, honestly, nothing yet. That is a debt and not a
+	-- design: giving a level "one fewer question" or "five more seconds" would be a bigger
+	-- number for the same decision, which is the numbers-only progression this rebuild
+	-- exists to remove. The in-lesson reward arrives with each subject's real verb. What
+	-- the rung buys *today* is the right to stop sitting the lesson, and that is worth
+	-- having on its own -- see the skip at the door below.
+	local before = Mastery.LevelOf(data, lesson.subjectId)
+	local level, rose = Mastery.Record(data, lesson.subjectId, share)
+
 	local scored = `{lesson.right} of {count} right`
 	local reward = if gained > 0 then `. +{gained} smarts.` else "."
 	local line = if reason == "left"
 		then `You walked out. {scored}{reward}`
 		else `Lesson over. {scored}{reward}`
 
-	notice(player, line, gained > 0)
+	-- The promotion is said out loud and it replaces the score line rather than following
+	-- it, because it is the more important of the two and two notices in a row means the
+	-- first is never read. Topping out gets its own sentence: it is the only one that
+	-- changes what the player can do tomorrow, and a player who is not told they may now
+	-- skip will never find out -- the panel at the door only appears if they walk back.
+	if rose then
+		local name = subjectNameOf(lesson.subjectId)
+		line = if level >= Mastery.Levels
+			then `{scored}{reward} You have finished with {name} -- you can skip it from now on.`
+			else `{scored}{reward} {name} level {level} of {Mastery.Levels}.`
+	elseif before >= Mastery.Levels and reason ~= "left" then
+		-- Sat a subject they had already beaten. Worth a word: they chose to, the smarts
+		-- were real, and silence here reads as the skip having failed to work.
+		line = `{scored}{reward} You did not have to sit that one.`
+	end
+
+	notice(player, line, gained > 0 or rose)
 end
 
 -- One question answered, by picking row `row` off the panel -- or not answered at all,
@@ -897,31 +998,6 @@ local function answer(player: Player, lesson: Lesson, row: number?)
 	push(player)
 end
 
--- A row picked off the panel. Checked against the question that is actually live
--- rather than against whatever the client thinks it is answering: the twenty seconds
--- are real, and an answer clicked as the clock ran out has to lose to the clock.
-local function onAnswerRequested(player: Player, index: unknown, answerId: unknown)
-	if type(index) ~= "number" or type(answerId) ~= "string" then
-		return
-	end
-	local lesson = lessons[player]
-	if lesson == nil then
-		return
-	end
-	-- Both halves of "this question, still open". The index catches an answer to the
-	-- question before this one; the verdict catches one clicked during the beat the
-	-- teacher's line is up, which is the same click arriving a fraction later.
-	if lesson.index ~= index or lesson.verdictLeft > 0 or lesson.index > #lesson.questions then
-		return
-	end
-
-	local row = tonumber(answerId)
-	if row == nil or lesson.order[row] == nil then
-		return
-	end
-	answer(player, lesson, row)
-end
-
 -- What is on today.
 --
 -- Rotated rather than rolled, and the difference matters over a childhood: three random
@@ -954,7 +1030,7 @@ end
 -- including the smarts and the yearly count, which the lab pays and spends itself. That
 -- split is deliberate: the alternative is a School that knows how every verb is scored,
 -- which is the file that would have to be edited six times over.
-local function begin(player: Player, data: LifeData, room: Vector3): boolean
+local function beginLesson(player: Player, data: LifeData, room: Vector3): boolean
 	local subject = subjectFor(data)
 	if subject == nil then
 		notice(player, "There is nothing on today.", false)
@@ -986,6 +1062,7 @@ local function begin(player: Player, data: LifeData, room: Vector3): boolean
 
 	local lesson: Lesson = {
 		room = room,
+		subjectId = subject.id,
 		questions = questions,
 		index = 1,
 		right = 0,
@@ -1012,6 +1089,123 @@ local function begin(player: Player, data: LifeData, room: Vector3): boolean
 	return true
 end
 
+-- Taking the skip. Spends the lesson off the year and pays what an ordinary pass pays.
+--
+-- The payout is deliberately the middle band rather than the top one. A player who has
+-- topped a subject out can reliably score above GoodShare in it -- that is what topping
+-- it out means -- so paying SmartsPerGoodLesson here would make skipping strictly better
+-- than attending, and the lesson would be dead content rather than a choice. Paying the
+-- pass rate makes the trade honest: the skip costs you a point and buys you the
+-- afternoon, and which of those is worth more is a real question that changes with how
+-- much of the map you have left to see.
+--
+-- It counts as attendance, which is the other half of the deal. Turning up and proving
+-- you know it already is turning up, so the missed-year penalty must not fire on a
+-- player who skipped -- being punished for the thing you earned would be the single
+-- worst sentence this system could say.
+local function takeSkip(player: Player, data: LifeData, subjectId: string)
+	data.lessonsThisYear += 1
+
+	local gained = SCHOOL.SmartsPerOkLesson
+	if gained ~= 0 then
+		StatService.AddStat(player, "smarts", gained)
+	end
+
+	local reward = if gained > 0 then ` +{gained} smarts.` else ""
+	notice(player, `You skipped {subjectNameOf(subjectId)}.{reward} That is one lesson off the year.`, gained > 0)
+end
+
+-- A row picked off the panel. Checked against the question that is actually live
+-- rather than against whatever the client thinks it is answering: the twenty seconds
+-- are real, and an answer clicked as the clock ran out has to lose to the clock.
+local function onAnswerRequested(player: Player, index: unknown, answerId: unknown)
+	if type(index) ~= "number" or type(answerId) ~= "string" then
+		return
+	end
+
+	-- The skip offer, which is not a question in a lesson and is answered before one is
+	-- looked for. Index zero is the marker -- see stateFor -- and a lesson's questions
+	-- count from one, so the two can never be confused for each other.
+	local door = doors[player]
+	if door ~= nil and index == 0 then
+		doors[player] = nil
+
+		local profile = DataService.GetProfile(player)
+		if profile == nil then
+			push(player)
+			return
+		end
+		local data = Lives.Active(profile.Data)
+
+		-- Re-checked here rather than trusted from when the panel was drawn. The offer may
+		-- have been on screen for a while, and a birthday or a `/school year` in between
+		-- can have closed the door behind it. Everything the client sends is a request.
+		local refusal = refusalFor(data)
+		if refusal ~= nil then
+			notice(player, refusal, false)
+			return
+		end
+
+		if answerId == "skip" then
+			if not Mastery.IsTopped(data, door.subjectId) then
+				-- Only reachable from a client that made the row up, since the offer is only
+				-- ever drawn for a topped subject. Refused by name anyway: a silent drop here
+				-- would look exactly like the button not working.
+				notice(player, `You have not finished with {subjectNameOf(door.subjectId)} yet.`, false)
+				return
+			end
+			takeSkip(player, data, door.subjectId)
+			return
+		end
+
+		if answerId ~= "sit" then
+			-- A row id the panel never drew. Nothing to say to a real player, and nothing
+			-- to do but put the offer back up, which the next tick does.
+			push(player)
+			return
+		end
+
+		-- Sitting it. Falls through to the ordinary start, so a lesson chosen from the door
+		-- is in every respect the lesson that would have started on its own -- the offer
+		-- decides whether there is a lesson, never what one is. That is also why this needs
+		-- no branch for Science: a topped-out procedure subject goes through here and comes
+		-- out in the lab, exactly as it would have without the offer in front of it.
+		local at = attendAt
+		if at == nil then
+			notice(player, "The school is not in the world right now.", false)
+			return
+		end
+		-- Standing at the school is the one condition the offer itself does not carry. The
+		-- panel comes down within a tick of walking away, but a click already in flight
+		-- when it does would otherwise start a lesson from wherever the player had got to.
+		local position = characterPosition(player)
+		if position == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
+			notice(player, "You walked off before you answered.", false)
+			return
+		end
+
+		beginLesson(player, data, at)
+		return
+	end
+
+	local lesson = lessons[player]
+	if lesson == nil then
+		return
+	end
+	-- Both halves of "this question, still open". The index catches an answer to the
+	-- question before this one; the verdict catches one clicked during the beat the
+	-- teacher's line is up, which is the same click arriving a fraction later.
+	if lesson.index ~= index or lesson.verdictLeft > 0 or lesson.index > #lesson.questions then
+		return
+	end
+
+	local row = tonumber(answerId)
+	if row == nil or lesson.order[row] == nil then
+		return
+	end
+	answer(player, lesson, row)
+end
+
 local function tickPlayer(player: Player, elapsed: number)
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
@@ -1023,6 +1217,26 @@ local function tickPlayer(player: Player, elapsed: number)
 	local lesson = lessons[player]
 
 	if lesson == nil then
+		-- The skip offer comes down the moment the player walks off the pad, and before
+		-- anything else is considered. A panel asking whether to sit today's lesson,
+		-- still up while its owner is halfway across town, is the game talking about a
+		-- building that is no longer in front of them.
+		local door = doors[player]
+		if door ~= nil then
+			local at = attendAt
+			local away = position == nil
+				or at == nil
+				or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds
+			if away then
+				doors[player] = nil
+				push(player)
+			end
+			-- Returns either way. An open offer is a question the player has been asked and
+			-- has not answered, and starting the lesson out from under it -- which is what
+			-- falling through to the pad check below would do -- would answer it for them.
+			return
+		end
+
 		local held = notices[player]
 		if held ~= nil then
 			held.secondsLeft -= elapsed
@@ -1058,7 +1272,23 @@ local function tickPlayer(player: Player, elapsed: number)
 			notice(player, refusal, false)
 			return
 		end
-		begin(player, data, at)
+
+		-- A subject already finished with is asked about rather than started. This is the
+		-- only thing mastery buys today and it is the whole of part two: the lesson still
+		-- exists, it is just no longer compulsory.
+		--
+		-- Asked at the door rather than offered from the HUD because arriving is what
+		-- raises the question. A player who has topped out three subjects should not be
+		-- carrying three standing offers around town -- the decision belongs to the moment
+		-- they are standing outside the school with an afternoon in front of them.
+		local subject = subjectFor(data)
+		if subject ~= nil and Mastery.IsTopped(data, subject.id) then
+			doors[player] = { subjectId = subject.id }
+			push(player)
+			return
+		end
+
+		beginLesson(player, data, at)
 		return
 	end
 
@@ -1126,6 +1356,7 @@ local function forget(player: Player)
 	despawnTeacher(player)
 	lessons[player] = nil
 	notices[player] = nil
+	doors[player] = nil
 	pushed[player] = nil
 end
 
@@ -1160,6 +1391,11 @@ function SchoolService.OnAgeUp(player: Player)
 
 	data.lessonsThisYear = 0
 
+	-- Any skip offer standing at the door is now about last year's timetable. The subject
+	-- on today is keyed on the age and the lessons already sat, and a birthday moves both
+	-- -- so an offer left up would name one subject and start another.
+	doors[player] = nil
+
 	if missed and SCHOOL.SmartsPerYearMissed ~= 0 then
 		StatService.AddStat(player, "smarts", SCHOOL.SmartsPerYearMissed)
 		-- Told rather than left to be noticed on the stats bar. A number quietly going
@@ -1180,7 +1416,29 @@ function SchoolService.ResetForNewLife(player: Player)
 	ScienceService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		Lives.Active(profile.Data).lessonsThisYear = 0
+		local data = Lives.Active(profile.Data)
+		data.lessonsThisYear = 0
+
+		-- Every subject, not just the ones on today's timetable. Cleared by walking the
+		-- stored tables rather than the curriculum, because a life may hold mastery in a
+		-- subject that has since been taken off it -- and a subject that is not cleared is
+		-- one a new child arrives already finished with, which reads as the school
+		-- refusing to teach them and is close to impossible to trace back to here.
+		-- Collected before anything is removed. Clearing a subject writes to both tables,
+		-- so deleting straight out of the one being walked is the kind of thing that works
+		-- until the day it does not.
+		local held: { string } = {}
+		for subjectId in data.subjectMastery do
+			table.insert(held, subjectId)
+		end
+		for subjectId in data.subjectPasses do
+			if data.subjectMastery[subjectId] == nil then
+				table.insert(held, subjectId)
+			end
+		end
+		for _, subjectId in held do
+			Mastery.Clear(data, subjectId)
+		end
 	end
 	push(player)
 end
@@ -1247,6 +1505,39 @@ function SchoolService.SetLessonsThisYear(player: Player, count: number): boolea
 	return true
 end
 
+-- Studio harness: sets mastery in any subject directly.
+--
+-- The command that makes the skip testable at all. Reaching the top rung honestly is
+-- eight good lessons in one subject, which at three lessons a year and six subjects on
+-- the timetable is most of a childhood -- so without this the only way to see the door
+-- panel is to play to about fifteen.
+--
+-- Refuses an unknown subject rather than creating one. A typo that silently wrote
+-- mastery in "sceince" would look exactly like the command not working, and the player
+-- would go on typing it.
+function SchoolService.SetMastery(player: Player, subjectId: string, level: number): (boolean, string?)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false, "no profile loaded"
+	end
+	if Curriculum.Get(subjectId) == nil then
+		local names: { string } = {}
+		for _, subject in Curriculum.All do
+			table.insert(names, subject.id)
+		end
+		return false, `no subject "{subjectId}" -- try one of: {table.concat(names, ", ")}`
+	end
+
+	Mastery.Set(Lives.Active(profile.Data), subjectId, level)
+
+	-- Any offer standing at the door is now about a stale level, so it comes down and is
+	-- re-asked on the next tick. Without this, setting mastery while standing on the pad
+	-- leaves the old panel up and the command looks like it did nothing.
+	doors[player] = nil
+	push(player)
+	return true, nil
+end
+
 function SchoolService.SetEnabled(value: boolean)
 	enabled = value
 end
@@ -1299,8 +1590,28 @@ function SchoolService.Describe(player: Player): string
 
 	local pool = #Lessons.For(ageYearsOf(data), math.huge)
 
+	-- The ladder, subject by subject, and only for the ones actually on this age's
+	-- timetable -- a row for a subject that will not be taught for another three years is
+	-- noise in a line that is already long. Today's subject is marked, because "which one
+	-- is next" is the question every other part of this line is in service of.
+	local today = subjectFor(data)
+	local ladder: { string } = {}
+	for _, subject in Curriculum.ForAge(ageYearsOf(data)) do
+		local level = Mastery.LevelOf(data, subject.id)
+		local mark = if today ~= nil and today.id == subject.id then "*" else ""
+		local topped = if Mastery.IsTopped(data, subject.id) then " SKIPPABLE" else ""
+		table.insert(
+			ladder,
+			`{mark}{subject.id} {level}/{Mastery.Levels}`
+				.. `+{Mastery.PassesOf(data, subject.id)}/{Mastery.PassesPerLevel}{topped}`
+		)
+	end
+
+	local door = doors[player]
+	local offer = if door ~= nil then `offering the skip on {door.subjectId}` else "no offer up"
+
 	return string.format(
-		"school: %s | %s | age %d, %d/%d lessons this year, %d questions written for this age | %s | %s | %s",
+		"school: %s | %s | age %d, %d/%d lessons this year, %d questions written for this age | %s | %s | %s | %s | %s",
 		if enabled then "enabled" else "DISABLED",
 		where,
 		ageYearsOf(data),
@@ -1309,7 +1620,9 @@ function SchoolService.Describe(player: Player): string
 		pool,
 		refusal,
 		running,
-		teacherLine
+		teacherLine,
+		table.concat(ladder, ", "),
+		offer
 	)
 end
 

@@ -848,7 +848,29 @@ Commands.school = function(player: Player, args: { string }): string
 		return SchoolService.Describe(player)
 	end
 
-	return `usage: /school [start|end|year <n>|on|off] — {SchoolService.Describe(player)}`
+	-- The command that makes the skip reachable at all. Topping a subject out honestly is
+	-- eight good lessons in it, and at three lessons a year shared across six subjects
+	-- that is most of a childhood -- so `/school mastery music 5` and then walking to the
+	-- pad is the only practical way to see the door panel.
+	--
+	-- `/lab level <n>` does the same for Science alone and also updates a session already
+	-- in progress, which this cannot. The two are kept apart because the lab's level
+	-- changes what is on screen mid-run and no other subject's does.
+	if arg == "mastery" then
+		local subjectId = string.lower(args[2] or "")
+		local level = tonumber(args[3])
+		if subjectId == "" or level == nil then
+			return `usage: /school mastery <subject> <1-{Config.School.Mastery.Levels}>`
+				.. ` — {SchoolService.Describe(player)}`
+		end
+		local ok, refusal = SchoolService.SetMastery(player, subjectId, level)
+		if not ok then
+			return `{refusal or "could not set it"} — {SchoolService.Describe(player)}`
+		end
+		return SchoolService.Describe(player)
+	end
+
+	return `usage: /school [start|end|year <n>|mastery <subject> <n>|on|off] — {SchoolService.Describe(player)}`
 end
 
 -- Everything about the Science lab, on one command.
@@ -1652,7 +1674,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
-	.. "/school [start|end|year <n>], /lab [start|end|level <n>|refill|on|off], "
+	.. "/school [start|end|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
 	.. "/gym [start|end|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
