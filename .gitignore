@@ -2,3 +2,4 @@
 *.rbxlx
 sourcemap.json
 .DS_Store
+.claude/
