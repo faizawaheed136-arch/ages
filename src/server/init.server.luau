@@ -51,6 +51,7 @@ local CompanionService = require(services.CompanionService)
 local DeliveryService = require(services.DeliveryService)
 local WorkService = require(services.WorkService)
 local SchoolService = require(services.SchoolService)
+local ScienceService = require(services.ScienceService)
 local GymService = require(services.GymService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -97,6 +98,10 @@ NPCService:Start()
 CompanionService:Start()
 DeliveryService:Start()
 WorkService:Start()
+-- Before SchoolService, which hands a Science lesson straight to it. Cosmetic like
+-- every other line in this list -- both are running before the first player finishes
+-- loading -- but reading it in this order is the truth about which owns which.
+ScienceService:Start()
 SchoolService:Start()
 GymService:Start()
 PeopleService:Start()

@@ -130,7 +130,15 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- "there is a thing here, go to it". A lesson is not a thing in the room -- it is
 -- something you are already inside, like a shift -- so its questions open themselves
 -- and the walk is spent once, at the door. See SchoolService.
-export type InteractKind = "Person" | "Event"
+--
+-- "Station" does not contradict that, and the distinction is the reason Science is a
+-- different activity rather than a quiz in a nicer room. A question is not a thing in
+-- the room; a balance is. The walk to the school is still spent once at the door, and
+-- then the room itself is full of things to go to -- which is exactly the case dots
+-- were built for. A station carries no price and offers no menu: clicking it is the
+-- answer, and what it does is written on the board across the room rather than on the
+-- station, because the whole verb is holding the order in your head while you cross.
+export type InteractKind = "Person" | "Event" | "Station"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.

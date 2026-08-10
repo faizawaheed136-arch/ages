@@ -97,6 +97,25 @@ export type RemoteName =
 	-- from the sweep position it is already tracking, so a client that fires this
 	-- twice gains nothing.
 	| "RequestRep"
+	-- The Science lab in progress, pushed as a whole snapshot. Its own remote rather
+	-- than a field on LessonUpdated, because the two are different activities that
+	-- happen to share a building: a lesson is one question and a clock, and a lab is two
+	-- benches, a reagent pool and a mastery level. Folding them together would mean
+	-- every quiz question carried an empty bench list.
+	| "LabUpdated"
+	-- "I clicked that station." Carries the station id off the prompt's own attribute.
+	-- Never trusted: the server checks it against the stations it actually built and
+	-- against the bench it would land on, and refuses a click from a player with no
+	-- procedure running rather than starting one.
+	| "RequestLabStep"
+	-- "Take the last step back off that bench." Carries the bench index. The undo half
+	-- of the commit-and-undo pair, and free -- there is no cost, no cooldown and no
+	-- limit before commit, because a draft you are charged to edit is not a draft.
+	| "RequestLabUndo"
+	-- "Score that bench, I am done with it." Carries the bench index. The commit half,
+	-- and the only irreversible thing in the verb: everything before it can be taken
+	-- back and nothing after it can.
+	| "RequestLabCommit"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -284,6 +303,10 @@ local REMOTE_NAMES: { RemoteName } = {
 	"WorkoutUpdated",
 	"RequestStartWorkout",
 	"RequestRep",
+	"LabUpdated",
+	"RequestLabStep",
+	"RequestLabUndo",
+	"RequestLabCommit",
 }
 
 local FOLDER_NAME = "RemoteEvents"

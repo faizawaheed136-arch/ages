@@ -58,9 +58,12 @@ local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local DataService = require(script.Parent.DataService)
 local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
+local ScienceService = require(script.Parent.ScienceService)
 local Ground = require(script.Parent.Parent.world.Ground)
+local Lab = require(script.Parent.Parent.world.Lab)
 local SubjectModels = require(script.Parent.Parent.world.SubjectModels)
 local SubjectMotion = require(script.Parent.Parent.world.SubjectMotion)
+local Curriculum = require(script.Parent.Parent.content.Curriculum)
 local Lessons = require(script.Parent.Parent.content.Lessons)
 local Subjects = require(script.Parent.Parent.content.Subjects)
 
@@ -68,6 +71,7 @@ type LifeData = Types.LifeData
 type LessonQuestion = Types.LessonQuestion
 type LessonState = Types.LessonState
 type OfferedChoice = Types.OfferedChoice
+type SchoolSubject = Types.SchoolSubject
 type SubjectRig = SubjectModels.SubjectRig
 type Motion = SubjectMotion.Motion
 
@@ -571,6 +575,17 @@ local function buildRoom(): boolean
 		locked = false,
 	})
 	attendAt = at
+
+	-- The lab goes up with the school and around the same point, because it is a room in
+	-- the same building and the pad outside is its door too. Built here rather than
+	-- lazily on the first Science lesson so that a Studio session can see the benches
+	-- standing the moment the world loads -- a room that only appears once somebody is
+	-- nine is a room nobody can check.
+	--
+	-- Best effort, and a failure is not a failure of school: Lab.Build refusing means
+	-- Science refuses at the door with a reason, and every other subject carries on.
+	Lab.Build(at)
+
 	return true
 end
 
@@ -907,10 +922,58 @@ local function onAnswerRequested(player: Player, index: unknown, answerId: unkno
 	answer(player, lesson, row)
 end
 
+-- What is on today.
+--
+-- Rotated rather than rolled, and the difference matters over a childhood: three random
+-- draws a year from six subjects will hand a player the same one twice in a term and
+-- skip another for four years, and a timetable that behaves like that is not a
+-- timetable. Keyed on the age and the lessons already sat, so it walks the list evenly
+-- and every subject comes round -- and so the same year lived twice in a test gives the
+-- same subject, which is worth a great deal when the thing being tested is one of them.
+--
+-- Nil only if a whole school year has no subject in it, which content/Curriculum.luau
+-- refuses to load with. Handled anyway rather than assumed, because the check that makes
+-- it impossible lives in another file and could be relaxed there.
+local function subjectFor(data: LifeData): SchoolSubject?
+	local age = ageYearsOf(data)
+	local list = Curriculum.ForAge(age)
+	if #list == 0 then
+		return nil
+	end
+	local turn = age * SCHOOL.LessonsPerYear + data.lessonsThisYear
+	return list[turn % #list + 1]
+end
+
 -- Starts a lesson. Only fails for a reason worth saying out loud -- the caller has
 -- already checked everything about the player, and there is no longer a room to fail
 -- against.
+--
+-- Two shapes come out of here, and which one depends entirely on the subject's verb.
+-- A "quiz" subject runs the loop in the rest of this file. A "procedure" subject hands
+-- the whole afternoon to ScienceService and this file does nothing further with it --
+-- including the smarts and the yearly count, which the lab pays and spends itself. That
+-- split is deliberate: the alternative is a School that knows how every verb is scored,
+-- which is the file that would have to be edited six times over.
 local function begin(player: Player, data: LifeData, room: Vector3): boolean
+	local subject = subjectFor(data)
+	if subject == nil then
+		notice(player, "There is nothing on today.", false)
+		return false
+	end
+
+	if subject.verb == "procedure" then
+		local ok, refusal = ScienceService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "The lab is closed today.", false)
+			return false
+		end
+		-- Cleared so the science HUD is not opening underneath a school line about a
+		-- lesson that is not the one running.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
 	local questions = Lessons.For(ageYearsOf(data), SCHOOL.QuestionsPerLesson)
 	if #questions == 0 then
 		-- Impossible if the content file loaded, which checks every age has enough
@@ -976,6 +1039,15 @@ local function tickPlayer(player: Player, elapsed: number)
 		if position == nil or not buildRoom() then
 			return
 		end
+
+		-- A Science lesson is a lesson, and it is not one of these. Without this the pad
+		-- is read on every tick of a lab session -- and the lab centre is the pad, so the
+		-- player is standing on it the whole time -- and school would try to start a
+		-- second lesson four times a second for the length of the procedure.
+		if ScienceService.IsRunning(player) then
+			return
+		end
+
 		local at = attendAt
 		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
 			return
@@ -1082,6 +1154,7 @@ function SchoolService.OnAgeUp(player: Player)
 	-- is the generous reading and the right one: they are still in the room.
 	local missed = data.lessonsThisYear == 0
 		and lessons[player] == nil
+		and not ScienceService.IsRunning(player)
 		and yearJustEnded >= SCHOOL.StartAge
 		and yearJustEnded <= SCHOOL.EndAge
 
@@ -1100,6 +1173,11 @@ end
 -- somebody who no longer exists.
 function SchoolService.ResetForNewLife(player: Player)
 	forget(player)
+	-- The lab goes with it. Called from here rather than added to the caller's list
+	-- because Science is a subject of this school rather than a system beside it: a
+	-- caller that had to remember both would eventually forget one, and the failure --
+	-- a new child arriving at the lab already good at it -- is invisible.
+	ScienceService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		Lives.Active(profile.Data).lessonsThisYear = 0

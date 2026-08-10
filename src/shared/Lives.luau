@@ -87,6 +87,12 @@ function Lives.New(): LifeData
 		-- existed: that life has sat no lessons this year, which is exactly true -- there was
 		-- nothing to sit.
 		lessonsThisYear = 0,
+		-- Empty, which reads as level one in every subject with no passes banked -- true of
+		-- the newborn, and true of a save written before subjects had verbs. An old life
+		-- arrives at the lab as a beginner, which is what it is: it has never run a
+		-- procedure, because until now there were none to run.
+		subjectMastery = {},
+		subjectPasses = {},
 		-- Empty for a newborn, who has met nobody yet, and empty is also the honest thing to
 		-- hand a save written before people existed. An absent key is "not met", and the
 		-- authored starting bond is written the first time anything moves -- so a stored life's

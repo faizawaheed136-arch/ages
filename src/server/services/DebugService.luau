@@ -32,6 +32,7 @@ local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
+local ScienceService = require(script.Parent.ScienceService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -850,6 +851,92 @@ Commands.school = function(player: Player, args: { string }): string
 	return `usage: /school [start|end|year <n>|on|off] — {SchoolService.Describe(player)}`
 end
 
+-- Everything about the Science lab, on one command.
+--
+-- Separate from /school even though a procedure *is* a lesson, because they fail in
+-- completely different places. School's failures are about the door -- wrong age, year
+-- used up, no building tagged. The lab's are about the room: a station the floor refused
+-- to take, a procedure that names one, a level that hides too much of the board. Folding
+-- them into one command would mean the two most common questions ("why can I not start
+-- one" and "why is this one unplayable") printing the same paragraph.
+--
+-- The first line of bare /lab is the one that matters and it is the missing-station list.
+-- The floor can refuse a station -- a wall, a slope, another station already there -- and
+-- Lab.CanRun then refuses every procedure that names it. Played rather than read, that is
+-- a lesson that starts and immediately ends for no visible reason.
+--
+--   /lab                      whether the room got built and where, which stations the
+--                             floor refused, your mastery level and how much of the board
+--                             it shows, the live benches with their stacks and clocks,
+--                             charges left, and which of the four places you are standing.
+--   /lab start                a procedure where you stand -- but note the lab is always
+--                             the lab: this teleports nothing, so run it from inside the
+--                             room or the first proximity tick will find you outside it.
+--   /lab end                  grades whatever is on the benches now, the way the clock
+--                             running out does. The way to see a half-finished stack score
+--                             rather than having to sit through eighty seconds.
+--   /lab level 1 then /lab level 5
+--                             the whole progression, twice, in ten seconds. At 1 the board
+--                             shows three steps of an eight-step procedure and you will
+--                             walk back to it four times; at 5 it shows all eight and the
+--                             board is furniture. If those two feel the same, requirement
+--                             six is not landing and no amount of play will tell you why.
+--   /lab refill               the pool back to full without the cupboard trip, for testing
+--                             scoring without the traversal in the way.
+--   walk to a station with 0 charges
+--                             should refuse by name rather than doing nothing. The click
+--                             that silently fails is the one bug this activity cannot have.
+--   /lab off                  the whole verb dark, for telling a lab bug apart from a
+--                             school one -- /school start should then hand science to the
+--                             quiz path instead of refusing.
+Commands.lab = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return ScienceService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		ScienceService.SetEnabled(arg == "on")
+		return `lab {arg} — {ScienceService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = ScienceService.ForceStart(player)
+		if not started then
+			return `could not start a procedure: {refusal or "no reason given"} — {ScienceService.Describe(player)}`
+		end
+		return `procedure started — {ScienceService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not ScienceService.ForceEnd(player) then
+			return `no procedure running — {ScienceService.Describe(player)}`
+		end
+		return `benches graded — {ScienceService.Describe(player)}`
+	end
+
+	if arg == "level" then
+		local level = tonumber(args[2])
+		if level == nil or not ScienceService.SetLevel(player, level) then
+			return `usage: /lab level <1-{#Config.School.Science.RevealedStepsByLevel}> — {ScienceService.Describe(player)}`
+		end
+		return ScienceService.Describe(player)
+	end
+
+	if arg == "refill" then
+		if not ScienceService.Refill(player) then
+			return `nothing to refill — {ScienceService.Describe(player)}`
+		end
+		return `reagents topped up — {ScienceService.Describe(player)}`
+	end
+
+	return `usage: /lab [start|end|level <n>|refill|on|off] — {ScienceService.Describe(player)}`
+end
+
 -- The first five years, on one command.
 --
 -- The real path is "/die, then play", and unlike school and work that is genuinely quick
@@ -1565,7 +1652,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
-	.. "/school [start|end|year <n>], /gym [start|end|on|off], "
+	.. "/school [start|end|year <n>], /lab [start|end|level <n>|refill|on|off], "
+	.. "/gym [start|end|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"

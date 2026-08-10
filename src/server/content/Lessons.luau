@@ -20,6 +20,20 @@
 --   these into subjects would buy a menu nobody asked for and would make every gap in
 --   the bank look like a missing feature rather than a question not written yet.
 --
+--   That one is now overturned, and the paragraph above is left standing because the
+--   reasoning in it was correct and stopped being correct for a reason worth recording.
+--   It holds for exactly as long as every subject is the same act. Sorting one
+--   multiple-choice question from another by subject really does buy nothing. Science
+--   is no longer a multiple-choice question -- it is a procedure you walk, in a room
+--   with benches in it -- and once one subject is a different thing to do with your
+--   hands, the others need names to be told apart by. Types.SchoolSubject is the
+--   timetable that resulted; content/Curriculum.luau is the list.
+--
+--   This bank did not become obsolete when that happened. It is what every subject
+--   whose verb is not written yet still runs on, and the entries here are no longer
+--   the whole of school -- they are the "quiz" verb, which is a placeholder with a
+--   design attached and is meant to end up serving nothing.
+--
 --   No trick questions and no trivia. A question whose answer you either happen to
 --   know or do not is a coin toss with extra reading. Every one of these is either
 --   something a player can work out from the question, or something worth knowing --

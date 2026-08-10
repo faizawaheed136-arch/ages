@@ -11,10 +11,12 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 local StatsUI = require(script.ui.StatsUI)
 local ChoicePanel = require(script.ui.ChoicePanel)
+local LabUI = require(script.ui.LabUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
 local Prompts = require(script.world.Prompts)
+local LabDots = require(script.world.LabDots)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -28,6 +30,7 @@ type LessonState = Types.LessonState
 type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
 type PersonRosterEntry = Types.PersonRosterEntry
+type LabState = Types.LabState
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
 -- retries for a few frames instead of giving up on the first attempt.
@@ -54,10 +57,12 @@ task.spawn(hidePlayerList)
 
 local ui = StatsUI.new()
 local panel = ChoicePanel.new()
+local lab = LabUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
 local prompts = Prompts.new()
+local labDots = LabDots.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -73,6 +78,9 @@ local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local RequestStartWorkoutRemote = Remotes.Get("RequestStartWorkout")
 local RequestRepRemote = Remotes.Get("RequestRep")
+local RequestLabStepRemote = Remotes.Get("RequestLabStep")
+local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
+local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -125,6 +133,34 @@ prompts:On("Person", function(personId: string)
 		return
 	end
 	RequestPersonContactRemote:FireServer(personId)
+end)
+
+-- Clicking the dots on a piece of lab equipment. A station is the one interactable in
+-- the game that is not a *conversation* -- there is nothing to read and nothing to pick
+-- from, because the choice was made at the board and this is the player carrying it out.
+-- So it opens no panel at all: the click is the step.
+--
+-- The station id is the whole payload. Which bench it lands on, whether the player is
+-- close enough, and whether there is a reagent left to spend are all the server's to
+-- answer, because all three can have changed since this client was last told anything.
+prompts:On("Station", function(stationId: string)
+	RequestLabStepRemote:FireServer(stationId)
+end)
+
+-- Undo and Commit, off the panel rather than off anything in the world. Both are things
+-- you do *to the bench you are standing at*, and the bench already has the player's
+-- attention -- putting them on dots would mean walking up to a bench, clicking it to
+-- open a menu, and picking "commit" from a list of one.
+--
+-- The bench index comes from the panel, which got it from the last push. The server
+-- re-checks it against where the player actually is, so a stale index is refused rather
+-- than acted on.
+lab:OnUndo(function(benchIndex: number)
+	RequestLabUndoRemote:FireServer(benchIndex)
+end)
+
+lab:OnCommit(function(benchIndex: number)
+	RequestLabCommitRemote:FireServer(benchIndex)
 end)
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
@@ -368,6 +404,15 @@ Remotes.Get("WorkoutUpdated").OnClientEvent:Connect(function(state: WorkoutState
 	drawWorkoutPanel(state)
 end)
 
+-- The Science lab in progress. Two halves of one fact, and they are driven from the same
+-- push precisely so they cannot disagree: the panel says what the procedure is, and the
+-- dots on the stations say whether the room is currently something you can act on. A lit
+-- beaker with no panel up would be an invitation the server would refuse.
+Remotes.Get("LabUpdated").OnClientEvent:Connect(function(state: LabState?)
+	lab:Set(state)
+	labDots:SetRunning(state ~= nil and state.summary == nil)
+end)
+
 -- Who you are standing next to, and what they have to offer. The row keeps saying who
 -- it is long after there is anything left to take, because a person you are standing
 -- next to is still there when the conversation is over.
@@ -444,6 +489,12 @@ end)
 -- on, which is the only thing on screen worth reading while the summary holds.
 Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	panel:Hide()
+	-- The lab comes down with everything else. The server drops the session on death and
+	-- pushes nil, but the order of those two arriving is not guaranteed, and a bench
+	-- clock still counting down under a death notice would be the game insisting there is
+	-- something left to hurry for.
+	lab:Set(nil)
+	labDots:SetRunning(false)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

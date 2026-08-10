@@ -618,6 +618,173 @@ export type LessonState = {
 	wasRight: boolean,
 }
 
+-- Which subject a school lesson is, and by that which *verb* it runs.
+--
+-- The reason this exists at all is a reversal, and it is worth saying so where the
+-- reversal lands rather than only where it was made: content/Lessons.luau's header
+-- argues at length that there are no subjects, only a room with a board in it. That was
+-- right while every subject was the same act -- a question and three answers -- because
+-- naming them would have bought a menu and made every gap in the question bank look
+-- like a missing feature. It stops being right the moment a subject is a different
+-- thing to do with your hands. Science is not chemistry-flavoured multiple choice; it
+-- is a procedure you walk. Once one subject has its own verb the others need names to
+-- be told apart by, and the menu the old note was protecting against is now the point.
+--
+-- Not the same word as content/Subjects.luau, which holds SceneSubject -- the animals
+-- and people an event can be *about*. Unrelated, and the collision is unfortunate; this
+-- is the one on a timetable.
+export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" | "geography"
+
+-- How a subject is played. The whole content of the Bully model in one union: a
+-- subject is a verb, and two subjects sharing a verb are the same activity in
+-- different words, which is the thing this rebuild exists to stop.
+--
+-- "quiz" is the old path -- ask, three answers, a clock -- and it is transitional, not
+-- a design. Every subject still on it is a subject whose verb has not been written yet,
+-- and the list of them is meant to reach zero. It is kept because the alternative was
+-- deleting eleven of a childhood's twelve school years until all six verbs existed, and
+-- a childhood with one subject in it is worse than one with five placeholders.
+export type SchoolVerb = "quiz" | "procedure"
+
+-- One school subject as content declares it.
+export type SchoolSubject = {
+	id: SchoolSubjectId,
+	-- Shown on the board, the timetable and the report. Title case, one or two words:
+	-- it is read as a label rather than a sentence.
+	name: string,
+	verb: SchoolVerb,
+	-- What the subject asks of you, in the player's words rather than the system's. Read
+	-- once, at the door, by somebody deciding whether to walk in.
+	blurb: string,
+	-- The ages this subject is taught between, matched the way a question's band is. Not
+	-- every subject runs the whole twelve years -- a six-year-old is not running a
+	-- titration, and the year a subject opens is one of the few things that makes a
+	-- birthday change what school *is* rather than only what it asks.
+	minAge: number,
+	maxAge: number,
+}
+
+-- One step of a Science procedure: go to this station, do the thing it does.
+--
+-- A step is a station id and nothing else at authoring time. There is no "how" here on
+-- purpose -- the station is the how, and a step that carried its own instructions would
+-- let two steps at the same bench mean different things, which is exactly the
+-- undifferentiated-outcome trap the verb is built to avoid.
+export type ProcedureStep = {
+	station: string,
+	-- What the board writes on this line. Short: it is one row of a list read at a
+	-- glance from across a room, capped by Config.School.Science.MaxStepLabelLength.
+	label: string,
+}
+
+-- A Science procedure as content authors it: an ordered list of stations, and a name.
+export type Procedure = {
+	id: string,
+	-- Named as a thing you did, not a topic you covered -- "Grow a salt crystal" rather
+	-- than "Crystallisation". The report card reads better and so does the board.
+	name: string,
+	steps: { ProcedureStep },
+	minAge: number,
+	maxAge: number,
+}
+
+-- One bench's stack, as the client draws it.
+--
+-- Steps taken are station ids the player has clicked, in the order they clicked them.
+-- Freely removable until `committed`, which is the undo half of the commit-and-undo
+-- pair: the bench is a draft right up to the moment it is not.
+export type BenchState = {
+	-- 1-based, and the client's whole way of telling the two benches apart.
+	index: number,
+	-- The procedure's name -- "Grow a salt crystal". The one thing about a bench that is
+	-- true from across the room, so a player deciding which bench to pick up knows what
+	-- they would be picking up.
+	name: string,
+	-- Station ids, in click order. May be longer than the procedure and may hold stations
+	-- it never asked for -- that is exactly what makes it a draft rather than a form.
+	taken: { string },
+	-- The next few steps, and *only* while the player is standing at the board -- empty
+	-- everywhere else in the room.
+	--
+	-- This is the whole verb, so it is worth being explicit about why it empties. If the
+	-- list stayed on screen after the walk back, the board would be a button you press
+	-- once and mastery would buy nothing, because nobody would ever need to return. The
+	-- player carries the steps in their head across the room; how many they can carry is
+	-- what a level is. Emptying this is not the UI being unhelpful, it is the mechanic.
+	--
+	-- Windowed from where the stack currently stands rather than from step one, so the
+	-- board always answers "what now" instead of reminding you what you already did --
+	-- the bench in front of you is the record of that.
+	revealed: { ProcedureStep },
+	-- Where the revealed window starts, 1-based, and how many steps there are in total.
+	-- Together they let the board say "steps 4-6 of 8" -- and saying that there *is* a
+	-- hidden tail is what makes the next mastery level something to want, where hiding
+	-- the fact would make progression invisible.
+	--
+	-- May be `total + 1` or beyond, which is not an error and has to be drawn as one: it
+	-- means the stack has reached or run past the end of the procedure, `revealed` is
+	-- empty, and the honest thing for the board to say is "that is all of it, go and
+	-- commit". A board that clamped back to the last step would be telling a player who
+	-- has just finished to do the final step a second time.
+	revealedFrom: number,
+	total: number,
+	secondsLeft: number,
+	secondsTotal: number,
+	-- Whether this is the bench the player has in hand. Steps land here and nowhere else,
+	-- and it changes by walking up to the other bench -- which is what makes running two
+	-- procedures a matter of planned trips rather than of clicking twice as fast.
+	active: boolean,
+	-- Set once the bench is scored: the 0-1 share it earned, which lands on
+	-- Config.School's GoodShare/OkShare like every other verdict in the game.
+	score: number?,
+	-- The one line said about a committed bench, naming what went wrong and where. A
+	-- score with no sentence attached teaches nothing, which is the same reason a
+	-- question carries a `because`.
+	verdict: string?,
+	committed: boolean,
+}
+
+-- The Science lab in progress, pushed as a whole snapshot like every other state here.
+-- Nil means no procedure is running, which is almost all of a life.
+export type LabState = {
+	-- Both benches, or one while the second is still closed. Ordered by `index`.
+	benches: { BenchState },
+	-- Reagent charges left in the shared pool, and what it holds when full. Shared across
+	-- both benches on purpose -- it is the second thing the two procedures fight over, and
+	-- the reason committing a bench early is ever the right call rather than always the
+	-- timid one.
+	charges: number,
+	chargesMax: number,
+	-- Mastery level, the ceiling, and how many passes stand against the next one. On
+	-- screen because the thing mastery buys -- more of the board at once -- is otherwise
+	-- something a player only notices in hindsight, and a progression nobody can feel
+	-- arriving is a number.
+	level: number,
+	levelMax: number,
+	passes: number,
+	passesPerLevel: number,
+	-- Where the player is standing, which is the entire input state of this activity.
+	-- Nil or false almost all the time: this is a room you cross rather than a room you
+	-- stand in, and that is the point.
+	--
+	-- The client draws its affordances off these three and nothing else -- Commit is live
+	-- only at a bench, the step list only at the board, the refill bar only at the
+	-- cupboard -- so a button the player can see is always a button the server will honour.
+	atBoard: boolean,
+	atBench: number?,
+	atCupboard: boolean,
+	-- How far through the cupboard's refill the player is, 0-1. Only ever moving while
+	-- they stand there, and reset the moment they walk off: a refill you can start and
+	-- come back to would turn the trip into two half-trips.
+	refillProgress: number,
+	-- Set for the beat after the whole lab is done, replacing the benches on screen.
+	summary: string?,
+	-- The last thing the lab refused to do and why -- "No reagents left", "Go to a bench
+	-- first". Cleared on the next push that changes anything else, because a refusal is a
+	-- reply to a click and not a state to sit in.
+	notice: string?,
+}
+
 -- A workout in progress, pushed as a whole snapshot. Three phases:
 -- "offer"  — the machine is near, the panel asks Start/Leave
 -- "rep"    — the sweep bar is live, the PUSH button is up
@@ -1576,6 +1743,30 @@ export type LifeData = {
 	--
 	-- Per life, like the job and the money: nobody inherits an education.
 	lessonsThisYear: number,
+	-- How good this life has got at each subject's verb, keyed by subject id. Absent
+	-- keys read as level one, which is where everybody starts.
+	--
+	-- This is the one number in school that is not `smarts`, and the reason it exists
+	-- separately is that it does not measure the same thing. Smarts is what school was
+	-- *for* -- a stat other systems read, spent on being something other than a shop
+	-- assistant at sixteen. Mastery is what school is *like*: it buys how much of a
+	-- procedure the board shows you at once, which is a change to the activity rather
+	-- than to the character. A player at mastery five is not cleverer, they are walking
+	-- to the board less.
+	--
+	-- Keyed by subject rather than one figure, for the reason jobStanding is keyed by
+	-- job: being good at running a procedure says nothing about reading a passage, and
+	-- one number would let a term of Science pay for a term of Reading.
+	--
+	-- Per life, like everything else here. Nobody inherits an education.
+	subjectMastery: { [string]: number },
+	-- Passes banked toward the *next* mastery level in each subject, keyed the same way.
+	-- Reset to zero when a level is earned, so this only ever holds a partial run.
+	--
+	-- A separate field rather than a fractional mastery, because the two are read in
+	-- different places and a level is a thing the player is told about once. Absent keys
+	-- read as zero.
+	subjectPasses: { [string]: number },
 	-- How each person you know feels about you, keyed by person id, between
 	-- People.MinBond and People.MaxBond.
 	--

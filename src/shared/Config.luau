@@ -1660,6 +1660,182 @@ Config.School = {
 	MaxAskLength = 96,
 }
 
+-- Science. The first subject with a verb of its own rather than a question with the
+-- word "science" written above it.
+--
+-- The shape is Bully's: every subject is a different *thing you do*, not a different
+-- question set, and passing buys the right to skip rather than the right to do it
+-- again. What Science does is run a procedure -- a board names an ordered list of
+-- stations, you walk the room clicking them in order, and each click stacks a step on
+-- a bench. Nothing is scored until you commit the bench, so the whole stack is undoable
+-- right up to that moment; that is the commit-and-undo pair every activity here owes.
+--
+-- Two benches run at once against a shared set of stations, which is where the load
+-- comes from: the second procedure is not twice the work, it is the same work with the
+-- room contested. Reagents are the traversal forcer -- steps spend from a shared pool
+-- and the cupboard is across the room -- and mastery does not raise a number, it shows
+-- you more of the board at once, so a level is felt as fewer walks back to read it.
+--
+-- Nothing in here restates a verdict share or a smarts payout. A procedure's score is
+-- a 0-1 share like a lesson's, so it lands on Config.School's GoodShare/OkShare and
+-- SmartsPer*Lesson and there is deliberately no second ladder to keep in step.
+Config.School.Science = {
+	-- Benches running at once. Two, because one is a queue and three is a spectacle you
+	-- watch rather than a room you work: with two, every trip to a station is a choice
+	-- about which procedure it serves, and that choice is the whole mechanic.
+	-- Safe range: 1-3. At 1 there is no contention and this is a fetch quest.
+	Benches = 2,
+
+	-- The second bench does not open until the first procedure is this far along, so the
+	-- opening seconds teach the verb before they test it.
+	-- Safe range: 0.2-0.5. Above ~0.5 the second bench cannot be finished in time.
+	SecondBenchAtShare = 0.3,
+
+	-- The shortest procedure worth authoring. Four is long enough that order matters --
+	-- below it there is no sequence to get wrong, only a list to tick off. The ceiling is
+	-- MaxSteps, further down, and there is deliberately only one of those: two separately
+	-- tunable maximums is how a content check ends up quietly enforcing the looser one.
+	-- Safe range: 3-6, and below MaxSteps.
+	StepsMin = 4,
+
+	-- How long a procedure stands before the bench spoils and scores itself where it is.
+	-- Sized so an unmastered player crossing the room to re-read the board can finish
+	-- one bench comfortably and two only by planning the order of their trips.
+	-- Safe range: 50-120. Below ~50 the cupboard trip alone eats the clock.
+	SecondsPerProcedure = 80,
+
+	-- Speed is a multiplier on the score, never the score itself, and it has a floor: a
+	-- correct procedure committed on the buzzer is still worth most of a correct
+	-- procedure. Full credit needs this share of the clock still unspent at commit.
+	-- Safe range: Floor 0.6-0.85, FullShare 0.25-0.5. A floor of 0 makes a slow-but-right
+	-- run worthless, which punishes the player who is learning the room.
+	SpeedFloorFactor = 0.7,
+	SpeedFullShare = 0.4,
+
+	-- Reagents. Every step spends from one shared pool, refilled at a cupboard that is
+	-- deliberately not next to either bench. Twelve charges against a 4-8 step procedure
+	-- means roughly one cupboard trip per procedure and about one every fifty seconds
+	-- with two benches running -- close enough to the forty-to-sixty window that the room
+	-- never goes quiet, without the trip becoming the activity.
+	--
+	-- Shared rather than per-bench on purpose: it is the second thing the two procedures
+	-- have to fight over, and it is the one that makes committing a bench early a real
+	-- decision rather than always the safe one.
+	-- Safe range: Charges 8-20, ChargesPerStep 1-2, Refill 1.5-4.
+	SupplyCharges = 12,
+	ChargesPerStep = 1,
+	CupboardRefillSeconds = 2,
+
+	-- How much of the board you can see at once, by mastery level. This is requirement
+	-- six and the only progression the verb has: the player does not get faster hands or
+	-- a bigger number, they get to hold more of the procedure in their head at a time,
+	-- and they feel it as trips to the board that stop being necessary. At level one
+	-- three steps is one comfortable walk; by level five the whole longest procedure is
+	-- on screen and the board is furniture.
+	--
+	-- The length of this list is also the level ceiling -- ScienceService reads
+	-- `#RevealedStepsByLevel` rather than holding a separate maximum -- so adding a sixth
+	-- number here adds a sixth level and nothing else has to be told.
+	-- Safe range: rising, first 2-4, last at or above the longest authored procedure.
+	RevealedStepsByLevel = { 3, 4, 5, 6, 8 },
+
+	-- Escalation is deliberately *not* a station count that grows with mastery, which is
+	-- what this block held first. The lab is one room built once and shared by everyone
+	-- standing in it -- two players at different levels cannot be in differently furnished
+	-- versions of the same place -- so every station stands from the start, and the space
+	-- escalates by which stations a *procedure* sends you to. A nine-year-old's four-step
+	-- errand walks past five machines it never touches, which is also what a school lab
+	-- actually looks like.
+
+	-- Procedures scored at or above School.GoodShare that count toward the next level,
+	-- and how many of them a level costs. Two so a single lucky run does not promote and
+	-- a single bad one does not feel like it undid anything.
+	-- Safe range: 2-4.
+	PassesPerLevel = 2,
+
+	-- Room and reach. The board is read from further away than a station is clicked from,
+	-- because reading is not an interaction and standing in the doorway squinting is a
+	-- legitimate way to play. Station reach is tight enough that two stations can stand
+	-- near each other without either answering for the other.
+	-- Safe range: Station 3-5, Bench 4-6, Board 5-9, Cupboard 3-5, Room 30-60.
+	StationRadiusStuds = 4,
+	BenchRadiusStuds = 5,
+	BoardRadiusStuds = 7,
+	CupboardRadiusStuds = 4,
+	RoomRadiusStuds = 40,
+
+	-- How often the server re-checks players against benches, stations and the cupboard.
+	-- Matches School.TickSeconds because it is the identical proximity job.
+	-- Safe range: 0.1-1.
+	TickSeconds = 0.25,
+
+	-- How long a committed bench holds its result before it clears and re-lays. The same
+	-- beat as a lesson's verdict and for the same reason: the run has to be legible
+	-- before the next one starts.
+	-- Safe range: 2-6.
+	VerdictSeconds = 3.5,
+
+	-- Content limits, enforced at server start rather than found in play. A step label is
+	-- shorter than a question because it is read off a board in a list rather than a HUD
+	-- row, and ten steps is where the walk stops being a plan and becomes a memory test.
+	-- Safe range: MaxSteps 6-12 and above StepsMin, MaxStepLabelLength 16-40.
+	MaxSteps = 10,
+	MaxStepLabelLength = 28,
+
+	-- Where the lab's furniture stands, as fractions of RoomRadiusStuds rather than as
+	-- studs, so widening the room moves everything in it and nothing has to be re-measured.
+	--
+	-- The arrangement is the mechanic in physical form and the fractions are not
+	-- arbitrary. The board and the cupboard are on *opposite* sides, because the two
+	-- errands the verb forces -- go and re-read, go and refill -- have to be different
+	-- journeys or the player batches them into one and neither costs anything. The
+	-- benches sit between them on the cross axis so that every commit is a decision made
+	-- in the middle of the room rather than on the way past something else. The stations
+	-- ring the outside, further out than any of it, because they are the steps and the
+	-- steps are what the player should be spending their walking on.
+	Build = {
+		-- Safe range: 0.4-0.7 each, Station above both. Station at or above 1.0 puts a
+		-- step outside the room the player is held in and ends the lesson mid-procedure.
+		BoardDistanceShare = 0.55,
+		CupboardDistanceShare = 0.55,
+		BenchDistanceShare = 0.35,
+		StationDistanceShare = 0.75,
+
+		-- Bearings, in degrees clockwise from the room's forward. Board and cupboard face
+		-- each other across the room; the benches take the cross axis. Written out rather
+		-- than derived so a builder rearranging the room can see the whole layout in four
+		-- numbers.
+		BoardBearing = 0,
+		CupboardBearing = 180,
+		FirstBenchBearing = 90,
+		BenchBearingStep = 180,
+
+		-- How far off a station may be nudged when the floor refuses its first spot, as a
+		-- share of the room radius, and how many rings out are tried. Some floor is
+		-- better than a station that does not exist -- a missing station is a procedure
+		-- that cannot be finished, which is the one failure the player cannot play
+		-- around. Safe range: 0.05-0.2, 2-5.
+		StationRetryShare = 0.1,
+		StationRetries = 3,
+
+		-- Placeholder furniture, in studs. Sized so a bench reads as something you stand
+		-- at and a station as something you reach, from across a forty-stud room, and
+		-- deliberately blocky: these are stand-ins for models a builder drops in later,
+		-- and anything prettier here would only be harder to throw away.
+		-- Safe range: 2-6 wide, 1-4 tall.
+		StationSize = Vector3.new(2.6, 3, 2.6),
+		BenchSize = Vector3.new(6, 3, 3),
+		CupboardSize = Vector3.new(3.5, 6, 2),
+		BoardSize = Vector3.new(10, 6, 0.6),
+
+		-- How far away a station's own name label can still be read. Shorter than a shop
+		-- sign because it is not deciding whether you walk over -- the board already did
+		-- that -- it is confirming which thing you arrived at.
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+}
+
 -- The gym. A room full of machines that is also a place a life goes to spend
 -- effort on itself.
 --
