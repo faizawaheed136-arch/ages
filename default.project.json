@@ -76,6 +76,15 @@
       "Furniture": {
         "$path": "assets/Furniture.rbxmx"
       },
+      "Street": {
+        "$path": "assets/Street.rbxmx"
+      },
+      "Town": {
+        "$path": "assets/Town.rbxmx"
+      },
+      "City": {
+        "$path": "assets/City.rbxmx"
+      },
       "SpawnLocation": {
         "$className": "SpawnLocation",
         "$properties": {
@@ -94,7 +103,7 @@
           "Locked": true,
           "Color": [0.38823, 0.37254, 0.38823],
           "Position": [0, -10, 0],
-          "Size": [512, 20, 512]
+          "Size": [2048, 20, 2048]
         }
       }
     }

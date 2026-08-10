@@ -13,8 +13,9 @@ local Adult: { LifeEvent } = {
 		id = "adult_january",
 		minAge = 18,
 		maxAge = 55,
-		delivery = "Direct",
-		prompt = "You've signed up for something that involves getting up early and hurting on purpose.",
+		delivery = "NPCApproach",
+		cast = "neighbor",
+		prompt = "It's January and you've signed up for something that involves getting up early and hurting on purpose. The neighbor has seen you carrying the bag and has come to say what everyone is saying.",
 		choices = {
 			{
 				id = "stick",
@@ -67,8 +68,9 @@ local Adult: { LifeEvent } = {
 		id = "adult_old_number",
 		minAge = 25,
 		maxAge = 70,
-		delivery = "Direct",
-		prompt = "A name you haven't thought about in years comes up on your phone.",
+		delivery = "NPCApproach",
+		cast = "friend",
+		prompt = "Someone you haven't seen in years is standing on the doorstep. You almost don't recognise them, and then you do.",
 		choices = {
 			{
 				id = "answer",
@@ -141,6 +143,43 @@ local Adult: { LifeEvent } = {
 				label = "Go back to sleep",
 				outcome = "You slept another two hours and missed it entirely. You'd earned it, and there would be other mornings.",
 				effects = { health = 2, happiness = -1 },
+			},
+		},
+	},
+
+	-- Being unwell, grown up: the first illness with a job and a reason to go in
+	-- anyway. The doctor is a third answer only when money allows -- a price is a
+	-- gate, and a broke life has to make do with resting or pushing through.
+	{
+		id = "adult_caught_something",
+		minAge = 18,
+		maxAge = 75,
+		delivery = "Direct",
+		forbids = { "sick" },
+		weight = 0.5,
+		prompt = "You're coming down with something, and you can't decide whether it's worth being sensible about. There's stuff that needs doing.",
+		choices = {
+			{
+				id = "take_the_day",
+				label = "Take the day off",
+				outcome = "You stayed in and slept it off. The stuff waited, the way it always does, and you got back a day you'd have lost anyway.",
+				effects = { health = 4, happiness = -1 },
+				sets = { "sick" },
+			},
+			{
+				id = "power_through",
+				label = "Power through it",
+				outcome = "You did everything anyway, badly, with a hot face. It cost you more than it was worth, but you've never liked letting a day beat you.",
+				effects = { happiness = 2, health = -3 },
+				sets = { "sick" },
+			},
+			{
+				id = "see_a_doctor",
+				label = "See a doctor",
+				outcome = "You sat in a waiting room for an hour and a half and left with a prescription and a bill. You didn't feel clever. You did feel looked at.",
+				cost = 120,
+				effects = { health = 6, happiness = 1 },
+				sets = { "sick" },
 			},
 		},
 	},

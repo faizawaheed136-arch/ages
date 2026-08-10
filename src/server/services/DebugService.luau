@@ -11,20 +11,53 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Money = require(ReplicatedStorage:WaitForChild("Money"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
+local Interact = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("Interact"))
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
+local MoneyService = require(script.Parent.MoneyService)
+local PocketMoneyService = require(script.Parent.PocketMoneyService)
 local LifeService = require(script.Parent.LifeService)
 local EventService = require(script.Parent.EventService)
 local BodyService = require(script.Parent.BodyService)
 local DeliveryService = require(script.Parent.DeliveryService)
+local PlaceService = require(script.Parent.PlaceService)
+local WorkService = require(script.Parent.WorkService)
+local SchoolService = require(script.Parent.SchoolService)
+local GymService = require(script.Parent.GymService)
+local PeopleService = require(script.Parent.PeopleService)
+local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
+local PropService = require(script.Parent.PropService)
+local SceneService = require(script.Parent.SceneService)
+local SetupService = require(script.Parent.SetupService)
+local ReturnService = require(script.Parent.ReturnService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
+local Flags = require(script.Parent.Parent.content.Flags)
 
 type StatName = Types.StatName
+type LifeData = Types.LifeData
+
+-- Sorted, because an unordered dump of a keyed table comes out in a different order every
+-- time it is read and the command is mostly used to compare two readings of it.
+local function describeFlags(data: LifeData): string
+	local held: { string } = {}
+	for flagId, age in data.flags do
+		table.insert(held, `{flagId} (age {age})`)
+	end
+	if #held == 0 then
+		return "none yet"
+	end
+	table.sort(held)
+	return table.concat(held, ", ")
+end
 
 local PREFIXES = { "/", "!" }
 local MAX_AGE_UPS_PER_COMMAND = 200
@@ -33,6 +66,11 @@ local MAX_AGE_UPS_PER_COMMAND = 200
 -- something on the floor you walk onto rather than an obstacle you bump into.
 local ANCHOR_DISTANCE = 8
 local ANCHOR_SIZE = Vector3.new(4, 0.2, 4)
+
+-- How many interactables /dots prints before it stops. A harness listing, not a tunable:
+-- the answer is always in the nearest few, and a busy street would otherwise fill the
+-- output window with things behind the player.
+local DOTS_LISTED = 8
 
 local VALID_STATS: { [string]: boolean } = {
 	health = true,
@@ -96,8 +134,8 @@ Commands.bank = function(player: Player, args: { string }): string
 	if seconds == nil then
 		return "usage: /bank <seconds>"
 	end
-	profile.Data.secondsSinceAgeUp += seconds
-	return `banked {seconds}s -> {string.format("%.1f", profile.Data.secondsSinceAgeUp)}s toward auto age-up`
+	Lives.Active(profile.Data).secondsSinceAgeUp += seconds
+	return `banked {seconds}s -> {string.format("%.1f", Lives.Active(profile.Data).secondsSinceAgeUp)}s toward auto age-up`
 end
 
 -- Forces a specific event on screen without waiting for its age band to come
@@ -107,8 +145,14 @@ Commands.event = function(player: Player, args: { string }): string
 	if eventId == nil then
 		return "usage: /event <id> (see /events)"
 	end
-	if not EventService.ForceOffer(player, eventId) then
+	if LifeEvents.ById[eventId] == nil then
 		return `no event with id "{eventId}"`
+	end
+	if not EventService.ForceOffer(player, eventId) then
+		-- The id exists, so the only two ways left to be refused are a profile that has
+		-- not loaded and a life that has not been chosen. Named, because "nothing
+		-- happened" while sitting behind the setup menu is otherwise a five-minute hunt.
+		return `could not offer "{eventId}" — no profile loaded, or still in setup (see /setup)`
 	end
 	return `offered "{eventId}"`
 end
@@ -121,12 +165,12 @@ Commands.events = function(player: Player, _args: { string }): string
 		return "no profile loaded yet"
 	end
 
-	local ageYears = profile.Data.ageMonths // Config.Time.MonthsPerYear
+	local ageYears = Lives.Active(profile.Data).ageMonths // Config.Time.MonthsPerYear
 	local eligible: { string } = {}
 	local seenCount = 0
 
 	for _, event in LifeEvents.All do
-		if profile.Data.seenEventIds[event.id] then
+		if Lives.Active(profile.Data).seenEventIds[event.id] then
 			seenCount += 1
 		elseif ageYears >= event.minAge and ageYears <= event.maxAge then
 			table.insert(eligible, event.id)
@@ -246,12 +290,1015 @@ Commands.enact = function(player: Player, args: { string }): string
 		return `no event with id "{eventId}" (see /events, or /enact <on|off>)`
 	end
 	if not EventService.ForceOffer(player, eventId, "Enacted") then
-		return "no profile loaded yet"
+		return "no profile loaded, or still in setup (see /setup)"
 	end
 	-- Deliberately reports what actually happened rather than what was asked for.
-	-- A room too tight to hold the markers answers with a panel, and that is the
-	-- single most useful thing this command can tell you.
+	-- An event with nothing to hang dots on answers with a panel instead, and that is
+	-- the single most useful thing this command can tell you.
 	return `offered "{eventId}" — {EnactService.Describe(player)}`
+end
+
+-- The same three questions again, for the events whose answers are objects.
+--
+-- "/props <id>" forces one into the room whatever its content says, and this is the
+-- command that matters most of the three, because a Handled event is the one kind
+-- that cannot be proof-read by reading it. Whether two props are far enough apart to
+-- tell which one you are reaching for, whether a rug ends up somewhere a cookie then
+-- cannot be staged, and whether an instruction is legible from where the player
+-- actually stands are all things only walking around finds.
+--
+-- The bare form reports what each answer is still waiting for -- how far the rug has
+-- moved of the distance it needs, how long the player has stood still of the time it
+-- takes, which thing is in their hands -- because none of that is visible from the
+-- outside until the instant it resolves, and "nothing happened" is otherwise the
+-- only symptom of every one of these going wrong.
+--
+-- "/props off" hands every open set back to its panel, which tests the fallback
+-- deliberately instead of waiting out SecondsToChoose, and "/props clear" is for the
+-- test that left a rug in the middle of the floor.
+Commands.props = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PropService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		PropService.SetEnabled(arg == "on")
+		return `props {arg}`
+	end
+
+	if arg == "clear" then
+		PropService.ClearAll()
+		return "cleared every staged set on the server"
+	end
+
+	-- Not lowercased: event ids are case-sensitive, and only the switch words above
+	-- are matched loosely.
+	local eventId = args[1] :: string
+	if LifeEvents.ById[eventId] == nil then
+		return `no event with id "{eventId}" (see /events, or /props <on|off|clear>)`
+	end
+	if not EventService.ForceOffer(player, eventId, "Handled") then
+		return "no profile loaded, or still in setup (see /setup)"
+	end
+	-- Reports what actually happened rather than what was asked for, exactly as
+	-- /enact does. An event whose choices carry no acts, or whose props would not fit
+	-- where the player is standing, becomes a panel -- and that is the one thing this
+	-- command most needs to be able to tell you apart from a bug.
+	return `offered "{eventId}" — {PropService.Describe(player)}`
+end
+
+-- What is standing in the room, and the switch to stop anything standing in it.
+--
+-- Deliberately not a way to *summon* a subject. A scene lives exactly as long as
+-- the prompt it belongs to -- that is the one condition it polls, and it is what
+-- guarantees an animal cannot outlive the question it is there to illustrate --
+-- so a dog conjured with no pending event would clear itself within a tick. The
+-- way to put one in the room is to open the event that is about it:
+-- "/enact childhood_big_dog", or "/event childhood_big_dog" for the panel.
+--
+-- "/scene off" is the half that earns its keep day to day: it takes subjects out
+-- of the picture while something unrelated is being tested, the same way
+-- "/enact off" does for the dots.
+Commands.scene = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return SceneService.Describe(player)
+	end
+	if arg ~= "on" and arg ~= "off" then
+		return `usage: /scene [on|off] — {SceneService.Describe(player)}`
+	end
+	SceneService.SetEnabled(arg == "on")
+	return `scenes {arg}`
+end
+
+-- Reads or moves a balance. Three forms, and the split is not cosmetic: a bare
+-- number *sets*, which is how you get to the state a test needs, while "+n" and
+-- "-n" go through Add and Spend, which are the functions the game itself uses. A
+-- harness that could only set would never exercise the clamp, the overdraft refusal
+-- or the ledger's sense of direction.
+--
+-- The two tests this exists for: "/money 0" then open a panel carrying a priced
+-- choice (the row greys, its figure turns red, and clicking it does nothing), and
+-- "/money 500" then the same row (lit, clickable, and the price comes off the
+-- balance).
+Commands.money = function(player: Player, args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = args[1]
+	if arg == nil then
+		return `balance {Money.Format(Lives.Active(profile.Data).money)}`
+	end
+
+	local amount = tonumber(arg)
+	if amount == nil then
+		return `usage: /money [<amount>|+<amount>|-<amount>] (currently {Money.Format(Lives.Active(profile.Data).money)})`
+	end
+
+	-- The sign is read off the text rather than off the number, because a set to
+	-- zero and a relative move of zero are the same number and not the same command.
+	local sign = string.sub(arg, 1, 1)
+	if sign == "+" then
+		MoneyService.Add(player, amount, "debug /money")
+	elseif sign == "-" then
+		-- tonumber already carried the minus, and Spend takes a magnitude.
+		if not MoneyService.Spend(player, -amount, "debug /money") then
+			return `refused: cannot spend {Money.Format(-amount)} of {Money.Format(Lives.Active(profile.Data).money)}`
+		end
+	else
+		MoneyService.Set(player, amount)
+	end
+
+	return `balance {Money.Format(Lives.Active(profile.Data).money)}`
+end
+
+-- Reads or drives the pocket money ledger, and sends the person who carries it.
+--
+-- The real path is "/ageup and watch", but a birthday is a bad rig to test on: it
+-- happens once, it moves the age underneath you, and if the parent fails to arrive
+-- you have to wait a whole retry cycle to see what happens next. "/pocket owe 500"
+-- puts a debt in the ledger with no birthday behind it, and the other two forms are
+-- the two ways it can come out -- "send" for the good version, "pay" for the
+-- fallback that runs when the good version could not happen.
+--
+-- Four tests this exists for:
+--   /age 4 then /ageup          nothing is paid; five is the first birthday.
+--   /pocket owe 500, /pocket send   a parent walks over, the money leaves their
+--                               hands, they stand a moment and go.
+--   /pocket owe 500, /pocket pay    the same five hundred off the player's own
+--                               head, landing exactly once.
+--   /pocket send in a cupboard  nothing sets off, and /pocket says why.
+Commands.pocket = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = args[1]
+	if arg == nil then
+		return PocketMoneyService.Describe(player)
+	end
+
+	if arg == "pay" then
+		local paid = PocketMoneyService.Settle(player)
+		if paid <= 0 then
+			return `nothing owed — {PocketMoneyService.Describe(player)}`
+		end
+		return `handed over {Money.Format(paid)} — {PocketMoneyService.Describe(player)}`
+	end
+
+	if arg == "send" then
+		-- Yields on the avatar build, which is fine here: the command's reply is
+		-- meant to be the answer to "did anyone actually set off".
+		if not PocketMoneyService.Send(player) then
+			return `nobody set off — {PocketMoneyService.Describe(player)}`
+		end
+		return `on the way — {PocketMoneyService.Describe(player)}`
+	end
+
+	if arg == "owe" then
+		local amount = tonumber(args[2])
+		if amount == nil or not PocketMoneyService.Owe(player, amount) then
+			return `usage: /pocket owe <amount> — {PocketMoneyService.Describe(player)}`
+		end
+		return `owed — {PocketMoneyService.Describe(player)}`
+	end
+
+	return `usage: /pocket [send|pay|owe <amount>] — {PocketMoneyService.Describe(player)}`
+end
+
+-- Every named spot in the world, read out of the world itself. The one command
+-- for "is the street actually built" and "did that point survive the last edit",
+-- and the answer comes from the tags rather than from a list here, so a point
+-- that was renamed in Studio shows up renamed.
+Commands.places = function(_player: Player, _args: { string }): string
+	local places = PlaceService.All()
+	if #places == 0 then
+		return `nothing tagged "{Config.World.PlacePointTag}" is in the world`
+	end
+
+	local lines: { string } = {}
+	for _, place in places do
+		table.insert(lines, `{place.id} ({place.label})`)
+	end
+	return `{#places} places: {table.concat(lines, ", ")}`
+end
+
+-- Stands the player at a named place. Walking there is the game; this is for
+-- getting back to the far end of the street after a /die, and for checking that
+-- a point is somewhere a body actually fits before a job is ever clocked in at it.
+Commands.go = function(player: Player, args: { string }): string
+	local id = args[1]
+	if id == nil then
+		return `usage: /go <place> (see /places)`
+	end
+	-- Not lowercased: place ids come from world_plan.py and are matched exactly,
+	-- the same way event ids are.
+	if not PlaceService.Send(player, id) then
+		local place = PlaceService.Find(id)
+		if place == nil then
+			return `no place called "{id}" (see /places)`
+		end
+		return `found "{id}" but there is no character to move`
+	end
+	return `stood you at "{id}"`
+end
+
+-- Everything about working, on one command.
+--
+-- The real path is "/age 16, walk to the store, stand near the till", and that is
+-- the thing to test — but it is a four-minute walk before anything can go wrong,
+-- and most of what can go wrong is at the far end of it.
+--
+-- The tests this exists for:
+--   /job                      what job, what hours, when the moment is due.
+--   /age 16 then /job start   clock on from where you stand; the wage should tick
+--                             every 30 seconds and the balance move with it.
+--   /job moment               the shift's event now, instead of at hour 2-6.
+--   /job hours 39             one game hour left in the year; the next shift
+--                             should pay once and clock you straight back off.
+--   /job start then walk off  the radius should end it, and /job should say so.
+--   /job standing <id> <n>    set what a job makes of you. The only practical way
+--                             to stand in front of the office door and watch it
+--                             open: the honest route is several shifts downstairs.
+--                             Set <n> to -1 and the thin-ice warning should land;
+--                             to -8 the "one more bad shift" warning; to -10 a shift
+--                             end should sack you at clock-off.
+--   /age 18 then walk upstairs with a shop record below the requirement, the HUD
+--                             should say what it wants instead of doing nothing.
+--   /job quit                 give the job back, so the hiring pad can be tested
+--                             more than once in a life. The record stays behind at
+--                             the shop, which is the point of it.
+--   /age 16 with no job       a line should appear leading to the store, and go out
+--                             the moment you step onto the mark and take the work.
+--   /job task                 the next task now, instead of after the gap. A mark
+--                             should appear somewhere near the counter with a row on
+--                             the HUD counting down over it. The only way to check
+--                             where the search puts marks without working a shift.
+--                             It clears the board first, so the shift is left holding
+--                             exactly one thing however many it had a moment ago.
+--   /job task twice           the whole reason the shift is worth working. Two marks
+--                             lit at once, two rows on the HUD, two clocks running
+--                             independently, and the second mark placed well away from
+--                             the first -- if the two discs ever land within a stride
+--                             of each other the player clears both standing still and
+--                             the job is an idle payout pad again. That spacing is the
+--                             one thing in this system that cannot be checked by
+--                             reading the code, because it is a search over whatever
+--                             floor the store happens to have.
+--                             The second slot does not open until hour
+--                             Config.Work.Tasks.SecondSlotFromHour, so in the opening
+--                             minute of a shift this correctly refuses to hold two.
+--   /job skip 3               wind the shift's clock to the end of hour 3, which is how
+--                             the two-slot half of the shift is reached without standing
+--                             in a shop for ninety seconds first. The hours are really
+--                             worked on the way past, so the money and the shift moment
+--                             behave as if you had waited. Forward only.
+--   two live tasks, walk off  let one run out while finishing the other. The finished
+--                             one should clear its row and mark on the spot; the missed
+--                             one should hold its row saying "Missed" for a few seconds
+--                             while the shift keeps issuing into the slot it freed. A
+--                             miss that stalls the next task means MissLingerSeconds is
+--                             being read as the refill gap, which is the bug the two
+--                             clocks exist to prevent.
+--   /job task till            that task by name, which is how the customer is tested
+--                             without rolling for it. Somebody should walk in, stand
+--                             across the mark facing you, and follow you with their
+--                             head while the clock runs. Then "delivery" for the same
+--                             thing on the second mark of a two-mark task.
+--   /job task rush            the queue, and the one task with a shape of its own
+--                             rather than a sentence of its own. Three people should
+--                             arrive one after another and stand in a line pointing
+--                             away from the counter, with only the front one saying
+--                             anything. It is fetch, hand over, fetch, hand over, with
+--                             the counter mark staying put and the fetch mark moving
+--                             somewhere new every round. Each time you reach the counter
+--                             the
+--                             front one thanks you and goes, the line steps up, the
+--                             speech moves to the new front, and the HUD row counts
+--                             people down to "(last one)". "post" is the same task in
+--                             the office.
+--                             Worth watching for specifically: the line should hold
+--                             its shape. Three rigs slowly shoving each other apart
+--                             means the visitor collision group did not register, which
+--                             NPCService will have warned about at start.
+--   /job fail                 run the clock out on the oldest task still running, one
+--                             per call. The mark should go, the row should say
+--                             "Missed — out of time" for MissLingerSeconds, anybody
+--                             waiting should leave without a word, and the shift's tally
+--                             in /job should be one worse. Twice in a row is how both
+--                             slots are failed; once with two live is how the "lost one
+--                             while winning the other" case is looked at.
+--   /job task then /job       "shift worth +2" while you are finishing them and "+0"
+--                             once you have missed most of them, which is the whole
+--                             of what the tasks are for: the shift's tasks decide
+--                             what the shift did to your record.
+Commands.job = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return WorkService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		WorkService.SetEnabled(arg == "on")
+		return `clocking on {arg} — {WorkService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		-- Reports the refusal rather than only failing. Since the ladder exists, the
+		-- interesting failures are the ones with a reason attached -- too young, or not
+		-- yet thought well enough of somewhere else -- and a bare "could not" would
+		-- hide the exact thing this command is now most useful for testing.
+		local started, refusal = WorkService.ForceStart(player)
+		if not started then
+			return `could not clock on: {refusal or "no reason given"} — {WorkService.Describe(player)}`
+		end
+		return `clocked on — {WorkService.Describe(player)}`
+	end
+
+	if arg == "task" then
+		-- An optional task id, because four of the ten tasks are the interesting ones
+		-- -- the two-mark fetches and the ones with somebody waiting at the end of them
+		-- -- and rolling for them is a slow way to check a change to either.
+		local taskId = args[2]
+		if not WorkService.ForceTask(player, taskId) then
+			-- Three very different failures with one message, on purpose: not on shift,
+			-- no room near the station for a mark, or a task id this job does not have.
+			-- Describe says which of the first two -- it prints whether a shift is
+			-- running -- and the third is answered by the id being echoed back.
+			local named = if taskId ~= nil then ` "{taskId}"` else ""
+			return `no task{named} issued — not on shift, no such task for this job, or nowhere `
+				.. `near the station to stand — {WorkService.Describe(player)}`
+		end
+		return `task issued — {WorkService.Describe(player)}`
+	end
+
+	if arg == "fail" then
+		if not WorkService.ForceFailTask(player) then
+			return `no task in hand to run out — {WorkService.Describe(player)}`
+		end
+		return `task expired — {WorkService.Describe(player)}`
+	end
+
+	if arg == "standing" then
+		local jobId = args[2]
+		local value = tonumber(args[3])
+		if jobId == nil or value == nil or not WorkService.SetStanding(player, jobId, value) then
+			local standing = Config.Work.Standing
+			return `usage: /job standing <jobId> <{standing.Min}..{standing.Max}> — {WorkService.Describe(player)}`
+		end
+		return WorkService.Describe(player)
+	end
+
+	if arg == "end" then
+		if not WorkService.ForceEnd(player) then
+			return `not on shift — {WorkService.Describe(player)}`
+		end
+		return `clocked off — {WorkService.Describe(player)}`
+	end
+
+	if arg == "quit" then
+		if not WorkService.Quit(player) then
+			return `no job to quit — {WorkService.Describe(player)}`
+		end
+		return `quit — walk back onto the mark to be hired again. {WorkService.Describe(player)}`
+	end
+
+	-- The sacking, which quitting is not: quit leaves and can walk straight back on,
+	-- fire is done *to* you and shuts the pad until your next birthday. Walk back onto
+	-- the mark after this and the refusal should read; /ageup should then open it again.
+	if arg == "fire" then
+		local fired, refusal = WorkService.ForceFire(player)
+		if not fired then
+			return `could not let you go: {refusal or "no reason given"} — {WorkService.Describe(player)}`
+		end
+		return `let go — the pad refuses until your next birthday. {WorkService.Describe(player)}`
+	end
+
+	if arg == "moment" then
+		if not WorkService.ForceEvent(player) then
+			return `not on shift, so there is no shift for a moment to happen in`
+		end
+		-- Deliberately reports the state rather than "fired": the pick can legitimately
+		-- come back empty when every work event has been lived this life, and that is
+		-- the single most confusing thing this command can do silently.
+		return `tried the shift moment — {WorkService.Describe(player)}`
+	end
+
+	if arg == "hours" then
+		local hours = tonumber(args[2])
+		if hours == nil or not WorkService.SetHoursWorked(player, hours) then
+			return `usage: /job hours <0-{Config.Work.YearGameHours}> — {WorkService.Describe(player)}`
+		end
+		return WorkService.Describe(player)
+	end
+
+	-- Named apart from `hours` on purpose, and the two are the easiest pair of commands
+	-- in this file to confuse: `hours` is the year's budget, this is where you are inside
+	-- one shift. The refusal below says which one it is rather than just failing, because
+	-- the wrong one of these succeeds silently and looks like the right one not working.
+	if arg == "skip" then
+		local hour = tonumber(args[2])
+		if hour == nil or not WorkService.ForceShiftHour(player, hour) then
+			return `usage: /job skip <1-{Config.Work.ShiftGameHours}>, forward only, and not the same thing as /job hours — {WorkService.Describe(player)}`
+		end
+		-- The hours are credited by the shift tick, not here, so the line below still
+		-- reports the old count for the quarter-second before it catches up. Said out
+		-- loud rather than papered over: a tester who reads "0 of 8" straight after
+		-- skipping to hour 3 would otherwise conclude the command did nothing.
+		return `clock wound to hour {math.floor(hour)}; the hours are credited on the next tick — {WorkService.Describe(player)}`
+	end
+
+	return `usage: /job [start|end|quit|fire|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>|on|off] — {WorkService.Describe(player)}`
+end
+
+-- Everything about the gym, on one command.
+--
+-- The gym had a complete harness -- force a workout, end one, describe one, switch the
+-- whole system off -- and no way to reach any of it, which is how the `enabled` flag
+-- managed to read DISABLED forever without anybody noticing. The command exists so that
+-- never happens twice.
+--
+-- The four machines are meant to feel different, and the only way to check that from a
+-- keyboard is to read the numbers the grader actually used, so bare /gym prints the
+-- window of whatever machine you are standing at rather than a generic summary:
+--
+--   /gym                      machines found, the nearby machine's curve, sweep length,
+--                             zone centre and both half-widths *at your current health*,
+--                             the running session, and each machine's yearly allowance.
+--   /stat health 0 then /gym, /stat health 100 then /gym
+--                             the same machine printed twice. The half-widths should
+--                             grow by HealthWindowBonus across that span -- this is the
+--                             progression the player is supposed to feel, and it is
+--                             invisible in play until you have felt both ends of it.
+--   /gym start                a workout where you stand. Refusals carry their reason,
+--                             so "too young" and "used the year up" read differently.
+--   walk between machines with /gym after each
+--                             centre, curve and sweep should all change. If two machines
+--                             print the same three numbers they are the same machine.
+--   /gym end                  ends the session the way walking out does, so the reps
+--                             banked so far are kept and the year is still spent.
+--   /gym off                  the whole system dark, for telling a gym bug apart from a
+--                             places or a stats one. A session already running is closed
+--                             out rather than abandoned, so the client is never left
+--                             holding a rep counter for a workout that no longer exists.
+Commands.gym = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return GymService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		GymService.SetEnabled(arg == "on")
+		return `gym {arg} — {GymService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = GymService.ForceStart(player)
+		if not started then
+			return `could not start: {refusal or "no reason given"} — {GymService.Describe(player)}`
+		end
+		return `workout started — {GymService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not GymService.ForceEnd(player) then
+			return `no workout running — {GymService.Describe(player)}`
+		end
+		return `workout ended — {GymService.Describe(player)}`
+	end
+
+	return `usage: /gym [start|end|on|off] — {GymService.Describe(player)}`
+end
+
+-- Everything about school, on one command.
+--
+-- The first thing to check is the one thing no code here can fix: school needs a part
+-- in the world tagged with the place id, exactly as the store and the office do. With
+-- no such part there is no sign, no attend pad and no way in, and bare /school says so
+-- in those words rather than leaving a silent building to be hunted for.
+--
+--   /school                   whether the building was found, what age you are, how
+--                             many lessons this year, how many questions are written
+--                             for this age, and why you can or cannot sit one.
+--   /school start             a lesson where you stand, without the walk. Refusals are
+--                             reported with their reason, so being too young or having
+--                             used the year up can be read rather than guessed at.
+--   /school end               walk-out grading, without the walk. Unanswered questions
+--                             count as wrong, which is the rule worth seeing land.
+--   /age 6 then /school       the door should open at StartAge and shut after EndAge.
+--   /age 18 then /school      the refusal at the far end, which is the one players will
+--                             meet by living rather than by being sent there.
+--   /school year 3            the year used up. /school should then refuse at the door
+--                             and the pad should still be standing there refusing --
+--                             the building does not vanish because you are done with it.
+--   /school year 0 then /ageup
+--                             the missed year. Smarts should drop by SmartsPerYearMissed
+--                             on the birthday, and only inside the school ages.
+--   /school start then walk off
+--                             the room radius should end it and grade what was answered.
+--   /school off               the whole system dark, for telling a school bug apart from
+--                             a places or a body one.
+Commands.school = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return SchoolService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		SchoolService.SetEnabled(arg == "on")
+		return `school {arg} — {SchoolService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = SchoolService.ForceStart(player)
+		if not started then
+			return `could not sit a lesson: {refusal or "no reason given"} — {SchoolService.Describe(player)}`
+		end
+		return `lesson started — {SchoolService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not SchoolService.ForceEnd(player) then
+			return `no lesson in progress — {SchoolService.Describe(player)}`
+		end
+		return `lesson graded — {SchoolService.Describe(player)}`
+	end
+
+	if arg == "year" then
+		local count = tonumber(args[2])
+		if count == nil or not SchoolService.SetLessonsThisYear(player, count) then
+			return `usage: /school year <0-{Config.School.LessonsPerYear}> — {SchoolService.Describe(player)}`
+		end
+		return SchoolService.Describe(player)
+	end
+
+	return `usage: /school [start|end|year <n>|on|off] — {SchoolService.Describe(player)}`
+end
+
+-- The first five years, on one command.
+--
+-- The real path is "/die, then play", and unlike school and work that is genuinely quick
+-- -- childhood is the opening five minutes and it is meant to be lived. This is for the
+-- two things living it cannot tell you: why nothing appeared, and what a lure looks like
+-- in a room you have not walked to yet.
+--
+--   /toddler                  what is on the floor, how far off it is, and if there is
+--                             nothing, which of the four reasons it is. That last part is
+--                             the whole command: an empty room has four causes and they
+--                             are indistinguishable by standing in it.
+--   /die then watch           the honest test. Something should be across the room within
+--                             a few seconds of the new life starting, with a line to it.
+--   /toddler next             the next thing now, wherever you are standing. The way to
+--                             see how the placement behaves in a corridor, a corner or a
+--                             doorway without dying repeatedly to get there.
+--   crawl to it               it should open the way any event opens -- subject in the
+--                             room, choices on the floor -- and answering should make you
+--                             a year older and put the next one out about four seconds
+--                             later. If it opens but nothing goes on the floor, that is
+--                             the room being too tight and /enact will say so.
+--   /toddler next in a closet nothing should be placed, and /toddler should say "nowhere
+--                             in this room to put one" rather than failing silently. The
+--                             one failure that otherwise looks exactly like a broken game.
+--   /age 6                    the whole system should go dark and the line go out, mid
+--                             crawl if necessary.
+--   /toddler off              the toddler in an empty house, for telling a childhood bug
+--                             apart from a body, places or enactment one.
+Commands.toddler = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return ChildhoodService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		ChildhoodService.SetEnabled(arg == "on")
+		return `childhood {arg} — {ChildhoodService.Describe(player)}`
+	end
+
+	if arg == "next" then
+		if not ChildhoodService.ForceStage(player) then
+			return `nothing placed — {ChildhoodService.Describe(player)}`
+		end
+		return `placed — {ChildhoodService.Describe(player)}`
+	end
+
+	return `usage: /toddler [next|on|off] — {ChildhoodService.Describe(player)}`
+end
+
+-- What this life has done, and what that has opened.
+--
+-- The command exists because flags are the one system in the game with no visible
+-- surface of its own. A bond has a fan of pads that visibly widens; a flag looks like
+-- nothing at all until an event that most lives never see turns up, and "an event that
+-- did not turn up" is not something anybody can look at. So this is the surface.
+--
+--   /flags                    what you are carrying and the age you earned each one at.
+--   /flags all                every flag that exists and what it means, which is the way
+--                             to find the id to type into the next command.
+--   /flags set dog_loved      the branch without the childhood. Then /age 7 and /event
+--                             school_dog_again should be offerable; without the flag the
+--                             same command should refuse it.
+--   /flags set wandered_off   the people half. /age 8, walk up to Rae, and there should
+--                             be one more pad in front of her than there was.
+--   /flags clear dog_feared   proof the undo path works, which is what
+--                             school_dog_still's third answer does the honest way.
+--   /die                      flags are per life. Everything here should be empty in the
+--                             next one, and the school branches gone with it.
+Commands.flags = function(player: Player, args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local data = Lives.Active(profile.Data)
+
+	local arg = string.lower(args[1] or "")
+	if arg == "all" then
+		local lines: { string } = {}
+		for _, def in Flags.All do
+			table.insert(lines, `{def.id} — {def.meaning}`)
+		end
+		return table.concat(lines, "\n")
+	end
+
+	if arg == "set" or arg == "clear" then
+		-- Not lowercased, for the same reason person ids are not: flag ids are matched
+		-- exactly and only the switch words above are matched loosely.
+		local flagId = args[2]
+		if flagId == nil or Flags.ById[flagId] == nil then
+			return `usage: /flags {arg} <id> — see /flags all`
+		end
+		if arg == "clear" then
+			data.flags[flagId] = nil
+		else
+			data.flags[flagId] = data.ageMonths // Config.Time.MonthsPerYear
+		end
+		-- People are gated on flags, so the roster standing in the world was built
+		-- against the old set and is wrong now. Rebuilt here rather than left to the
+		-- next birthday, because the entire point of the command is to see the change.
+		PeopleService.Rebuild(player)
+		return `flags: {describeFlags(data)}`
+	end
+
+	if arg ~= "" then
+		return "usage: /flags [all|set <id>|clear <id>]"
+	end
+	return `flags: {describeFlags(data)}`
+end
+
+-- Everything about the people in the world, on one command.
+--
+-- Same first check as school, and for the same reason: people stand at named places, so
+-- with nothing in Studio tagged "home", "store" or "school" nobody is anywhere and bare
+-- /people says which of them could not be found rather than leaving an empty street to
+-- be puzzled over.
+--
+--   /people                   who should be in this life, whether they are standing in
+--                             it, what they think of you, and how many offers that buys.
+--                             The one command for "where is my mother".
+--   /people bond mom 90       the top band without the childhood. Walk up afterwards and
+--                             the fan should be wider, because offers are gated on bond.
+--   /people bond neighbor 45  the office reference, which is the far end of this system:
+--                             /age 18, then read the hiring sign upstairs. It should ask
+--                             for 45 smarts instead of 60 and name Mr. Alderman.
+--   /people bond mom 0        the other direction. Fewer pads, and the allowance on the
+--                             next birthday should be the flat grant with no multiplier
+--                             -- check it with /pocket.
+--   /people clear             the once-a-year cap lifted, so the same conversation can be
+--                             had twice without a birthday in between. Without this,
+--                             walking back up gets the busy line.
+--   /ageup with a bond set    decay. A person you did not visit should lose ground on the
+--                             birthday; one you did should not.
+--   /age 18 with Rae          the age window closing. She should be gone from the school
+--                             the moment the birthday lands, without a rebuild by hand.
+--   /people off               the street emptied, for telling a people bug apart from a
+--                             places, body or NPC one.
+Commands.people = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PeopleService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		PeopleService.SetEnabled(arg == "on")
+		return `people {arg} — {PeopleService.Describe(player)}`
+	end
+
+	if arg == "clear" then
+		if not PeopleService.ClearVisits(player) then
+			return `could not clear — {PeopleService.Describe(player)}`
+		end
+		return `visits cleared — {PeopleService.Describe(player)}`
+	end
+
+	if arg == "bond" then
+		-- Not lowercased: person ids are matched exactly, the same way place and event
+		-- ids are, and only the switch words above are matched loosely.
+		local personId = args[2]
+		local value = tonumber(args[3])
+		if personId == nil or value == nil or not PeopleService.SetBond(player, personId, value) then
+			local people = Config.People
+			return `usage: /people bond <personId> <{people.MinBond}..{people.MaxBond}> — `
+				.. PeopleService.Describe(player)
+		end
+		return PeopleService.Describe(player)
+	end
+
+	-- The pair this exists for, and neither is reachable by playing. "/people refuse
+	-- always" then taking an ask shows the words somebody says when they turn you down;
+	-- "never" shows the same row paying out. Without it, seeing both halves of a coin at
+	-- one visit a year means burning in-game years to land on the side you wanted --
+	-- and "/people clear" would hand back the visit but not the coin.
+	if arg == "refuse" then
+		local mode = string.lower(args[2] or "")
+		if mode ~= "chance" and mode ~= "always" and mode ~= "never" then
+			return `usage: /people refuse <chance|always|never> — {PeopleService.Describe(player)}`
+		end
+		PeopleService.SetRefusalMode(mode :: PeopleService.RefusalMode)
+		return `refusals {mode} — {PeopleService.Describe(player)}`
+	end
+
+	return `usage: /people [bond <id> <n>|refuse <chance|always|never>|clear|on|off] — `
+		.. PeopleService.Describe(player)
+end
+
+-- The town, which /people deliberately leaves out. Generated strangers who share every
+-- system with the four and differ in exactly one way that matters here: they are only
+-- given bodies while the player is near *them*, so "not standing there" is their ordinary
+-- state rather than a fault. Everyone else is still somewhere -- walking, with no rig on
+-- them -- which is why every row below carries a distance whether it has a body or not.
+--
+-- Which is the thing this command exists to make legible. Without it a street that is
+-- meant to hold a dozen people and holds four looks identical to a broken generator, a
+-- missing tag, and the rig ceiling doing exactly its job.
+--
+--   /town              how many are in this life at this age, how many wear a body
+--                      against the ceiling, which places you are near and how far, and
+--                      how many are old enough that their plate shows no age.
+--   /town list         every row: name, archetype, place, shown age, bond, and distance.
+--                      Nearest first, unbodied last.
+--   /town near         only the ones standing in front of you, which is the reading to
+--                      take while walking -- a row with a body is a row you can click.
+--   walk away, /town   presence, the one part of this that runs by itself. The bodied
+--                      count should fall as you leave the radius and climb again on the
+--                      way back, with no command in between.
+--   /town walk off     the town frozen where it stands. Everything else should behave
+--                      exactly as it did before anybody could walk, which is how a
+--                      walking bug is told apart from a bonding one. `on` again and
+--                      they carry on without a rebuild.
+--   /town list twice   the walk itself, and the half of it nobody can see. Every row
+--                      ends in what that person is doing -- walking, resting, held, off,
+--                      or "no body, N studs away, walking" for the ones with no rig --
+--                      and running it twice a few seconds apart should show those
+--                      changing and the distances moving on bodied and bodiless alike.
+--                      A town where only the bodied rows move is a town whose ghosts
+--                      have stopped being stepped.
+--   /town routes       the roads. Zero tagged points is not a fault -- it means everyone
+--                      is wandering to probed ground near their own place -- but two
+--                      disconnected pieces is, and it looks exactly like people refusing
+--                      to visit half the map.
+--   walk up to one     the halt. They should stop, turn to square up to you, and stay
+--                      turned while you walk around them; their row reads "held". Step
+--                      away and they go back to "resting" and then walk off.
+--   follow one, leave  the handoff, which is the one thing here that can only be seen by
+--                      doing it. Walk somebody a long way from their place, back off
+--                      until their row loses its body, then walk back: they should be
+--                      near where you left them, not back at their building.
+--   /town then /people the split. No id should be in both, and the four should never
+--                      appear here.
+--   /age 6, /town      the age windows. Classmates arrive with the school; before that
+--                      those rows are simply absent, which is content and not a bug.
+--   /people off        the town goes with it. It is one roster, so a town left standing
+--                      would mean the presence pass is building people the service has
+--                      been told not to have.
+Commands.town = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PeopleService.DescribeTown(player, "summary")
+	end
+	if arg == "list" then
+		return PeopleService.DescribeTown(player, "all")
+	end
+	if arg == "near" then
+		return PeopleService.DescribeTown(player, "bodied")
+	end
+	if arg == "routes" then
+		return PeopleService.DescribeRoutes()
+	end
+
+	if arg == "walk" then
+		local mode = string.lower(args[2] or "")
+		if mode ~= "on" and mode ~= "off" then
+			return `usage: /town walk <on|off> — {PeopleService.DescribeTown(player, "summary")}`
+		end
+		PeopleService.SetTownWalking(mode == "on")
+		return `town walking {mode} — {PeopleService.DescribeTown(player, "summary")}`
+	end
+
+	return `usage: /town [list|near|routes|walk <on|off>] — {PeopleService.DescribeTown(player, "summary")}`
+end
+
+-- What the life is to the people in it, and the one thing about the people system that
+-- has no number behind it to fall back on. A bond can be read off /people; a tie is
+-- either there or it is not, and every way it can be wrong is silent -- a rung that never
+-- appears, a rung that appeared twice, a capped rung spent by somebody who left.
+--
+--   /ties              everybody who is something, what they are, and whether each capped
+--                      rung is full or open. "lapsed" means they hold a tie but are no
+--                      longer in the life, which is the state that must NOT hold a slot.
+--   /ties set <id> <tie>   makes it so without earning it, and deliberately ignores the
+--                      cap -- producing two closest friends is the whole point, because
+--                      that is the state the cap exists to prevent and the only way to
+--                      see what it looks like if it ever slips through.
+--   /ties clear <id>   takes one back off. The rung that gave it should reappear on that
+--                      person's panel and the friend-only rows should vanish with it.
+--
+-- The walk-through worth doing once, on a classmate:
+--
+--   /age 12, /people bond <id> 15, click them   the "known" rung is on the panel and the
+--                      "friend" one is not. Take it: their plate gains a second line.
+--   click them again   the rung is gone from the list. It happened; it does not happen
+--                      twice, and a row offering to introduce yourself to a friend would
+--                      read as a bug rather than a rule.
+--   bond to 40, /reevents, take the friend rung, then look at the panel   the friend-only
+--                      row is there now and was not before.
+--   bond to 75, take the closest rung, then walk to another classmate at the same bond
+--                      their closest rung is absent. That is the cap, and /ties shows it
+--                      as "closest full".
+--   /age 18            the classmate ages out. /ties shows them "lapsed" and "closest
+--                      open" again -- losing touch after school reopens the slot without
+--                      ever unsaying what they were to you.
+Commands.ties = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PeopleService.DescribeTies(player)
+	end
+
+	if arg == "set" or arg == "clear" then
+		local personId = args[2]
+		if personId == nil then
+			return `usage: /ties {arg} <personId>{if arg == "set" then " <tieId>" else ""}`
+		end
+		-- Nil is the clear, which is why this is one branch rather than two: the service
+		-- takes a tie or the absence of one, and a "clear" that went through a different
+		-- path would be a second way to write the same field.
+		local tieId = if arg == "set" then args[3] else nil
+		if arg == "set" and tieId == nil then
+			return "usage: /ties set <personId> <tieId>"
+		end
+		if not PeopleService.SetTie(player, personId, tieId) then
+			return `no person "{personId}" or no tie "{tieId or ""}" — {PeopleService.DescribeTies(player)}`
+		end
+		return PeopleService.DescribeTies(player)
+	end
+
+	return `usage: /ties [set <personId> <tieId>|clear <personId>] — {PeopleService.DescribeTies(player)}`
+end
+
+-- Every interactable in the world, nearest first, and why the near ones are or are not
+-- usable. The command for "I walked up to her and clicking did nothing".
+--
+-- Reads four things, in the order they go wrong:
+--   * whether a prompt exists on that thing at all -- nothing attached is a spawn bug,
+--     not an interaction one, and it is by far the most common answer;
+--   * whether it carries a kind and an id, because a prompt without them is a thing the
+--     player can click that the client will refuse to route;
+--   * whether it is Enabled, which is how somebody who has already given you their time
+--     this year is turned off without their name going dark;
+--   * how far away it is against its own reach, since the dots are readable from two and
+--     a half times the distance they are usable from, and the gap between those two
+--     numbers is where "it isn't working" usually lives;
+--   * whether the *name* is up, and from how far, which is a different range again and
+--     deliberately the shortest of the three -- see Config.Interact.NameRangeMultiplier.
+--
+-- What it cannot see: whether the client actually connected the button. That connection
+-- is made in client/world/Prompts.luau and marked with an attribute set on the client,
+-- and a client-set attribute does not come back across. If everything below reads fine
+-- and clicking still does nothing, the Output window is the place to look -- that path
+-- warns rather than failing quietly.
+Commands.dots = function(player: Player, _args: { string }): string
+	local character = player.Character
+	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+	local from = if root ~= nil and root:IsA("BasePart") then root.Position else nil
+
+	type Row = { distance: number, text: string }
+	local rows: { Row } = {}
+	local reachable = 0
+
+	for _, instance in Workspace:GetDescendants() do
+		if instance.Name ~= Interact.PromptName or not instance:IsA("ProximityPrompt") then
+			continue
+		end
+		local prompt = instance :: ProximityPrompt
+		local adornee = prompt.Parent
+
+		local distance = math.huge
+		if from ~= nil and adornee ~= nil and adornee:IsA("BasePart") then
+			distance = (from - adornee.Position).Magnitude
+		end
+
+		local kind = prompt:GetAttribute(Interact.KindAttribute)
+		local id = prompt:GetAttribute(Interact.IdAttribute)
+		local named = if type(kind) == "string" and type(id) == "string"
+			then `{kind} "{id}"`
+			else "NO KIND OR ID"
+
+		local dots = if adornee ~= nil then adornee:FindFirstChild(Interact.DotsName) else nil
+		local within = distance <= prompt.MaxActivationDistance
+		if within and prompt.Enabled and dots ~= nil then
+			reachable += 1
+		end
+
+		local why: { string } = {}
+		if not prompt.Enabled then
+			table.insert(why, "DISABLED")
+		end
+		if dots == nil then
+			table.insert(why, "NO DOTS")
+		end
+		if not within then
+			table.insert(why, `out of reach ({math.round(prompt.MaxActivationDistance)})`)
+		end
+		-- Kept out of `why`, which is a list of *faults*. Whether a name is up is a separate
+		-- axis from whether the dots work -- that is the entire reason they are two
+		-- billboards -- and folding it in would make a perfectly good row read as a problem.
+		--
+		-- Read off the billboard rather than recomputed from Config, because "that name is
+		-- showing from too far away" is a question about what the gui was actually built
+		-- with; a re-derivation here would agree with itself while disagreeing with the world.
+		local plate = if adornee ~= nil then adornee:FindFirstChild(Interact.NameplateName) else nil
+		local naming = if plate ~= nil and plate:IsA("BillboardGui") and plate.Enabled
+			then (if distance <= plate.MaxDistance
+				then ", name up"
+				else `, name at {math.round(plate.MaxDistance)}`)
+			else ""
+
+		table.insert(rows, {
+			distance = distance,
+			text = `{named} at {if distance == math.huge then "?" else tostring(math.round(distance))} studs`
+				.. (if #why > 0 then ` — {table.concat(why, ", ")}` else " — usable")
+				.. naming,
+		})
+	end
+
+	if #rows == 0 then
+		return `nothing tagged "{Interact.PromptName}" is in the world — nobody has been spawned with dots`
+	end
+
+	table.sort(rows, function(a: Row, b: Row): boolean
+		if a.distance == b.distance then
+			return a.text < b.text
+		end
+		return a.distance < b.distance
+	end)
+
+	local texts: { string } = {}
+	-- Capped because a busy street is a dozen rigs and the answer is always in the first
+	-- few: the question this command answers is about the thing in front of the player.
+	for index, row in rows do
+		if index > DOTS_LISTED then
+			break
+		end
+		table.insert(texts, row.text)
+	end
+
+	local head = `{#rows} interactables, {reachable} usable from here`
+	if from == nil then
+		head ..= " (no character, so every distance is unknown)"
+	end
+	if #rows > DOTS_LISTED then
+		head ..= `, nearest {DOTS_LISTED} shown`
+	end
+	return `{head} | {table.concat(texts, " · ")}`
 end
 
 -- Clears the per-life seen list so the same content can be replayed without
@@ -269,16 +1316,197 @@ Commands.life = function(player: Player, _args: { string }): string
 	if profile == nil then
 		return "no profile loaded yet"
 	end
-	local data = profile.Data
+	local data = Lives.Active(profile.Data)
+	local country = SetupService.CountryOf(data)
 	return string.format(
-		"age=%d stage=%s alive=%s banked=%.1fs lives=%d pending=%s",
+		"%s from %s (%s) | age=%d gender=%s stage=%s alive=%s money=%s banked=%.1fs lives=%d pending=%s",
+		-- Falls back to the Roblox name, so a life that has not been set up yet reads as a
+		-- player sitting in the menu rather than as a blank.
+		SetupService.NameOf(data, player.Name),
+		if country ~= nil then country.name else "nowhere yet",
+		-- The gate itself, printed next to the name it gates: "begun=false" is the answer
+		-- to every "why has nothing happened for a minute" this system can cause.
+		if Lives.HasBegun(data) then "begun" else "in setup",
 		data.ageMonths // Config.Time.MonthsPerYear,
+		-- "unset" should be unreachable -- DataService fills it on load and again on
+		-- rebirth -- so seeing it here is the symptom of one of those two not having run,
+		-- which is worth being able to read rather than papering over with a default.
+		data.gender or "unset",
 		data.stage,
 		tostring(data.alive),
+		Money.Format(data.money),
 		data.secondsSinceAgeUp,
-		data.livesLived,
+		-- Off the profile, not the life: it counts the player's lives across every slot.
+		profile.Data.livesLived,
 		data.pendingEventId or "none"
 	) .. ` delivering={data.deliveringEventId or "none"}`
+end
+
+-- Who this life is, and the way to give it somebody without leaving the place.
+--
+-- **`open` is gone, and its absence is the point of part 3.** It used to clear `setup` and
+-- raise the character menu over the running town; there is no character menu here any more,
+-- so clearing `setup` would now do nothing but strand the player in a world that will not
+-- tick until they rejoin. Making a life is the lobby's job -- see `LobbySetupService`.
+--
+-- `skip` stays, and it matters more than it used to. In Studio there is no way to reach the
+-- lobby at all, so this is the only thing that can put a life into the slot a test needs to
+-- run in. It rolls a whole valid setup and starts it, by the same code path a real answer
+-- takes.
+Commands.setup = function(player: Player, args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local data = Lives.Active(profile.Data)
+	local action = string.lower(args[1] or "show")
+
+	if action == "skip" or action == "restart" then
+		-- `restart` discards whatever is in the active slot; `skip force` is the same thing
+		-- spelled the other way, kept because the refusal below used to be the only hint and
+		-- muscle memory reaches for the command it just failed.
+		local force = action == "restart" or string.lower(args[2] or "") == "force"
+		-- In Studio a developer typing `/setup skip` expects a fresh life, not a refusal
+		-- about a slot occupied by a previous session. Auto-forcing here keeps the common
+		-- path a one-command experience rather than a two-step puzzle.
+		if not force and RunService:IsStudio() and Lives.HasBegun(data) then
+			force = true
+		end
+		local rolled = SetupService.Skip(player, force)
+		if rolled == nil then
+			if force then
+				-- Only reachable now with no profile: a forced skip resets the slot itself, so
+				-- an occupied one is no longer a reason to refuse.
+				return "nothing to restart -- no profile loaded yet"
+			end
+			return "slot " .. tostring(profile.Data.activeSlot)
+				.. " already has a life in it -- /setup restart to discard it and start fresh, "
+				.. "or /slots use <n> for an empty one then rejoin"
+		end
+		local verb = if action == "restart" or force then "restarted" else "skipped"
+		return `{verb}: {rolled.firstName} {rolled.lastName} from {rolled.countryId}, era {rolled.eraId}`
+	end
+
+	if action == "show" then
+		local setup = data.setup
+		if setup == nil then
+			return "in setup -- no life chosen yet, so the age clock is stopped"
+		end
+		local country = SetupService.CountryOf(data)
+		return `{setup.firstName} {setup.lastName}, {if country ~= nil then country.name else setup.countryId}, `
+			.. `era {setup.eraId}, gender {data.gender or "unset"}`
+	end
+
+	return "usage: /setup [show|skip|restart]"
+end
+
+-- The save slots, which are otherwise completely invisible from inside the game place --
+-- there is no UI here that mentions them, because choosing one is the lobby's job.
+--
+-- `use` deliberately only moves the pointer and asks for a rejoin rather than swapping the
+-- running life in place. Tearing down a life and standing up another one is real work --
+-- body, world, people, HUD -- and it already has a home: the lobby, where no life is
+-- running and there is nothing to tear down. A second half-version of it living in the
+-- debug harness would be the exact duplicate-logic trap this codebase keeps avoiding, and
+-- it would be the copy that silently rots.
+--
+-- `delete` refuses the active slot for the same reason: the life it would erase is the one
+-- standing in the world right now, and every service is holding a reference to it.
+Commands.slots = function(player: Player, args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local data = profile.Data
+	local action = string.lower(args[1] or "list")
+	local index = tonumber(args[2])
+
+	if action == "list" then
+		local rows = {}
+		for slot = 1, Config.Slots.Count do
+			local life = data.slots[slot]
+			local mark = if slot == data.activeSlot then ">" else " "
+			if life == nil then
+				-- Unreachable unless ensureSlots did not run. Worth reading as a fault
+				-- rather than being quietly skipped over by the loop.
+				table.insert(rows, `{mark} {slot}: MISSING -- ensureSlots did not fill this`)
+			elseif not Lives.HasBegun(life) then
+				table.insert(rows, `{mark} {slot}: empty`)
+			else
+				local country = SetupService.CountryOf(life)
+				table.insert(
+					rows,
+					`{mark} {slot}: {SetupService.NameOf(life, player.Name)}, `
+						.. `age {life.ageMonths // Config.Time.MonthsPerYear}, `
+						.. `{if country ~= nil then country.name else "nowhere"}, `
+						.. `{if life.alive then "alive" else "dead"}`
+				)
+			end
+		end
+		return `slot {data.activeSlot} of {Config.Slots.Count} active (schema {data.schema}, `
+			.. `{data.livesLived} lives lived)\n`
+			.. table.concat(rows, "\n")
+	end
+
+	if action == "use" then
+		if index == nil then
+			return `usage: /slots use <1-{Config.Slots.Count}>`
+		end
+		if index == data.activeSlot then
+			return `already on slot {index}`
+		end
+		if not DataService.SetActiveSlot(player, index) then
+			return `{index} is not a slot -- there are {Config.Slots.Count}`
+		end
+		return `active slot is now {index}. Rejoin to actually run it -- switching a life `
+			.. "in place is the lobby's job, not this harness's."
+	end
+
+	if action == "delete" then
+		if index == nil then
+			return `usage: /slots delete <1-{Config.Slots.Count}>`
+		end
+		if index ~= math.floor(index) or index < 1 or index > Config.Slots.Count then
+			return `{index} is not a slot -- there are {Config.Slots.Count}`
+		end
+		if index == data.activeSlot then
+			return `refusing to delete slot {index}: it is the life you are standing in. `
+				.. "Switch away first (/slots use <n>, rejoin), then delete it."
+		end
+		-- A fresh life rather than a nil hole, which is what "empty" means everywhere else
+		-- and what keeps the list dense -- see the note on ProfileData.slots.
+		data.slots[index] = Lives.New()
+		return `slot {index} deleted -- it is an empty life again`
+	end
+
+	return "usage: /slots [list|use <n>|delete <n>]"
+end
+
+-- Back to the lobby.
+--
+-- No longer its own teleport. It used to be one, because it was the only route out of this
+-- place and there was no menu to arrive at; now the death screen's button, the arrival check
+-- and this command all go through `ReturnService.Send`, which is the one function that knows
+-- how the handoff works -- retries, the in-flight stamp, and the two refusals worth reading.
+-- A second copy here would be the copy that silently rots.
+--
+-- It does not end the profile session or touch `activeSlot`, and neither does ReturnService.
+-- Leaving is what releases the session lock, and the lobby rewrites the slot the moment the
+-- player picks one; doing either here would be this place reaching into a handoff it is on
+-- the receiving end of.
+--
+-- Refusals arrive on the client as a line on the death screen, which is no use at all when
+-- this was typed into the chat bar by somebody who is alive -- so the two that can be known
+-- synchronously are answered here, in the console, where the command was given.
+Commands.lobby = function(player: Player, _args: { string }): string
+	if RunService:IsStudio() then
+		return "teleports do not work in Studio -- publish both places to test the trip back"
+	end
+	if Config.Lobby.LobbyPlaceId == 0 then
+		return "Config.Lobby.LobbyPlaceId is not set -- publish the lobby and put its id there"
+	end
+	ReturnService.Send(player)
+	return "teleporting to the lobby"
 end
 
 -- Reads back what the age ladder actually did to the character, so a band that
@@ -290,7 +1518,7 @@ Commands.band = function(player: Player, _args: { string }): string
 		return "no profile loaded yet"
 	end
 
-	local ageYears = profile.Data.ageMonths // Config.Time.MonthsPerYear
+	local ageYears = Lives.Active(profile.Data).ageMonths // Config.Time.MonthsPerYear
 	local band = BodyService.BandForAge(ageYears)
 
 	local character = player.Character
@@ -300,22 +1528,47 @@ Commands.band = function(player: Player, _args: { string }): string
 	end
 
 	local height = humanoid:FindFirstChild("BodyHeightScale")
-	return string.format(
-		"age=%d band=%s | want speed=%.1f jump=%.1f scale=%.2f | live speed=%.1f jump=%.1f scale=%s",
+	local headValue = humanoid:FindFirstChild("HeadScale")
+	-- Size comes off the growth curve rather than the band now, so the wanted
+	-- figure has to be read from the same place the body was -- printing the band's
+	-- idea of it would answer a question nothing asks any more.
+	local wantBody, wantHead = Config.Growth.At(ageYears)
+	local body = string.format(
+		"age=%d band=%s | want speed=%.1f jump=%.1f body=%.2f head=%.2f | live speed=%.1f jump=%.1f body=%s head=%s",
 		ageYears,
 		band.id,
 		band.walkSpeed,
 		band.jumpPower,
-		band.bodyScale,
+		wantBody,
+		wantHead,
 		humanoid.WalkSpeed,
 		humanoid.JumpPower,
-		if height ~= nil and height:IsA("NumberValue") then string.format("%.2f", height.Value) else "n/a (R6 rig?)"
+		if height ~= nil and height:IsA("NumberValue") then string.format("%.2f", height.Value) else "n/a (R6 rig?)",
+		if headValue ~= nil and headValue:IsA("NumberValue") then string.format("%.2f", headValue.Value) else "n/a"
 	)
+
+	-- Reported next to the numbers rather than under its own command, because
+	-- "why does my toddler look wrong" is one question and the speed and the
+	-- animation are two halves of the answer.
+	local animate = if character ~= nil then character:FindFirstChild("Animate") else nil
+	local live = "no Animate script"
+	if animate ~= nil then
+		local walk = animate:FindFirstChild("walk")
+		local track = if walk ~= nil then walk:FindFirstChildOfClass("Animation") else nil
+		live = if track ~= nil then `walk={track.AnimationId}` else "no walk slot"
+	end
+	return `{body}\nanims: {BodyService.DescribeAnimations(band.id)} | live {live}`
 end
 
 local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, "
 	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>, "
-	.. "/enact [id|on|off]"
+	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
+	.. "/pocket [send|pay|owe <n>], "
+	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
+	.. "/school [start|end|year <n>], /gym [start|end|on|off], "
+	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
+	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
+	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT
@@ -329,6 +1582,8 @@ local function stripPrefix(message: string): string?
 	end
 	return nil
 end
+
+local NoticeRemote = Remotes.Get("Notice")
 
 local function onChatted(player: Player, message: string)
 	local body = stripPrefix(message)
@@ -347,8 +1602,14 @@ local function onChatted(player: Player, message: string)
 	local ok, result = pcall(handler, player, parts)
 	if ok then
 		print(`[AGES debug] {player.Name}: {result}`)
+		-- Show the result in-game so the developer does not have to watch the
+		-- Output window to see what a command did or why it refused.
+		if result ~= nil and result ~= "" then
+			NoticeRemote:FireClient(player, result)
+		end
 	else
 		warn(`[AGES debug] /{name} failed: {result}`)
+		NoticeRemote:FireClient(player, `/{name} error: {result}`)
 	end
 end
 

@@ -7,14 +7,25 @@
 -- decides whether aging up is allowed; that verdict arrives from the server.
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("Config"))
+local Money = require(game:GetService("ReplicatedStorage"):WaitForChild("Money"))
 local Types = require(game:GetService("ReplicatedStorage"):WaitForChild("Types"))
+-- Shared with GymService so the bar the player is looking at and the hit the server
+-- grades are computed by the same function. See src/shared/Sweep.luau.
+local Sweep = require(game:GetService("ReplicatedStorage"):WaitForChild("Sweep"))
 
 type Stats = Types.Stats
 type StatName = Types.StatName
 type ManualAgeUpState = Types.ManualAgeUpState
+type ShiftState = Types.ShiftState
+type TaskState = Types.TaskState
+type LessonState = Types.LessonState
+type PersonState = Types.PersonState
+type PersonRosterEntry = Types.PersonRosterEntry
+type WorkoutState = Types.WorkoutState
 
 local STAT_ORDER: { { name: StatName, label: string } } = {
 	{ name = "health", label = "Health" },
@@ -29,15 +40,95 @@ local COOLDOWN_COLOR = Color3.fromRGB(52, 52, 60)
 local PROGRESS_COLOR = Color3.fromRGB(110, 160, 220)
 local GOOD_STAT_COLOR = Color3.fromRGB(90, 200, 120)
 local WARN_STAT_COLOR = Color3.fromRGB(210, 60, 60)
+-- Its own color, and deliberately not the green of a healthy stat bar: money is not
+-- a score, and a balance that turns red at some threshold would be inventing a rule
+-- the game does not have. One shade, always.
+local MONEY_COLOR = Color3.fromRGB(225, 205, 130)
+-- The shift bar. Deliberately not the money color: the bar is time, and the only
+-- thing on this HUD that fills up while the player is doing something rather than
+-- while something is being done to them.
+local SHIFT_COLOR = Color3.fromRGB(120, 195, 165)
+-- The task bar, and the only bar on this HUD that runs *down*. Everything else here
+-- fills toward something good; this one is time being spent, so it empties, and the
+-- direction alone tells the player which kind of bar they are looking at before they
+-- have read a word of it.
+local TASK_COLOR = Color3.fromRGB(235, 200, 120)
+-- The last third. Not red -- nothing dies here, you just miss one -- but a clear
+-- enough change to be caught out of the corner of an eye while you are running.
+local TASK_URGENT_COLOR = Color3.fromRGB(228, 140, 80)
+-- Held while a prompt is open. Grey and still, the same language the locked choice
+-- markers use: this is not a clock that has broken, it is one that is not running.
+local TASK_PAUSED_COLOR = Color3.fromRGB(120, 118, 128)
+-- Below this share of the clock, the bar goes urgent.
+local TASK_URGENT_SHARE = 1 / 3
+-- The caption's ordinary colour, kept as a name because the missed line borrows the
+-- row for a few seconds and has to give it back.
+local TASK_CAPTION_COLOR = Color3.fromRGB(140, 140, 155)
+
+-- The gym sweep bar. The sweet zone is a gold band in the centre of the track,
+-- the perfect zone is a brighter inner band, and the needle is white. These
+-- colours deliberately do not share a palette with any other row: the sweep is
+-- the only part of this HUD the player is actively looking at during a workout.
+local SWEEP_BAND_COLOR = Color3.fromRGB(180, 150, 50)
+local SWEEP_PERFECT_COLOR = Color3.fromRGB(230, 195, 60)
+local SWEEP_NEEDLE_COLOR = Color3.fromRGB(245, 240, 230)
+local PUSH_ACTIVE_COLOR = Color3.fromRGB(235, 190, 90)
+local PUSH_INACTIVE_COLOR = Color3.fromRGB(70, 70, 82)
+-- The sweet zone's half-widths as fractions of the track. Config's SweetFraction
+-- and PerfectFraction are full widths; the bands are centred on 0.5, so each
+-- extends half its width to either side -- the exact same halves the server
+-- grades a hit against.
+-- The bands start as a placeholder and are resized on every state that arrives.
+-- Nothing about the sweep is a client-side constant any more: where the zone sits
+-- depends on the machine, and how wide it is depends on the character's health, so
+-- both come down with the state or the bar would draw a lie.
+local PLACEHOLDER_HALF = 0.1
+
+-- The roster: who you know, and who is worth calling. The available dot is green
+-- when there is something left to say this year, grey when the once-a-year visit is
+-- spent. The grey is deliberately close to the background so a spent row reads as
+-- part of the list rather than as an error on it.
+local ROSTER_AVAILABLE_COLOR = Color3.fromRGB(90, 200, 120)
+local ROSTER_USED_COLOR = Color3.fromRGB(120, 118, 128)
+local ROSTER_MAX_HEIGHT = 180
+local ROSTER_ROW_HEIGHT = 26
 
 local StatsUI = {}
 StatsUI.__index = StatsUI
+
+-- The four parts of a task row that anything ever writes to. The track is not in here
+-- on purpose: it is a backing plate and nothing ever changes it, and a field that is
+-- held and never read is a field somebody later has to prove is dead.
+type TaskRow = {
+	row: Frame,
+	label: TextLabel,
+	caption: TextLabel,
+	fill: Frame,
+}
 
 export type StatsUIHandle = typeof(setmetatable(
 	{} :: {
 		screenGui: ScreenGui,
 		ageLabel: TextLabel,
 		stageLabel: TextLabel,
+		moneyLabel: TextLabel,
+		shiftRow: Frame,
+		shiftLabel: TextLabel,
+		shiftCaption: TextLabel,
+		shiftFill: Frame,
+		-- Fixed at two, matching `Config.Work.Tasks.MaxConcurrent`, and built once at
+		-- startup rather than created and destroyed as tasks arrive. A row that is
+		-- rebuilt is a row that jumps the whole panel down a line the instant the shop
+		-- asks for a second thing -- which is precisely the moment the player is reading
+		-- the first one.
+		taskRows: { TaskRow },
+		lessonRow: Frame,
+		lessonLabel: TextLabel,
+		lessonCaption: TextLabel,
+		lessonFill: Frame,
+		personRow: Frame,
+		personLabel: TextLabel,
+		personCaption: TextLabel,
 		progressFill: Frame,
 		progressCaption: TextLabel,
 		ageUpButton: TextButton,
@@ -46,7 +137,25 @@ export type StatsUIHandle = typeof(setmetatable(
 		noticeToken: number,
 		deathFrame: Frame,
 		deathLabel: TextLabel,
+		deathButton: TextButton,
+		deathNoteLabel: TextLabel,
 		statBars: { [StatName]: { fill: Frame, label: TextLabel } },
+		rosterFrame: Frame,
+		rosterList: ScrollingFrame,
+		rosterRows: { TextButton },
+		onPersonTapped: ((personId: string) -> ())?,
+		workoutRow: Frame,
+		workoutLabel: TextLabel,
+		workoutCaption: TextLabel,
+		sweepTrack: Frame,
+		sweepBand: Frame,
+		sweepPerfect: Frame,
+		sweepNeedle: Frame,
+		pushButton: TextButton,
+		sweepConnection: RBXScriptConnection?,
+		sweepPhase: string?,
+		sweepBaseProgress: number,
+		sweepElapsed: number,
 	},
 	StatsUI
 ))
@@ -91,6 +200,60 @@ local function makeStatRow(parent: Instance, order: number, label: string): { fi
 	textLabel.Parent = row
 
 	return { fill = fill, label = textLabel }
+end
+
+-- One row of "go here before this runs out". Built by a function rather than written
+-- twice because there are two of them now and there is exactly one thing worse than a
+-- HUD that only reports half of what the shift is asking for: two rows that drifted
+-- apart in font, height or urgency color and so read as two different kinds of demand.
+local function makeTaskRow(parent: Instance, order: number): TaskRow
+	local row = Instance.new("Frame")
+	row.Name = "TaskRow"
+	row.Size = UDim2.new(1, 0, 0, 34)
+	row.LayoutOrder = order
+	row.BackgroundTransparency = 1
+	row.Visible = false
+	row.Parent = parent
+
+	local label = Instance.new("TextLabel")
+	label.Name = "Label"
+	label.Size = UDim2.new(1, 0, 0, 16)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 13
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextColor3 = Color3.fromRGB(240, 232, 214)
+	label.Text = ""
+	label.Parent = row
+
+	local caption = Instance.new("TextLabel")
+	caption.Name = "Caption"
+	caption.Size = UDim2.new(1, 0, 0, 13)
+	caption.Position = UDim2.new(0, 0, 0, 15)
+	caption.BackgroundTransparency = 1
+	caption.Font = Enum.Font.Gotham
+	caption.TextSize = 11
+	caption.TextXAlignment = Enum.TextXAlignment.Left
+	caption.TextColor3 = TASK_CAPTION_COLOR
+	caption.Text = ""
+	caption.Parent = row
+
+	local track = Instance.new("Frame")
+	track.Name = "Track"
+	track.Size = UDim2.new(1, 0, 0, 4)
+	track.Position = UDim2.new(0, 0, 1, -4)
+	track.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	track.BorderSizePixel = 0
+	track.Parent = row
+
+	local fill = Instance.new("Frame")
+	fill.Name = "Fill"
+	fill.Size = UDim2.new(1, 0, 1, 0)
+	fill.BackgroundColor3 = TASK_COLOR
+	fill.BorderSizePixel = 0
+	fill.Parent = track
+
+	return { row = row, label = label, caption = caption, fill = fill }
 end
 
 function StatsUI.new(): StatsUIHandle
@@ -155,10 +318,272 @@ function StatsUI.new(): StatsUIHandle
 	stageLabel.LayoutOrder = 1
 	stageLabel.Parent = panel
 
+	-- Above the stat bars rather than among them, because it is not one. A balance is
+	-- a fact about the player's situation like their age and their stage, and it wants
+	-- to be readable at a glance from the same place they read those -- especially
+	-- while standing in front of a choice they may not be able to afford.
+	local moneyLabel = Instance.new("TextLabel")
+	moneyLabel.Name = "MoneyLabel"
+	moneyLabel.Size = UDim2.new(1, 0, 0, 18)
+	moneyLabel.BackgroundTransparency = 1
+	moneyLabel.Font = Enum.Font.GothamMedium
+	moneyLabel.TextSize = 15
+	moneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+	moneyLabel.TextColor3 = MONEY_COLOR
+	-- Formatted rather than a placeholder, because the server pushes the real balance
+	-- on join and a life starts at zero anyway: "$0" is true from the first frame, and
+	-- a dash would only ever be visible as a flicker.
+	moneyLabel.Text = Money.Format(0)
+	moneyLabel.LayoutOrder = 2
+	moneyLabel.Parent = panel
+
+	-- The workout: the one row that asks for timing. Shown only while a workout is
+	-- running -- not while an offer is up, because the offer panel is the thing on
+	-- screen then -- and built unlike any other row. Every other bar on this HUD
+	-- fills toward something or empties away from it; this one is a needle the
+	-- player has to hit, which is a different thing to read.
+	--
+	-- Hidden outright until a session starts, for the same reason the shift row is
+	-- until a job exists: a row about nothing teaches the player not to look at it.
+	-- UIListLayout skips invisible children, so this costs no space when it is off.
+	local workoutRow = Instance.new("Frame")
+	workoutRow.Name = "WorkoutRow"
+	workoutRow.Size = UDim2.new(1, 0, 0, 46)
+	workoutRow.LayoutOrder = 2.5
+	workoutRow.BackgroundTransparency = 1
+	workoutRow.Visible = false
+	workoutRow.Parent = panel
+
+	local workoutLabel = Instance.new("TextLabel")
+	workoutLabel.Name = "Label"
+	workoutLabel.Size = UDim2.new(1, 0, 0, 18)
+	workoutLabel.BackgroundTransparency = 1
+	workoutLabel.Font = Enum.Font.GothamMedium
+	workoutLabel.TextSize = 14
+	workoutLabel.TextXAlignment = Enum.TextXAlignment.Left
+	workoutLabel.TextColor3 = Color3.fromRGB(240, 232, 214)
+	workoutLabel.Text = ""
+	workoutLabel.Parent = workoutRow
+
+	-- The track the needle sweeps across. Wider and taller than a stat bar, because
+	-- for ten seconds at a time it is the whole game.
+	local sweepTrack = Instance.new("Frame")
+	sweepTrack.Name = "Track"
+	sweepTrack.Size = UDim2.new(1, 0, 0, 12)
+	sweepTrack.Position = UDim2.new(0, 0, 0, 19)
+	sweepTrack.BackgroundColor3 = Color3.fromRGB(34, 34, 40)
+	sweepTrack.BorderSizePixel = 0
+	sweepTrack.Parent = workoutRow
+
+	-- The sweet zone: the band around centre that counts as a hit.
+	local sweepBand = Instance.new("Frame")
+	sweepBand.Name = "SweetBand"
+	sweepBand.Size = UDim2.new(PLACEHOLDER_HALF * 2, 0, 1, 0)
+	sweepBand.Position = UDim2.new(0.5 - PLACEHOLDER_HALF, 0, 0, 0)
+	sweepBand.BackgroundColor3 = SWEEP_BAND_COLOR
+	sweepBand.BorderSizePixel = 0
+	sweepBand.Parent = sweepTrack
+
+	-- The perfect zone: the inner, brighter band.
+	local sweepPerfect = Instance.new("Frame")
+	sweepPerfect.Name = "PerfectBand"
+	sweepPerfect.Size = UDim2.new(PLACEHOLDER_HALF * 2, 0, 1, 0)
+	sweepPerfect.Position = UDim2.new(0.5 - PLACEHOLDER_HALF, 0, 0, 0)
+	sweepPerfect.BackgroundColor3 = SWEEP_PERFECT_COLOR
+	sweepPerfect.BorderSizePixel = 0
+	sweepPerfect.Parent = sweepTrack
+
+	local sweepNeedle = Instance.new("Frame")
+	sweepNeedle.Name = "Needle"
+	sweepNeedle.Size = UDim2.new(0, 2, 1, 0)
+	sweepNeedle.AnchorPoint = Vector2.new(0.5, 0)
+	sweepNeedle.Position = UDim2.new(0, 0, 0, 0)
+	sweepNeedle.BackgroundColor3 = SWEEP_NEEDLE_COLOR
+	sweepNeedle.BorderSizePixel = 0
+	sweepNeedle.Parent = sweepTrack
+
+	local workoutCaption = Instance.new("TextLabel")
+	workoutCaption.Name = "Caption"
+	workoutCaption.Size = UDim2.new(1, 0, 0, 13)
+	workoutCaption.Position = UDim2.new(0, 0, 0, 33)
+	workoutCaption.BackgroundTransparency = 1
+	workoutCaption.Font = Enum.Font.Gotham
+	workoutCaption.TextSize = 11
+	workoutCaption.TextXAlignment = Enum.TextXAlignment.Left
+	workoutCaption.TextColor3 = TASK_CAPTION_COLOR
+	workoutCaption.Text = ""
+	workoutCaption.Parent = workoutRow
+
+	-- Work. Hidden outright until the player holds a job, because for the first
+	-- sixteen years of a life it would be a row about nothing -- and a HUD element
+	-- that is empty most of the time teaches the player not to look at it.
+	-- UIListLayout skips invisible children, so this costs no space when it is off.
+	local shiftRow = Instance.new("Frame")
+	shiftRow.Name = "ShiftRow"
+	shiftRow.Size = UDim2.new(1, 0, 0, 38)
+	shiftRow.LayoutOrder = 3
+	shiftRow.BackgroundTransparency = 1
+	shiftRow.Visible = false
+	shiftRow.Parent = panel
+
+	local shiftLabel = Instance.new("TextLabel")
+	shiftLabel.Name = "Label"
+	shiftLabel.Size = UDim2.new(1, 0, 0, 18)
+	shiftLabel.BackgroundTransparency = 1
+	shiftLabel.Font = Enum.Font.GothamMedium
+	shiftLabel.TextSize = 14
+	shiftLabel.TextXAlignment = Enum.TextXAlignment.Left
+	shiftLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+	shiftLabel.Text = ""
+	shiftLabel.Parent = shiftRow
+
+	local shiftCaption = Instance.new("TextLabel")
+	shiftCaption.Name = "Caption"
+	shiftCaption.Size = UDim2.new(1, 0, 0, 14)
+	shiftCaption.Position = UDim2.new(0, 0, 0, 17)
+	shiftCaption.BackgroundTransparency = 1
+	shiftCaption.Font = Enum.Font.Gotham
+	shiftCaption.TextSize = 11
+	shiftCaption.TextXAlignment = Enum.TextXAlignment.Left
+	shiftCaption.TextColor3 = Color3.fromRGB(140, 140, 155)
+	shiftCaption.Text = ""
+	shiftCaption.Parent = shiftRow
+
+	local shiftTrack = Instance.new("Frame")
+	shiftTrack.Name = "Track"
+	shiftTrack.Size = UDim2.new(1, 0, 0, 4)
+	shiftTrack.Position = UDim2.new(0, 0, 1, -4)
+	shiftTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	shiftTrack.BorderSizePixel = 0
+	shiftTrack.Parent = shiftRow
+
+	local shiftFill = Instance.new("Frame")
+	shiftFill.Name = "Fill"
+	shiftFill.Size = UDim2.new(0, 0, 1, 0)
+	shiftFill.BackgroundColor3 = SHIFT_COLOR
+	shiftFill.BorderSizePixel = 0
+	shiftFill.Parent = shiftTrack
+
+	-- What you are doing this minute, as opposed to what you are doing this year.
+	--
+	-- Its own row directly under the shift, and hidden whenever there is no task,
+	-- which is nearly always: this appears for fifteen seconds at a time, eight or
+	-- nine times inside a four-minute shift, and never once in the sixteen years
+	-- before the first job. A row that is empty most of the time teaches the player
+	-- not to look at it -- so this one is never empty, it is simply not there.
+	--
+	-- Two of them, because for most of a shift the shop is asking for two things at
+	-- once and a HUD that can only hold one of them would be hiding the entire decision
+	-- the job is built around. They sit at 4 and 4.5 so the lesson row below keeps the
+	-- number it has always had -- the second task row is squeezed into the gap rather
+	-- than shifting every row under it, which is how a HUD stays stable while it grows.
+	--
+	-- Order is stable and meaningful: `SetTasks` fills them in the order the server sent,
+	-- which is the order the tasks were issued, so the older task is always the upper
+	-- row. The player's eye does not have to re-find which one is about to run out.
+	local taskRows: { TaskRow } = { makeTaskRow(panel, 4), makeTaskRow(panel, 4.5) }
+
+	-- The lesson row. Deliberately the task row again, one size larger: same shape,
+	-- same colors, same countdown emptying left to right, because a lesson and a shift
+	-- are the same promise to the player -- go somewhere before this runs out -- and a
+	-- second visual language for the second half of that promise would be the game
+	-- teaching itself twice.
+	--
+	-- Larger only because a question is a sentence and a task is a phrase. This is the
+	-- one label on the HUD that wraps.
+	local lessonRow = Instance.new("Frame")
+	lessonRow.Name = "LessonRow"
+	lessonRow.Size = UDim2.new(1, 0, 0, 48)
+	lessonRow.LayoutOrder = 5
+	lessonRow.BackgroundTransparency = 1
+	lessonRow.Visible = false
+	lessonRow.Parent = panel
+
+	local lessonLabel = Instance.new("TextLabel")
+	lessonLabel.Name = "Label"
+	lessonLabel.Size = UDim2.new(1, 0, 0, 30)
+	lessonLabel.BackgroundTransparency = 1
+	lessonLabel.Font = Enum.Font.GothamMedium
+	lessonLabel.TextSize = 13
+	lessonLabel.TextXAlignment = Enum.TextXAlignment.Left
+	lessonLabel.TextYAlignment = Enum.TextYAlignment.Top
+	lessonLabel.TextWrapped = true
+	lessonLabel.TextColor3 = Color3.fromRGB(240, 232, 214)
+	lessonLabel.Text = ""
+	lessonLabel.Parent = lessonRow
+
+	local lessonCaption = Instance.new("TextLabel")
+	lessonCaption.Name = "Caption"
+	lessonCaption.Size = UDim2.new(1, 0, 0, 13)
+	lessonCaption.Position = UDim2.new(0, 0, 0, 30)
+	lessonCaption.BackgroundTransparency = 1
+	lessonCaption.Font = Enum.Font.Gotham
+	lessonCaption.TextSize = 11
+	lessonCaption.TextXAlignment = Enum.TextXAlignment.Left
+	lessonCaption.TextWrapped = true
+	lessonCaption.TextColor3 = TASK_CAPTION_COLOR
+	lessonCaption.Text = ""
+	lessonCaption.Parent = lessonRow
+
+	local lessonTrack = Instance.new("Frame")
+	lessonTrack.Name = "Track"
+	lessonTrack.Size = UDim2.new(1, 0, 0, 4)
+	lessonTrack.Position = UDim2.new(0, 0, 1, -4)
+	lessonTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	lessonTrack.BorderSizePixel = 0
+	lessonTrack.Parent = lessonRow
+
+	local lessonFill = Instance.new("Frame")
+	lessonFill.Name = "Fill"
+	lessonFill.Size = UDim2.new(1, 0, 1, 0)
+	lessonFill.BackgroundColor3 = TASK_COLOR
+	lessonFill.BorderSizePixel = 0
+	lessonFill.Parent = lessonTrack
+
+	-- Who you are standing next to, and what they just said back.
+	--
+	-- The only row on this HUD with no bar under it, and that absence is the design. A
+	-- shift, a task and a lesson are all things with a clock running; a conversation is
+	-- not, and drawing an empty track under it would promise a countdown that never
+	-- comes. It is also the only row where the second line is somebody talking rather
+	-- than the game reporting, which is why the reply is the part that gets the colour.
+	local personRow = Instance.new("Frame")
+	personRow.Name = "PersonRow"
+	personRow.Size = UDim2.new(1, 0, 0, 44)
+	personRow.LayoutOrder = 6
+	personRow.BackgroundTransparency = 1
+	personRow.Visible = false
+	personRow.Parent = panel
+
+	local personLabel = Instance.new("TextLabel")
+	personLabel.Name = "Label"
+	personLabel.Size = UDim2.new(1, 0, 0, 16)
+	personLabel.BackgroundTransparency = 1
+	personLabel.Font = Enum.Font.GothamBold
+	personLabel.TextSize = 13
+	personLabel.TextXAlignment = Enum.TextXAlignment.Left
+	personLabel.TextColor3 = Color3.fromRGB(240, 232, 214)
+	personLabel.Text = ""
+	personLabel.Parent = personRow
+
+	local personCaption = Instance.new("TextLabel")
+	personCaption.Name = "Caption"
+	personCaption.Size = UDim2.new(1, 0, 0, 26)
+	personCaption.Position = UDim2.new(0, 0, 0, 17)
+	personCaption.BackgroundTransparency = 1
+	personCaption.Font = Enum.Font.Gotham
+	personCaption.TextSize = 11
+	personCaption.TextXAlignment = Enum.TextXAlignment.Left
+	personCaption.TextYAlignment = Enum.TextYAlignment.Top
+	personCaption.TextWrapped = true
+	personCaption.TextColor3 = TASK_CAPTION_COLOR
+	personCaption.Text = ""
+	personCaption.Parent = personRow
+
 	local progressRow = Instance.new("Frame")
 	progressRow.Name = "AutoAgeUpRow"
 	progressRow.Size = UDim2.new(1, 0, 0, 24)
-	progressRow.LayoutOrder = 2
+	progressRow.LayoutOrder = 7
 	progressRow.BackgroundTransparency = 1
 	progressRow.Parent = panel
 
@@ -190,13 +615,15 @@ function StatsUI.new(): StatsUIHandle
 
 	local statBars: { [StatName]: { fill: Frame, label: TextLabel } } = {}
 	for i, entry in STAT_ORDER do
-		statBars[entry.name] = makeStatRow(panel, i + 2, entry.label)
+		-- Offset past the fixed rows above: age, stage, money, shift, task, lesson, person,
+		-- growing-up.
+		statBars[entry.name] = makeStatRow(panel, i + 7, entry.label)
 	end
 
 	local ageUpButton = Instance.new("TextButton")
 	ageUpButton.Name = "AgeUpButton"
 	ageUpButton.Size = UDim2.new(1, 0, 0, 32)
-	ageUpButton.LayoutOrder = #STAT_ORDER + 3
+	ageUpButton.LayoutOrder = #STAT_ORDER + 8
 	ageUpButton.BackgroundColor3 = COOLDOWN_COLOR
 	ageUpButton.BorderSizePixel = 0
 	ageUpButton.AutoButtonColor = false
@@ -210,6 +637,32 @@ function StatsUI.new(): StatsUIHandle
 	local buttonCorner = Instance.new("UICorner")
 	buttonCorner.CornerRadius = UDim.new(0, 6)
 	buttonCorner.Parent = ageUpButton
+
+	-- The roster: who you know, who you can talk to. Hidden until the server sends
+	-- the first list, which happens on join and whenever someone becomes available.
+	local rosterFrame = Instance.new("Frame")
+	rosterFrame.Name = "Roster"
+	rosterFrame.Size = UDim2.new(1, 0, 0, 0)
+	rosterFrame.BackgroundTransparency = 1
+	rosterFrame.LayoutOrder = 13
+	rosterFrame.Visible = false
+	rosterFrame.Parent = panel
+
+	local rosterList = Instance.new("ScrollingFrame")
+	rosterList.Name = "List"
+	rosterList.Size = UDim2.new(1, 0, 1, 0)
+	rosterList.BackgroundTransparency = 1
+	rosterList.ScrollBarThickness = 3
+	rosterList.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
+	rosterList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	rosterList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	rosterList.BorderSizePixel = 0
+	rosterList.Parent = rosterFrame
+
+	local rosterLayout = Instance.new("UIListLayout")
+	rosterLayout.Padding = UDim.new(0, 2)
+	rosterLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	rosterLayout.Parent = rosterList
 
 	local noticeFrame = Instance.new("Frame")
 	noticeFrame.Name = "Notice"
@@ -250,8 +703,8 @@ function StatsUI.new(): StatsUIHandle
 	local deathLabel = Instance.new("TextLabel")
 	deathLabel.Name = "DeathLabel"
 	deathLabel.Size = UDim2.new(0, 500, 0, 80)
-	deathLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-	deathLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+	deathLabel.AnchorPoint = Vector2.new(0.5, 1)
+	deathLabel.Position = UDim2.new(0.5, 0, 0.5, 8)
 	deathLabel.BackgroundTransparency = 1
 	deathLabel.Font = Enum.Font.GothamBold
 	deathLabel.TextSize = 28
@@ -260,12 +713,91 @@ function StatsUI.new(): StatsUIHandle
 	deathLabel.ZIndex = 11
 	deathLabel.Parent = deathFrame
 
+	-- The one control on the death screen, and the only way out of this place.
+	--
+	-- It is here rather than nowhere because a death screen that only ever clears on a timer
+	-- is a screen the player is made to sit through. The server sends them back after
+	-- `Config.Death.RespawnDelaySeconds` regardless -- this is the same trip, taken sooner,
+	-- and pressing it is idempotent on the server side, so an impatient double-press is one
+	-- teleport.
+	local deathButton = Instance.new("TextButton")
+	deathButton.Name = "BackToMenu"
+	deathButton.Size = UDim2.new(0, 260, 0, 46)
+	deathButton.AnchorPoint = Vector2.new(0.5, 0)
+	deathButton.Position = UDim2.new(0.5, 0, 0.5, 20)
+	deathButton.BackgroundColor3 = Color3.fromRGB(238, 232, 220)
+	deathButton.AutoButtonColor = true
+	deathButton.Font = Enum.Font.GothamBold
+	deathButton.TextSize = 17
+	deathButton.TextColor3 = Color3.fromRGB(24, 20, 14)
+	deathButton.Text = "Back to the menu"
+	deathButton.ZIndex = 11
+	deathButton.Parent = deathFrame
+
+	local deathButtonCorner = Instance.new("UICorner")
+	deathButtonCorner.CornerRadius = UDim.new(0, 8)
+	deathButtonCorner.Parent = deathButton
+
+	-- Where a refusal lands. Under the button rather than in the log, because the two
+	-- refusals that actually happen -- Studio, and an unpublished lobby place id -- are both
+	-- sentences somebody needs to read while looking at the button that did nothing.
+	local deathNoteLabel = Instance.new("TextLabel")
+	deathNoteLabel.Name = "DeathNote"
+	deathNoteLabel.Size = UDim2.new(0, 520, 0, 56)
+	deathNoteLabel.AnchorPoint = Vector2.new(0.5, 0)
+	deathNoteLabel.Position = UDim2.new(0.5, 0, 0.5, 78)
+	deathNoteLabel.BackgroundTransparency = 1
+	deathNoteLabel.Font = Enum.Font.Gotham
+	deathNoteLabel.TextSize = 14
+	deathNoteLabel.TextWrapped = true
+	deathNoteLabel.TextColor3 = Color3.fromRGB(240, 180, 160)
+	deathNoteLabel.Text = ""
+	deathNoteLabel.ZIndex = 11
+	deathNoteLabel.Parent = deathFrame
+
+	-- The one button that asks the player for timing. Bottom-centre, where a
+	-- rhythm-action button belongs: it is the only thing on screen during a rep
+	-- that is meant to be pressed, and it has to be findable while the eyes are
+	-- on the sweep bar. Grey and inert while a verdict is up, because there is
+	-- nothing to push during a verdict and a button that vanished would be harder
+	-- to find when the next rep starts.
+	local pushButton = Instance.new("TextButton")
+	pushButton.Name = "PushButton"
+	pushButton.Size = UDim2.new(0, 220, 0, 56)
+	pushButton.AnchorPoint = Vector2.new(0.5, 1)
+	pushButton.Position = UDim2.new(0.5, 0, 1, -24)
+	pushButton.BackgroundColor3 = PUSH_INACTIVE_COLOR
+	pushButton.AutoButtonColor = false
+	pushButton.Font = Enum.Font.GothamBold
+	pushButton.TextSize = 20
+	pushButton.TextColor3 = Color3.fromRGB(120, 120, 130)
+	pushButton.Text = "PUSH"
+	pushButton.Visible = false
+	pushButton.Parent = screenGui
+
+	local pushCorner = Instance.new("UICorner")
+	pushCorner.CornerRadius = UDim.new(0, 10)
+	pushCorner.Parent = pushButton
+
 	screenGui.Parent = playerGui
 
 	return setmetatable({
 		screenGui = screenGui,
 		ageLabel = ageLabel,
 		stageLabel = stageLabel,
+		moneyLabel = moneyLabel,
+		shiftRow = shiftRow,
+		taskRows = taskRows,
+		lessonRow = lessonRow,
+		lessonLabel = lessonLabel,
+		lessonCaption = lessonCaption,
+		lessonFill = lessonFill,
+		personRow = personRow,
+		personLabel = personLabel,
+		personCaption = personCaption,
+		shiftLabel = shiftLabel,
+		shiftCaption = shiftCaption,
+		shiftFill = shiftFill,
 		progressFill = progressFill,
 		progressCaption = progressCaption,
 		ageUpButton = ageUpButton,
@@ -274,7 +806,25 @@ function StatsUI.new(): StatsUIHandle
 		noticeToken = 0,
 		deathFrame = deathFrame,
 		deathLabel = deathLabel,
+		deathButton = deathButton,
+		deathNoteLabel = deathNoteLabel,
 		statBars = statBars,
+		rosterFrame = rosterFrame,
+		rosterList = rosterList,
+		rosterRows = {},
+		onPersonTapped = nil,
+		workoutRow = workoutRow,
+		workoutLabel = workoutLabel,
+		workoutCaption = workoutCaption,
+		sweepTrack = sweepTrack,
+		sweepBand = sweepBand,
+		sweepPerfect = sweepPerfect,
+		sweepNeedle = sweepNeedle,
+		pushButton = pushButton,
+		sweepConnection = nil,
+		sweepPhase = nil,
+		sweepBaseProgress = 0,
+		sweepElapsed = 0,
 	}, StatsUI)
 end
 
@@ -284,6 +834,349 @@ end
 
 function StatsUI.SetStage(self: StatsUIHandle, stage: string)
 	self.stageLabel.Text = stage
+end
+
+-- No animation and no flash. A balance that counted up would be a slot machine, and
+-- the one thing the money in this game must never feel like is a reward for
+-- pressing something.
+function StatsUI.SetMoney(self: StatsUIHandle, balance: number)
+	self.moneyLabel.Text = Money.Format(balance)
+end
+
+-- The shift, or the lack of one. Four states, deliberately different shapes rather
+-- than the same row with blanks in it:
+--
+--   nothing     hidden. Most of a life, and a row about nothing is a row the
+--               player learns to stop reading.
+--   turned away what this place wants from you before it will have you. Shown even
+--               with no job at all -- see below, it is the most important of the
+--               four despite being the rarest.
+--   off shift   what you do, what they make of you, and how much of the year you
+--               have worked. Answers "can I go and earn something right now".
+--   on shift    a bar that fills, and what it has paid so far.
+--
+-- Earnings are shown against the shift, never as a rate. A wage of "$200 an hour"
+-- is arithmetic that happens to be true and reads as a lie, because the hour it
+-- refers to is a game hour and lasts thirty seconds.
+--
+-- A record is shown as a phrase and never as a number, for a related reason: "14"
+-- is a true thing about a hidden variable, and "Well thought of" is the thing the
+-- number was always standing in for.
+function StatsUI.SetShift(self: StatsUIHandle, state: ShiftState)
+	local title = state.jobTitle
+	local blockedReason = state.blockedReason
+
+	if title == nil and blockedReason == nil then
+		self.shiftRow.Visible = false
+		return
+	end
+	self.shiftRow.Visible = true
+
+	-- Takes priority over everything, including a shift's own progress, because the
+	-- server only ever sets it for a player standing at a station they cannot use.
+	-- Clocking on is automatic and proximity-based, so being turned away is
+	-- otherwise *silent*: you walk into the office at eighteen, nothing happens, and
+	-- a career ladder you cannot see is indistinguishable from a door that is broken.
+	if blockedReason ~= nil then
+		self.shiftLabel.Text = title or "Not hired here"
+		self.shiftCaption.Text = blockedReason
+		self.shiftFill.Size = UDim2.new(0, 0, 1, 0)
+		return
+	end
+
+	-- Past this point there is a job, since having neither was handled above. The
+	-- cast says what the control flow already guarantees and the type cannot see.
+	local heldTitle = title :: string
+
+	if not state.onShift then
+		self.shiftLabel.Text = heldTitle
+		-- The record leads, because off shift it is what has changed since the player
+		-- last looked and what decides whether the next rung is open to them.
+		--
+		-- Sentence-cased here rather than authored capitalized, because the same
+		-- phrase has to read correctly mid-sentence in a refusal ("You need to be well
+		-- thought of as a Shop assistant first") and as a heading in this row.
+		local standing = state.standing
+		local worked = `{state.shiftsThisYear} of {state.shiftsPerYear} shifts this year`
+		self.shiftCaption.Text = if standing ~= nil
+			then `{string.upper(string.sub(standing, 1, 1))}{string.sub(standing, 2)} · {worked}`
+			else worked
+		self.shiftFill.Size = UDim2.new(0, 0, 1, 0)
+		return
+	end
+
+	local fraction = if state.shiftGameHours > 0
+		then math.clamp(state.gameHoursWorked / state.shiftGameHours, 0, 1)
+		else 0
+	self.shiftFill.Size = UDim2.new(fraction, 0, 1, 0)
+
+	self.shiftLabel.Text = `{heldTitle} — on shift`
+	-- Hours floored rather than rounded: an hour is only worked once it is over,
+	-- and it is only paid then too, so a caption reading "3 hrs" while the bar is
+	-- most of the way through the fourth is telling the truth about the money.
+	self.shiftCaption.Text = string.format(
+		"%d of %d hrs · %s earned",
+		math.floor(state.gameHoursWorked),
+		state.shiftGameHours,
+		Money.Format(state.earned)
+	)
+end
+
+-- One row of the only thing on this HUD that is about the next fifteen seconds.
+--
+-- Everything else in this panel is a standing fact -- your age, your money, your
+-- record, how much of the shift is left -- and none of it changes because of anything
+-- you do in the moment. These rows do. They are the only place the game asks the player
+-- for something and then watches a clock, so they are the only rows allowed to be loud,
+-- and the only ones that disappear completely the second they have nothing to say.
+local function drawTask(parts: TaskRow, state: TaskState)
+	parts.row.Visible = true
+
+	-- The count only appears when there is one to give. "1 of 1" is a fact about the
+	-- implementation; a single-mark task should just say what it is.
+	--
+	-- People before marks, when the task has both. On a rush the marks are the same two
+	-- over and over, so "3 of 6" is a true count of nothing the player is thinking
+	-- about -- what they want is how many more of these there are, and the answer to
+	-- that is standing in a line in front of them. The row only has to agree with it.
+	local waiting = state.waiting
+	if waiting ~= nil then
+		parts.label.Text = if waiting == 1
+			then `{state.label}  (last one)`
+			else `{state.label}  ({waiting} waiting)`
+	elseif state.spotCount > 1 then
+		parts.label.Text = `{state.label}  ({state.spotIndex}/{state.spotCount})`
+	else
+		parts.label.Text = state.label
+	end
+
+	local total = math.max(state.secondsTotal, 1)
+	local left = math.max(state.secondsLeft, 0)
+	local share = math.clamp(left / total, 0, 1)
+	parts.fill.Size = UDim2.new(share, 0, 1, 0)
+
+	if state.missed then
+		-- The row outlives the task by a few seconds, and this is the only reason it
+		-- does. Everywhere else the HUD reports a state; here it reports something that
+		-- has already happened, because the alternative is a mark and a row both
+		-- vanishing at once and a player who cannot tell whether they failed something
+		-- or the game simply stopped asking. The shift is going to charge them for this
+		-- at the end -- that price is only fair if they saw it being incurred.
+		--
+		-- It matters more now than it did with one task. A miss no longer means an empty
+		-- HUD -- the other task is still running, still counting down, still lit on the
+		-- floor -- so without this the failure would be swallowed whole by the thing the
+		-- player was doing instead. Two rows is the only arrangement in which "you lost
+		-- that one while you were winning this one" can be said at all.
+		parts.label.Text = state.label
+		parts.caption.Text = "Missed — out of time"
+		parts.caption.TextColor3 = TASK_URGENT_COLOR
+		parts.fill.BackgroundColor3 = TASK_URGENT_COLOR
+		return
+	end
+	parts.caption.TextColor3 = TASK_CAPTION_COLOR
+
+	if state.paused then
+		-- Said in words rather than left to a frozen bar, because a clock that has
+		-- stopped and one that has broken look exactly the same, and only one of them
+		-- is worth standing still for. The player is mid-prompt and needs to know that
+		-- reading it is free.
+		parts.caption.Text = "Paused while you answer"
+		parts.fill.BackgroundColor3 = TASK_PAUSED_COLOR
+		return
+	end
+
+	-- Ceiling rather than floor, so the number reaches zero exactly as the time does
+	-- instead of sitting on "0s" for a whole second while the task is still winnable.
+	parts.caption.Text = `{math.ceil(left)}s left`
+	parts.fill.BackgroundColor3 = if share <= TASK_URGENT_SHARE then TASK_URGENT_COLOR else TASK_COLOR
+end
+
+-- Every task the shift is currently asking for, all of them every time.
+--
+-- A list rather than one state, and it is the whole point of the job: with one task the
+-- only question a shift could ask was how fast the player walks, and there is exactly
+-- one right answer to that at every instant, which is not a decision. Two running clocks
+-- with two marks in two directions is the first moment the shift asks something the
+-- player can get wrong on purpose -- which one to abandon.
+--
+-- An empty list is the usual state and it is not an error: it means the gap between
+-- tasks, or the eight hours of a shift at a job with nothing authored, or the sixteen
+-- years before a first job. Every row is hidden in all three, because a HUD element that
+-- is empty most of the time is one players stop reading.
+--
+-- Extra states beyond the rows built are dropped rather than queued. The server caps
+-- itself at `Config.Work.Tasks.MaxConcurrent` and this is sized to match, so a state
+-- with nowhere to go means those two numbers have come apart -- and the honest failure
+-- for that is a task the player cannot see, not a HUD that grows a third row nobody
+-- designed the panel around.
+function StatsUI.SetTasks(self: StatsUIHandle, states: { TaskState })
+	for index, parts in self.taskRows do
+		local state = states[index]
+		if state == nil then
+			parts.row.Visible = false
+		else
+			drawTask(parts, state)
+		end
+	end
+end
+
+-- The task row's twin, for the half of a life that has no job in it.
+--
+-- Nil is the ordinary state here too, and for longer: most of a life is not spent in a
+-- lesson. Same rule as the task row -- nothing to say, nothing on screen.
+--
+-- Three things arrive through this one channel and they are told apart by the state
+-- itself rather than by a flag, because each distinction is already visible in the
+-- numbers. A live question has a clock and no verdict. A verdict has a clock's worth of
+-- context but no time left on it. A notice -- a lesson's closing summary, or the door
+-- refusing you -- has `count` of zero, which is the server saying this is not a question
+-- and has no position in anything.
+function StatsUI.SetLesson(self: StatsUIHandle, state: LessonState?)
+	if state == nil then
+		self.lessonRow.Visible = false
+		return
+	end
+	self.lessonRow.Visible = true
+	self.lessonLabel.Text = state.ask
+
+	-- Kept in front of the verdict as well as the countdown, so that being told why an
+	-- answer was wrong does not cost the player the one number that says how much of the
+	-- lesson is left to fix it in. Absent entirely on a notice, which is about the whole
+	-- lesson rather than any question in it.
+	local position = if state.count > 0 then `{state.index} of {state.count} · ` else ""
+
+	local verdict = state.verdict
+	if verdict ~= nil then
+		-- Green for right and the task row's urgent orange for wrong, rather than a red:
+		-- a wrong answer here has already cost what it is going to cost, and the row's
+		-- job now is to be read, not to alarm. The bar is emptied rather than hidden
+		-- because the clock genuinely is spent -- either the question is over or there
+		-- was never one running.
+		local color = if state.wasRight then GOOD_STAT_COLOR else TASK_URGENT_COLOR
+		self.lessonCaption.Text = position .. verdict
+		self.lessonCaption.TextColor3 = color
+		self.lessonFill.BackgroundColor3 = color
+		self.lessonFill.Size = UDim2.new(0, 0, 1, 0)
+		return
+	end
+	self.lessonCaption.TextColor3 = TASK_CAPTION_COLOR
+
+	local total = math.max(state.secondsTotal, 1)
+	local share = math.clamp(math.max(state.secondsLeft, 0) / total, 0, 1)
+	self.lessonFill.Size = UDim2.new(share, 0, 1, 0)
+	self.lessonFill.BackgroundColor3 = if share <= TASK_URGENT_SHARE then TASK_URGENT_COLOR else TASK_COLOR
+
+	-- The running score sits between the position and the clock because it is the one
+	-- number the player can still change, and the only one the smarts award is read off.
+	self.lessonCaption.Text = `{position}{state.right} right · {math.ceil(math.max(state.secondsLeft, 0))}s left`
+end
+
+-- Who the player is standing next to. Nil means nobody is, which is most of a life.
+--
+-- Two lines, and the split is the point of the row. The top one is a fact that holds for
+-- as long as you stand there -- their name and what you are to each other. The bottom one
+-- is a moment: the thing they just said, which clears itself a few seconds later and
+-- leaves the name behind. A row that folded them together would have somebody's name
+-- flickering every time they spoke.
+--
+-- The band is shown as a phrase and never as a number, because a score next to your
+-- mother's name is a progress bar where a relationship should be.
+function StatsUI.SetPerson(self: StatsUIHandle, state: PersonState?)
+	if state == nil then
+		self.personRow.Visible = false
+		return
+	end
+	self.personRow.Visible = true
+	self.personLabel.Text = `{state.name} · {state.band}`
+
+	local reply = state.reply
+	if reply == nil then
+		-- Emptied rather than left showing the last thing said, so a line does not hang
+		-- under somebody's name after the moment it belonged to has passed.
+		self.personCaption.Text = ""
+		return
+	end
+	-- Quoted, because this is the only writing on the HUD that is a person talking to the
+	-- player rather than the game narrating at them, and nothing else here is in quotes.
+	self.personCaption.Text = `"{reply}"`
+	self.personCaption.TextColor3 = if state.replyGood then GOOD_STAT_COLOR else TASK_CAPTION_COLOR
+end
+
+-- The workout, or the lack of one.
+--
+-- Nil and "offer" are the two ways nothing is being asked of the player right
+-- now; both hide the row, because an offer is a panel and a row about a workout
+-- that has not started would be a row about nothing. Rep and verdict are the two
+-- ways something is: the row appears, the PUSH button appears, and the sweep
+-- needle runs.
+--
+-- The needle is animated client-side between the server's pushes, which arrive
+-- about five times a second -- a sweep that only moved in server ticks would be
+-- a stagger, not a bar. Each push re-anchors the base so the client's guess is
+-- corrected before it can drift by more than a tick.
+function StatsUI.SetWorkout(self: StatsUIHandle, state: WorkoutState?)
+	if self.sweepConnection ~= nil then
+		self.sweepConnection:Disconnect()
+		self.sweepConnection = nil
+	end
+
+	if state == nil or state.phase == "offer" then
+		self.workoutRow.Visible = false
+		self.pushButton.Visible = false
+		self.sweepPhase = nil
+		return
+	end
+
+	self.workoutRow.Visible = true
+	self.sweepPhase = state.phase
+	self.workoutLabel.Text = `{state.machineLabel} — rep {state.rep} of {state.reps}`
+
+	-- The bands are redrawn from the state every time rather than set once at build.
+	-- Two things move them: which machine this is, and how fit the character is. The
+	-- second is the point -- health widens the window, and a widening the player
+	-- cannot see is progression that may as well not exist.
+	self.sweepBand.Size = UDim2.new(state.sweetHalf * 2, 0, 1, 0)
+	self.sweepBand.Position = UDim2.new(state.sweetCenter - state.sweetHalf, 0, 0, 0)
+	self.sweepPerfect.Size = UDim2.new(state.perfectHalf * 2, 0, 1, 0)
+	self.sweepPerfect.Position = UDim2.new(state.sweetCenter - state.perfectHalf, 0, 0, 0)
+
+	local staminaLine = `{state.stamina} of {state.maxStamina} stamina`
+	if state.phase == "verdict" then
+		-- Frozen at the position the hit landed. The bar is still, the grade
+		-- is spoken, and there is nothing to time until the next rep starts.
+		self.sweepNeedle.Position = UDim2.new(state.progress, 0, 0, 0)
+		self.workoutCaption.Text = `{state.grade or "..."} · {staminaLine}`
+		self.pushButton.BackgroundColor3 = PUSH_INACTIVE_COLOR
+		self.pushButton.TextColor3 = Color3.fromRGB(120, 120, 130)
+	else
+		-- Interpolated forward in the machine's own curve, from the share of the
+		-- sweep the server says has run. Accumulating share and re-curving it -- as
+		-- opposed to advancing the needle position directly -- is what keeps a
+		-- quickening bar quickening between ticks instead of sliding linearly and
+		-- then jumping when the next state lands.
+		self.sweepBaseProgress = state.elapsedShare
+		self.sweepElapsed = 0
+		self.workoutCaption.Text = staminaLine
+		self.pushButton.BackgroundColor3 = PUSH_ACTIVE_COLOR
+		self.pushButton.TextColor3 = Color3.fromRGB(30, 25, 10)
+
+		local sweepSeconds = state.sweepSeconds
+		local curve = state.curve
+		self.sweepConnection = RunService.RenderStepped:Connect(function(dt: number)
+			self.sweepElapsed += dt
+			local share = math.min(1, self.sweepBaseProgress + self.sweepElapsed / sweepSeconds)
+			self.sweepNeedle.Position = UDim2.new(Sweep.At(curve, share), 0, 0, 0)
+		end)
+	end
+
+	self.pushButton.Visible = true
+end
+
+-- Pressed while the needle is sweeping. The server decides the quality of the
+-- hit; this button only reports that a hit was attempted.
+function StatsUI.OnPushActivated(self: StatsUIHandle, callback: () -> ())
+	self.pushButton.Activated:Connect(callback)
 end
 
 function StatsUI.OnAgeUpActivated(self: StatsUIHandle, callback: () -> ())
@@ -371,13 +1264,115 @@ function StatsUI.SetStats(self: StatsUIHandle, stats: Stats)
 	end
 end
 
+-- Pressed to go back to the lobby. Not `Once`: a refusal leaves the screen up and the button
+-- live, which is the whole reason a refusal is drawn on it.
+function StatsUI.OnReturnActivated(self: StatsUIHandle, callback: () -> ())
+	self.deathButton.Activated:Connect(callback)
+end
+
+-- The last thing this place says about a life.
+--
+-- "Restarting..." is what this used to say, and it was true until part 3: the same body wound
+-- back to age zero and the character menu came up over the town. Nothing restarts now -- the
+-- life stays dead in the slot it was lived in, and the player goes back to the menu to pick
+-- another card or delete this one. The wording says so, because a screen that promises a
+-- restart and then teleports somewhere else is a screen that lied.
 function StatsUI.ShowDeath(self: StatsUIHandle, ageYears: number)
-	self.deathLabel.Text = `You died at age {ageYears}.\nRestarting...`
+	self.deathLabel.Text = `You died at age {ageYears}.`
+	self.deathNoteLabel.Text = ""
 	self.deathFrame.Visible = true
 end
 
-function StatsUI.HideDeath(self: StatsUIHandle)
-	self.deathFrame.Visible = false
+-- Why the trip back did not happen, printed under the button that did not work. Cleared by
+-- the next `ShowDeath` rather than on a timer: there is nothing else to read on this screen,
+-- and the reason is still true for as long as it is up.
+function StatsUI.ShowReturnRefusal(self: StatsUIHandle, reason: string)
+	self.deathNoteLabel.Text = reason
+end
+
+-- Whether there is a life to show a HUD for at all.
+--
+-- The whole ScreenGui rather than the stats panel, because the death overlay lives in here
+-- too and the two are switched together on purpose: a HUD is a claim that somebody is alive
+-- to have stats, and a death screen is a claim that somebody just stopped being. There is no
+-- state in which one of them belongs on screen without the other.
+--
+-- Enabled rather than Visible so nothing inside has to be put back the way it was: rows the
+-- server pushes while this is off -- stats, money -- are written to a HUD that is simply not
+-- being drawn, and are already correct when it comes back.
+function StatsUI.SetHudVisible(self: StatsUIHandle, visible: boolean)
+	self.screenGui.Enabled = visible
+end
+
+function StatsUI.SetRoster(self: StatsUIHandle, entries: { PersonRosterEntry })
+	-- Clear old rows.
+	for _, row in self.rosterRows do
+		row:Destroy()
+	end
+	table.clear(self.rosterRows)
+
+	if #entries == 0 then
+		self.rosterFrame.Visible = false
+		return
+	end
+
+	self.rosterFrame.Visible = true
+	local height = math.min(#entries * ROSTER_ROW_HEIGHT, ROSTER_MAX_HEIGHT)
+	self.rosterFrame.Size = UDim2.new(1, 0, 0, height)
+	self.rosterList.Size = UDim2.new(1, 0, 1, 0)
+
+	for i, entry in entries do
+		local row = Instance.new("TextButton")
+		row.Name = entry.id
+		row.Size = UDim2.new(1, 0, 0, ROSTER_ROW_HEIGHT)
+		row.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+		row.BackgroundTransparency = 0.4
+		row.BorderSizePixel = 0
+		row.Font = Enum.Font.Gotham
+		row.TextSize = 13
+		row.TextColor3 = if entry.available
+			then Color3.fromRGB(225, 225, 235)
+			else Color3.fromRGB(140, 140, 155)
+		row.TextXAlignment = Enum.TextXAlignment.Left
+		row.Text = `  {entry.name} \xc2\xb7 {entry.band}`
+		row.LayoutOrder = i
+		row.Parent = self.rosterList
+
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 4)
+		rowCorner.Parent = row
+
+		-- Availability dot: green when there is something to say, grey when spent.
+		local dot = Instance.new("Frame")
+		dot.Name = "Dot"
+		dot.Size = UDim2.new(0, 6, 0, 6)
+		dot.Position = UDim2.new(1, -12, 0.5, 0)
+		dot.AnchorPoint = Vector2.new(0, 0.5)
+		dot.BackgroundColor3 = if entry.available
+			then ROSTER_AVAILABLE_COLOR
+			else ROSTER_USED_COLOR
+		dot.BackgroundTransparency = if entry.available then 0 else 0.6
+		dot.BorderSizePixel = 0
+		dot.Parent = row
+
+		local dotCorner = Instance.new("UICorner")
+		dotCorner.CornerRadius = UDim.new(1, 0)
+		dotCorner.Parent = dot
+
+		local personId = entry.id
+		row.Activated:Connect(function()
+			local cb = self.onPersonTapped
+			if cb ~= nil then
+				cb(personId)
+			end
+		end)
+
+		table.insert(self.rosterRows, row)
+	end
+end
+
+function StatsUI.OnPersonTapped(self: StatsUIHandle, callback: (personId: string) -> ())
+	self.onPersonTapped = callback
 end
 
 return StatsUI

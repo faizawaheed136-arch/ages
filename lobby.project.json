@@ -1,0 +1,104 @@
+{
+  "name": "ages-lobby",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/lobby/server",
+        "shared": {
+          "$className": "Folder",
+          "DataService": {
+            "$path": "src/server/services/DataService.luau"
+          },
+          "Countries": {
+            "$path": "src/server/content/Countries.luau"
+          },
+          "LifeSetup": {
+            "$path": "src/server/content/LifeSetup.luau"
+          }
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "ProfileStore": {
+        "$path": "vendor/ProfileStore"
+      }
+    },
+    "ReplicatedStorage": {
+      "$path": "src/shared"
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "GlobalShadows": true,
+        "ClockTime": 3.2,
+        "GeographicLatitude": 41.7,
+        "Brightness": 0.6,
+        "ExposureCompensation": 0.35,
+        "Ambient": [0.05098, 0.05882, 0.08235],
+        "OutdoorAmbient": [0.07843, 0.08627, 0.11764],
+        "EnvironmentDiffuseScale": 0.25,
+        "EnvironmentSpecularScale": 0.85,
+        "FogEnd": 260,
+        "FogStart": 60,
+        "FogColor": [0.07058, 0.07843, 0.11372]
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.42,
+          "Offset": 0.25,
+          "Haze": 2.4,
+          "Glare": 0.6,
+          "Color": [0.47843, 0.52941, 0.63921],
+          "Decay": [0.15686, 0.18039, 0.25098]
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 1.1,
+          "Size": 32,
+          "Threshold": 1.1
+        }
+      },
+      "DepthOfField": {
+        "$className": "DepthOfFieldEffect",
+        "$properties": {
+          "FarIntensity": 0.28,
+          "FocusDistance": 14,
+          "InFocusRadius": 16,
+          "NearIntensity": 0
+        }
+      },
+      "ColorCorrection": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": 0.02,
+          "Contrast": 0.12,
+          "Saturation": -0.08,
+          "TintColor": [0.96862, 0.96078, 1]
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/lobby/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "StreamingEnabled": false,
+        "FallenPartsDestroyHeight": -500
+      }
+    }
+  }
+}

@@ -11,24 +11,33 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
+local PocketMoneyService = require(script.Parent.PocketMoneyService)
 local EventService = require(script.Parent.EventService)
 local BodyService = require(script.Parent.BodyService)
 local DeliveryService = require(script.Parent.DeliveryService)
+local WorkService = require(script.Parent.WorkService)
+local SchoolService = require(script.Parent.SchoolService)
+local GymService = require(script.Parent.GymService)
+local PeopleService = require(script.Parent.PeopleService)
+local ChildhoodService = require(script.Parent.ChildhoodService)
+local SetupService = require(script.Parent.SetupService)
+local ReturnService = require(script.Parent.ReturnService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
 type ManualAgeUpState = Types.ManualAgeUpState
-type ProfileData = Types.ProfileData
+type LifeData = Types.LifeData
 
 local AgeUpdatedRemote = Remotes.Get("AgeUpdated")
 local AgeUpProgressRemote = Remotes.Get("AgeUpProgress")
 local RequestAgeUpRemote = Remotes.Get("RequestAgeUp")
 local PlayerDiedRemote = Remotes.Get("PlayerDied")
-local PlayerRespawnedRemote = Remotes.Get("PlayerRespawned")
 local LifeStageChangedRemote = Remotes.Get("LifeStageChanged")
+local NoticeRemote = Remotes.Get("Notice")
 
 local LifeService = {}
 
@@ -52,21 +61,60 @@ local function rollNaturalDeath(ageYears: number): boolean
 	return math.random() < chance
 end
 
-local function ageYearsOf(data: ProfileData): number
+-- The birthday chance of falling ill, given the health the new year begins on.
+-- Zero at and above the line -- illness is the tax on being run down, not a lottery
+-- everyone is in -- and rising in a straight line to the ceiling at zero health, so
+-- every point of health below the line is a little more of the body failing to hold.
+local function illnessChanceAt(health: number): number
+	local healthConfig = Config.Health
+	if health >= healthConfig.RiskHealth then
+		return 0
+	end
+	local fall = (healthConfig.RiskHealth - health) / healthConfig.RiskHealth
+	return healthConfig.BaseIllnessChance + fall * (healthConfig.MaxIllnessChance - healthConfig.BaseIllnessChance)
+end
+
+-- One birthday's worth of sickness, run in the right order: whatever the year had
+-- is over first, then the new year gets its own chance to begin one. Recovery
+-- restoring less than a sick year took is the whole shape of the loop -- a life that
+-- falls ill pays a little each time until it either gets well or runs out of the
+-- middle of the bar, and a life that keeps dropping faces a worse chance every year.
+--
+-- The flag is read and written here and nowhere else. StatService and WorkService
+-- read it straight off the record to tax the year and the shifts -- they stay leaves
+-- in the require graph -- while this is the only place it is ever set or cleared.
+local function progressSickness(player: Player, data: LifeData)
+	local healthConfig = Config.Health
+
+	if data.flags.sick ~= nil then
+		data.flags.sick = nil
+		StatService.AddStat(player, "health", healthConfig.RecoverHealth)
+		NoticeRemote:FireClient(player, "You got over it. Whatever it was, it's behind you now.")
+	end
+
+	if math.random() < illnessChanceAt(data.stats.health) then
+		data.flags.sick = data.ageMonths // Config.Time.MonthsPerYear
+		NoticeRemote:FireClient(player, "You're coming down with something. You feel hollow and feverish, and it isn't going anywhere fast.")
+	end
+end
+
+local function ageYearsOf(data: LifeData): number
 	return data.ageMonths // Config.Time.MonthsPerYear
 end
 
+-- Whether there is a life here to run at all.
+--
 -- Gated on age rather than life stage: the player takes the wheel partway
 -- through Childhood, at the point they could plausibly be choosing things for
 -- themselves, not at the stage boundary years later.
-local function isSelfDirected(data: ProfileData): boolean
+local function isSelfDirected(data: LifeData): boolean
 	return ageYearsOf(data) >= Config.ManualAgeUpMinAge
 end
 
 -- The earliest years run on a shorter timer because there is nothing for the
 -- player to decide while they pass. Thresholds are authored in game hours and
 -- converted here, so the day length is the only dial that moves them.
-local function autoThresholdSeconds(data: ProfileData): number
+local function autoThresholdSeconds(data: LifeData): number
 	local gameHours = if isSelfDirected(data) then Config.AutoAgeUpGameHours else Config.ChildAutoAgeUpGameHours
 	return gameHours * Config.Time.RealSecondsPerGameHour
 end
@@ -74,8 +122,16 @@ end
 -- Single source of truth for the manual gate. The HUD renders whatever this
 -- returns rather than re-deriving the rule, so the button can never offer an
 -- action the server would refuse.
-local function manualState(data: ProfileData): ManualAgeUpState
-	if not data.alive then
+-- `livesLived` is passed in rather than read off the life, because it is the one thing this
+-- rule needs that is a fact about the *player* rather than the person: how many lives have
+-- been finished across every save slot. Threading it as an argument keeps this function
+-- pure and testable, and keeps the account/life split visible at the call site instead of
+-- buried behind a lookup.
+local function manualState(data: LifeData, livesLived: number): ManualAgeUpState
+	-- Unborn reads as Hidden exactly like dead does. The client hides the whole HUD behind
+	-- the setup menu anyway, so this is the belt to that braces: a client that failed to
+	-- hide it is holding a button the server will refuse rather than one that works.
+	if not data.alive or not Lives.HasBegun(data) then
 		return "Hidden"
 	end
 
@@ -84,7 +140,7 @@ local function manualState(data: ProfileData): ManualAgeUpState
 		-- Once it has been lived at least once, skipping it becomes the
 		-- player's call. No cooldown applies: the counter is at zero on a fresh
 		-- life, which is exactly when a returning player wants this button.
-		if data.livesLived >= Config.SkipChildhoodMinLives then
+		if livesLived >= Config.SkipChildhoodMinLives then
 			return "SkipChildhood"
 		end
 		return "Hidden"
@@ -96,8 +152,22 @@ local function manualState(data: ProfileData): ManualAgeUpState
 	return "Ready"
 end
 
-local function pushProgress(player: Player, data: ProfileData)
-	AgeUpProgressRemote:FireClient(player, data.secondsSinceAgeUp, autoThresholdSeconds(data), manualState(data))
+local function pushProgress(player: Player, data: LifeData)
+	-- Looked up here rather than added to this function's signature, so that all eight call
+	-- sites stay as they were: every one of them already had the player, and none of them
+	-- had any business knowing that the skip-childhood rule reads an account-level counter.
+	--
+	-- Falls back to zero if the profile has gone, which is the safe direction -- zero lives
+	-- lived hides the skip button, and a player whose profile has unloaded mid-push should
+	-- not be handed a control that acts on a life the server can no longer see.
+	local profile = DataService.GetProfile(player)
+	local livesLived = if profile ~= nil then profile.Data.livesLived else 0
+	AgeUpProgressRemote:FireClient(
+		player,
+		data.secondsSinceAgeUp,
+		autoThresholdSeconds(data),
+		manualState(data, livesLived)
+	)
 end
 
 function LifeService.GetAgeYears(player: Player): number?
@@ -105,51 +175,93 @@ function LifeService.GetAgeYears(player: Player): number?
 	if profile == nil then
 		return nil
 	end
-	return ageYearsOf(profile.Data)
+	return ageYearsOf(Lives.Active(profile.Data))
 end
 
 -- Public so the Studio debug harness can force a death without waiting on a
 -- mortality roll. Safe to call on an already-dead player: the alive check
--- makes it a no-op, so a retried call cannot queue a second respawn.
+-- makes it a no-op, so a retried call cannot queue a second trip to the lobby
+-- or count the same life twice in `livesLived`.
 function LifeService.Die(player: Player)
 	local profile = DataService.GetProfile(player)
-	if profile == nil or not profile.Data.alive then
+	if profile == nil then
+		return
+	end
+	local dying = Lives.Active(profile.Data)
+	if not dying.alive then
 		return
 	end
 
-	profile.Data.alive = false
-	profile.Data.stage = "Death"
+	dying.alive = false
+	dying.stage = "Death"
+	-- On the profile, not the life: it counts what the *player* has been through, and a life
+	-- that reset its own counter would put every player permanently on their first.
+	--
+	-- Incremented here rather than at the start of the next life, which is where it used to
+	-- sit, because there is no "next life" in this place any more. The lobby reads this number
+	-- to say which life a card is about to be, and the lobby is where the player is going.
+	profile.Data.livesLived += 1
 	-- Whatever the world was holding out for this person goes with them, rather
 	-- than sitting in the house through the death screen waiting for a collector
 	-- who is never coming.
 	DeliveryService.ResetForNewLife(player)
-	pushProgress(player, profile.Data)
-	PlayerDiedRemote:FireClient(player, ageYearsOf(profile.Data))
+	-- And they stop working, for the plainest reason available. Before the death
+	-- screen rather than with the rest of the reset below, because a shift left
+	-- running would go on paying a corpse for the length of the respawn delay.
+	WorkService.ResetForNewLife(player)
+	-- Likewise, and for the sharper version of the same reason: a lesson left running
+	-- would leave three answer pads breathing on a classroom floor through the death
+	-- screen, waiting on somebody who is not coming back to them.
+	SchoolService.ResetForNewLife(player)
+	-- Likewise: a workout in progress would leave a sweep bar frozen on
+	-- a dead body and a PUSH button that did nothing, so end it and clear
+	-- the yearly caps.
+	GymService.ResetForNewLife(player)
+	-- And the room empties. Not for a mechanical reason -- nothing is left running --
+	-- but because the death screen is read over the world behind it, and a mother
+	-- standing in the doorway through her child's death would be the single worst frame
+	-- this game could draw.
+	PeopleService.ResetForNewLife(player)
+	-- And whatever was lying across the room waiting to be crawled to. Same reasoning
+	-- as the room emptying: a lit pad still inviting a dead child somewhere is a worse
+	-- frame than an empty floor.
+	ChildhoodService.ResetForNewLife(player)
+	-- And whoever was walking pocket money across the room to this person, who is no longer
+	-- there to take it. This call used to sit in the rebirth below, clearing the ledger for a
+	-- newborn; the ledger no longer needs clearing -- a new life is a new `Lives.New()` with an
+	-- empty one -- but the delivery in flight still does, and a parent finishing a walk to a
+	-- corpse is exactly the frame the rest of this teardown exists to prevent.
+	PocketMoneyService.ResetForNewLife(player)
+	pushProgress(player, dying)
+	PlayerDiedRemote:FireClient(player, ageYearsOf(dying))
 
+	-- And then they go back to the menu.
+	--
+	-- **The rebirth that used to live here is gone, and this is the change part 3 is for.**
+	-- It wound this same life back to age zero, re-rolled its gender, reset six services and
+	-- cleared `setup` so the character menu would draw itself over the town -- which meant a
+	-- player had one life at a time, ever, and the moment it ended it was overwritten by the
+	-- next one. There was no way to look back at who you had been, because nothing was kept.
+	--
+	-- Nothing is reset now. The dead life stays exactly as it died, in the slot it was lived
+	-- in, and the lobby draws it on a card as a person with a name and an age they got to --
+	-- the player deletes it when they are ready to use the slot for somebody else. All the
+	-- resets that used to run here have moved to where a life actually begins, which is the
+	-- lobby writing a new one into an empty slot: `Lives.New()` is the whole of it, because
+	-- a brand-new life has nothing to clear.
+	--
+	-- The delay is the same one it always was: long enough to read the summary. What comes
+	-- after it is a teleport instead of a newborn.
 	task.delay(Config.Death.RespawnDelaySeconds, function()
-		-- Bail out if the player's profile changed identity (e.g. rejoined).
-		if DataService.GetProfile(player) ~= profile then
+		-- Bail out if the player's profile changed identity (e.g. rejoined), or if they have
+		-- already pressed the button on the death screen themselves. Both leave the trip to
+		-- somebody else; ReturnService's own in-flight stamp makes the second harmless anyway,
+		-- but a refusal fired at a player mid-teleport is a message onto a screen that is
+		-- already going away.
+		if DataService.GetProfile(player) ~= profile or player.Parent ~= Players then
 			return
 		end
-
-		profile.Data.ageMonths = 0
-		profile.Data.stage = "Childhood"
-		profile.Data.alive = true
-		profile.Data.livesLived += 1
-		profile.Data.secondsSinceAgeUp = 0
-
-		StatService.ResetToStarting(player)
-		EventService.ResetSeen(player)
-		DeliveryService.ResetForNewLife(player)
-		-- Back to a newborn body; respawning does not itself reload the character.
-		BodyService.Apply(player)
-		PlayerRespawnedRemote:FireClient(player)
-		LifeStageChangedRemote:FireClient(player, "Childhood")
-		AgeUpdatedRemote:FireClient(player, 0, "Sync" :: AgeUpCause)
-		pushProgress(player, profile.Data)
-
-		-- A new life opens on its first moment rather than on an empty year.
-		EventService.OfferForAge(player, 0)
+		ReturnService.Send(player)
 	end)
 end
 
@@ -168,11 +280,14 @@ end
 -- real path instead of a shortcut that could diverge from it.
 function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	local profile = DataService.GetProfile(player)
-	if profile == nil or not profile.Data.alive then
+	if profile == nil then
 		return
 	end
 
-	local data = profile.Data
+	local data = Lives.Active(profile.Data)
+	if not data.alive then
+		return
+	end
 
 	-- Banked time is spent before anything else can yield: a duplicate request
 	-- arriving behind this one fails its cooldown check, so a retry (or a
@@ -199,8 +314,45 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- allowance of ambient deliveries.
 	DeliveryService.OnAgeUp(player)
 
+	-- A new year of work to be had. Deliberately does not interrupt a shift in
+	-- progress: a birthday at work is still a day at work.
+	WorkService.OnAgeUp(player)
+
+	-- And a new year of school, on the same terms -- except that this one also looks
+	-- back. A school year nobody turned up to is charged for here, because not going
+	-- is not something that happens at a place: it is something that turns out to have
+	-- happened once the year is over, and a birthday is when a year is over.
+	--
+	-- After WorkService rather than before it for no reason beyond reading order: the
+	-- two touch nothing in common, and a player cannot be at both.
+	SchoolService.OnAgeUp(player)
+
+	-- A new year of machines: the per-machine yearly caps reset, and any
+	-- workout in progress is graded on the year it started in.
+	GymService.OnAgeUp(player)
+
+	-- And a year of everybody you did not go and see. Last of the three because it is
+	-- the only one that looks purely backwards: work and school each hand out a fresh
+	-- year's allowance as well, and this hands out nothing -- it just settles up.
+	PeopleService.OnAgeUp(player)
+
 	AgeUpdatedRemote:FireClient(player, ageYears, cause)
 	pushProgress(player, data)
+
+	-- A birthday is payday too, for as long as somebody else is doing the paying.
+	--
+	-- After the age has gone out, so the balance moves against a HUD already showing
+	-- the new year -- being handed a ten-year-old's allowance while the screen still
+	-- says nine is a small lie about why the number went up. Before the death rolls,
+	-- because the birthday happened: a year that turns out to be your last still had
+	-- a birthday in it, and if it does kill you the money is cleared with everything
+	-- else a moment later anyway.
+	--
+	-- Runs on skipped years as well, and deliberately. A skipped year passes unlived
+	-- and so offers no event, but it is still a birthday, and pocket money is not a
+	-- prompt -- a childhood skipped for the second time should not also be a
+	-- childhood unpaid.
+	PocketMoneyService.OnAgeUp(player)
 
 	if killIfOutOfHealth(player) then
 		return
@@ -209,6 +361,12 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 		LifeService.Die(player)
 		return
 	end
+
+	-- One birthday's worth of sickness: recovery, then a roll for the new year. Runs
+	-- on skipped years too, and for the same reason decay does -- a skipped year is
+	-- still a year the body lives, and skipping should not let a life dodge the
+	-- recovery that is its only way off the tax.
+	progressSickness(player, data)
 
 	-- Last, so a year that killed the player never also hands them a prompt.
 	-- Skipped years pass unlived by definition, so they don't offer one either.
@@ -229,7 +387,7 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 			if current == nil then
 				return
 			end
-			EventService.OfferForAge(player, ageYearsOf(current.Data))
+			EventService.OfferForAge(player, ageYearsOf(Lives.Active(current.Data)))
 		end)
 	else
 		EventService.OfferForAge(player, ageYears)
@@ -241,7 +399,7 @@ end
 -- writing ageMonths directly, so the skipped years still decay stats and cross
 -- stage boundaries exactly as if they had been played. Bounded by construction:
 -- at most one iteration per year being skipped.
-local function skipChildhood(player: Player, data: ProfileData)
+local function skipChildhood(player: Player, data: LifeData)
 	for _ = 1, Config.ManualAgeUpMinAge do
 		if not data.alive or isSelfDirected(data) then
 			break
@@ -265,11 +423,18 @@ end
 local function bankPlaytime(elapsedSeconds: number)
 	for _, player in Players:GetPlayers() do
 		local profile = DataService.GetProfile(player)
-		if profile == nil or not profile.Data.alive then
+		-- The gate. A player still choosing their name banks nothing -- not a partial
+		-- second, not a health check -- so the menu can be read at whatever speed the
+		-- player reads at. This is the line that makes setup a decision rather than a
+		-- timed one.
+		if profile == nil then
 			continue
 		end
 
-		local data = profile.Data
+		local data = Lives.Active(profile.Data)
+		if not data.alive or not Lives.HasBegun(data) then
+			continue
+		end
 		data.secondsSinceAgeUp += elapsedSeconds
 
 		if killIfOutOfHealth(player) then
@@ -292,8 +457,13 @@ local function onAgeUpRequested(player: Player)
 		return
 	end
 
-	local data = profile.Data
-	local state = manualState(data)
+	local data = Lives.Active(profile.Data)
+	-- livesLived threaded from the profile exactly as pushProgress does it: manualState
+	-- takes it as an argument, and the account-level counter lives on the profile we
+	-- already hold here. Passing it (rather than leaving it nil) is the whole fix -- the
+	-- skip-childhood branch compares livesLived against a number, so a nil argument threw
+	-- and every age-up request died silently, stranding a freshly skipped life at age 0.
+	local state = manualState(data, profile.Data.livesLived)
 
 	if state == "SkipChildhood" then
 		skipChildhood(player, data)
@@ -312,15 +482,66 @@ local function onAgeUpRequested(player: Player)
 	LifeService.AgeUp(player, "Manual")
 end
 
+-- The moment a life actually starts: the setup is written, so everything that was waiting
+-- on it goes.
+--
+-- Lives here rather than in SetupService because it is the tail of what a rebirth used to
+-- do inline, and splitting a life's first moment across two files by *where the trigger*
+-- came from would mean a life begun on join and a life begun after a death screen opened
+-- differently. SetupService calls it through a handler for the same reason EventService
+-- gets its age-up handler that way: requiring back the other direction closes a cycle.
+local function beginLife(player: Player)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+	local ageYears = ageYearsOf(data)
+
+	-- Re-applied even though the rebirth already did it, because the *other* way into this
+	-- function is a fresh join, where nothing has applied a body at all.
+	BodyService.Apply(player)
+	AgeUpdatedRemote:FireClient(player, ageYears, "Sync" :: AgeUpCause)
+	LifeStageChangedRemote:FireClient(player, data.stage)
+	pushProgress(player, data)
+
+	-- A new life opens on its first moment rather than on an empty year. This is the line
+	-- that moved out of the rebirth block: the first decision of a life now arrives after
+	-- the player has decided whose life it is.
+	EventService.OfferForAge(player, ageYears)
+end
+
 local function pushInitialState(player: Player)
 	local profile = DataService.WaitForProfile(player)
 	if profile == nil then
 		return
 	end
-	local data = profile.Data
-	AgeUpdatedRemote:FireClient(player, ageYearsOf(data), "Sync" :: AgeUpCause)
+	local data = Lives.Active(profile.Data)
+	-- Nothing to describe. A slot with no setup in it is not a life yet, and ReturnService is
+	-- already sending this player back to the lobby to fill one -- pushing an age and a stage
+	-- at them on the way out would raise a HUD over a world they are leaving.
+	if not Lives.HasBegun(data) then
+		return
+	end
+	local ageYears = ageYearsOf(data)
+	AgeUpdatedRemote:FireClient(player, ageYears, "Sync" :: AgeUpCause)
 	LifeStageChangedRemote:FireClient(player, data.stage)
 	pushProgress(player, data)
+
+	-- **The first moment of a life created in the lobby, and the one thing arriving here does
+	-- that a rejoin must not.** Before part 3 this line was not needed: every life was born in
+	-- this place, so `beginLife` always ran and always offered age zero. A life is now written
+	-- on the other side of a teleport, so the player walks in already begun and the opening
+	-- event has nobody to offer it.
+	--
+	-- Gated on having seen nothing and having nothing pending, which is what makes it safe to
+	-- run on *every* arrival: a player rejoining at forty has a seen list behind them, so this
+	-- does nothing, and one who disconnected mid-decision has that decision still pending and
+	-- gets it back rather than a second one. Only a life that has genuinely not started yet
+	-- passes both tests, and it can only pass them once.
+	if data.pendingEventId == nil and next(data.seenEventIds) == nil then
+		EventService.OfferForAge(player, ageYears)
+	end
 end
 
 function LifeService:Init()
@@ -328,6 +549,9 @@ function LifeService:Init()
 	-- Handed over rather than required the other way around: EventService cannot
 	-- require this module without closing a dependency cycle.
 	EventService.SetAgeUpHandler(LifeService.AgeUp)
+	-- Same device, same reason. SetupService writes the setup and this runs the moment
+	-- after, which is the moment a life starts.
+	SetupService.SetBeginHandler(beginLife)
 end
 
 function LifeService:Start()

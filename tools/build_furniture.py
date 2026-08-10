@@ -29,16 +29,14 @@ move from one wall to another. Free-standing builders are authored around their
 centre and say so.
 """
 
-import base64
-import struct
-from contextlib import contextmanager
-
+import rbxmx
+from rbxmx import FABRIC, MARBLE, METAL, NEON, PLASTIC, SMOOTH, WOOD
+from rbxmx import against, free, part, piece, point_light
 from house_plan import DELIVERY_MODE_ATTRIBUTE, DELIVERY_TAG
 from house_plan import FURNITURE as OUT
 from house_plan import A, B, C, D, U1, U2, U3
 
-# Enum.Material tokens.
-PLASTIC, SMOOTH, WOOD, PLANKS, FABRIC, METAL, NEON, MARBLE = 256, 272, 512, 528, 1312, 1088, 288, 784
+rbxmx.begin("RBXFURN")
 
 # A single warm, muted palette so the blockiness reads as deliberate rather
 # than as a pile of default-colored bricks.
@@ -52,182 +50,6 @@ LINEN = (214, 206, 192)
 SKY = (162, 190, 206)
 WHITE = (245, 243, 238)
 BRASS = (198, 160, 96)
-
-_items = []
-_ref = 0
-_parts = 0
-
-# (pivot_x, pivot_z, quarter_turns, floor_y) for whatever is being emitted.
-_ctx = (0.0, 0.0, 0, 0.0)
-
-# Quarter turns about Y, applied to a local offset. One turn sends x to z.
-_TURN_OFFSET = {
-    0: lambda dx, dz: (dx, dz),
-    1: lambda dx, dz: (dz, -dx),
-    2: lambda dx, dz: (-dx, -dz),
-    3: lambda dx, dz: (-dz, dx),
-}
-_TURN_MATRIX = {
-    0: "<R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>",
-    1: "<R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22>",
-    2: "<R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22>",
-    3: "<R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22>",
-}
-
-# Which quarter turn puts a piece's back against which wall. Named for the wall
-# rather than the direction it faces, because that is how a room gets laid out.
-_BACK = {"north": 0, "west": 1, "south": 2, "east": 3}
-
-
-@contextmanager
-def against(room, side, along):
-    """Emit a wall-standing builder with its back on `side` of `room`."""
-    global _ctx
-    previous = _ctx
-    px, pz = room.wall(side, along)
-    _ctx = (px, pz, _BACK[side], room.floor)
-    try:
-        yield
-    finally:
-        _ctx = previous
-
-
-@contextmanager
-def free(room, x, z, side="north"):
-    """Emit a builder at an explicit spot in the room, for the pieces that stand
-    away from every wall."""
-    global _ctx
-    previous = _ctx
-    _ctx = (x, z, _BACK[side], room.floor)
-    try:
-        yield
-    finally:
-        _ctx = previous
-
-
-def piece(label):
-    """Wraps a builder so everything it emits lands in one Model.
-
-    The grouping is not cosmetic. It is what lets the checker tell a sink set
-    into a counter — parts of one object, allowed to share space — from a plant
-    standing inside a sofa, which is a mistake. It also means each blocky
-    stand-in is one selectable object, so it can be swapped for real art
-    without disturbing anything around it.
-    """
-
-    def decorate(build):
-        def wrapped(*args, **kwargs):
-            start = len(_items)
-            build(*args, **kwargs)
-            children = _items[start:]
-            del _items[start:]
-            _items.append(f'''<Item class="Model" referent="{_next_ref()}">
-<Properties>
-<string name="Name">{label}</string>
-</Properties>
-{"".join(children)}
-</Item>''')
-
-        wrapped.__name__ = build.__name__
-        wrapped.__doc__ = build.__doc__
-        return wrapped
-
-    return decorate
-
-
-def _next_ref():
-    global _ref
-    _ref += 1
-    return f"RBXFURN{_ref:04d}"
-
-
-def _c3(rgb):
-    r, g, b = rgb
-    return (0xFF << 24) | (r << 16) | (g << 8) | b
-
-
-def _tags_blob(tags):
-    return base64.b64encode("\0".join(tags).encode()).decode()
-
-
-def _attributes_blob(attrs):
-    """Roblox attribute format: u32 count, then per entry name, type, value.
-
-    0x02 is the string type id. Only strings are needed here; if this encoding
-    is ever wrong the attribute simply won't appear, and WorldEventService warns
-    by name about the object that carries it.
-    """
-    out = struct.pack("<I", len(attrs))
-    for key, value in attrs.items():
-        kb = key.encode()
-        vb = value.encode()
-        out += struct.pack("<I", len(kb)) + kb
-        out += b"\x02"
-        out += struct.pack("<I", len(vb)) + vb
-    return base64.b64encode(out).decode()
-
-
-def part(name, offset, size, color, material=SMOOTH, transparency=0.0,
-         collide=True, shape=1, upright_cylinder=False, tags=None, attrs=None,
-         children=""):
-    """offset is (dx, dy, dz) in the builder's own space: dx across, dz forward
-    from its back face, and dy up from the floor to the part's underside."""
-    global _parts
-    _parts += 1
-    dx, dy, dz = offset
-    sx, sy, sz = size
-    px, pz, turns, floor = _ctx
-
-    ox, oz = _TURN_OFFSET[turns](dx, dz)
-    x, z = px + ox, pz + oz
-    y = floor + dy + sy / 2
-
-    if upright_cylinder:
-        # Cylinder parts run along their X axis, so a disc lying flat needs X
-        # rotated onto Y. sx becomes thickness; sy/sz become the diameter.
-        # Discs are circular about that axis, so the room turn does not apply.
-        rot = "<R00>0</R00><R01>-1</R01><R02>0</R02><R10>1</R10><R11>0</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22>"
-        y = floor + dy + sx / 2
-    else:
-        rot = _TURN_MATRIX[turns]
-
-    extra = ""
-    if tags:
-        extra += f'<BinaryString name="Tags">{_tags_blob(tags)}</BinaryString>'
-    if attrs:
-        extra += f'<BinaryString name="AttributesSerialize">{_attributes_blob(attrs)}</BinaryString>'
-
-    _items.append(f'''<Item class="Part" referent="{_next_ref()}">
-<Properties>
-<string name="Name">{name}</string>
-<CoordinateFrame name="CFrame"><X>{x}</X><Y>{y}</Y><Z>{z}</Z>{rot}</CoordinateFrame>
-<Vector3 name="size"><X>{sx}</X><Y>{sy}</Y><Z>{sz}</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">{"true" if collide else "false"}</bool>
-<token name="Material">{material}</token>
-<token name="shape">{shape}</token>
-<Color3uint8 name="Color3uint8">{_c3(color)}</Color3uint8>
-<float name="Transparency">{transparency}</float>
-<float name="Reflectance">0</float>
-{extra}
-</Properties>
-{children}
-</Item>''')
-
-
-def point_light(color, brightness, rng):
-    r, g, b = [c / 255 for c in color]
-    return f'''<Item class="PointLight" referent="{_next_ref()}">
-<Properties>
-<string name="Name">Glow</string>
-<Color3 name="Color"><R>{r}</R><G>{g}</G><B>{b}</B></Color3>
-<float name="Brightness">{brightness}</float>
-<float name="Range">{rng}</float>
-<bool name="Shadows">true</bool>
-<bool name="Enabled">true</bool>
-</Properties>
-</Item>'''
-
 
 # --------------------------------------------------------------------------
 # Wall pieces. Local origin sits on the back face, centred across X, so depth
@@ -510,13 +332,8 @@ def ceiling_light(room, x, z, height=LIGHT_HEIGHT):
     # dy is measured up from whatever the context calls the floor, so hanging a
     # fitting is a matter of calling the ceiling the floor and going down. The
     # 1.1 is how far the bulb sits below the cord's top in pendant().
-    global _ctx
-    previous = _ctx
-    _ctx = (x, z, 0, room.ceiling)
-    try:
+    with rbxmx.at(x, z, floor=room.ceiling):
         pendant(room.ceiling - room.floor - height - 1.1)
-    finally:
-        _ctx = previous
 
 
 # --------------------------------------------------------------------------
@@ -728,14 +545,4 @@ with free(U3, 17.0, 14.0):
 ceiling_light(U3, 10.0, 14.0)
 ceiling_light(U3, 24.0, 14.0)
 
-body = "\n".join(_items)
-OUT.write_text(f'''<roblox version="4">
-<Item class="Model" referent="RBXFURNROOT">
-<Properties>
-<string name="Name">Furniture</string>
-</Properties>
-{body}
-</Item>
-</roblox>
-''')
-print(f"wrote {OUT} ({_parts} parts in {len(_items)} pieces)")
+print(rbxmx.write(OUT, "Furniture"))

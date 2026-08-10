@@ -17,15 +17,19 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
+local Townsfolk = require(script.Parent.Townsfolk)
+
 type CastMember = Types.CastMember
 
--- Scales are HumanoidDescription multipliers around 1. Height is the one that
--- carries most of the read: an adult at 1.0 next to a toddler scaled to 0.3 is
--- already a towering figure without any other work.
+-- Scales are *build*, not size: multipliers around 1 saying how far off average this
+-- person is. Age is applied on top by Config.Growth at the moment the rig is built, so
+-- an adult here at 1.0 towers over a two-year-old player without anybody having to
+-- write down that they tower -- and a peer stays a peer as the player grows.
 local Cast: { CastMember } = {
 	{
 		id = "mom",
 		name = "Mom",
+		gender = "female",
 		skinColor = Color3.fromRGB(232, 190, 160),
 		heightScale = 0.98,
 		widthScale = 0.92,
@@ -39,6 +43,7 @@ local Cast: { CastMember } = {
 	{
 		id = "dad",
 		name = "Dad",
+		gender = "male",
 		skinColor = Color3.fromRGB(226, 181, 150),
 		heightScale = 1.06,
 		widthScale = 1.05,
@@ -52,6 +57,7 @@ local Cast: { CastMember } = {
 	{
 		id = "neighbor",
 		name = "Mr. Alderman",
+		gender = "male",
 		skinColor = Color3.fromRGB(198, 152, 120),
 		heightScale = 1.02,
 		widthScale = 1.08,
@@ -63,14 +69,20 @@ local Cast: { CastMember } = {
 		hairAssetId = 0,
 	},
 	{
-		-- Scaled down because they grow up alongside the player and first show up
-		-- in the school years. One rig, so they are recognisable later.
+		-- The one peer in the authored cast, and so the one member with an ageOffset.
+		-- Rae used to be written at 0.9 height and 1.05 head, which was a way of saying
+		-- "a child" by hand -- and it was wrong twice: a shrunk adult with a normal head
+		-- is a short adult rather than a child, and a number written once meant Rae was
+		-- exactly as tall at seventeen as at six. The offset hands both jobs to
+		-- Config.Growth, so these three are back to being build: very slightly slight.
 		id = "friend",
 		name = "Rae",
+		gender = "female",
 		skinColor = Color3.fromRGB(168, 124, 96),
-		heightScale = 0.9,
-		widthScale = 0.9,
-		headScale = 1.05,
+		ageOffset = 0,
+		heightScale = 0.96,
+		widthScale = 0.95,
+		headScale = 1,
 		proportionScale = 1,
 		bodyTypeScale = 0.6,
 		shirtAssetId = 0,
@@ -78,6 +90,18 @@ local Cast: { CastMember } = {
 		hairAssetId = 0,
 	},
 }
+
+-- The town's bodies, folded in behind the four. Everything downstream of this file looks
+-- a member up by id and does not care where it came from -- NPCService builds an avatar
+-- from a description either way -- so this is the whole of what it costs to have a
+-- generated population wearing real bodies.
+--
+-- Appended rather than merged in place, so `Default` stays the first authored member: the
+-- person the world sends when an event forgot to say who, and that should never be a
+-- stranger the game picked out of a hat.
+for _, member in Townsfolk.Bodies do
+	table.insert(Cast, member)
+end
 
 local byId: { [string]: CastMember } = {}
 for _, member in Cast do

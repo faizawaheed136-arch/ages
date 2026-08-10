@@ -256,6 +256,132 @@ local Ambient: { LifeEvent } = {
 			},
 		},
 	},
+
+	-- Being unwell, as something that came to the door. The one onset that can
+	-- reach any age it wants, so the health loop's sickness occasionally begins
+	-- here instead of on a birthday -- and being warned of it in person makes the
+	-- rest of the year read differently than a roll of the dice would.
+	{
+		id = "ambient_flu",
+		minAge = 13,
+		maxAge = 70,
+		delivery = "NPCApproach",
+		cast = "friend",
+		forbids = { "sick" },
+		weight = 0.5,
+		prompt = "Rae is at the door, coat still on, voice half gone. 'I've got it,' they say. 'You've probably got it. I thought you'd want to know.'",
+		choices = {
+			{
+				id = "let_them_in",
+				label = "Let them in anyway",
+				outcome = "You sat with them until it got dark, both of you wrecked and neither of you minded. Being ill with somebody is better than being ill alone.",
+				effects = { happiness = 3, health = 2 },
+				sets = { "sick" },
+			},
+			{
+				id = "send_them_home",
+				label = "Send them home to bed",
+				outcome = "You sent them off with a full kettle and watched them go. Sensible. You thought about them most of the evening, and then you went down with it yourself.",
+				effects = { health = 1, happiness = -1, smarts = 1 },
+				sets = { "sick" },
+			},
+		},
+	},
+
+	-- Texture. These are the first repeatable ambient events, marked for exactly
+	-- the reason the field exists: a birthday comes round every year and a sale
+	-- comes round every few, and a life in this world should be able to live one
+	-- twice without the game pretending it is the first time either has happened.
+	-- Selection only reaches them after every fresh event has been lived, so they
+	-- are what the world does when it has no news, which is what a quiet life
+	-- mostly is.
+	{
+		id = "ambient_neighbor_birthday",
+		minAge = 12,
+		maxAge = 90,
+		delivery = "NPCApproach",
+		cast = "neighbor",
+		repeatable = true,
+		prompt = "There's a knock and then the neighbor's voice through the letterbox, asking whether you're in. It is, it turns out, their birthday.",
+		choices = {
+			{
+				id = "bring_something",
+				label = "Bring something over and stay for a bit",
+				outcome = "You crossed the street with whatever you had and sat in their kitchen until the evening ran out. They told you about the one before this one.",
+				effects = { happiness = 5, looks = 1 },
+			},
+			{
+				id = "sing_through_door",
+				label = "Sing badly through the letterbox",
+				outcome = "You did, from the pavement, and they laughed loud enough that the street heard. It was the right amount for the day.",
+				effects = { happiness = 4, health = -1 },
+			},
+			{
+				id = "wish_them",
+				label = "Wish them happy birthday and leave it there",
+				outcome = "You said it through the door and went back to what you were doing. They thanked you twice, which was worse than not thanking you.",
+				effects = { happiness = -1, smarts = 1 },
+			},
+		},
+	},
+	{
+		id = "ambient_shop_sale",
+		minAge = 14,
+		maxAge = 999,
+		delivery = "Letter",
+		repeatable = true,
+		prompt = "A leaflet came through the door -- the shop you actually use is having a clearance. There's a thing in the window you've looked at twice.",
+		choices = {
+			{
+				id = "splurge",
+				label = "Buy the thing you keep looking at",
+				outcome = "You bought it at closing time. It was over in a week, and you got a month of looking at it first, which was the real part of the transaction.",
+				cost = 20,
+				effects = { happiness = 4, looks = 1 },
+			},
+			{
+				id = "browse",
+				label = "Browse and buy nothing",
+				outcome = "You went down and looked at everything and bought nothing, which is a free afternoon and one of the nicer kinds. The thing was still there the week after.",
+				effects = { happiness = 2 },
+			},
+			{
+				id = "bin_it",
+				label = "Put it straight in the recycling",
+				outcome = "You binned it without reading it. You walked past the shop twice that week and caught yourself wondering what you'd have spent.",
+				effects = { smarts = 1, happiness = -1 },
+			},
+		},
+	},
+	{
+		id = "ambient_first_frost",
+		minAge = 16,
+		maxAge = 999,
+		delivery = "NPCApproach",
+		cast = "neighbor",
+		repeatable = true,
+		prompt = "The first frost of the year is on the ground, and the neighbor is by the fence with a torch in one hand and a jacket in the other, asking if you've seen it.",
+		choices = {
+			{
+				id = "join_them",
+				label = "Put on boots and go look at it",
+				outcome = "You walked the whole street with them in the dark, stamping on puddles to hear them crack. You knew every house by the light in its window.",
+				effects = { happiness = 5, health = 2, looks = -1 },
+			},
+			{
+				id = "window_frost",
+				label = "Look at it from the window",
+				outcome = "You waved from the warm side of the glass. The frost did its thing and the neighbor did theirs, and both were fine from where you stood.",
+				effects = { happiness = 1, health = 1 },
+			},
+			{
+				id = "not_yet",
+				label = "Tell them you'll see it tomorrow",
+				outcome = "You went back to bed, and the frost was gone by midday. It comes again every year, and you have never once caught the first one.",
+				effects = { happiness = -3, health = 2 },
+			},
+		},
+	},
 }
 
 return Ambient

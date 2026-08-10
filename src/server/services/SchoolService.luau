@@ -1,0 +1,1273 @@
+--!strict
+-- School: the twelve years of a life that had nothing in them to do.
+--
+-- Everything between being born and being hired was a stat readout and a text prompt
+-- on a birthday. A player could not spend an afternoon being nine, because there was
+-- no afternoon -- childhood was a progress bar in front of the job. This is the thing
+-- that fills it.
+--
+-- The loop:
+--
+--   You walk to the school and step on the pad outside it. A question comes up with
+--   three or four answers under it and a clock. You have twenty seconds to pick one.
+--   Whatever you pick, the teacher's line explains the answer for a beat, and then the
+--   next question comes up. Five of those is a lesson.
+--
+-- The question opens itself, and that is the one place in this game where nothing has
+-- three dots over its head. Dots are for things you walk up to -- a person, an animal
+-- -- and they mean "there is something here". A lesson is not something in the room;
+-- it is something you are already inside, like a shift. You did the walking when you
+-- came to the school. Making a nine-year-old click a building between every question
+-- would be charging them for the same journey five times.
+--
+-- The walk is still what a lesson costs. It is spent at the door rather than at every
+-- question, and the clock is what stops the twenty seconds after that being idle.
+--
+-- What it is for, past being something to do. `smarts` was a number nothing in the
+-- game read -- no job asked for it, no event moved it, and it decayed at zero a year.
+-- School moves it and the office job now wants it, so the afternoons a nine-year-old
+-- spends here are the reason a sixteen-year-old can be something other than a shop
+-- assistant. That is the point of the whole system: it makes the first half of a life
+-- pay into the second, which is the one thing a life simulator has to do.
+--
+-- Two things are deliberately *not* here.
+--
+-- There is no guide line to the school. Config.Guide exists to point at "something
+-- that just opened up", and school does not open up -- it is there for the whole of
+-- your childhood, in a building on a street, with a sign over the door. The sign and
+-- the pad are shared and server-built, on the rule Remotes.luau states: a thing meant
+-- for whoever walks past is built in the world, and a thing addressed to one person is
+-- pushed to them. A school is a building. A job offer is addressed to you.
+--
+-- And there is no way to fail into a hole. Missing every question in a lesson costs
+-- you the lesson, never smarts; only never turning up at all costs anything, once a
+-- year, on the birthday that ends it. A childhood spent elsewhere ends around thirty
+-- smarts rather than at zero -- behind, not ruined -- because "failure worth playing"
+-- means a bad run you can still play out of.
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local ChoiceMarkers = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("ChoiceMarkers"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
+
+local DataService = require(script.Parent.DataService)
+local PlaceService = require(script.Parent.PlaceService)
+local StatService = require(script.Parent.StatService)
+local Ground = require(script.Parent.Parent.world.Ground)
+local SubjectModels = require(script.Parent.Parent.world.SubjectModels)
+local SubjectMotion = require(script.Parent.Parent.world.SubjectMotion)
+local Lessons = require(script.Parent.Parent.content.Lessons)
+local Subjects = require(script.Parent.Parent.content.Subjects)
+
+type LifeData = Types.LifeData
+type LessonQuestion = Types.LessonQuestion
+type LessonState = Types.LessonState
+type OfferedChoice = Types.OfferedChoice
+type SubjectRig = SubjectModels.SubjectRig
+type Motion = SubjectMotion.Motion
+
+-- One answer disc on the classroom floor. The marker is the drawn pad and the at is
+-- the point the player has to reach, kept together because the two belong to the
+-- same answer and a disc that moved would otherwise leave its proximity test behind.
+type Disc = {
+	at: Vector3,
+	marker: ChoiceMarkers.ChoiceMarker,
+}
+
+local SchoolService = {}
+
+local LessonUpdatedRemote = Remotes.Get("LessonUpdated")
+local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
+
+-- The place id the classroom answers to. A part in Studio carries this on its place
+-- attribute, exactly like the shop and the office. Nothing here builds a school: the
+-- world is built by hand and this finds it, so moving the building is a drag in Studio
+-- and not an edit here.
+local PLACE_ID = "school"
+
+local SCHOOL = Config.School
+
+-- One lesson in progress. Only ever one per player -- you cannot be in two classrooms.
+type Lesson = {
+	-- Where the classroom is, taken once at the start rather than looked up per tick.
+	-- The lesson is anchored to the room it began in, so a place point that streams out
+	-- mid-lesson does not silently move the walls in around the player.
+	room: Vector3,
+	questions: { LessonQuestion },
+	-- Which question is in front of the player, from 1. Runs one past #questions for
+	-- the instant between the last answer and the lesson closing.
+	index: number,
+	right: number,
+
+	-- Which authored answer each row on the panel is: `order[n]` is the index into
+	-- `questions[index].answers` that row number n is showing. The rows are shuffled
+	-- and the question is not, which is why this is a second list rather than a
+	-- rearrangement of the first -- `correct` keeps meaning what the content file said
+	-- it meant.
+	--
+	-- Shuffled per question and not per lesson, so the right answer is never learnable
+	-- as a position. A child who works out that the correct answer is always the top
+	-- row has stopped answering questions and started reading the game.
+	--
+	-- It is also the whole of what the client is told. The rows go out numbered by
+	-- their position on the panel, so an answer coming back names a row and this is the
+	-- only thing that knows which answer that row was.
+	order: { number },
+
+	-- The answer discs on the classroom floor, in row order so disc n answers the same
+	-- row the panel row n would have. Nil means this question's answers are rows to
+	-- click: either the lesson is not physical, or the floor refused a disc and the
+	-- question fell back. Cleared with the question and never kept past the lesson.
+	discs: { Disc }?,
+
+	secondsLeft: number,
+	-- Counts down while the teacher's line is being held, and is the flag for "an
+	-- answer has been given and the next question has not started". Zero means the
+	-- question is live.
+	verdictLeft: number,
+	verdictText: string?,
+	verdictRight: boolean,
+}
+
+local lessons: { [Player]: Lesson } = {}
+
+-- The last thing pushed to each player, so an unchanged state is not re-sent four
+-- times a second. Same reason WorkService keeps one: the HUD row is redrawn on
+-- receipt, and a row that redraws every tick cannot be read.
+local pushed: { [Player]: string } = {}
+
+-- A notice with no lesson behind it -- a refusal at the door, or the summary of a
+-- lesson that has just ended -- and how long is left of it. Held separately from
+-- `lessons` precisely because it outlives the lesson: the closing line has to stay up
+-- for a beat after everything else about the lesson is gone.
+type Notice = { text: string, good: boolean, secondsLeft: number }
+local notices: { [Player]: Notice } = {}
+
+
+local function characterPosition(player: Player): Vector3?
+	local character = player.Character
+	if character == nil then
+		return nil
+	end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root == nil or not root:IsA("BasePart") then
+		return nil
+	end
+	return root.Position
+end
+
+local function ageYearsOf(data: LifeData): number
+	return data.ageMonths // Config.Time.MonthsPerYear
+end
+
+-- The teacher in the classroom. One per player with a lesson, built from the
+-- `teacher` subject so it reuses the same rig path as every animal in the game.
+-- It is a smaller SceneService: walk in, stand facing the player, do whatever the
+-- last answer said it did, and hold that pose -- but it belongs to the lesson
+-- rather than to an event, so it lives here next to the loop that grades answers.
+-- The gesture the teacher performs is set by answer() and read by the run loop,
+-- which is the one channel of communication the two halves of this file need.
+type Teacher = {
+	rig: SubjectRig,
+	motion: Motion,
+	-- The point it is standing on this frame, which moves when a wrong answer
+	-- makes it step back and comes home when it re-centres.
+	at: Vector3,
+	-- The front-of-room spot it belongs on between answers, which is also where a
+	-- re-centre is heading.
+	front: Vector3,
+	-- Where it walks in from, so the walk-out can retrace it if there were one.
+	-- (There is not: the teacher is despawned rather than walked away, because
+	-- nobody watches a classroom empty out.)
+	spawn: Vector3,
+	heading: number,
+	-- Ground covered and time since spawn, keyed the same way the animal gait is
+	-- keyed -- traveled for the walk, elapsed for everything done standing still.
+	travelled: number,
+	startedAt: number,
+	-- What the last answer called for, read once and cleared by the run loop.
+	-- "right" is a bow, "wrong" is a step back, "settle" is a calm nod, and
+	-- "approach" is a step toward the player before bowing. Nil when the loop
+	-- is idling.
+	gesture: "right" | "wrong" | "settle" | "approach"?,
+	-- Set by despawnTeacher(); every wait below checks it before touching the rig,
+	-- because the model may be gone by the time the loop next wakes.
+	cancelled: boolean,
+}
+local teachers: { [Player]: Teacher } = {}
+
+-- Everything school puts in the world lives in one folder, so a Studio session can see
+-- at a glance what is standing and clear the lot if a test left something behind.
+--
+-- Declared up here rather than down beside `buildRoom`, which is the only place it reads
+-- like it belongs, because `spawnTeacher` calls it and `spawnTeacher` is defined above
+-- that point. Lua resolves names at compile time: a call written above the `local function`
+-- that defines it does not see the local at all, it compiles to a *global* lookup and
+-- returns nil. Nothing catches that -- it is legal Luau, so `luau-compile` passes, and
+-- `rojo build` never parses the file -- and the symptom is not a load error but every
+-- lesson in the game dying on "attempt to call a nil value" the first time a teacher spawns.
+local function schoolFolder(): Folder
+	local existing = workspace:FindFirstChild("SchoolPads")
+	if existing ~= nil and existing:IsA("Folder") then
+		return existing
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "SchoolPads"
+	folder.Parent = workspace
+	return folder
+end
+
+-- Facing and floor helpers, kept local to this file because the teacher only ever
+-- walks straight lines and turns toward a player. Three are the same three
+-- SceneService uses, copied small because the teacher never needs the scene's
+-- arc-search -- its spot is computed once, opposite the player from the room.
+local MIN_DIRECTION = 1e-3
+
+local function flatten(direction: Vector3): Vector3?
+	local flat = Vector3.new(direction.X, 0, direction.Z)
+	if flat.Magnitude < MIN_DIRECTION then
+		return nil
+	end
+	return flat.Unit
+end
+
+local function headingTo(direction: Vector3): number
+	return math.atan2(-direction.X, -direction.Z)
+end
+
+local function poseAt(at: Vector3, heading: number): CFrame
+	return CFrame.new(at) * CFrame.Angles(0, heading, 0)
+end
+
+-- Hands one frame to the teacher's motion. Present so every call site passes the
+-- same four things, and so a new field on the pose is added in one place.
+local function presentTeacher(teacher: Teacher, root: CFrame, moving: boolean, turning: number, settled: boolean)
+	teacher.motion.apply({
+		root = root,
+		traveled = teacher.travelled,
+		elapsed = os.clock() - teacher.startedAt,
+		moving = moving,
+		turning = turning,
+		settled = settled,
+	})
+end
+
+-- Walks the teacher between two floor points at its own pace, facing the way it is
+-- going. Returns false if the loop was cancelled part-way, which means the model is
+-- already gone and the caller must not touch it again.
+local function travelTeacher(teacher: Teacher, from: Vector3, to: Vector3): boolean
+	local direction = flatten(to - from)
+	local distance = (to - from).Magnitude
+	if direction == nil or distance < MIN_DIRECTION then
+		return true
+	end
+
+	local heading = headingTo(direction)
+	local covered = 0
+	while covered < distance do
+		local delta = RunService.Heartbeat:Wait()
+		if teacher.cancelled then
+			return false
+		end
+		local step = math.min(distance - covered, teacher.rig.subject.walkSpeed * delta)
+		covered += step
+		teacher.travelled += step
+		presentTeacher(teacher, poseAt(from:Lerp(to, covered / distance), heading), true, 0, false)
+	end
+	teacher.at = to
+	return true
+end
+
+-- One frame of standing still: eases the facing round toward the player and hands
+-- the frame over, the same tracking SceneService does for a subject -- a teacher
+-- that follows you perfectly is a turret, and one that never turns is a statue.
+local function standTeacher(player: Player, teacher: Teacher, settled: boolean): number
+	local heading = teacher.heading
+	local remaining = 0
+	local character = player.Character
+	if character ~= nil then
+		local target = flatten(character:GetPivot().Position - teacher.at)
+		if target ~= nil then
+			local desired = headingTo(target)
+			remaining = (desired - heading + math.pi) % (2 * math.pi) - math.pi
+			heading += remaining * Config.Scene.TurnResponsiveness
+		end
+	end
+	presentTeacher(teacher, poseAt(teacher.at, heading), false, remaining, settled)
+	return heading
+end
+
+-- Stands facing the player for a while, easing the turn on every frame.
+local function holdTeacher(player: Player, teacher: Teacher, seconds: number, settled: boolean)
+	local waited = 0
+	while waited < seconds do
+		local delta = RunService.Heartbeat:Wait()
+		if teacher.cancelled then
+			return
+		end
+		waited += delta
+		teacher.heading = standTeacher(player, teacher, settled)
+	end
+end
+
+-- The teacher's whole classroom life: walk in, then idle facing the player, doing
+-- whatever each answer asks of it. Deliberately a much smaller loop than a
+-- SceneService scene -- the teacher has no arc to place in and no walk-out to
+-- retrace, because it is despawned rather than sent away.
+local function runTeacher(player: Player, teacher: Teacher)
+	if not travelTeacher(teacher, teacher.spawn, teacher.front) then
+		return
+	end
+
+	while true do
+		local delta = RunService.Heartbeat:Wait()
+		if teacher.cancelled then
+			return
+		end
+
+		local gesture = teacher.gesture
+		if gesture ~= nil then
+			teacher.gesture = nil
+			if gesture == "right" then
+				-- A bow, held a beat, then eased back up. The motion owns how long
+				-- getting up takes, so the motion is asked -- the same rule as an
+				-- animal getting back to its feet after lying down.
+				holdTeacher(player, teacher, SCHOOL.TeacherNodSeconds, true)
+				if teacher.cancelled then
+					return
+				end
+				holdTeacher(player, teacher, SubjectMotion.SettleSeconds, false)
+			elseif gesture == "settle" then
+				-- A calm nod: shorter than a full bow, for questions that were
+				-- merely correct rather than genuinely earned.
+				holdTeacher(player, teacher, SCHOOL.TeacherNodSeconds * 0.5, true)
+				if teacher.cancelled then
+					return
+				end
+				holdTeacher(player, teacher, SubjectMotion.SettleSeconds, false)
+			elseif gesture == "approach" then
+				-- A step toward the player, a bow, then back to the front. The
+				-- mirror of "wrong" but in the other direction: the teacher
+				-- closes distance for the ones that were genuinely earned.
+				local playerPos = characterPosition(player)
+				local toward = if playerPos ~= nil then flatten(playerPos - teacher.at) else nil
+				if toward ~= nil then
+					local closer = teacher.at + toward * SCHOOL.TeacherBackStuds
+					if not travelTeacher(teacher, teacher.at, closer) then
+						return
+					end
+					holdTeacher(player, teacher, SCHOOL.TeacherNodSeconds, true)
+					if teacher.cancelled then
+						return
+					end
+					if not travelTeacher(teacher, teacher.at, teacher.front) then
+						return
+					end
+					holdTeacher(player, teacher, SubjectMotion.SettleSeconds, false)
+				end
+			elseif gesture == "wrong" then
+				-- A step back: away from the player, a beat standing there, then
+				-- back to the front. The step is what makes a wrong answer land in
+				-- the room rather than as a sentence on a panel.
+				local playerPos = characterPosition(player)
+				local toward = if playerPos ~= nil then flatten(playerPos - teacher.at) else nil
+				if toward ~= nil then
+					local back = teacher.at - toward * SCHOOL.TeacherBackStuds
+					if not travelTeacher(teacher, teacher.at, back) then
+						return
+					end
+					holdTeacher(player, teacher, SCHOOL.TeacherBackHoldSeconds, false)
+					if teacher.cancelled then
+						return
+					end
+					travelTeacher(teacher, teacher.at, teacher.front)
+				end
+			end
+			if teacher.cancelled then
+				return
+			end
+		end
+
+		teacher.heading = standTeacher(player, teacher, false)
+	end
+end
+
+-- Finds the teacher a spot ahead of the player where they are facing, walks the rig
+-- up to the front, and starts its loop. Best-effort in exactly the sense the scene
+-- placement is: a room with nowhere for the teacher is an ordinary outcome, and the
+-- lesson plays exactly as it did before teachers existed.
+--
+-- Anchored to the player's facing rather than to the room centre, because the player
+-- steps onto the room centre to start the lesson -- the direction from room to player
+-- is the one direction that tells you nothing about where a teacher should stand.
+local function spawnTeacher(player: Player): boolean
+	if not SCHOOL.TeacherEnabled then
+		return false
+	end
+	local subject = Subjects.ById["teacher"]
+	local character = player.Character
+	local position = characterPosition(player)
+	if subject == nil or character == nil or position == nil then
+		return false
+	end
+
+	local direction = flatten(character:GetPivot().LookVector)
+	if direction == nil then
+		return false
+	end
+
+	local ignore = Ground.IgnoreList()
+	local teacherRadius = math.max(subject.bodyLength, subject.bodyWidth) / 2
+	local teacherHeight = subject.shoulderHeight
+	local playerHeight = Ground.BodyHeight(character)
+
+	local front = position + direction * SCHOOL.TeacherFrontStuds
+	local spawn = front + direction * SCHOOL.TeacherWalkInStuds
+
+	-- Where the teacher ends up and where they walk in from, both probed at the
+	-- teacher's own size rather than the player's -- an adult standing in a classroom is
+	-- a different footprint from a child sitting in one.
+	--
+	-- Neither is checked for a line to the other, and that is the behavior this has
+	-- always had rather than an oversight in passing: the walk in is pathfound, so a
+	-- teacher who has to come round a doorway is a teacher coming round a doorway, and a
+	-- straight-line test would refuse the room for a corner the walk handles fine.
+	local frontFloor = Ground.SpotAt(front, teacherRadius, teacherHeight, ignore)
+	local spawnFloor = Ground.SpotAt(spawn, teacherRadius, teacherHeight, ignore)
+	if frontFloor == nil or spawnFloor == nil then
+		return false
+	end
+	-- The *player* has to be able to see it, measured at the player's height. Separate
+	-- from the two above because it is a different question about a different body, and
+	-- it is the one that decides whether the lesson happens in the room or on a panel.
+	if not Ground.Reachable(position, frontFloor, playerHeight, ignore) then
+		return false
+	end
+
+	local rig = SubjectModels.Build(subject)
+	rig.model.Parent = schoolFolder()
+	local motion = SubjectMotion.Attach(rig)
+
+	local heading = headingTo(front - spawn)
+	rig.model:PivotTo(poseAt(spawnFloor, heading))
+
+	local teacher: Teacher = {
+		rig = rig,
+		motion = motion,
+		at = spawnFloor,
+		front = frontFloor,
+		spawn = spawnFloor,
+		heading = heading,
+		travelled = 0,
+		startedAt = os.clock(),
+		gesture = nil,
+		cancelled = false,
+	}
+	teachers[player] = teacher
+	task.spawn(runTeacher, player, teacher)
+	return true
+end
+
+-- Ends the teacher's presence immediately. Everything that despawns it goes through
+-- here, because the model must never be destroyed from inside its own loop -- the
+-- cancelled flag is set first and the loop checks it at every wait, which is the one
+-- thing that keeps a destroyed model from being posed again.
+local function despawnTeacher(player: Player)
+	local teacher = teachers[player]
+	if teacher == nil then
+		return
+	end
+	teachers[player] = nil
+	teacher.cancelled = true
+	teacher.motion.stop()
+	teacher.rig.model:Destroy()
+end
+
+-- Whether the room has been furnished yet. Built lazily rather than at Start, because
+-- the place point may stream in after the server does -- and a school that only exists
+-- if the building happened to be loaded at boot is a school that is missing on exactly
+-- the runs where it matters.
+local roomBuilt = false
+local attendAt: Vector3? = nil
+
+-- Studio harness switch. Off means no lesson can start and any in progress is ended,
+-- which is what makes it possible to test the shift loop in a world that also has a
+-- school in it without walking past the door and being pulled into a lesson.
+local enabled = true
+
+-- The sign over the door and the pad under it. Shared, built once, and never taken
+-- down -- the two things in this system that belong to the building rather than to a
+-- player.
+--
+-- The pad is deliberately still gold and still there for somebody who has used up
+-- their lessons for the year. A hiring post has to disappear once you take the job,
+-- because an offer that has been accepted is no longer an offer; a school door is not
+-- an offer, and a door that vanishes when you are done for the year would read as the
+-- building having gone. Stepping on it out of hours gets you a reason instead.
+local function buildRoom(): boolean
+	if roomBuilt then
+		return attendAt ~= nil
+	end
+
+	local place = PlaceService.Find(PLACE_ID)
+	if place == nil then
+		-- Already warned once by PlaceService, and warning again per tick would bury
+		-- the rest of the log. Retried on the next tick rather than given up on, in
+		-- case the building is still streaming in.
+		return false
+	end
+
+	roomBuilt = true
+	local folder = schoolFolder()
+	local at = place.part.Position
+
+	local sign = Instance.new("BillboardGui")
+	sign.Name = "SchoolSign"
+	sign.Adornee = place.part
+	sign.Size = UDim2.new(12, 0, 2.4, 0)
+	sign.StudsOffsetWorldSpace = Vector3.new(0, Config.Work.Hiring.SignLiftStuds, 0)
+	-- Read from down the street to decide whether to walk over, not once you have
+	-- arrived -- the same job the hiring signs do, so it borrows their distance rather
+	-- than inventing a second number that would drift away from it.
+	sign.MaxDistance = Config.Work.Hiring.SignMaxDistanceStuds
+	sign.AlwaysOnTop = true
+	sign.Parent = place.part
+
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Size = UDim2.new(1, 0, 0.62, 0)
+	title.BackgroundTransparency = 1
+	title.Font = Enum.Font.GothamBold
+	title.TextScaled = true
+	title.TextColor3 = Color3.fromRGB(255, 250, 240)
+	title.Text = "SCHOOL"
+	title.Parent = sign
+
+	local terms = Instance.new("TextLabel")
+	terms.Name = "Terms"
+	terms.Size = UDim2.new(1, 0, 0.38, 0)
+	terms.Position = UDim2.new(0, 0, 0.62, 0)
+	terms.BackgroundTransparency = 1
+	terms.Font = Enum.Font.GothamMedium
+	terms.TextScaled = true
+	terms.TextColor3 = Color3.fromRGB(245, 205, 120)
+	-- States its terms and lets you work out whether you meet them, exactly as the
+	-- hiring signs do. A sign that told a five-year-old they were too young would be
+	-- the building talking about the reader rather than about itself.
+	terms.Text = `Lessons for ages {SCHOOL.StartAge} to {SCHOOL.EndAge}`
+	terms.Parent = sign
+
+	-- The handle is deliberately dropped. Everything a ChoiceMarker hands back is for a
+	-- marker that comes down again -- somewhere to read its position from, a pulse to
+	-- cancel, a pad to destroy -- and this one never does. Holding a reference would
+	-- only imply there is a case where the school closes.
+	ChoiceMarkers.Build(folder, at, Config.Work.Hiring.PadRadiusStuds, {
+		label = "Go to class",
+		locked = false,
+	})
+	attendAt = at
+	return true
+end
+
+local function destroyDiscs(lesson: Lesson)
+	local discs = lesson.discs
+	if discs == nil then
+		return
+	end
+	for _, disc in discs do
+		disc.marker.destroy()
+	end
+	lesson.discs = nil
+end
+
+-- One floor disc per answer, fanned around the player so the question is answered
+-- by walking. Reuses the same Ground probes EnactService and the workplace run
+-- before they put anything on a floor: the disc has to have floor under it, a
+-- body-sized gap to stand in, and a straight walk from where the player is.
+-- Err on rejecting -- the cost of rejecting is a panel question, and the cost
+-- of accepting is a disc half in a wall.
+local function placeDiscs(lesson: Lesson, player: Player): boolean
+	local character = player.Character
+	local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+	if root == nil or not root:IsA("BasePart") then
+		return false
+	end
+	local center = root.Position
+
+	local ignore = Ground.IgnoreList()
+	local radius = Ground.BodyRadius(character)
+	local height = Ground.BodyHeight(character)
+
+	local count = #lesson.order
+	if count < 2 then
+		return false
+	end
+
+	-- Scattered like WorkSpots so the same question at the same spot does not fan
+	-- its discs into the same corners every time.
+	local bearings = Ground.ScatteredBearings(SCHOOL.DiscArcDegrees, count)
+
+	local placed: { Disc } = {}
+	-- The points of `placed`, kept alongside it because `Apart` takes positions and a
+	-- disc is more than one. Appended to at the same moment as `placed` below, and the
+	-- pair only stays honest because there is exactly one place either is added to.
+	local takenSpots: { Vector3 } = {}
+	for row, bearing in bearings do
+		local direction = CFrame.Angles(0, math.rad(bearing), 0) * Vector3.new(0, 0, -1)
+		local spot: Vector3? = nil
+		for _, step in { 1, 1.5, 2 } do
+			local candidate = center + direction * (SCHOOL.DiscDistanceStuds * step)
+
+			local floor = Ground.SpotAt(candidate, radius, height, ignore, center)
+			if floor == nil then
+				continue
+			end
+			if not Ground.Apart(floor, takenSpots, SCHOOL.DiscReachStuds * 2 + 1) then
+				continue
+			end
+
+			spot = floor
+			break
+		end
+		if spot == nil then
+			-- The floor refused a disc, so the whole question falls back to the
+			-- panel. Any discs already placed come down with it: a question is asked
+			-- one way or the other, never half over a fan and half over a row.
+			for _, disc in placed do
+				disc.marker.destroy()
+			end
+			lesson.discs = nil
+			return false
+		end
+
+		table.insert(takenSpots, spot)
+		table.insert(placed, {
+			at = spot,
+			marker = ChoiceMarkers.Build(schoolFolder(), spot, SCHOOL.DiscReachStuds, {
+				label = lesson.questions[lesson.index].answers[lesson.order[row]],
+				locked = false,
+			}),
+		})
+	end
+
+	lesson.discs = placed
+	return true
+end
+
+-- The rows to put in front of the player, in the shuffled order, or empty while there
+-- is nothing to answer -- the beat the teacher's line is up, and the moment a lesson
+-- has ended. Empty is what closes the panel, so this being right is what stops a
+-- question standing open over the explanation of the last one.
+local function rowsFor(lesson: Lesson): { OfferedChoice }
+	local rows: { OfferedChoice } = {}
+	if lesson.verdictLeft > 0 or lesson.index > #lesson.questions then
+		return rows
+	end
+	local question = lesson.questions[lesson.index]
+	for row, answerIndex in lesson.order do
+		-- Numbered by position on the panel rather than by which answer it is. The
+		-- client is never told which of the authored answers it is looking at, so a
+		-- client reading its own traffic learns the order it was already shown and
+		-- nothing else.
+		table.insert(rows, { id = tostring(row), label = question.answers[answerIndex], cost = nil, locked = lesson.discs ~= nil })
+	end
+	return rows
+end
+
+local function stateFor(player: Player): LessonState?
+	local lesson = lessons[player]
+	if lesson ~= nil and lesson.index <= #lesson.questions then
+		local question = lesson.questions[lesson.index]
+		return {
+			ask = question.ask,
+			answers = rowsFor(lesson),
+			index = lesson.index,
+			count = #lesson.questions,
+			right = lesson.right,
+			secondsLeft = math.max(0, lesson.secondsLeft),
+			secondsTotal = SCHOOL.SecondsPerQuestion,
+			verdict = lesson.verdictText,
+			wasRight = lesson.verdictRight,
+			physical = lesson.discs ~= nil,
+		}
+	end
+
+	local notice = notices[player]
+	if notice ~= nil then
+		return {
+			ask = "School",
+			-- Nothing to answer, which is also what tells the client to close whatever
+			-- panel it has open: this is a message, not a question.
+			answers = {},
+			-- Zeroes throughout: this is a message, not a position in a lesson, and the
+			-- client reads a zero total as "draw no clock". See the type.
+			index = 0,
+			count = 0,
+			right = 0,
+			secondsLeft = 0,
+			secondsTotal = 0,
+			verdict = notice.text,
+			wasRight = notice.good,
+		}
+	end
+
+	return nil
+end
+
+local function push(player: Player)
+	local state = stateFor(player)
+	-- A digest rather than a deep compare, and it has to name every field that is
+	-- drawn: a state whose only change is the second on the clock must still be sent,
+	-- and one whose only change is nothing at all must not.
+	local digest = if state == nil
+		then "none"
+		else `{state.ask}|{state.index}/{state.count}|{state.right}|{math.floor(state.secondsLeft * 4)}|`
+			.. `{tostring(state.verdict)}|{tostring(state.wasRight)}|{#state.answers}|{tostring(state.physical)}`
+	if pushed[player] == digest then
+		return
+	end
+	pushed[player] = digest
+	LessonUpdatedRemote:FireClient(player, state)
+end
+
+-- A line with no lesson behind it. Replaces whatever was showing, because the newest
+-- thing the school has to say is always the one worth reading.
+local function notice(player: Player, text: string, good: boolean)
+	notices[player] = { text = text, good = good, secondsLeft = SCHOOL.VerdictSeconds }
+	push(player)
+end
+
+-- Why this player cannot sit a lesson right now, or nil if they can. Written as the
+-- sentence the player reads, because there is exactly one caller and a reason code
+-- would only ever be turned back into this string.
+local function refusalFor(data: LifeData): string?
+	if not enabled then
+		return "School is closed."
+	end
+	if not data.alive then
+		return "School is closed."
+	end
+
+	local age = ageYearsOf(data)
+	if age < SCHOOL.StartAge then
+		return `You start school at {SCHOOL.StartAge}.`
+	end
+	if age > SCHOOL.EndAge then
+		return "You are done with school."
+	end
+	if data.lessonsThisYear >= SCHOOL.LessonsPerYear then
+		return `You have had your {SCHOOL.LessonsPerYear} lessons this year. Come back next year.`
+	end
+
+	return nil
+end
+
+-- Puts whichever question is now current in front of the player. When physical
+-- lessons are enabled the answers go down as discs on the classroom floor and the
+-- panel rows arrive locked; when the floor refuses discs or the switch is off the
+-- panel rows are the answer, as before.
+local function askCurrent(lesson: Lesson, player: Player)
+	destroyDiscs(lesson)
+
+	local question = lesson.questions[lesson.index]
+
+	-- Shuffled per question, and the shuffle is on the *order* rather than on the
+	-- answers themselves, so `correct` keeps meaning what the content file said it
+	-- meant. Shuffling a copy of the answers and re-finding the right one by string
+	-- match would break the moment two questions shared an answer.
+	local order: { number } = {}
+	for index = 1, #question.answers do
+		table.insert(order, index)
+	end
+	for index = #order, 2, -1 do
+		local swap = math.random(index)
+		order[index], order[swap] = order[swap], order[index]
+	end
+
+	lesson.order = order
+	lesson.secondsLeft = SCHOOL.SecondsPerQuestion
+	lesson.verdictLeft = 0
+	lesson.verdictText = nil
+	lesson.verdictRight = false
+
+	if SCHOOL.PhysicalLessons then
+		placeDiscs(lesson, player)
+	end
+end
+
+-- Ends the lesson and grades it. `reason` is why it stopped, and it changes the
+-- sentence but never the arithmetic: a lesson walked out of halfway through is graded
+-- on all of its questions, not on the ones that were reached. Leaving early is a way
+-- of getting them wrong.
+local function finish(player: Player, data: LifeData, lesson: Lesson, reason: string)
+	destroyDiscs(lesson)
+	despawnTeacher(player)
+	lessons[player] = nil
+
+	local count = #lesson.questions
+	local share = if count > 0 then lesson.right / count else 0
+
+	local gained: number
+	if share >= SCHOOL.GoodShare then
+		gained = SCHOOL.SmartsPerGoodLesson
+	elseif share >= SCHOOL.OkShare then
+		gained = SCHOOL.SmartsPerOkLesson
+	else
+		gained = SCHOOL.SmartsPerPoorLesson
+	end
+
+	if gained ~= 0 then
+		StatService.AddStat(player, "smarts", gained)
+	end
+
+	-- Counted however it ended, including walked out of. Turning up is what the year's
+	-- cap is counting, and a player who could start a lesson, leave, and start another
+	-- would be able to re-roll the questions until they got an easy five.
+	data.lessonsThisYear += 1
+
+	local scored = `{lesson.right} of {count} right`
+	local reward = if gained > 0 then `. +{gained} smarts.` else "."
+	local line = if reason == "left"
+		then `You walked out. {scored}{reward}`
+		else `Lesson over. {scored}{reward}`
+
+	notice(player, line, gained > 0)
+end
+
+-- One question answered, by picking row `row` off the panel -- or not answered at all,
+-- when `row` is nil and the clock ran out. Both go through here, because running out of
+-- time is a wrong answer with the same consequences and should read as one.
+local function answer(player: Player, lesson: Lesson, row: number?)
+	local question = lesson.questions[lesson.index]
+
+	local chose = if row ~= nil then lesson.order[row] else nil
+	local correct = chose == question.correct
+	if correct then
+		lesson.right += 1
+	end
+
+	-- The teacher reads the verdict in the room while it is read on the panel. The
+	-- gesture is a request the run loop picks up on its next frame; if the teacher
+	-- is mid-walk-in it performs it once it arrives, which is late but never lost.
+	-- A correct answer with a per-question reaction uses that instead of the
+	-- default bow, so the teacher's body language varies across the lesson.
+	local teacher = teachers[player]
+	if teacher ~= nil then
+		if correct and question.reaction ~= nil then
+			teacher.gesture = question.reaction
+		else
+			teacher.gesture = if correct then "right" else "wrong"
+		end
+	end
+
+	-- The teacher's line either way, which is the one thing that makes this school
+	-- rather than a quiz: getting it wrong should still leave you knowing the answer.
+	-- Prefixed with the verdict so the row reads as a reply to what you just did rather
+	-- than as a fact appearing on screen.
+	local opening = if correct then "Right." elseif chose ~= nil then "Not quite." else "Time."
+	lesson.verdictText = `{opening} {question.because}`
+	lesson.verdictRight = correct
+	lesson.verdictLeft = SCHOOL.VerdictSeconds
+	lesson.secondsLeft = 0
+
+	-- The index deliberately does not move here. It advances when the explanation
+	-- expires, so for the whole beat the line is up the row still says "3 of 5" about
+	-- the question the line is explaining -- rather than about the one that has not
+	-- been asked yet.
+	push(player)
+end
+
+-- A row picked off the panel. Checked against the question that is actually live
+-- rather than against whatever the client thinks it is answering: the twenty seconds
+-- are real, and an answer clicked as the clock ran out has to lose to the clock.
+local function onAnswerRequested(player: Player, index: unknown, answerId: unknown)
+	if type(index) ~= "number" or type(answerId) ~= "string" then
+		return
+	end
+	local lesson = lessons[player]
+	if lesson == nil then
+		return
+	end
+	-- Both halves of "this question, still open". The index catches an answer to the
+	-- question before this one; the verdict catches one clicked during the beat the
+	-- teacher's line is up, which is the same click arriving a fraction later.
+	if lesson.index ~= index or lesson.verdictLeft > 0 or lesson.index > #lesson.questions then
+		return
+	end
+
+	local row = tonumber(answerId)
+	if row == nil or lesson.order[row] == nil then
+		return
+	end
+	answer(player, lesson, row)
+end
+
+-- Starts a lesson. Only fails for a reason worth saying out loud -- the caller has
+-- already checked everything about the player, and there is no longer a room to fail
+-- against.
+local function begin(player: Player, data: LifeData, room: Vector3): boolean
+	local questions = Lessons.For(ageYearsOf(data), SCHOOL.QuestionsPerLesson)
+	if #questions == 0 then
+		-- Impossible if the content file loaded, which checks every age has enough
+		-- written for it. Reachable only if the bank is emptied without the check being
+		-- updated, and the honest thing to do is say so rather than start a lesson with
+		-- nothing in it.
+		notice(player, "There is nothing on today.", false)
+		return false
+	end
+
+	local lesson: Lesson = {
+		room = room,
+		questions = questions,
+		index = 1,
+		right = 0,
+		order = {},
+		secondsLeft = SCHOOL.SecondsPerQuestion,
+		verdictLeft = 0,
+		verdictText = nil,
+		verdictRight = false,
+	}
+
+	askCurrent(lesson, player)
+
+	-- The teacher walks in as the first question opens. Best-effort, and a lesson
+	-- with nowhere to put the teacher is still a lesson -- the same rule the scene
+	-- placement lives by.
+	spawnTeacher(player)
+
+	-- Cleared only once the first question is actually up, so the refusal above is the
+	-- last thing on the row rather than being wiped by the push from a lesson that
+	-- failed to start.
+	notices[player] = nil
+	lessons[player] = lesson
+	push(player)
+	return true
+end
+
+local function tickPlayer(player: Player, elapsed: number)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+	local position = characterPosition(player)
+
+	local lesson = lessons[player]
+
+	if lesson == nil then
+		local held = notices[player]
+		if held ~= nil then
+			held.secondsLeft -= elapsed
+			if held.secondsLeft <= 0 then
+				notices[player] = nil
+			end
+			push(player)
+			-- Deliberately returns: the attend pad is not read while a line is being
+			-- held, so somebody standing on it after a refusal reads the refusal instead
+			-- of being refused again on every tick for as long as they stand there.
+			return
+		end
+
+		if position == nil or not buildRoom() then
+			return
+		end
+		local at = attendAt
+		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
+			return
+		end
+
+		local refusal = refusalFor(data)
+		if refusal ~= nil then
+			notice(player, refusal, false)
+			return
+		end
+		begin(player, data, at)
+		return
+	end
+
+	-- From here on there is a lesson, and every way it can end is asked before
+	-- anything is asked of the player.
+	if not data.alive or not enabled then
+		finish(player, data, lesson, "left")
+		return
+	end
+	if position == nil or Ground.FlatDistance(position, lesson.room) > SCHOOL.RoomRadiusStuds then
+		finish(player, data, lesson, "left")
+		return
+	end
+
+	if lesson.verdictLeft > 0 then
+		lesson.verdictLeft -= elapsed
+		if lesson.verdictLeft > 0 then
+			push(player)
+			return
+		end
+
+		lesson.verdictLeft = 0
+		lesson.verdictText = nil
+		lesson.index += 1
+		if lesson.index > #lesson.questions then
+			finish(player, data, lesson, "over")
+			return
+		end
+		askCurrent(lesson, player)
+		push(player)
+		return
+	end
+
+	lesson.secondsLeft -= elapsed
+
+	-- When the answers are discs on the floor, the tick is what reads the player's
+	-- feet: standing on a disc is picking it, and the first disc under the player
+	-- answers the question. When the answers are rows on the panel, a click arrives
+	-- on its own remote and the tick only counts down.
+	if lesson.discs ~= nil then
+		for row, disc in lesson.discs do
+			if Ground.FlatDistance(position, disc.at) <= SCHOOL.DiscReachStuds then
+				answer(player, lesson, row)
+				return
+			end
+		end
+	end
+
+	if lesson.secondsLeft <= 0 then
+		answer(player, lesson, nil)
+		return
+	end
+
+	push(player)
+end
+
+-- Ends whatever is running and forgets this player entirely. The one place a lesson
+-- ends without being graded, because in every case that calls it there is nobody left
+-- to grade -- a player who left, or a life that is being started over.
+local function forget(player: Player)
+	local lesson = lessons[player]
+	if lesson ~= nil then
+		destroyDiscs(lesson)
+	end
+	despawnTeacher(player)
+	lessons[player] = nil
+	notices[player] = nil
+	pushed[player] = nil
+end
+
+-- A birthday. The year's lessons refill, and a year nobody turned up to is charged
+-- for. Charged here rather than at the school, because not going is not a thing that
+-- happens at a place -- it is a thing that turns out to have happened when the year
+-- ends, which is exactly what a birthday is.
+--
+-- LifeService calls this after the age has already moved, so the year being judged is
+-- the one just left: the age the player has now reached, less one. Getting that off by
+-- one would charge a five-year-old for missing a year of school that had not started
+-- and let a seventeen-year-old off the last one.
+function SchoolService.OnAgeUp(player: Player)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+
+	local yearJustEnded = ageYearsOf(data) - 1
+	-- A lesson in progress counts as having turned up, even though nothing has been
+	-- graded yet. `lessonsThisYear` only moves when a lesson ends, so a birthday landing
+	-- mid-question would otherwise charge a child for missing a year of school while
+	-- they were sitting in it -- which is the one accusation this penalty must never
+	-- make. The lesson goes on and counts against the new year when it finishes, which
+	-- is the generous reading and the right one: they are still in the room.
+	local missed = data.lessonsThisYear == 0
+		and lessons[player] == nil
+		and yearJustEnded >= SCHOOL.StartAge
+		and yearJustEnded <= SCHOOL.EndAge
+
+	data.lessonsThisYear = 0
+
+	if missed and SCHOOL.SmartsPerYearMissed ~= 0 then
+		StatService.AddStat(player, "smarts", SCHOOL.SmartsPerYearMissed)
+		-- Told rather than left to be noticed on the stats bar. A number quietly going
+		-- down is the game punishing you without saying so, and this is the one penalty
+		-- in the system -- it has to be legible or it is just an unexplained drift.
+		notice(player, `You missed a year of school. {SCHOOL.SmartsPerYearMissed} smarts.`, false)
+	end
+end
+
+-- A new life. Nobody inherits an education, and a lesson in progress belonged to
+-- somebody who no longer exists.
+function SchoolService.ResetForNewLife(player: Player)
+	forget(player)
+	local profile = DataService.GetProfile(player)
+	if profile ~= nil then
+		Lives.Active(profile.Data).lessonsThisYear = 0
+	end
+	push(player)
+end
+
+-- Studio harness: sits a lesson wherever the player is standing, skipping the walk to
+-- the school but nothing else.
+--
+-- Deliberately does not skip the refusal check, for the reason WorkService.ForceStart
+-- gives: a test tool that could open a door the game keeps shut is a tool that cannot
+-- test the door. Age and the yearly cap are the two things most worth being able to
+-- stand in front of and read the reason off.
+function SchoolService.ForceStart(player: Player): (boolean, string?)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false, "no profile loaded"
+	end
+	if lessons[player] ~= nil then
+		return false, "already in a lesson"
+	end
+
+	local refusal = refusalFor(Lives.Active(profile.Data))
+	if refusal ~= nil then
+		return false, refusal
+	end
+
+	local position = characterPosition(player)
+	if position == nil then
+		return false, "no character in the world"
+	end
+
+	-- The room becomes wherever they are standing, so walking away still ends the
+	-- lesson and the radius is still the radius. The same trick, and the same honesty
+	-- about it, as clocking on where you stand.
+	if not begin(player, Lives.Active(profile.Data), position) then
+		return false, "could not place the answers here"
+	end
+	return true, nil
+end
+
+-- Ends a lesson in progress and grades it, exactly as walking out would.
+function SchoolService.ForceEnd(player: Player): boolean
+	local lesson = lessons[player]
+	local profile = DataService.GetProfile(player)
+	if lesson == nil or profile == nil then
+		return false
+	end
+	finish(player, Lives.Active(profile.Data), lesson, "over")
+	return true
+end
+
+-- Studio harness: sets how many lessons this year is already down as having had.
+--
+-- The yearly cap and the missed-year charge are the two rules school actually turns on,
+-- and both are otherwise only reachable by sitting three lessons or letting a whole year
+-- go by. Clamped rather than refused above the cap, because the interesting test is the
+-- refusal at the door and asking for four when three is the limit is asking for that.
+function SchoolService.SetLessonsThisYear(player: Player, count: number): boolean
+	local profile = DataService.GetProfile(player)
+	if profile == nil or count < 0 then
+		return false
+	end
+	Lives.Active(profile.Data).lessonsThisYear = math.min(math.floor(count), SCHOOL.LessonsPerYear)
+	push(player)
+	return true
+end
+
+function SchoolService.SetEnabled(value: boolean)
+	enabled = value
+end
+
+function SchoolService.IsEnabled(): boolean
+	return enabled
+end
+
+-- What the harness prints. Every number a `/school` command could be asked about, in
+-- the order somebody debugging would want them: whether the building was found, then
+-- who this player is to it, then what is actually running.
+function SchoolService.Describe(player: Player): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "school: no profile loaded"
+	end
+	local data = Lives.Active(profile.Data)
+
+	local place = PlaceService.Find(PLACE_ID)
+	local where = if place == nil
+		then `no part tagged "{PLACE_ID}" -- the school is not in the world`
+		else `at {math.floor(place.part.Position.X)}, {math.floor(place.part.Position.Z)}`
+
+	local refusal = refusalFor(data) or "can sit a lesson now"
+
+	local running = "no lesson"
+	local lesson = lessons[player]
+	if lesson ~= nil then
+		local question = if lesson.index <= #lesson.questions
+			then lesson.questions[lesson.index].id
+			else "(finished)"
+		local held = if lesson.verdictLeft > 0
+			then `holding the teacher's line for {string.format("%.1f", lesson.verdictLeft)}s`
+			else `{#lesson.order} answers on the panel, {string.format("%.1f", lesson.secondsLeft)}s left`
+		running = `question {lesson.index}/{#lesson.questions} "{question}", {lesson.right} right, {held}`
+	end
+
+	-- Teacher presence: where the teacher stands, and what the last answer called for.
+	-- The two "why is there nobody in the room" answers -- switched off, and no floor
+	-- for it -- look identical from inside the game, so the harness says which.
+	local teacherLine = "no teacher"
+	local teacher = teachers[player]
+	if teacher ~= nil then
+		local gesture = if teacher.gesture == nil then "idle" else `about to {teacher.gesture}`
+		local spot = math.floor((teacher.at - teacher.front).Magnitude * 10) / 10
+		teacherLine = `teacher at the front, {gesture}, {string.format("%.1f", spot)} studs off-spot`
+	elseif SCHOOL.TeacherEnabled then
+		teacherLine = "teacher skipped (no floor for it)"
+	end
+
+	local pool = #Lessons.For(ageYearsOf(data), math.huge)
+
+	return string.format(
+		"school: %s | %s | age %d, %d/%d lessons this year, %d questions written for this age | %s | %s | %s",
+		if enabled then "enabled" else "DISABLED",
+		where,
+		ageYearsOf(data),
+		data.lessonsThisYear,
+		SCHOOL.LessonsPerYear,
+		pool,
+		refusal,
+		running,
+		teacherLine
+	)
+end
+
+function SchoolService:Start()
+	Players.PlayerAdded:Connect(function(player: Player)
+		-- Pushed once the profile exists, so a rejoining player's row starts blank
+		-- rather than holding whatever the last occupant of the slot was looking at.
+		task.spawn(function()
+			if DataService.WaitForProfile(player) ~= nil then
+				push(player)
+			end
+		end)
+	end)
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		forget(player)
+	end)
+
+	RequestLessonAnswerRemote.OnServerEvent:Connect(function(player: Player, index: unknown, answerId: unknown)
+		local ok, err = pcall(onAnswerRequested, player, index, answerId)
+		if not ok then
+			warn(`[AGES] lesson answer failed for {player.Name}: {err}`)
+		end
+	end)
+
+	task.spawn(function()
+		while true do
+			local elapsed = task.wait(SCHOOL.TickSeconds)
+			for _, player in Players:GetPlayers() do
+				local ok, err = pcall(tickPlayer, player, elapsed)
+				if not ok then
+					warn(`[AGES] school tick failed for {player.Name}: {err}`)
+				end
+			end
+		end
+	end)
+end
+
+return SchoolService

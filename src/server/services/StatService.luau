@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 
 local DataService = require(script.Parent.DataService)
 
@@ -31,7 +32,7 @@ function StatService.GetStats(player: Player): Stats?
 	if profile == nil then
 		return nil
 	end
-	local stats = profile.Data.stats
+	local stats = Lives.Active(profile.Data).stats
 	return {
 		health = stats.health,
 		happiness = stats.happiness,
@@ -47,7 +48,7 @@ function StatService.AddStat(player: Player, statName: StatName, delta: number)
 	if profile == nil then
 		return
 	end
-	local stats = profile.Data.stats
+	local stats = Lives.Active(profile.Data).stats
 	stats[statName] = clamp(stats[statName] + delta)
 	pushStats(player, stats)
 end
@@ -57,7 +58,7 @@ function StatService.SetStat(player: Player, statName: StatName, value: number)
 	if profile == nil then
 		return
 	end
-	local stats = profile.Data.stats
+	local stats = Lives.Active(profile.Data).stats
 	stats[statName] = clamp(value)
 	pushStats(player, stats)
 end
@@ -68,7 +69,8 @@ function StatService.ApplyYearlyDecay(player: Player, ageYears: number)
 	if profile == nil then
 		return
 	end
-	local stats = profile.Data.stats
+	local data = Lives.Active(profile.Data)
+	local stats = data.stats
 	local multiplier = if ageYears >= Config.Stats.ElderDecayStartAge then Config.Stats.ElderDecayMultiplier else 1
 
 	for _, statName in STAT_NAMES do
@@ -78,28 +80,29 @@ function StatService.ApplyYearlyDecay(player: Player, ageYears: number)
 		end
 	end
 
+	-- Being unwell costs more than an ordinary year does, and it is the kind of
+	-- drain that can end a life rather than merely dim one. Read straight off the
+	-- flag rather than through a service so this stays a leaf in the require graph:
+	-- the flag is the contract, and nothing here needs to know how it got set.
+	if data.flags.sick ~= nil then
+		stats.health = clamp(stats.health - Config.Health.SickHealthPerYear)
+		stats.happiness = clamp(stats.happiness - Config.Health.SickHappinessPerYear)
+	end
+
 	pushStats(player, stats)
 end
 
 function StatService.PushStats(player: Player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		pushStats(player, profile.Data.stats)
+		pushStats(player, Lives.Active(profile.Data).stats)
 	end
 end
 
-function StatService.ResetToStarting(player: Player)
-	local profile = DataService.GetProfile(player)
-	if profile == nil then
-		return
-	end
-	local stats = profile.Data.stats
-	stats.health = Config.Stats.Starting.health
-	stats.happiness = Config.Stats.Starting.happiness
-	stats.smarts = Config.Stats.Starting.smarts
-	stats.looks = Config.Stats.Starting.looks
-	pushStats(player, stats)
-end
+-- `ResetToStarting` used to live here, and it is gone rather than kept. It wound a life's
+-- four bars back to `Config.Stats.Starting` for the rebirth that ran in place; a new life is
+-- now a fresh `Lives.New()` that starts there already, with whatever the create card spent on
+-- top -- see `LifeSetup.StartingStats`, which applies this same clamp.
 
 function StatService:Init() end
 
@@ -108,7 +111,7 @@ function StatService:Start()
 		task.spawn(function()
 			local profile = DataService.WaitForProfile(player)
 			if profile ~= nil then
-				pushStats(player, profile.Data.stats)
+				pushStats(player, Lives.Active(profile.Data).stats)
 			end
 		end)
 	end)

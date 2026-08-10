@@ -8,26 +8,38 @@
 --   Body       HumanoidDescription scales and colors. Needs no asset ids at all,
 --              so a visitor is a properly proportioned person from the very
 --              first run rather than a placeholder waiting on a shopping trip.
---   Motion     A straight walk via Humanoid:MoveTo. Deliberately the simplest
---              honest version -- no pathfinding graph -- and flagged as such in
---              Config.NPC, because the moment a visitor has to cross a cluttered
---              room this needs PathfindingService instead.
+--   Motion     Two of them, and the caller picks. `walkTo` is a straight line via
+--              Humanoid:MoveTo, which is right for a visitor crossing an empty
+--              hallway to a spot chosen to be reachable. `pathTo` asks
+--              PathfindingService for a route and walks it waypoint by waypoint,
+--              which is what a townsperson crossing a built world needs -- a
+--              straight line there walks into the first wall it meets and gives up.
 --   Expression Looped idle/walk plus one-shot greet and talk clips, driven from
---              Config.Assets.Animations, and procedural head tracking.
+--              Config.Assets.Animations, procedural head tracking, and turning on
+--              the spot to face somebody.
 --
 -- Head tracking is the part worth understanding. It is the single largest
 -- difference between a mannequin and a person, and it costs nothing: no asset,
 -- no upload, just the neck joint re-aimed a few times a second. So it runs even
 -- while every animation id above is still empty, and it is what carries the
 -- scene until they are filled in.
+--
+-- `face` is the same argument one level down the body. The neck says somebody has
+-- noticed you; turning to square up says they have stopped what they were doing.
+-- It exists because the town walks now, and being spoken to by a person facing
+-- away down the street is worse than being spoken to by a statue.
 
+local PathfindingService = game:GetService("PathfindingService")
 local Players = game:GetService("Players")
+local PhysicsService = game:GetService("PhysicsService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 
 local Cast = require(script.Parent.Parent.content.Cast)
+local DataService = require(script.Parent.DataService)
 
 type LifeEvent = Types.LifeEvent
 type CastMember = Types.CastMember
@@ -50,9 +62,53 @@ local WALK_POLL_SECONDS = 0.1
 -- visitor who stops does not keep striding for half a step.
 local ANIMATION_FADE_SECONDS = 0.2
 
+-- Below this, the vector from a rig to whoever it is turning toward is straight up
+-- or straight down and carries no heading. Not a tunable: it is the floating-point
+-- floor of the arithmetic it guards, the same one PlaceService keeps for the same
+-- reason.
+local FLAT_FACING_EPSILON = 1e-3
+
+-- Visitors are solid to the world and to the player, and pass through each other.
+--
+-- The world half is not a choice: a humanoid with nothing to collide with falls
+-- through the floor. The each-other half is what makes a queue possible at all --
+-- four rigs standing a couple of studs apart shove one another sideways within
+-- seconds, and a line that drifts apart under its own weight is not a line.
+--
+-- The player is deliberately left out of it. Somebody standing at a till is a person
+-- in your way, and walking through them would undo the only thing that makes them
+-- feel present.
+local VISITOR_COLLISION_GROUP = "AgesVisitors"
+
 -- Every rig currently alive, so a hot reload or a server restart can sweep up
 -- visitors whose delivery no longer exists.
 local active: { [Model]: boolean } = {}
+
+-- Registered once, on demand, and reported if it fails rather than left to be
+-- discovered as a queue that will not hold its shape.
+local collisionGroupReady = false
+
+local function ensureCollisionGroup(): boolean
+	if collisionGroupReady then
+		return true
+	end
+
+	local ok, err = pcall(function()
+		-- Checked rather than assumed: registering a name twice is an error, and this
+		-- runs again after every hot reload in Studio.
+		if not PhysicsService:IsCollisionGroupRegistered(VISITOR_COLLISION_GROUP) then
+			PhysicsService:RegisterCollisionGroup(VISITOR_COLLISION_GROUP)
+		end
+		PhysicsService:CollisionGroupSetCollidable(VISITOR_COLLISION_GROUP, VISITOR_COLLISION_GROUP, false)
+	end)
+	if not ok then
+		warn(`[AGES] visitors will push each other around: {err}`)
+		return false
+	end
+
+	collisionGroupReady = true
+	return true
+end
 
 local function visitorsFolder(): Folder
 	local existing = workspace:FindFirstChild(VISITORS_FOLDER)
@@ -65,11 +121,55 @@ local function visitorsFolder(): Folder
 	return folder
 end
 
-local function buildDescription(member: CastMember): HumanoidDescription
+-- How big this person is, right now, as the four numbers a rig is scaled by.
+--
+-- A CastMember carries a *build* -- how far off average for their age they are --
+-- and the age supplies the rest, from the one curve everybody in the world grows
+-- along. Nil age means grown, which is the honest default for every caller that
+-- spawns an adult and has no reason to say so: a shopkeeper, a delivery driver,
+-- somebody a scene needed. It reproduces exactly what this file did before there
+-- was a curve at all.
+--
+-- Depth is scaled with the rest, and it did not used to be. On an adult that is
+-- invisible, which is why it went unnoticed; on a body scaled to a third of its
+-- height it is the difference between a small child and a flattened one.
+local function scaleOf(member: CastMember, ageYears: number?): (number, number, number)
+	if ageYears == nil then
+		return member.heightScale, member.widthScale, member.headScale
+	end
+	local body, head = Config.Growth.At(ageYears)
+	return member.heightScale * body, member.widthScale * body, member.headScale * head
+end
+
+-- How old a peer is right now, for callers who never had a reason to work it out.
+-- PeopleService knows a townsperson's age already and passes it; everybody else --
+-- an event sending Rae round, a scene that just wants somebody there -- does not,
+-- and asking each of them to would be asking every caller to care about growth in
+-- order to spawn a person. So the question is answered here, once, off the member's
+-- own ageOffset.
+--
+-- nil for anybody without an offset, which is everybody but the peers, and nil again
+-- if the profile has not loaded: an adult-sized rig is a far smaller wrong than a
+-- newborn-sized one, which is what treating a missing profile as age nought would give.
+local function peerAge(player: Player, member: CastMember): number?
+	local offset = member.ageOffset
+	if offset == nil then
+		return nil
+	end
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return nil
+	end
+	return math.max(Lives.Active(profile.Data).ageMonths // Config.Time.MonthsPerYear + offset, 0)
+end
+
+local function buildDescription(member: CastMember, ageYears: number?): HumanoidDescription
 	local description = Instance.new("HumanoidDescription")
-	description.HeightScale = member.heightScale
-	description.WidthScale = member.widthScale
-	description.HeadScale = member.headScale
+	local height, width, headSize = scaleOf(member, ageYears)
+	description.HeightScale = height
+	description.WidthScale = width
+	description.DepthScale = width
+	description.HeadScale = headSize
 	description.ProportionScale = member.proportionScale
 	description.BodyTypeScale = member.bodyTypeScale
 
@@ -93,6 +193,45 @@ local function buildDescription(member: CastMember): HumanoidDescription
 	end
 
 	return description
+end
+
+-- Written once when the rig is built and again on every birthday.
+--
+-- Belt and braces over the description, and both halves earn their place. The
+-- description is what gets the *proportions* right at build time; these
+-- NumberValues are what the engine actually renders from, they can be written
+-- to a body that already exists, and they are not subject to whatever the
+-- place's avatar rules would clamp a description to. Without the second half a
+-- classmate stays the size they were the day you met them until something else
+-- happens to tear their rig down -- which is a birthday you can watch not
+-- happening.
+local warnedAboutScales = false
+local function applyScale(humanoid: Humanoid, member: CastMember, ageYears: number?)
+	local height, width, headSize = scaleOf(member, ageYears)
+	local scales: { [string]: number } = {
+		BodyHeightScale = height,
+		BodyWidthScale = width,
+		BodyDepthScale = width,
+		HeadScale = headSize,
+	}
+
+	local scaled = true
+	for valueName, target in scales do
+		local value = humanoid:FindFirstChild(valueName)
+		if value ~= nil and value:IsA("NumberValue") then
+			value.Value = target
+		else
+			scaled = false
+		end
+	end
+
+	-- Once per server, exactly as BodyService does for the player's own rig, and
+	-- for the same reason: silently not growing looks like a content mistake and
+	-- sends whoever is chasing it to the wrong file entirely.
+	if not scaled and not warnedAboutScales then
+		warnedAboutScales = true
+		warn("[AGES] a visitor rig has no R15 scale values; nobody in the world will be sized to their age")
+	end
 end
 
 -- An empty id means one has not been chosen in Studio yet. Returning nil rather
@@ -168,7 +307,13 @@ end
 -- rather than trusting MoveToFinished, because a humanoid wedged on geometry
 -- never fires it and a visitor frozen in the hallway forever is worse than one
 -- who quietly gives up.
-local function walkTo(humanoid: Humanoid, position: Vector3): boolean
+--
+-- `shouldStop` is how a walk is called off from outside while it is happening --
+-- somebody has walked up to talk, the roster is being torn down, the whole thing
+-- has been switched off in the harness. Asked on the poll rather than handed a
+-- cancel token, because the caller is the only thing that knows what "call it off"
+-- means and this way it never has to be told twice.
+local function walkTo(humanoid: Humanoid, position: Vector3, timeout: number, shouldStop: (() -> boolean)?): boolean
 	local finished = false
 	local reached = false
 
@@ -180,8 +325,18 @@ local function walkTo(humanoid: Humanoid, position: Vector3): boolean
 	humanoid:MoveTo(position)
 
 	local elapsed = 0
-	while not finished and elapsed < Config.NPC.WalkTimeoutSeconds do
+	while not finished and elapsed < timeout do
 		if humanoid.Parent == nil then
+			break
+		end
+		if shouldStop ~= nil and shouldStop() then
+			-- Abandoned, not arrived. Aimed at where they already stand, which is the
+			-- only way to stop a humanoid without freezing it in mid-stride.
+			local root = humanoid.RootPart
+			if root ~= nil then
+				humanoid:MoveTo(root.Position)
+			end
+			reached = false
 			break
 		end
 		elapsed += task.wait(WALK_POLL_SECONDS)
@@ -189,6 +344,64 @@ local function walkTo(humanoid: Humanoid, position: Vector3): boolean
 
 	connection:Disconnect()
 	return reached
+end
+
+-- The agent a route is computed for. Nominal, like everything else measured off
+-- Config.NPC.BodyRadius: a path has to be asked for before there is a body to
+-- measure, and asking for one slightly wider than anybody actually is means the
+-- error is a route refused rather than a route through a doorway they do not fit.
+local function agentParams(): { [string]: any }
+	return {
+		AgentRadius = Config.NPC.BodyRadius,
+		AgentHeight = Config.NPC.BodyHeight,
+		AgentCanJump = true,
+	}
+end
+
+-- Walks a computed route and reports whether the whole thing was walked.
+--
+-- Every failure here -- no route, a wedged waypoint, geometry that moved -- comes
+-- back as false rather than as a retry, because the caller is a wander loop that
+-- already has somewhere else to be. Grinding against an obstacle is the one
+-- behaviour that reads as broken from across the street; giving up and strolling
+-- somewhere else does not.
+local function pathTo(humanoid: Humanoid, root: BasePart, position: Vector3, shouldStop: (() -> boolean)?): boolean
+	if shouldStop ~= nil and shouldStop() then
+		return false
+	end
+
+	local path = PathfindingService:CreatePath(agentParams())
+
+	local ok = pcall(function()
+		path:ComputeAsync(root.Position, position)
+	end)
+	if not ok or path.Status ~= Enum.PathStatus.Success then
+		-- No route. Not warned: an unreachable spot is an ordinary answer when the
+		-- thing asking is picking spots at random, and a warning per attempt would
+		-- bury the log in a town of thirty.
+		path:Destroy()
+		return false
+	end
+
+	local waypoints = path:GetWaypoints()
+	path:Destroy()
+
+	-- The first waypoint is where the walker already is, so walking to it is a
+	-- MoveTo that finishes instantly and costs a poll interval each leg.
+	for index = 2, #waypoints do
+		if humanoid.Parent == nil then
+			return false
+		end
+		local waypoint = waypoints[index]
+		if waypoint.Action == Enum.PathWaypointAction.Jump then
+			humanoid.Jump = true
+		end
+		if not walkTo(humanoid, waypoint.Position, Config.NPC.WaypointTimeoutSeconds, shouldStop) then
+			return false
+		end
+	end
+
+	return true
 end
 
 local function resolveMember(event: LifeEvent): CastMember
@@ -206,14 +419,77 @@ local function resolveMember(event: LifeEvent): CastMember
 	return member
 end
 
--- Builds the visitor and starts the scene. Yields: creating an avatar from a
--- description is a web-backed call. Returns nil if the rig could not be made,
--- which the caller must treat as "this delivery did not happen".
-function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): DeliveryPresentation?
-	local member = resolveMember(event)
+-- A person standing in the world, and everything anyone can ask one to do.
+--
+-- Handed back by Spawn rather than driven through the service, because a visitor is
+-- not a singleton and the caller is the only thing that knows the shape of the
+-- errand: a delivery walks to a fixed spot and waits, while a parent chases a
+-- moving toddler across a room. Both are the same person underneath, which is the
+-- whole point of the split.
+export type Visitor = {
+	model: Model,
+	-- The part to hang things off -- the anchor a delivery's interact prompt sits on
+	-- and the point money floats up from.
+	root: BasePart,
+	-- Where they are now.
+	at: () -> Vector3,
+	-- Whether the rig has left the world. Every yield below is a place a visitor can
+	-- be torn down under the caller -- a server sweep, a life ending -- so anything
+	-- that comes back from a wait and touches them has to ask this first.
+	gone: () -> boolean,
+	-- Aims the walk at a point and returns immediately. For a target that moves, call
+	-- it again: a humanoid holds the last destination it was given, so a chase is a
+	-- re-aim on a tick rather than anything cleverer.
+	moveTo: (position: Vector3) -> (),
+	-- Stops where they stand. Needed because moveTo has no "and stop here" -- a
+	-- chaser that simply stopped re-aiming would keep walking into the player.
+	halt: () -> (),
+	-- Walks to a point and reports whether it arrived, yielding until it does or
+	-- until Config.NPC.WalkTimeoutSeconds gives up. The right call for a fixed
+	-- destination; useless for a moving one.
+	walkTo: (position: Vector3) -> boolean,
+	-- The same, by a route rather than in a straight line, and false the moment any
+	-- part of it fails. What to use when the destination is somewhere in a built
+	-- world rather than a spot picked to be reachable -- see the note above pathTo.
+	-- Yields for as long as the walk takes, so it takes a way to be called off: pass
+	-- a predicate that goes true when this walk has stopped being wanted.
+	pathTo: (position: Vector3, shouldStop: (() -> boolean)?) -> boolean,
+	-- Turns them on the spot to look at a point, easing rather than snapping, and
+	-- holds there. nil lets go, and is what has to be called before they walk again:
+	-- a body being held at an angle cannot also be steering itself.
+	--
+	-- Not a MoveTo. A humanoid turns by walking, so aiming one at a point a step
+	-- away to make it face somebody produces a shuffle, and a person who takes a
+	-- step toward you every time you speak to them is unnerving rather than warm.
+	face: (target: Vector3?) -> (),
+	-- How fast they walk from now on. Here rather than at spawn because the same
+	-- body does different things at different speeds -- crossing town is a stroll,
+	-- arriving at a door is not -- and both are properties of the errand.
+	setSpeed: (studsPerSecond: number) -> (),
+	-- How old they are from now on, which is the only thing that decides how big
+	-- they are. Here rather than only at spawn because a birthday must not cost a
+	-- rebuild: tearing a rig down and building a new one is a yielding web call and
+	-- a visible pop, so the whole street would flicker every time the player aged
+	-- up. nil is grown, matching Spawn.
+	setAge: (ageYears: number?) -> (),
+	greet: () -> (),
+	talk: () -> (),
+	destroy: () -> (),
+}
+
+-- Builds a person and puts them in the world facing the way `at` faces. Yields:
+-- creating an avatar from a description is a web-backed call. Returns nil if the rig
+-- could not be made, which every caller must treat as "this did not happen".
+--
+-- Knows nothing about why they are here. It takes a cast member and a place to
+-- appear, and everything above the neck -- head tracking, locomotion clips -- runs
+-- from the moment they exist, because those are properties of being a person rather
+-- than of any particular errand.
+function NPCService.Spawn(player: Player, member: CastMember, at: CFrame, ageYears: number?): Visitor?
+	local age = ageYears or peerAge(player, member)
 
 	local ok, rig = pcall(function()
-		return Players:CreateHumanoidModelFromDescription(buildDescription(member), Enum.HumanoidRigType.R15)
+		return Players:CreateHumanoidModelFromDescription(buildDescription(member, age), Enum.HumanoidRigType.R15)
 	end)
 	if not ok or rig == nil then
 		warn(`[AGES] could not build visitor "{member.id}": {rig}`)
@@ -230,14 +506,26 @@ function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): D
 	end
 
 	visitor.Name = `Visitor_{member.id}`
+	-- Again, over the description that already asked for it. See applyScale.
+	applyScale(humanoid, member, age)
 	humanoid.DisplayName = member.name
 	humanoid.WalkSpeed = Config.NPC.WalkSpeed
 	-- Nobody is fighting anybody in this game, so a health bar over a visitor's
 	-- head would be answering a question the player never asked.
 	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 
+	-- Set before parenting, so no rig is ever briefly able to shove the one it is
+	-- queueing behind. One frame of that is enough to break a line.
+	if ensureCollisionGroup() then
+		for _, part in visitor:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CollisionGroup = VISITOR_COLLISION_GROUP
+			end
+		end
+	end
+
 	-- Placed before parenting so the visitor is never briefly at the origin.
-	visitor:PivotTo(point.CFrame)
+	visitor:PivotTo(at)
 	visitor.Parent = visitorsFolder()
 	active[visitor] = true
 
@@ -301,6 +589,161 @@ function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): D
 		end)
 	end
 
+	-- Copied out of the optionals above so the closures below close over plain
+	-- values. A refinement made here does not survive into a function body that runs
+	-- later, and every one of these is read from inside one.
+	local body = root :: BasePart
+	local walker = humanoid :: Humanoid
+
+	local function gone(): boolean
+		return visitor.Parent == nil or walker.Parent == nil
+	end
+
+	local function play(track: AnimationTrack?)
+		if track == nil or gone() then
+			return
+		end
+		track:Play(ANIMATION_FADE_SECONDS)
+	end
+
+	-- Where they are being held looking, and whether the loop doing the holding is
+	-- already running. One loop per rig at most: `face` is called again on every tick
+	-- of an open conversation so the turn tracks a player who walks around them, and
+	-- spawning a fresh loop each time would stack a dozen of them fighting over the
+	-- same root part within a few seconds.
+	local facing: Vector3? = nil
+	local turning = false
+
+	local function stepFacing()
+		while facing ~= nil and not gone() do
+			local target = facing :: Vector3
+			local flat = Vector3.new(target.X - body.Position.X, 0, target.Z - body.Position.Z)
+			if flat.Magnitude > FLAT_FACING_EPSILON then
+				local want = CFrame.lookAt(body.Position, body.Position + flat.Unit)
+				-- Slerped through CFrame:Lerp rather than by stepping a yaw angle,
+				-- because a yaw has a seam at +/-pi and a person turning the long way
+				-- round to greet somebody standing just behind them is a spin.
+				local stepped = body.CFrame:Lerp(want, Config.NPC.TurnResponsiveness)
+				body.CFrame = CFrame.lookAt(body.Position, body.Position + stepped.LookVector)
+
+				local left = math.deg(math.acos(math.clamp(body.CFrame.LookVector:Dot(want.LookVector), -1, 1)))
+				if left <= Config.NPC.TurnDoneDegrees then
+					-- Squared up. The hold stays -- AutoRotate is still off and the
+					-- target is still set -- so this only stops the arithmetic, which
+					-- would otherwise nudge forever without ever quite arriving.
+					body.CFrame = want
+					break
+				end
+			end
+			task.wait(Config.NPC.TurnTickSeconds)
+		end
+		turning = false
+	end
+
+	local function face(target: Vector3?)
+		if gone() then
+			return
+		end
+		facing = target
+		if target == nil then
+			-- Steering handed back. Without this a walker keeps whatever angle it was
+			-- held at and moons sideways down the street.
+			walker.AutoRotate = true
+			return
+		end
+		-- Off while held, because AutoRotate is the humanoid writing this same CFrame
+		-- from its own velocity, and the two take turns rather than settling.
+		walker.AutoRotate = false
+		if not turning then
+			turning = true
+			task.spawn(stepFacing)
+		end
+	end
+
+	return {
+		model = visitor,
+		root = body,
+		at = function()
+			return body.Position
+		end,
+		gone = gone,
+		moveTo = function(position: Vector3)
+			if gone() then
+				return
+			end
+			-- Any walk lets go of a held angle first. A body cannot be steering itself
+			-- and being held square to somebody at the same time, and the failure when
+			-- both are true is a rig sliding down the street sideways.
+			face(nil)
+			walker:MoveTo(position)
+		end,
+		halt = function()
+			if gone() then
+				return
+			end
+			-- Told to walk to where they already are, which is how a humanoid is
+			-- stopped without freezing it: it settles on the spot and the locomotion
+			-- clips follow its own reported speed back down to idle.
+			walker:MoveTo(body.Position)
+		end,
+		walkTo = function(position: Vector3): boolean
+			if gone() then
+				return false
+			end
+			face(nil)
+			return walkTo(walker, position, Config.NPC.WalkTimeoutSeconds)
+		end,
+		pathTo = function(position: Vector3, shouldStop: (() -> boolean)?): boolean
+			if gone() then
+				return false
+			end
+			face(nil)
+			return pathTo(walker, body, position, shouldStop)
+		end,
+		face = face,
+		setSpeed = function(studsPerSecond: number)
+			if gone() then
+				return
+			end
+			walker.WalkSpeed = studsPerSecond
+		end,
+		setAge = function(years: number?)
+			if gone() then
+				return
+			end
+			applyScale(walker, member, years)
+		end,
+		greet = function()
+			play(greetTrack)
+		end,
+		talk = function()
+			play(talkTrack)
+		end,
+		destroy = function()
+			looking = false
+			facing = nil
+			runningConnection:Disconnect()
+			active[visitor] = nil
+			visitor:Destroy()
+		end,
+	}
+end
+
+-- A visitor for an event: in from the doorstep, waiting to be reached, and away
+-- again once they have been.
+--
+-- Thin on purpose. Everything about being a person is Spawn's, and everything here
+-- is about this particular errand -- which door, how far in, and what "dismissed"
+-- means to a delivery. The whole file used to be this function, and splitting it is
+-- what lets a parent bring pocket money without a LifeEvent or a delivery point
+-- existing to justify her.
+function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): DeliveryPresentation?
+	local visitor = NPCService.Spawn(player, resolveMember(event), point.CFrame)
+	if visitor == nil then
+		return nil
+	end
+	local arriving = visitor :: Visitor
+
 	local arrivalPosition = point.Position
 	-- The waiting spot is straight in from the door along the point's own facing,
 	-- so where a visitor ends up is set in Studio by turning the marker rather
@@ -309,25 +752,16 @@ function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): D
 
 	local dismissed = false
 
-	local function teardown()
-		looking = false
-		runningConnection:Disconnect()
-		active[visitor] = nil
-		visitor:Destroy()
-	end
-
 	task.spawn(function()
-		walkTo(humanoid, waitPosition)
+		arriving.walkTo(waitPosition)
 		if dismissed then
 			return
 		end
-		if greetTrack ~= nil then
-			greetTrack:Play(ANIMATION_FADE_SECONDS)
-		end
+		arriving.greet()
 	end)
 
 	return {
-		anchor = root,
+		anchor = arriving.root,
 		dismiss = function(collected: boolean)
 			if dismissed then
 				return
@@ -335,20 +769,16 @@ function NPCService.Arrive(player: Player, point: BasePart, event: LifeEvent): D
 			dismissed = true
 
 			task.spawn(function()
-				if visitor.Parent ~= nil and collected then
+				if collected then
 					-- Talk over the prompt the player is now reading, then leave.
 					-- Vanishing the instant they are reached would undo the whole
 					-- reason they walked in.
-					if talkTrack ~= nil then
-						talkTrack:Play(ANIMATION_FADE_SECONDS)
-					end
+					arriving.talk()
 					task.wait(Config.NPC.TalkBeatSeconds)
 				end
 
-				if visitor.Parent ~= nil and humanoid.Parent ~= nil then
-					walkTo(humanoid, arrivalPosition)
-				end
-				teardown()
+				arriving.walkTo(arrivalPosition)
+				arriving.destroy()
 			end)
 		end,
 	}
@@ -369,7 +799,12 @@ function NPCService.DespawnAll()
 	end
 end
 
-function NPCService:Init() end
+-- Asked for at start rather than at the first spawn, so a server that cannot have it
+-- says so in the log while somebody is still reading the log, instead of half an hour
+-- later in the shape of a queue that will not stand still.
+function NPCService:Init()
+	ensureCollisionGroup()
+end
 
 function NPCService:Start()
 	NPCService.DespawnAll()

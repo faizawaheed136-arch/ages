@@ -24,7 +24,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Delivery = require(ReplicatedStorage:WaitForChild("Delivery"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 
 local DataService = require(script.Parent.DataService)
 local EventService = require(script.Parent.EventService)
@@ -33,7 +35,7 @@ local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local DeliveryPresenters = require(script.Parent.Parent.world.DeliveryPresenters)
 
 type LifeEvent = Types.LifeEvent
-type ProfileData = Types.ProfileData
+type LifeData = Types.LifeData
 type EventDelivery = Types.EventDelivery
 type DeliveryPresentation = Types.DeliveryPresentation
 
@@ -183,7 +185,7 @@ local function finish(player: Player, collected: boolean, clearProfile: boolean)
 	end
 
 	local profile = DataService.GetProfile(player)
-	if profile ~= nil and profile.Data.deliveringEventId == current.eventId then
+	if profile ~= nil and Lives.Active(profile.Data).deliveringEventId == current.eventId then
 		-- Only when it is still *this* event. On collection EventService has
 		-- already cleared it while opening the prompt, and a new life may have
 		-- staged something else entirely; either way this must not clobber it.
@@ -191,7 +193,7 @@ local function finish(player: Player, collected: boolean, clearProfile: boolean)
 		-- The event is deliberately not marked seen. Expiry is silent and it
 		-- returns to the pool, because missing a phone call should feel like
 		-- missing a phone call rather than like losing something.
-		profile.Data.deliveringEventId = nil
+		Lives.Active(profile.Data).deliveringEventId = nil
 	end
 end
 
@@ -221,9 +223,9 @@ local function present(player: Player, event: LifeEvent): boolean
 	-- something else, or started a whole new life.
 	local profile = DataService.GetProfile(player)
 	local stillWanted = profile ~= nil
-		and profile.Data.alive
-		and profile.Data.deliveringEventId == event.id
-		and profile.Data.pendingEventId == nil
+		and Lives.Active(profile.Data).alive
+		and Lives.Active(profile.Data).deliveringEventId == event.id
+		and Lives.Active(profile.Data).pendingEventId == nil
 		and player.Parent == Players
 
 	if not stillWanted then
@@ -245,7 +247,7 @@ end
 -- before the build because the build yields: a second attempt arriving inside
 -- that window fails PickStageable's deliveringEventId check rather than putting
 -- two letters on one mat.
-local function stage(player: Player, data: ProfileData)
+local function stage(player: Player, data: LifeData)
 	if building[player] then
 		return
 	end
@@ -284,7 +286,7 @@ local function tick()
 			continue
 		end
 
-		local data = profile.Data
+		local data = Lives.Active(profile.Data)
 		local current = staged[player]
 
 		if current ~= nil then
@@ -333,7 +335,7 @@ local function restore(player: Player)
 		return
 	end
 
-	local data = profile.Data
+	local data = Lives.Active(profile.Data)
 	local eventId = data.deliveringEventId
 	if eventId == nil or not data.alive then
 		return
@@ -343,6 +345,14 @@ local function restore(player: Player)
 	if event == nil then
 		warn(`[AGES] delivered event "{eventId}" no longer exists; dropping it`)
 		data.deliveringEventId = nil
+		return
+	end
+
+	-- The field is shared with every system that puts something in the world to be walked
+	-- to, and rebuilding somebody else's is not the same as rebuilding one of ours: there
+	-- is no presenter for a wandered event, so this would fail to stage it and then clear
+	-- the claim -- quietly stealing it from the system that is about to put it out.
+	if Delivery.RouteOf(event.delivery) ~= "Ambient" then
 		return
 	end
 
@@ -378,7 +388,7 @@ function DeliveryService.OnAgeUp(player: Player)
 
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		profile.Data.deliveriesThisYear = 0
+		Lives.Active(profile.Data).deliveriesThisYear = 0
 	end
 end
 
@@ -389,8 +399,8 @@ function DeliveryService.ResetForNewLife(player: Player)
 
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		profile.Data.deliveriesThisYear = 0
-		profile.Data.deliveryCountdown = nextGap()
+		Lives.Active(profile.Data).deliveriesThisYear = 0
+		Lives.Active(profile.Data).deliveryCountdown = nextGap()
 	end
 end
 
@@ -409,9 +419,9 @@ function DeliveryService.ForceStage(player: Player, eventId: string): boolean
 	end
 
 	finish(player, false, true)
-	profile.Data.deliveringEventId = event.id
-	if not present(player, event) and profile.Data.deliveringEventId == event.id then
-		profile.Data.deliveringEventId = nil
+	Lives.Active(profile.Data).deliveringEventId = event.id
+	if not present(player, event) and Lives.Active(profile.Data).deliveringEventId == event.id then
+		Lives.Active(profile.Data).deliveringEventId = nil
 		return false
 	end
 	return true
@@ -432,7 +442,7 @@ function DeliveryService.Describe(player: Player): string
 		return "no profile loaded"
 	end
 
-	local data = profile.Data
+	local data = Lives.Active(profile.Data)
 	local current = staged[player]
 	local placed = if current ~= nil
 		then `{current.delivery} "{current.eventId}"`
