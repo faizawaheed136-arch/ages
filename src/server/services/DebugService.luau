@@ -33,6 +33,7 @@ local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
 local ScienceService = require(script.Parent.ScienceService)
+local GeographyService = require(script.Parent.GeographyService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -978,6 +979,92 @@ Commands.lab = function(player: Player, args: { string }): string
 	return `usage: /lab [start|end|level <n>|refill|on|off] — {ScienceService.Describe(player)}`
 end
 
+-- Everything about the Geography errand, on one command.
+--
+-- Separate from /school and from /lab for the same reason those two are separate from each
+-- other: this verb fails somewhere neither of them can. Its failures are about the *place
+-- graph* -- too few sendable points, a town made entirely of route nodes, a destination
+-- upstairs behind a door -- and none of that is visible from a lesson that simply does not
+-- start.
+--
+-- The first line of bare /geo is the one that matters and it is the sendable count. The
+-- errand skips waypoints and skips anything more than Hunt.MaxRiseStuds off the floor you
+-- started on, so "382 tagged" and "0 sendable" is an entirely possible and entirely silent
+-- state -- and it is what a half-built world looks like from in here.
+--
+--   /geo                      how many places are sendable out of how many are tagged,
+--                             your mastery level and what it tells you, and the live
+--                             errand: which stop, how far off you are, the clock, and the
+--                             credit banked so far.
+--   /geo start                an errand from where you stand. Unlike /lab start this is
+--                             the real thing -- the first leg is measured from your feet,
+--                             so it is worth running from somewhere other than the school
+--                             to see what the town looks like from there.
+--   /geo find                 counts the destination in hand as reached. The command to
+--                             use, because the walk is thirty seconds and it stands in
+--                             front of everything worth testing: the arrival beat, the
+--                             next leg being drawn from the right spot, the closing line,
+--                             and the report card row.
+--   /geo end                  grades the errand where it stands, the way giving up does.
+--   /geo level 1 then /geo level 4
+--                             the whole progression in ten seconds, and the one thing to
+--                             actually judge. At 1 you get a name and nothing else; at 4
+--                             you get an arrow and a distance, which is very nearly the
+--                             guide line the rest of the game gives away. If the town does
+--                             not feel meaningfully more legible between those two, this
+--                             subject has no reward in it and the ladder needs rewriting
+--                             rather than retuning.
+--   /geo off                  the whole verb dark, for telling a geography bug apart from
+--                             a school one -- /school start should then hand geography to
+--                             the quiz path instead of refusing.
+Commands.geo = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return GeographyService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		GeographyService.SetEnabled(arg == "on")
+		return `geography {arg} — {GeographyService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = GeographyService.ForceStart(player)
+		if not started then
+			return `could not start an errand: {refusal or "no reason given"} — {GeographyService.Describe(player)}`
+		end
+		return `errand started — {GeographyService.Describe(player)}`
+	end
+
+	if arg == "find" then
+		if not GeographyService.ForceFind(player) then
+			return `nothing to find — {GeographyService.Describe(player)}`
+		end
+		return `stop reached — {GeographyService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not GeographyService.ForceEnd(player) then
+			return `no errand running — {GeographyService.Describe(player)}`
+		end
+		return `errand graded — {GeographyService.Describe(player)}`
+	end
+
+	if arg == "level" then
+		local level = tonumber(args[2])
+		if level == nil or not GeographyService.SetLevel(player, level) then
+			return `usage: /geo level <1-{#Config.School.Hunt.RevealedByLevel}> — {GeographyService.Describe(player)}`
+		end
+		return GeographyService.Describe(player)
+	end
+
+	return `usage: /geo [start|find|end|level <n>|on|off] — {GeographyService.Describe(player)}`
+end
+
 -- The first five years, on one command.
 --
 -- The real path is "/die, then play", and unlike school and work that is genuinely quick
@@ -1694,7 +1781,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
-	.. "/gym [start|end|on|off], "
+	.. "/geo [start|find|end|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"

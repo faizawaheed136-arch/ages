@@ -128,6 +128,15 @@ export type RemoteName =
 	-- against the card it actually staged -- so a press that lands after a birthday has
 	-- replaced the card cannot put away a year the player has not seen.
 	| "RequestReportCardRead"
+	-- The geography errand in progress, pushed as a whole snapshot: which stop you are on,
+	-- what you have earned the right to be told about it, and the clock.
+	--
+	-- It has no request remote to pair with, and that is the verb rather than an oversight.
+	-- Every other activity in the game answers by pressing something; this one is answered
+	-- by *being somewhere*, so the only input is the character controller the player
+	-- already has and the only judge is the server's own distance check. Adding a "check
+	-- here" button would turn walking into a formality performed next to the answer.
+	| "HuntUpdated"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -321,6 +330,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestLabCommit",
 	"ReportCardUpdated",
 	"RequestReportCardRead",
+	"HuntUpdated",
 }
 
 local FOLDER_NAME = "RemoteEvents"

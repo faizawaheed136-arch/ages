@@ -61,6 +61,7 @@ local DataService = require(script.Parent.DataService)
 local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
 local ScienceService = require(script.Parent.ScienceService)
+local GeographyService = require(script.Parent.GeographyService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local SubjectModels = require(script.Parent.Parent.world.SubjectModels)
@@ -1208,12 +1209,13 @@ end
 -- already checked everything about the player, and there is no longer a room to fail
 -- against.
 --
--- Two shapes come out of here, and which one depends entirely on the subject's verb.
+-- Three shapes come out of here, and which one depends entirely on the subject's verb.
 -- A "quiz" subject runs the loop in the rest of this file. A "procedure" subject hands
--- the whole afternoon to ScienceService and this file does nothing further with it --
--- including the smarts and the yearly count, which the lab pays and spends itself. That
--- split is deliberate: the alternative is a School that knows how every verb is scored,
--- which is the file that would have to be edited six times over.
+-- the whole afternoon to ScienceService and a "hunt" subject hands it to
+-- GeographyService, and this file does nothing further with either -- including the
+-- smarts and the yearly count, which each verb pays and spends itself. That split is
+-- deliberate: the alternative is a School that knows how every verb is scored, which is
+-- the file that would have to be edited six times over.
 local function beginLesson(player: Player, data: LifeData, room: Vector3): boolean
 	local subject = subjectFor(data)
 	if subject == nil then
@@ -1229,6 +1231,23 @@ local function beginLesson(player: Player, data: LifeData, room: Vector3): boole
 		end
 		-- Cleared so the science HUD is not opening underneath a school line about a
 		-- lesson that is not the one running.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
+	if subject.verb == "hunt" then
+		local ok, refusal = GeographyService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "There is no geography today.", false)
+			return false
+		end
+		-- Cleared for the same reason as above: the hunt takes the screen from here, and
+		-- a school line left underneath it is a line about a lesson that is not running.
+		--
+		-- No teacher is spawned and no scene is drawn, unlike a quiz. That is the verb:
+		-- the errand happens in the town, and a classroom built around a player who is
+		-- about to walk out of it is furniture nobody will be in the room to see.
 		notices[player] = nil
 		push(player)
 		return true
@@ -1476,6 +1495,14 @@ local function tickPlayer(player: Player, elapsed: number)
 			return
 		end
 
+		-- And so is a Geography errand. The failure here is the same one but arrives
+		-- later: a hunt begins on the school pad and ends wherever the last destination
+		-- was, so the first tick after the player walks back into school would start a
+		-- second lesson on top of the one they are still on.
+		if GeographyService.IsRunning(player) then
+			return
+		end
+
 		local at = attendAt
 		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
 			return
@@ -1659,6 +1686,7 @@ function SchoolService.OnAgeUp(player: Player)
 	local missed = data.lessonsThisYear == 0
 		and lessons[player] == nil
 		and not ScienceService.IsRunning(player)
+		and not GeographyService.IsRunning(player)
 		and yearJustEnded >= SCHOOL.StartAge
 		and yearJustEnded <= SCHOOL.EndAge
 
@@ -1694,11 +1722,14 @@ end
 -- somebody who no longer exists.
 function SchoolService.ResetForNewLife(player: Player)
 	forget(player)
-	-- The lab goes with it. Called from here rather than added to the caller's list
-	-- because Science is a subject of this school rather than a system beside it: a
-	-- caller that had to remember both would eventually forget one, and the failure --
-	-- a new child arriving at the lab already good at it -- is invisible.
+	-- Every verb goes with it. Called from here rather than added to the caller's list
+	-- because these are subjects of this school rather than systems beside it: a caller
+	-- that had to remember all of them would eventually forget one, and the failure -- a
+	-- new child arriving at the lab, or in a town they have already learned, already good
+	-- at it -- is invisible. This list grows by one line per verb, which is the price of
+	-- that, and it is cheaper than the bug.
 	ScienceService.ResetForNewLife(player)
+	GeographyService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

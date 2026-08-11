@@ -368,6 +368,21 @@ Config.World = {
 	-- position is: one of the two would rot, and it would be this one.
 	PlacePointLabelAttribute = "PlaceLabel",
 
+	-- The id prefix both world generators use for a place point that is a *route
+	-- node* rather than a destination: a crossing, the middle of an avenue, the
+	-- corridor through the mall. Roughly 174 of the city's 382 points are these.
+	--
+	-- Here rather than open-coded in the one system that has to tell them apart,
+	-- because it is the world's own naming convention -- gen_town.py and
+	-- gen_city.py both hold to it -- and this block is already where the rest of
+	-- that convention is written down. A system that needs somewhere a player can
+	-- be *sent* (Geography's hunt is the first) must skip these: "go to cross
+	-- street 4" names a road marking, not a place, and being told to find one is
+	-- being told to find nothing.
+	--
+	-- If the generators ever rename the convention, this is the one line to change.
+	PlaceWaypointPrefix = "wp_",
+
 	-- How far above a place point a character is set down. A place point marks
 	-- the floor, and a body dropped with its middle on the floor is a body
 	-- half in it -- this is a body's own half-height plus a little air to fall
@@ -1679,6 +1694,119 @@ Config.School = {
 		-- not promote and a single bad one does not feel like it undid anything.
 		-- Safe range: 2-4.
 		PassesPerLevel = 2,
+	},
+
+	-- Geography, which is the errand: you are told the *name* of somewhere and you go
+	-- there. No lit disc, no line on the floor.
+	--
+	-- That absence is the whole verb, and it only works because of how much the rest of
+	-- the game does the opposite. Every other destination in AGES arrives as a gold disc
+	-- with a beam pointing at it and the distance written on the waypoint -- the shift,
+	-- the lure, the job post. A child has spent ten years being led by the hand. This is
+	-- the one lesson that lets go, and the skill being tested is the only one a town can
+	-- honestly test: do you know where anything is.
+	--
+	-- Nothing here names a place. The destinations are drawn from the live place graph at
+	-- the moment the lesson starts, so a town that grows grows the subject with it and a
+	-- place renamed in Studio is never a lesson pointing at somewhere that no longer
+	-- exists. See GeographyService.
+	Hunt = {
+		-- Destinations in one lesson. Three, which at the leg lengths below is a lesson of
+		-- roughly the same ninety seconds a quiz is -- and, more to the point, three is
+		-- enough for a bad first guess to be recoverable and few enough that each one still
+		-- counts for a third of the grade.
+		-- Safe range: 2-5. Above ~5 the lesson outlasts the walk home.
+		Stops = 3,
+
+		-- How far apart consecutive destinations may be, in studs. The town is about 930
+		-- studs across and a schoolchild walks at 16, so the far end of this band is a
+		-- twenty-eight second leg and the near end about twelve.
+		--
+		-- A band rather than a maximum, and the minimum is the important half: without it
+		-- the draw happily picks the shop next door, and a lesson made of three ten-stud
+		-- hops is not a lesson about a town. With it, a hunt walks a loop around a district
+		-- rather than crossing the map twice.
+		-- Safe range: 120-300 and 350-650, low below high.
+		MinLegStuds = 200,
+		MaxLegStuds = 450,
+
+		-- How near a destination counts as arriving. Looser than a classroom's attend
+		-- radius on purpose: a place point sits behind a counter or inside a doorway, and
+		-- being made to find the exact tile after already finding the building is precision
+		-- for its own sake -- the walk was the lesson and it is already over.
+		-- Safe range: 8-25.
+		ArriveRadiusStuds = 14,
+
+		-- How far above or below the spot the lesson started from a destination may be
+		-- and still be drawable, in studs.
+		--
+		-- This is the upstairs test. The city's fifty-six first-floor apartments are
+		-- place points like any other, sixteen studs up, and every one of them is a
+		-- stranger's home behind a door with no sign on it. A verb that gives you a name
+		-- and no marker can only be played by a player who can *see* the destination from
+		-- the street, so a place you have to already know the way into is not a
+		-- destination -- it is a riddle. Ground-floor shop interiors are well inside this
+		-- and stay drawable, which is right: the mall is findable from outside.
+		-- Safe range: 5-12. Above ~16 the upstairs flats come back.
+		MaxRiseStuds = 8,
+
+		-- The most a stop the clock ran out on can still be worth, as a share of one
+		-- found, scaled by how much of the way there the player actually got.
+		--
+		-- Without this the lesson has four possible scores -- none, one, two or three of
+		-- three -- and a player who was thirty studs from the bookstore when time went
+		-- scores exactly what a player who never left the school scores. That is the
+		-- undifferentiated-outcome trap, and the fix has to be in the verb's own units,
+		-- which are distance: credit is the fraction of the original gap closed at the
+		-- player's nearest approach. It is not a speed bonus and must never become one --
+		-- getting there fast earns nothing extra, because wandering is what the subject
+		-- is for.
+		-- Safe range: 0.3-0.6. At 1 a near miss pays the same as arriving.
+		MissedCreditCap = 0.5,
+
+		-- How often a running hunt re-reads where the player is standing. Matches
+		-- School.TickSeconds because it is the identical proximity job.
+		-- Safe range: 0.1-0.5. Above ~0.5 arrival visibly lags the footstep.
+		TickSeconds = 0.25,
+
+		-- How long each destination may take before the lesson gives up on it and moves on.
+		-- Sixty seconds is nearly four times the longest leg, so this only ever fires on a
+		-- player who is genuinely lost -- which is the honest failure for this verb.
+		--
+		-- Moving on rather than ending, deliberately: a missed stop scores nothing and the
+		-- lesson continues. A verb whose failure state is "the activity stops" punishes by
+		-- waiting, which is the one consequence shape we have ruled out everywhere else.
+		-- Safe range: 30-120. Below ~30 a wrong first guess cannot be recovered from.
+		SecondsPerStop = 60,
+
+		-- How long the line about the stop you just reached holds before the next name is
+		-- given. The same beat a lesson's verdict gets and for the same reason: arriving is
+		-- the payoff and a payoff with no pause is one nobody registers.
+		-- Safe range: 1-4.
+		ArrivedSeconds = 2,
+
+		-- What each mastery rung tells you, on top of everything the rungs below it told
+		-- you. This is the entire reward of the subject and it is deliberately not a
+		-- number: a level does not make you walk faster or score more, it makes the town
+		-- legible. That is Bully's map markers, which is the best reward in that game, and
+		-- it is the one progression a player feels as the world changing rather than as a
+		-- statistic moving.
+		--
+		-- Must be exactly School.Mastery.Levels long, checked at require time in
+		-- GeographyService for the same reason Science's RevealedStepsByLevel is: a rung
+		-- the verb has no answer for is a promotion that visibly does nothing.
+		--
+		--   name    -- the place's own label, and nothing else. Level one is being told
+		--              "the pages & press" and having to know that is the bookstore.
+		--   area    -- roughly where in town it is, as a compass sector from the school.
+		--   bearing -- an arrow at the top of the screen pointing at it. Direction only.
+		--   range   -- how far away it is, which with the arrow is very nearly the guide
+		--              line the rest of the game gives away for free.
+		--
+		-- The fifth rung adds nothing to the list because the fifth rung is the exit: it
+		-- tops the subject out and buys the right to skip, which is what every subject's
+		-- top rung buys.
+		RevealedByLevel = { "name", "area", "bearing", "range", "range" },
 	},
 
 	-- Content limits, enforced at server start rather than found in play. The answer

@@ -52,6 +52,7 @@ local DeliveryService = require(services.DeliveryService)
 local WorkService = require(services.WorkService)
 local SchoolService = require(services.SchoolService)
 local ScienceService = require(services.ScienceService)
+local GeographyService = require(services.GeographyService)
 local GymService = require(services.GymService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -98,10 +99,12 @@ NPCService:Start()
 CompanionService:Start()
 DeliveryService:Start()
 WorkService:Start()
--- Before SchoolService, which hands a Science lesson straight to it. Cosmetic like
--- every other line in this list -- both are running before the first player finishes
--- loading -- but reading it in this order is the truth about which owns which.
+-- Before SchoolService, which hands a Science or a Geography lesson straight to whichever
+-- of these owns the verb. Cosmetic like every other line in this list -- all three are
+-- running before the first player finishes loading -- but reading it in this order is the
+-- truth about which owns which.
 ScienceService:Start()
+GeographyService:Start()
 SchoolService:Start()
 GymService:Start()
 PeopleService:Start()

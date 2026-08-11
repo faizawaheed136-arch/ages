@@ -644,7 +644,7 @@ export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" |
 -- and the list of them is meant to reach zero. It is kept because the alternative was
 -- deleting eleven of a childhood's twelve school years until all six verbs existed, and
 -- a childhood with one subject in it is worse than one with five placeholders.
-export type SchoolVerb = "quiz" | "procedure"
+export type SchoolVerb = "quiz" | "procedure" | "hunt"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {
@@ -839,6 +839,56 @@ export type LabState = {
 	-- first". Cleared on the next push that changes anything else, because a refusal is a
 	-- reply to a click and not a state to sit in.
 	notice: string?,
+}
+
+-- A geography lesson in progress: one destination at a time, and how much the player has
+-- earned the right to be told about it.
+--
+-- Pushed as a whole snapshot like every other activity state. Small on purpose -- there is
+-- no board, no benches and no rows, because the interface for this verb is the town.
+export type HuntState = {
+	-- Which stop of how many, both 1-based and both on screen: "2 of 3" is the only
+	-- structure this activity has and hiding it would make a lesson feel unbounded.
+	stop: number,
+	stops: number,
+	-- The place's own authored label -- "the pages & press", "number 5, on avenue 2". The
+	-- whole of level one, and the thing every higher rung is drawn on top of rather than
+	-- instead of.
+	label: string,
+	-- Roughly where in town, as a compass sector: "north-east side of town". Nil below the
+	-- rung that buys it, and nil is the meaning -- the client draws nothing rather than a
+	-- blank line, so the difference between rungs is visible as the panel growing.
+	area: string?,
+	-- Compass bearing to the destination in degrees, 0 = north, clockwise. Sent as a
+	-- number rather than as a drawn arrow so the client can point it continuously as the
+	-- player turns, which is the difference between an arrow and a hint.
+	bearing: number?,
+	-- Studs to the destination. Nil below its rung. Deliberately the last thing bought:
+	-- with the bearing it is very nearly the guide line every other system gives away, and
+	-- the top of this ladder should feel like being handed the map.
+	rangeStuds: number?,
+	-- Seconds left on this stop before the lesson gives up on it and moves to the next.
+	secondsLeft: number,
+	-- Stops reached so far, which is what the lesson is graded on. On screen because a
+	-- player who has missed one should be able to see that the remaining two still matter.
+	found: number,
+	-- Where this life stands on the geography ladder, and how close the next rung is.
+	--
+	-- On the panel rather than left to be discovered, and for a stronger reason than the
+	-- lab has: what a rung buys here is *the panel itself* growing a line. A player who
+	-- was never told the ladder exists has no way to read a compass sector appearing as a
+	-- reward rather than as the game having quietly changed its mind about how much to
+	-- tell them.
+	level: number,
+	levelMax: number,
+	passes: number,
+	passesPerLevel: number,
+	-- Set for the beat after arriving, replacing the destination on screen. The pause that
+	-- makes arriving register as an event rather than as the name silently changing.
+	arrived: string?,
+	-- Set for the beat after the whole lesson is done. Same slot the lab's summary uses and
+	-- read the same way: the closing line, held, and then the activity is gone.
+	summary: string?,
 }
 
 -- A workout in progress, pushed as a whole snapshot. Three phases:

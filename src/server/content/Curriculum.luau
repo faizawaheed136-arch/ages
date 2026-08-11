@@ -105,15 +105,21 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = 14,
 	},
 
-	-- Geography. Quiz today, and the subject with the clearest verb waiting for it: the
-	-- game already has a town, a flag set and a country list, so the honest version is a
-	-- hunt -- given a description, walk to the place -- which is a verb no other subject
-	-- can borrow because no other subject owns a map.
+	-- Geography. The errand, and the one lesson where the game stops telling you where
+	-- things are: you are given a place's *name* and nothing else, and you walk. Every
+	-- other destination in AGES arrives as a lit disc with a beam over it and a distance
+	-- counting down, so taking that away is not a missing feature -- it is the entire
+	-- verb, and it is a verb no other subject can borrow because no other subject owns
+	-- the town.
+	--
+	-- Starts at eight rather than six for the same reason Science starts at nine: holding
+	-- a name in your head across a two-hundred-stud walk is the mechanic, and a player who
+	-- cannot yet read the name is not being challenged.
 	{
 		id = "geography",
 		name = "Geography",
-		verb = "quiz",
-		blurb = "Places, and how to find them.",
+		verb = "hunt",
+		blurb = "You get the name. You do not get the marker. Go and find it.",
 		minAge = 8,
 		maxAge = SCHOOL_END,
 	},

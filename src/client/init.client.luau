@@ -12,6 +12,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local StatsUI = require(script.ui.StatsUI)
 local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
+local HuntUI = require(script.ui.HuntUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -31,6 +32,7 @@ type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
 type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
+type HuntState = Types.HuntState
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -59,6 +61,7 @@ task.spawn(hidePlayerList)
 local ui = StatsUI.new()
 local panel = ChoicePanel.new()
 local lab = LabUI.new()
+local hunt = HuntUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
@@ -482,6 +485,14 @@ Remotes.Get("LabUpdated").OnClientEvent:Connect(function(state: LabState?)
 	labDots:SetRunning(state ~= nil and state.summary == nil)
 end)
 
+-- The Geography errand in progress. One half of one fact, which makes it the shortest
+-- handler here and the point is that it stays that way: there is no second half in the
+-- world, no dots to light and no mark to drop. The panel is the whole interface, because
+-- the town is the rest of it.
+Remotes.Get("HuntUpdated").OnClientEvent:Connect(function(state: HuntState?)
+	hunt:Set(state)
+end)
+
 -- Who you are standing next to, and what they have to offer. The row keeps saying who
 -- it is long after there is anything left to take, because a person you are standing
 -- next to is still there when the conversation is over.
@@ -564,6 +575,10 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- something left to hurry for.
 	lab:Set(nil)
 	labDots:SetRunning(false)
+	-- And the errand, for the same reason: the server drops the hunt on death and pushes
+	-- nil, but the order the two arrive in is not guaranteed, and a stop clock counting
+	-- down under a death notice would be the game insisting there is somewhere left to be.
+	hunt:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil
