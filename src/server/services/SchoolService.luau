@@ -55,6 +55,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local ChoiceMarkers = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("ChoiceMarkers"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Mastery"))
+local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
 local PlaceService = require(script.Parent.PlaceService)
@@ -72,6 +73,8 @@ type LifeData = Types.LifeData
 type LessonQuestion = Types.LessonQuestion
 type LessonState = Types.LessonState
 type OfferedChoice = Types.OfferedChoice
+type ReportCard = Types.ReportCard
+type SchoolYearRecord = Types.SchoolYearRecord
 type SchoolSubject = Types.SchoolSubject
 type SubjectRig = SubjectModels.SubjectRig
 type Motion = SubjectMotion.Motion
@@ -88,6 +91,8 @@ local SchoolService = {}
 
 local LessonUpdatedRemote = Remotes.Get("LessonUpdated")
 local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
+local ReportCardUpdatedRemote = Remotes.Get("ReportCardUpdated")
+local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 
 -- The place id the classroom answers to. A part in Studio carries this on its place
 -- attribute, exactly like the shop and the office. Nothing here builds a school: the
@@ -175,6 +180,18 @@ local notices: { [Player]: Notice } = {}
 type Door = { subjectId: string }
 local doors: { [Player]: Door } = {}
 
+-- Whether this player is currently being shown their report card.
+--
+-- The card itself is on the profile -- see LifeData.pendingReport -- and this is only
+-- whether it is in their hands right now. Two separate things on purpose: the card
+-- survives a birthday, a logout and a rejoin, and being at the school does not.
+--
+-- Held per player for the reason the door is, and read the same way: set when they arrive
+-- at the pad, cleared when they walk off or press the button. Keeping the geometry out
+-- here rather than in the composer means the card can be built from a profile alone,
+-- which is what makes the harness command able to print one.
+local cards: { [Player]: boolean } = {}
+
 
 local function characterPosition(player: Player): Vector3?
 	local character = player.Character
@@ -199,6 +216,33 @@ end
 local function subjectNameOf(subjectId: string): string
 	local subject = Curriculum.Get(subjectId)
 	return if subject ~= nil then subject.name else subjectId
+end
+
+-- What is on in a given slot of a given year, from 1. The timetable itself, and the one
+-- place the rotation is worked out.
+--
+-- Rotated rather than rolled, and the difference matters over a childhood: three random
+-- draws a year from six subjects will hand a player the same one twice in a term and skip
+-- another for four years, and a timetable that behaves like that is not a timetable. Keyed
+-- on the age and the slot, so it walks the list evenly and every subject comes round -- and
+-- so the same year lived twice in a test gives the same subjects, which is worth a great
+-- deal when the thing being tested is one of them.
+--
+-- Asked about a slot rather than about "now" because the report card has to name the
+-- subject in a slot the player never turned up for. A year with an empty second period is
+-- reported as "Music, absent" rather than as a blank, and that is only possible because
+-- the timetable is a function of the year rather than a record of what happened.
+--
+-- Nil only if a whole school year has no subject in it, which content/Curriculum.luau
+-- refuses to load with. Handled anyway rather than assumed, because the check that makes
+-- it impossible lives in another file and could be relaxed there.
+local function subjectForSlot(ageYears: number, slot: number): SchoolSubject?
+	local list = Curriculum.ForAge(ageYears)
+	if #list == 0 then
+		return nil
+	end
+	local turn = ageYears * SCHOOL.LessonsPerYear + (slot - 1)
+	return list[turn % #list + 1]
 end
 
 -- The teacher in the classroom. One per player with a lesson, built from the
@@ -769,7 +813,7 @@ local function stateFor(player: Player): LessonState?
 					id = "skip",
 					label = "Skip it",
 					cost = nil,
-					note = `+{SCHOOL.SmartsPerOkLesson} smarts, no lesson`,
+					note = `+{Report.SmartsFor(Report.Skipped)} smarts, no lesson`,
 					locked = false,
 				},
 			},
@@ -827,6 +871,155 @@ end
 local function notice(player: Player, text: string, good: boolean)
 	notices[player] = { text = text, good = good, secondsLeft = SCHOOL.VerdictSeconds }
 	push(player)
+end
+
+-- The line that says what this life is closest to finishing, or nil when nothing is
+-- close. Only ever about the subjects on the current timetable: a rung in a subject that
+-- will not be taught for another three years is not a near miss, it is trivia.
+--
+-- One line and only when it is true, which is the whole discipline of it. A card that
+-- printed "keep going!" every year would be a card nobody read the bottom of by twelve.
+local function nearMissFor(data: LifeData): string?
+	-- A ladder that promotes on a single pass has no "one away" to be -- everybody not
+	-- topped out is always one away -- and the line would be on every card forever.
+	if Mastery.PassesPerLevel <= 1 then
+		return nil
+	end
+
+	for _, subject in Curriculum.ForAge(ageYearsOf(data)) do
+		if not Mastery.IsTopped(data, subject.id) and Mastery.PassesOf(data, subject.id) == Mastery.PassesPerLevel - 1 then
+			-- Not named `next`: that is a Lua global, and shadowing it here is legal,
+			-- silent, and exactly the sort of thing that surprises somebody later.
+			local rung = Mastery.LevelOf(data, subject.id) + 1
+			if rung >= Mastery.Levels then
+				-- The only near miss that changes what the player can *do*, so it says so
+				-- rather than naming the rung. A number is a smaller thing to be told than
+				-- an afternoon back.
+				return `One more good {subject.name} lesson finishes it for good.`
+			end
+			return `One more good {subject.name} lesson makes it level {rung}.`
+		end
+	end
+	return nil
+end
+
+-- Everything this life's school years came to, counted. Counted rather than listed
+-- year by year: by seventeen a list is twelve entries of muted text nobody reads to the
+-- end, and what a record actually says is "three good years and two thrown away".
+local function recordLineFor(data: LifeData): string?
+	local parts: { string } = {}
+	for _, entry in Report.Tally(data) do
+		local years = if entry.years == 1 then "1 year" else `{entry.years} years`
+		table.insert(parts, `{years} {entry.grade}`)
+	end
+	if #parts == 0 then
+		return nil
+	end
+	return `School so far: {table.concat(parts, ", ")}.`
+end
+
+-- Composes a staged card into the thing the player reads.
+--
+-- Takes the report rather than reading it off the profile, so the harness can print a
+-- card for a year without one having to be staged -- and so this function has no way to
+-- accidentally hand over a card that is not the one being asked about.
+local function buildCard(data: LifeData, report: SchoolYearRecord): ReportCard
+	local rows: { OfferedChoice } = {}
+
+	-- Every slot of the year, not every lesson sat. The empty ones are most of what a bad
+	-- year's card has to say, and naming the subject that was on -- which the timetable can
+	-- still answer for a year that is over -- is the difference between "you missed a
+	-- lesson" and "you missed Music".
+	local slots = math.max(SCHOOL.LessonsPerYear, #report.lessons)
+	for slot = 1, slots do
+		local lesson = report.lessons[slot]
+		if lesson == nil then
+			local subject = subjectForSlot(report.ageYears, slot)
+			local name = if subject ~= nil then subject.name else "Nothing"
+			table.insert(rows, {
+				id = `slot{slot}`,
+				label = `{name} — {Report.AbsentWord}`,
+				cost = nil,
+				-- An em dash rather than "0 smarts". Nothing happened, and a zero in the
+				-- column where every other row has a payout reads as a lesson that paid
+				-- badly rather than as one that never took place.
+				note = "—",
+				locked = true,
+			})
+		else
+			-- The stored subject wins over the timetable's for a slot that was actually
+			-- sat. They agree today; they would not for a life saved before a subject was
+			-- moved, and what happened beats what was scheduled.
+			local label = `{subjectNameOf(lesson.subjectId)} — {Report.WordFor(lesson.band)}`
+			if lesson.level ~= nil then
+				label ..= `, level {lesson.level} of {Mastery.Levels}`
+			end
+			table.insert(rows, {
+				id = `slot{slot}`,
+				label = label,
+				cost = nil,
+				note = if lesson.smarts > 0 then `+{lesson.smarts} smarts` else "no smarts",
+				locked = true,
+			})
+		end
+	end
+
+	-- The one row that is not locked, and the only thing on the card that can be pressed.
+	-- The client does not read this id -- there is nothing else to press, so it fires the
+	-- acknowledgement whatever comes back -- but it is named rather than blank because a
+	-- row with no id is a row nothing can be said about in a log.
+	table.insert(rows, { id = "read", label = "Continue", cost = nil, note = nil, locked = false })
+
+	local footnotes: { string } = {}
+	local near = nearMissFor(data)
+	if near ~= nil then
+		table.insert(footnotes, near)
+	end
+	local record = recordLineFor(data)
+	if record ~= nil then
+		table.insert(footnotes, record)
+	end
+
+	return {
+		ageYears = report.ageYears,
+		title = `Age {report.ageYears} report card: {report.grade}`,
+		rows = rows,
+		footnote = table.concat(footnotes, "\n"),
+	}
+end
+
+-- The card in this player's hands right now, or nil. Both halves have to be true: one
+-- staged on the profile, and the player standing where it is handed over.
+local function cardFor(player: Player): ReportCard?
+	if not cards[player] then
+		return nil
+	end
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return nil
+	end
+	local data = Lives.Active(profile.Data)
+	local report = data.pendingReport
+	if report == nil then
+		return nil
+	end
+	return buildCard(data, report)
+end
+
+-- The last card pushed to each player, so the panel is not rebuilt four times a second
+-- under somebody standing still reading it. Only the age is digested because a card is
+-- immutable once staged: the year it reports is over, and nothing that could change a row
+-- can happen without a birthday replacing the whole card anyway.
+local pushedCards: { [Player]: string } = {}
+
+local function pushCard(player: Player)
+	local card = cardFor(player)
+	local digest = if card == nil then "none" else `card:{card.ageYears}`
+	if pushedCards[player] == digest then
+		return
+	end
+	pushedCards[player] = digest
+	ReportCardUpdatedRemote:FireClient(player, card)
 end
 
 -- Why this player cannot sit a lesson right now, or nil if they can. Written as the
@@ -899,14 +1092,12 @@ local function finish(player: Player, data: LifeData, lesson: Lesson, reason: st
 	local count = #lesson.questions
 	local share = if count > 0 then lesson.right / count else 0
 
-	local gained: number
-	if share >= SCHOOL.GoodShare then
-		gained = SCHOOL.SmartsPerGoodLesson
-	elseif share >= SCHOOL.OkShare then
-		gained = SCHOOL.SmartsPerOkLesson
-	else
-		gained = SCHOOL.SmartsPerPoorLesson
-	end
+	-- Which band and what it pays both come from school/Report rather than from an
+	-- if-chain here. ScienceService had a byte-identical copy of that chain, and two
+	-- copies of "what counts as a good afternoon" is how a report card ends up disagreeing
+	-- with the closing line the player just read.
+	local band = Report.BandFor(share)
+	local gained = Report.SmartsFor(band)
 
 	if gained ~= 0 then
 		StatService.AddStat(player, "smarts", gained)
@@ -929,6 +1120,15 @@ local function finish(player: Player, data: LifeData, lesson: Lesson, reason: st
 	-- having on its own -- see the skip at the door below.
 	local before = Mastery.LevelOf(data, lesson.subjectId)
 	local level, rose = Mastery.Record(data, lesson.subjectId, share)
+
+	-- And onto the year's record, which is what the card handed over next birthday is
+	-- drawn from. Written here rather than derived later because none of it survives the
+	-- year otherwise: `smarts` is a running total that says nothing about which afternoon
+	-- moved it, and mastery says where the player ended up rather than how they got there.
+	--
+	-- The promotion is passed only when there was one. A row reading "level 3" against a
+	-- lesson that did not earn it would credit the wrong afternoon.
+	Report.RecordLesson(data, lesson.subjectId, band, gained, if rose then level else nil)
 
 	local scored = `{lesson.right} of {count} right`
 	local reward = if gained > 0 then `. +{gained} smarts.` else "."
@@ -998,26 +1198,10 @@ local function answer(player: Player, lesson: Lesson, row: number?)
 	push(player)
 end
 
--- What is on today.
---
--- Rotated rather than rolled, and the difference matters over a childhood: three random
--- draws a year from six subjects will hand a player the same one twice in a term and
--- skip another for four years, and a timetable that behaves like that is not a
--- timetable. Keyed on the age and the lessons already sat, so it walks the list evenly
--- and every subject comes round -- and so the same year lived twice in a test gives the
--- same subject, which is worth a great deal when the thing being tested is one of them.
---
--- Nil only if a whole school year has no subject in it, which content/Curriculum.luau
--- refuses to load with. Handled anyway rather than assumed, because the check that makes
--- it impossible lives in another file and could be relaxed there.
+-- What is on today: the next slot of this year's timetable, which is the one after the
+-- lessons already sat.
 local function subjectFor(data: LifeData): SchoolSubject?
-	local age = ageYearsOf(data)
-	local list = Curriculum.ForAge(age)
-	if #list == 0 then
-		return nil
-	end
-	local turn = age * SCHOOL.LessonsPerYear + data.lessonsThisYear
-	return list[turn % #list + 1]
+	return subjectForSlot(ageYearsOf(data), data.lessonsThisYear + 1)
 end
 
 -- Starts a lesson. Only fails for a reason worth saying out loud -- the caller has
@@ -1106,10 +1290,15 @@ end
 local function takeSkip(player: Player, data: LifeData, subjectId: string)
 	data.lessonsThisYear += 1
 
-	local gained = SCHOOL.SmartsPerOkLesson
+	local gained = Report.SmartsFor(Report.Skipped)
 	if gained ~= 0 then
 		StatService.AddStat(player, "smarts", gained)
 	end
+
+	-- Recorded as its own band rather than as an ordinary pass. They are worth the same
+	-- smarts and they are not the same afternoon, and a card that could not tell them
+	-- apart would report a year spent elsewhere as a year of lessons.
+	Report.RecordLesson(data, subjectId, Report.Skipped, gained, nil)
 
 	local reward = if gained > 0 then ` +{gained} smarts.` else ""
 	notice(player, `You skipped {subjectNameOf(subjectId)}.{reward} That is one lesson off the year.`, gained > 0)
@@ -1217,17 +1406,42 @@ local function tickPlayer(player: Player, elapsed: number)
 	local lesson = lessons[player]
 
 	if lesson == nil then
+		-- Whether the player has left the pad, for the two things that may already be up in
+		-- front of them. Read once because both ask the identical question and a second
+		-- probe a few lines apart could honestly answer it differently.
+		--
+		-- Only sound for a panel that is *already* open, which is the only thing it is used
+		-- for. `attendAt` is filled in by buildRoom further down, so on the first tick of a
+		-- session this reads nil -- harmless, because nothing can be open yet, and the
+		-- lower half of this branch re-reads it after the room has been built.
+		local standingAt = attendAt
+		local walkedOff = position == nil
+			or standingAt == nil
+			or Ground.FlatDistance(position, standingAt) > SCHOOL.AttendRadiusStuds
+
+		-- The card in the player's hands, and it outranks everything else the school could
+		-- be doing. It is last year's business being finished before this year's is
+		-- started, which is the order it happens in a real school and, more to the point,
+		-- the order that stops a lesson beginning underneath something being read.
+		--
+		-- Comes down the moment they walk off, and goes back up when they come back: the
+		-- card is still staged on the profile, and the only thing that puts it away is the
+		-- player pressing the button on it.
+		if cards[player] then
+			if walkedOff then
+				cards[player] = nil
+				pushCard(player)
+			end
+			return
+		end
+
 		-- The skip offer comes down the moment the player walks off the pad, and before
 		-- anything else is considered. A panel asking whether to sit today's lesson,
 		-- still up while its owner is halfway across town, is the game talking about a
 		-- building that is no longer in front of them.
 		local door = doors[player]
 		if door ~= nil then
-			local at = attendAt
-			local away = position == nil
-				or at == nil
-				or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds
-			if away then
+			if walkedOff then
 				doors[player] = nil
 				push(player)
 			end
@@ -1264,6 +1478,18 @@ local function tickPlayer(player: Player, elapsed: number)
 
 		local at = attendAt
 		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
+			return
+		end
+
+		-- Handing the card over, and deliberately *above* the refusal below rather than
+		-- after it. The two most likely refusals at this moment are "you have had your
+		-- lessons this year" and "you are done with school" -- which are exactly the states
+		-- the owner of an uncollected card is most likely to be in. A card collectable only
+		-- on a day you may also sit a lesson is a card the last year of school never
+		-- delivers, and the final year is the one whose card matters most.
+		if data.pendingReport ~= nil then
+			cards[player] = true
+			pushCard(player)
 			return
 		end
 
@@ -1358,6 +1584,53 @@ local function forget(player: Player)
 	notices[player] = nil
 	doors[player] = nil
 	pushed[player] = nil
+	-- Only the *held* card, never the staged one. `data.pendingReport` is the player's
+	-- record and survives a logout on purpose -- what is dropped here is the fact that they
+	-- happened to be standing at the school reading it. The new-life path clears the record
+	-- itself, separately, through Report.Clear.
+	cards[player] = nil
+	pushedCards[player] = nil
+end
+
+-- The player pressed Continue. The one thing that puts a card away for good.
+--
+-- Carries the year it was pressed on, which is the only thing a client has to say about a
+-- card -- there is exactly one pressable row, so *which row* is not a question. The year
+-- is here for the race a lesson answer's question index is here for: a birthday landing
+-- while a card is on screen stages a new one and swaps the panel underneath the player, and
+-- a press already in flight from the old card would otherwise clear the new one unread.
+-- One year of school, silently thrown away, in the one window where the game was talking
+-- over itself.
+local function onCardRead(player: Player, ageYears: unknown)
+	if not cards[player] then
+		-- No card in front of them. A stale press from a panel that came down while the
+		-- click was in flight, and there is nothing to say about it: the thing the player
+		-- wanted -- the card gone -- has already happened.
+		return
+	end
+
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+	local report = data.pendingReport
+	if report == nil then
+		cards[player] = nil
+		pushCard(player)
+		return
+	end
+	if ageYears ~= report.ageYears then
+		-- Answering a card that is no longer the one staged. Left standing rather than
+		-- refused out loud: the new card is already on screen in front of them, and a
+		-- notice explaining a race would be the game apologizing for something the player
+		-- never saw.
+		return
+	end
+
+	cards[player] = nil
+	data.pendingReport = nil
+	pushCard(player)
 end
 
 -- A birthday. The year's lessons refill, and a year nobody turned up to is charged
@@ -1391,6 +1664,18 @@ function SchoolService.OnAgeUp(player: Player)
 
 	data.lessonsThisYear = 0
 
+	-- Closes the year and stages its card, before the penalty below is charged and told.
+	-- Order matters in one direction only: `missed` has to be read before `lessonsThisYear`
+	-- is reset, which it is. The card itself is not handed over here -- it waits on the
+	-- profile until the player next stands at the school, which is the whole delivery
+	-- decision for this feature. See the block in tickPlayer.
+	--
+	-- Fires on every birthday, including the ones outside school age, because CloseYear is
+	-- what decides that: it wipes the year's lessons either way and only writes a grade for
+	-- a year that was a school year. Skipping the call for a five-year-old would leave a
+	-- half-year of nursery lessons on the record to be folded into the first real card.
+	Report.CloseYear(data, yearJustEnded, missed)
+
 	-- Any skip offer standing at the door is now about last year's timetable. The subject
 	-- on today is keyed on the age and the lessons already sat, and a birthday moves both
 	-- -- so an offer left up would name one subject and start another.
@@ -1419,6 +1704,12 @@ function SchoolService.ResetForNewLife(player: Player)
 		local data = Lives.Active(profile.Data)
 		data.lessonsThisYear = 0
 
+		-- The whole record, not just the year in progress. A new child holding somebody
+		-- else's report card, or a record line claiming three years they never lived, is the
+		-- kind of bug that reads as the save system being broken rather than as school
+		-- being wrong.
+		Report.Clear(data)
+
 		-- Every subject, not just the ones on today's timetable. Cleared by walking the
 		-- stored tables rather than the curriculum, because a life may hold mastery in a
 		-- subject that has since been taken off it -- and a subject that is not cleared is
@@ -1441,6 +1732,9 @@ function SchoolService.ResetForNewLife(player: Player)
 		end
 	end
 	push(player)
+	-- Takes down a card that was on screen when the life ended. `forget` has already
+	-- dropped the digest, so this pushes nil rather than being deduplicated away.
+	pushCard(player)
 end
 
 -- Studio harness: sits a lesson wherever the player is standing, skipping the walk to
@@ -1472,7 +1766,7 @@ function SchoolService.ForceStart(player: Player): (boolean, string?)
 	-- The room becomes wherever they are standing, so walking away still ends the
 	-- lesson and the radius is still the radius. The same trick, and the same honesty
 	-- about it, as clocking on where you stand.
-	if not begin(player, Lives.Active(profile.Data), position) then
+	if not beginLesson(player, Lives.Active(profile.Data), position) then
 		return false, "could not place the answers here"
 	end
 	return true, nil
@@ -1503,6 +1797,47 @@ function SchoolService.SetLessonsThisYear(player: Player, count: number): boolea
 	Lives.Active(profile.Data).lessonsThisYear = math.min(math.floor(count), SCHOOL.LessonsPerYear)
 	push(player)
 	return true
+end
+
+-- Studio harness: closes the school year on the spot and stages its card.
+--
+-- The card is otherwise only reachable by sitting lessons and then waiting out a birthday,
+-- which at the real year length is minutes per card and a whole childhood to see a full
+-- record line. This runs the same CloseYear the birthday runs, on the year the player is
+-- actually in, so what it stages is a real card and not a mock one -- a harness that built
+-- its own card would be testing itself.
+--
+-- Not delivered here. It goes onto the profile exactly as a birthday's would, and the
+-- player still has to walk to the school for it, because *that walk is the feature* and a
+-- command that skipped it could not test it.
+function SchoolService.StageReportCard(player: Player): (boolean, string?)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false, "no profile loaded"
+	end
+	local data = Lives.Active(profile.Data)
+	local ageYears = ageYearsOf(data)
+
+	if ageYears < SCHOOL.StartAge or ageYears > SCHOOL.EndAge then
+		-- Refused by name rather than staging nothing and reporting success. CloseYear
+		-- would drop it silently, and a command that prints "ok" and produces no card is
+		-- the harness lying about the system it exists to explain.
+		return false, `age {ageYears} is outside school (ages {SCHOOL.StartAge} to {SCHOOL.EndAge})`
+	end
+
+	-- Same reading of "missed" the birthday uses, minus the in-progress-lesson clause: this
+	-- is being run deliberately, and refusing it because a lesson happens to be open would
+	-- make the command depend on where the player is standing.
+	local missed = data.lessonsThisYear == 0
+	if not Report.CloseYear(data, ageYears, missed) then
+		return false, "no year to close -- no lessons sat and the year is not counted as missed"
+	end
+
+	data.lessonsThisYear = 0
+	-- The offer at the door is keyed on lessons already sat, which has just moved.
+	doors[player] = nil
+	push(player)
+	return true, nil
 end
 
 -- Studio harness: sets mastery in any subject directly.
@@ -1610,8 +1945,19 @@ function SchoolService.Describe(player: Player): string
 	local door = doors[player]
 	local offer = if door ~= nil then `offering the skip on {door.subjectId}` else "no offer up"
 
+	-- The staged card and the held one said separately, because the two states they tell
+	-- apart are the ones worth being able to tell apart: a card waiting on the profile that
+	-- the player has not walked to the school for, versus one on screen in front of them.
+	-- "Nothing is happening" looks the same from inside the game in both cases.
+	local report = data.pendingReport
+	local cardLine = if report == nil
+		then `no card staged, {#data.schoolGrades} year(s) on the record`
+		else `card staged for age {report.ageYears} "{report.grade}" ({#report.lessons} lesson(s)), `
+			.. `{if cards[player] then "in hand" else "not collected"}, `
+			.. `{#data.schoolGrades} year(s) on the record`
+
 	return string.format(
-		"school: %s | %s | age %d, %d/%d lessons this year, %d questions written for this age | %s | %s | %s | %s | %s",
+		"school: %s | %s | age %d, %d/%d lessons this year, %d questions written for this age | %s | %s | %s | %s | %s | %s",
 		if enabled then "enabled" else "DISABLED",
 		where,
 		ageYearsOf(data),
@@ -1622,7 +1968,8 @@ function SchoolService.Describe(player: Player): string
 		running,
 		teacherLine,
 		table.concat(ladder, ", "),
-		offer
+		offer,
+		cardLine
 	)
 end
 
@@ -1645,6 +1992,13 @@ function SchoolService:Start()
 		local ok, err = pcall(onAnswerRequested, player, index, answerId)
 		if not ok then
 			warn(`[AGES] lesson answer failed for {player.Name}: {err}`)
+		end
+	end)
+
+	RequestReportCardReadRemote.OnServerEvent:Connect(function(player: Player, ageYears: unknown)
+		local ok, err = pcall(onCardRead, player, ageYears)
+		if not ok then
+			warn(`[AGES] report card read failed for {player.Name}: {err}`)
 		end
 	end)
 

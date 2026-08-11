@@ -341,6 +341,133 @@ def check_decl_order(files, code):
     return bad
 
 
+# Names a file may call without defining: the Lua and Roblox globals. Anything not on
+# this list and not defined in the file is a global lookup that yields nil.
+#
+# Deliberately short. The library tables -- math, string, table, task, os, bit32, utf8,
+# coroutine, debug, buffer, Enum, Instance, Vector3, CFrame -- are absent on purpose: they
+# are only ever *called through* a field (`task.wait`, `Instance.new`), and a field access
+# is filtered out before the whitelist is consulted. A bare `math(` would be a bug.
+LUA_GLOBALS = {
+    "assert", "collectgarbage", "error", "getfenv", "getmetatable", "ipairs",
+    "loadstring", "newproxy", "next", "pairs", "pcall", "print", "rawequal", "rawget",
+    "rawlen", "rawset", "require", "select", "setfenv", "setmetatable", "tonumber",
+    "tostring", "type", "typeof", "unpack", "xpcall",
+    # Roblox's additions to the global table.
+    "delay", "spawn", "tick", "time", "wait", "warn", "elapsedTime", "settings", "version",
+}
+
+# Words that can legally sit immediately before a `(` without being a call.
+LUA_KEYWORDS = {
+    "and", "break", "continue", "do", "else", "elseif", "end", "export", "false", "for",
+    "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then",
+    "true", "until", "while",
+}
+
+
+def _balanced(text: str, start: int) -> int:
+    """Index just past the `)` matching the `(` at `start`."""
+    depth, i, n = 0, start, len(text)
+    while i < n:
+        if text[i] == "(":
+            depth += 1
+        elif text[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return n
+
+
+def _split_top(text: str) -> list[str]:
+    """Split on commas that are not inside brackets."""
+    parts, depth, current = [], 0, []
+    for c in text:
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        if c == "," and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(c)
+    parts.append("".join(current))
+    return parts
+
+
+def _defined_names(t: str) -> set[str]:
+    """Every name this file binds: locals, parameters, loop variables, globals it writes."""
+    names: set[str] = set()
+
+    # `local a, b: T = ...` and `local function f`. The whole list, not just the first
+    # name -- a second name on a `local` line is as bound as the first.
+    for m in re.finditer(r"(?<![.:\w])local\s+(?:function\s+)?([^=\n]+)", t):
+        for part in _split_top(m.group(1)):
+            hit = re.match(r"\s*([A-Za-z_]\w*)", part)
+            if hit:
+                names.add(hit.group(1))
+
+    # Parameters, scanned with balanced brackets rather than `[^)]*` because a parameter
+    # can be typed as a function -- `callback: (id: string) -> ()` -- and a naive scan
+    # stops at the first `)` and loses every parameter after it.
+    for m in re.finditer(r"(?<![.:\w])function\b", t):
+        open_at = t.find("(", m.end())
+        if open_at == -1:
+            continue
+        # Only if the `(` really belongs to this `function`: nothing but a name, dots,
+        # colons and space may sit between them.
+        if not re.fullmatch(r"\s*[\w.:]*\s*", t[m.end() : open_at]):
+            continue
+        for part in _split_top(t[open_at + 1 : _balanced(t, open_at) - 1]):
+            hit = re.match(r"\s*([A-Za-z_]\w*)", part)
+            if hit:
+                names.add(hit.group(1))
+
+    # Loop variables, both forms.
+    for m in re.finditer(r"(?<![.:\w])for\s+([A-Za-z_][\w\s,]*?)\s*(?:=|\bin\b)", t):
+        for part in m.group(1).split(","):
+            names.add(part.strip())
+
+    # A plain `name = ...` binds a global if there is no local in scope, and either way
+    # the file has said what it means by that name. Counted so this check reports only
+    # names the file never mentions on the left of anything.
+    for m in re.finditer(r"(?<![.:\w=~<>])([A-Za-z_]\w*)\s*(?:,\s*[A-Za-z_]\w*\s*)*=(?!=)", t):
+        names.add(m.group(1))
+
+    return names
+
+
+def check_undefined_calls(files, code):
+    """A call to a name the file never defines. The other half of the nil-call bug.
+
+    `check_decl_order` catches a local called *above* its own `local function`. It cannot
+    catch a call to a name that is not in the file at all -- which is what a rename leaves
+    behind, and this exact defect shipped: part two of the school rebuild renamed `begin`
+    to `beginLesson` and missed the call in `ForceStart`. Legal Luau, so the syntax check
+    passed; `rojo build` never parses; and the symptom would have been `/school start`
+    dying on "attempt to call a nil value" while every other path in the file worked.
+
+    Reports only calls, for the reason `check_decl_order` gives: a bare reference needs
+    scope analysis this has none of. Over-collecting bound names is the safe direction --
+    it can only hide a bug, never invent one -- so parameters, loop variables and plain
+    assignments all count as definitions even where a real parser would scope them out.
+    """
+    bad = 0
+    for f in files:
+        t = code[f]
+        names = _defined_names(t)
+        seen: set[str] = set()
+        for m in re.finditer(r"(?<![.:\w])([A-Za-z_]\w*)\s*\(", t):
+            name = m.group(1)
+            if name in seen or name in names or name in LUA_GLOBALS or name in LUA_KEYWORDS:
+                continue
+            seen.add(name)
+            print(f"  {f.relative_to(ROOT)}:{line_of(t, m.start())}  {name} is called but never defined")
+            bad += 1
+    return bad
+
+
 CHECKS = [
     ("syntax (luau-compile)", check_compile),
     ("both places build (rojo)", check_builds),
@@ -349,6 +476,7 @@ CHECKS = [
     ("remote name consistency", check_remotes),
     ("unused locals", check_unused_locals),
     ("declaration order", check_decl_order),
+    ("calls to undefined names", check_undefined_calls),
 ]
 
 

@@ -808,6 +808,13 @@ end
 --                             on the birthday, and only inside the school ages.
 --   /school start then walk off
 --                             the room radius should end it and grade what was answered.
+--   /school card              closes the year on the spot and stages its card. The card
+--                             is *not* handed over here -- walk to the school for it,
+--                             because that walk is the feature. Run it three times with
+--                             /ageup in between to see the record line grow.
+--   /school card with no lessons sat
+--                             the absent card: three empty slots naming the subjects that
+--                             were on, and a year graded "never turned up".
 --   /school off               the whole system dark, for telling a school bug apart from
 --                             a places or a body one.
 Commands.school = function(player: Player, args: { string }): string
@@ -840,6 +847,17 @@ Commands.school = function(player: Player, args: { string }): string
 		return `lesson graded — {SchoolService.Describe(player)}`
 	end
 
+	if arg == "card" then
+		local ok, refusal = SchoolService.StageReportCard(player)
+		if not ok then
+			return `no card staged: {refusal or "no reason given"} — {SchoolService.Describe(player)}`
+		end
+		-- Says where it is, because the one thing that looks like a bug here is the command
+		-- working and nothing appearing. It is on the profile; the school is where it is
+		-- read.
+		return `card staged — walk to the school to collect it. {SchoolService.Describe(player)}`
+	end
+
 	if arg == "year" then
 		local count = tonumber(args[2])
 		if count == nil or not SchoolService.SetLessonsThisYear(player, count) then
@@ -870,7 +888,8 @@ Commands.school = function(player: Player, args: { string }): string
 		return SchoolService.Describe(player)
 	end
 
-	return `usage: /school [start|end|year <n>|mastery <subject> <n>|on|off] — {SchoolService.Describe(player)}`
+	return `usage: /school [start|end|card|year <n>|mastery <subject> <n>|on|off]`
+		.. ` — {SchoolService.Describe(player)}`
 end
 
 -- Everything about the Science lab, on one command.
@@ -1674,7 +1693,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
-	.. "/school [start|end|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
+	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
 	.. "/gym [start|end|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "

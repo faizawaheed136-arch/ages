@@ -664,6 +664,62 @@ export type SchoolSubject = {
 	maxAge: number,
 }
 
+-- One lesson as the record remembers it. Written the moment a lesson ends -- by whichever
+-- verb ended it -- and read once, on the card handed over at the start of the next year.
+--
+-- It stores what was decided rather than what it was decided from. The band is the word
+-- the verb already graded itself with and the smarts are what it already paid, so a card
+-- can never contradict the closing line the player read at the time: there is no second
+-- calculation here to disagree with the first.
+export type SchoolLessonRecord = {
+	subjectId: string,
+	-- One of school/Report's four: good, ok, poor, skipped. A plain string rather than a
+	-- union because it is written to a save file, and a saved life holding a band this
+	-- build has never heard of has to load rather than fail to type-check.
+	band: string,
+	smarts: number,
+	-- The mastery rung this lesson promoted the subject to, or absent if it promoted
+	-- nothing. Only the promotion, never the standing level -- see Report.RecordLesson.
+	level: number?,
+}
+
+-- A school year that has ended, named. `lessons` is the year's record; the grade is what
+-- Report.GradeFor made of it.
+export type SchoolYearRecord = {
+	ageYears: number,
+	grade: string,
+	lessons: { SchoolLessonRecord },
+}
+
+-- One line of the school history: an age and what that year came to. The lessons are
+-- deliberately not kept -- twelve years of five-field records on every profile, to draw a
+-- line that counts them, is a save file paying for detail nothing reads.
+export type SchoolYearGrade = {
+	ageYears: number,
+	grade: string,
+}
+
+-- The card itself, on its way to the player. Composed entirely on the server, the way a
+-- Notice is: every string on it is finished prose, and the client's whole job is to put
+-- it on the panel.
+--
+-- The rows are already panel-shaped rather than being facts for the client to lay out.
+-- That is the same call `LessonState.answers` makes and for the same reason: what a row
+-- looks like when you read it is one decision, made once, and a card that laid its own
+-- rows out would be a second place for it to be made differently.
+export type ReportCard = {
+	-- The age the reported year ended at. Echoed back on the acknowledgement so a press
+	-- landing after a birthday cannot clear a card it was never shown.
+	ageYears: number,
+	title: string,
+	-- One locked row per lesson slot -- including the empty ones, which is most of what a
+	-- bad year's card has to say -- and one row at the bottom that is not locked, which is
+	-- the press that puts the card away.
+	rows: { OfferedChoice },
+	-- The muted line under the rows: what this life is close to, and what its record is.
+	footnote: string,
+}
+
 -- One step of a Science procedure: go to this station, do the thing it does.
 --
 -- A step is a station id and nothing else at authoring time. There is no "how" here on
@@ -1767,6 +1823,35 @@ export type LifeData = {
 	-- different places and a level is a thing the player is told about once. Absent keys
 	-- read as zero.
 	subjectPasses: { [string]: number },
+	-- The lessons sat so far in the year currently running, in the order they happened.
+	-- Emptied by every birthday, into the card that birthday stages.
+	--
+	-- Distinct from `lessonsThisYear`, which counts the same afternoons and is what the
+	-- yearly cap and the missed-year penalty read. A count cannot be reported on: it
+	-- cannot say which subject, or how it went, or that the year had two good lessons and
+	-- an empty slot rather than three mediocre ones. Both exist because both are read, and
+	-- the count is the one the rules run on precisely so a change to what a card shows can
+	-- never move what school charges.
+	schoolYear: { SchoolLessonRecord },
+	-- Every school year this life has finished, named. Twelve entries at most.
+	--
+	-- Written once a birthday and never rewritten, because a year that is over is over --
+	-- this is the only field in school that is a history rather than a state. Read today
+	-- by the card, which counts it into the record line, and it is what an end-of-life
+	-- verdict will have to read: a grade is reconstructible from nothing once the year has
+	-- passed, so a build that fails to write it as it happens can never recover it.
+	schoolGrades: { SchoolYearGrade },
+	-- A card that has been staged and not yet handed over, or absent when there is none.
+	--
+	-- Absent means "nothing to collect", on the same absent-means-something idiom as
+	-- `pendingEventId` -- which is why it is deliberately missing from Lives.New's table
+	-- rather than being written there as nil.
+	--
+	-- Durable rather than transient because the card is collected at the school, at a
+	-- moment of the player's choosing, which may be a week and two sessions after the
+	-- birthday that wrote it. A card held only in memory would be a year's verdict that
+	-- quietly evaporated if you logged off on your birthday.
+	pendingReport: SchoolYearRecord?,
 	-- How each person you know feels about you, keyed by person id, between
 	-- People.MinBond and People.MaxBond.
 	--

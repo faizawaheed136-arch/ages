@@ -93,6 +93,16 @@ function Lives.New(): LifeData
 		-- procedure, because until now there were none to run.
 		subjectMastery = {},
 		subjectPasses = {},
+		-- Empty, which reads as "no lessons yet this year" and "no year finished yet" --
+		-- true of the newborn, and the right thing to hand a save written before the record
+		-- existed. That life's school years genuinely have no verdict: they were lived by a
+		-- build that was not keeping one, and inventing grades for them here would be the
+		-- game making up a childhood it did not watch.
+		--
+		-- `pendingReport` is intentionally absent, and the absence is the meaning: nothing
+		-- staged, nothing to collect at the school.
+		schoolYear = {},
+		schoolGrades = {},
 		-- Empty for a newborn, who has met nobody yet, and empty is also the honest thing to
 		-- hand a save written before people existed. An absent key is "not met", and the
 		-- authored starting bond is written the first time anything moves -- so a stored life's

@@ -243,10 +243,18 @@ export type PanelContent = {
 	key: string,
 	prompt: string,
 	options: { PanelOption },
-	-- A line under the prompt telling the player how to answer, for the rare list
-	-- whose rows are not the interface -- a physical lesson's answers are discs on
-	-- the floor, so its rows arrive locked and this is what says so. Read the way a
-	-- banner's hint is: an instruction, muted against the fiction.
+	-- The muted line under the choices. Two jobs, and they are the same shape so they
+	-- share a slot rather than a second label:
+	--
+	--   * an instruction, for the rare list whose rows are not the interface -- a physical
+	--     lesson's answers are discs on the floor, so its rows arrive locked and this is
+	--     what says so.
+	--   * a footnote, for a list that is a *statement* rather than a question -- a report
+	--     card's rows are all locked and the line under them is what the year came to.
+	--
+	-- Multi-line prose is fine: the label wraps and grows. Read the way a banner's hint is,
+	-- muted against the fiction, which suits both -- neither is the thing being said, both
+	-- are said quietly underneath it.
 	hint: string?,
 	-- Open in the PhoneCall voice rather than Interact: narrow, barely dimmed, blue
 	-- accents -- the room stays visible because the player is still standing in it

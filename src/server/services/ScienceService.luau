@@ -53,6 +53,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Stations = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("Stations"))
 local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Mastery"))
+local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
@@ -122,6 +123,12 @@ type Session = {
 	charges: number,
 	level: number,
 	passes: number,
+	-- The rung this life was on when the session opened, kept so the closing line can say
+	-- whether the lab moved it. Snapshotted at Begin and never rewritten, unlike `level`,
+	-- which tracks the live figure for the board -- commitBench writes mastery as each
+	-- bench is committed, so a "before" read taken inside `finish` would already include
+	-- the promotion it is trying to detect.
+	levelAtStart: number,
 	-- Seconds of standing at the cupboard banked toward a refill. Reset the moment the
 	-- player steps away, on purpose: a refill you can start and come back to is two half
 	-- trips, and the trip is the mechanic.
@@ -481,14 +488,13 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	end
 	local share = if #session.benches > 0 then total / #session.benches else 0
 
-	local gained: number
-	if share >= SCHOOL.GoodShare then
-		gained = SCHOOL.SmartsPerGoodLesson
-	elseif share >= SCHOOL.OkShare then
-		gained = SCHOOL.SmartsPerOkLesson
-	else
-		gained = SCHOOL.SmartsPerPoorLesson
-	end
+	-- Graded through Report rather than against SCHOOL's thresholds directly, which is the
+	-- whole reason Report is shared. A lab and a quiz are two ways of spending the same
+	-- afternoon, and the day these two files disagreed about what a good one was would be
+	-- the day the report card and the lesson's own closing line said different things about
+	-- it.
+	local band = Report.BandFor(share)
+	local gained = Report.SmartsFor(band)
 
 	if gained ~= 0 then
 		StatService.AddStat(player, "smarts", gained)
@@ -503,6 +509,16 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	-- otherwise a player could start, leave, and start again until they drew a procedure
 	-- they liked.
 	data.lessonsThisYear += 1
+
+	-- Onto the year's record, so an afternoon in the lab appears on the report card as the
+	-- lesson it was. Written after the count moves and after mastery has settled, so the
+	-- rung passed in is the one the session actually finished on.
+	--
+	-- The promotion is reported only when the lab moved it, which is what `levelAtStart` is
+	-- for: a card line reading "Science, level 3" against a session that ended on the rung
+	-- it began on would read as though this afternoon had earned it.
+	local level = levelOf(data)
+	Report.RecordLesson(data, SUBJECT_ID, band, gained, if level > session.levelAtStart then level else nil)
 
 	local percent = math.floor(share * 100 + 0.5)
 	local reward = if gained > 0 then `. +{gained} smarts.` else "."
@@ -572,6 +588,7 @@ function ScienceService.Begin(player: Player, data: LifeData): (boolean, string?
 		charges = SCIENCE.SupplyCharges,
 		level = levelOf(data),
 		passes = passesOf(data),
+		levelAtStart = levelOf(data),
 		refillHeld = 0,
 		pool = pool,
 		benchesMax = SCIENCE.Benches,

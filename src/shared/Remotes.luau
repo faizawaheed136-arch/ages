@@ -116,6 +116,18 @@ export type RemoteName =
 	-- and the only irreversible thing in the verb: everything before it can be taken
 	-- back and nothing after it can.
 	| "RequestLabCommit"
+	-- The report card waiting at the school, or nil when there is none.
+	--
+	-- Its own remote rather than a fifth thing on LessonUpdated, and the restraint is
+	-- deliberate: that channel already carries a question, a verdict, a notice and a skip
+	-- offer, told apart by which of its numbers are zero. A card is a different shape --
+	-- rows that are not answers, prose that is not a question, and no clock at all -- and
+	-- a fifth tenant told apart by yet another zero is how a channel stops being readable.
+	| "ReportCardUpdated"
+	-- "I have read it." Carries the age the card was about, which the server checks
+	-- against the card it actually staged -- so a press that lands after a birthday has
+	-- replaced the card cannot put away a year the player has not seen.
+	| "RequestReportCardRead"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -307,6 +319,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestLabStep",
 	"RequestLabUndo",
 	"RequestLabCommit",
+	"ReportCardUpdated",
+	"RequestReportCardRead",
 }
 
 local FOLDER_NAME = "RemoteEvents"

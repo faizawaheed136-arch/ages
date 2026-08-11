@@ -62,11 +62,11 @@ reported as "builds clean" has not been type-checked.
 
 **Run `python3 tools/check.py` from the repo root.** It does everything in this section
 in one pass — syntax, both builds, dangling Config refs, require cycles, remote-name
-consistency, unused locals, declaration order — and exits non-zero if anything is wrong.
-Run it before you hand any change over. The rest of this section is what it does and why,
-which matters when it reports something.
+consistency, unused locals, declaration order, calls to undefined names — and exits
+non-zero if anything is wrong. Run it before you hand any change over. The rest of this
+section is what it does and why, which matters when it reports something.
 
-Two things it has already caught that nothing else could:
+Three things it has already caught that nothing else could:
 
 - `schoolFolder()` called forty lines above its `local function`, which is a *global* read
   in Lua and therefore nil. Legal Luau, so the syntax check passed; `rojo build` never
@@ -74,6 +74,10 @@ Two things it has already caught that nothing else could:
   nil value" the first time a teacher spawned.
 - Two remote names in `REMOTE_NAMES` and missing from the `RemoteName` union. Compiles,
   builds, and works at runtime — only the analyzer objects, which means only Studio does.
+- `begin(player, ...)` left behind in `SchoolService.ForceStart` after the function was
+  renamed to `beginLesson`. Same nil-call class as the first, but the name is nowhere in
+  the file at all, so the declaration-order check could never see it. It shipped, and
+  `/school start` would have died the first time it ran.
 
 It is deliberately not a linter. Every check in it is there because that exact defect
 already shipped into this tree at least once, and anything that produced false positives
@@ -116,6 +120,13 @@ Then `rojo build` plus a Python pass over `src/`:
 3. **Declaration order** — a local function used above its definition. Regex
    `(?<![.:\w])name\s*\(`, and it **must strip `--` comments first** or it reports
    prose as calls.
+4. **Calls to undefined names** — the same nil call, but to a name the file never binds
+   at all, which is what a half-finished rename leaves behind. Collect every name the
+   file binds (locals, parameters, loop variables, plain assignments), then report any
+   `name(` that is not one of them, not a Lua/Roblox global and not a keyword. Parameter
+   lists must be scanned with balanced brackets — a parameter typed as a function,
+   `callback: (id: string) -> ()`, defeats a `[^)]*` scan and loses every parameter
+   after it, which reads as a false positive on a perfectly good call.
 
 Also worth doing by hand: grep every consumer of a field you changed. A field that
 is written and never read is orphaned code, and the build will not tell you.

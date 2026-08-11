@@ -31,6 +31,7 @@ type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
 type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
+type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
 -- retries for a few frames instead of giving up on the first attempt.
@@ -75,6 +76,7 @@ local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
 local RequestPersonOfferRemote = Remotes.Get("RequestPersonOffer")
 local RequestPersonContactRemote = Remotes.Get("RequestPersonContact")
 local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
+local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local RequestStartWorkoutRemote = Remotes.Get("RequestStartWorkout")
 local RequestRepRemote = Remotes.Get("RequestRep")
@@ -212,6 +214,51 @@ local function drawLessonPanel(state: LessonState?)
 	end
 end
 
+-- Last year's report card, handed over at the school. The one panel in the game that is
+-- not a question: every row but the last is locked, because the rows *are* the news --
+-- what was on, how it went, what it paid -- and the only thing to press is the one that
+-- says you have read it.
+--
+-- Keyed on the year rather than on the card, so a birthday landing while the previous
+-- year's card is still on screen replaces it rather than being swallowed by an open key
+-- that happens to match. Held for the same reason every other panel key here is held:
+-- taking the panel down has to name what it is taking down, and an event can have arrived
+-- over the top in between.
+local reportPanelKey: string? = nil
+
+local function drawReportCard(card: ReportCard?)
+	local wanted = if card ~= nil then `report:{card.ageYears}` else nil
+
+	local open = reportPanelKey
+	if open ~= nil and open ~= wanted then
+		panel:CloseOptions(open)
+		reportPanelKey = nil
+	end
+
+	if card == nil or wanted == nil or reportPanelKey == wanted then
+		return
+	end
+
+	if panel:ShowOptions({
+		key = wanted,
+		prompt = card.title,
+		options = card.rows,
+		-- Empty for a first card, which has no record behind it and nothing close --
+		-- passed as nil rather than as a blank string so the label is hidden rather than
+		-- reserving a line of nothing under the rows.
+		hint = if card.footnote ~= "" then card.footnote else nil,
+		-- The row id is not sent, because there is only one pressable row and "which"
+		-- is not a question. The *year* is, and the server checks it against the card it
+		-- has staged: a birthday landing while this panel is up replaces the card, and a
+		-- press already on its way from the old one must not clear the new one unread.
+		choose = function()
+			RequestReportCardReadRemote:FireServer(card.ageYears)
+		end,
+	}) then
+		reportPanelKey = wanted
+	end
+end
+
 -- A conversation that has no body to walk to: the person was called from the roster,
 -- so it opens in the phone's voice rather than as somebody standing in the room. Same
 -- offers, same answers -- the phone is a window, not a different person.
@@ -250,19 +297,6 @@ local function drawPhonePanel(state: PersonState)
 		phonePanelKey = key
 	end
 end
-
--- The phone panel can be closed by things that are not the phone -- a lesson push, an
--- event, a death -- and those do not carry a phone-specific close signal. `OnHidden`
--- fires on any full teardown, which is the one case where the remembered key would
--- otherwise sit stale and swallow the next call's panel.
-panel:OnHidden(function(key: string)
-	if phonePanelKey ~= nil and phonePanelKey == key then
-		phonePanelKey = nil
-	end
-	if workoutPanelKey ~= nil and workoutPanelKey == key then
-		workoutPanelKey = nil
-	end
-end)
 
 -- The workout offer panel, which opens when the player stands near a machine
 -- that is not capped. Closed by pressing Start (server validates proximity
@@ -308,6 +342,29 @@ local function drawWorkoutPanel(state: WorkoutState?)
 		workoutPanelKey = wanted
 	end
 end
+
+-- A panel can be closed by something that is not the thing that opened it -- a lesson
+-- push, an event, a death -- and none of those carry a close signal the phone, the workout
+-- or the report card would recognize. `OnHidden` fires on any full teardown, which is the
+-- one case where a remembered key would otherwise sit stale and silently swallow the next
+-- push that wanted the panel.
+--
+-- **Deliberately placed below every key it clears, and this is not a style choice.** A name
+-- used with no `local` in scope compiles to a *global* read in Lua rather than an error, so
+-- when this block sat above `workoutPanelKey` it read a global that was always nil, the
+-- workout branch never once ran, and the exact staleness this exists to prevent was live
+-- the whole time. Nothing warns about it. Any key added here has to be declared above.
+panel:OnHidden(function(key: string)
+	if phonePanelKey ~= nil and phonePanelKey == key then
+		phonePanelKey = nil
+	end
+	if workoutPanelKey ~= nil and workoutPanelKey == key then
+		workoutPanelKey = nil
+	end
+	if reportPanelKey ~= nil and reportPanelKey == key then
+		reportPanelKey = nil
+	end
+end)
 
 Remotes.Get("EventOffered").OnClientEvent:Connect(function(offered: OfferedEvent)
 	panel:Show(offered)
@@ -392,6 +449,18 @@ end)
 Remotes.Get("LessonUpdated").OnClientEvent:Connect(function(state: LessonState?)
 	ui:SetLesson(state)
 	drawLessonPanel(state)
+end)
+
+-- The report card, raised and taken down entirely by the server: it goes up when the
+-- player is standing at the school with an uncollected one, and comes down when they press
+-- Continue or walk off. Nothing on this client asks for it -- there is nothing to click,
+-- because arriving is the click.
+--
+-- No HUD half to go with it, unlike a lesson or a workout. A card is a thing you read once
+-- and are finished with; a row saying "you have a report card" would still be there three
+-- years later, which is what a HUD row is for and this is not.
+Remotes.Get("ReportCardUpdated").OnClientEvent:Connect(function(card: ReportCard?)
+	drawReportCard(card)
 end)
 
 -- The workout in progress, or an offer to start one. Two halves of one thing:
@@ -499,6 +568,7 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	lessonPanelKey = nil
 	phonePanelKey = nil
 	workoutPanelKey = nil
+	reportPanelKey = nil
 	ui:ShowDeath(ageYears)
 end)
 
