@@ -127,6 +127,22 @@ function Lives.New(): LifeData
 		-- every other one, which is to say it has to cost time.
 		bounty = 0,
 		convictions = 0,
+		-- `gangId`, `gangRankId` and `leftGangAt` are all intentionally absent, and the
+		-- absence is the meaning in each case: runs with nobody, holds no rung, has never
+		-- walked away from one. Because Reconcile fills a stored life from exactly this
+		-- table, a field that is not here is one it can never wrongly invent -- so a save
+		-- written before gangs existed cannot arrive already in one, which is the only
+		-- direction these three would be dangerous to be wrong in.
+		--
+		-- Empty, which reads as "no gang has an opinion of you yet" -- true of the newborn,
+		-- and the right thing to hand an old save: that life's standing starts being kept
+		-- from now rather than being back-paid for crimes nobody was counting.
+		gangStanding = {},
+		-- False rather than absent, because unlike the three above this one is read on
+		-- every tick and an absent boolean would be a nil compared against `true` -- legal,
+		-- silent, and wrong only for the lives that predate the field. False is also
+		-- correct: a life not in a gang is not wearing anybody's colors.
+		wearingColors = false,
 	}
 end
 
@@ -211,6 +227,33 @@ function Lives.SuspicionMultiplier(life: LifeData): number
 		return 1
 	end
 	return Config.Crime.Record.SuspicionMultiplier
+end
+
+-- Whether this life is currently wearing a gang's colors.
+--
+-- Both halves matter and neither implies the other: a member who has taken the band off is
+-- in a gang and not wearing it, and `wearingColors` is only ever true alongside a gang
+-- because taking a band off does not resign. Written as one question because every caller
+-- wants the same one -- is there a bright band on this head right now.
+function Lives.WearingColors(life: LifeData): boolean
+	return life.gangId ~= nil and life.wearingColors
+end
+
+-- How much easier the colors make a life to describe, stacked on top of the record.
+--
+-- Here rather than in GangService for the reason the two above are here: BountyService is
+-- what multiplies heat, and BountyService cannot require GangService without a cycle --
+-- GangService needs the bounty to decide whether somebody got away. This file requires
+-- nothing but Config and Types, so it is the one place both ends can reach.
+--
+-- Multiplied by the caller against the record multiplier rather than folded in here, so
+-- that a life with a record wearing colors is charged for both -- which is correct, and is
+-- the worst possible combination to be walking past a witness in.
+function Lives.ColorsMultiplier(life: LifeData): number
+	if not Lives.WearingColors(life) then
+		return 1
+	end
+	return Config.Gangs.ColorsSuspicion
 end
 
 -- How much higher every job's stat bar sits for this life. Also one for a clean record, for

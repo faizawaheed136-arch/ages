@@ -256,6 +256,16 @@ export type PanelContent = {
 	-- muted against the fiction, which suits both -- neither is the thing being said, both
 	-- are said quietly underneath it.
 	hint: string?,
+	-- Overrides the style's prompt color for this one show, and nothing else on the panel.
+	--
+	-- Added for the gang bosses, who are the first speakers in the game whose words the
+	-- player has to place: four of them say four different things in four different rooms,
+	-- and which gang is talking is the single most useful fact on the panel. Passing their
+	-- color is how a boss sounds like themselves without a second panel style per gang.
+	--
+	-- Optional and nil everywhere else on purpose. A person, a lesson and a report card are
+	-- all one voice each, and a colored line on any of them would be decoration.
+	accent: Color3?,
 	-- Open in the PhoneCall voice rather than Interact: narrow, barely dimmed, blue
 	-- accents -- the room stays visible because the player is still standing in it
 	-- holding a phone.
@@ -618,6 +628,13 @@ function ChoicePanel.ShowOptions(self: ChoicePanelHandle, content: PanelContent)
 
 	local style = if content.phone then DELIVERY_STYLES.PhoneCall else DELIVERY_STYLES.Interact
 	applyStyle(self, style, content.prompt)
+	-- After applyStyle rather than instead of it, which is what makes this safe to leave
+	-- unset: every show reapplies the style's own color first, so a colored gang panel
+	-- cannot leak its accent into the next person who talks.
+	local accent = content.accent
+	if accent ~= nil then
+		self.promptLabel.TextColor3 = accent
+	end
 	buildOptions(self, style, content.options, content.choose)
 
 	-- Muted the way a banner's hint is, so it reads as an instruction rather than as

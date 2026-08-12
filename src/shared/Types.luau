@@ -1298,6 +1298,102 @@ export type TieDef = {
 	limit: number?,
 }
 
+-- One rung of the gang ladder.
+--
+-- Shaped like TieDef above and for the same reasons -- an id, a label you would say out
+-- loud, and a threshold -- but the threshold here means something narrower than it looks.
+-- `standing` is what the rung costs to be *offered*, never what awards it. The rung
+-- itself is handed over by a person, off a panel, in a moment the player chose to walk
+-- into. See the header of Config.Gangs for why that distinction is load-bearing.
+export type GangRankDef = {
+	id: string,
+	-- What goes under your name, lowercase, as somebody would say it: "who calls it".
+	label: string,
+	-- Standing at which the boss will offer this rung. Ascending across the ladder, and
+	-- the first rung is 0 because joining is itself the thing that earned it.
+	standing: number,
+	-- Whether holding this rung anywhere bars you from holding it elsewhere. Only the top
+	-- rung sets it, and it is the same device as TieDef.limit: a rung nobody has to choose
+	-- between is a rung that costs nothing to reach.
+	oneGangOnly: boolean?,
+}
+
+-- One of the four gangs. Content: who they are, what color they wear, and where to find
+-- the person who can let you in.
+export type GangDef = {
+	id: string,
+	-- What players call them. Shown on nameplates and in the panel, so it has to survive
+	-- being read at a glance across a street.
+	name: string,
+	-- The band on every member's head, and the single most important field here. It has to
+	-- be identifiable at fifty studs against asphalt, grass and brick, which is why all
+	-- four are saturated and none of them are close to each other on the wheel.
+	color: Color3,
+	-- Which side of the city they hold. Not read by anything yet -- territory is deferred
+	-- until the map expansion -- but written now because inventing it later would mean
+	-- re-deciding four gangs' identities against streets that already exist.
+	side: string,
+	-- The place point where the person who runs them stands, and the castId of that
+	-- person. Split the same way Person splits placeId from castId, so moving a boss is a
+	-- content edit and not a rebuild.
+	bossPlaceId: string,
+	bossCastId: string,
+	-- One line, in their own voice, shown on the panel that offers to let you in. This is
+	-- the only characterisation four gangs get in part one, so it has to do the work of
+	-- telling them apart beyond the color.
+	pitch: string,
+}
+
+-- What the client draws about the gang you are in, or nil when you are in none.
+export type GangState = {
+	gangId: string,
+	name: string,
+	color: Color3,
+	-- The rung you hold, and the one above it, already resolved to labels so the panel
+	-- never has to know the ladder. `nextLabel` is nil at the top.
+	rankId: string,
+	rankLabel: string,
+	nextLabel: string?,
+	-- Standing you have, and what the next rung is offered at. Both raw so the panel can
+	-- draw a bar without a second opinion about what full means. `nextStanding` is nil at
+	-- the top, which is how the panel knows to draw the bar as done rather than as empty.
+	standing: number,
+	nextStanding: number?,
+	-- Whether the boss would hand you the next rung right now. Not the same as
+	-- `standing >= nextStanding`: the top rung also asks that you hold it nowhere else.
+	-- The panel says "go and see them", so this has to be the server's whole answer.
+	promotable: boolean,
+	-- Whether the colors are currently on your head. False after you take them off, which
+	-- is a thing you would do on purpose and which the panel must not quietly hide.
+	wearing: boolean,
+	-- One line of feedback, cleared after it has been shown. Same device as the notices on
+	-- TheftState and BankState.
+	notice: string?,
+}
+
+-- What the boss standing in front of you is saying, and what you can say back.
+--
+-- Deliberately shaped like the person-chat payload rather than like GangState: this is a
+-- conversation, it lasts as long as you stand there, and it is nil the moment you walk
+-- away. `offers` reuses OfferedChoice so the client draws it with the panel it already
+-- has -- a gang boss is a person with a list, and inventing a second list widget for one
+-- would be two widgets to keep in step.
+export type GangPanel = {
+	gangId: string,
+	name: string,
+	color: Color3,
+	-- Who is talking, so the panel has a name at the top like every other conversation.
+	bossName: string,
+	-- What they say right now: the pitch if you are a stranger, something about your
+	-- standing if you are theirs, something short if you are a rival's.
+	reply: string,
+	-- Whether that line is good news, for the same reason a person's chat carries it: the
+	-- panel tints on it, and having the client guess from the wording would mean the tint
+	-- disagreed with the sentence the first time somebody rewrote a line.
+	replyGood: boolean,
+	offers: { OfferedChoice },
+}
+
 -- Somebody who exists in your life. Content, like a job: who they are, where they
 -- stand, when they are around, and what they are willing to do for you.
 --
@@ -2112,6 +2208,31 @@ export type LifeData = {
 	-- person is not them -- which is also the only clean slate this game offers, and it
 	-- costs exactly what starting again costs.
 	convictions: number,
+	-- Which gang this life runs with, and what rung it holds there. Both absent for the
+	-- overwhelming majority of lives, and the absence is the meaning: not in a gang is not
+	-- a rank called "nobody", it is the field not being there.
+	--
+	-- Two fields rather than one record because they are written at different moments by
+	-- different rules -- the gang is chosen by the player at a panel, the rung is conferred
+	-- by somebody else at a later one -- and a record would invite writing them together.
+	gangId: string?,
+	gangRankId: string?,
+	-- Standing with every gang that has an opinion of you, keyed by gang id. Shaped like
+	-- `jobStanding` and read the same way, and kept per gang rather than only for the one
+	-- you are in for the same reason `bonds` outlive a scene: leaving does not make the
+	-- work you did for them not have happened, and a gang you left at 900 should not
+	-- welcome you back as a stranger.
+	gangStanding: { [string]: number },
+	-- When this life last walked away from a gang, as a life-seconds stamp, or absent if it
+	-- never has. Read only to hold the rejoin window open; a life that has never been in
+	-- one has no window to be inside.
+	leftGangAt: number?,
+	-- Whether the colors are currently on. Persisted rather than session-held because
+	-- taking them off is a decision with a cost attached, and one that a player would
+	-- reasonably expect to survive a respawn -- rediscovering that the game re-dressed you
+	-- in a bright band while you were walking into a bank would be the game undoing a
+	-- choice you made on purpose.
+	wearingColors: boolean,
 	-- Every school year this life has finished, named. Twelve entries at most.
 	--
 	-- Written once a birthday and never rewritten, because a year that is over is over --

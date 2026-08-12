@@ -36,6 +36,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 local BountyService = require(script.Parent.BountyService)
 local DataService = require(script.Parent.DataService)
+local GangService = require(script.Parent.GangService)
 local MoneyService = require(script.Parent.MoneyService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
@@ -383,6 +384,11 @@ local function tickPlayer(player: Player, elapsed: number)
 		drawer.left -= amount
 		session.taken += amount
 		MoneyService.Add(player, amount, `Taken from the {session.name}`)
+		-- Paid per dollar rather than per drawer emptied, so a till abandoned halfway still
+		-- counts for what came out of it. Deliberately small: money is already its own
+		-- reward, and a ladder that paid richly per dollar would make the richest route the
+		-- only route worth walking.
+		GangService.Credit(player, amount * Config.Gangs.Earn.PerMoneyStolen, `emptied the {session.name}`)
 		if drawer.left <= 0 then
 			drawer.refillAt = now + THEFT.RefillSeconds
 		end

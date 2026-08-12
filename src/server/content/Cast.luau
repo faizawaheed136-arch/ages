@@ -89,6 +89,73 @@ local Cast: { CastMember } = {
 		pantsAssetId = 0,
 		hairAssetId = 0,
 	},
+	-- The four people who run the four gangs.
+	--
+	-- Here rather than in Public.luau, and that placement is forced by Public's own first
+	-- rule: nothing may reference one of those by id, and a gang boss is referenced by id
+	-- from content/Gangs.luau, holds a rung of yours, and has to be the same face the next
+	-- time you walk in. That is the definition of a cast member.
+	--
+	-- Built as adults with visibly different frames, because these four are the only
+	-- authored bodies a player will ever compare side by side -- the game points them at
+	-- all four during one decision -- and four strangers of identical build would make the
+	-- choice read as a menu of colors rather than of people.
+	{
+		id = "gang_boss_north",
+		name = "Odile",
+		gender = "female",
+		skinColor = Color3.fromRGB(142, 100, 74),
+		heightScale = 1.03,
+		widthScale = 0.94,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.75,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	{
+		id = "gang_boss_east",
+		name = "Bram",
+		gender = "male",
+		skinColor = Color3.fromRGB(214, 172, 140),
+		heightScale = 1.11,
+		widthScale = 1.14,
+		headScale = 0.98,
+		proportionScale = 1,
+		bodyTypeScale = 0.55,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	{
+		id = "gang_boss_south",
+		name = "Marisol",
+		gender = "female",
+		skinColor = Color3.fromRGB(188, 140, 106),
+		heightScale = 0.93,
+		widthScale = 1.02,
+		headScale = 1.02,
+		proportionScale = 1,
+		bodyTypeScale = 0.9,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	{
+		id = "gang_boss_west",
+		name = "Teodor",
+		gender = "male",
+		skinColor = Color3.fromRGB(240, 205, 178),
+		heightScale = 1,
+		widthScale = 0.88,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.65,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
 }
 
 -- The town's bodies, folded in behind the four. Everything downstream of this file looks

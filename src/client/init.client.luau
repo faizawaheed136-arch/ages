@@ -17,6 +17,7 @@ local EaselUI = require(script.ui.EaselUI)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
 local BankUI = require(script.ui.BankUI)
+local GangUI = require(script.ui.GangUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -42,6 +43,8 @@ type ArtState = Types.ArtState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
+type GangState = Types.GangState
+type GangPanel = Types.GangPanel
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -81,6 +84,7 @@ local heat = HeatUI.new()
 local searchRing = SearchRing.new()
 local till = TillUI.new()
 local bank = BankUI.new()
+local gang = GangUI.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -106,6 +110,9 @@ local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestBankOpenRemote = Remotes.Get("RequestBankOpen")
 local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
+local RequestGangOpenRemote = Remotes.Get("RequestGangOpen")
+local RequestGangChoiceRemote = Remotes.Get("RequestGangChoice")
+local RequestGangColorsRemote = Remotes.Get("RequestGangColors")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -194,6 +201,19 @@ end)
 -- taken and nothing is tripped until something is held.
 prompts:On("Vault", function(place: string)
 	RequestBankOpenRemote:FireServer(place)
+end)
+
+-- Clicking the dots over the head of the person who runs a gang. Its own kind rather than
+-- a Person, because the client dispatches on kind alone and a boss registered as a Person
+-- would open the ordinary chat panel over them -- a panel whose rows are the offers the
+-- *server* pushed for whoever you are standing next to, which for a boss is nobody. The
+-- symptom would be a person you can talk to who has nothing to say.
+--
+-- Unlike a person, nothing is drawn off held state: the request goes up and the panel comes
+-- back. That is not an oversight -- what a boss says depends on your standing with *them*,
+-- which is four numbers the HUD has no row for and no reason to hold.
+prompts:On("Boss", function(gangId: string)
+	RequestGangOpenRemote:FireServer(gangId)
 end)
 
 -- One boolean for both of the room's controls, and which one it means is never named here.
@@ -418,6 +438,54 @@ local function drawWorkoutPanel(state: WorkoutState?)
 	end
 end
 
+-- The person who runs a gang, talking. Raised and taken down entirely by the server: it
+-- goes up when the player clicks the dots and standing in front of them is what keeps it
+-- there, so walking off closes it without this client sending anything.
+--
+-- Deliberately re-shown on *every* push rather than skipped when the key is unchanged, which
+-- is the opposite of what the workout panel does. The difference is that this panel's rows
+-- change while the player stands still and the key does not: the rejoin countdown ticks down
+-- to a row that unlocks, and standing crossing a rung turns "412 more" into a rung you can
+-- take. The server already filters -- see GangService.pushPanel, whose digest carries every
+-- row's locked flag and note -- so a push arriving *is* the news that something moved.
+--
+-- The reply goes in the prompt rather than the hint because it is the fiction, and the
+-- speaker's name goes underneath because the nameplate over their head has already
+-- answered "who" by the time anybody has read this far.
+local gangPanelKey: string? = nil
+
+local function drawGangPanel(state: GangPanel?)
+	local wanted = if state ~= nil then `gang:{state.gangId}` else nil
+
+	local open = gangPanelKey
+	if open ~= nil and open ~= wanted then
+		panel:CloseOptions(open)
+		gangPanelKey = nil
+	end
+
+	if state == nil or wanted == nil then
+		return
+	end
+
+	if panel:ShowOptions({
+		key = wanted,
+		prompt = state.reply,
+		options = state.offers,
+		hint = `{state.bossName} · {state.name}`,
+		-- Their color when the news is good, and the panel's own when it is not. One
+		-- channel with one meaning -- whether this gang is currently on your side -- rather
+		-- than a gang color that is always on and therefore says nothing. `replyGood` is
+		-- the server's judgement of its own sentence, so a rewritten line cannot end up
+		-- tinted against what it says.
+		accent = if state.replyGood then state.color else nil,
+		choose = function(choiceId: string)
+			RequestGangChoiceRemote:FireServer(state.gangId, choiceId)
+		end,
+	}) then
+		gangPanelKey = wanted
+	end
+end
+
 -- A panel can be closed by something that is not the thing that opened it -- a lesson
 -- push, an event, a death -- and none of those carry a close signal the phone, the workout
 -- or the report card would recognize. `OnHidden` fires on any full teardown, which is the
@@ -438,6 +506,9 @@ panel:OnHidden(function(key: string)
 	end
 	if reportPanelKey ~= nil and reportPanelKey == key then
 		reportPanelKey = nil
+	end
+	if gangPanelKey ~= nil and gangPanelKey == key then
+		gangPanelKey = nil
 	end
 end)
 
@@ -602,6 +673,31 @@ Remotes.Get("BankUpdated").OnClientEvent:Connect(function(state: BankState?)
 	bank:Set(state)
 end)
 
+-- Who you run with. Nil for most players and most of most lives, and nil is the state that
+-- takes the corner back -- there is no "you are in no gang" row, because a HUD row is a
+-- claim that something is going on and not being in a gang is not going on.
+--
+-- One half of one fact here, and the other half is not drawn by this client at all: it is
+-- the band on your own head, which is a part in the world built by the server because
+-- everybody else in the room has to be able to read it too. That split is the same one the
+-- lab and the search ring make, and it is why the panel says "COLORS ON" rather than
+-- drawing a swatch and calling it done -- the swatch would be a picture of a hat the player
+-- is already wearing.
+Remotes.Get("GangUpdated").OnClientEvent:Connect(function(state: GangState?)
+	gang:Set(state)
+end)
+
+Remotes.Get("GangPanelUpdated").OnClientEvent:Connect(function(state: GangPanel?)
+	drawGangPanel(state)
+end)
+
+-- The band, on or off. The only button in the game that makes the player easier to
+-- describe: it is asked for here and answered by the server, which is why the panel never
+-- flips its own switch -- see GangUI's Activated handler.
+gang:OnColorsToggled(function(want: boolean)
+	RequestGangColorsRemote:FireServer(want)
+end)
+
 Remotes.Get("BountyUpdated").OnClientEvent:Connect(function(state: BountyState?)
 	heat:Set(state)
 	if state == nil then
@@ -716,11 +812,16 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- And the bank. Same reason, and worse: a HOLD TO SILENCE button under a death notice
 	-- would be asking somebody who is gone to run back across a room.
 	bank:Set(nil)
+	-- And the gang. Milder than the rest -- nothing on it is counting down -- but a COLORS
+	-- button under a death notice is a control offering to change something about a person
+	-- who no longer has a head, and the corner is better empty.
+	gang:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil
 	workoutPanelKey = nil
 	reportPanelKey = nil
+	gangPanelKey = nil
 	ui:ShowDeath(ageYears)
 end)
 

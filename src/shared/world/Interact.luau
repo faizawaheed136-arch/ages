@@ -156,7 +156,13 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- you enter an activity; by the time the alarm matters the player is already inside one,
 -- and a second prompt in the same room would spend the whole robbery fighting the vault's
 -- for whichever is nearest while somebody runs between them.
-export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault"
+-- "Boss" is a person and is deliberately not "Person". Dispatch is by kind alone, so a
+-- gang boss registered as a Person would open the ordinary chat panel and be asked for a
+-- tie -- and the offers a boss makes are not offers about a friendship. The two also have
+-- different failure modes worth keeping apart: a Person can refuse you and that is content,
+-- whereas a boss refusing to promote you is the ladder working and has to say which rung
+-- and how far off you are.
+export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.

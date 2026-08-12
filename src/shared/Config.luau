@@ -3240,6 +3240,187 @@ Config.Crime = {
 	},
 }
 
+-- Who you run with.
+--
+-- The crime systems above are all solitary: one player, one drawer, one alarm, one
+-- pursuit. This is the layer that makes a second person mean something, and the
+-- design problem it has to solve is that the standard version of this feature is a
+-- name tag, a chat channel, and a number that goes up when you commit crimes -- which
+-- is the idle payout pad wearing a jacket.
+--
+-- Two things stop it being that, and both are rules borrowed from elsewhere in the
+-- tree rather than invented here:
+--
+-- **Standing is earned, rank is given.** `Ties.luau` argues that friendship cannot be a
+-- bond threshold, because then "everybody you were reliably nice to would become your
+-- friend on some birthday you were not paying attention on, and the game would be
+-- telling you about your own life after the fact". A rank that auto-promotes at 500
+-- points has exactly that defect. So standing accrues quietly and the *rung* is only
+-- ever conferred face to face, off a panel, by the person who runs the gang.
+--
+-- **The colors are worn.** Joining puts a bright band on your head, one color to a
+-- gang, readable across a street. That is what makes a mixed room of players and NPCs
+-- legible at a glance -- and it is also a liability, because the same band is what a
+-- witness describes. The bandana is an identity and a tell at once, and the whole
+-- feature leans on that being true in both directions.
+Config.Gangs = {
+	-- The four rungs, and the ladder is deliberately short for the reason Ties.luau
+	-- keeps three: a ladder with eleven grades on it has quietly replaced a
+	-- relationship with a progress bar.
+	--
+	-- `standing` is what the rung costs to be *offered*. Reaching it is necessary and
+	-- never sufficient -- the boss still has to hand it to you.
+	--
+	-- Read in order and the last one reached wins, so these must stay ascending.
+	--
+	-- The labels carry their own article -- "a hand", not "hand" -- because three of the
+	-- four take one and the fourth does not, and a caller that wrote `You are a {label}`
+	-- would say "You are a who calls it". Putting the article in the content is what lets
+	-- every line that says a rung out loud be written the same way.
+	Ranks = {
+		-- Rung zero has no entry here: not being in a gang is the absence of a rank,
+		-- not a rank called "nobody", and giving it a row would put it on nameplates.
+
+		-- You are around. Nobody has asked you to do anything, and your cut is whatever
+		-- you were standing close enough to pick up.
+		{ id = "hanger_on", label = "a hanger-on", standing = 0 },
+		-- You get handed one job and told what to hold. The first rung that is worth
+		-- anything, because it is the first one where somebody else's plan has a slot
+		-- with your name in it.
+		{ id = "hand", label = "a hand", standing = 120 },
+		-- You pick your own role, and you can bring one person. The rung where the game
+		-- stops telling you where to stand.
+		{ id = "name", label = "a name", standing = 400 },
+		-- You choose the job, the crew, and who holds what.
+		--
+		-- Capped at one gang, which is the same device `closest` uses in Ties.luau and
+		-- is here for the same reason: it is the first gang decision that costs
+		-- something. Running the east side means not running the west side.
+		{ id = "caller", label = "who calls it", standing = 1000, oneGangOnly = true },
+	},
+
+	-- What standing a piece of work is worth.
+	--
+	-- The user's rule is that anything helping the gang counts, so this is deliberately
+	-- broad rather than a bank-robbery counter. The numbers are ratios first and
+	-- absolutes second: a till is a chore, a vault is an event, and getting clear
+	-- afterwards is worth more than either because it is the part players skip.
+	Earn = {
+		-- Per unit of money taken from a till or a vault. Small on purpose -- money is
+		-- already its own reward, and paying standing per dollar as well would make the
+		-- richest route the only route.
+		-- Safe range: 0.01-0.06.
+		PerMoneyStolen = 0.02,
+
+		-- Flat, once, for tripping a vault. The bank is the set piece and it should read
+		-- as one on the ladder too.
+		-- Safe range: 20-80.
+		VaultOpened = 45,
+
+		-- Flat, for coming down from a real bounty to nothing without being arrested.
+		-- The largest single award in the table, because escaping is the only line here
+		-- that cannot be farmed by standing still and holding a button.
+		-- Safe range: 40-140.
+		GotAway = 90,
+
+		-- The bounty you must have actually reached for GotAway to pay. Stops a player
+		-- collecting an escape award for the two points a witness gave them.
+		-- Safe range: 25-80.
+		GotAwayNeedsBounty = 40,
+
+		-- Per second spent inside a room where somebody else's alarm is ringing.
+		--
+		-- This is the one that makes a second person worth having. BankService already
+		-- charges heat to everybody in the room rather than to whoever tripped it, so
+		-- standing on the panel while a gang-mate empties the vault is heat you took
+		-- that was not yours -- and that is precisely the thing a gang should reward.
+		-- Safe range: 1-6.
+		PerSecondSharedHeat = 3,
+	},
+
+	-- What it costs.
+	--
+	-- Failure has to be worth playing, so these are real rather than decorative -- but
+	-- none of them can take a rung away. A rung was conferred in a moment by a person,
+	-- and quietly deleting it later is the exact "telling you about your own life after
+	-- the fact" that the offer model exists to prevent. Standing falls; the rung holds.
+	Lose = {
+		-- Standing lost on arrest. Being caught is not a betrayal, it is an occupational
+		-- hazard, so this is a setback and not a purge.
+		-- Safe range: 60-200.
+		OnArrest = 120,
+
+		-- Standing lost for leaving a room while its alarm was ringing and somebody else
+		-- was still holding the vault. This is the betrayal, and it is the only entry
+		-- here that is about another person rather than about the police.
+		-- Safe range: 100-300.
+		OnBailing = 180,
+
+		-- The floor. Standing never goes below this, so a bad night cannot cost a player
+		-- a rung's worth of history they earned weeks ago.
+		-- Safe range: 0-50.
+		Floor = 0,
+	},
+
+	-- The head covering.
+	--
+	-- Sized in studs against an unscaled R15 head, then scaled with the head it sits on,
+	-- so it fits a nine-year-old and a grown adult without a second set of numbers.
+	Bandana = {
+		-- How far the band sticks out past the head on each axis. Small: this is a band
+		-- around a head, not a helmet, and a value large enough to read as headgear from
+		-- across a street is also large enough to clip through a hair accessory.
+		-- Safe range: 0.05-0.25.
+		Swell = 0.12,
+
+		-- How tall the band is, and how far above the head's center it sits. Together
+		-- these put it across the forehead rather than over the eyes or on the crown.
+		-- Safe range: Height 0.3-0.8, Lift 0.1-0.45.
+		Height = 0.52,
+		Lift = 0.26,
+
+		-- How much of the color is emitted rather than lit. The point of the band is to
+		-- be identifiable at a distance in any weather and at night, and a purely
+		-- diffuse band goes grey at dusk exactly when a gang most needs to be counted.
+		-- Not 1: a fully neon head reads as a powerup, not as clothing.
+		-- Safe range: 0.25-0.7.
+		Glow = 0.45,
+	},
+
+	-- How much easier the colors make you to describe.
+	--
+	-- Multiplies heat from anything that saw you while you were wearing them, on top of
+	-- the record multiplier BountyService already applies. This is the liability half of
+	-- the bandana and it is what makes taking it off a real decision rather than a
+	-- cosmetic one.
+	-- Safe range: 1.1-1.8. At 1 the colors are free and the choice disappears.
+	ColorsSuspicion = 1.35,
+
+	-- How long you must be out of a gang before another will take you.
+	--
+	-- Not a punishment -- it is here so that "which gang" is a decision with a cost
+	-- rather than a menu a player reopens whenever a rival's job looks better. In game
+	-- seconds, real time.
+	-- Safe range: 60-600.
+	RejoinSeconds = 180,
+
+	-- How old the four bosses are.
+	--
+	-- Here for the same reason the bank guard's age is: NPCService otherwise picks an age
+	-- near the player's, which is right for a stranger in the street and wrong for somebody
+	-- who runs a gang -- it would put a nine-year-old in charge of the east side for a
+	-- nine-year-old player, and the one thing a boss has to read as is somebody older than
+	-- you who was already here.
+	-- Safe range: 28-60.
+	BossAgeYears = 41,
+
+	-- How often membership is re-read: colors re-applied after a respawn, standing
+	-- pushed to the client, escapes noticed. Slower than the crime tick because nothing
+	-- here is a reaction time.
+	-- Safe range: 0.4-1.5.
+	TickSeconds = 0.5,
+}
+
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to
 -- someone who never learned the shop was there, and "walk around until you find it"
 -- is not discovery, it is a search. This draws the line from where you are to the

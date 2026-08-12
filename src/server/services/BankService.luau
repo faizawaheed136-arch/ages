@@ -49,6 +49,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 local BountyService = require(script.Parent.BountyService)
 local DataService = require(script.Parent.DataService)
+local GangService = require(script.Parent.GangService)
 local MoneyService = require(script.Parent.MoneyService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
@@ -91,6 +92,15 @@ type Room = {
 	-- building, which is the only way out of it: once tripped, this room is against you
 	-- until it is empty of robbers.
 	tripped: boolean,
+	-- Who opened it. Held for one reason only: the gang ladder pays standing for heat you
+	-- took that was not yours, so the person whose robbery it is has to be excluded from
+	-- that award -- their heat is theirs. Cleared with `tripped` when the room settles.
+	--
+	-- A Player rather than a name, and therefore a strong reference held only for as long
+	-- as the room stays tripped. A player who leaves mid-robbery is dropped from the game
+	-- but not from here until the last person walks out, which is at most one robbery's
+	-- worth of a table entry and is not worth a weak table to avoid.
+	trippedBy: Player?,
 	ringing: boolean,
 	-- When a silenced alarm arms itself again. 0 while ringing or untripped.
 	rearmAt: number,
@@ -175,6 +185,7 @@ local function roomFor(place: string): Room?
 		full = full,
 		refillAt = 0,
 		tripped = false,
+		trippedBy = nil,
 		ringing = false,
 		rearmAt = 0,
 		ringingSince = 0,
@@ -312,6 +323,7 @@ end
 -- which is the same exit the player is going to want thirty seconds later anyway.
 local function settle(room: Room)
 	room.tripped = false
+	room.trippedBy = nil
 	room.ringing = false
 	room.rearmAt = 0
 	room.ringingSince = 0
@@ -499,6 +511,22 @@ local function tickRoom(room: Room, now: number, elapsed: number)
 			if at ~= nil then
 				BountyService.Seen(player, BANK.HeatPerSecondRinging * elapsed, `The {room.name} alarm`, at)
 			end
+			-- Everybody in the room except whoever opened the vault.
+			--
+			-- This is the line that makes a second person worth having. The heat above is
+			-- charged to the whole building rather than to the person holding the money, so
+			-- standing on the panel while a gang-mate empties the vault means eating heat
+			-- that was never yours -- and that is exactly the work a gang should be paying
+			-- for. Excluding the tripper is what stops it being farmable: a lone robber
+			-- would otherwise be paid twice for the same alarm, once in money and once in
+			-- standing, for doing nothing but standing next to their own crime.
+			if player ~= room.trippedBy then
+				GangService.Credit(
+					player,
+					Config.Gangs.Earn.PerSecondSharedHeat * elapsed,
+					`took heat at the {room.name}`
+				)
+			end
 		end
 	end
 
@@ -512,11 +540,27 @@ local function endSession(player: Player)
 	end
 	sessions[player] = nil
 	push(player)
+
+	local room = rooms[session.place]
+	local remaining = othersIn(session.place)
+
+	-- Walking out on somebody.
+	--
+	-- Charged only when all three are true at once: the alarm is live, this player is not
+	-- the one who opened it, and there is still somebody in there. That last clause is what
+	-- keeps it honest -- leaving a room you are alone in is not a betrayal, it is escaping,
+	-- which is a thing this game pays for elsewhere and must not punish here.
+	--
+	-- Read before `settle` below, because settle clears `trippedBy` and would make every
+	-- departure look like the tripper's own.
+	if room ~= nil and room.ringing and player ~= room.trippedBy and #remaining > 0 then
+		GangService.OnBailed(player)
+	end
+
 	-- After the session is gone, so a room emptied by the last person leaving settles on
 	-- this call rather than a fifth of a second later. Walking out of a bank should stop
 	-- the alarm you can hear through the door.
-	local room = rooms[session.place]
-	if room ~= nil and #othersIn(session.place) == 0 then
+	if room ~= nil and #remaining == 0 then
 		settle(room)
 		despawnGuard(room)
 		Vault.ShowAlarm(session.place, "quiet")
@@ -584,8 +628,13 @@ local function tickPlayer(player: Player, elapsed: number)
 			-- act of starting, before a penny has moved, which is the promise this room
 			-- makes up front and the reason none of what follows is a stealth check.
 			room.tripped = true
+			room.trippedBy = player
 			ring(room, now)
 			BountyService.Seen(player, BANK.HeatOnTrip, `Opened the {room.name} vault`, at)
+			-- The set piece, paid flat and once. A vault is the event this whole tree
+			-- builds toward and it should read as one on the ladder too, rather than
+			-- arriving as a slightly faster trickle of the per-dollar rate below.
+			GangService.Credit(player, Config.Gangs.Earn.VaultOpened, `opened the {room.name} vault`)
 			noticeFor(session, "The alarm is going.")
 			pushRoom(session.place)
 		end
@@ -594,6 +643,11 @@ local function tickPlayer(player: Player, elapsed: number)
 		room.left -= amount
 		session.taken += amount
 		MoneyService.Add(player, amount, `Taken from the {room.name}`)
+		-- The same per-dollar rate the till pays, on top of the flat award for opening the
+		-- door. A vault is worth more than a drawer here because it *holds* more, not
+		-- because it is scored differently -- one rate across every theft in the game means
+		-- a player can reason about what a job is worth without being told.
+		GangService.Credit(player, amount * Config.Gangs.Earn.PerMoneyStolen, `emptied the {room.name}`)
 		if room.left <= 0 then
 			room.refillAt = now + BANK.RefillSeconds
 		end

@@ -58,6 +58,7 @@ local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
 local BankService = require(services.BankService)
+local GangService = require(services.GangService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
@@ -89,6 +90,7 @@ DeliveryService:Init()
 WorkService:Init()
 TheftService:Init()
 BankService:Init()
+GangService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -133,6 +135,12 @@ TheftService:Start()
 -- index, and the first thing a trip does is hand heat to BountyService. It also spawns a
 -- guard, which is an NPCService rig -- and NPCService is already up, several lines above.
 BankService:Start()
+-- The gang, after every system that pays it. Standing a boss up reads the place index and
+-- spawns an NPCService rig, so both of those have to be up -- but the ordering that actually
+-- matters is against BountyService: a gang tick reads the player's live bounty to decide
+-- whether an escape happened, and a tick that ran before the manhunt existed would read a
+-- zero and quietly award nothing for the best thing the player did all life.
+GangService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()

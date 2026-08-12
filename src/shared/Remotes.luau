@@ -203,6 +203,30 @@ export type RemoteName =
 	-- could silence an alarm from the vault, which is the one shortcut that would delete
 	-- the activity outright.
 	| "RequestBankHold"
+	-- Who you run with and how far up you are. Pushed on change rather than on a clock,
+	-- because standing moves in bursts -- a vault pays forty-five points in one instant and
+	-- then nothing for a minute -- and a fixed-rate push would spend most of its traffic
+	-- resending a number that had not moved.
+	| "GangUpdated"
+	-- What the boss in front of you is saying, and what you can say back. Separate from
+	-- GangUpdated because they have different lifetimes: your rank is true everywhere and
+	-- all the time, whereas this is true only while you are standing in front of one
+	-- specific person, and nil the moment you walk away.
+	| "GangPanelUpdated"
+	-- "I clicked the boss." Opens the panel and nothing else -- joining is a row on it, not
+	-- this. Walking up to all four bosses to read what they want is free, deliberately, for
+	-- the same reason clicking a vault door trips nothing: a decision this permanent should
+	-- not be made by the first person the player happened to bump into.
+	| "RequestGangOpen"
+	-- "I picked that row." Carries the row id only. What a row *costs* and whether it is
+	-- allowed is decided here from the player's own standing, never from what was sent --
+	-- a client that could name its own rung would be a client that promotes itself.
+	| "RequestGangChoice"
+	-- "Band on" / "band off." The one piece of gang state a player changes without a
+	-- person present, because taking your colors off is something you do in an alley at the
+	-- moment you decide to, and routing it through a boss would mean the only way to go
+	-- unmarked was to walk back across the city to the person who marked you.
+	| "RequestGangColors"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -407,6 +431,11 @@ local REMOTE_NAMES: { RemoteName } = {
 	"BankUpdated",
 	"RequestBankOpen",
 	"RequestBankHold",
+	"GangUpdated",
+	"GangPanelUpdated",
+	"RequestGangOpen",
+	"RequestGangChoice",
+	"RequestGangColors",
 }
 
 local FOLDER_NAME = "RemoteEvents"

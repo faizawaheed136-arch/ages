@@ -34,6 +34,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 
 local DataService = require(script.Parent.DataService)
+local GangService = require(script.Parent.GangService)
 local LifeService = require(script.Parent.LifeService)
 local MoneyService = require(script.Parent.MoneyService)
 
@@ -496,12 +497,15 @@ function BountyService.HasRecord(player: Player): boolean
 	return data ~= nil and Lives.HasRecord(data)
 end
 
+-- Both multipliers at once, because every caller wants the product and none of them wants
+-- to remember there are two. A record makes you quicker to recognise; a bright band on your
+-- head makes you quicker to describe; a life with both is charged for both.
 function BountyService.SuspicionMultiplier(player: Player): number
 	local data = dataFor(player)
 	if data == nil then
 		return 1
 	end
-	return Lives.SuspicionMultiplier(data)
+	return Lives.SuspicionMultiplier(data) * Lives.ColorsMultiplier(data)
 end
 
 function BountyService.HiringBarMultiplier(player: Player): number
@@ -540,6 +544,15 @@ function BountyService.Arrest(player: Player): boolean
 	data.convictions += 1
 
 	loseTrack(watchFor(player))
+
+	-- Before the sentence rather than after it, and that ordering matters for one specific
+	-- reason: AgeUp below can end the life, and a life that ended in custody must still
+	-- have had its standing charged. It also clears the escape peak, which has to happen
+	-- while the bounty being zeroed is still fresh -- otherwise GangService's next tick
+	-- reads a bounty that fell from high to nothing and pays out the escape award for an
+	-- arrest, which would be the largest number in that table going to the worst possible
+	-- event.
+	GangService.OnArrest(player)
 
 	-- The haul, such as it is. Everything on you rather than a fixed fine, because a fine
 	-- is a number and confiscation is the job not having happened -- which is the thing
@@ -612,7 +625,7 @@ function BountyService.Describe(player: Player): string
 	local tier = tierFor(data.bounty)
 	local known = if watch ~= nil then watch.lastKnown else nil
 	return string.format(
-		"bounty %.1f/%d (%s, %d officers, sight %d, search %d) · convictions %d (suspicion x%.2f, hiring bar x%.2f) · %s · last known %s (%.1fs old) · %s",
+		"bounty %.1f/%d (%s, %d officers, sight %d, search %d) · convictions %d (suspicion x%.2f, hiring bar x%.2f) · colors x%.2f · %s · last known %s (%.1fs old) · %s",
 		data.bounty,
 		CRIME.MaxBounty,
 		tier.name,
@@ -626,6 +639,10 @@ function BountyService.Describe(player: Player): string
 		-- a record is working is a tester who will not check.
 		Lives.SuspicionMultiplier(data),
 		Lives.HiringBarMultiplier(data),
+		-- Separately from the record's own multiplier above, because the two stack and a
+		-- single combined figure would leave a tester unable to tell which of the two is
+		-- responsible for a number that looks too high.
+		Lives.ColorsMultiplier(data),
 		if watch ~= nil and watch.seen then "IN SIGHT" else string.format("unseen %.1fs", if watch ~= nil then watch.unseenFor else 0),
 		if known ~= nil then string.format("%d,%d", known.X, known.Z) else "nowhere",
 		if watch ~= nil then watch.sightingAge else 0,

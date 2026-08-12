@@ -39,6 +39,7 @@ local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
 local BankService = require(script.Parent.BankService)
+local GangService = require(script.Parent.GangService)
 local WitnessService = require(script.Parent.WitnessService)
 local DisguiseService = require(script.Parent.DisguiseService)
 local PeopleService = require(script.Parent.PeopleService)
@@ -52,6 +53,7 @@ local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
 local Hideouts = require(script.Parent.Parent.content.Hideouts)
 local Vaults = require(script.Parent.Parent.content.Vaults)
+local Gangs = require(script.Parent.Parent.content.Gangs)
 
 type StatName = Types.StatName
 type LifeData = Types.LifeData
@@ -136,17 +138,24 @@ end
 
 -- Fast-forwards the automatic age-up timer so the safety net can be tested
 -- without editing Config.AutoAgeUpGameHours and restarting.
-Commands.bank = function(player: Player, args: { string }): string
+--
+-- Named `/idle` and not `/bank`, which is what it was called until the vault arrived and
+-- took the name. Two entries in this table with the same key is not an error in Lua -- the
+-- second assignment simply wins at require time -- so the symptom was a command that had
+-- worked for months answering with a bank's usage line and nothing anywhere saying why.
+-- Both were even listed in HELP_TEXT. Worth remembering before adding the next one: this
+-- table is the whole namespace, and it fails silently.
+Commands.idle = function(player: Player, args: { string }): string
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
 		return "no profile loaded yet"
 	end
 	local seconds = tonumber(args[1])
 	if seconds == nil then
-		return "usage: /bank <seconds>"
+		return "usage: /idle <seconds>"
 	end
 	Lives.Active(profile.Data).secondsSinceAgeUp += seconds
-	return `banked {seconds}s -> {string.format("%.1f", Lives.Active(profile.Data).secondsSinceAgeUp)}s toward auto age-up`
+	return `idled {seconds}s -> {string.format("%.1f", Lives.Active(profile.Data).secondsSinceAgeUp)}s toward auto age-up`
 end
 
 -- Forces a specific event on screen without waiting for its age band to come
@@ -1363,6 +1372,102 @@ Commands.bank = function(player: Player, args: { string }): string
 	return `usage: /bank [go [<place>]|reset|on|off] — {BankService.Describe(player)}`
 end
 
+-- The gang, which is the one crime system whose state outlives the run that made it.
+--
+--   /gang                     all four: standing with each, whether their boss is actually
+--                             standing up, which one you run with (*), the rung you hold,
+--                             what you could take right now, whether the colors are on and
+--                             how long the rejoin window has left. "no boss" on all four at
+--                             once means the posts have not been built yet -- they are torn
+--                             down in an empty server and rebuilt on the next join, so this
+--                             is normal for about half a second and a bug after that.
+--   /gang go <id>             walk to whoever runs that gang. The four are deliberately in
+--                             four different rooms and finding them is the content, which is
+--                             not what is being tested when the question is whether a rung
+--                             hands over.
+--   /gang join <id>           in, without the walk. Still refuses if you are already in one
+--                             and still honours the rejoin window, because those are the two
+--                             rules worth testing and a debug join that skipped them would
+--                             be testing something else.
+--   /gang credit <n>          n standing with the gang you are in, through the same seam
+--                             every robbery uses. The fast way to climb the ladder without
+--                             emptying four vaults, and it takes the promotion notice with
+--                             it -- which is the thing most likely to be wrong.
+--   /gang colors [on|off]     the band, on or off. No argument toggles it. This is the one
+--                             that changes how hard the game is: the colors multiply every
+--                             point of heat, so /bounty and this belong in the same session.
+--   /gang reset               out of the gang, standing wiped, band off. Unlike leaving,
+--                             which keeps the standing -- a reset is a clean slate and a
+--                             resignation is not.
+--   /gang off                 nobody is standing at any of the four and no band goes on
+--                             anybody's head, for telling a gang bug apart from a pursuit
+--                             one -- with this off, heat is nobody's fault but yours.
+Commands.gang = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return GangService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		GangService.SetEnabled(arg == "on")
+		return `gang {arg} — {GangService.Describe(player)}`
+	end
+
+	if arg == "reset" then
+		GangService.ResetPlayer(player)
+		return `gang wiped — {GangService.Describe(player)}`
+	end
+
+	if arg == "colors" then
+		local want = args[2]
+		local target = if want == nil then not GangService.IsWearing(player) else string.lower(want) == "on"
+		if not GangService.SetColors(player, target) then
+			return `colors unchanged — {GangService.Describe(player)}`
+		end
+		return `colors {if target then "on" else "off"} — {GangService.Describe(player)}`
+	end
+
+	if arg == "credit" then
+		local points = tonumber(args[2])
+		if points == nil then
+			return "usage: /gang credit <n>"
+		end
+		local after = GangService.Credit(player, points, "did something worth hearing about")
+		return `standing {string.format("%.0f", after)} — {GangService.Describe(player)}`
+	end
+
+	if arg == "join" or arg == "go" then
+		local gangId = string.lower(args[2] or "")
+		local def = Gangs.ById[gangId]
+		if def == nil then
+			local ids: { string } = {}
+			for _, entry in Gangs.All do
+				table.insert(ids, entry.id)
+			end
+			return `usage: /gang {arg} <{table.concat(ids, "|")}>`
+		end
+		if arg == "go" then
+			if not PlaceService.Send(player, def.bossPlaceId) then
+				-- Names the place rather than shrugging, because the failure this catches is a
+				-- boss whose bossPlaceId has drifted off the map -- which otherwise reads as a
+				-- gang that simply cannot be joined, with nothing anywhere saying why.
+				return `{def.name}'s boss is meant to be at "{def.bossPlaceId}", and there is no such place`
+			end
+			return `sent to {def.name} at {def.bossPlaceId} — {GangService.Describe(player)}`
+		end
+		if not GangService.ForceJoin(player, def.id) then
+			return `could not join {def.name} — {GangService.Describe(player)}`
+		end
+		return `joined {def.name} — {GangService.Describe(player)}`
+	end
+
+	return `usage: /gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off] — {GangService.Describe(player)}`
+end
+
 Commands.police = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -2175,7 +2280,7 @@ Commands.band = function(player: Player, _args: { string }): string
 	return `{body}\nanims: {BodyService.DescribeAnimations(band.id)} | live {live}`
 end
 
-local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /bank <seconds>, /life, /band, "
+local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /idle <seconds>, /life, /band, "
 	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>, "
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
@@ -2185,6 +2290,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /theft [go <place>|fill|on|off], "
 	.. "/bank [go [<place>]|reset|on|off], "
+	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
