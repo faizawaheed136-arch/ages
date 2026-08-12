@@ -15,6 +15,7 @@ local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
 local HeatUI = require(script.ui.HeatUI)
+local TillUI = require(script.ui.TillUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -38,6 +39,7 @@ type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
 type BountyState = Types.BountyState
+type TheftState = Types.TheftState
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -75,6 +77,7 @@ local prompts = Prompts.new()
 local labDots = LabDots.new()
 local heat = HeatUI.new()
 local searchRing = SearchRing.new()
+local till = TillUI.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -96,6 +99,8 @@ local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
 local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
+local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
+local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -160,6 +165,21 @@ end)
 -- answer, because all three can have changed since this client was last told anything.
 prompts:On("Station", function(stationId: string)
 	RequestLabStepRemote:FireServer(stationId)
+end)
+
+-- Clicking the dots on a drawer. Unlike a station this opens something, and unlike a
+-- person what it opens is not a list of choices -- it is the counter itself, with one
+-- control on it that has to be held. The click is walking up to the till and nothing more,
+-- which is why the payload is the place id and why no money can possibly move on it.
+prompts:On("Till", function(place: string)
+	RequestTillOpenRemote:FireServer(place)
+end)
+
+-- Hands in, hands out. Off the panel rather than off the dots, because a hold is not
+-- something you can do to three dots -- and because the release has to be able to happen
+-- when the player has already looked away from the drawer to watch the clerk.
+till:OnHold(function(holding: boolean)
+	RequestTillHoldRemote:FireServer(holding)
 end)
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
@@ -544,6 +564,15 @@ end)
 -- see BountyService, which never once reads where the player really is. Anything here
 -- that substituted the local character's position for it would delete the entire system
 -- while leaving every panel on screen looking perfectly correct.
+-- The drawer in front of you. One half of one fact and it stays that way: the clerk and
+-- the camera are already in the room, moving, and the panel says only where they are
+-- pointed this second. There is deliberately nothing drawn in the world to go with this --
+-- no highlight on the till, no arc showing the camera's cone -- because the whole verb is
+-- reading two things that were always going to be visible anyway.
+Remotes.Get("TheftUpdated").OnClientEvent:Connect(function(state: TheftState?)
+	till:Set(state)
+end)
+
 Remotes.Get("BountyUpdated").OnClientEvent:Connect(function(state: BountyState?)
 	heat:Set(state)
 	if state == nil then
@@ -651,6 +680,10 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- one -- but that is a tick away and this is now.
 	heat:Set(nil)
 	searchRing.Set(nil, 0, false)
+	-- And the drawer. The server drops the session on the next tick when it reads a dead
+	-- player, but a HOLD TO TAKE button standing under a death notice would be an
+	-- invitation to rob a shop with nobody left to do it.
+	till:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

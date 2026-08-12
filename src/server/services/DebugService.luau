@@ -37,6 +37,7 @@ local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
+local TheftService = require(script.Parent.TheftService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -1253,6 +1254,53 @@ end
 --                             remembered.
 --   /police off               no officers regardless of heat, for telling a pursuit bug
 --                             apart from a bounty one.
+-- The drawer, separately from the heat it earns.
+--
+--   /theft                    every shop in the content list: whether its till is built,
+--                             what is left in it, and where its clerk and camera are
+--                             pointed right now. "NOT BUILT" is the one worth catching --
+--                             it means a place id in content/Tills.luau no longer names a
+--                             room in the town, and the door would simply do nothing.
+--   /theft go <place>         stand at that shop's counter. The walk is the game, but the
+--                             walk is not the thing being tested when the question is
+--                             whether a clerk turns.
+--   /theft fill               every drawer back to full, without waiting out the refill.
+--   /theft off                no robbery at any counter, for telling a theft bug apart
+--                             from a bounty one.
+Commands.theft = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return TheftService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		TheftService.SetEnabled(arg == "on")
+		return `theft {arg} — {TheftService.Describe(player)}`
+	end
+
+	if arg == "fill" then
+		TheftService.RefillAll()
+		return `drawers filled — {TheftService.Describe(player)}`
+	end
+
+	if arg == "go" then
+		local place = args[2]
+		if place == nil then
+			return "usage: /theft go <place>"
+		end
+		if not PlaceService.Send(player, place) then
+			return `no place called "{place}"`
+		end
+		return `sent to {place} — {TheftService.Describe(player)}`
+	end
+
+	return `usage: /theft [go <place>|fill|on|off] — {TheftService.Describe(player)}`
+end
+
 Commands.police = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -1994,7 +2042,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
-	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], "
+	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /theft [go <place>|fill|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"

@@ -152,6 +152,15 @@ export type RemoteName =
 	-- is the game -- a channel that shipped their coordinates would let a client draw the
 	-- one thing this system is asking the player to work out.
 	| "BountyUpdated"
+	-- The till in front of you, pushed as a whole snapshot: what is left in the drawer,
+	-- what you are holding, and -- the whole of it -- which way the clerk and the camera
+	-- are currently pointed.
+	--
+	-- The two attentions are sent as *state*, not as a warning. There is no "you are
+	-- about to be seen" field and there must never be one: the clerk turns and the camera
+	-- sweeps in the world where the player can watch them, and a channel that told the
+	-- client when to let go would be playing the activity on their behalf.
+	| "TheftUpdated"
 	-- "Put the tube I am holding on that cell." Carries the cell index and the pigment id.
 	-- Never trusted: the server checks the cell is on the canvas, the pigment is one this
 	-- rung was actually handed, the pot is not empty and the player is at the easel -- a
@@ -162,6 +171,16 @@ export type RemoteName =
 	-- study keeps moving: holding on covers more of the canvas and lets what you have
 	-- already done go stale.
 	| "RequestArtSign"
+	-- "My hands are in the drawer" / "they are not any more." One remote with a boolean
+	-- rather than two, because the two are the same fact and a start that arrived without
+	-- its stop -- or in the wrong order after a hiccup -- would leave a player taking
+	-- money from across the street. The server re-checks reach on every tick regardless.
+	| "RequestTillHold"
+	-- "I clicked the drawer." Opens the panel and puts the player at that till, and does
+	-- nothing else -- no money moves on this remote. Kept separate from the hold so that
+	-- the click and the verb are separate acts, which is the whole reason a till is not a
+	-- Station: clicking a station *is* the answer, and clicking a till is walking up to it.
+	| "RequestTillOpen"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -358,8 +377,11 @@ local REMOTE_NAMES: { RemoteName } = {
 	"HuntUpdated",
 	"ArtUpdated",
 	"BountyUpdated",
+	"TheftUpdated",
 	"RequestArtPaint",
 	"RequestArtSign",
+	"RequestTillHold",
+	"RequestTillOpen",
 }
 
 local FOLDER_NAME = "RemoteEvents"

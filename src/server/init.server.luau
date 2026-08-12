@@ -56,6 +56,7 @@ local GeographyService = require(services.GeographyService)
 local ArtService = require(services.ArtService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
+local TheftService = require(services.TheftService)
 local GymService = require(services.GymService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -83,6 +84,7 @@ NPCService:Init()
 CompanionService:Init()
 DeliveryService:Init()
 WorkService:Init()
+TheftService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -117,6 +119,11 @@ SchoolService:Start()
 -- a crime -- but the dependency runs this way and only this way, and the list should say so.
 BountyService:Start()
 PoliceService:Start()
+-- After both, and it has to be: standing up a till reads the place index, and the first
+-- thing a robbery does is hand heat to BountyService and a sighting with it. It also has
+-- an Init, unlike the two above -- the drawer is held with a button and the button is a
+-- remote, so there is a handler to register before anybody can be standing at a counter.
+TheftService:Start()
 GymService:Start()
 PeopleService:Start()
 ChildhoodService:Start()

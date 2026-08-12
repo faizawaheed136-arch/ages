@@ -1010,6 +1010,43 @@ export type BountyState = {
 	notice: string?,
 }
 
+-- The till you are standing at, pushed as a whole snapshot.
+--
+-- The two attention fields are the activity. They say where the clerk and the camera are
+-- pointed *now*, and nothing here predicts, warns or counts down to the moment either of
+-- them turns -- the clerk's shoulders and the camera's housing do that in the world,
+-- which is where a player watching for it should be looking. A HUD that flashed a second
+-- before the glance would replace the whole verb with a reaction test.
+--
+-- Nil is every moment of every life that is not spent robbing somewhere, which is almost
+-- all of them.
+export type TheftState = {
+	-- The shop's name, for the panel to say. The name rather than the place id, because
+	-- this is the one readout the player reads as a sentence -- "First Pharmacy" is where
+	-- they are, "pharmacy" is where the game keeps it.
+	place: string,
+	-- What is left in the drawer, and what a full one holds -- both, so the panel can
+	-- draw a share without the client having to know Config's float.
+	tillLeft: number,
+	tillFull: number,
+	-- What this visit has taken so far. Already banked: money is credited as it comes
+	-- out, not on release, so being interrupted never costs the player what they had
+	-- already lifted. There is no pot to lose, only a drawer to stop taking from.
+	taken: number,
+	-- Whether the player's hands are actually in it this second. False the moment they
+	-- let go, walk out of reach, or the drawer empties.
+	holding: boolean,
+	-- Where the two attentions are pointed. True means "on the till".
+	clerkWatching: boolean,
+	cameraWatching: boolean,
+	-- Being seen, which is the state the grace window ends in. Distinct from
+	-- `clerkWatching or cameraWatching` by Config.Crime.Theft.GraceSeconds -- the gap
+	-- between them is the undo, and a panel that could not show both would be showing
+	-- the player a punishment with no visible chance to have avoided it.
+	spotted: boolean,
+	notice: string?,
+}
+
 -- A workout in progress, pushed as a whole snapshot. Three phases:
 -- "offer"  — the machine is near, the panel asks Start/Leave
 -- "rep"    — the sweep bar is live, the PUSH button is up

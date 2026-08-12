@@ -2947,6 +2947,99 @@ Config.Crime = {
 		-- Safe range: 0.1-0.4. Past ~0.4 the top jobs are unreachable rather than hard.
 		HiringBarIncrease = 0.2,
 	},
+
+	-- The take. What you actually do to earn the heat above.
+	--
+	-- One verb: hold to empty the till. Everything interesting here is in the two
+	-- rhythms you have to hold *between*, and the numbers below are chosen so that the
+	-- two never settle into one pattern:
+	--
+	--   the clerk    turns to the register, then away to the shelves. A short cycle you
+	--                can count, and the one you learn first.
+	--   the camera   sweeps the room on its own clock, longer and slower, and it does
+	--                not care where the clerk is looking.
+	--
+	-- The two periods are deliberately not multiples of each other. The gaps where
+	-- neither is on the till therefore drift -- sometimes four seconds long, sometimes
+	-- none at all -- and the skill of this activity is reading the alignment rather than
+	-- counting to four. That is the whole design, and it is two numbers.
+	--
+	-- Being seen is never an arrest and never ends the robbery. It is heat and a
+	-- sighting, which is to say it hands you straight to the half of the system that is
+	-- already built. The soft failure is the point: a robbery that goes wrong should be
+	-- the *beginning* of the interesting part of the afternoon.
+	Theft = {
+		-- What a full shop till holds, against the note above Config.Money: an adult
+		-- hour of ordinary work is about twenty, and a first job is 2,400 a year. So a
+		-- clean till is worth about a fortnight of legitimate wages -- plainly worth
+		-- doing, and plainly not a career on its own.
+		-- Safe range: 120-400. Past ~400 one shop is a year's wages and nothing else in
+		-- the economy matters.
+		TillFloat = 220,
+
+		-- How fast it comes out while you are holding.
+		--
+		-- Set against the clerk's away window on purpose: one uninterrupted window is
+		-- worth a little over half a till, so a full till *cannot* be taken in one go.
+		-- The player has to either leave money in the drawer and walk, or stay for a
+		-- second window and take the alignment they are given. That choice, made every
+		-- few seconds, is the activity.
+		-- Safe range: 15-40. At the value where one window empties a till the whole
+		-- decision disappears.
+		TakePerSecond = 26,
+
+		-- How long a robbed till takes to be worth robbing again. Long enough that the
+		-- answer to "I want more" is the next shop rather than this one, which is what
+		-- makes a spree a walk across town with heat on you.
+		-- Safe range: 180-600.
+		RefillSeconds = 300,
+
+		-- The clerk's cycle, in seconds: facing the till, then away from it.
+		-- Safe range: 2-5 looking, 3-7 away. Away below ~3 leaves no window at all.
+		ClerkLookSeconds = 3.2,
+		ClerkAwaySeconds = 4.6,
+
+		-- The camera's, which is one number because a sweep is one motion. The share of
+		-- it spent pointed at the till is what makes the two rhythms interfere: 9 and
+		-- 7.8 have a lowest common multiple of about a minute, so the pattern the player
+		-- is reading takes a minute to repeat and never feels like a metronome.
+		-- Safe range: 7-14 seconds, 0.25-0.5 on the till.
+		CameraSweepSeconds = 9,
+		CameraOnTillShare = 0.35,
+
+		-- How close you have to be to have your hands in the drawer.
+		-- Safe range: 6-10. This is a reach, not a room.
+		ReachStuds = 8,
+
+		-- The undo window. How long after an attention turns onto you before it counts
+		-- as being seen -- which is to say, how long you have to let go.
+		--
+		-- The single most important number in this half of the system, the way
+		-- ContactSeconds is in the other. It is what makes releasing a decision the
+		-- player makes rather than a reaction they fail: half a second is enough to act
+		-- on something you were watching for and nowhere near enough to bail on
+		-- something you were not.
+		-- Safe range: 0.3-0.9. Above ~0.9 you can hold through a whole glance.
+		GraceSeconds = 0.5,
+
+		-- What being caught with your hands in it costs, in heat. Roughly the first
+		-- tier's threshold, so one bad window is one officer -- a consequence you can
+		-- see walking toward you rather than a number you read.
+		-- Safe range: 10-30.
+		HeatOnSpotted = 18,
+
+		-- And what it costs to keep holding after that. Per second, so a player who
+		-- brazens it out climbs tiers rather than sitting at one -- which is the version
+		-- of "go loud" this game can have without giving anybody a weapon.
+		-- Safe range: 3-12.
+		HeatPerSecondSpotted = 6,
+
+		-- How often the take is re-read. The same rate as the pursuit, because the two
+		-- are one activity from the player's side and a till that paid on a different
+		-- beat from the officers arriving would feel like two games.
+		-- Safe range: 0.1-0.3.
+		TickSeconds = 0.2,
+	},
 }
 
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to

@@ -138,7 +138,14 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- were built for. A station carries no price and offers no menu: clicking it is the
 -- answer, and what it does is written on the board across the room rather than on the
 -- station, because the whole verb is holding the order in your head while you cross.
-export type InteractKind = "Person" | "Event" | "Station"
+--
+-- "Till" is its own kind rather than a Station with a different id, and the reason is
+-- that the client dispatches on kind alone: a till that called itself a Station would
+-- send a lab step the first time anybody clicked it, which is a bug that would look
+-- exactly like the theft system not being wired up. It also is not one -- a station is
+-- answered by clicking, and clicking a till only ever puts you *at* it. What happens
+-- next is held, not clicked, and is done from the panel the click opens.
+export type InteractKind = "Person" | "Event" | "Station" | "Till"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.
