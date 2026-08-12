@@ -145,6 +145,13 @@ export type RemoteName =
 	-- screen an inch from the copy, and a comparison you can make without turning your head
 	-- is not the comparison this lesson is about.
 	| "ArtUpdated"
+	-- Heat, pushed as a whole snapshot: what tier you are at, how many officers are out,
+	-- whether anybody can see you this second, and where the police believe you are.
+	--
+	-- Carries no officer positions. The bodies are already in the world and finding them
+	-- is the game -- a channel that shipped their coordinates would let a client draw the
+	-- one thing this system is asking the player to work out.
+	| "BountyUpdated"
 	-- "Put the tube I am holding on that cell." Carries the cell index and the pigment id.
 	-- Never trusted: the server checks the cell is on the canvas, the pigment is one this
 	-- rung was actually handed, the pot is not empty and the player is at the easel -- a
@@ -350,6 +357,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestReportCardRead",
 	"HuntUpdated",
 	"ArtUpdated",
+	"BountyUpdated",
 	"RequestArtPaint",
 	"RequestArtSign",
 }

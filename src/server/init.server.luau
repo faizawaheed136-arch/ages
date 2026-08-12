@@ -54,6 +54,8 @@ local SchoolService = require(services.SchoolService)
 local ScienceService = require(services.ScienceService)
 local GeographyService = require(services.GeographyService)
 local ArtService = require(services.ArtService)
+local BountyService = require(services.BountyService)
+local PoliceService = require(services.PoliceService)
 local GymService = require(services.GymService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -108,6 +110,13 @@ ScienceService:Start()
 GeographyService:Start()
 ArtService:Start()
 SchoolService:Start()
+-- Heat before the officers, because the officers are a function of it: PoliceService's
+-- first tick asks BountyService how many bodies the street should have, and a police force
+-- that started answering before there was a number to answer from would spend its opening
+-- pass reading zero. Cosmetic in practice -- both are running long before anybody commits
+-- a crime -- but the dependency runs this way and only this way, and the list should say so.
+BountyService:Start()
+PoliceService:Start()
 GymService:Start()
 PeopleService:Start()
 ChildhoodService:Start()

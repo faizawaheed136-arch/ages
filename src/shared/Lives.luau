@@ -116,6 +116,17 @@ function Lives.New(): LifeData
 		-- costs a stored life nothing -- a tie is only ever conferred by an offer, so there is
 		-- no year of anything to make up and nothing to be charged for having missed.
 		ties = {},
+		-- No heat and no record, which is true of a newborn and is the only safe thing to
+		-- hand a save written before crime existed: an old life cannot be charged for a
+		-- bounty that was never running, and inventing a conviction for a life the game was
+		-- not watching would be the worst possible direction for this field to be wrong in.
+		--
+		-- Heat is persisted rather than held per session, and that is deliberate: it is the
+		-- one number in the game a player would otherwise clear by pressing Leave. Logging
+		-- out is the cheapest hiding place in any open world and it has to cost the same as
+		-- every other one, which is to say it has to cost time.
+		bounty = 0,
+		convictions = 0,
 	}
 end
 

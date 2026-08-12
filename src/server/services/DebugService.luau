@@ -35,6 +35,8 @@ local GymService = require(script.Parent.GymService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
+local BountyService = require(script.Parent.BountyService)
+local PoliceService = require(script.Parent.PoliceService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -1165,6 +1167,115 @@ Commands.art = function(player: Player, args: { string }): string
 	return `usage: /art [start|sign|end|shift|refill|level <n>|on|off] — {ArtService.Describe(player)}`
 end
 
+-- Heat, and the whole reason this command exists rather than a crime to commit.
+--
+-- Part one of crime ships the *response* without anything to provoke it, which is
+-- deliberate: the pursuit is the hard half and it is fully testable on its own, and
+-- building the theft first would have meant tuning a chase by robbing a shop forty times.
+-- `/bounty 50` is the shop.
+--
+-- Nothing in this system can be checked by looking at it. An officer walking toward you
+-- looks identical whether it has seen you or is heading for a spot you left thirty seconds
+-- ago, and those two are the entire feature. Bare `/bounty` and `/police` print the
+-- difference.
+--
+--   /bounty                   the number, the tier, how long since anybody saw you, and
+--                             where the police currently believe you are. The last two are
+--                             the ones to read: if "unseen" is climbing while an officer
+--                             is stood in front of you, sight is broken.
+--   /bounty <n>               set the heat to n and let the town respond. The command.
+--                             Try 20, then 50, then 95 and watch the street change shape
+--                             rather than the numbers change size.
+--   /bounty clear             drop it with no conviction, for testing the cool-down path
+--                             without serving a sentence.
+--   /bounty arrest            take the arrest now: the sentence, the confiscation and the
+--                             record, without waiting to be cornered. The fastest way to
+--                             check what a conviction actually costs a life.
+--   /bounty off               freeze the decay without removing the heat, so a tier can be
+--                             held still while the officers are watched.
+Commands.bounty = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return BountyService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		BountyService.SetEnabled(arg == "on")
+		return `bounty decay {arg} — {BountyService.Describe(player)}`
+	end
+
+	if arg == "clear" then
+		BountyService.Clear(player)
+		return `heat dropped — {BountyService.Describe(player)}`
+	end
+
+	if arg == "arrest" then
+		if not BountyService.Arrest(player) then
+			return `nothing to arrest you for — {BountyService.Describe(player)}`
+		end
+		return `arrested — {BountyService.Describe(player)}`
+	end
+
+	local amount = tonumber(arg)
+	if amount == nil then
+		return `usage: /bounty [<n>|clear|arrest|on|off] — {BountyService.Describe(player)}`
+	end
+
+	-- Set rather than add, because the thing being tested is a tier and the tester is
+	-- holding a table of thresholds. Done as a clear followed by an add so that there is
+	-- exactly one path that raises heat in the whole game, and the harness is on it -- a
+	-- debug command with its own private way of writing the number is a debug command that
+	-- eventually tests something the player can never reach.
+	BountyService.Clear(player)
+	if amount > 0 then
+		BountyService.Add(player, amount, "Debug heat")
+	end
+	return BountyService.Describe(player)
+end
+
+-- The bodies, separately from the number that summoned them.
+--
+-- Split from /bounty for the same reason PoliceService is split from BountyService: when
+-- a pursuit misbehaves the first question is always which half is wrong, and one command
+-- printing both would make that the one thing it could not tell you.
+--
+--   /police                   every officer out: which post, whether it is pursuing or
+--                             searching, and how far through an arrest it is. "searching"
+--                             while stood next to you is the bug worth catching -- it
+--                             means line of sight is failing, usually on geometry.
+--   /police clear             every body off the street, leaving the heat alone. They
+--                             should come straight back, which is the point: it tests that
+--                             the response rebuilds from the number rather than being
+--                             remembered.
+--   /police off               no officers regardless of heat, for telling a pursuit bug
+--                             apart from a bounty one.
+Commands.police = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PoliceService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		PoliceService.SetEnabled(arg == "on")
+		return `police {arg} — {PoliceService.Describe(player)}`
+	end
+
+	if arg == "clear" then
+		PoliceService.Clear(player)
+		return `street cleared — {PoliceService.Describe(player)}`
+	end
+
+	return `usage: /police [clear|on|off] — {PoliceService.Describe(player)}`
+end
+
 -- The first five years, on one command.
 --
 -- The real path is "/die, then play", and unlike school and work that is genuinely quick
@@ -1883,6 +1994,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"

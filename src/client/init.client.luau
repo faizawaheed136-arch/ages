@@ -14,11 +14,13 @@ local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
+local HeatUI = require(script.ui.HeatUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
 local Prompts = require(script.world.Prompts)
 local LabDots = require(script.world.LabDots)
+local SearchRing = require(script.world.SearchRing)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -35,6 +37,7 @@ type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
+type BountyState = Types.BountyState
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -70,6 +73,8 @@ local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
 local prompts = Prompts.new()
 local labDots = LabDots.new()
+local heat = HeatUI.new()
+local searchRing = SearchRing.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -529,6 +534,25 @@ Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
 end)
 
+-- How much of the town is looking for you. Two halves of one fact, driven from the one
+-- push for the same reason the lab's two halves are: the bar says how bad it is, the ring
+-- on the street says where they think you are, and a bar reading "manhunt" over a ring
+-- that had stopped moving would be the game lying about the only thing the player can
+-- actually act on.
+--
+-- The ring is fed the state's own `lastKnown`, which is a *belief* and not a position --
+-- see BountyService, which never once reads where the player really is. Anything here
+-- that substituted the local character's position for it would delete the entire system
+-- while leaving every panel on screen looking perfectly correct.
+Remotes.Get("BountyUpdated").OnClientEvent:Connect(function(state: BountyState?)
+	heat:Set(state)
+	if state == nil then
+		searchRing.Set(nil, 0, false)
+		return
+	end
+	searchRing.Set(state.lastKnown, state.searchRadiusStuds, state.seen)
+end)
+
 -- Who you are standing next to, and what they have to offer. The row keeps saying who
 -- it is long after there is anything left to take, because a person you are standing
 -- next to is still there when the conversation is over.
@@ -620,6 +644,13 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- gone to hurry up and finish. The wall itself is the server's and comes down with the
 	-- session.
 	easel:Set(nil)
+	-- And the manhunt, which is the one of these that would be actively cruel to leave
+	-- up: a search ring still creeping across the street under a death notice would have
+	-- the player watching for a corner they cannot turn any more. The server stops caring
+	-- about a dead player's bounty on its next tick -- BountyService.Get returns zero for
+	-- one -- but that is a tick away and this is now.
+	heat:Set(nil)
+	searchRing.Set(nil, 0, false)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

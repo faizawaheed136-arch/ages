@@ -19,7 +19,10 @@ export type LifeStageId = "Childhood" | "Adolescence" | "Adulthood" | "Elder" | 
 -- the years crossed by Skip Childhood, which pass without offering an event.
 -- "Event" is a childhood year ended by answering its event: silent, because the
 -- outcome the player is already reading is the announcement.
-export type AgeUpCause = "Manual" | "Auto" | "Sync" | "Skip" | "Event"
+-- "Custody" is a sentence being served. It runs the ordinary per-year path like every
+-- other cause here, which is the point of it having a name: the years in a cell decay
+-- stats and cross stage boundaries exactly as if they had been lived, because they were.
+export type AgeUpCause = "Manual" | "Auto" | "Sync" | "Skip" | "Event" | "Custody"
 
 -- Server's verdict on the Age Up button, so the HUD never invents its own
 -- gating rule: Hidden (dead, or a first life still in childhood), Cooldown
@@ -958,6 +961,52 @@ export type ArtState = {
 	-- The last thing the easel refused and why -- "Out of paint", "Go back to the easel".
 	-- Cleared by the next push that changes anything else: a refusal answers a click, it
 	-- is not a state to sit in.
+	notice: string?,
+}
+
+-- Heat, as the player is allowed to know it.
+--
+-- The interesting asymmetry in this whole system is that the player knows more about
+-- what the police think than the police know about the player, and this type is that
+-- sentence written down. `lastKnown` is the payload: it is where they believe you are,
+-- which is a thing a person being hunted genuinely would know -- you were there, you
+-- remember being seen -- and it is the only information that makes hiding a decision
+-- rather than a guess.
+--
+-- That is a deliberate inversion of Geography, which refuses to tell you where anything
+-- is. Both are the same rule applied honestly: show the player what their character
+-- would actually know, and nothing else.
+--
+-- Carries no officer positions and never will. A live readout of where the police are
+-- standing would delete the search: the entire game is inferring that from where you
+-- last saw one, and a field here would answer it for free.
+export type BountyState = {
+	-- 0..1 against Config.Crime.MaxBounty, for the bar. The raw number is deliberately
+	-- not here -- a player reading "63" starts optimising against the tier thresholds
+	-- instead of against the street.
+	share: number,
+	-- The tier's name, which is the only label shown: "reported", "manhunt".
+	tier: string,
+	-- How many officers are actually in the world after you. Shown because it is a fact
+	-- you could establish by looking, and because "four" is a better sentence than a bar.
+	officers: number,
+	-- Right now, this second, does anybody have eyes on you. The single most important
+	-- field here -- it is the feedback that teaches the whole system, and without it a
+	-- player cannot tell a successful hide from a lucky one.
+	seen: boolean,
+	-- True once the freeze after being seen has elapsed and the number is actually
+	-- falling. Separate from `not seen` on purpose: the gap between them is
+	-- Config.Crime.CoolStartSeconds, and a player who cannot see that gap thinks the
+	-- decay is broken.
+	cooling: boolean,
+	-- Where the police believe you are, and how wide they are willing to search around
+	-- it. Nil once nobody has any idea, which is the state worth playing for.
+	lastKnown: Vector3?,
+	searchRadiusStuds: number,
+	-- Whether this life has a record. Changes nothing on screen except one word, but it
+	-- is the reason the numbers behave differently, so it has to be visible or the
+	-- difficulty looks like a bug.
+	hasRecord: boolean,
 	notice: string?,
 }
 
@@ -1953,6 +2002,23 @@ export type LifeData = {
 	-- the count is the one the rules run on precisely so a change to what a card shows can
 	-- never move what school charges.
 	schoolYear: { SchoolLessonRecord },
+	-- Heat, 0..Config.Crime.MaxBounty. What the police are currently prepared to spend on
+	-- finding you, and the number every tier is read off.
+	--
+	-- Persisted, unlike almost everything else about a pursuit, and for one reason: it is
+	-- the only state a player could otherwise wipe by disconnecting. The officers are not
+	-- saved -- bodies are cheap and are rebuilt from this number on the way back in -- but
+	-- the number itself has to survive the session or leaving is a free escape, and a free
+	-- escape is the one thing that would make the rest of this system pointless.
+	bounty: number,
+	-- How many times this life has been convicted. A count rather than a flag because it
+	-- is the thing that is allowed to grow: one conviction raises the bar, and there is
+	-- room here for a second to raise it further without a new field.
+	--
+	-- Per life, like everything else. A record is a fact about a person, and the next
+	-- person is not them -- which is also the only clean slate this game offers, and it
+	-- costs exactly what starting again costs.
+	convictions: number,
 	-- Every school year this life has finished, named. Twelve entries at most.
 	--
 	-- Written once a birthday and never rewritten, because a year that is over is over --

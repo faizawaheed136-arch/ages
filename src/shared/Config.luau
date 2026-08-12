@@ -2815,6 +2815,140 @@ Config.People.RiskBands = {
 -- Pointing the player at something worth walking to.
 --
 -- The world is the menu in this game, which is a good thing to believe right up
+-- Crime, and the price of it.
+--
+-- The system is two halves and one number joins them: a crime *spends* heat and the
+-- police are what heat *buys*. Nothing here is a punishment bolted onto a reward -- how
+-- much you took is literally the difficulty setting for the next several minutes, which
+-- is the only reason taking more is a decision rather than a preference.
+--
+-- The load-bearing idea in this whole block is that the police do not know where you
+-- are. They know where you were *last seen*, and they search outward from it. Every
+-- number below that looks like it is about difficulty is really about that one fact:
+-- SearchRadiusStuds is how wrong they are allowed to be, SightStuds is how easily you
+-- make them right again, and ContactSeconds is how long being wrong saves you. Tune
+-- them together or not at all -- an officer who can see far enough to never lose you
+-- turns the whole system into a chase you cannot win, which is a different game and a
+-- worse one.
+--
+-- Deliberately no combat anywhere in here, and not because of the rating: if the police
+-- could be fought then the answer to every pursuit is to turn around, and last known
+-- position, dumping the goods and changing your coat all stop being decisions on the
+-- same afternoon. Running has to be the only verb or none of the rest of it has teeth.
+Config.Crime = {
+	-- The heat number itself. Unbounded at the bottom by zero and capped here, because
+	-- every tier below reads off this scale and a bounty that could run away past the
+	-- top tier would be a fifth tier nobody wrote.
+	-- Safe range: 100 only. Change the tiers instead -- this is the scale they are cut
+	-- from, not a difficulty knob.
+	MaxBounty = 100,
+
+	-- How fast heat bleeds off, in points per second, once nobody has eyes on you.
+	--
+	-- Two and a half minutes from the cap to clean if you are never seen again. Long
+	-- enough that a big score is genuinely an afternoon you have to survive rather than
+	-- a corner to hide behind for twenty seconds; short enough that it is over inside one
+	-- sitting. The whole of it is spent hiding, which is why the decay is the pacing of
+	-- this system and not a formality.
+	-- Safe range: 0.4-1.2. Above ~1.2 the top tier never gets to happen.
+	DecayPerSecond = 0.65,
+
+	-- Heat does not fall at all while any officer can see you, and this is how long after
+	-- losing sight of you it stays frozen before the decay restarts. The pause is the
+	-- thing that makes breaking line of sight feel like it did something *later* rather
+	-- than instantly -- an officer who turns a corner has not given up, and a bounty that
+	-- resumed cooling the same frame would say they had.
+	-- Safe range: 3-12. Below ~3 there is no reason to hide rather than to keep running.
+	CoolStartSeconds = 6,
+
+	-- What the police can do at each level of heat, and the only place difficulty is
+	-- written. Escalation here is by *changing the space* rather than by raising numbers:
+	-- one officer who searches where you were is a different problem from four who spread
+	-- out, and neither is the same problem with a bigger multiplier.
+	--
+	-- `officers` is a hard cap on bodies in the world, and it is a performance budget as
+	-- much as a design one -- see PoliceService for the per-tick cost of one.
+	-- `sightStuds` is how far an officer recognises you at, which is the real difficulty
+	-- dial: it is how quickly a search turns back into a pursuit.
+	-- `searchRadiusStuds` is how far from your last known position they are willing to
+	-- spread. Bigger is harder, because standing still stops working.
+	-- Safe range: 1-6 officers. Past ~6 the town reads as a cordon rather than a response.
+	Tiers = {
+		{ atLeast = 0, name = "clean", officers = 0, sightStuds = 0, searchRadiusStuds = 0 },
+		{ atLeast = 15, name = "reported", officers = 1, sightStuds = 55, searchRadiusStuds = 40 },
+		{ atLeast = 40, name = "wanted", officers = 2, sightStuds = 70, searchRadiusStuds = 70 },
+		{ atLeast = 65, name = "manhunt", officers = 4, sightStuds = 85, searchRadiusStuds = 110 },
+		{ atLeast = 88, name = "citywide", officers = 6, sightStuds = 100, searchRadiusStuds = 160 },
+	},
+
+	-- How long an officer has to stay within ArrestStuds of you before it is an arrest.
+	--
+	-- The single most important number for how this feels. An instant arrest on contact
+	-- means one bad corner ends the afternoon and the player never learns what went
+	-- wrong; three seconds means being caught is something you can see coming and
+	-- sometimes escape, which is the difference between a fail state and a near miss.
+	-- This is the soft-failure requirement for the chase half, and it is the whole of it.
+	-- Safe range: 2-5. Below ~2 there is no near miss and above ~5 they never catch you.
+	ContactSeconds = 3,
+	-- Safe range: 6-14. Wider than a conversation because a humanoid closing on a moving
+	-- target overshoots, and an arrest that needed a perfect stop would mostly not happen.
+	ArrestStuds = 9,
+
+	-- How fast an officer moves, against Config.NPC.WalkSpeed for an ordinary person.
+	--
+	-- Slightly *under* the player's run on purpose. A pursuer who is faster than you
+	-- reduces every chase to how long the straight road is, and the interesting version
+	-- of this is one you can outrun in the open but not out-corner -- so the officers buy
+	-- their difficulty with numbers and knowing where you were, never with speed.
+	-- Safe range: 14-19. At or above the player's speed the chase stops being winnable.
+	OfficerWalkSpeed = 17,
+
+	-- How often the pursuit re-reads the world. Separate from the decay tick because the
+	-- two are asking different questions at different rates: where everyone is standing
+	-- has to be fresh, and a number falling by half a point does not.
+	-- Safe range: 0.15-0.4. Below ~0.15 the pathfinder is the bottleneck, not the tick.
+	TickSeconds = 0.2,
+
+	-- How stale a last known position may get before the officers stop believing it and
+	-- start spreading out instead of converging. Without this they walk to a spot, stand
+	-- on it and stay there, which reads as broken rather than as searching.
+	-- Safe range: 5-15.
+	SightingHoldSeconds = 9,
+
+	-- Custody, in years off the life, by the tier you were caught at.
+	--
+	-- Years rather than months because a year is the game's own unit of time and the
+	-- machinery for spending one already exists and already does the right things -- see
+	-- LifeService.AgeUp and the note on skipChildhood. Writing months directly would skip
+	-- the stat decay and the stage boundaries, which is the difference between a sentence
+	-- costing you something and a sentence costing you a number.
+	--
+	-- Never served in real time. The player is not made to sit in a cell: idle time inside
+	-- an activity is a bug by this project's own rules, and a jail you wait out is the
+	-- purest possible form of it. The years are spent, the life moves on, and what is left
+	-- behind is the record -- which is the actual sentence.
+	-- Safe range: 1-4. Past ~4 a single bust ends a life's prospects outright.
+	CustodyYearsByTier = { 0, 1, 1, 2, 3 },
+
+	-- What a record does, once you have one.
+	--
+	-- Both of these are multipliers on difficulty rather than locks, which is the whole
+	-- design of the consequence: a wall tells the player their save is ruined, a raised
+	-- bar tells them to be better. It also makes the only interesting version of this
+	-- character possible -- the one grinding stats to clear a bar everybody else walks
+	-- under.
+	Record = {
+		-- Cameras and officers recognise a known face faster. Multiplies the rate at
+		-- which being seen turns into heat.
+		-- Safe range: 1.2-2.5.
+		SuspicionMultiplier = 1.6,
+		-- Every job's stat requirements go up by this fraction. Not a refusal: a
+		-- requirement.
+		-- Safe range: 0.1-0.4. Past ~0.4 the top jobs are unreachable rather than hard.
+		HiringBarIncrease = 0.2,
+	},
+}
+
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to
 -- someone who never learned the shop was there, and "walk around until you find it"
 -- is not discovery, it is a search. This draws the line from where you are to the
