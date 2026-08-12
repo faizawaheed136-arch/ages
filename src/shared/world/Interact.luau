@@ -145,7 +145,18 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- exactly like the theft system not being wired up. It also is not one -- a station is
 -- answered by clicking, and clicking a till only ever puts you *at* it. What happens
 -- next is held, not clicked, and is done from the panel the click opens.
-export type InteractKind = "Person" | "Event" | "Station" | "Till"
+--
+-- "Vault" is separate from "Till" for the same dispatch reason and for a second one: they
+-- open different panels because they are different activities. A till asks you not to be
+-- seen; a bank takes it as given and asks how long you will stay. Sharing a kind would
+-- have put a bank's alarm readout on a shop's panel, and the two rooms would have started
+-- teaching each other's lesson.
+--
+-- Note that the bank's *alarm panel* is not on this list and never will be. Dots are how
+-- you enter an activity; by the time the alarm matters the player is already inside one,
+-- and a second prompt in the same room would spend the whole robbery fighting the vault's
+-- for whichever is nearest while somebody runs between them.
+export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.

@@ -3122,6 +3122,122 @@ Config.Crime = {
 		-- Safe range: 0.1-0.3.
 		TickSeconds = 0.2,
 	},
+
+	-- The bank.
+	--
+	-- Deliberately not a bigger till, and this is the whole of the design. Escalation in this
+	-- project is by changing the space rather than by raising numbers -- see the note on
+	-- Tiers, which makes the same argument about officers -- and a vault that was a drawer
+	-- with more in it would be the numbers-only version of an activity we already have.
+	--
+	-- So it asks the opposite question with the same input. A till is "do not be seen": you
+	-- read two attentions and hold in the gap between them, and being spotted is the failure.
+	-- A bank is "you *will* be seen": the alarm goes the moment you commit, before you have
+	-- taken a penny, and the game is how long you are willing to stay. Nothing here is a
+	-- stealth check. Everything here is a clock you are choosing to run down.
+	--
+	-- Three things at once instead of the till's two, and the third is the room itself. The
+	-- vault is forty-odd studs from the alarm panel by the door, so silencing the alarm means
+	-- leaving the money -- which is the traversal requirement met by the floor plan rather
+	-- than by inventing a consumable to fetch. It is also the reason a second person is worth
+	-- having and never required: two players never run, one player always does.
+	Bank = {
+		-- What is in the vault, against a small shop's whole float of 220. Six or seven
+		-- tills, which is what makes this the afternoon rather than a stop on the way
+		-- through one -- and it has to be, because the heat it buys cannot be walked off in
+		-- the time a corner store's can.
+		-- Safe range: 900-2200. Below ~900 nobody would take the alarm for it.
+		VaultFloat = 1400,
+
+		-- How fast it comes out once the door is moving. Twenty-five seconds for the whole
+		-- vault, which is four times the till's window and is meant to be: the number the
+		-- player is really deciding is how much of those twenty-five seconds they can afford,
+		-- and every second of it is a second the officers are closer.
+		-- Safe range: 40-80. Above ~80 the alarm never gets to matter.
+		TakePerSecond = 55,
+
+		-- How long a robbed vault takes to be worth robbing again. Long, because a bank you
+		-- could go back to in five minutes would make the whole town's four tills pointless.
+		-- Safe range: 600-1800.
+		RefillSeconds = 900,
+
+		-- What tripping the alarm costs the instant you touch the door, before any money.
+		-- Straight past the first rung onto the second: two officers are dispatched by the
+		-- act of starting, which is the promise the activity makes up front.
+		-- Safe range: 20-45. Below ~20 the opening is not the commitment it should be.
+		HeatOnTrip = 30,
+
+		-- How long after being silenced before the alarm arms itself again.
+		--
+		-- The metronome the whole room is played against, and it is set so that a solo player
+		-- can just about hold the pattern together: a round trip to the panel is roughly six
+		-- seconds of running and holding, so twelve seconds means about a third of a solo
+		-- robbery is spent not at the vault. Two players spend none of it.
+		-- Safe range: 8-20. Below ~8 solo is impossible; above ~20 the panel is scenery.
+		RearmSeconds = 12,
+
+		-- What the alarm costs per second while it is ringing. On top of a live fix on your
+		-- position -- see BankService -- which is the part that actually hurts: ringing means
+		-- the officers converge on you, and silenced means they are searching a building.
+		-- Safe range: 3-9.
+		HeatPerSecondRinging = 5,
+
+		-- How long you have to hold the panel to silence it. Short, because the cost of the
+		-- trip is the trip; making the hold long as well would just be the same tax twice.
+		-- Safe range: 1-3.
+		SilenceSeconds = 2,
+
+		-- How close counts as being at the vault door or at the panel. The same reach as a
+		-- till drawer, because it is the same gesture and two different numbers for "you are
+		-- close enough to touch this" would be two things for the player to learn.
+		-- Safe range: 6-10.
+		ReachStuds = 8,
+
+		-- The guard.
+		--
+		-- The reason the alarm is not a clean twelve-second beat you can count. He walks a
+		-- patrol, and when he sees somebody at the vault he re-arms the panel there and then
+		-- -- which is the whole of what he does. He never touches the player, never blocks a
+		-- door and never ends anything: he is a non-combat opponent whose only weapon is
+		-- ruining your timing, and reading his patrol is the same skill as reading a clerk's
+		-- shoulders. Continuity with the till is the point.
+		--
+		-- How far he recognises somebody at the vault. Set against the floor plan rather
+		-- than against a feeling: from the door end of his patrol the vault is forty studs
+		-- away, so thirty means there is a stretch of his walk during which he genuinely
+		-- cannot see it. That stretch is the window, and it is the difference between a
+		-- guard who is an obstacle and a guard who is a rhythm.
+		-- Safe range: 20-38. At 40+ the window closes and the panel becomes unusable.
+		GuardSeeStuds = 30,
+
+		-- How old the guard is. Here rather than left to NPCService's default, which picks
+		-- an age near the player's -- a fine rule for a stranger in the street and the wrong
+		-- one for a man employed to stand in a bank, because it would put a nine-year-old on
+		-- the door for a nine-year-old robber.
+		-- Safe range: 25-55.
+		GuardAgeYears = 34,
+
+		-- How long his loop takes end to end. Deliberately not a multiple of RearmSeconds,
+		-- for the reason the clerk and the camera are not multiples of each other: the
+		-- interference is the thing worth reading.
+		-- Safe range: 12-30.
+		GuardPatrolSeconds = 17,
+
+		-- How long he stops and looks at you after catching you, before resuming his walk.
+		--
+		-- Not a cooldown and not a punishment -- the alarm has already gone by then. It is
+		-- there so the player can see *who* ruined their timing: an alarm that re-armed
+		-- while a man carried on strolling past would read as the twelve-second clock being
+		-- broken rather than as somebody having spotted them.
+		-- Safe range: 1.5-4. Below ~1.5 the stop is not visible from across the room.
+		GuardNoticeSeconds = 2.5,
+
+		-- How often the room is re-read. The same beat as the pursuit and the take, because
+		-- from the player's side this is one activity and a vault that paid on a different
+		-- clock from the officers arriving would feel like two games.
+		-- Safe range: 0.1-0.3.
+		TickSeconds = 0.2,
+	},
 }
 
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to

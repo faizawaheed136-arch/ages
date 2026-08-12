@@ -181,6 +181,28 @@ export type RemoteName =
 	-- the click and the verb are separate acts, which is the whole reason a till is not a
 	-- Station: clicking a station *is* the answer, and clicking a till is walking up to it.
 	| "RequestTillOpen"
+	-- The bank room you are standing in, pushed as a whole snapshot: what is left in the
+	-- vault, what the alarm is doing, where the guard is, and which of the room's two
+	-- controls is within arm's reach right now.
+	--
+	-- The alarm's countdown *is* sent, which is the one place this system tells the client
+	-- something the till's deliberately does not. That is not an inconsistency, it is the
+	-- difference between the two rooms: a till asks you to read two attentions moving in
+	-- the world, and a bank hands you a clock up front and asks how much of it you are
+	-- willing to spend. Hiding a number the alarm is already screaming would be coy rather
+	-- than skilful.
+	| "BankUpdated"
+	-- "I clicked the vault door." Puts the player in the room's activity and opens the
+	-- panel. Takes nothing and trips nothing -- the alarm goes on the first *hold*, so
+	-- walking up to a vault and reading the guard's patrol is free, which is the whole
+	-- read-before-you-commit window this activity has.
+	| "RequestBankOpen"
+	-- "My hands are on it" / "they are not any more." One boolean for both of the room's
+	-- controls, because which one it means is decided by where the player is standing and
+	-- the server is the only end that gets to say. A client that could name the control
+	-- could silence an alarm from the vault, which is the one shortcut that would delete
+	-- the activity outright.
+	| "RequestBankHold"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -382,6 +404,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestArtSign",
 	"RequestTillHold",
 	"RequestTillOpen",
+	"BankUpdated",
+	"RequestBankOpen",
+	"RequestBankHold",
 }
 
 local FOLDER_NAME = "RemoteEvents"

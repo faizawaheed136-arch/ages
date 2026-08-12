@@ -38,6 +38,7 @@ local ArtService = require(script.Parent.ArtService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
+local BankService = require(script.Parent.BankService)
 local WitnessService = require(script.Parent.WitnessService)
 local DisguiseService = require(script.Parent.DisguiseService)
 local PeopleService = require(script.Parent.PeopleService)
@@ -50,6 +51,7 @@ local ReturnService = require(script.Parent.ReturnService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
 local Hideouts = require(script.Parent.Parent.content.Hideouts)
+local Vaults = require(script.Parent.Parent.content.Vaults)
 
 type StatName = Types.StatName
 type LifeData = Types.LifeData
@@ -1304,6 +1306,63 @@ Commands.theft = function(player: Player, args: { string }): string
 	return `usage: /theft [go <place>|fill|on|off] — {TheftService.Describe(player)}`
 end
 
+-- The vault, separately again, because the bank fails in ways a till cannot.
+--
+--   /bank                     every bank: whether the room is built, how many patrol spots
+--                             survived the standable check, what is left in the vault, what
+--                             the alarm is doing and how long it has left, how many people
+--                             are inside, and where the guard is. Two lines here are worth
+--                             catching before anything else. "NOT BUILT" means the place id
+--                             in content/Vaults.luau no longer names a room. "0 patrol
+--                             spot(s)" means the offsets in that file have drifted off the
+--                             generated floor -- the bank still works, but it is running as
+--                             a clean twelve-second metronome with nothing interfering with
+--                             it, which is a much easier room than the one that was designed
+--                             and reads as the guard being broken rather than absent.
+--   /bank go                  stand in the bank. The walk across town is the game and is not
+--                             what is being tested when the question is whether a door swings.
+--   /bank reset               every vault full, every alarm quiet, every door shut. Both
+--                             halves at once on purpose: the two questions a run answers are
+--                             "can I open it" and "can I shut it up", and being handed a full
+--                             vault behind a ringing bell would only ever let you retry one.
+--   /bank off                 no vault opens anywhere, for telling a bank bug apart from a
+--                             pursuit one -- with this off, a chase that starts at the bank
+--                             is somebody else's fault.
+Commands.bank = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return BankService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		BankService.SetEnabled(arg == "on")
+		return `bank {arg} — {BankService.Describe(player)}`
+	end
+
+	if arg == "reset" then
+		BankService.ResetAll()
+		return `vaults reset — {BankService.Describe(player)}`
+	end
+
+	if arg == "go" then
+		-- The place id rather than a name the player types, because there is one bank and
+		-- asking for it by content id is what catches the case this command exists to catch:
+		-- if the id has drifted, this refuses by name instead of walking somebody into a
+		-- room with no vault in it.
+		local place = args[2] or Vaults.Banks[1].place
+		if not PlaceService.Send(player, place) then
+			return `no place called "{place}"`
+		end
+		return `sent to {place} — {BankService.Describe(player)}`
+	end
+
+	return `usage: /bank [go [<place>]|reset|on|off] — {BankService.Describe(player)}`
+end
+
 Commands.police = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -2125,6 +2184,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /theft [go <place>|fill|on|off], "
+	.. "/bank [go [<place>]|reset|on|off], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "

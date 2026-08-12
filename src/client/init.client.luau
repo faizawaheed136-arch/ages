@@ -16,6 +16,7 @@ local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
+local BankUI = require(script.ui.BankUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -40,6 +41,7 @@ type HuntState = Types.HuntState
 type ArtState = Types.ArtState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
+type BankState = Types.BankState
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -78,6 +80,7 @@ local labDots = LabDots.new()
 local heat = HeatUI.new()
 local searchRing = SearchRing.new()
 local till = TillUI.new()
+local bank = BankUI.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -101,6 +104,8 @@ local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
+local RequestBankOpenRemote = Remotes.Get("RequestBankOpen")
+local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -180,6 +185,22 @@ end)
 -- when the player has already looked away from the drawer to watch the clerk.
 till:OnHold(function(holding: boolean)
 	RequestTillHoldRemote:FireServer(holding)
+end)
+
+-- Clicking the dots on a vault door. Its own kind rather than a Till with a different id,
+-- because the client dispatches on kind alone and a vault that called itself a Till would
+-- open a shop panel over a bank -- a bug that would look exactly like the alarm not being
+-- wired up. Like the till, the click only ever puts the player *in* the room: nothing is
+-- taken and nothing is tripped until something is held.
+prompts:On("Vault", function(place: string)
+	RequestBankOpenRemote:FireServer(place)
+end)
+
+-- One boolean for both of the room's controls, and which one it means is never named here.
+-- The server decides from where the player is standing, because a client that could say
+-- "silence" while stood at the vault would delete the walk that is the entire activity.
+bank:OnHold(function(holding: boolean)
+	RequestBankHoldRemote:FireServer(holding)
 end)
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
@@ -573,6 +594,14 @@ Remotes.Get("TheftUpdated").OnClientEvent:Connect(function(state: TheftState?)
 	till:Set(state)
 end)
 
+-- The bank room you are in. Unlike the till there *is* something drawn in the world to go
+-- with this -- the lamp on the alarm panel and the vault door swinging as it empties -- and
+-- that is not an inconsistency: those two are shared facts about a room that a second
+-- player has to be able to read without a panel of their own.
+Remotes.Get("BankUpdated").OnClientEvent:Connect(function(state: BankState?)
+	bank:Set(state)
+end)
+
 Remotes.Get("BountyUpdated").OnClientEvent:Connect(function(state: BountyState?)
 	heat:Set(state)
 	if state == nil then
@@ -684,6 +713,9 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- player, but a HOLD TO TAKE button standing under a death notice would be an
 	-- invitation to rob a shop with nobody left to do it.
 	till:Set(nil)
+	-- And the bank. Same reason, and worse: a HOLD TO SILENCE button under a death notice
+	-- would be asking somebody who is gone to run back across a room.
+	bank:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

@@ -57,6 +57,7 @@ local ArtService = require(services.ArtService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
+local BankService = require(services.BankService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
@@ -87,6 +88,7 @@ CompanionService:Init()
 DeliveryService:Init()
 WorkService:Init()
 TheftService:Init()
+BankService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -126,6 +128,11 @@ PoliceService:Start()
 -- an Init, unlike the two above -- the drawer is held with a button and the button is a
 -- remote, so there is a handler to register before anybody can be standing at a counter.
 TheftService:Start()
+-- The bank, next to the till because they are the same half of the same system read from
+-- opposite ends, and after it for the same two reasons: standing up a vault reads the place
+-- index, and the first thing a trip does is hand heat to BountyService. It also spawns a
+-- guard, which is an NPCService rig -- and NPCService is already up, several lines above.
+BankService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()

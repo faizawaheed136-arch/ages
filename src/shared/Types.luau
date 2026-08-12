@@ -1047,6 +1047,62 @@ export type TheftState = {
 	notice: string?,
 }
 
+-- The bank room you are standing in, pushed as a whole snapshot.
+--
+-- Where TheftState describes a *drawer*, this describes a *room*, and almost every field
+-- below is shared: the vault, the alarm and the guard are one set of facts that every
+-- player in the building is looking at. Two people robbing one bank are playing the same
+-- game, which is the difference between a second player being a partner and a second
+-- player being a duplicate.
+export type BankState = {
+	-- The bank's name, for the panel to say. The name rather than the place id, for the
+	-- same reason TheftState carries one.
+	place: string,
+	-- What is left in the vault and what a full one holds -- both, so the panel can draw a
+	-- share without the client having to know Config's float.
+	vaultLeft: number,
+	vaultFull: number,
+	-- What this visit has taken so far. Already banked as it came out, exactly as the till
+	-- does: there is no pot to lose here, only a vault to stop taking from. What *is* still
+	-- at risk is the money itself, because an arrest confiscates what you are carrying --
+	-- so the run home is the last part of the activity and it is not drawn on this panel.
+	taken: number,
+
+	-- Which of the room's two controls the player is standing at: "vault", "alarm", or
+	-- "between" for the thirty-odd studs of floor in the middle.
+	--
+	-- The panel has one button and this is what decides what it says. Sent as a place
+	-- rather than as a verb because the place is the honest fact -- the player is not
+	-- "in take mode", they are stood at the vault -- and because a client that was told
+	-- the verb could ask for the wrong one.
+	at: "vault" | "alarm" | "between",
+	-- Whether the player's hands are actually on it this second. False the moment they let
+	-- go, walk out of reach of both, or the vault empties.
+	holding: boolean,
+	-- How far through a silence hold they are, 0 to 1. Zero at the vault, where holding
+	-- takes money instead.
+	silencing: number,
+
+	-- "quiet" before anybody has committed, then "ringing" or "silenced" for the rest of
+	-- the visit. There is no fourth state: once tripped, this building is against you until
+	-- the last person leaves it.
+	alarm: "quiet" | "ringing" | "silenced",
+	-- Seconds until a silenced alarm arms itself again, and how long a ringing one has been
+	-- going. Exactly one of the two is ever non-zero, but both are sent rather than one
+	-- signed number, because they are two different sentences and the panel says them
+	-- differently.
+	rearmIn: number,
+	ringingFor: number,
+
+	-- Where the guard's attention is. "away" is the window; "near" means he is in the room
+	-- with you and has not looked up; "onYou" means he has, and the alarm went with it.
+	-- Nil when this bank could not stand one up at all, which the panel says plainly rather
+	-- than drawing an "away" lamp for a man who does not exist.
+	guard: ("away" | "near" | "onYou")?,
+
+	notice: string?,
+}
+
 -- A workout in progress, pushed as a whole snapshot. Three phases:
 -- "offer"  — the machine is near, the panel asks Start/Leave
 -- "rep"    — the sweep bar is live, the PUSH button is up
