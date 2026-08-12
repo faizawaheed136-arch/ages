@@ -231,21 +231,4 @@ function Till.InReach(place: string, from: Vector3): boolean
 	return Ground.FlatDistance(from, fitting.drawer) <= THEFT.ReachStuds
 end
 
--- Every shop back down. The harness only: a shop is built once and left standing, so the
--- ordinary game never calls this.
-function Till.Clear()
-	for _, fitting in fittings do
-		local dots = fitting.dots
-		if dots ~= nil then
-			dots.Destroy()
-		end
-	end
-	fittings = {}
-	local existing = folder
-	if existing ~= nil then
-		existing:Destroy()
-		folder = nil
-	end
-end
-
 return Till

@@ -76,6 +76,16 @@ type Watch = {
 	-- recomputed because two different readers want it in the same tick and the answer is
 	-- expensive enough to be worth asking once.
 	seen: boolean,
+	-- Whether anybody could say what you look like. Set by every sighting and destroyed
+	-- by a change of clothes, and it is what ordinary people on the street read: a town
+	-- can only recognise a face it has been given.
+	--
+	-- Separate from the heat on purpose. Heat is what you did; a description is what they
+	-- know about who did it, and the whole of the disguise verb lives in the gap between
+	-- those two. A player who has been reported but never actually seen -- which is not
+	-- currently reachable, but will be the moment an alarm or a tip-off exists -- is
+	-- wanted by a police force with nothing to go on, and that should mean something.
+	described: boolean,
 	notice: string?,
 	noticeLeft: number,
 }
@@ -146,11 +156,26 @@ local function watchFor(player: Player): Watch
 		sightingAge = 0,
 		unseenFor = NEVER_SEEN,
 		seen = false,
+		described = false,
 		notice = nil,
 		noticeLeft = 0,
 	}
 	watches[player] = made
 	return made
+end
+
+-- Everything the police believe about you, dropped: where you were, that they can see you,
+-- and what you look like.
+--
+-- Not the heat. That is a number about what you *did* and it survives every one of the four
+-- things that call this -- a change of clothes, an arrest, a debug wipe, and the moment the
+-- number itself reaches zero. Keeping the two apart is what makes a disguise an escape
+-- rather than an undo.
+local function loseTrack(watch: Watch)
+	watch.lastKnown = nil
+	watch.seen = false
+	watch.unseenFor = NEVER_SEEN
+	watch.described = false
 end
 
 local function dataFor(player: Player): LifeData?
@@ -282,8 +307,10 @@ local function tickPlayer(player: Player, elapsed: number)
 	if data.bounty <= 0 then
 		-- Heat gone means the belief goes with it. Without this an officer sent out by the
 		-- next crime would start from a sighting that belonged to the last one, which reads
-		-- as the police having remembered something they were never told.
-		watch.lastKnown = nil
+		-- as the police having remembered something they were never told. The description
+		-- goes with it for the same reason: a town that kept recognising somebody nobody
+		-- is looking for would be a spree's first crime following it for the rest of a life.
+		loseTrack(watch)
 		push(player)
 		return
 	end
@@ -346,6 +373,51 @@ function BountyService.Sighted(player: Player, at: Vector3)
 	watch.sightingAge = 0
 	watch.unseenFor = 0
 	watch.seen = true
+	-- Every sighting is also a description. Set here rather than at each call site so a
+	-- disguise can never be defeated by one and not another: whatever saw you -- officer,
+	-- camera, clerk, passer-by -- got a look at what you are wearing, and the one that
+	-- forgot to say so would be a hole the player could find and nobody could explain.
+	watch.described = true
+end
+
+-- Nobody can say what you look like any more.
+--
+-- The one thing in this system that moves a number *down* other than time, and it is
+-- deliberately not the heat: what you did still stands, and there are still the same
+-- officers out. What goes is where they think you are and who they are looking for --
+-- so a converge becomes a search of somewhere you are not, and the street stops turning
+-- to look at you. `seen` and `unseenFor` are reset with it because leaving them would
+-- have the decay still frozen for a player nobody can identify.
+--
+-- Idempotent, and the caller is told whether it actually did anything: changing clothes
+-- while already unrecognised should not be sold to the player as an escape.
+function BountyService.LoseDescription(player: Player): boolean
+	local watch = watches[player]
+	if watch == nil or not watch.described then
+		return false
+	end
+	loseTrack(watch)
+	noticeFor(player, "Different clothes. They have lost you.")
+	push(player)
+	return true
+end
+
+-- Whether the police have anything to go on. Read by the crowd, which will not recognise
+-- a face nobody has described to it.
+function BountyService.Described(player: Player): boolean
+	local watch = watches[player]
+	return watch ~= nil and watch.described
+end
+
+-- Whether anybody had eyes on the player as of the last tick.
+--
+-- Already on the wire for the HUD; exported for the disguise, which needs the same fact on
+-- the server and must not be given the pushed state to read it out of. It is a claim about
+-- one tick and nothing longer -- see the note where the tick clears it -- which is exactly
+-- what "not while they can see you" means.
+function BountyService.IsSeen(player: Player): boolean
+	local watch = watches[player]
+	return watch ~= nil and watch.seen
 end
 
 -- Somebody saw the player do something, and it cost them. The sighting and the heat in one
@@ -467,10 +539,7 @@ function BountyService.Arrest(player: Player): boolean
 	data.bounty = 0
 	data.convictions += 1
 
-	local watch = watchFor(player)
-	watch.lastKnown = nil
-	watch.seen = false
-	watch.unseenFor = NEVER_SEEN
+	loseTrack(watchFor(player))
 
 	-- The haul, such as it is. Everything on you rather than a fixed fine, because a fine
 	-- is a number and confiscation is the job not having happened -- which is the thing
@@ -506,10 +575,7 @@ function BountyService.Clear(player: Player)
 	if data ~= nil then
 		data.bounty = 0
 	end
-	local watch = watchFor(player)
-	watch.lastKnown = nil
-	watch.seen = false
-	watch.unseenFor = NEVER_SEEN
+	loseTrack(watchFor(player))
 	push(player)
 end
 

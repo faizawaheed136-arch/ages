@@ -2128,6 +2128,67 @@ function PeopleService.ClearVisits(player: Player): boolean
 	return true
 end
 
+-- Everybody currently standing in the world for this player, as ids and positions.
+--
+-- Exists for WitnessService, which needs to know who can see a wanted player and must not
+-- be given the rigs to find out: a service that could reach a Visitor could pause a walk,
+-- turn a head or destroy a body, and the crowd's only business is looking. Positions rather
+-- than handles is the whole of the encapsulation, and it is the same argument Till makes
+-- about handing out a Vector3 instead of a piece of shop furniture.
+--
+-- Includes the family, who are people too and who live in rooms the player has every reason
+-- to hide in. A mother who does not notice her son sprinting through the kitchen with the
+-- police outside would be a strange thing to have built on purpose.
+export type Bystander = {
+	personId: string,
+	position: Vector3,
+}
+
+function PeopleService.Bystanders(player: Player): { Bystander }
+	local out: { Bystander } = {}
+	local here = standing[player]
+	if here == nil then
+		return out
+	end
+	for personId, stand in here do
+		local visitor = stand.visitor
+		if visitor.gone() then
+			continue
+		end
+		table.insert(out, { personId = personId, position = visitor.root.Position })
+	end
+	return out
+end
+
+-- Somebody stops walking and turns to look, or goes back to what they were doing.
+--
+-- The reaction, and it is the whole of the crowd's signposting: a witness is on screen for
+-- Config.Crime.Witness.SeeSeconds *before* the report lands, which is the player's warning
+-- and their chance to walk out of it. The gesture is deliberately the same one a person
+-- makes when you walk up to talk to them -- stop, turn -- because a town has one vocabulary
+-- and a second "notice" animation would read as a different kind of creature.
+--
+-- Refused outright while the player is mid-conversation with them. Two systems driving one
+-- pair of legs is the bug the hold and release below were written to avoid, and a chat is
+-- the one that was there first.
+function PeopleService.Alarm(player: Player, personId: string, at: Vector3?): boolean
+	local here = standing[player]
+	local stand = if here ~= nil then here[personId] else nil
+	if stand == nil or stand.visitor.gone() then
+		return false
+	end
+	local chat = chats[player]
+	if chat ~= nil and chat.personId == personId then
+		return false
+	end
+	if at == nil then
+		release(player, stand)
+	else
+		holdFor(player, stand, at)
+	end
+	return true
+end
+
 -- Off empties the street of everybody, on puts them back. Applied to every player rather
 -- than to whoever typed it, because this is a switch on the world and a server with
 -- people in it for one player and not another would be a worse test than either state.

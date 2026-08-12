@@ -3040,6 +3040,88 @@ Config.Crime = {
 		-- Safe range: 0.1-0.3.
 		TickSeconds = 0.2,
 	},
+
+	-- The town, once it has your description.
+	--
+	-- The chase's second opponent, and the reason it exists is that without it the whole
+	-- of being wanted is standing behind a wall for two and a half minutes waiting for
+	-- DecayPerSecond to finish. That is the unskilled-dead-time bug this project keeps
+	-- designing away, sitting in the middle of the best part of the system. Ordinary
+	-- people recognising you turns hiding from a wait into a route: the empty back street
+	-- is now genuinely better than the busy one, and that is a decision made continuously
+	-- rather than once.
+	--
+	-- Only ever while the police have a description of you -- see Disguise below, which
+	-- is the answer to this and the verb the chase was missing.
+	Witness = {
+		-- How far away an ordinary person recognises a face they have been told to look
+		-- for. Deliberately shorter than every officer's sightStuds, including the
+		-- lowest: a passer-by glancing up is not a trained search, and a crowd that saw
+		-- further than the police would make the officers irrelevant.
+		-- Safe range: 30-60. Above ~60 a busy street is impassable at any tier.
+		SeeStuds = 45,
+
+		-- How long they have to have you in view before they call it in.
+		--
+		-- The undo window, and the same idea as the till's GraceSeconds: long enough
+		-- that walking briskly past somebody is not automatically a report, short
+		-- enough that loitering in a crowd is. It is also the time their reaction is on
+		-- screen -- they stop and turn to face you the moment the count starts -- so
+		-- this doubles as how much warning the player gets.
+		-- Safe range: 1.5-4. Below ~1.5 there is no warning, only a punishment.
+		SeeSeconds = 2.2,
+
+		-- What one report costs. Small on purpose: a witness is not a disaster, it is a
+		-- reason to keep moving. What actually hurts is the sighting it carries, which
+		-- drags the search back onto you.
+		-- Safe range: 2-8.
+		Heat = 4,
+
+		-- How long before the same person will report you again. Without it, standing in
+		-- front of one pedestrian is a heat firehose and the tier climbs on its own with
+		-- nothing interesting having happened.
+		-- Safe range: 12-40.
+		CooldownSeconds = 20,
+	},
+
+	-- Changing your clothes, which is the chase's verb.
+	--
+	-- Everything above is something happening *to* the player. This is the one thing they
+	-- can do about it, and it is deliberately powerful: it does not reduce the heat, it
+	-- deletes the police's belief about where you are. Officers converging on a corner
+	-- become officers searching a place you are not, and the town stops recognising you
+	-- until an officer lays eyes on you again.
+	--
+	-- Powerful, and paid for in the only currency a chase has: you have to be somewhere
+	-- specific, standing still, with nobody watching, for five seconds, while the search
+	-- ring drifts. Getting there is the traversal this activity needs; standing there is
+	-- the commit; walking off is the undo.
+	Disguise = {
+		-- How long you have to stand on the mark. The commit window, and the number that
+		-- decides whether this is a decision or a formality: five seconds is long enough
+		-- that starting it with an officer one street over is a genuine gamble.
+		-- Safe range: 3-8. Below ~3 it is free; above ~8 nobody will ever risk it.
+		ChangeSeconds = 5,
+
+		-- How close to the mark counts as standing on it. Generous, because the player
+		-- arrives here at a run and a rail that needed a precise stop would be a rail
+		-- nobody uses under pressure.
+		-- Safe range: 4-9.
+		ReachStuds = 6,
+
+		-- What a change of clothes costs. Priced against a small till float, so a spree
+		-- pays for its own escapes and a player who is caught broke has to run instead.
+		-- Not a lock: the heat still decays on its own, so being unable to afford this is
+		-- a worse afternoon rather than a dead end.
+		-- Safe range: 0-80. Above ~80 the escape costs more than the crime paid.
+		Cost = 35,
+
+		-- How often the mark re-reads who is standing on it and whether they are being
+		-- watched. The same beat as the pursuit, because a change that completed on a
+		-- different clock from the officer walking in would read as unfair.
+		-- Safe range: 0.1-0.3.
+		TickSeconds = 0.2,
+	},
 }
 
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to

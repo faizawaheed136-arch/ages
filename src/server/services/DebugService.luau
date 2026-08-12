@@ -38,6 +38,8 @@ local ArtService = require(script.Parent.ArtService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
+local WitnessService = require(script.Parent.WitnessService)
+local DisguiseService = require(script.Parent.DisguiseService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -47,6 +49,7 @@ local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
+local Hideouts = require(script.Parent.Parent.content.Hideouts)
 
 type StatName = Types.StatName
 type LifeData = Types.LifeData
@@ -1324,6 +1327,85 @@ Commands.police = function(player: Player, args: { string }): string
 	return `usage: /police [clear|on|off] — {PoliceService.Describe(player)}`
 end
 
+-- The town looking at you, and the one thing you can do about it.
+--
+-- Both on one command because they are one loop from the player's side -- the crowd reads a
+-- description and the change of clothes destroys it -- and testing either without the other
+-- tells you almost nothing. The two switches are separate for exactly the case where that
+-- stops being true: with `/crowd witness off` a chase that never ends is the pursuit's
+-- fault, and with `/crowd disguise off` an escape that happens anyway is not the mark's.
+--
+--   /crowd                    who is close enough to recognise you, how many are staring,
+--                             and whether the police have a description at all -- which is
+--                             the answer to "why is nobody reacting" nine times in ten.
+--   /crowd go <n>             stand you on the nth hideout mark, because four of them are
+--                             a long walk apart on purpose and testing the five-second
+--                             count should not cost the walk every time.
+--   /crowd describe           hand the police a description without committing a crime, so
+--                             the crowd can be tested from a standing start.
+--   /crowd witness [on|off]
+--   /crowd disguise [on|off]
+Commands.crowd = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local function report(): string
+		return `{WitnessService.Describe(player)} — {DisguiseService.Describe(player)}`
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return report()
+	end
+
+	if arg == "witness" or arg == "disguise" then
+		local value = string.lower(args[2] or "")
+		if value ~= "on" and value ~= "off" then
+			return `usage: /crowd {arg} [on|off] — {report()}`
+		end
+		if arg == "witness" then
+			WitnessService.SetEnabled(value == "on")
+		else
+			DisguiseService.SetEnabled(value == "on")
+		end
+		return `{arg} {value} — {report()}`
+	end
+
+	if arg == "describe" then
+		-- A sighting at the player's own feet, which is the one place in this codebase that
+		-- is allowed to do that. Everywhere else handing the police the live position would
+		-- delete the search -- see BountyService's header -- but the whole point here is to
+		-- reach the described state without robbing anything first.
+		local character = player.Character
+		local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+		if root == nil then
+			return "no body in the world"
+		end
+		BountyService.Sighted(player, (root :: BasePart).Position)
+		return `described — {report()}`
+	end
+
+	if arg == "go" then
+		local index = tonumber(args[2] or "")
+		local spots = Hideouts.Spots
+		if index == nil or index < 1 or index > #spots then
+			local names = {}
+			for order, spot in spots do
+				table.insert(names, `{order}={spot.place}`)
+			end
+			return `usage: /crowd go <1-{#spots}> ({table.concat(names, ", ")})`
+		end
+		local place = spots[math.floor(index)].place
+		if not PlaceService.Send(player, place) then
+			return `hideout "{place}" has no place point in this world`
+		end
+		return `sent to {place} — {report()}`
+	end
+
+	return `usage: /crowd [go <n>|describe|witness on|off|disguise on|off] — {report()}`
+end
+
 -- The first five years, on one command.
 --
 -- The real path is "/die, then play", and unlike school and work that is genuinely quick
@@ -2043,6 +2125,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /theft [go <place>|fill|on|off], "
+	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"

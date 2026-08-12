@@ -57,6 +57,8 @@ local ArtService = require(services.ArtService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
+local WitnessService = require(services.WitnessService)
+local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -124,8 +126,17 @@ PoliceService:Start()
 -- an Init, unlike the two above -- the drawer is held with a button and the button is a
 -- remote, so there is a handler to register before anybody can be standing at a counter.
 TheftService:Start()
+-- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
+-- first thing a completed change does is delete a belief BountyService owns.
+DisguiseService:Start()
 GymService:Start()
 PeopleService:Start()
+-- Dead last of the crime services, and after PeopleService rather than before it. The crowd
+-- is the only part of this that reads bodies somebody else put in the street: a witness pass
+-- that ran before there was anybody standing in the town would spend its first ticks
+-- reporting an empty street, and the whole system would look broken for exactly as long as
+-- it took the first person to spawn.
+WitnessService:Start()
 ChildhoodService:Start()
 -- Last of the real services, and it has to be. It checks arriving players for a life worth
 -- running and sends the ones without one back to the lobby -- but the check has to be made
