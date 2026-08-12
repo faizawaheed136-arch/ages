@@ -352,12 +352,13 @@ local function tickPlayer(player: Player, elapsed: number)
 		session.watchedFor += elapsed
 		if session.watchedFor >= THEFT.GraceSeconds and not session.spotted then
 			session.spotted = true
-			-- Heat and a sighting, in that order, because the sighting is what the
-			-- officers the heat buys will walk to. A shop that raised the number without
-			-- reporting where would send the whole response to wherever the player
-			-- happened to be seen next, which for a player standing still is nowhere.
-			BountyService.Add(player, THEFT.HeatOnSpotted, `Caught at the {session.name}`)
-			BountyService.Sighted(player, at)
+			-- Heat and a sighting together, because they are one event: a shop that
+			-- raised the number without reporting where would send the whole response
+			-- to wherever the player happened to be seen next, which for a player
+			-- standing still is nowhere. Seen rather than Add is also what makes a
+			-- second conviction cost more than the first, and this file does not have
+			-- to know that.
+			BountyService.Seen(player, THEFT.HeatOnSpotted, `Caught at the {session.name}`, at)
 			noticeFor(session, if clerkOn then "The clerk looked up." else "The camera is on you.")
 		end
 	else
@@ -371,11 +372,10 @@ local function tickPlayer(player: Player, elapsed: number)
 	end
 
 	if session.spotted and session.holding then
-		BountyService.Add(player, THEFT.HeatPerSecondSpotted * elapsed, `Still at the {session.name}`)
 		-- Re-reported every tick, because they are watching you right now: this is the one
 		-- place in the game where the police's belief about where you are is continuously
 		-- correct, and it is correct for exactly as long as you keep your hands in the till.
-		BountyService.Sighted(player, at)
+		BountyService.Seen(player, THEFT.HeatPerSecondSpotted * elapsed, `Still at the {session.name}`, at)
 	end
 
 	if session.holding and drawer.left > 0 then

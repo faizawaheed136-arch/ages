@@ -348,6 +348,26 @@ function BountyService.Sighted(player: Player, at: Vector3)
 	watch.seen = true
 end
 
+-- Somebody saw the player do something, and it cost them. The sighting and the heat in one
+-- call, because they are one event.
+--
+-- This is where a record has its teeth, and it is one function rather than a multiplier
+-- sprinkled through every activity for the reason the comment on SuspicionMultiplier
+-- already gives: a branch written in one place and forgotten in another is how a
+-- consequence quietly stops applying to three of the four things that can trigger it. A
+-- till, a camera, a witness and a bank guard all end up here, so all four recognise a known
+-- face faster without any of them knowing that records exist.
+--
+-- Kept separate from Add rather than folded into it because Add is the ledger and has to
+-- mean what it says: `/bounty 20` awarding 32 to a player with a conviction would be a
+-- debug command that lies, and a flat penalty that has nothing to do with being observed
+-- would pick up a multiplier that is explicitly about being observed.
+function BountyService.Seen(player: Player, points: number, reason: string, at: Vector3): number
+	local total = BountyService.Add(player, points * BountyService.SuspicionMultiplier(player), reason)
+	BountyService.Sighted(player, at)
+	return total
+end
+
 -- Where the police should be looking, and how wide. Nil means nobody has any idea, which
 -- is a real answer and the caller has to have a plan for it.
 --
@@ -388,31 +408,36 @@ function BountyService.TierOf(player: Player): Tier
 	return tierFor(BountyService.Get(player))
 end
 
--- Whether this life has ever been convicted. Read by the pursuit -- a known face is
--- recognised faster -- and, later, by hiring.
+-- The record, for callers holding a Player rather than a life.
+--
+-- Thin on purpose. What a conviction *means* is three functions in Lives, which requires
+-- nothing but Config and Types precisely so that hiring -- on the far side of a require
+-- cycle from here -- can ask the same question and get the same answer. These three are a
+-- profile lookup and a forward, and the day they grow a rule of their own is the day the
+-- record has two definitions again.
+--
+-- A player with no profile loaded reads as clean rather than as an error, because every
+-- caller is in the middle of doing something else -- aiming a camera, refusing a job -- and
+-- none of them has a sensible branch for "we do not know yet".
 function BountyService.HasRecord(player: Player): boolean
 	local data = dataFor(player)
-	return data ~= nil and data.convictions > 0
+	return data ~= nil and Lives.HasRecord(data)
 end
 
--- How much faster a known face turns into heat. One for a clean life, so every caller can
--- multiply unconditionally rather than branching on whether the player has a record --
--- a branch that would eventually be written in one place and forgotten in another.
 function BountyService.SuspicionMultiplier(player: Player): number
-	if not BountyService.HasRecord(player) then
+	local data = dataFor(player)
+	if data == nil then
 		return 1
 	end
-	return CRIME.Record.SuspicionMultiplier
+	return Lives.SuspicionMultiplier(data)
 end
 
--- How much higher every job's stat bar sits for this life. Also one for a clean record,
--- for the same reason. Read by hiring when part 4 lands; exported now because the number
--- belongs with the record rather than with the shop.
 function BountyService.HiringBarMultiplier(player: Player): number
-	if not BountyService.HasRecord(player) then
+	local data = dataFor(player)
+	if data == nil then
 		return 1
 	end
-	return 1 + CRIME.Record.HiringBarIncrease
+	return Lives.HiringBarMultiplier(data)
 end
 
 -- Caught.
@@ -521,7 +546,7 @@ function BountyService.Describe(player: Player): string
 	local tier = tierFor(data.bounty)
 	local known = if watch ~= nil then watch.lastKnown else nil
 	return string.format(
-		"bounty %.1f/%d (%s, %d officers, sight %d, search %d) · convictions %d · %s · last known %s (%.1fs old) · %s",
+		"bounty %.1f/%d (%s, %d officers, sight %d, search %d) · convictions %d (suspicion x%.2f, hiring bar x%.2f) · %s · last known %s (%.1fs old) · %s",
 		data.bounty,
 		CRIME.MaxBounty,
 		tier.name,
@@ -529,6 +554,12 @@ function BountyService.Describe(player: Player): string
 		tier.sightStuds,
 		tier.searchRadiusStuds,
 		data.convictions,
+		-- The record's two teeth, spelled out rather than left to be inferred from the
+		-- conviction count. They are applied a long way from here -- one in a shop, one at
+		-- a hiring desk -- and a tester who has to multiply in their head to check whether
+		-- a record is working is a tester who will not check.
+		Lives.SuspicionMultiplier(data),
+		Lives.HiringBarMultiplier(data),
 		if watch ~= nil and watch.seen then "IN SIGHT" else string.format("unseen %.1fs", if watch ~= nil then watch.unseenFor else 0),
 		if known ~= nil then string.format("%d,%d", known.X, known.Z) else "nowhere",
 		if watch ~= nil then watch.sightingAge else 0,

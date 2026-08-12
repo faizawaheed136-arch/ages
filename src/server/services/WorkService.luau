@@ -521,7 +521,16 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 	-- score and no explanation of it.
 	local minSmarts = job.minSmarts
 	if minSmarts ~= nil then
-		local asks = minSmarts
+		-- What a conviction actually costs, and it is deliberately a bar rather than a
+		-- lock. A door that closed would tell the player their save is spoiled and there
+		-- is nothing to be done; a bar that moved tells them to be better, and makes the
+		-- one genuinely interesting version of this character possible -- somebody
+		-- grinding smarts to clear a line everybody else walks under.
+		--
+		-- Rounded up so the sentence at the door can name a whole number. A refusal
+		-- asking for 66.4 smarts is a refusal that has stopped speaking English.
+		local asked = math.ceil(minSmarts * Lives.HiringBarMultiplier(data))
+		local asks = asked
 		local vouched = false
 		local voucherName = ""
 
@@ -534,7 +543,12 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 		if vouch ~= nil then
 			local bond = People.BondIn(data.bonds, vouch.personId)
 			if bond ~= nil and bond >= vouch.minBond then
-				asks = minSmarts - vouch.worthSmarts
+				-- Taken off the raised bar, not the printed one, so a word from somebody
+				-- who thinks well of you is worth the same number of smarts whether or not
+				-- you have a record. That is the point of it: the neighbor knows what he
+				-- knows about you, and the office running your name does not change what he
+				-- has watched you do for twenty years.
+				asks = asked - vouch.worthSmarts
 				vouched = true
 				voucherName = personName(vouch.personId)
 			end
@@ -542,6 +556,12 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 
 		if data.stats.smarts < asks then
 			local held = math.floor(data.stats.smarts)
+			-- Said out loud whenever it applies, for the same reason the vouch line below
+			-- is said out loud: a bar that quietly moved is indistinguishable from a bar
+			-- the player had misread. A consequence the player cannot see is a consequence
+			-- they cannot decide to work off, which would make it a punishment rather than
+			-- a difficulty.
+			local record = if asked > minSmarts then ` A clean record would have got you in at {minSmarts}.` else ""
 			if vouched then
 				-- The refusal says the word was put in, which matters more than it looks.
 				-- A bar that quietly moved is indistinguishable from a bar the player had
@@ -549,9 +569,9 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 				-- somebody, for years -- is worth being told about even while being
 				-- turned away.
 				return `Even with {voucherName} putting in a word this desk needs {asks} smarts `
-					.. `and you have {held}. School was where the rest came from.`
+					.. `and you have {held}. School was where the rest came from.{record}`
 			end
-			return `This desk needs {minSmarts} smarts and you have {held}. School was where that came from.`
+			return `This desk needs {asked} smarts and you have {held}. School was where that came from.{record}`
 		end
 	end
 

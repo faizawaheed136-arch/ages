@@ -185,6 +185,43 @@ function Lives.HasBegun(life: LifeData): boolean
 	return life.setup ~= nil
 end
 
+-- Whether this life has ever been convicted, and what that costs.
+--
+-- Here rather than in BountyService, which is where the rest of crime lives and where these
+-- three started, because a criminal record is not a fact about a chase -- it is a fact
+-- about a life, and the two things that read it sit on opposite sides of the game. The
+-- pursuit asks "does this face get recognised faster"; hiring asks "how high is this desk's
+-- bar for this person", and hiring must never have to know that a police service exists.
+--
+-- The move was forced as well as right: WorkService -> BountyService -> LifeService ->
+-- WorkService is a require cycle, and this file is the one place in the tree with a
+-- standing promise to require nothing but Config and Types so that anybody can ask it
+-- anything. `HasBegun` is here for exactly the same reason -- see its own note. Config
+-- holds the numbers, this holds the one sentence in the codebase that says what they mean,
+-- and BountyService keeps thin Player-flavoured wrappers for callers holding a Player.
+function Lives.HasRecord(life: LifeData): boolean
+	return life.convictions > 0
+end
+
+-- How much faster a known face turns into heat. One for a clean life, so every caller can
+-- multiply unconditionally rather than branching on whether the player has a record -- a
+-- branch that would eventually be written in one place and forgotten in another.
+function Lives.SuspicionMultiplier(life: LifeData): number
+	if not Lives.HasRecord(life) then
+		return 1
+	end
+	return Config.Crime.Record.SuspicionMultiplier
+end
+
+-- How much higher every job's stat bar sits for this life. Also one for a clean record, for
+-- the same reason.
+function Lives.HiringBarMultiplier(life: LifeData): number
+	if not Lives.HasRecord(life) then
+		return 1
+	end
+	return 1 + Config.Crime.Record.HiringBarIncrease
+end
+
 -- The life this profile is currently playing.
 --
 -- Errors rather than clamping if the slot is out of range. `activeSlot` is guaranteed valid
