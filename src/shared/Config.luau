@@ -1995,6 +1995,178 @@ Config.School.Science = {
 	},
 }
 
+-- Art. The study: a small picture is pinned to the wall of the room and you copy it,
+-- cell by cell, onto a canvas.
+--
+-- The line that makes this a different subject from Science rather than the same one
+-- with paint on it: **Science hides the board and asks you to remember. Art shows you
+-- everything and asks you to notice.** The wall is always in the room, the canvas is
+-- always on screen, and neither is ever annotated -- nothing marks a cell as wrong,
+-- ever. The verb is the comparison, and the day a feature helpfully outlines the cells
+-- that do not match is the day this subject stops existing.
+--
+-- Which is why the picture moves. A study that sat still would be a form to fill in, so
+-- part of every study is allowed to shift while you paint -- the light turns, somebody
+-- nudges the fruit -- and cells you have already painted quietly stop being right. You
+-- are told how many have gone stale and never which, so the two things worth doing at
+-- any moment are "paint an empty cell" and "go and find the one that changed", which is
+-- the two-queue requirement arriving from a single rule rather than from a second bench.
+--
+-- Signing is the commit and it is a real decision, unlike the lab's. Your score is the
+-- canvas at the moment you sign, and the canvas rots while you hold it -- so finishing
+-- is a trade between covering more of the picture and keeping what you have.
+--
+-- Nothing in here restates a verdict share or a smarts payout. A canvas scores a 0-1
+-- share exactly as a procedure and a quiz do, and lands on Config.School's GoodShare /
+-- OkShare and SmartsPer*Lesson.
+Config.School.Art = {
+	-- The canvas, in cells. Sixteen is the number where the picture is still a picture --
+	-- a harbour with a sail and a hull in it -- and the painting is still about eighty
+	-- clicks including repairs, which is a ninety-second lesson at a comfortable pace
+	-- rather than a typing test.
+	--
+	-- Both numbers are load bearing on the content: every study in content/Studies is
+	-- authored as exactly Rows strings of exactly Columns letters, and changing either of
+	-- these without redrawing all five pictures errors at require time by design.
+	-- Safe range: 3-6 each. At 8x8 a lesson is four hundred clicks.
+	Columns = 4,
+	Rows = 4,
+
+	-- How long the canvas may be worked on before it is taken away and scored as it
+	-- stands. Longer than a quiz because there are sixteen cells to visit rather than
+	-- five questions, and short enough that the last thirty seconds are spent choosing
+	-- what to fix rather than idly touching up a finished picture.
+	-- Safe range: 60-180. Below ~60 nobody at two tubes can cover the canvas at all.
+	SecondsPerCanvas = 120,
+
+	-- How often something in the study is allowed to move, and how many cells go at once.
+	--
+	-- This is the pacing of the whole subject. At eighteen seconds a two-minute canvas
+	-- shifts about six times, so roughly a third of the lesson is spent repairing -- enough
+	-- that ignoring it loses the grade, few enough that the picture is still recognisably
+	-- the thing you started copying. One cell at a time rather than two, because a shift
+	-- you have to hunt for is the mechanic and a shift that redraws half the wall is just
+	-- the wall being replaced.
+	-- Safe range: 12-30 and 1-2. Below ~12 the canvas rots faster than anyone can paint.
+	ShiftSeconds = 18,
+	ShiftCells = 1,
+
+	-- Strokes in the pot, and how near the supply cupboard you have to get to fill it.
+	--
+	-- The traversal forcer, and it is a shared pot rather than one per tube on purpose:
+	-- per-tube supply would quietly delete this requirement at the top of the ladder,
+	-- where a player holds eight tubes and therefore four times the paint. Fourteen
+	-- against sixteen cells means every canvas needs at least one trip and a canvas with
+	-- repairs in it needs two.
+	--
+	-- What the trip costs is not the seconds. It is that the study wall is behind you the
+	-- whole way there and back -- see Build.CupboardBearing -- so the shift that happens
+	-- while you are fetching paint is the one you have no idea about. That is the
+	-- difference between this errand and the lab's, which only ever costs time.
+	-- Safe range: 10-24 and 4-10. Above ~24 the cupboard never gets visited.
+	StrokesPerRefill = 14,
+	CupboardRadiusStuds = 7,
+
+	-- How near the easel you have to be to put paint on the canvas. Tight, because the
+	-- easel is the one place in the room where the study and the canvas are both in front
+	-- of you, and painting from the cupboard would make the trip free.
+	-- Safe range: 4-10. Above ~10 it starts to overlap the cupboard's own radius.
+	EaselRadiusStuds = 6,
+
+	-- How far the player may get from the middle of the room before the canvas counts as
+	-- walked away from, and the scale everything in Build is laid out against.
+	--
+	-- Half again the size of the lab, which is the one number in this block that had to be
+	-- argued for. At the lab's forty the easel and the cupboard end up about twenty-five
+	-- studs apart, which a schoolchild covers in a second and a half -- and a fetch that
+	-- takes three seconds round trip is not a pacing interrupt, it is a button with a walk
+	-- animation. At sixty the trip is closer to seven seconds of not being able to see the
+	-- wall, against a study that moves every eighteen, so going for paint genuinely risks
+	-- missing something. The room is big because the mechanic is *distance from the
+	-- picture*, and there is no other way to buy that.
+	-- Safe range: 40-90. Below ~40 the cupboard stops costing anything.
+	RoomRadiusStuds = 60,
+
+	-- How often a running canvas re-reads where the player is standing and runs its
+	-- clocks. Matches School.TickSeconds because it is the identical proximity job.
+	-- Safe range: 0.1-0.5.
+	TickSeconds = 0.25,
+
+	-- How many tubes of paint each mastery rung hands over, taken from the study's own
+	-- colours most-used first -- so rung one gives you the two the picture is mostly made
+	-- of, and the rungs above it give you the ones it is barely made of, which are exactly
+	-- the ones that make it look like the thing it is of. A sail, a hull, a highlight.
+	--
+	-- This is the entire reward of the subject, and unlike Geography's it is not
+	-- information: it is how much room you have to be wrong. At two tubes the best
+	-- possible copy of the tightest study here scores 0.835 against a GoodShare of 0.8 --
+	-- a perfect painting barely passes, and every cell you fail to reach costs you the
+	-- lesson. At the top rung the ceiling is 1.0 and there is slack in it for a corner you
+	-- never got to. That is progression widening the player's own tolerance rather than
+	-- moving a number outside the verb, and it is checked at require time in ArtService:
+	-- a first rung whose ceiling drops under GoodShare would be a subject nobody could
+	-- ever pass their way out of.
+	--
+	-- The last entry is the whole shelf rather than six, because a study may be made of
+	-- more colours than five and the top rung is also the rung that buys the right to
+	-- skip -- so it should be the one where a perfect copy is actually possible.
+	-- Must be exactly School.Mastery.Levels long.
+	-- Safe range: 2-8 each, rising, first at or above 2. At 1 there is nothing to choose.
+	PaletteByLevel = { 2, 3, 4, 5, 8 },
+
+	-- How long the closing line holds before the panel clears. The same beat every other
+	-- subject's verdict gets.
+	-- Safe range: 2-6.
+	VerdictSeconds = 3.5,
+
+	-- Where the art room's furniture stands, in the same fractions-of-the-radius terms the
+	-- lab's Build block uses, so the two rooms are re-laid the same way.
+	--
+	-- The arrangement is the mechanic, again, and it is nearly the opposite of the lab's.
+	-- There the board and the cupboard face each other so the two errands cannot be
+	-- batched. Here there are not two errands -- there is one thing you must be looking at
+	-- and one thing you must occasionally walk to, and they are put on opposite sides so
+	-- that walking to the paint turns you away from the picture.
+	Build = {
+		-- Safe range: 0.4-0.8 each, Easel below both. The easel sits nearer the wall than
+		-- the middle so the study fills the view from it.
+		WallDistanceShare = 0.7,
+		EaselDistanceShare = 0.25,
+		CupboardDistanceShare = 0.65,
+
+		-- Bearings in degrees clockwise from the room's forward, matching the lab's
+		-- convention. The wall and the cupboard face each other across the easel.
+		WallBearing = 0,
+		EaselBearing = 0,
+		CupboardBearing = 180,
+
+		-- One cell of the study wall, in studs, and the gap between them. Big because the
+		-- whole subject is reading this thing from across a room -- a wall you have to walk
+		-- up to would make every comparison a round trip and the lesson would be a
+		-- pilgrimage. At 4.5 studs a four-wide study is about twenty studs across, which is
+		-- legible from the easel at the distances above.
+		-- Safe range: 3-7 and 0.1-0.6.
+		WallCellStuds = 4.5,
+		WallCellGapStuds = 0.35,
+
+		-- How far off the floor the bottom row of the wall sits, and how thick the panels
+		-- are. Lifted so the study is at eye height from a standing child rather than
+		-- something they are looking down at.
+		-- Safe range: 2-8 and 0.2-1.
+		WallLiftStuds = 4,
+		WallDepthStuds = 0.4,
+
+		-- Placeholder furniture, in studs, in the same blocky spirit as the lab's: these
+		-- are stand-ins for models a builder drops in later.
+		EaselSize = Vector3.new(3, 5, 2),
+		CupboardSize = Vector3.new(3.5, 6, 2),
+
+		-- How far away the room's own labels can still be read. Matches the lab's.
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+}
+
 -- The gym. A room full of machines that is also a place a life goes to spend
 -- effort on itself.
 --

@@ -62,8 +62,10 @@ local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
+local ArtService = require(script.Parent.ArtService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
+local Studio = require(script.Parent.Parent.world.Studio)
 local SubjectModels = require(script.Parent.Parent.world.SubjectModels)
 local SubjectMotion = require(script.Parent.Parent.world.SubjectMotion)
 local Curriculum = require(script.Parent.Parent.content.Curriculum)
@@ -663,6 +665,14 @@ local function buildRoom(): boolean
 	-- Science refuses at the door with a reason, and every other subject carries on.
 	Lab.Build(at)
 
+	-- And the art room, for the same reasons in the same order -- a room in the same
+	-- building, standing before anybody is old enough to be sent to it, and free to fail
+	-- on its own without taking the rest of the timetable down with it. Laid around the
+	-- same point as the lab and much wider than it, which is deliberate: see
+	-- Config.School.Art.RoomRadiusStuds for why the walk from the easel to the paint
+	-- cupboard has to cost real seconds.
+	Studio.Build(at)
+
 	return true
 end
 
@@ -1253,6 +1263,23 @@ local function beginLesson(player: Player, data: LifeData, room: Vector3): boole
 		return true
 	end
 
+	if subject.verb == "copy" then
+		local ok, refusal = ArtService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "The art room is closed today.", false)
+			return false
+		end
+		-- Cleared for the same reason as the two above.
+		--
+		-- No teacher and no scene here either, but for the opposite reason to Geography's:
+		-- the art room is already built and already standing a few studs away, so a
+		-- classroom drawn on top of it would be two rooms occupying one lesson. The player
+		-- walks to the easel; that walk is the opening of the verb.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
 	local questions = Lessons.For(ageYearsOf(data), SCHOOL.QuestionsPerLesson)
 	if #questions == 0 then
 		-- Impossible if the content file loaded, which checks every age has enough
@@ -1503,6 +1530,15 @@ local function tickPlayer(player: Player, elapsed: number)
 			return
 		end
 
+		-- And so is a painting. Same failure as Science's, arriving in the same place: the
+		-- art room is laid around the school pad, so an Art lesson begins with the player
+		-- standing on the pad and stays that way for the seconds it takes them to walk out
+		-- to the easel -- during which, without this, school would start a fresh lesson on
+		-- top of it four times a second.
+		if ArtService.IsRunning(player) then
+			return
+		end
+
 		local at = attendAt
 		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
 			return
@@ -1687,6 +1723,7 @@ function SchoolService.OnAgeUp(player: Player)
 		and lessons[player] == nil
 		and not ScienceService.IsRunning(player)
 		and not GeographyService.IsRunning(player)
+		and not ArtService.IsRunning(player)
 		and yearJustEnded >= SCHOOL.StartAge
 		and yearJustEnded <= SCHOOL.EndAge
 
@@ -1730,6 +1767,7 @@ function SchoolService.ResetForNewLife(player: Player)
 	-- that, and it is cheaper than the bug.
 	ScienceService.ResetForNewLife(player)
 	GeographyService.ResetForNewLife(player)
+	ArtService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

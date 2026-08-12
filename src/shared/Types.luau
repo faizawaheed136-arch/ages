@@ -644,7 +644,7 @@ export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" |
 -- and the list of them is meant to reach zero. It is kept because the alternative was
 -- deleting eleven of a childhood's twelve school years until all six verbs existed, and
 -- a childhood with one subject in it is worse than one with five placeholders.
-export type SchoolVerb = "quiz" | "procedure" | "hunt"
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {
@@ -889,6 +889,76 @@ export type HuntState = {
 	-- Set for the beat after the whole lesson is done. Same slot the lab's summary uses and
 	-- read the same way: the closing line, held, and then the activity is gone.
 	summary: string?,
+}
+
+-- One tube of paint as the player has been handed it. The colour travels rather than the
+-- id alone even though the client can resolve one from the other, because this is the row
+-- the swatch is drawn from and a palette that had to do a lookup per swatch per push
+-- would be doing it to save eight numbers.
+export type PaletteSwatch = {
+	id: string,
+	name: string,
+	color: Color3,
+}
+
+-- An Art lesson in progress: a picture on the wall, a canvas on screen, and the gap
+-- between them.
+--
+-- Two rules about this payload, and they are the subject rather than an implementation
+-- detail. It carries the *canvas* and never the study -- the picture being copied is
+-- physically on the wall of the room and sending it would put it on screen next to the
+-- copy, which turns comparing two things across a room into comparing two things an inch
+-- apart. And nothing in it says which cells are wrong. `stale` is a count and there is
+-- deliberately no list beside it: being told how much you owe and having to find it is
+-- the entire verb, and a field here naming the cells would delete the subject in one
+-- line without breaking a single test.
+export type ArtState = {
+	-- The canvas shape, so the client lays out a grid without a second copy of Config.
+	columns: number,
+	rows: number,
+	-- What the player has painted, one entry per cell, reading left to right then top to
+	-- bottom. Nil for an untouched cell -- and nil is drawn as bare canvas rather than as
+	-- white paint, which matters because white is a pigment you can be handed.
+	painted: { Color3? },
+	-- The study's title, which is all the help the wall's own label gives.
+	title: string,
+	-- The tubes this life's mastery rung has been handed, most-used-in-this-picture first.
+	-- Ordered rather than a set because the order is the reward made visible: the colours
+	-- at the end of the row are the ones a lower rung would not have had.
+	palette: { PaletteSwatch },
+	-- Which tube is in hand, as an index into `palette`, or nil before the first pick.
+	held: number?,
+	-- Strokes left in the shared pot and what it holds when full. Shared across every
+	-- tube on purpose -- see School.Art.StrokesPerRefill -- so the cupboard trip does not
+	-- quietly disappear at the top of the ladder.
+	strokes: number,
+	strokesMax: number,
+	-- How many painted cells no longer match the wall, and nothing about which. See the
+	-- note above the type: this number is the second queue, and a list would be the bug.
+	stale: number,
+	-- How many cells have any paint on them at all, which with `stale` is the whole of
+	-- what the player knows about their own canvas.
+	filled: number,
+	secondsLeft: number,
+	-- Where the player is standing. The canvas only takes paint at the easel and the pot
+	-- only fills at the cupboard, and the client greys its own affordances off these two
+	-- so a control that looks live is always one the server will honour.
+	atEasel: boolean,
+	atCupboard: boolean,
+	-- Mastery, on screen for the same reason it is in the other two verbs: what a rung
+	-- buys here is the row of tubes getting longer, and a player who was never told the
+	-- ladder existed would read a new colour appearing as the game changing its mind.
+	level: number,
+	levelMax: number,
+	passes: number,
+	passesPerLevel: number,
+	-- Set for the beat after the canvas is signed or taken away. Same slot the lab's
+	-- summary uses and read the same way.
+	summary: string?,
+	-- The last thing the easel refused and why -- "Out of paint", "Go back to the easel".
+	-- Cleared by the next push that changes anything else: a refusal answers a click, it
+	-- is not a state to sit in.
+	notice: string?,
 }
 
 -- A workout in progress, pushed as a whole snapshot. Three phases:

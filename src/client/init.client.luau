@@ -13,6 +13,7 @@ local StatsUI = require(script.ui.StatsUI)
 local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
+local EaselUI = require(script.ui.EaselUI)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -33,6 +34,7 @@ type WorkoutState = Types.WorkoutState
 type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
 type HuntState = Types.HuntState
+type ArtState = Types.ArtState
 type ReportCard = Types.ReportCard
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
@@ -62,6 +64,7 @@ local ui = StatsUI.new()
 local panel = ChoicePanel.new()
 local lab = LabUI.new()
 local hunt = HuntUI.new()
+local easel = EaselUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
@@ -86,6 +89,8 @@ local RequestRepRemote = Remotes.Get("RequestRep")
 local RequestLabStepRemote = Remotes.Get("RequestLabStep")
 local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
 local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
+local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
+local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -167,6 +172,27 @@ end)
 lab:OnCommit(function(benchIndex: number)
 	RequestLabCommitRemote:FireServer(benchIndex)
 end)
+
+-- A square of the canvas and the tube in hand. Off the panel for the same reason Undo
+-- and Commit are, only more so: sixteen cells and up to eight tubes is twenty-four things
+-- to click, and putting any of them in the world would mean a player choosing a colour by
+-- walking up to it.
+--
+-- Both numbers are the client's opinion and neither is trusted. The server re-checks the
+-- cell is on the canvas, the pigment is one this player was actually handed, that they are
+-- standing at the easel and that there is paint left -- and refuses with a line rather than
+-- silently, because a brush that sometimes does nothing is the worst thing this verb could
+-- feel like.
+easel.onPaint = function(cellIndex: number, pigmentId: string)
+	RequestArtPaintRemote:FireServer(cellIndex, pigmentId)
+end
+
+-- Handing the canvas in early, which is a real decision here rather than a formality:
+-- the study keeps moving while you hold it, so twelve good cells now can be worth more
+-- than sixteen with four gone stale.
+easel.onSign = function()
+	RequestArtSignRemote:FireServer()
+end
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
 -- open. The question is put up and taken down by the server's pushes: answers on it
@@ -493,6 +519,16 @@ Remotes.Get("HuntUpdated").OnClientEvent:Connect(function(state: HuntState?)
 	hunt:Set(state)
 end)
 
+-- The canvas in progress. As short as the hunt's and for a different reason: the other
+-- half of this fact is already in the world and is not ours to draw. The study on the wall
+-- is built by the server as parts, shared by everybody in the room, and it changes by a
+-- part changing colour with nothing announcing it. There is deliberately no client-side
+-- flash, outline or marker to go with a shift -- lighting up the cell that moved would
+-- hand over the one thing this subject is asking the player to find for themselves.
+Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
+	easel:Set(state)
+end)
+
 -- Who you are standing next to, and what they have to offer. The row keeps saying who
 -- it is long after there is anything left to take, because a person you are standing
 -- next to is still there when the conversation is over.
@@ -579,6 +615,11 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- nil, but the order the two arrive in is not guaranteed, and a stop clock counting
 	-- down under a death notice would be the game insisting there is somewhere left to be.
 	hunt:Set(nil)
+	-- And the canvas. Same race, and the same reason not to trust it: a paint count and a
+	-- clock still running under a death notice would be the game asking somebody who is
+	-- gone to hurry up and finish. The wall itself is the server's and comes down with the
+	-- session.
+	easel:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

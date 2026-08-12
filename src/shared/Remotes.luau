@@ -137,6 +137,24 @@ export type RemoteName =
 	-- already has and the only judge is the server's own distance check. Adding a "check
 	-- here" button would turn walking into a formality performed next to the answer.
 	| "HuntUpdated"
+	-- The art canvas in progress, pushed as a whole snapshot: what the player has painted,
+	-- what paint they were handed, and how many cells have gone stale.
+	--
+	-- What it does *not* carry is the study being copied, and that omission is the subject.
+	-- The picture is on the wall of the room; putting it on this channel would put it on
+	-- screen an inch from the copy, and a comparison you can make without turning your head
+	-- is not the comparison this lesson is about.
+	| "ArtUpdated"
+	-- "Put the tube I am holding on that cell." Carries the cell index and the pigment id.
+	-- Never trusted: the server checks the cell is on the canvas, the pigment is one this
+	-- rung was actually handed, the pot is not empty and the player is at the easel -- a
+	-- painting made from the cupboard would make the paint run free.
+	| "RequestArtPaint"
+	-- "I am done, that is the painting." The commit, and the only irreversible act in the
+	-- verb. Unlike the lab's it is a real decision rather than a formality, because the
+	-- study keeps moving: holding on covers more of the canvas and lets what you have
+	-- already done go stale.
+	| "RequestArtSign"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -331,6 +349,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"ReportCardUpdated",
 	"RequestReportCardRead",
 	"HuntUpdated",
+	"ArtUpdated",
+	"RequestArtPaint",
+	"RequestArtSign",
 }
 
 local FOLDER_NAME = "RemoteEvents"

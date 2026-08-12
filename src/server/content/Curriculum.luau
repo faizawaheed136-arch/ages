@@ -65,21 +65,20 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = SCHOOL_END,
 	},
 
-	-- Reading, Art and Music. All three are quiz stubs today and all three have a verb
-	-- owed to them, written down here so the debt is legible rather than implied:
+	-- Reading and Music. Both are quiz stubs today and both have a verb owed to them,
+	-- written down here so the debt is legible rather than implied:
 	--
-	--   Reading -- a passage on the board and the answer somewhere in it, so the verb is
-	--     finding rather than knowing.
-	--   Art     -- copy a shown composition onto a canvas from parts, scored on how close
-	--     you got, which is the one school activity that can be soft-failed by degree
-	--     without a right answer existing at all.
+	--   Reading -- something where the verb is *finding* rather than knowing. "A passage on
+	--     the board and the answer somewhere in it" is the obvious shape and is also a quiz
+	--     with more words in it, so it is written down as an unsolved problem rather than a
+	--     plan.
 	--   Music   -- a rhythm held rather than a question answered; the input primitive
 	--     already exists for sports and is the obvious place to reuse it.
 	--
-	-- None of them is built. They are on the timetable because a childhood with one
-	-- subject in it is a worse game than one with five placeholders, and because the
-	-- alternative -- holding the whole rebuild until all six verbs exist -- means
-	-- shipping nothing for a month.
+	-- Neither is built. They are on the timetable because a childhood with one subject in
+	-- it is a worse game than one with five placeholders, and because the alternative --
+	-- holding the whole rebuild until all six verbs exist -- means shipping nothing for a
+	-- month.
 	{
 		id = "reading",
 		name = "Reading",
@@ -88,11 +87,23 @@ local SOURCE: { SchoolSubject } = {
 		minAge = SCHOOL_START,
 		maxAge = SCHOOL_END,
 	},
+
+	-- Art. Copy the study on the wall onto your canvas, one square of paint at a time,
+	-- while the study quietly changes behind your back. The only subject here that can be
+	-- soft-failed by degree without a right answer ever existing: a cell painted in the
+	-- nearest colour you were handed is worth most of a cell painted correctly, so the
+	-- score is a distance rather than a tally of rights and wrongs.
+	--
+	-- The only subject that starts at six, and the one place the mastery ladder is doing
+	-- the age-banding instead of the content. A six-year-old and a fourteen-year-old copy
+	-- the same harbour; what differs is how many tubes of paint they have been handed --
+	-- see Config.School.Art.PaletteByLevel -- so there is nothing here a small child cannot
+	-- attempt and nothing an older one has run out of.
 	{
 		id = "art",
 		name = "Art",
-		verb = "quiz",
-		blurb = "Colour, shape and what goes with what.",
+		verb = "copy",
+		blurb = "Copy the wall. It will not hold still, and you were not given every colour.",
 		minAge = SCHOOL_START,
 		maxAge = 14,
 	},

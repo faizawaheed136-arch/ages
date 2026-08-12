@@ -34,6 +34,7 @@ local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
+local ArtService = require(script.Parent.ArtService)
 local PeopleService = require(script.Parent.PeopleService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local EnactService = require(script.Parent.EnactService)
@@ -1065,6 +1066,105 @@ Commands.geo = function(player: Player, args: { string }): string
 	return `usage: /geo [start|find|end|level <n>|on|off] — {GeographyService.Describe(player)}`
 end
 
+-- The art room, and the one verb whose bug you cannot see by looking at it.
+--
+-- Everything in Art is a colour on a part, so a wrong scoring rule and a right one look
+-- identical on screen -- both are a wall and a canvas with paint on them. This command
+-- exists to print the numbers underneath: which study is up, how many tubes you were
+-- handed, how many cells are filled and how many have gone stale, and what the canvas
+-- would score if you signed it now.
+--
+--   /art                      the wall, the palette, the canvas and the live score. The
+--                             stale count here and the stale count on the panel must be
+--                             the same number; if they ever differ, the panel is lying
+--                             about the only thing it is allowed to tell you.
+--   /art start                a lesson from where you stand, so the room can be tested
+--                             without waiting for a birthday. You still have to walk to
+--                             the easel -- the verb is not skippable and this does not
+--                             skip it.
+--   /art shift                moves one cell of the study now, instead of waiting out
+--                             Config.School.Art.ShiftSeconds. The command to use: the
+--                             whole subject is whether a player *notices* a shift, and
+--                             the only way to judge that is to cause one while looking
+--                             somewhere else on purpose.
+--   /art refill               fills the paint back up without the walk, for testing the
+--                             scoring apart from the errand.
+--   /art sign                 hands the canvas in the way the button does.
+--   /art end                  grades it where it stands, the way walking out does.
+--   /art level 1 then /art level 5
+--                             two tubes against eight, on the same study. At 1 a perfect
+--                             copy barely passes, which is the point -- if it does not
+--                             feel like being handed the picture's actual colours on the
+--                             way up, the ladder is a number and needs rewriting rather
+--                             than retuning.
+--   /art off                  the whole verb dark, so an art bug can be told apart from a
+--                             school one -- /school start should then hand art to the
+--                             quiz path instead of refusing.
+Commands.art = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return ArtService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		ArtService.SetEnabled(arg == "on")
+		return `art {arg} — {ArtService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = ArtService.ForceStart(player)
+		if not started then
+			return `could not start a study: {refusal or "no reason given"} — {ArtService.Describe(player)}`
+		end
+		return `study started — {ArtService.Describe(player)}`
+	end
+
+	if arg == "shift" then
+		-- Takes no player on purpose. The wall is the room's rather than anybody's, and a
+		-- shift landing for one painter and not the other beside them would be a different
+		-- game from the one this is.
+		if not ArtService.ForceShift() then
+			return `nothing on the wall — {ArtService.Describe(player)}`
+		end
+		return `the study moved — {ArtService.Describe(player)}`
+	end
+
+	if arg == "refill" then
+		if not ArtService.Refill(player) then
+			return `nothing to refill — {ArtService.Describe(player)}`
+		end
+		return `paint topped up — {ArtService.Describe(player)}`
+	end
+
+	if arg == "sign" then
+		if not ArtService.ForceSign(player) then
+			return `no study running — {ArtService.Describe(player)}`
+		end
+		return `canvas signed — {ArtService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not ArtService.ForceEnd(player) then
+			return `no study running — {ArtService.Describe(player)}`
+		end
+		return `canvas graded — {ArtService.Describe(player)}`
+	end
+
+	if arg == "level" then
+		local level = tonumber(args[2])
+		if level == nil or not ArtService.SetLevel(player, level) then
+			return `usage: /art level <1-{#Config.School.Art.PaletteByLevel}> — {ArtService.Describe(player)}`
+		end
+		return ArtService.Describe(player)
+	end
+
+	return `usage: /art [start|sign|end|shift|refill|level <n>|on|off] — {ArtService.Describe(player)}`
+end
+
 -- The first five years, on one command.
 --
 -- The real path is "/die, then play", and unlike school and work that is genuinely quick
@@ -1781,7 +1881,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
-	.. "/geo [start|find|end|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/geo [start|find|end|level <n>|on|off], "
+	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"
