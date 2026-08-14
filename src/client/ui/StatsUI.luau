@@ -116,6 +116,9 @@ export type StatsUIHandle = typeof(setmetatable(
 		shiftLabel: TextLabel,
 		shiftCaption: TextLabel,
 		shiftFill: Frame,
+		shiftXpTrack: Frame,
+		shiftXpFill: Frame,
+		shiftXpLabel: TextLabel,
 		-- Fixed at two, matching `Config.Work.Tasks.MaxConcurrent`, and built once at
 		-- startup rather than created and destroyed as tasks arrive. A row that is
 		-- rebuilt is a row that jumps the whole panel down a line the instant the shop
@@ -156,6 +159,11 @@ export type StatsUIHandle = typeof(setmetatable(
 		sweepPhase: string?,
 		sweepBaseProgress: number,
 		sweepElapsed: number,
+		houseRow: Frame,
+		houseLabel: TextLabel,
+		houseCaption: TextLabel,
+		billRow: Frame,
+		billLabel: TextLabel,
 	},
 	StatsUI
 ))
@@ -464,6 +472,72 @@ function StatsUI.new(): StatsUIHandle
 	shiftFill.BorderSizePixel = 0
 	shiftFill.Parent = shiftTrack
 
+	-- The standing XP track beneath the shift clock. A thin progress bar so the player
+	-- can see how close they are to the next band, independent of how much of the shift
+	-- is left. Same width as the track above it, slightly dimmer colour so it reads as
+	-- a second track rather than a doubled-up one.
+	local shiftXpTrack = Instance.new("Frame")
+	shiftXpTrack.Name = "XpTrack"
+	shiftXpTrack.Size = UDim2.new(1, 0, 0, 2)
+	shiftXpTrack.Position = UDim2.new(0, 0, 1, -2)
+	shiftXpTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	shiftXpTrack.BorderSizePixel = 0
+	shiftXpTrack.Parent = shiftRow
+
+	local shiftXpFill = Instance.new("Frame")
+	shiftXpFill.Name = "XpFill"
+	shiftXpFill.Size = UDim2.new(0, 0, 1, 0)
+	shiftXpFill.BackgroundColor3 = SHIFT_COLOR
+	shiftXpFill.BorderSizePixel = 0
+	shiftXpFill.Parent = shiftXpTrack
+
+	local shiftXpLabel = Instance.new("TextLabel")
+	shiftXpLabel.Name = "XpLabel"
+	shiftXpLabel.Size = UDim2.new(1, 0, 0, 10)
+	shiftXpLabel.Position = UDim2.new(0, 0, 1, -10)
+	shiftXpLabel.BackgroundTransparency = 1
+	shiftXpLabel.Font = Enum.Font.Gotham
+	shiftXpLabel.TextSize = 9
+	shiftXpLabel.TextXAlignment = Enum.TextXAlignment.Left
+	shiftXpLabel.TextColor3 = Color3.fromRGB(120, 160, 140)
+	shiftXpLabel.Text = ""
+	shiftXpLabel.Parent = shiftRow
+
+	-- Home: which house is linked to the player's life, and whether bills are due.
+	-- Hidden until a house is owned, because a row that always says "No home" is
+	-- visual noise during the years the player has no home. Shown briefly when a
+	-- bill is due so the player notices without having to open the full panel.
+	local houseRow = Instance.new("Frame")
+	houseRow.Name = "HouseRow"
+	houseRow.Size = UDim2.new(1, 0, 0, 28)
+	houseRow.LayoutOrder = 3.5
+	houseRow.BackgroundTransparency = 1
+	houseRow.Visible = false
+	houseRow.Parent = panel
+
+	local houseLabel = Instance.new("TextLabel")
+	houseLabel.Name = "Label"
+	houseLabel.Size = UDim2.new(1, 0, 0, 18)
+	houseLabel.BackgroundTransparency = 1
+	houseLabel.Font = Enum.Font.GothamMedium
+	houseLabel.TextSize = 13
+	houseLabel.TextXAlignment = Enum.TextXAlignment.Left
+	houseLabel.TextColor3 = Color3.fromRGB(180, 200, 230)
+	houseLabel.Text = ""
+	houseLabel.Parent = houseRow
+
+	local houseCaption = Instance.new("TextLabel")
+	houseCaption.Name = "Caption"
+	houseCaption.Size = UDim2.new(1, 0, 0, 10)
+	houseCaption.Position = UDim2.new(0, 0, 0, 17)
+	houseCaption.BackgroundTransparency = 1
+	houseCaption.Font = Enum.Font.Gotham
+	houseCaption.TextSize = 10
+	houseCaption.TextXAlignment = Enum.TextXAlignment.Left
+	houseCaption.TextColor3 = Color3.fromRGB(140, 140, 155)
+	houseCaption.Text = ""
+	houseCaption.Parent = houseRow
+
 	-- What you are doing this minute, as opposed to what you are doing this year.
 	--
 	-- Its own row directly under the shift, and hidden whenever there is no task,
@@ -586,6 +660,27 @@ function StatsUI.new(): StatsUIHandle
 	progressRow.LayoutOrder = 7
 	progressRow.BackgroundTransparency = 1
 	progressRow.Parent = panel
+
+	-- Bill indicator: a small warning row shown when monthly bills are past due.
+	-- Hidden by default; appears when debt > 0 or a bill was just unpaid.
+	local billRow = Instance.new("Frame")
+	billRow.Name = "BillRow"
+	billRow.Size = UDim2.new(1, 0, 0, 24)
+	billRow.LayoutOrder = 7.5
+	billRow.BackgroundTransparency = 1
+	billRow.Visible = false
+	billRow.Parent = panel
+
+	local billLabel = Instance.new("TextLabel")
+	billLabel.Name = "Label"
+	billLabel.Size = UDim2.new(1, 0, 0, 24)
+	billLabel.BackgroundTransparency = 1
+	billLabel.Font = Enum.Font.GothamMedium
+	billLabel.TextSize = 12
+	billLabel.TextXAlignment = Enum.TextXAlignment.Left
+	billLabel.TextColor3 = Color3.fromRGB(230, 120, 80)
+	billLabel.Text = ""
+	billLabel.Parent = billRow
 
 	local progressCaption = Instance.new("TextLabel")
 	progressCaption.Name = "Caption"
@@ -798,6 +893,9 @@ function StatsUI.new(): StatsUIHandle
 		shiftLabel = shiftLabel,
 		shiftCaption = shiftCaption,
 		shiftFill = shiftFill,
+		shiftXpTrack = shiftXpTrack,
+		shiftXpFill = shiftXpFill,
+		shiftXpLabel = shiftXpLabel,
 		progressFill = progressFill,
 		progressCaption = progressCaption,
 		ageUpButton = ageUpButton,
@@ -825,6 +923,11 @@ function StatsUI.new(): StatsUIHandle
 		sweepPhase = nil,
 		sweepBaseProgress = 0,
 		sweepElapsed = 0,
+		houseRow = houseRow,
+		houseLabel = houseLabel,
+		houseCaption = houseCaption,
+		billRow = billRow,
+		billLabel = billLabel,
 	}, StatsUI)
 end
 
@@ -881,6 +984,8 @@ function StatsUI.SetShift(self: StatsUIHandle, state: ShiftState)
 		self.shiftLabel.Text = title or "Not hired here"
 		self.shiftCaption.Text = blockedReason
 		self.shiftFill.Size = UDim2.new(0, 0, 1, 0)
+		self.shiftXpTrack.Visible = false
+		self.shiftXpLabel.Text = ""
 		return
 	end
 
@@ -902,6 +1007,8 @@ function StatsUI.SetShift(self: StatsUIHandle, state: ShiftState)
 			then `{string.upper(string.sub(standing, 1, 1))}{string.sub(standing, 2)} · {worked}`
 			else worked
 		self.shiftFill.Size = UDim2.new(0, 0, 1, 0)
+		self.shiftXpTrack.Visible = false
+		self.shiftXpLabel.Text = ""
 		return
 	end
 
@@ -920,6 +1027,20 @@ function StatsUI.SetShift(self: StatsUIHandle, state: ShiftState)
 		state.shiftGameHours,
 		Money.Format(state.earned)
 	)
+
+	-- The XP bar underneath the shift clock. Emptied whenever there is no job,
+	-- because a bar that reads "0 / --" is worse than a bar that is not there.
+	if state.nextBandXp ~= nil and state.nextBandXp > 0 then
+		self.shiftXpTrack.Visible = true
+		self.shiftXpFill.Size = UDim2.new(
+			math.clamp(state.standingXp / state.nextBandXp, 0, 1), 0, 1, 0
+		)
+		self.shiftXpLabel.Text =
+			`{state.standingXp} / {state.nextBandXp} to {string.lower(heldTitle)}`
+	else
+		self.shiftXpTrack.Visible = false
+		self.shiftXpLabel.Text = ""
+	end
 end
 
 -- One row of the only thing on this HUD that is about the next fifteen seconds.
@@ -1391,6 +1512,60 @@ end
 
 function StatsUI.OnPersonTapped(self: StatsUIHandle, callback: (personId: string) -> ())
 	self.onPersonTapped = callback
+end
+
+-- A house was bought, sold, or its job link changed. Shows the owned house and
+-- any linked home job; hides the row when nothing is owned.
+function StatsUI.SetHouse(self: StatsUIHandle, state: Types.HouseState?)
+	if state == nil then
+		self.houseRow.Visible = false
+		return
+	end
+	local ownedCount = 0
+	for _ in state.owned do
+		ownedCount += 1
+	end
+	if ownedCount == 0 then
+		self.houseRow.Visible = false
+		return
+	end
+	self.houseRow.Visible = true
+	-- Pick the first owned house and show its linked job if any.
+	for houseId, _ in state.owned do
+		local job = state.homeJob[houseId]
+		self.houseLabel.Text = "Home: " .. houseId
+		self.houseCaption.Text = if job ~= nil
+			then "Work-from-home: " .. job
+			else "No home job linked"
+		break
+	end
+end
+
+-- A bill was charged. Shows debt status and whether the current month is paid.
+function StatsUI.SetBill(self: StatsUIHandle, state: Types.BillState?)
+	if state == nil then
+		self.billRow.Visible = false
+		return
+	end
+	if state.debt > 0 then
+		self.billRow.Visible = true
+		self.billLabel.Text = `Debt: ${Money.Format(state.debt)} — ${if state.paid then "Paid" else "Unpaid"} this month`
+	elseif state.notice ~= nil then
+		self.billRow.Visible = true
+		self.billLabel.Text = state.notice
+		task.delay(4, function()
+			if self.billLabel.Text == state.notice then
+				self.billRow.Visible = false
+			end
+		end)
+	else
+		self.billRow.Visible = false
+	end
+end
+
+-- A milestone was achieved. Shows a brief flash-style notice.
+function StatsUI.ShowMilestone(self: StatsUIHandle, label: string, bonus: number)
+	self:ShowNotice(`Milestone: {label}! +${Money.Format(bonus)} credits`)
 end
 
 return StatsUI
