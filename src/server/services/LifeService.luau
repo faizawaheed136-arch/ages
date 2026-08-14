@@ -22,7 +22,10 @@ local DeliveryService = require(script.Parent.DeliveryService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
+local FightService = require(script.Parent.FightService)
 local PeopleService = require(script.Parent.PeopleService)
+local BillService = require(script.Parent.BillService)
+local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
@@ -217,6 +220,12 @@ function LifeService.Die(player: Player)
 	-- a dead body and a PUSH button that did nothing, so end it and clear
 	-- the yearly caps.
 	GymService.ResetForNewLife(player)
+	-- And the fight, which is the sharpest case of the lot. A bout left running would keep
+	-- ticking against a dead player -- an opponent still winding up, still landing strikes,
+	-- still taking footing off somebody who has no footing to lose -- and the death screen
+	-- would come up with three live buttons under it. The opponent leaves with everything
+	-- else; nothing is paid out, because the fight was not finished, it was interrupted.
+	FightService.ResetForNewLife(player)
 	-- And the room empties. Not for a mechanical reason -- nothing is left running --
 	-- but because the death screen is read over the world behind it, and a mother
 	-- standing in the doorway through her child's death would be the single worst frame
@@ -353,6 +362,15 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- prompt -- a childhood skipped for the second time should not also be a
 	-- childhood unpaid.
 	PocketMoneyService.OnAgeUp(player)
+
+	-- Bills are due every game year (Config.Bills.BillIntervalMonths months).
+	-- They run after pocket money so a life that cannot afford them falls into debt
+	-- rather than being patched over by childhood allowance.
+	BillService.Charge(player)
+
+	-- Milestone age checks run after the age has moved and bills are settled, so a
+	-- life that died from debt cannot also score the longevity bonus.
+	MilestoneService.OnAgeUp(player, ageYears)
 
 	if killIfOutOfHealth(player) then
 		return
