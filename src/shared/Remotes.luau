@@ -227,6 +227,49 @@ export type RemoteName =
 	-- moment you decide to, and routing it through a boss would mean the only way to go
 	-- unmarked was to walk back across the city to the person who marked you.
 	| "RequestGangColors"
+	-- House ownership updates. Pushed whenever a life buys or sells a suburb
+	-- home, or changes the job linked to it. The client reads the whole table
+	-- to redraw the property panel, so it always arrives complete.
+	| "HouseUpdated"
+	-- "I want to buy this suburb house." Carries the house id string; the
+	-- server checks ownership limit, money, and id validity before granting.
+	| "RequestBuyHouse"
+	-- "I want to sell this suburb house." Carries the house id string. The
+	-- server clears any linked home job first, then refunds the resale value.
+	| "RequestSellHouse"
+	-- "I want to link this job to my house." Carries houseId and jobId; the server
+	-- checks ownership, that the job exists, and that the job's placeId matches the
+	-- house before committing the link.
+	| "RequestSetHomeJob"
+	-- The dealership queue in progress, pushed as a whole snapshot: how many
+	-- are waiting, who is at the front, and where the counter is. Its own remote
+	-- rather than a field on ShiftUpdated because the queue is independent of
+	-- any shift -- it exists whether the player is working at the dealership or not.
+	| "CarDealerUpdated"
+	-- "I served the customer at the counter." No payload -- the server checks
+	-- that there is a queue and a front customer before granting the tip.
+	| "RequestCarDealerServe"
+	-- The fight in progress, pushed whole every tick it changes. Whole rather than
+	-- split into "my bars" and "their bars" because a fight is read as one picture --
+	-- a charge held against a wind-up filling opposite it -- and two remotes landing a
+	-- frame apart would let the player see a strike land before the tell that sold it.
+	| "FightUpdated"
+	-- "I am holding the strike button / I let go / I am guarding / I stepped." Carries
+	-- an action name and a boolean for the held ones. What it deliberately does not
+	-- carry is a charge value: the server owns the clock the meter is drawn from, so
+	-- the strongest thing a forged packet can claim is that a button went down.
+	| "RequestFightAction"
+	-- "Square up." Carries the id of the challenger whose dots were clicked, which the
+	-- server checks against the one it actually stood in front of this player.
+	| "RequestFightSquare"
+	-- Monthly bill update. Pushed whenever a bill is charged or debt changes.
+	| "BillDue"
+	-- A milestone was achieved this life. Carries milestone id, label, and bonus.
+	| "MilestoneAchieved"
+	-- A bond milestone was crossed with a specific person. Carries person name and milestone.
+	| "BondMilestone"
+	-- An NPC shared gossip about the player. Carries speaker, topic, and effect.
+	| "GossipUpdate"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -436,6 +479,19 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestGangOpen",
 	"RequestGangChoice",
 	"RequestGangColors",
+	"HouseUpdated",
+	"RequestBuyHouse",
+	"RequestSellHouse",
+	"RequestSetHomeJob",
+	"CarDealerUpdated",
+	"RequestCarDealerServe",
+	"FightUpdated",
+	"RequestFightAction",
+	"RequestFightSquare",
+	"BillDue",
+	"MilestoneAchieved",
+	"BondMilestone",
+	"GossipUpdate",
 }
 
 local FOLDER_NAME = "RemoteEvents"
