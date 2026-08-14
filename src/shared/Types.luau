@@ -2632,6 +2632,10 @@ export type LobbyState = {
 	activeSlot: number,
 	slotCount: number,
 	livesLived: number,
+	-- The join code active for the player's current active slot, or nil when
+	-- no code has been generated. The client reads this to decide whether to
+	-- show the code on the card and whether the join input is live.
+	joinCode: string?,
 }
 
 return Types
