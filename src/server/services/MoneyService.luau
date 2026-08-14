@@ -57,29 +57,6 @@ local function whole(amount: number): number
 	return math.floor(amount)
 end
 
--- What a life starts with.
---
--- A function rather than a direct read of Config, and this is the seam the whole
--- money system is built to leave open. Being born into a family with something
--- behind it -- the difference between an ordinary house and a palace -- changes
--- exactly this answer and nothing else: the profile field, the HUD, the prices and
--- every guard downstream are all indifferent to where the first figure came from.
---
--- One number today, and deliberately not a speculative table of family types with
--- one entry in it. When backgrounds exist they will be content, chosen at the
--- moment a life begins, and read here.
-function MoneyService.StartingBalance(_player: Player): number
-	return whole(Config.Money.StartingBalance)
-end
-
-function MoneyService.Get(player: Player): number?
-	local profile = DataService.GetProfile(player)
-	if profile == nil then
-		return nil
-	end
-	return Lives.Active(profile.Data).money
-end
-
 -- Whether the player could pay this right now. Used both to decide what a choice
 -- looks like before it is taken and to refuse it when it is, so the two can never
 -- disagree about what is affordable.
@@ -182,19 +159,6 @@ function MoneyService.Set(player: Player, amount: number): boolean
 	data.money = target
 	push(player, previous, data.money, "debug /money")
 	return true
-end
-
--- `ResetForNewLife` used to live here, and it is gone rather than kept for later. It set a
--- life's balance back to `StartingBalance` for the rebirth that ran in place; there is no
--- rebirth any more -- a new life is a fresh `Lives.New()`, which reads the same number out of
--- Config on the way in -- so the reset had nothing left to reset. See `Lives.New`.
-
-function MoneyService.Push(player: Player)
-	local profile = DataService.GetProfile(player)
-	if profile ~= nil then
-		local data = Lives.Active(profile.Data)
-		push(player, data.money, data.money, "join")
-	end
 end
 
 function MoneyService:Init() end
