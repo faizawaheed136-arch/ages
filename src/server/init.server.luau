@@ -62,11 +62,17 @@ local GangService = require(services.GangService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
+local FightService = require(services.FightService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
 local SetupService = require(services.SetupService)
 local ReturnService = require(services.ReturnService)
 local DebugService = require(services.DebugService)
+local HouseService = require(services.HouseService)
+local CarDealerService = require(services.CarDealerService)
+local BillService = require(services.BillService)
+local MilestoneService = require(services.MilestoneService)
+local GossipService = require(services.GossipService)
 
 DataService:Init()
 StatService:Init()
@@ -102,6 +108,10 @@ EventService:Start()
 EnactService:Start()
 PropService:Start()
 SceneService:Start()
+-- ReturnService must start before BodyService: its onPlayerAdded hook calls
+-- SetupService.Skip to create a fresh child life, and that has to happen
+-- before BodyService's watch applies the (then-adult) size to the character.
+ReturnService:Start()
 BodyService:Start()
 LifeService:Start()
 WorldEventService:Start()
@@ -110,6 +120,16 @@ NPCService:Start()
 CompanionService:Start()
 DeliveryService:Start()
 WorkService:Start()
+HouseService:Init()
+CarDealerService:Init()
+BillService:Init()
+MilestoneService:Init()
+GossipService:Init()
+HouseService:Start()
+CarDealerService:Start()
+BillService:Start()
+MilestoneService:Start()
+GossipService:Start()
 -- Before SchoolService, which hands a Science, a Geography or an Art lesson straight to
 -- whichever of these owns the verb. Cosmetic like every other line in this list -- all four
 -- are running before the first player finishes loading -- but reading it in this order is
@@ -145,6 +165,11 @@ GangService:Start()
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()
 GymService:Start()
+-- The fight, after NPCService because squaring somebody up spawns a rig, and after
+-- StatService because the pool a player has to spend is read off their health the moment a
+-- bout opens. Both are up well above this. Nothing else in the game reads a fight, so it
+-- goes late and nothing waits on it.
+FightService:Start()
 PeopleService:Start()
 -- Dead last of the crime services, and after PeopleService rather than before it. The crowd
 -- is the only part of this that reads bodies somebody else put in the street: a witness pass
@@ -153,12 +178,9 @@ PeopleService:Start()
 -- it took the first person to spawn.
 WitnessService:Start()
 ChildhoodService:Start()
--- Last of the real services, and it has to be. It checks arriving players for a life worth
--- running and sends the ones without one back to the lobby -- but the check has to be made
--- against a fully booted server, because "no life here" is a claim about state every service
--- above has had its chance to load. SetupService has no Start any more: it used to raise the
--- character menu from here, and the menu is in the other place now.
-ReturnService:Start()
+-- ReturnService already started above, before BodyService, so the child life is in place
+-- before the body is sized. DebugService still runs last because it drives the other
+-- services and no-ops outside Studio.
 DebugService:Start()
 
 print("[AGES] Server started")
