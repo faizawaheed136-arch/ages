@@ -76,11 +76,6 @@ function MilestoneService.OnFirstHouse(player: Player)
 	checkAndFire(player, "FirstHouse", "Homeowner", MILESTONES.FirstHouse.bonus)
 end
 
--- Check car purchase milestone.
-function MilestoneService.OnFirstCar(player: Player)
-	checkAndFire(player, "FirstCar", "Car Owner", MILESTONES.FirstCar.bonus)
-end
-
 -- Check shift count milestones. Called from WorkService after a shift completes.
 function MilestoneService.OnShiftComplete(player: Player, totalShifts: number)
 	local life = lifeDataFor(player)
