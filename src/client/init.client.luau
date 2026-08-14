@@ -18,6 +18,13 @@ local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
 local BankUI = require(script.ui.BankUI)
 local GangUI = require(script.ui.GangUI)
+local FightUI = require(script.ui.FightUI)
+local HouseUI = require(script.ui.HouseUI)
+local CarDealerUI = require(script.ui.CarDealerUI)
+local MoneyPop = require(script.world.MoneyPop)
+local BonusPop = require(script.world.BonusPop)
+local MilestoneFlash = require(script.world.MilestoneFlash)
+local BondCelebration = require(script.world.BondCelebration)
 local Guide = require(script.world.Guide)
 local JobPosts = require(script.world.JobPosts)
 local TaskMark = require(script.world.TaskMark)
@@ -46,6 +53,7 @@ type BankState = Types.BankState
 type GangState = Types.GangState
 type GangPanel = Types.GangPanel
 type ReportCard = Types.ReportCard
+type FightState = Types.FightState
 
 -- SetCoreGuiEnabled throws while the core scripts are still loading, so this
 -- retries for a few frames instead of giving up on the first attempt.
@@ -85,6 +93,9 @@ local searchRing = SearchRing.new()
 local till = TillUI.new()
 local bank = BankUI.new()
 local gang = GangUI.new()
+local fight = FightUI.new()
+local house = HouseUI.new()
+local carDealer = CarDealerUI.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -113,6 +124,12 @@ local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
 local RequestGangOpenRemote = Remotes.Get("RequestGangOpen")
 local RequestGangChoiceRemote = Remotes.Get("RequestGangChoice")
 local RequestGangColorsRemote = Remotes.Get("RequestGangColors")
+local RequestFightSquareRemote = Remotes.Get("RequestFightSquare")
+local RequestFightActionRemote = Remotes.Get("RequestFightAction")
+local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
+local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
+local RequestSetHomeJobRemote = Remotes.Get("RequestSetHomeJob")
+local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -216,11 +233,64 @@ prompts:On("Boss", function(gangId: string)
 	RequestGangOpenRemote:FireServer(gangId)
 end)
 
+-- Clicking the dots over the head of somebody who wants a fight. Its own kind for the same
+-- reason a boss is: dispatch is by kind alone, so a fighter registered as a Person would
+-- open the ordinary chat panel over somebody who is about to swing at you.
+--
+-- The id goes up and the server checks it against the opponent actually stood in front of
+-- this player rather than looking it up in the content table -- so this being a value the
+-- client chose does not let the client choose who it is fighting, or conjure a second one.
+prompts:On("Fight", function(fighterId: string)
+	RequestFightSquareRemote:FireServer(fighterId)
+end)
+
+-- Clicking the dots at the car dealership counter. Its own kind so the client
+-- dispatches on type rather than id: a dealership dot registered as a Station
+-- would open a lab panel over a sales floor, and nobody wants that confusion.
+prompts:On("Dealer", function()
+	carDealer:Open()
+end)
+
+-- The three answers, and all three go up as bare requests: what a strike is worth is
+-- decided entirely by how long the *server* saw the button held, not by anything sent from
+-- here. A client that sent a power value would be a client that could send 1.0 every time.
+--
+-- Strike and guard send their held state on both edges. The release is the half that
+-- matters -- it is what commits a charge -- so FightUI is careful to have exactly one path
+-- that can change a hold, and every way a hold can end runs through it.
+fight:OnStrike(function(held: boolean)
+	RequestFightActionRemote:FireServer("strike", held)
+end)
+
+fight:OnGuard(function(held: boolean)
+	RequestFightActionRemote:FireServer("guard", held)
+end)
+
+fight:OnSidestep(function()
+	RequestFightActionRemote:FireServer("sidestep")
+end)
+
 -- One boolean for both of the room's controls, and which one it means is never named here.
 -- The server decides from where the player is standing, because a client that could say
 -- "silence" while stood at the vault would delete the walk that is the entire activity.
 bank:OnHold(function(holding: boolean)
 	RequestBankHoldRemote:FireServer(holding)
+end)
+
+house:OnBuyHouse(function(houseId: string)
+	RequestBuyHouseRemote:FireServer(houseId)
+end)
+
+house:OnSellHouse(function(houseId: string)
+	RequestSellHouseRemote:FireServer(houseId)
+end)
+
+house:OnSetHomeJob(function(houseId: string, jobId: string)
+	RequestSetHomeJobRemote:FireServer(houseId, jobId)
+end)
+
+carDealer:OnServe(function()
+	RequestCarDealerServeRemote:FireServer()
 end)
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
@@ -525,9 +595,22 @@ Remotes.Get("StatsUpdated").OnClientEvent:Connect(function(stats: Stats)
 end)
 
 -- One number, pushed on join and on every movement. There is no request for it and
--- nothing to reconcile: whatever arrived last is the balance.
-Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number)
+-- nothing to reconcile: whatever arrived last is the balance. The client also
+-- tracks the previous balance so it can show a directional pop for every change.
+local moneyPrevious: number? = nil
+Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number, reason: string?)
+	local previous = moneyPrevious
+	moneyPrevious = balance
 	ui:SetMoney(balance)
+	if previous ~= nil then
+		local delta = balance - previous
+		if delta ~= 0 then
+			MoneyPop.Show(nil, delta)
+			if reason ~= nil then
+				BonusPop.Show(nil, math.abs(delta), reason)
+			end
+		end
+	end
 end)
 
 -- A whole snapshot each time rather than a delta, so a dropped push is corrected
@@ -636,6 +719,18 @@ Remotes.Get("HuntUpdated").OnClientEvent:Connect(function(state: HuntState?)
 	hunt:Set(state)
 end)
 
+-- The fight in progress. One half of one fact, and the other half is the opponent
+-- themselves -- who is stood in front of the player, winding up, in the world. That is
+-- deliberate and it is why the tell is drawn twice: the panel's bar is the precise one and
+-- the body is the readable one, and a player should be able to learn to fight off either.
+--
+-- Nothing is drawn on the floor. Every other destination in the game is a lit disc, but a
+-- fight has no destination -- the whole of it happens inside twelve studs of where you are
+-- already standing, and a marker under somebody's feet would be marking the obvious.
+Remotes.Get("FightUpdated").OnClientEvent:Connect(function(state: FightState?)
+	fight:Set(state)
+end)
+
 -- The canvas in progress. As short as the hunt's and for a different reason: the other
 -- half of this fact is already in the world and is not ours to draw. The study on the wall
 -- is built by the server as parts, shared by everybody in the room, and it changes by a
@@ -723,6 +818,31 @@ Remotes.Get("PersonUpdated").OnClientEvent:Connect(function(state: PersonState?)
 		phonePanelKey = nil
 	end
 	ui:SetPerson(state)
+end)
+
+Remotes.Get("HouseUpdated").OnClientEvent:Connect(function(state: Types.HouseState?)
+	house:Set(state)
+end)
+
+Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarDealerState?)
+	carDealer:Set(state)
+end)
+
+Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
+	ui:SetBill(state)
+end)
+
+Remotes.Get("MilestoneAchieved").OnClientEvent:Connect(function(event: Types.MilestoneEvent)
+	MilestoneFlash.Show(event.label, event.bonus)
+	ui:ShowNotice(`Milestone: {event.label}! +{event.bonus} credits`)
+end)
+
+Remotes.Get("BondMilestone").OnClientEvent:Connect(function(event: Types.BondMilestoneEvent)
+	BondCelebration.Show(event.person, event.label)
+end)
+
+Remotes.Get("GossipUpdate").OnClientEvent:Connect(function(event: Types.GossipEvent)
+	ui:ShowNotice(`The townsfolk are talking about: "${event.topics}"`)
 end)
 
 -- Who you know and what they have left, as a whole list for the HUD. Whole rather
@@ -816,6 +936,15 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- button under a death notice is a control offering to change something about a person
 	-- who no longer has a head, and the corner is better empty.
 	gang:Set(nil)
+	-- And the fight, which needs it most: a fight panel is three live buttons, and leaving
+	-- them under a death notice would be offering to keep swinging. The server has already
+	-- ended the bout -- this is the client refusing to be the one that lags behind.
+	fight:Set(nil)
+	-- And the property panel and the dealership queue. Neither is a countdown, but a
+	-- buy button or a serve button under a death notice is still a control over a person
+	-- who no longer has a head, and the corner is better empty.
+	house:Set(nil)
+	carDealer:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil
