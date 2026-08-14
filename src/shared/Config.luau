@@ -4001,6 +4001,30 @@ Config.Lobby = {
 		-- edge of the screen is pure black and the composition loses its floor.
 		ScrimTransparency = 0.12,
 	},
+
+	-- Join codes: a short string a player generates for one of their slots, then
+	-- enters (by hand or on another device) to jump straight to Play. It is a
+	-- convenience, not a security feature -- the code is checked against the
+	-- server's own table and the slot is still bounds-checked on arrival.
+	JoinCode = {
+		-- How many characters the code has. Six is long enough to not collide by
+		-- chance (36^6 ≈ 2 billion) and short enough to type without mistyping.
+		Length = 6,
+
+		-- What characters are allowed. Uppercase digits and letters only -- no
+		-- I, O, or l which look like 1 and 0 on small screens.
+		Charset = "0123456789ABCDEFGHJKMNPQRSTUVWXYZ",
+
+		-- How long a code lives after it is generated. Five minutes is enough to
+		-- type it into a second device and press Enter, and short enough that a
+		-- leaked code expires before it is worth anything.
+		TTLSeconds = 300,
+
+		-- How many active codes a single player may hold at once. One is the
+		-- sensible default -- a code is a one-time shortcut, not a persistent
+		-- share link -- and keeping it low means the server table stays small.
+		MaxPerPlayer = 1,
+	},
 }
 
 -- Spins: Robux buys a pull at a perk, disclosed odds and all. The one deliberate exception
