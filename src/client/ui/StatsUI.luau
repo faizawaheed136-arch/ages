@@ -61,6 +61,13 @@ local TASK_URGENT_COLOR = Color3.fromRGB(228, 140, 80)
 -- TASK_URGENT_COLOR because urgency is time-based and a rush is urgent from the
 -- first second.
 local TASK_RUSH_COLOR = Color3.fromRGB(220, 100, 80)
+-- Two-mark fetch/hand cycles. Blue sets them apart from the single-mark tasks
+-- and from the rush, so a player glancing at the HUD can tell whether they are
+-- in a round-trip or a point-to-point before reading the label.
+local TASK_FETCH_COLOR = Color3.fromRGB(120, 170, 230)
+-- Single-mark tasks. Green is the default "go do this" colour, distinct from
+-- blue (fetch cycle) and orange (rush), and from the urgent amber.
+local TASK_HAND_COLOR = Color3.fromRGB(120, 200, 130)
 -- Held while a prompt is open. Grey and still, the same language the locked choice
 -- markers use: this is not a clock that has broken, it is one that is not running.
 local TASK_PAUSED_COLOR = Color3.fromRGB(120, 118, 128)
@@ -1115,7 +1122,9 @@ local function drawTask(parts: TaskRow, state: TaskState)
 	-- Ceiling rather than floor, so the number reaches zero exactly as the time does
 	-- instead of sitting on "0s" for a whole second while the task is still winnable.
 	parts.caption.Text = `{math.ceil(left)}s left`
-	local baseColor = if state.rush then TASK_RUSH_COLOR else TASK_COLOR
+	local baseColor = if state.rush then TASK_RUSH_COLOR
+		elseif state.spotCount > 1 then TASK_FETCH_COLOR
+		else TASK_HAND_COLOR
 	parts.fill.BackgroundColor3 = if share <= TASK_URGENT_SHARE then TASK_URGENT_COLOR else baseColor
 end
 
