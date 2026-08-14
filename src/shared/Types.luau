@@ -321,6 +321,22 @@ export type Job = {
 	-- Who could put in a word for you here, if anyone would. Only ever read alongside
 	-- `minSmarts`, because lowering a bar that does not exist is not a favour.
 	vouch: JobVouch?,
+	-- Job-specific shift events. Picked from first, falling back to the global pool.
+	-- Nil means the job uses only the generic event pool.
+	shiftEvents: { JobShiftEvent }?,
+}
+
+export type JobShiftEvent = {
+	id: string,
+	weight: number,
+	-- Text shown when the event triggers.
+	line: string,
+	-- Optional standing change.
+	standing: number?,
+	-- Optional money bonus or penalty.
+	money: number?,
+	-- Optional happiness change.
+	happiness: number?,
 }
 
 -- What the HUD is told about the shift in progress. A snapshot rather than a
@@ -357,6 +373,13 @@ export type ShiftState = {
 	-- and the game has told you nothing about why. A refusal has to say what it
 	-- wants from you or the ladder is invisible.
 	blockedReason: string?,
+	-- XP carried from `workXp` on this life's data. Reset to zero when the shift
+	-- starts and refilled each tick from the server so the bar stays honest.
+	standingXp: number,
+	-- The XP value at which the next standing band is reached. Used by the HUD
+	-- to turn the raw `standingXp` into a fraction for the progress bar. Nil when
+	-- the player is at the maximum band.
+	nextBandXp: number?,
 }
 
 -- Where the game is currently pointing the player, and what they will find when they
@@ -1151,6 +1174,125 @@ export type WorkoutState = {
 	looksGained: number,
 }
 
+-- A fight in progress, as the client needs to draw it.
+--
+-- Everything here is server-owned. The client renders bars and sends button presses;
+-- it decides nothing, which is why a charge that is worth more than the meter showed
+-- is not a thing that can happen. The one concession to smoothness is `charge`, which
+-- the client advances between ticks the same way the gym advances its needle -- and,
+-- like the gym, from a share the server sent rather than from a clock of its own.
+export type FightState = {
+	-- "square" is the moment before it starts, when somebody is stood in front of you
+	-- and the panel is asking. "down" is either fighter on the floor; "over" is the
+	-- result sitting on screen. Both exist as phases rather than as a closed panel
+	-- because the end of a fight is the part the player most needs to read.
+	phase: "square" | "fight" | "down" | "over",
+	-- Who, and what kind of fighter they are. The style is shown because it is the
+	-- thing worth learning: the whole depth of this system is that a brawler and a
+	-- scrapper want opposite answers out of the same three buttons, and a player who
+	-- cannot name what they are facing cannot build that knowledge.
+	foeName: string,
+	foeStyle: string,
+	-- One sentence naming the answer to this opponent, shown only while squaring up.
+	-- It is on the state rather than in the client because the whole difficulty curve
+	-- lives in content/Fighters.luau, and a style added there with no advice written
+	-- beside it should arrive on screen mute rather than arrive wrong.
+	foeBlurb: string,
+	-- The contest. Footing is what runs out; whoever hits zero goes down.
+	footing: number,
+	maxFooting: number,
+	foeFooting: number,
+	foeMaxFooting: number,
+	-- The shared pool the player's three actions spend from.
+	stamina: number,
+	maxStamina: number,
+	-- What the player is doing. `charge` is 0-1 through a wind-up and only moves while
+	-- the strike button is held; `recover` is 0-1 of a lockout still to run, which is
+	-- what greys the buttons out.
+	charge: number,
+	guarding: boolean,
+	sidestepping: boolean,
+	recover: number,
+	-- What the opponent is doing, which is the entire read. `foeWind` runs 0-1 through
+	-- their wind-up and the strike lands at 1, so the tell the player is reacting to is
+	-- a bar filling rather than an animation they have to have seen before.
+	foeIntent: "wait" | "close" | "wind" | "guard" | "recover" | "down",
+	foeWind: number,
+	-- Whether the opponent is close enough to hit and be hit. Drives the "break off to
+	-- recover" read, since stamina comes back faster out here.
+	engaged: boolean,
+	-- The last exchange, in a word: "Blocked", "Dodged", "Broke guard", "Whiffed".
+	-- Carries its own good/bad rather than letting the client infer one from the
+	-- wording, for the same reason a person's reply does.
+	beat: string?,
+	beatGood: boolean,
+	-- Thresholds the power meter has to draw. Sent rather than read from Config on the
+	-- client because the meter is the only place the overcharge decision is visible,
+	-- and a client drawing the line from its own copy is a client that can disagree
+	-- with the server about where it was.
+	jabShare: number,
+	guardBreakShare: number,
+	overchargeShare: number,
+	-- Non-nil once the fight is decided: what to put on screen.
+	result: string?,
+	won: boolean,
+}
+
+-- A kind of fighter: one opponent personality, expressed entirely in timings.
+--
+-- This is the "same input, different opponent" requirement, and it is the reason the
+-- fight can survive a hundred repetitions on three buttons. Nothing here adds a move.
+-- What it changes is how long the tell lasts, how hard the answer hits and how often
+-- they choose to guard instead -- and those three numbers are enough to make a brawler
+-- and a scrapper want opposite play out of the identical control set. A player who has
+-- learned to sidestep a brawler will get hit doing it to a scrapper, and that is the
+-- knowledge the system is built to accumulate.
+--
+-- Each one carries its own body rather than a cast id. The people you fight are not
+-- drawn from the population you befriend, so pointing at content/Cast.luau would mean
+-- a street tough who might also be somebody's mother.
+export type FighterDef = {
+	id: string,
+	-- The style, shown to the player during the fight. Worth naming for the same
+	-- reason the tell is worth drawing: you cannot learn a matchup you cannot identify.
+	name: string,
+	-- What to do about them, in a sentence. Shown on the square-up panel, so the first
+	-- one the player ever meets is not a guessing game, and printed by the debug
+	-- command. The activity law asks for a tutorial that is always there and free to
+	-- ignore; on a fight lasting twenty seconds this is the whole of it.
+	blurb: string,
+	body: CastMember,
+	ageYears: number,
+	-- Multiplier on the base footing pool. Above 1 is somebody who takes longer to put
+	-- down, which is not the same as somebody who hits harder and should not be used
+	-- as though it were.
+	-- Safe range: 0.8 .. 1.4.
+	footingScale: number,
+	-- How long their wind-up telegraphs before it lands. THE most important number in
+	-- the file: it is the reaction window, and every archetype is really a statement
+	-- about how much time the player gets to choose an answer.
+	-- Safe range: 0.45 .. 1.6.
+	windSeconds: number,
+	-- What their strike takes off the player's footing when it lands clean.
+	-- Safe range: 6 .. 22.
+	strikeFooting: number,
+	-- Their lockout after striking. This is the punish window the player is playing
+	-- for, and it is why the heaviest hitter has to be the slowest to recover.
+	-- Safe range: 0.3 .. 1.0.
+	recoverSeconds: number,
+	-- How often they answer with a guard instead of a wind-up, 0-1. A fighter who
+	-- guards is a fighter the player has to overcharge against, which is the only way
+	-- the overcharge risk becomes mandatory rather than optional.
+	-- Safe range: 0 .. 0.6.
+	guardChance: number,
+	-- How long they hold that guard before dropping it.
+	-- Safe range: 0.6 .. 2.0.
+	guardSeconds: number,
+	-- The beat between finishing one action and starting the next. Low is relentless.
+	-- Safe range: 0.15 .. 0.9.
+	restSeconds: number,
+}
+
 -- One thing you can do with somebody: one row on the panel their dots open.
 --
 -- Shaped after EventChoice on purpose, because it is the same idea seen from the other
@@ -1447,6 +1589,9 @@ export type Person = {
 	requires: { string }?,
 	forbids: { string }?,
 	offers: { PersonOffer },
+	-- Contextual dialogue lines keyed by situation. Picked when the person is near
+	-- the player and none of the offer panel is open. Nil means no extra lines.
+	contextualLines: { [string]: { string } }?,
 }
 
 -- The person in front of the player, pushed to the HUD. Nil means nobody is, which is
@@ -1480,6 +1625,9 @@ export type PersonState = {
 	-- opens the same panel in the PhoneCall voice, and the row saying who you are
 	-- standing next to does not appear for one, because you are not next to them.
 	contact: boolean,
+	-- A contextual line picked from the person's archetype, shown when no offer
+	-- panel is open. Nil when there is no contextual line for the current situation.
+	contextualLine: string?,
 }
 
 -- The people the player has met, as a list the HUD can render as a tappable roster
@@ -2130,6 +2278,10 @@ export type LifeData = {
 	-- have never worked and a job that has no opinion of you yet are the same thing,
 	-- which they are.
 	jobStanding: { [string]: number },
+	-- XP earned this life at the current job, toward the next standing band.
+	-- Reset when the job changes or the life dies. Read as a raw number; the
+	-- HUD turns it into a fraction of the distance to the next band threshold.
+	workXp: number,
 	-- Jobs that have let you go this year, keyed by job id. Set when standing hits
 	-- Config.Work.Standing.FireAt; blocks re-hire at that one employer until the next
 	-- birthday clears it. A cooldown rather than a permanent ban -- being sacked costs
@@ -2316,6 +2468,31 @@ export type LifeData = {
 	-- Per life, like everything above it. Cleared on death, which is what brings the menu
 	-- back for the next one.
 	setup: LifeSetup?,
+	-- House ownership per life. Each suburb house a life has purchased,
+	-- and the job linked to it for work-from-home purposes.
+	--
+	-- Stored on LifeData rather than ProfileData because it resets on death --
+	-- a new life inherits no property, just as it inherits no money.
+	--
+	-- `owned` is a set of house ids the life has bought; `homeJob` maps a house
+	-- id to the job id the life works from that house. Empty is the default,
+	-- which reads as "no property, no home job" -- true of a newborn, and the
+	-- right thing to hand an old save written before houses existed.
+	houses: {
+		owned: { [string]: boolean },
+		homeJob: { [string]: string },
+	},
+	-- Bills tracking per life. Reset on death like money.
+	bills: {
+		debt: number,
+		lastBillMonth: number,
+		shiftsCompleted: number,
+	},
+	-- Milestones already achieved this life, keyed by milestone id. Reset on death.
+	milestones: { [string]: boolean },
+	-- Bond milestones already fired this life, keyed by "personId_milestoneValue".
+	-- Reset on death so each life gets its own relationship arc.
+	bondMilestones: { [string]: boolean },
 }
 
 -- The account: one player, several lives, and the few things that outlive all of them.
@@ -2396,6 +2573,53 @@ export type SlotSummary = {
 	gender: Gender?,
 	ageYears: number?,
 	alive: boolean?,
+}
+
+-- House ownership state, pushed whole whenever a life buys or sells a suburb home
+-- or changes the job linked to it. The client draws a property panel from this,
+-- so the full set of owned and available houses arrives each time.
+export type HouseState = {
+	owned: { [string]: boolean },
+	homeJob: { [string]: string },
+	available: { [string]: number },
+}
+
+-- The dealership queue in progress. Pushed whenever the queue changes: a customer
+-- arrives, is served, or the player clocks on at the auto_dealer shift.
+export type CarDealerState = {
+	waiting: number,
+	counter: Vector3?,
+	greeting: string?,
+	served: boolean,
+}
+
+-- Monthly bill state, pushed whenever a bill is charged or debt changes.
+export type BillState = {
+	totalThisMonth: number,
+	debt: number,
+	paid: boolean,
+	notice: string?,
+}
+
+-- A milestone achievement, pushed once when a life crosses a threshold.
+export type MilestoneEvent = {
+	milestone: string,
+	label: string,
+	bonus: number,
+}
+
+-- An NPC gossip event, pushed when a townsfolk shares news about the player.
+export type GossipEvent = {
+	speaker: string,
+	topics: string,
+	effect: string,
+}
+
+-- A bond milestone was crossed with a specific person.
+export type BondMilestoneEvent = {
+	person: string,
+	milestone: number,
+	label: string,
 }
 
 -- What the lobby knows about this player, pushed whole whenever any of it changes.
