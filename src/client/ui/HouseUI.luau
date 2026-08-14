@@ -29,8 +29,6 @@ local BUY_COLOR = Color3.fromRGB(90, 200, 120)
 local BUY_TEXT = Color3.fromRGB(20, 40, 20)
 local SELL_COLOR = Color3.fromRGB(226, 78, 74)
 local SELL_TEXT = Color3.fromRGB(255, 240, 238)
-local LINK_COLOR = Color3.fromRGB(110, 160, 220)
-local LINK_TEXT = Color3.fromRGB(20, 30, 50)
 
 local HouseUI = {}
 HouseUI.__index = HouseUI
@@ -47,7 +45,6 @@ export type HouseUIHandle = typeof(setmetatable(
 		noticeLabel: TextLabel,
 		onBuyHouse: ((houseId: string) -> ())?,
 		onSellHouse: ((houseId: string) -> ())?,
-		onSetHomeJob: ((houseId: string, jobId: string) -> ())?,
 	},
 	HouseUI
 ))
@@ -177,7 +174,6 @@ function HouseUI.new(): HouseUIHandle
 		noticeLabel = noticeLabel,
 		onBuyHouse = nil,
 		onSellHouse = nil,
-		onSetHomeJob = nil,
 	}, HouseUI) :: HouseUIHandle
 
 	return self
@@ -189,10 +185,6 @@ end
 
 function HouseUI.OnSellHouse(self: HouseUIHandle, handler: (houseId: string) -> ())
 	self.onSellHouse = handler
-end
-
-function HouseUI.OnSetHomeJob(self: HouseUIHandle, handler: (houseId: string, jobId: string) -> ())
-	self.onSetHomeJob = handler
 end
 
 function HouseUI.Set(self: HouseUIHandle, state: HouseState?)
@@ -281,31 +273,9 @@ function HouseUI.Set(self: HouseUIHandle, state: HouseState?)
 				end
 			end)
 
-			if jobId == nil then
-				local linkBtn = Instance.new("TextButton")
-				linkBtn.Name = "Link"
-				linkBtn.Size = UDim2.new(0, 80, 1, 0)
-				linkBtn.Position = UDim2.new(1, -80, 0, 0)
-				linkBtn.BackgroundColor3 = LINK_COLOR
-				linkBtn.BorderSizePixel = 0
-				linkBtn.AutoButtonColor = false
-				linkBtn.Font = Enum.Font.GothamBold
-				linkBtn.TextSize = 11
-				linkBtn.TextColor3 = LINK_TEXT
-				linkBtn.Text = "LINK"
-				linkBtn.Parent = row
-
-				local linkCorner = Instance.new("UICorner")
-				linkCorner.CornerRadius = UDim.new(0, 5)
-				linkCorner.Parent = linkBtn
-
-				linkBtn.MouseButton1Click:Connect(function()
-					local handler = self.onSetHomeJob
-					if handler ~= nil then
-						handler(houseId, "")
-					end
-				end)
-			end
+			-- No LINK button: home-job linking requires a job picker UI that
+			-- does not exist yet. The row still shows the linked job when one
+			-- is present; when it is absent the button is simply omitted.
 		end
 	else
 		self.ownedSection.Text = "OWNED"
