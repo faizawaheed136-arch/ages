@@ -189,50 +189,6 @@ function HouseService.SetHomeJob(player: Player, houseId: string, jobId: string)
 	return true, jobId
 end
 
--- Get the home job id for an owned house, or nil if none is linked.
-function HouseService.GetHomeJob(player: Player, houseId: string): string?
-	if typeof(houseId) ~= "string" then
-		return nil
-	end
-	local life = lifeDataFor(player)
-	if life == nil then
-		return nil
-	end
-	local houses = life.houses
-	if houses == nil then
-		return nil
-	end
-	if houses.owned[houseId] ~= true then
-		return nil
-	end
-	return houses.homeJob[houseId]
-end
-
--- Check whether a job can be done from home (placeId is an owned suburb house
--- with a linked home job). Returns the job with its place verified, or nil.
-function HouseService.ResolveJob(player: Player, job: Types.Job): Types.Job?
-	if not Config.Work.HomeJobAllowed then
-		return nil
-	end
-	if not string.find(job.placeId, "^suburb_") == 1 then
-		return nil
-	end
-
-	local life = lifeDataFor(player)
-	if life == nil then
-		return nil
-	end
-
-	local houses = life.houses :: { owned: { [string]: boolean }, homeJob: { [string]: string } }
-	if houses.owned[job.placeId] ~= true then
-		return nil
-	end
-
-	-- The job is valid and the player owns the house. Return it as-is.
-	-- WorkService.stationAtHand() will handle the rest.
-	return job
-end
-
 function HouseService:Init()
 	REQUEST_BUY.OnServerEvent:Connect(function(player: Player, houseId: any)
 		if typeof(houseId) ~= "string" then
