@@ -1165,9 +1165,6 @@ Config.CarDealer = {
 	-- work-shift tip because walk-ins are voluntary and should feel rewarding.
 	-- Safe range: 50-200.
 	ServeTip = 100,
-	-- How far the counter mark sits from the station. Same system as work tasks,
-	-- so this does not need to be tuned separately -- it is WorkSpots.Attend's job.
-	CounterReachStuds = Config.Work.Tasks.ReachStuds,
 }
 
 -- Monthly living expenses. Money leaves every game month whether the player
@@ -2645,11 +2642,6 @@ Config.People = {
 	-- Safe range: integers between MinBond (-20) and MaxBond (100), ascending.
 	BondMilestones = { 10, 25, 50, 75, 100 },
 
-	-- Whether a person with bond 25 or higher gifts money on their next visit.
-	-- A genuine friend brings something; the chance keeps it from becoming a
-	-- guaranteed income stream and preserves the visit as a choice, not a chore.
-	-- Safe range: 0-0.5.
-	BondGiftChance = 0.3,
 }
 
 -- Places a person can be asked to walk to with you.
