@@ -983,7 +983,29 @@ Commands.school = function(player: Player, args: { string }): string
 		return SchoolService.Describe(player)
 	end
 
-	return `usage: /school [start|end|card|year <n>|mastery <subject> <n>|on|off]`
+	if arg == "interact" then
+		-- Lists every hand-placed interact anchor in the school building, its
+		-- event id, its configured position, and whether it is currently tagged
+		-- in the world. A missing tag means the furniture model has not been
+		-- placed yet — the event id is valid but nothing in the map will fire it.
+		local tag = Config.World.InteractTag
+		local eventAttr = Config.World.InteractEventAttribute
+		local tagged: { [string]: boolean } = {}
+		for _, instance in CollectionService:GetTagged(tag) do
+			local id = instance:GetAttribute(eventAttr)
+			if typeof(id) == "string" then
+				tagged[id] = true
+			end
+		end
+		local lines: { string } = {}
+		for _, entry in Config.School.Anchors do
+			local status = tagged[entry.eventId] and "tagged" or "not tagged"
+			table.insert(lines, `  {entry.eventId} at ({entry.x}, {entry.z}) — {status}`)
+		end
+		return `school interact anchors ({#lines}):\n` .. table.concat(lines, "\n")
+	end
+
+	return `usage: /school [start|end|card|year <n>|mastery <subject> <n>|interact|on|off]`
 		.. ` — {SchoolService.Describe(player)}`
 end
 
@@ -2578,7 +2600,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
 	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
-	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
+	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/fight [<style>|win|lose|end|on|off], "
