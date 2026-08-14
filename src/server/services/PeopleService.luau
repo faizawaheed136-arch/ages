@@ -1988,19 +1988,6 @@ local function forget(player: Player)
 	rebuildAgain[player] = nil
 end
 
--- How somebody feels about this player right now, for the systems that pay a bond out.
--- Public because a bond is only worth having if something outside this file reads it,
--- and every one of those readers wants the same thing: the number, with the authored
--- starting point already applied.
-function PeopleService.BondWith(player: Player, personId: string): number?
-	local profile = DataService.GetProfile(player)
-	local person = People.ById[personId]
-	if profile == nil or person == nil then
-		return nil
-	end
-	return bondOf(Lives.Active(profile.Data), person)
-end
-
 -- A birthday. Everybody you did not see this last year thinks a little less of you, and
 -- the roster is rebuilt because a year is when people arrive in a life and leave it.
 --
@@ -2259,10 +2246,6 @@ function PeopleService.SetEnabled(value: boolean)
 		end
 		requestRebuild(player)
 	end
-end
-
-function PeopleService.IsEnabled(): boolean
-	return enabled
 end
 
 -- What the harness prints. Everybody who should be in this life, whether they are
