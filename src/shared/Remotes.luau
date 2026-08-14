@@ -270,6 +270,11 @@ export type RemoteName =
 	| "BondMilestone"
 	-- An NPC shared gossip about the player. Carries speaker, topic, and effect.
 	| "GossipUpdate"
+	-- A join code was entered. Carries the code string; the server looks it up
+	-- and, if valid, selects the target slot and calls Play.
+	| "RequestJoinByCode"
+	-- Why a join code was not accepted, in a sentence meant for the player.
+	| "JoinRefused"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -492,6 +497,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"MilestoneAchieved",
 	"BondMilestone",
 	"GossipUpdate",
+	"RequestJoinByCode",
+	"JoinRefused",
 }
 
 local FOLDER_NAME = "RemoteEvents"
