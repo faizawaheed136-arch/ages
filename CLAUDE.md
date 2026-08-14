@@ -153,11 +153,18 @@ is written and never read is orphaned code, and the build will not tell you.
 
 ## Content rules
 
-13+: no combat, no gambling, no gore. All audiences, US English. Failure should be
-worth playing.
+13+: no gambling, no gore. All audiences, US English. Failure should be worth playing.
 
-**The 13+ rating is a hard ceiling — any feature that would push the game to 17+ is off
-the table, permanently, not deferred.** The romantic-partner / dating system was scrapped
+**Combat is allowed.** This line used to read "no combat" and stated it as a platform
+constraint. That was wrong: Roblox permits combat at 13+, and the biggest games on the
+platform are built on it — Blox Fruits is 13+ and fights for a living. It was a design
+preference dressed up as a rule, and the owner has overruled it. What the rating actually
+forbids is *gore*: no blood, no dismemberment, no realistic injury, no death animations
+that dwell. A fight is a contest with a winner, and it ends with somebody on the floor and
+back up again. Weigh new combat against that, not against a ban that does not exist.
+
+**The 13+ rating is still a hard ceiling — any feature that would push the game to 17+ is
+off the table, permanently, not deferred.** The romantic-partner / dating system was scrapped
 for exactly this reason: a partner is the one relationship the game cannot write and stay
 13+. The tie ladder therefore stops at friendship (`known` → `friend` → `closest friend`)
 and climbs no further; if the top rung ever wants to grow, the rung above `closest` has to
