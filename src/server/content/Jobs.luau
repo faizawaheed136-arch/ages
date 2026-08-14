@@ -37,6 +37,12 @@ local SOURCE: { Job } = {
 		-- first year you can trade your time for money instead of being given it.
 		minAge = 16,
 		yearlySalary = 2400,
+		shiftEvents = {
+			{ id = "shop_assistant.rude_customer", weight = 3, line = "A customer is complaining about the price. What do you do?", money = -20, happiness = -5 },
+			{ id = "shop_assistant.helpful", weight = 4, line = "An elderly customer needs help reaching a shelf. You fetch it for them.", standing = 1, happiness = 3 },
+			{ id = "shop_assistant.busy_lunch", weight = 2, line = "The lunch rush hits all at once. You keep your head.", standing = 1, money = 10 },
+			{ id = "shop_assistant.found_money", weight = 1, line = "You find a forgotten five-dollar bill under the counter.", money = 5 },
+		},
 	},
 	{
 		id = "office_clerk",
@@ -81,6 +87,12 @@ local SOURCE: { Job } = {
 		-- their neighbor gets in where either on its own would not have been enough. That
 		-- is the whole reason both systems exist in the same childhood.
 		vouch = { personId = "neighbor", minBond = 45, worthSmarts = 15 },
+		shiftEvents = {
+			{ id = "office_clerk.filing_error", weight = 3, line = "You spot a filing error that could cost the company. Do you report it?", standing = 2 },
+			{ id = "office_clerk.overwork", weight = 2, line = "The boss piles on extra paperwork at 4pm. You stay late to finish it.", happiness = -5, standing = 1 },
+			{ id = "office_clerk.good_report", weight = 2, line = "Your quarterly report impressed the manager.", standing = 2, money = 50 },
+			{ id = "office_clerk.paper Jam", weight = 4, line = "The copier jams during a busy morning. You clear it without being asked.", standing = 1 },
+		},
 	},
 	{
 		id = "manager",
@@ -106,6 +118,11 @@ local SOURCE: { Job } = {
 		-- budget and talk to a client, which is not the same as being clever but
 		-- is close enough that the number sits here rather than lower.
 		minSmarts = 75,
+		shiftEvents = {
+			{ id = "manager.team_conflict", weight = 2, line = "Two clerks are arguing over shift coverage. You mediate.", standing = 2, happiness = 2 },
+			{ id = "manager.quarterly_review", weight = 1, line = "Quarterly review: the numbers are solid. Your bonus reflects it.", money = 200, standing = 3 },
+			{ id = "manager.staff_shortage", weight = 3, line = "Two people called in sick. You cover the floor yourself.", happiness = -5, standing = 1 },
+		},
 	},
 	{
 		id = "bakery",
@@ -118,6 +135,12 @@ local SOURCE: { Job } = {
 		-- The same wage as the shop floor, for the same reason: what the first job
 		-- teaches is that you are worth something, not what you are worth.
 		yearlySalary = 2400,
+		shiftEvents = {
+			{ id = "bakery.early_start", weight = 3, line = "The oven needs tending at 5am. You're here before dawn.", standing = 1 },
+			{ id = "bakery.wasted_flour", weight = 2, line = "A batch of bread went stale. You dispose of it and start fresh.", money = -15 },
+			{ id = "bakery.perfect_loaf", weight = 1, line = "The sourdough came out perfect. A customer asks for the recipe.", standing = 2, happiness = 5 },
+			{ id = "bakery.busy_morning", weight = 3, line = "The breakfast rush never stops. Your arms ache but the display stays full.", standing = 1, money = 10 },
+		},
 	},
 	{
 		id = "librarian",
@@ -138,6 +161,12 @@ local SOURCE: { Job } = {
 		-- and below what a diligent child clears before they are fifteen. A librarian
 		-- is not a genius. They are somebody who reads, which is close enough.
 		minSmarts = 55,
+		shiftEvents = {
+			{ id = "librarian.misfiled", weight = 3, line = "A book is misfiled and a patron can't find it. You help locate it.", standing = 1, happiness = 2 },
+			{ id = "librarian.quiet_afternoon", weight = 2, line = "A rare quiet afternoon. You get behind on reshelfing.", standing = 1 },
+			{ id = "librarian.damaged_book", weight = 1, line = "A patron damaged a reference book. You process the replacement cost.", money = -25 },
+			{ id = "librarian.children_hour", weight = 3, line = "Story time with the kids goes well. They ask when you're coming back.", happiness = 5 },
+		},
 	},
 	{
 		id = "mechanic",
@@ -163,6 +192,12 @@ local SOURCE: { Job } = {
 		-- recommending you for the room where the money is -- but it will pull a
 		-- player who half-went to school over the garage's lower line.
 		vouch = { personId = "neighbor", minBond = 40, worthSmarts = 12 },
+		shiftEvents = {
+			{ id = "mechanic.tough_job", weight = 3, line = "An oldtimer's car needs more than expected. You talk them through it honestly.", standing = 2, happiness = 3 },
+			{ id = "mechanic.parts_delay", weight = 2, line = "The parts order is late. You wait around doing inventory.", happiness = -3 },
+			{ id = "mechanic.fix_it_right", weight = 2, line = "You caught a safety issue another shop missed. The customer is grateful.", standing = 2, money = 30 },
+			{ id = "mechanic.oily_break", weight = 3, line = "A coffee break with the other mechanic. Good banter.", happiness = 3 },
+		},
 	},
 	{
 		id = "gym_instructor",
@@ -202,6 +237,404 @@ local SOURCE: { Job } = {
 		-- it is the one bar on this row that a player who skipped school simply
 		-- cannot reach from the bakery -- which is the point of the row.
 		minSmarts = 65,
+	},
+
+	-- ------------------------------------------------------------------
+	-- City careers.
+	--
+	-- The five ladders below grow out of the town's two first jobs: the shop
+	-- floor's shelf work and a baker's shift are the two things this city
+	-- already trusts, so they are the rungs the new rows stand on. The
+	-- independent jobs are the city's fresh first rungs -- a sixteen-year-old
+	-- should walk a street of open doors, not two sentences -- and they pay
+	-- what a first job pays.
+	--
+	-- Retail ladder: shop floor -> specialist shops -> the market's manager.
+	{
+		id = "clothing_retail",
+		title = "Clothing retail",
+		placeId = "clothing_store",
+		minAge = 18,
+		yearlySalary = 6000,
+		-- The same six shifts the shop floor asked for, because the city's
+		-- shops are that ladder continuing rather than a fresh one.
+		requires = { jobId = "shop_assistant", standing = 6 },
+	},
+	{
+		id = "electronics_retail",
+		title = "Electronics retail",
+		placeId = "electronics",
+		minAge = 18,
+		yearlySalary = 6400,
+		requires = { jobId = "shop_assistant", standing = 6 },
+		-- Selling a thing you have to be able to explain. Fifty-five is the
+		-- library's bar: a childhood with most of its lessons in it, which is
+		-- what it takes to answer a question about what you are selling.
+		minSmarts = 55,
+	},
+	{
+		id = "supermarket_manager",
+		title = "Supermarket manager",
+		placeId = "supermarket",
+		minAge = 20,
+		yearlySalary = 16000,
+		-- The market is the retail row's office, and it trusts the same way
+		-- the office does: fourteen is "relied on", the door a building with a
+		-- dozen tills opens to somebody it knows by name.
+		requires = { jobId = "clothing_retail", standing = 14 },
+		minSmarts = 70,
+	},
+
+	-- Food ladder: the bakery and the cafe are both first rungs; the pizza
+	-- kitchen and the restaurant floor grow out of them, and the chef is the
+	-- top of the row -- the clinic's pay for a kitchen's version of trust.
+	{
+		id = "barista",
+		title = "Barista",
+		placeId = "cafe",
+		minAge = 18,
+		yearlySalary = 6000,
+	},
+	{
+		id = "pizzeria_cook",
+		title = "Pizzeria cook",
+		placeId = "pizzeria",
+		minAge = 18,
+		yearlySalary = 6400,
+		requires = { jobId = "barista", standing = 5 },
+	},
+	{
+		id = "restaurant_server",
+		title = "Restaurant server",
+		placeId = "restaurant",
+		minAge = 18,
+		yearlySalary = 6000,
+		-- The bakery teaches what carrying a tray to somebody who is hungry
+		-- takes: five shifts, the same door the librarian and the mechanic
+		-- walk through off the same rung.
+		requires = { jobId = "bakery", standing = 5 },
+	},
+	{
+		id = "chef",
+		title = "Chef",
+		placeId = "dining_1",
+		minAge = 20,
+		yearlySalary = 12000,
+		requires = { jobId = "pizzeria_cook", standing = 12 },
+		-- A kitchen reads a menu, not a budget, so the bar sits with the
+		-- librarian's rather than the office's: a childhood with most of its
+		-- lessons in it, and a career of cooking on top.
+		minSmarts = 55,
+	},
+
+	-- Service ladder: the post office sorts, the bank counts, and the hotel
+	-- runs the front desk that both of those earn.
+	{
+		id = "postal_worker",
+		title = "Postal worker",
+		placeId = "post_office",
+		minAge = 18,
+		yearlySalary = 6000,
+		requires = { jobId = "bakery", standing = 5 },
+	},
+	{
+		id = "bank_teller",
+		title = "Bank teller",
+		placeId = "bank",
+		minAge = 20,
+		yearlySalary = 8000,
+		requires = { jobId = "postal_worker", standing = 8 },
+		-- The bar is here because a teller has to be trusted to add up.
+		-- Fifty-five is a childhood with most of its lessons in it.
+		minSmarts = 55,
+	},
+	{
+		id = "hotel_receptionist",
+		title = "Hotel receptionist",
+		placeId = "hotel",
+		minAge = 20,
+		yearlySalary = 8000,
+		requires = { jobId = "bank_teller", standing = 8 },
+	},
+
+	-- Health ladder: the pharmacy is the door into care, and the dental
+	-- chair and the vet's table both stand on it.
+	{
+		id = "pharmacy_tech",
+		title = "Pharmacy technician",
+		placeId = "pharmacy",
+		minAge = 18,
+		yearlySalary = 6000,
+		requires = { jobId = "shop_assistant", standing = 5 },
+		-- A shelf you hand medicine off needs to be read properly. Fifty is
+		-- the mechanic's bar: a childhood with some school in it rather than
+		-- none, because the ones who skipped every lesson must be the ones
+		-- who never get the job.
+		minSmarts = 50,
+	},
+	{
+		id = "dental_assistant",
+		title = "Dental assistant",
+		placeId = "dental",
+		minAge = 20,
+		yearlySalary = 8000,
+		requires = { jobId = "pharmacy_tech", standing = 8 },
+		minSmarts = 60,
+	},
+	{
+		id = "vet_tech",
+		title = "Vet technician",
+		placeId = "vet",
+		minAge = 20,
+		yearlySalary = 8000,
+		requires = { jobId = "pharmacy_tech", standing = 8 },
+		minSmarts = 55,
+	},
+
+	-- Safety ladder: the site and the warehouse are the hands-first route,
+	-- and the station and the precinct are where it ends up trusted.
+	{
+		id = "construction_worker",
+		title = "Construction worker",
+		placeId = "construction_site",
+		minAge = 18,
+		yearlySalary = 6400,
+		requires = { jobId = "bakery", standing = 5 },
+		shiftEvents = {
+			{ id = "construction_worker.safety_check", weight = 3, line = "Safety inspector comes through. Everything passes on the first try.", standing = 2 },
+			{ id = "construction_worker.bad_weather", weight = 2, line = "Rain delays the pour. You wait it out on the scaffolding.", happiness = -5 },
+			{ id = "construction_worker.lift", weight = 2, line = "You helped a coworker lift a heavy beam. Teamwork counts.", standing = 1, happiness = 3 },
+			{ id = "construction_worker.early_finish", weight = 1, line = "The wall went up ahead of schedule. Foreman lets you clock out early.", money = 20 },
+		},
+	},
+	{
+		id = "warehouse_worker",
+		title = "Warehouse worker",
+		placeId = "warehouse",
+		minAge = 18,
+		yearlySalary = 6400,
+		requires = { jobId = "construction_worker", standing = 6 },
+		shiftEvents = {
+			{ id = "warehouse_worker.inv_count", weight = 3, line = "Inventory count is off by a few units. You reconcile it.", standing = 1 },
+			{ id = "warehouse_worker.heavy_lift", weight = 2, line = "You moved a pallet that was supposed to be two people. Back aches.", happiness = -3, standing = 1 },
+			{ id = "warehouse_worker.found_good", weight = 2, line = "You organized a messy aisle. The team thanks you.", standing = 2, happiness = 3 },
+			{ id = "warehouse_worker.scanner_broke", weight = 1, line = "The scanner broke mid-shift. You hand-wrote the logs.", happiness = -5 },
+		},
+	},
+	{
+		id = "firefighter",
+		title = "Firefighter",
+		placeId = "fire_station",
+		minAge = 20,
+		yearlySalary = 12000,
+		requires = { jobId = "warehouse_worker", standing = 10 },
+		minSmarts = 60,
+	},
+	{
+		id = "police_officer",
+		title = "Police officer",
+		placeId = "police_station",
+		minAge = 20,
+		yearlySalary = 12000,
+		requires = { jobId = "warehouse_worker", standing = 10 },
+		-- The highest bar on the safety row: a childhood with most of its
+		-- lessons in it. Mr. Alderman's word pulls it down but never to the
+		-- floor -- fifty-three still needs most of school.
+		minSmarts = 65,
+		vouch = { personId = "neighbor", minBond = 45, worthSmarts = 12 },
+	},
+
+	-- The city's fresh first jobs. Sixteen in the city is a street of open
+	-- doors, and these are the doors.
+	{
+		id = "mall_cashier",
+		title = "Mall cashier",
+		placeId = "mall_entrance",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "florist",
+		title = "Florist",
+		placeId = "florist",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "bookseller",
+		title = "Bookseller",
+		placeId = "bookstore",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "toy_seller",
+		title = "Toy seller",
+		placeId = "toy_store",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "music_seller",
+		title = "Music seller",
+		placeId = "music_store",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "laundry_worker",
+		title = "Laundry worker",
+		placeId = "laundromat",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "gas_attendant",
+		title = "Gas station attendant",
+		placeId = "gas_station",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "car_wash_worker",
+		title = "Car wash attendant",
+		placeId = "car_wash",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "cinema_usher",
+		title = "Cinema usher",
+		placeId = "cinema",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "bowling_attendant",
+		title = "Bowling attendant",
+		placeId = "bowling",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "arcade_worker",
+		title = "Arcade worker",
+		placeId = "arcade",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+	{
+		id = "farm_hand",
+		title = "Farm hand",
+		placeId = "farm",
+		minAge = 16,
+		yearlySalary = 2400,
+	},
+
+	-- The eighteen-year-old trades the city keeps off the ladders: work that
+	-- asks for a finished childhood but does not sit on anybody's row.
+	{
+		id = "barber",
+		title = "Barber",
+		placeId = "barbershop",
+		minAge = 18,
+		yearlySalary = 6000,
+		-- A trade a childhood with a bit of school in it can reach, and the
+		-- one place Mr. Alderman's word reaches into this row: he knows who
+		-- keeps a decent pair of scissors, and his say-so pulls the bar down
+		-- to thirty -- a childhood with some school in it rather than none.
+		minSmarts = 40,
+		vouch = { personId = "neighbor", minBond = 35, worthSmarts = 10 },
+	},
+	{
+		id = "hairdresser",
+		title = "Hairdresser",
+		placeId = "salon",
+		minAge = 18,
+		yearlySalary = 6000,
+	},
+	{
+		id = "tattoo_artist",
+		title = "Tattoo artist",
+		placeId = "tattoo_parlor",
+		minAge = 18,
+		yearlySalary = 6400,
+	},
+	{
+		id = "car_salesperson",
+		title = "Car salesperson",
+		placeId = "auto_dealer",
+		minAge = 18,
+		yearlySalary = 8000,
+		-- The commission side of the job needs the reading a price list and a
+		-- finance sheet take, so the bar sits with the bank's rather than the
+		-- barber's: a childhood with most of its lessons in it.
+		minSmarts = 55,
+	},
+	{
+		id = "town_clerk",
+		title = "Town clerk",
+		placeId = "town_hall",
+		minAge = 18,
+		yearlySalary = 8000,
+	},
+	{
+		id = "referee",
+		title = "Sports referee",
+		placeId = "soccer_field",
+		minAge = 18,
+		yearlySalary = 6400,
+	},
+	-- Work-from-home jobs. Each one is anchored to a suburb house the player can
+	-- buy; the placeId is the house id, not a public building. A life must own
+	-- the house and link the job before it shows up in the job posts.
+	{
+		id = "freelance_writer",
+		title = "Freelance writer",
+		placeId = "suburb_1",
+		minAge = 16,
+		yearlySalary = 2400,
+		minSmarts = 50,
+	},
+	{
+		id = "home_accountant",
+		title = "Home accountant",
+		placeId = "suburb_5",
+		minAge = 18,
+		yearlySalary = 6000,
+		minSmarts = 60,
+	},
+	{
+		id = "online_teacher",
+		title = "Online tutor",
+		placeId = "suburb_10",
+		minAge = 18,
+		yearlySalary = 6000,
+		minSmarts = 55,
+	},
+	{
+		id = "remote_coder",
+		title = "Remote developer",
+		placeId = "suburb_50",
+		minAge = 20,
+		yearlySalary = 12000,
+		minSmarts = 70,
+	},
+	{
+		id = "home_healthcare",
+		title = "Home healthcare aid",
+		placeId = "suburb_20",
+		minAge = 18,
+		yearlySalary = 8000,
+		minSmarts = 55,
+	},
+	{
+		id = "house_sitter",
+		title = "House sitter",
+		placeId = "suburb_30",
+		minAge = 16,
+		yearlySalary = 2400,
+		minSmarts = 45,
 	},
 }
 
