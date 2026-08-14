@@ -128,7 +128,6 @@ local RequestFightSquareRemote = Remotes.Get("RequestFightSquare")
 local RequestFightActionRemote = Remotes.Get("RequestFightAction")
 local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
 local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
-local RequestSetHomeJobRemote = Remotes.Get("RequestSetHomeJob")
 local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 
 -- The last thing the server said about the person in front of the player. Held
@@ -283,10 +282,6 @@ end)
 
 house:OnSellHouse(function(houseId: string)
 	RequestSellHouseRemote:FireServer(houseId)
-end)
-
-house:OnSetHomeJob(function(houseId: string, jobId: string)
-	RequestSetHomeJobRemote:FireServer(houseId, jobId)
 end)
 
 carDealer:OnServe(function()
