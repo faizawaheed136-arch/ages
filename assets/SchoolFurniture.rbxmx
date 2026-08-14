@@ -1,0 +1,428 @@
+<roblox version="4">
+<Item class="Model" referent="RBXSCHOOLROOT">
+<Properties>
+<string name="Name">SchoolFurniture</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0034">
+<Properties>
+<string name="Name">SchoolFurniture</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0006">
+<Properties>
+<string name="Name">NoticeBoard</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0005">
+<Properties>
+<string name="Name">NoticeBoard</string>
+</Properties>
+<Item class="Part" referent="RBXSCHOOL0001">
+<Properties>
+<string name="Name">BoardFace</string>
+<CoordinateFrame name="CFrame"><X>-114.05</X><Y>8.0</Y><Z>40.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>5.0</Y><Z>4.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0002">
+<Properties>
+<string name="Name">BoardTop</string>
+<CoordinateFrame name="CFrame"><X>-114.1</X><Y>8.1</Y><Z>42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.2</X><Y>0.2</Y><Z>4.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286074930</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0003">
+<Properties>
+<string name="Name">BoardBottom</string>
+<CoordinateFrame name="CFrame"><X>-114.1</X><Y>3.1</Y><Z>42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.2</X><Y>0.2</Y><Z>4.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286074930</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0004">
+<Properties>
+<string name="Name">NoticeBoardEventAnchor</string>
+<CoordinateFrame name="CFrame"><X>-113.95</X><Y>6.5</Y><Z>42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>2.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294308846</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc0V2ZW50</BinaryString><BinaryString name="AttributesSerialize">AQAAAAcAAABFdmVudElkAhMAAABzY2hvb2xfbm90aWNlX2JvYXJk</BinaryString>
+</Properties>
+
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSCHOOL0012">
+<Properties>
+<string name="Name">WaterFountain</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0011">
+<Properties>
+<string name="Name">WaterFountain</string>
+</Properties>
+<Item class="Part" referent="RBXSCHOOL0007">
+<Properties>
+<string name="Name">FountainBody</string>
+<CoordinateFrame name="CFrame"><X>-138.1</X><Y>4.75</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.2</X><Y>2.5</Y><Z>1.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289244336</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0008">
+<Properties>
+<string name="Name">FountainBasin</string>
+<CoordinateFrame name="CFrame"><X>-138.15</X><Y>2.65</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>0.3</Y><Z>1.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289244336</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0009">
+<Properties>
+<string name="Name">FountainSpout</string>
+<CoordinateFrame name="CFrame"><X>-138.25</X><Y>4.65</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>0.3</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289244336</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0010">
+<Properties>
+<string name="Name">WaterFountainEventAnchor</string>
+<CoordinateFrame name="CFrame"><X>-137.85</X><Y>4.75</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.8</X><Y>1.5</Y><Z>0.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294308846</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc0V2ZW50</BinaryString><BinaryString name="AttributesSerialize">AQAAAAcAAABFdmVudElkAhUAAABzY2hvb2xfd2F0ZXJfZm91bnRhaW4=</BinaryString>
+</Properties>
+
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSCHOOL0018">
+<Properties>
+<string name="Name">Locker</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0017">
+<Properties>
+<string name="Name">Locker</string>
+</Properties>
+<Item class="Part" referent="RBXSCHOOL0013">
+<Properties>
+<string name="Name">LockerBody</string>
+<CoordinateFrame name="CFrame"><X>-150.3</X><Y>8.0</Y><Z>22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6</X><Y>7.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283593384</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0014">
+<Properties>
+<string name="Name">LockerDoor</string>
+<CoordinateFrame name="CFrame"><X>-150.05</X><Y>8.0</Y><Z>22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>7.0</Y><Z>1.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282803348</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0015">
+<Properties>
+<string name="Name">LockerGrille</string>
+<CoordinateFrame name="CFrame"><X>-150.05</X><Y>6.0</Y><Z>22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281484900</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0016">
+<Properties>
+<string name="Name">LockerEventAnchor</string>
+<CoordinateFrame name="CFrame"><X>-149.75</X><Y>6.1</Y><Z>22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>1.2</Y><Z>0.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294308846</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc0V2ZW50</BinaryString><BinaryString name="AttributesSerialize">AQAAAAcAAABFdmVudElkAhIAAABzY2hvb2xfbG9ja2VyX25vdGU=</BinaryString>
+</Properties>
+
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSCHOOL0033">
+<Properties>
+<string name="Name">Bookshelf</string>
+</Properties>
+<Item class="Model" referent="RBXSCHOOL0032">
+<Properties>
+<string name="Name">Bookshelf</string>
+</Properties>
+<Item class="Part" referent="RBXSCHOOL0019">
+<Properties>
+<string name="Name">ShelfSideLeft</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>4.5</Y><Z>42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>5.0</Y><Z>0.15</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0020">
+<Properties>
+<string name="Name">ShelfSideRight</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>4.5</Y><Z>44.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>5.0</Y><Z>0.15</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0021">
+<Properties>
+<string name="Name">ShelfTop</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>4.575</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>0.15</Y><Z>2.15</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0022">
+<Properties>
+<string name="Name">ShelfBottom</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>0.575</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>0.15</Y><Z>2.15</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0023">
+<Properties>
+<string name="Name">ShelfBoard1.5</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>1.55</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>0.1</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0024">
+<Properties>
+<string name="Name">ShelfBoard2.8</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>2.8499999999999996</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>0.1</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0025">
+<Properties>
+<string name="Name">ShelfBoard3.8</string>
+<CoordinateFrame name="CFrame"><X>-150.25</X><Y>3.8499999999999996</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.15</X><Y>0.1</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289231954</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0026">
+<Properties>
+<string name="Name">Book1</string>
+<CoordinateFrame name="CFrame"><X>-0.15</X><Y>2.0</Y><Z>-0.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>0.8</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290001980</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0027">
+<Properties>
+<string name="Name">Book2</string>
+<CoordinateFrame name="CFrame"><X>-0.15</X><Y>2.0</Y><Z>-0.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>0.8</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282148020</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0028">
+<Properties>
+<string name="Name">Book3</string>
+<CoordinateFrame name="CFrame"><X>-0.15</X><Y>2.0</Y><Z>0.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>0.8</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282163280</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0029">
+<Properties>
+<string name="Name">Book4</string>
+<CoordinateFrame name="CFrame"><X>-0.15</X><Y>2.0</Y><Z>0.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>0.8</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290027580</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0030">
+<Properties>
+<string name="Name">Book5</string>
+<CoordinateFrame name="CFrame"><X>-0.15</X><Y>2.0</Y><Z>0.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.1</X><Y>0.8</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287380640</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSCHOOL0031">
+<Properties>
+<string name="Name">BookshelfEventAnchor</string>
+<CoordinateFrame name="CFrame"><X>-149.85</X><Y>3.0</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294308846</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc0V2ZW50</BinaryString><BinaryString name="AttributesSerialize">AQAAAAcAAABFdmVudElkAhMAAABzY2hvb2xfbGlicmFyeV9ib29r</BinaryString>
+</Properties>
+
+</Item>
+</Item>
+</Item>
+</Item>
+</Item>
+</roblox>
