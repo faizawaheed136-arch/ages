@@ -96,6 +96,8 @@ local SpinsUpdatedRemote = Remotes.Get("SpinsUpdated")
 local RequestBuySpinsRemote = Remotes.Get("RequestBuySpins")
 local RequestSpinRemote = Remotes.Get("RequestSpin")
 local SpinActionRefusedRemote = Remotes.Get("SpinActionRefused")
+local RequestJoinByCodeRemote = Remotes.Get("RequestJoinByCode")
+local JoinRefusedRemote = Remotes.Get("JoinRefused")
 
 local LobbyUI = {}
 LobbyUI.__index = LobbyUI
@@ -195,6 +197,18 @@ export type LobbyUIHandle = typeof(setmetatable(
 		-- and the player's next press would be aimed at whichever one they last read.
 		pendingDelete: number?,
 		pendingDeleteToken: number,
+		-- The join-code section. A code is generated for the active slot and shown on screen;
+		-- the player can copy it or regenerate it. Below that, a text input accepts a code
+		-- from another player and joins the slot it points at.
+		joinCodePanel: Frame,
+		joinCodeCodeLabel: TextLabel,
+		joinCodeCopyButton: TextButton,
+		joinCodeRegenButton: TextButton,
+		joinCodeHintLabel: TextLabel,
+		joinCodeInput: TextBox,
+		joinCodeJoinButton: TextButton,
+		joinCodeInputLabel: TextLabel,
+		joinCodeBusy: boolean,
 	},
 	LobbyUI
 ))
@@ -456,6 +470,165 @@ function LobbyUI.new(): LobbyUIHandle
 	cardList.CanvasSize = UDim2.new()
 	cardList.ScrollingDirection = Enum.ScrollingDirection.Y
 	cardList.Parent = slotsPage
+
+	-- Join-code section: sits between the cards and Play. A code is generated for the
+	-- active slot so a second device (or another player at the same keyboard) can join
+	-- it by typing the string. The same panel also accepts a code and jumps to the slot
+	-- it points at, which is how the debug harness tests the join path without publishing.
+	local joinCodePanel = Instance.new("Frame")
+	joinCodePanel.Name = "JoinCode"
+	joinCodePanel.BackgroundColor3 = PANEL
+	joinCodePanel.BorderSizePixel = 0
+	joinCodePanel.Size = UDim2.new(1, 0, 0, 110)
+	joinCodePanel.Position = UDim2.new(0, 0, 1, -186)
+	joinCodePanel.Parent = slotsPage
+	corner(joinCodePanel, 10)
+	stroke(joinCodePanel, EDGE, 1)
+
+	local joinCodeHeader = Instance.new("TextLabel")
+	joinCodeHeader.Name = "Header"
+	joinCodeHeader.BackgroundTransparency = 1
+	joinCodeHeader.Size = UDim2.new(1, 0, 0, 16)
+	joinCodeHeader.Position = UDim2.new(0, 12, 0, 8)
+	joinCodeHeader.Font = Enum.Font.GothamMedium
+	joinCodeHeader.Text = "JOIN CODE"
+	joinCodeHeader.TextSize = 10
+	joinCodeHeader.TextColor3 = MUTED
+	joinCodeHeader.TextXAlignment = Enum.TextXAlignment.Left
+	joinCodeHeader.Parent = joinCodePanel
+
+	-- The code string for the active slot, or a hint when none is generated yet.
+	local joinCodeCodeLabel = Instance.new("TextLabel")
+	joinCodeCodeLabel.Name = "Code"
+	joinCodeCodeLabel.BackgroundTransparency = 1
+	joinCodeCodeLabel.Size = UDim2.new(1, -180, 0, 28)
+	joinCodeCodeLabel.Position = UDim2.new(0, 12, 0, 28)
+	joinCodeCodeLabel.Font = Enum.Font.GothamMonoBold
+	joinCodeCodeLabel.Text = ""
+	joinCodeCodeLabel.TextSize = 20
+	joinCodeCodeLabel.TextColor3 = ACCENT
+	joinCodeCodeLabel.TextXAlignment = Enum.TextXAlignment.Left
+	joinCodeCodeLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	joinCodeCodeLabel.Parent = joinCodePanel
+
+	local joinCodeHintLabel = Instance.new("TextLabel")
+	joinCodeHintLabel.Name = "Hint"
+	joinCodeHintLabel.BackgroundTransparency = 1
+	joinCodeHintLabel.Size = UDim2.new(1, -180, 0, 16)
+	joinCodeHintLabel.Position = UDim2.new(0, 12, 0, 58)
+	joinCodeHintLabel.Font = Enum.Font.Gotham
+	joinCodeHintLabel.Text = "Press Generate to create a code for this slot."
+	joinCodeHintLabel.TextSize = 11
+	joinCodeHintLabel.TextColor3 = MUTED
+	joinCodeHintLabel.TextXAlignment = Enum.TextXAlignment.Left
+	joinCodeHintLabel.TextWrapped = true
+	joinCodeHintLabel.Parent = joinCodePanel
+
+	-- Copy the visible code to the clipboard. No remote is needed: the string is
+	-- already on screen and the only thing the clipboard does is move it off the
+	-- device so it can be typed into a second one.
+	local joinCodeCopyButton = Instance.new("TextButton")
+	joinCodeCopyButton.Name = "Copy"
+	joinCodeCopyButton.AnchorPoint = Vector2.new(1, 0)
+	joinCodeCopyButton.Position = UDim2.new(1, -12, 0, 28)
+	joinCodeCopyButton.Size = UDim2.new(0, 72, 0, 28)
+	joinCodeCopyButton.BackgroundColor3 = ROW
+	joinCodeCopyButton.BorderSizePixel = 0
+	joinCodeCopyButton.AutoButtonColor = false
+	joinCodeCopyButton.Font = Enum.Font.GothamMedium
+	joinCodeCopyButton.Text = ""
+	joinCodeCopyButton.TextSize = 12
+	joinCodeCopyButton.TextColor3 = TEXT
+	joinCodeCopyButton.Parent = joinCodePanel
+	corner(joinCodeCopyButton, 6)
+	gradient(joinCodeCopyButton, Color3.new(1, 1, 1), Color3.fromRGB(178, 178, 190))
+	local joinCodeCopyLabel = Instance.new("TextLabel")
+	joinCodeCopyLabel.Name = "Label"
+	joinCodeCopyLabel.BackgroundTransparency = 1
+	joinCodeCopyLabel.Size = UDim2.new(1, 0, 1, 0)
+	joinCodeCopyLabel.Font = Enum.Font.GothamMedium
+	joinCodeCopyLabel.Text = "Copy"
+	joinCodeCopyLabel.TextSize = 12
+	joinCodeCopyLabel.TextColor3 = INK
+	joinCodeCopyLabel.Parent = joinCodeCopyButton
+
+	-- Regenerate replaces the current code. One use per code, the old one expires
+	-- the moment a new one is issued.
+	local joinCodeRegenButton = Instance.new("TextButton")
+	joinCodeRegenButton.Name = "Regen"
+	joinCodeRegenButton.AnchorPoint = Vector2.new(1, 0)
+	joinCodeRegenButton.Position = UDim2.new(1, -12, 0, 60)
+	joinCodeRegenButton.Size = UDim2.new(0, 108, 0, 24)
+	joinCodeRegenButton.BackgroundColor3 = ROW
+	joinCodeRegenButton.BorderSizePixel = 0
+	joinCodeRegenButton.AutoButtonColor = false
+	joinCodeRegenButton.Font = Enum.Font.GothamMedium
+	joinCodeRegenButton.Text = ""
+	joinCodeRegenButton.TextSize = 12
+	joinCodeRegenButton.TextColor3 = MUTED
+	joinCodeRegenButton.Parent = joinCodePanel
+	corner(joinCodeRegenButton, 6)
+	local joinCodeRegenLabel = Instance.new("TextLabel")
+	joinCodeRegenLabel.Name = "Label"
+	joinCodeRegenLabel.BackgroundTransparency = 1
+	joinCodeRegenLabel.Size = UDim2.new(1, 0, 1, 0)
+	joinCodeRegenLabel.Font = Enum.Font.GothamMedium
+	joinCodeRegenLabel.Text = "Regenerate"
+	joinCodeRegenLabel.TextSize = 12
+	joinCodeRegenLabel.TextColor3 = MUTED
+	joinCodeRegenLabel.Parent = joinCodeRegenButton
+
+	-- A thin divider separates the "my code" section from the "join someone" section.
+	local joinCodeDivider = Instance.new("Frame")
+	joinCodeDivider.Name = "Divider"
+	joinCodeDivider.BackgroundColor3 = EDGE
+	joinCodeDivider.BorderSizePixel = 0
+	joinCodeDivider.Size = UDim2.new(1, -24, 0, 1)
+	joinCodeDivider.Position = UDim2.new(0, 12, 0, 88)
+	joinCodeDivider.Parent = joinCodePanel
+
+	-- A text input for entering another player's code, and a button to submit it.
+	-- The button fires the remote; the remote owns all validation and the server
+	-- fires back on JoinRefused with either a human-readable refusal or the generated
+	-- code when no payload is given (generation path).
+	local joinCodeInput = Instance.new("TextBox")
+	joinCodeInput.Name = "Input"
+	joinCodeInput.BackgroundColor3 = ROW
+	joinCodeInput.BorderSizePixel = 0
+	joinCodeInput.Size = UDim2.new(0.5, -18, 0, 28)
+	joinCodeInput.Position = UDim2.new(0, 12, 0, 92)
+	joinCodeInput.Font = Enum.Font.GothamMonoBold
+	joinCodeInput.Text = ""
+	joinCodeInput.TextSize = 16
+	joinCodeInput.TextColor3 = TEXT
+	joinCodeInput.PlaceholderText = "Enter code..."
+	joinCodeInput.ClearTextOnFocus = false
+	joinCodeInput.Parent = joinCodePanel
+	corner(joinCodeInput, 6)
+
+	local joinCodeJoinButton = Instance.new("TextButton")
+	joinCodeJoinButton.Name = "Join"
+	joinCodeJoinButton.BackgroundColor3 = ACCENT
+	joinCodeJoinButton.BorderSizePixel = 0
+	joinCodeJoinButton.Size = UDim2.new(0, 86, 0, 28)
+	joinCodeJoinButton.Position = UDim2.new(0.5, 6, 0, 92)
+	joinCodeJoinButton.AutoButtonColor = false
+	joinCodeJoinButton.Font = Enum.Font.GothamBold
+	joinCodeJoinButton.Text = ""
+	joinCodeJoinButton.TextSize = 14
+	joinCodeJoinButton.TextColor3 = INK
+	joinCodeJoinButton.Parent = joinCodePanel
+	corner(joinCodeJoinButton, 8)
+	gradient(joinCodeJoinButton, Color3.new(1, 1, 1), Color3.fromRGB(216, 200, 176))
+	local joinCodeJoinLabel = Instance.new("TextLabel")
+	joinCodeJoinLabel.Name = "Label"
+	joinCodeJoinLabel.BackgroundTransparency = 1
+	joinCodeJoinLabel.Size = UDim2.new(1, 0, 1, 0)
+	joinCodeJoinLabel.Font = Enum.Font.GothamBold
+	joinCodeJoinLabel.Text = "Join"
+	joinCodeJoinLabel.TextSize = 14
+	joinCodeJoinLabel.TextColor3 = INK
+	joinCodeJoinLabel.Parent = joinCodeJoinButton
 
 	local playButton = Instance.new("TextButton")
 	playButton.Name = "Play"
@@ -764,6 +937,14 @@ function LobbyUI.new(): LobbyUIHandle
 		spinButtonLabel = spinButtonLabel,
 		spinsState = nil,
 		spinBusy = false,
+		joinCodePanel = joinCodePanel,
+		joinCodeCodeLabel = joinCodeCodeLabel,
+		joinCodeCopyButton = joinCodeCopyButton,
+		joinCodeRegenButton = joinCodeRegenButton,
+		joinCodeHintLabel = joinCodeHintLabel,
+		joinCodeInput = joinCodeInput,
+		joinCodeJoinButton = joinCodeJoinButton,
+		joinCodeBusy = false,
 	}, LobbyUI)
 
 	-- Tweened rather than assigned, like the slot cards, so the whole screen answers the cursor
@@ -823,6 +1004,16 @@ function LobbyUI.new(): LobbyUIHandle
 				perkId = perkId,
 			})
 		end
+	end)
+
+	joinCodeCopyButton.Activated:Connect(function()
+		self:onCopyCode()
+	end)
+	joinCodeRegenButton.Activated:Connect(function()
+		self:onRegenCode()
+	end)
+	joinCodeJoinButton.Activated:Connect(function()
+		self:onJoinByCode()
 	end)
 
 	playEntrance(column, scrim)
@@ -1239,6 +1430,8 @@ function LobbyUI.redraw(self: LobbyUIHandle)
 		elseif state.livesLived == 0 then `{begun} of {state.slotCount} slots in use`
 		else `{begun} of {state.slotCount} slots in use -- {state.livesLived} lives lived`
 
+	self:redrawJoinCode()
+
 	for index = 1, state.slotCount do
 		local card = self.cards[index]
 		if card == nil then
@@ -1458,6 +1651,20 @@ local function ensureProductRows(self: LobbyUIHandle, count: number)
 	end
 end
 
+function LobbyUI.redrawJoinCode(self: LobbyUIHandle)
+	local state = self.state
+	if state == nil then
+		return
+	end
+	local code = state.joinCode
+	self.joinCodeCodeLabel.Text = if code ~= nil then code else ""
+	self.joinCodeHintLabel.Visible = code == nil
+	self.joinCodeCodeLabel.Visible = code ~= nil
+	self.joinCodeCopyButton.Active = code ~= nil and not self.joinCodeBusy
+	self.joinCodeRegenButton.Active = code ~= nil and not self.joinCodeBusy
+	self.joinCodeJoinButton.Active = code ~= nil and not self.joinCodeBusy
+end
+
 -- Everything the spins page looks like, for the state it is in -- the only function in this
 -- file that writes a perk-row or product-row property after construction, on the same
 -- one-writer rule `redraw` follows for the slot cards.
@@ -1542,6 +1749,74 @@ end
 -- and the eventual grant answers itself by `SpinsUpdated` arriving with a higher count.
 function LobbyUI.onBuy(_self: LobbyUIHandle, product: SpinProduct)
 	RequestBuySpinsRemote:FireServer(product.id)
+end
+
+function LobbyUI.onCopyCode(self: LobbyUIHandle)
+	local code = self.state.joinCode
+	if code == nil or self.joinCodeBusy then
+		return
+	end
+	self.joinCodeBusy = true
+	self:redrawJoinCode()
+	-- The clipboard is a client-only copy -- no remote needed, because the code is already
+	-- on screen and the only thing the clipboard does is move it off this device.
+	local ok, err = pcall(function()
+		setclipboard(code)
+	end)
+	if ok then
+		self.joinCodeCopyButton.Text = "Copied"
+		task.delay(1.5, function()
+			self.joinCodeCopyButton.Text = ""
+			self.joinCodeBusy = false
+			self:redrawJoinCode()
+		end)
+	else
+		self:refuse(`Could not copy to clipboard: {err}`)
+		self.joinCodeBusy = false
+		self:redrawJoinCode()
+	end
+end
+
+function LobbyUI.onRegenCode(self: LobbyUIHandle)
+	if self.joinCodeBusy then
+		return
+	end
+	self.joinCodeBusy = true
+	self:redrawJoinCode()
+	RequestJoinByCodeRemote:FireServer()
+	-- The server pushes a new state; the redraw joins it. Until it lands the button stays
+	-- locked so a double-press does not queue two generations.
+	task.delay(Config.Lobby.JoinCode.TTLSeconds, function()
+		-- Failsafe: if the server pushed nothing at all (unlikely), unlock after a long wait
+		-- rather than leaving the button permanently grey.
+		if self.joinCodeBusy then
+			self.joinCodeBusy = false
+			self:redrawJoinCode()
+		end
+	end)
+end
+
+function LobbyUI.onJoinByCode(self: LobbyUIHandle)
+	if self.joinCodeBusy then
+		return
+	end
+	local code = self.joinCodeInput.Text
+	if code == "" then
+		self:refuse("Type a code to join.")
+		return
+	end
+	self.joinCodeBusy = true
+	self:redrawJoinCode()
+	RequestJoinByCodeRemote:FireServer(code)
+	-- The server either teleports (success) or refuses on JoinRefused. Both are terminal:
+	-- on success the screen goes away, on refusal the refusal handler re-arms the button.
+	task.delay(5, function()
+		-- Failsafe for a stuck UI if the server never answers.
+		if self.joinCodeBusy then
+			self.joinCodeBusy = false
+			self:redrawJoinCode()
+		end
+	end)
 end
 
 -- Greyed and unclickable while a Play is being answered.
@@ -1660,6 +1935,14 @@ function LobbyUI.Start(): LobbyUIHandle
 		else
 			ui:refuse(reason)
 		end
+	end)
+
+	JoinRefusedRemote.OnClientEvent:Connect(function(reason: string)
+		-- A join-by-code attempt was refused. Re-arm the button so the player can try again.
+		ui.joinCodeBusy = false
+		ui:redrawJoinCode()
+		-- Shown under the slot list, the same place every other refusal appears.
+		ui:refuse(reason)
 	end)
 
 	return ui
