@@ -40,7 +40,8 @@ local JobTasks = require(script.Parent.Parent.content.JobTasks)
 local Ground = require(script.Parent.Parent.world.Ground)
 local WorkSpots = require(script.Parent.Parent.world.WorkSpots)
 local MoneyPop = require(script.Parent.Parent.world.MoneyPop)
-local Customers = require(script.Parent.Parent.world.Customers)
+local MilestoneService = require(script.Parent.MilestoneService)
+local StatService = require(script.Parent.StatService)
 
 type Job = Types.Job
 type JobTask = Types.JobTask
@@ -121,6 +122,10 @@ type Shift = {
 	-- before repeating any. Being asked to sweep the same aisle twice running is the
 	-- shift equivalent of the same customer being rude to you two shifts in a row.
 	tasksUsed: { [string]: true },
+	-- XP earned during this shift, carried forward from `workXp` on the life and
+	-- incremented as tasks and events land. Pushed to the client so the bar under
+	-- the shift track fills toward the next standing band.
+	standingXp: number,
 }
 
 -- One task in progress. The marks are resolved up front rather than one at a time,
@@ -417,6 +422,11 @@ local function adjustStanding(player: Player, data: LifeData, jobId: string, del
 		warnStanding(player, jobId, before, after)
 	end
 	print(`[AGES] {player.Name} standing at "{jobId}" {before} -> {after} ({bandFor(after).name})`)
+
+	-- Fire the max-standing milestone the moment the band is first reached.
+	if bandFor(after) == BANDS[#BANDS] and bandFor(before) ~= BANDS[#BANDS] then
+		MilestoneService.OnMaxStanding(player, jobId)
+	end
 end
 
 -- What an hour of this job pays *this player*, which is the base rate plus
@@ -849,6 +859,7 @@ local function stateFor(player: Player): ShiftState
 			shiftsPerYear = Config.Work.ShiftsPerYear,
 			standing = nil,
 			blockedReason = nil,
+			standingXp = 0,
 		}
 	end
 
@@ -872,6 +883,17 @@ local function stateFor(player: Player): ShiftState
 		shiftsPerYear = Config.Work.ShiftsPerYear,
 		standing = if job ~= nil then bandFor(standingAt(data, job.id)).name else nil,
 		blockedReason = blocked[player],
+		standingXp = data.workXp,
+		nextBandXp = if job ~= nil then (function()
+			local standing = standingAt(data, job.id)
+			local current = bandFor(standing)
+			for i = 1, #BANDS do
+				if BANDS[i] == current then
+					return if i > 1 then BANDS[i - 1].atLeast else nil
+				end
+			end
+			return nil
+		end)() else nil,
 	}
 end
 
@@ -1002,6 +1024,7 @@ local function fire(player: Player, data: LifeData, jobId: string)
 	NoticeRemote:FireClient(player, text)
 
 	print(`[AGES] {player.Name} was let go from "{jobId}" at age {ageYearsOf(data)}`)
+	data.workXp = 0
 	push(player)
 end
 
@@ -1050,6 +1073,19 @@ local function endShift(player: Player, reason: string, standingDelta: number)
 	end
 	adjustStanding(player, data, shift.jobId, delta)
 
+	-- Track shift completions for milestone checking. The bill field is the source
+	-- of truth for total shifts this year, so update it here on every finished shift.
+	local totalShifts = data.bills.shiftsCompleted + 1
+	data.bills.shiftsCompleted = totalShifts
+	MilestoneService.OnShiftComplete(player, totalShifts)
+
+	-- Carry the shift's XP into the life's total. StandingXP is per-job, so it
+	-- only accumulates while the player holds this job; a change of job resets
+	-- it in takeJob below.
+	if data.jobId == shift.jobId then
+		data.workXp += shift.standingXp
+	end
+
 	-- The sacking lands here and nowhere else -- at clock-off, once the shift's own worth
 	-- has been counted, so a bad shift always finishes before it can cost you the job.
 	-- Checked directly off the record rather than off the delta just applied, because a
@@ -1081,6 +1117,11 @@ local function takeJob(player: Player, data: LifeData, job: Job)
 		print(`[AGES] {player.Name} took the job "{job.id}" at age {ageYearsOf(data)}`)
 	else
 		print(`[AGES] {player.Name} left "{previous}" for "{job.id}" at age {ageYearsOf(data)}`)
+	end
+
+	if previous == nil then
+		data.workXp = 0
+		MilestoneService.OnFirstJob(player, job.id)
 	end
 
 	push(player)
@@ -1131,6 +1172,7 @@ local function startShift(player: Player, job: Job, station: Vector3): boolean
 		tasksIssued = 0,
 		tasksDone = 0,
 		tasksUsed = {},
+		standingXp = 0,
 	}
 	push(player)
 	return true
@@ -1562,6 +1604,7 @@ local function completeTask(player: Player, data: LifeData, shift: Shift, job: J
 		MoneyPop.Show(task.spots[#task.spots], tip)
 	end
 
+	shift.standingXp += Config.Work.StandingXp.PerTask
 	push(player)
 end
 
@@ -1765,9 +1808,10 @@ local function tryShiftEvent(player: Player, shift: Shift)
 	-- being worked, which is the number the ladder moves -- so the unlock is
 	-- earned here, at the counter, and not somewhere the life was not standing.
 	local profile = DataService.GetProfile(player)
+	local data = if profile ~= nil then Lives.Active(profile.Data) else nil
 	local standing = 0
 	if profile ~= nil then
-		standing = standingAt(Lives.Active(profile.Data), shift.jobId)
+		standing = standingAt(data, shift.jobId)
 	end
 
 	-- Asked for anything but the last thing that happened to them first. Once the
@@ -1775,6 +1819,56 @@ local function tryShiftEvent(player: Player, shift: Shift)
 	-- without this the same customer would occasionally be rude to you twice in a
 	-- row -- which is the single most obvious way a repeat can read as a bug rather
 	-- than as a life.
+	-- Job-specific shift events take priority over the generic pool. Each job
+	-- authors its own array of mid-shift moments; the generic pool is the fallback
+	-- when the job has none, or when all job-specific events are exhausted.
+	local job = Jobs.ById[shift.jobId]
+	if job ~= nil and job.shiftEvents ~= nil and #job.shiftEvents > 0 then
+		local available: { { id: string, weight: number, line: string, money: number?, happiness: number?, standing: number? } } = {}
+		for _, candidate in job.shiftEvents do
+			if candidate.id ~= lastMoment[player] then
+				table.insert(available, candidate)
+			end
+		end
+		if #available == 0 then
+			available = job.shiftEvents
+		end
+		if #available > 0 then
+			local totalWeight = 0
+			for _, c in available do
+				totalWeight += c.weight
+			end
+			local roll = math.random(1, totalWeight)
+			local cum = 0
+			for _, candidate in available do
+				cum += candidate.weight
+				if roll <= cum then
+					-- Apply inline effects rather than routing through the full
+					-- LifeEvent system: shift events are simple moments, not
+					-- choice-driven scenes.
+					if candidate.money ~= nil and candidate.money ~= 0 then
+						if candidate.money > 0 then
+							MoneyService.Add(player, candidate.money, `shift event: {candidate.id}`)
+						else
+							MoneyService.Spend(player, math.abs(candidate.money), `shift event: {candidate.id}`)
+						end
+					end
+					if candidate.happiness ~= nil and candidate.happiness ~= 0 then
+						StatService.AddStat(player, "happiness", candidate.happiness)
+					end
+					if candidate.standing ~= nil and candidate.standing ~= 0 then
+						adjustStanding(player, data, shift.jobId, candidate.standing)
+					end
+					NoticeRemote:FireClient(player, candidate.line)
+					shift.standingXp += Config.Work.StandingXp.PerEvent
+					lastMoment[player] = candidate.id
+					push(player)
+					return
+				end
+			end
+		end
+	end
+
 	local previous = lastMoment[player]
 	local event = EventService.PickStageable(player, "Shift", function(candidate: LifeEvent): boolean
 		return candidate.id ~= previous and momentFits(shift, standing, candidate)
@@ -1818,6 +1912,7 @@ local function onAnswered(player: Player, _event: LifeEvent, choice: EventChoice
 	end
 
 	adjustStanding(player, Lives.Active(profile.Data), shift.jobId, performance)
+	shift.standingXp += Config.Work.StandingXp.PerEvent
 	-- Pushed here rather than left to the next tick, so the HUD names the new
 	-- standing on the same frame the outcome line appears.
 	push(player)
@@ -2323,6 +2418,20 @@ end
 
 function WorkService.IsEnabled(): boolean
 	return enabled
+end
+
+-- Whether the player is currently on an active shift at the given place.
+-- Used by other services to coordinate around shift ownership of a location.
+function WorkService.IsWorkingAt(player: Player, placeId: string): boolean
+	local shift = shifts[player]
+	if shift == nil then
+		return false
+	end
+	local job = Jobs.ById[shift.jobId]
+	if job == nil then
+		return false
+	end
+	return job.placeId == placeId
 end
 
 -- What the harness prints for /job.
