@@ -580,8 +580,8 @@
 <Item class="Part" referent="RBXSTREET0042">
 <Properties>
 <string name="Name">Path</string>
-<CoordinateFrame name="CFrame"><X>-24.6</X><Y>0.9199999999999999</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>56.0</X><Y>0.6</Y><Z>6.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>-24.6</X><Y>0.915</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>56.0</X><Y>0.59</Y><Z>6.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">864</token>
@@ -8015,21 +8015,6 @@
 <float name="Transparency">1.0</float>
 <float name="Reflectance">0</float>
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABvZmZpY2UKAAAAUGxhY2VMYWJlbAITAAAAdGhlIG9mZmljZSB1cHN0YWlycw==</BinaryString>
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0636">
-<Properties>
-<string name="Name">Place_manager</string>
-<CoordinateFrame name="CFrame"><X>-132.0</X><Y>18.02</Y><Z>-44.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">272</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-<float name="Transparency">1.0</float>
-<float name="Reflectance">0</float>
-<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgcAAABtYW5hZ2VyCgAAAFBsYWNlTGFiZWwCFAAAAHRoZSBtYW5hZ2VyJ3Mgb2ZmaWNl</BinaryString>
 </Properties>
 
 </Item>

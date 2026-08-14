@@ -260,8 +260,17 @@ with group("FrontPath"):
     # Laid on the door line, which is measured and not chosen -- see world_plan.
     # A path that arrives at the wall beside the door is worse than no path,
     # because it tells the player the wrong thing with total confidence.
+    #
+    # Its surface is a hundredth under PATH_TOP rather than on it. The house is
+    # imported art and carries its own doorstep -- a 0.15-stud slab over
+    # x -2.1..1.3, z -5.5..0.7 -- whose top is at PATH_TOP exactly, so a path
+    # laid to the same height fought it across six studs directly outside the
+    # front door: the most-looked-at square of ground in the game. A hundredth
+    # is under the place-point float tolerance, so "home" still reads as
+    # standing on it, and it puts the doorstep proud of the path, which is what
+    # a doorstep is.
     box("Path", (PATH_X0, PATH_X1, DOOR_LINE - PATH_HALF, DOOR_LINE + PATH_HALF,
-                 PATH_TOP - 0.6, PATH_TOP), PATH_STONE, PEBBLE)
+                 PATH_TOP - 0.6, PATH_TOP - 0.01), PATH_STONE, PEBBLE)
 
 
 def fence_run(z0, z1, index):

@@ -27,6 +27,7 @@ Two ways to place geometry, because two things are being built:
 
 import base64
 import html
+import math
 import struct
 from contextlib import contextmanager
 
@@ -34,6 +35,12 @@ from contextlib import contextmanager
 PLASTIC, SMOOTH, WOOD, PLANKS, FABRIC, METAL, NEON, MARBLE = 256, 272, 512, 528, 1312, 1088, 288, 784
 CONCRETE, BRICK, SLATE, GLASS, ASPHALT, PAVEMENT = 816, 848, 800, 1568, 1376, 1232
 GRASS, LEAFY_GRASS, PEBBLE, COBBLESTONE, LIMESTONE, GRANITE = 1280, 1284, 864, 880, 1216, 832
+# The two the works district needs and nothing else in the world does: rusted
+# sheet for a scrapyard and a silo, and tread plate for a loading dock. Kept
+# here rather than approximated with METAL and a brown, because the whole point
+# of the industrial palette is that it is the one district where a surface is
+# allowed to look worn -- and METAL renders polished at any colour.
+CORRODED_METAL, DIAMOND_PLATE = 1040, 1056
 
 _items = []
 _ref = 0
@@ -282,6 +289,38 @@ def box(name, bounds, color, material=SMOOTH, transparency=0.0, collide=True,
     x0, x1, z0, z1, y0, y1 = bounds
     _emit(name, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2,
           abs(x1 - x0), abs(y1 - y0), abs(z1 - z0), _TURN_MATRIX[0],
+          color, material, transparency, collide, 1, tags, attrs, children)
+
+
+def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
+             collide=True, tags=None, attrs=None, children=""):
+    """A world-space box spun `yaw` degrees about Y, given centre-and-size.
+
+    The fourth way to place geometry, and the only one that is not a rectangle
+    on the grid. `box` is corner-to-corner because a road running north is two
+    x's and two z's and anything else would be unreadable -- but a road running
+    round a circle is not describable that way at all, and neither is a tower
+    set at an angle to the grid. Those want a centre, a size and an angle.
+
+    Positive yaw turns the +X axis toward +Z, which is the same handedness the
+    quarter turns in `_TURN_OFFSET` use, so `spun_box(..., yaw=90)` and a piece
+    emitted under `at(..., side="west")` agree about which way they have turned.
+
+    The corner-to-corner form stays the default for everything on the grid. This
+    is for the things that are not: use it and the axis-aligned bounding box a
+    checker reads back is larger than the part, which is true, but it means two
+    angled parts can be reported as overlapping when they do not. check_city.py
+    reads the rotation back and does a proper separating-axis test for exactly
+    that reason -- if you add another checker, do the same or stay on the grid.
+    """
+    cx, cy, cz = center
+    sx, sy, sz = size
+    rad = math.radians(yaw)
+    c, s = math.cos(rad), math.sin(rad)
+    rot = (f"<R00>{c}</R00><R01>0</R01><R02>{s}</R02>"
+           f"<R10>0</R10><R11>1</R11><R12>0</R12>"
+           f"<R20>{-s}</R20><R21>0</R21><R22>{c}</R22>")
+    _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
           color, material, transparency, collide, 1, tags, attrs, children)
 
 

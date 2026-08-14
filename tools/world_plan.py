@@ -277,6 +277,15 @@ PLACE_LABEL_ATTRIBUTE = "PlaceLabel"
 # are written for somebody standing in the game wondering where they can go.
 PLACE_POINTS = [
     ("home", 0.0, DOOR_LINE, PATH_TOP, "the front path, outside your own door"),
+    # Also where the world's SpawnLocation stands, at (-49.6, 1.32, -2) in
+    # default.project.json -- PATH_TOP plus the pad's own half-height. It used to
+    # sit at (13, 1.387, -18.6), which is over nothing at all: the front garden
+    # ends at x=3.4 and the city's ground does not begin until x=8, z=60, so a
+    # player who arrived before any service had teleported them landed on the bare
+    # baseplate ten studs below. The gate rather than "home" because a spawn is
+    # where several people can appear at once, and the front path here is six
+    # studs wide where the doorway is two. If this moves, move the pad -- a
+    # .project.json cannot hold a comment, which is why the note is here.
     ("gate", PROPERTY_X + 3.0, DOOR_LINE, PATH_TOP, "your front gate, on the street"),
     ("crossing", -58.0, DOOR_LINE, PAVING, "the crossing outside your house"),
     ("school", -105.0, SCHOOL_DOOR, PAVING, "the school forecourt"),

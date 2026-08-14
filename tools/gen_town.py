@@ -767,7 +767,13 @@ def house(z0, z1, door_z, number):
     d0, d1 = door_z - DOORWAY / 2, door_z + DOORWAY / 2
 
     with group(f"House{number}"):
-        box("Path", (NEAR_WALK_X0 + KERB_WIDTH, HOUSE_X0, door_z - 2.2, door_z + 2.2,
+        # Starts at the back of the sidewalk, not at the kerb. The sidewalk is
+        # already paved from the kerb to the property line -- by build_street.py
+        # along the original street and by this file's own extensions past it --
+        # so a path drawn from the kerb laid eleven studs of stone in the same
+        # plane as eleven studs of paving, in two different files, and the two
+        # flickered against each other outside every front door in town.
+        box("Path", (NEAR_WALK_X1, HOUSE_X0, door_z - 2.2, door_z + 2.2,
                      PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
 
         with group("HouseStructure"):
@@ -865,7 +871,11 @@ with group("StreetFurniture"):
     # The south meadow gets a few trees so the loop's far side reads as grass
     # rather than as a void; the frontages along the loop stay clear for the
     # buildings that will one day front them.
-    for x, z in ((-104.0, 88.0), (-104.0, 160.0), (-104.0, 220.0),
+    # The row up the west verge starts at z=160, not z=88: build_street.py
+    # already plants one at (-104, 88) as the last of its own row, and the two
+    # were landing in exactly the same square from two different files -- one
+    # trunk inside another, in two assets neither of which could see the other.
+    for x, z in ((-104.0, 160.0), (-104.0, 220.0),
                  (-130.0, -120.0), (-130.0, -164.0), (-140.0, -214.0),
                  (-220.0, -50.0), (-220.0, 50.0), (-220.0, 150.0),
                  (-220.0, 200.0), (-215.0, -320.0), (-150.0, -320.0),
