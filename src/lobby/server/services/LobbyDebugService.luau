@@ -34,7 +34,7 @@ local PREFIXES = { "/", "!" }
 local Commands: { [string]: (Player, { string }) -> string } = {}
 
 local HELP_TEXT = "lobby commands: /slots [list|use <n>|delete <n>], /create [n], /play [n], "
-	.. "/stage [list|rebuild], /spins [list|grant <n>|roll|perk <id>], /ids"
+	.. "/stage [list|rebuild], /spins [list|grant <n>|roll|perk <id>], /joincode [gen|revoke|list], /ids"
 
 -- The same listing the game place's `/slots` prints, and deliberately the same wording.
 --
@@ -218,6 +218,37 @@ Commands.ids = function(_player: Player, _args: { string }): string
 	local game_ = if Config.Lobby.GamePlaceId == 0 then "NOT SET" else tostring(Config.Lobby.GamePlaceId)
 	local lobby = if Config.Lobby.LobbyPlaceId == 0 then "NOT SET" else tostring(Config.Lobby.LobbyPlaceId)
 	return `this place: {game.PlaceId} -- Config.Lobby.GamePlaceId: {game_} -- LobbyPlaceId: {lobby}`
+end
+
+Commands.joincode = function(player: Player, args: { string }): string
+	local action = string.lower(args[1] or "list")
+
+	if action == "gen" or action == "generate" then
+		local code = LobbyService.GenerateJoinCode(player)
+		if code == nil then
+			return "could not generate a code -- the active slot has no life"
+		end
+		local p = DataService.GetProfile(player)
+		local slot = p and p.Data.activeSlot or 1
+		return `generated {code} for slot {slot}`
+	end
+
+	if action == "revoke" then
+		local revoked = LobbyService.RevokeJoinCode(player, args[2])
+		if revoked then
+			return "code revoked"
+		end
+		return "no code to revoke"
+	end
+
+	-- Default: list.
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local slot = profile.Data.activeSlot
+	local life = profile.Data.slots[slot]
+	return `active slot {slot}: {if life ~= nil and Lives.HasBegun(life) then life.setup.firstName .. " " .. life.setup.lastName else "no life"} -- generate with /joincode gen`
 end
 
 Commands.help = function(_player: Player, _args: { string }): string
