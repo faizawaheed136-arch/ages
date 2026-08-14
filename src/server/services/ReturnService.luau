@@ -28,6 +28,7 @@ local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local DataService = require(script.Parent.DataService)
+local SetupService = require(script.Parent.SetupService)
 
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local ReturnRefusedRemote = Remotes.Get("ReturnRefused")
@@ -123,41 +124,49 @@ end
 -- start -- and before part 3 that was fine, because the menu was drawn over it. It is not
 -- drawn over it any more.
 local function onPlayerAdded(player: Player)
-	task.spawn(function()
-		local profile = DataService.WaitForProfile(player)
-		if profile == nil or player.Parent ~= Players then
-			return
-		end
-		local life = Lives.Active(profile.Data)
-		if Lives.HasBegun(life) and life.alive then
-			return
-		end
-		-- In Studio the player needs a moment to type /setup skip before we send them
-		-- back. Delaying here is not a workaround -- it is the honest shape of the
-		-- system: we know the teleport will refuse, so we let the player reach for the
-		-- harness that puts a life into the slot they are standing in, and only send
-		-- them on if they do not.
-		if RunService:IsStudio() then
-			task.wait(3)
-			-- Re-read after the pause: a /setup skip in those three seconds has done
-			-- its job and the life is begun. Nothing to refuse here.
-			life = Lives.Active(profile.Data)
-			if Lives.HasBegun(life) and life.alive then
-				return
-			end
+	-- Must run synchronously (no task.spawn) so it fires before BodyService's watch
+	-- on the same PlayerAdded queue. If deferred, BodyService sizes the character
+	-- to the saved adult age first and the child life never gets applied on join.
+	local profile = DataService.WaitForProfile(player)
+	if profile == nil or player.Parent ~= Players then
+		return
+	end
+	-- In Studio, always start a fresh child life on join. This runs BEFORE the
+	-- "has an adult life already?" check so that BodyService, which sizes the
+	-- character as adult on the first frame it sees a begun life, never gets a
+	-- chance to apply adult scales. A force-skipped life is always age zero, so
+	-- beginLife runs BodyService.Apply against a child body right here.
+	-- /setup skip is still available mid-session to restart at will.
+	if RunService:IsStudio() then
+		local rolled = SetupService.Skip(player, true)
+		if rolled == nil then
 			warn(
-				`[AGES] return: {player.Name} still has no life after the Studio grace `
-					.. `period -- sending them to /setup skip instructions`
+				`[AGES] return: {player.Name} could not begin a life in Studio -- `
+					.. `SetupService.Skip returned nil`
 			)
-			refuse(player, "No life begun. Type /setup skip in chat to start one, then rejoin.")
 			return
 		end
-		warn(
-			`[AGES] return: {player.Name} arrived on slot {profile.Data.activeSlot} with no life to play `
-				.. `(begun={Lives.HasBegun(life)}, alive={life.alive}); sending them back to the lobby`
-		)
-		ReturnService.Send(player)
-	end)
+		-- Skip/commit calls beginLife which calls BodyService.Apply, but BodyService's
+		-- CharacterAdded handler may have already fired (with the default adult body) before
+		-- the profile was ready. Calling Apply again here guarantees the child scales are on
+		-- the character regardless of timing.
+		BodyService.Apply(player)
+		-- Yield one frame so BodyService's PlayerAdded handler (connected after ours)
+		-- cannot fire its synchronous character check before we finish. Without this,
+		-- BodyService reads the still-unbegun profile and sizes the character adult-sized
+		-- on the very first frame, overwriting the child scales we just applied.
+		task.wait()
+		return
+	end
+	local life = Lives.Active(profile.Data)
+	if Lives.HasBegun(life) and life.alive then
+		return
+	end
+	warn(
+		`[AGES] return: {player.Name} arrived on slot {profile.Data.activeSlot} with no life to play `
+			.. `(begun={Lives.HasBegun(life)}, alive={life.alive}); sending them back to the lobby`
+	)
+	ReturnService.Send(player)
 end
 
 function ReturnService:Init()

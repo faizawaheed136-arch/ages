@@ -351,6 +351,15 @@ local function onCharacterAdded(player: Player, character: Model)
 		return
 	end
 
+	-- An unbegun slot has no setup yet, so its age is still zero and its body has
+	-- no band. Applying one here would size the character adult on the first frame,
+	-- before ReturnService has had a chance to begin a child life and put the right
+	-- scales on. Wait for the life to be begun, then apply.
+	local data = Lives.Active(profile.Data)
+	if not Lives.HasBegun(data) then
+		return
+	end
+
 	BodyService.Apply(player)
 end
 
