@@ -1093,6 +1093,9 @@ Config.Work = {
 	-- Safe range: 1 to ShiftGameHours - 1, low below high.
 	EventEarliestGameHour = 2,
 	EventLatestGameHour = 6,
+	-- Allow work-from-home jobs whose placeId points to a suburb house.
+	-- When false, home-based jobs are silently excluded from the job posts.
+	HomeJobAllowed = true,
 }
 
 -- Being hired, as opposed to working. Two different things that used to be one:
@@ -1123,7 +1126,93 @@ Config.Work.Hiring = {
 	SignMaxDistanceStuds = 160,
 }
 
--- What you actually do for four minutes.
+-- House ownership. Suburb homes a player can buy and use as a workplace.
+--
+-- All data is per-life, resetting on death just like money and bonds. A life
+-- that dies with a house leaves no inheritance -- the property vanishes with
+-- the slot, and the new life starts with nothing.
+Config.House = {
+	-- Price to buy one suburb house. Single-digit thousands, so a teen can
+	-- afford it after a year of part-time work, but not so cheap that it's
+	-- meaningless.
+	BuyPrice = 5000,
+	-- Maximum houses a single life can own at once. One is the intended
+	-- experience -- a home base to return to -- but two or three won't break
+	-- anything for players who want property investment.
+	MaxPerPlayer = 1,
+	-- Fraction of BuyPrice returned when selling. Seven-tenths encourages
+	-- buying and selling as a cycle rather than hoarding; the 30% loss is
+	-- the cost of ownership, like property tax in the real world.
+	ResaleFraction = 0.7,
+}
+
+-- The car dealership queue. Runs alongside the work shift at auto_dealer so the place
+-- feels alive even when nobody is on the clock -- customers line up at the showroom and
+-- the player can serve them whether they are working there or just walking past.
+Config.CarDealer = {
+	-- How many customers wait in line at once. More than three is a chore; two is a
+	-- conversation.
+	-- Safe range: 2-4.
+	MaxQueue = 3,
+	-- How long between one customer arriving and the next, in real seconds. Staggered
+	-- so the queue builds visibly rather than appearing full all at once.
+	-- Safe range: 8-20.
+	CustomerGapSeconds = 12,
+	-- How often the service ticks to check for new arrivals and advance the queue.
+	-- Safe range: 1-3.
+	TickSeconds = 2,
+	-- The tip the player earns for serving a walk-in customer. Separate from the
+	-- work-shift tip because walk-ins are voluntary and should feel rewarding.
+	-- Safe range: 50-200.
+	ServeTip = 100,
+	-- How far the counter mark sits from the station. Same system as work tasks,
+	-- so this does not need to be tuned separately -- it is WorkSpots.Attend's job.
+	CounterReachStuds = Config.Work.Tasks.ReachStuds,
+}
+
+-- Monthly living expenses. Money leaves every game month whether the player
+-- wants it to or not, which is the one force that keeps a life from running
+-- forward on autopilot and turning the pocket-money trickle into a flood.
+Config.Bills = {
+	-- The base cost of existing in the world each month, before anything else
+	-- is factored in. Small enough that a first job can cover it, large enough
+	-- that skipping work for a month leaves you behind.
+	-- Safe range: 100-400.
+	BaseMonthly = 200,
+	-- Extra cost per suburb house owned. A home is not free to maintain, and
+	-- this is the monthly slice of the 30% resale loss that the plan names
+	-- "property tax." The house already cost BuyPrice to enter; this is the
+	-- rent you pay for staying.
+	-- Safe range: 100-500.
+	HouseMonthly = 200,
+	-- Money held above this threshold shifts you into a higher lifestyle tier,
+	-- and the monthly bill scales with it. A life that accumulates ten thousand
+	-- without paying more than a starter keeps drifting further ahead of the
+	-- curve -- this keeps the curve from becoming invisible.
+	-- Safe range: 5000-20000.
+	LuxuryThreshold = 10000,
+	-- Bill multiplier once the luxury threshold is passed. A life that has
+	-- climbed past the entry-level band pays more, not because the game is
+	-- punishing wealth but because a bigger life costs more to sustain.
+	-- Safe range: 1.2-2.0.
+	LuxuryMultiplier = 1.5,
+	-- What accumulates when a bill cannot be paid in full. Debt grows on top
+	-- of debt and the interest is what makes a life that runs behind for a
+	-- year hard to climb out of without a meaningful change.
+	-- Safe range: 0.03-0.10.
+	DebtInterestRate = 0.05,
+	-- Hard ceiling on how much debt a life can carry. Above this the life
+	-- flags as financially distressed and happiness drains faster; the cap
+	-- exists so the number never becomes abstract.
+	-- Safe range: 2000-10000.
+	MaxDebt = 5000,
+	-- How often bills are charged, in game months. Twelve means once per
+	-- year on the birthday; six means twice and gives a second chance to
+	-- dig out before the next hit.
+	-- Safe range: 6-12.
+	BillIntervalMonths = 12,
+}
+
 --
 -- A shift used to be a timer. You walked to a marker, stood on it, and a number went
 -- up for four real minutes -- which is not a job, it is a loading screen you are paid
@@ -1319,6 +1408,18 @@ Config.Work.Tasks = {
 	-- and it is not the same offense as walking out, which already costs -2.
 	-- Safe range: -1 to 1.
 	PoorShiftStanding = 0,
+
+	-- XP toward the next standing band, shown as a thin bar under the shift
+	-- progress. Distinct from standing itself: standing is the record the job
+	-- keeps, XP is the visible progress the player watches climb. Reset each
+	-- shift so the bar always shows how far into the current shift the next band
+	-- is. Per-task and per-event values are small so a shift of four minutes
+	-- yields a meaningful fill without making the bar a speed test.
+	-- Safe range: 1-10 per task, 1-5 per event.
+	StandingXp = {
+		PerTask = 5,
+		PerEvent = 3,
+	},
 }
 
 -- The people a task is for.
@@ -2164,6 +2265,18 @@ Config.School.Art = {
 		-- How far away the room's own labels can still be read. Matches the lab's.
 		-- Safe range: 30-90.
 		LabelMaxDistanceStuds = 60,
+
+		-- Hand-placed interact anchors in the school building. Each entry names an
+		-- event id from LifeEvents/School.luau and a world position (x, z) where its
+		-- tagged anchor part lives. The service reads the tag and attribute itself;
+		-- this block is the inventory so the debug path can list and relist them.
+		-- Safe range: one entry per event, positions inside the school footprint.
+		Anchors = {
+			{ eventId = "school_notice_board", x = -114.0, z = 42.0 },
+			{ eventId = "school_water_fountain", x = -138.0, z = 48.0 },
+			{ eventId = "school_locker_note", x = -150.0, z = 22.0 },
+			{ eventId = "school_library_book", x = -150.0, z = 43.0 },
+		},
 	},
 }
 
@@ -2528,6 +2641,20 @@ Config.People = {
 		-- rest of a life that never reaches the shop.
 		MaxWalkSeconds = 240,
 	},
+
+	-- Bond milestones. When a bond crosses one of these thresholds the game fires
+	-- a celebration and the person's offers change character. The numbers sit
+	-- between MinBond and MaxBond and are checked in ascending order: the first
+	-- one the current bond meets is the one that fires, and each threshold fires
+	-- only once per life so the player gets the fanfare exactly once per rung.
+	-- Safe range: integers between MinBond (-20) and MaxBond (100), ascending.
+	BondMilestones = { 10, 25, 50, 75, 100 },
+
+	-- Whether a person with bond 25 or higher gifts money on their next visit.
+	-- A genuine friend brings something; the chance keeps it from becoming a
+	-- guaranteed income stream and preserves the visit as a choice, not a chore.
+	-- Safe range: 0-0.5.
+	BondGiftChance = 0.3,
 }
 
 -- Places a person can be asked to walk to with you.
@@ -2574,7 +2701,13 @@ Config.Places = {
 		"suburb_1",
 		"suburb_5",
 		"suburb_10",
+		"suburb_20",
+		"suburb_30",
 		"suburb_50",
+		-- New districts: fade offices and north strip so companions can walk there.
+		"fade_1",
+		"north_shop_1",
+		"auto_dealer",
 	},
 }
 
@@ -3041,6 +3174,90 @@ Config.Crime = {
 		TickSeconds = 0.2,
 	},
 
+	-- Being noticed, which until now was two different questions with two different
+	-- answers and no name.
+	--
+	-- An officer used to see you the instant you crossed a distance line, and a passer-by
+	-- used to need a flat 2.2 seconds regardless of anything about you. Neither asked the
+	-- question the chase is actually built on: *how much do you stand out right now*. So
+	-- the player had no lever between "wanted" and "not wanted" -- nothing to do with a
+	-- street full of people except avoid it -- and the one number that should obviously
+	-- have made you easier to spot, the bounty on your head, did nothing of the kind.
+	--
+	-- Now both observers accumulate the same `notice`, at a rate set by how conspicuous
+	-- you are, and being spotted happens when it fills. That single change is what turns
+	-- a set of range checks into a system with play in it, because every term below is a
+	-- lever the player can move:
+	--
+	--   heat     the headline rule -- the more wanted you are, the faster anybody makes
+	--            you. This is what stops a citywide manhunt feeling identical to a first
+	--            report, without touching a single officer's stats.
+	--   speed    sprinting past a crowd is louder than walking through it. This is the
+	--            one term the player controls second to second, and it is the reason
+	--            "keep your head down" is now a real instruction rather than flavour.
+	--   colors   a gang bandana is meant to be legible across a street -- that is its
+	--            whole job -- so wearing one while wanted has to cost something. It is
+	--            also what Part 4 needs: being made in enemy territory is the trigger.
+	--
+	-- Notice resets the moment line of sight breaks, for both observers, and that is
+	-- deliberate rather than an omission: it is what keeps breaking sight a *move* rather
+	-- than a pause, which is the rule WitnessService was already built on and the one the
+	-- whole hiding half of the chase rests on.
+	Spotting = {
+		-- What you are worth noticing at all, wanted or not, stood perfectly still with
+		-- nothing on. The floor rather than the norm -- everything else adds to it.
+		-- Safe range: 0.2-0.5. At 0 a clean player standing still is literally invisible,
+		-- which reads as a broken officer rather than as good play.
+		Base = 0.35,
+
+		-- How much of the rate the bounty is worth, at full heat. The largest single term
+		-- on purpose: "easier to spot with a higher bounty" is the rule this table exists
+		-- to implement, and it should dominate the others rather than sit alongside them.
+		-- Safe range: 0.4-0.9.
+		HeatShare = 0.65,
+
+		-- How much moving flat out is worth, against standing still.
+		--
+		-- Smaller than heat, and it has to be: if running were the dominant term then the
+		-- correct play at every tier would be to walk everywhere, and a chase you win by
+		-- strolling is not a chase. It is a discount for playing carefully, not a
+		-- replacement for being uninteresting to the police.
+		-- Safe range: 0.2-0.6.
+		MovementShare = 0.4,
+
+		-- What counts as flat out, in studs per second, for the term above. Anything at
+		-- or past this is fully conspicuous; the scale is linear below it.
+		-- Safe range: 16-24. Should sit at or near the player's actual run speed, or the
+		-- term saturates before the player is really running and stops discriminating.
+		RunSpeedStuds = 20,
+
+		-- Wearing gang colors, flat. Not scaled by anything, because a bandana is either
+		-- on your head or it is not, and the whole design of gang colors is that they are
+		-- readable from across a street.
+		-- Safe range: 0.15-0.5.
+		ColorsBonus = 0.3,
+
+		-- How much of the rate survives at the very edge of an observer's range.
+		--
+		-- Without a falloff, sightStuds is a hard line: one stud closer and you are made
+		-- at full speed. With it, the edge of somebody's vision is a place you can be
+		-- briefly and get away with, which is what makes distance a thing to manage
+		-- rather than a boolean to be on the right side of.
+		-- Safe range: 0.2-0.5. At 1 the falloff is switched off entirely.
+		EdgeShare = 0.35,
+
+		-- Seconds for a *trained* observer to make you at point-blank range with a
+		-- conspicuousness of exactly 1. Officers only.
+		--
+		-- Short, because an officer who has to study you is an officer you can walk past,
+		-- and the pursuit half of this system was never the part that needed slowing
+		-- down. What this buys is the moment of grace that did not exist before: at low
+		-- heat, moving slowly, at the edge of their vision, you are not made instantly --
+		-- and that moment is the entire reason spotting is a system rather than a check.
+		-- Safe range: 0.6-2. Above ~2 officers stop feeling like a threat at all.
+		OfficerSeconds = 1.1,
+	},
+
 	-- The town, once it has your description.
 	--
 	-- The chase's second opponent, and the reason it exists is that without it the whole
@@ -3061,13 +3278,17 @@ Config.Crime = {
 		-- Safe range: 30-60. Above ~60 a busy street is impassable at any tier.
 		SeeStuds = 45,
 
-		-- How long they have to have you in view before they call it in.
+		-- How long a passer-by needs to place a face of conspicuousness exactly 1, stood
+		-- right in front of them. No longer a flat hold: it is the denominator of the
+		-- rate in Crime.Spotting, so a calm clean player takes several times this and a
+		-- sprinting banded-up one takes well under it. Point-blank, too -- across the
+		-- street it stretches by the falloff in EdgeShare.
 		--
-		-- The undo window, and the same idea as the till's GraceSeconds: long enough
-		-- that walking briskly past somebody is not automatically a report, short
-		-- enough that loitering in a crowd is. It is also the time their reaction is on
-		-- screen -- they stop and turn to face you the moment the count starts -- so
-		-- this doubles as how much warning the player gets.
+		-- Still the undo window, and still the same idea as the till's GraceSeconds:
+		-- long enough that walking briskly past somebody is not automatically a report,
+		-- short enough that loitering in a crowd is. It is also the time their reaction
+		-- is on screen -- they stop and turn to face you the moment the notice starts
+		-- filling -- so this doubles as how much warning the player gets.
 		-- Safe range: 1.5-4. Below ~1.5 there is no warning, only a punishment.
 		SeeSeconds = 2.2,
 
@@ -3911,6 +4132,216 @@ Config.Setup = {
 			available = false,
 		},
 	},
+}
+
+-- ---------------------------------------------------------------------------
+-- Fighting.
+--
+-- A fight in AGES is a contest for *footing*, not for health. You do not injure
+-- anybody; you take them off their feet, they go down, and they get back up. That
+-- is not a content filter bolted on top of a damage system -- it is the damage
+-- system, and it is what keeps a brawl inside 13+ without anybody having to
+-- remember a rule. There is no blood, no injury state and no death animation here
+-- because there is nothing in the mechanic for one to describe.
+--
+-- The verb is charge-and-release, the same primitive the sports work settled on, so
+-- the game keeps one input language: hold to wind up, let go to commit. Around it sit
+-- two answers -- guard and sidestep -- and the three of them make a triangle rather
+-- than a ladder. Guard turns a strike into stamina loss; a *fully charged* strike
+-- breaks a guard; a sidestep beats anything already committed. Which means holding
+-- the charge longer is not simply better, and that is the whole game: the wind-up
+-- that breaks a guard is the wind-up somebody can step around.
+--
+-- Stamina is what stops all three being free, and it is the pacing mechanism as
+-- well. It recovers slowly while you are in range and quickly while you are not, so
+-- a fight paces itself into exchange, break, exchange without a timer anywhere in
+-- this table telling it to.
+-- ---------------------------------------------------------------------------
+Config.Fight = {
+	-- Server tick. Matches the gym's rate: fast enough that a released charge lands on
+	-- the value the player saw, slow enough that a busy street is not paying for it.
+	-- Safe range: 0.05 .. 0.15.
+	TickSeconds = 0.1,
+
+	-- How much footing everybody starts a fight with before health is counted.
+	-- Safe range: 40 .. 80.
+	BaseFooting = 60,
+
+	-- What a full health bar adds to that, as a share of BaseFooting. This is the only
+	-- progression in the system and it is deliberately inside the mechanic rather than
+	-- beside it: a player who has been to the gym watches their own footing bar draw
+	-- longer, which is what GymService already does with its sweet zone and what the
+	-- activity law asks for in place of a number on a menu.
+	-- Safe range: 0.3 .. 1.0.
+	HealthFootingBonus = 0.6,
+
+	-- The shared pool every action spends from.
+	-- Safe range: 80 .. 140.
+	MaxStamina = 100,
+	-- Recovery while still in range of the opponent, per second. Low on purpose --
+	-- standing toe to toe should not refill you.
+	-- Safe range: 4 .. 14.
+	StaminaPerSecondEngaged = 9,
+	-- Recovery once you have broken off. The gap between these two is what makes
+	-- backing out of range a decision rather than a retreat, and it is where the verse
+	-- and chorus of a fight comes from.
+	-- Safe range: 15 .. 30.
+	StaminaPerSecondClear = 22,
+
+	-- Charge-and-release. Seconds to wind a strike from nothing to full.
+	-- Safe range: 0.7 .. 1.2.
+	ChargeSeconds = 0.9,
+	-- Below this share of a full charge a release is a jab: cheap, fast, and it will
+	-- not break anybody's guard. There is no dead zone where a release does nothing,
+	-- because an input that silently does nothing is the one thing a player cannot
+	-- learn from.
+	-- Safe range: 0.15 .. 0.35.
+	JabShare = 0.25,
+	-- Past this share the wind-up is an overcharge: it hits harder than a full charge
+	-- but leaves you in recovery for much longer, so the biggest punch in the game is
+	-- also the most punishable. Free risk/reward for one number, the same shape as the
+	-- golf-meter overswing.
+	-- Safe range: 0.8 .. 0.95.
+	OverchargeShare = 0.85,
+	-- What a strike costs, and what it takes off an opponent at minimum and maximum
+	-- charge. The floor is not zero: a jab that did nothing would make the fast option
+	-- a trap rather than a choice.
+	-- Safe range: StrikeStamina 10 .. 20, footing 4 .. 10 and 16 .. 26.
+	StrikeStamina = 14,
+	StrikeFootingMin = 6,
+	StrikeFootingMax = 20,
+	-- Extra footing an overcharged strike takes, as a multiplier on the maximum.
+	-- Safe range: 1.2 .. 1.8.
+	OverchargeFootingScale = 1.4,
+
+	-- Recovery: seconds of lockout after committing, during which nothing is available.
+	-- These three are the entire punish economy and they are ordered on purpose -- a
+	-- clean strike costs least, an overcharge more, and a strike that hit nothing at
+	-- all costs most.
+	-- Safe range: 0.3 .. 0.6, 0.7 .. 1.1, 0.9 .. 1.4.
+	StrikeRecoverSeconds = 0.45,
+	OverchargeRecoverSeconds = 0.9,
+	WhiffRecoverSeconds = 1.1,
+
+	-- Guard. Holding costs stamina per second, so a permanent block is not a strategy.
+	-- Safe range: 8 .. 18.
+	GuardStaminaPerSecond = 12,
+	-- What still gets through a successful block, as shares of the incoming strike.
+	-- Some footing leaks -- a block should be the better outcome, never a free one --
+	-- and the rest arrives as stamina cost, which is what eventually opens a turtling
+	-- player up without needing a rule that says "you may not block".
+	-- Safe range: footing 0.1 .. 0.25, stamina 0.6 .. 1.0.
+	GuardedFootingShare = 0.15,
+	GuardedStaminaShare = 0.8,
+	-- The charge at which a strike breaks a guard outright. Sent to the client so the
+	-- power meter can draw the line: the player has to see the threshold they are
+	-- holding for, or the overcharge decision is being made blind.
+	--
+	-- **This must stay above OverchargeShare, and FightService refuses to load if it is
+	-- not.** The two numbers together are the whole question the boxer asks. Below
+	-- overcharge, a guard could be broken by a strike that never entered the punishing
+	-- zone -- so breaking a guard would cost nothing at all, the safest play against a
+	-- fifty-percent guard would be to hold exactly this much every single time, and an
+	-- opponent built entirely around risk would have no risk left in him. Above it, there
+	-- is no way through a guard that does not also accept the near-second of recovery,
+	-- which is what makes squaring up to a boxer a bet rather than a routine.
+	-- Safe range: 0.88 .. 0.95, and always greater than OverchargeShare.
+	GuardBreakShare = 0.92,
+	-- What breaking a guard is worth, as a multiplier on the strike's footing.
+	-- Safe range: 1.3 .. 2.0.
+	GuardBreakFootingScale = 1.5,
+	-- Lockout on the guard that was broken. The reward for the read.
+	-- Safe range: 0.5 .. 1.0.
+	GuardBreakRecoverSeconds = 0.7,
+
+	-- Sidestep. Expensive, brief and total: inside the window nothing lands. It has to
+	-- be expensive, because a cheap dodge answers every question in the triangle.
+	-- Safe range: stamina 18 .. 30, window 0.25 .. 0.45.
+	SidestepStamina = 22,
+	SidestepSeconds = 0.35,
+	SidestepRecoverSeconds = 0.3,
+
+	-- Inside this many studs you can hit and be hit.
+	-- Safe range: 9 .. 16.
+	RangeStuds = 12,
+	-- Get this far away and the fight is over -- you walked out of it. Generous, so
+	-- that backing off to recover stamina cannot end a fight by accident.
+	-- Safe range: 40 .. 80.
+	BreakStuds = 55,
+
+	-- How long somebody stays down before getting back up. The fight is already over
+	-- when this starts; it is a beat for the result to land, not a punishment, and it
+	-- is short because the 13+ line is specifically about not dwelling here.
+	-- Safe range: 2 .. 4.
+	DownSeconds = 3,
+
+	-- How long the result stays on screen after they are back up.
+	-- Safe range: 2 .. 5.
+	OverSeconds = 3,
+
+	-- How far in front of the player a challenger squares up.
+	-- Safe range: 6 .. 10.
+	SquareUpStuds = 8,
+
+	-- Walk speed an opponent closes at. Slower than a running player on purpose:
+	-- breaking off has to be possible, or the stamina economy has no exit.
+	-- Safe range: 10 .. 18.
+	FoeWalkSpeed = 14,
+
+	-- How long a beat line ("Blocked", "Broke guard") stays on the client.
+	-- Safe range: 0.5 .. 1.5.
+	BeatSeconds = 0.9,
+
+	-- What losing costs, and what winning is worth.
+	--
+	-- Small on purpose, and health rather than money: a fight you lose should cost you
+	-- the thing that makes the next fight harder, not the thing that makes the next
+	-- hour harder. Because footing scales off health, a beating shortens your own bar
+	-- the next time somebody squares up -- the loop closes on itself without a single
+	-- number outside the mechanic, and a player on a losing streak feels it in the bar
+	-- they are watching rather than in a wallet they are not.
+	--
+	-- The win pays happiness because nothing else honestly fits. Winning a street fight
+	-- does not make you fitter or better looking, and paying it in money would make the
+	-- town's toughs an income stream -- which is the "idle payout pad" the activity law
+	-- names as the thing to avoid, just with a punch on the front of it.
+	-- Safe range: 4 .. 12, 2 .. 8.
+	LossHealth = 8,
+	WinHappiness = 4,
+}
+
+-- Milestones. One-time bonuses for hitting life landmarks, fired once per life
+-- so the player gets the celebration exactly once. Each entry names the trigger,
+-- the label the client shows, and the money bonus attached.
+Config.Milestones = {
+	FirstJob = { label = "First Job", bonus = 500 },
+	FirstHouse = { label = "Homeowner", bonus = 1000 },
+	TenShifts = { label = "Steady Worker", bonus = 300 },
+	FiftyShifts = { label = "Dedicated", bonus = 1000 },
+	FirstCar = { label = "Car Owner", bonus = 500 },
+	MaxStanding = { label = "Top Performer", bonus = 2000 },
+	Age30 = { label = "Thirty", bonus = 1000 },
+	Age50 = { label = "Fifty", bonus = 2000 },
+	Age80 = { label = "Long Life", bonus = 5000 },
+}
+
+-- NPC gossip. When two townsfolk are near each other and the player has done
+-- something notable, one may share a line about the player with the other.
+-- The gossip fades over time and nudges bonds among nearby people.
+Config.Gossip = {
+	-- How close two NPCs need to be for gossip to happen.
+	-- Safe range: 15-50.
+	RangeStuds = 30,
+	-- How many game hours gossip stays active before fading.
+	-- Safe range: 24-96.
+	FadeHours = 48,
+	-- Bond change when an NPC gossips about the player to someone nearby.
+	-- Positive if the gossip was about something good, negative otherwise.
+	-- Safe range: -5 to 5.
+	BondModifier = 2,
+	-- How often the gossip system checks for new opportunities.
+	-- Safe range: 30-120 seconds.
+	TickSeconds = 60,
 }
 
 return Config
