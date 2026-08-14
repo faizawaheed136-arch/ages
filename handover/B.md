@@ -2,6 +2,21 @@
 
 _No entry yet. Append yours at the top, newest first._
 
+## 2026-08-14 (sixth entry)
+
+**Lane clean.** Gate `all clean` — 139 files, 8 checks. One small fix landed in this session: removed a duplicate `local subjectGates = job.subjectGates` declaration inside `hireRefusalFor` (commit `d298a54`).
+
+**What is in place, waiting on C:**
+- `Config.SubjectPerks = { [undefined] = nil }` — empty slot, zero entries.
+- `Job.subjectGates` type field exists, zero jobs carry it.
+- `WorkService.hireRefusalFor` reads both; the moment C fills them the hire system uses them automatically.
+
+C's `SubjectCareerMap` decides which careers each subject gates and at what level, and what `smartsBonus` mastery leaves behind. Until then the seam compiles and passes the gate but is inert — no job refuses a hire on school grounds, no job discounts its smart requirement on a cleared gate.
+
+**Everything else in this lane is done and verified.** No stubs, no TODOs, no orphaned code.
+
+**Gate:** `all clean` — 139 files, 8 checks.
+
 ## 2026-08-14 (fifth entry)
 
 **School→Career seam implemented.** The subject gates that make school
