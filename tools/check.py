@@ -24,13 +24,20 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
-LUAU_COMPILE = Path.home() / ".aftman/tool-storage/luau/luau-compile"
-ROJO = Path.home() / ".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo"
+# There is no aftman.toml, so nothing installs itself and both binaries are looked up
+# at a fixed path under the user's home. The `.exe` suffix is the only difference
+# between the macOS/Linux and Windows releases; without it a correctly installed
+# Windows toolchain looks exactly like a missing one.
+EXE = ".exe" if sys.platform == "win32" else ""
+LUAU_COMPILE = Path.home() / f".aftman/tool-storage/luau/luau-compile{EXE}"
+ROJO = Path.home() / f".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo{EXE}"
+BUILD_TMP = Path(tempfile.gettempdir())
 
 
 # --------------------------------------------------------------------------- #
@@ -137,9 +144,16 @@ def line_of(text: str, index: int) -> int:
 
 def check_compile(files, code):
     """A syntax error anywhere on the boot path loads a place with no services in it."""
+    # A missing tool is a FAILURE, not a skip. This used to `return 0`, which meant a
+    # machine with no toolchain printed "all clean" and exited 0 with the only check
+    # that catches a fatal error never having run -- the worst possible outcome on a
+    # newly set-up box, where it reads as "the tree is fine" instead of "I checked
+    # nothing". Every other check in this file is pure Python and cannot be skipped.
     if not LUAU_COMPILE.exists():
-        print(f"  SKIPPED: {LUAU_COMPILE} missing (re-download luau-macos.zip)")
-        return 0
+        print(f"  FAILED: {LUAU_COMPILE} missing -- this check did not run.")
+        print("    Install luau-compile from the luau-lang/luau releases page")
+        print(f"    ({'luau-windows.zip' if EXE else 'luau-macos.zip'}) to that path.")
+        return 1
     bad = 0
     for f in files:
         # stdout is the compiled bytecode -- binary, and not utf-8 decodable, so it
@@ -160,14 +174,16 @@ def check_compile(files, code):
 def check_builds(files, code):
     """Both places, always. Plain `rojo build` only builds the game place."""
     if not ROJO.exists():
-        print(f"  SKIPPED: {ROJO} missing")
-        return 0
+        print(f"  FAILED: {ROJO} missing -- this check did not run.")
+        print("    Install rojo 7.7.0 from the rojo-rbx/rojo releases page to that path.")
+        return 1
     bad = 0
     for project in ("default.project.json", "lobby.project.json"):
         if not (ROOT / project).exists():
             continue
         r = subprocess.run(
-            [str(ROJO), "build", project, "-o", f"/tmp/agescheck-{project}.rbxl"],
+            [str(ROJO), "build", project,
+             "-o", str(BUILD_TMP / f"agescheck-{project}.rbxl")],
             capture_output=True,
             text=True,
             cwd=ROOT,

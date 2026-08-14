@@ -1,5 +1,6 @@
 {
   "name": "ages-lobby",
+  "globIgnorePaths": ["**/*.tmp.*"],
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {

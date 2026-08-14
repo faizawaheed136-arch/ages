@@ -1,0 +1,20 @@
+# This tree is shared between a Mac and a Windows box through git. Windows git ships
+# with core.autocrlf=true, which rewrites every line of every file on checkout and
+# back again on commit. That is survivable for a 200-line Luau file and catastrophic
+# for an 8 MB generated .rbxmx: a clone that changed nothing shows up as a whole-file
+# diff, and the two machines start disagreeing about files neither of them edited.
+# Normalise to LF everywhere so the bytes on disk are the same on both platforms.
+* text=auto eol=lf
+
+# Generated Roblox model XML. These are machine-written by tools/gen_*.py, they are
+# large, and a line-level merge of one is not something a human can resolve -- the
+# correct fix for a conflict here is always to regenerate, never to hand-edit. Mark
+# them binary so git refuses the merge outright instead of producing a plausible-
+# looking file with half of each map in it.
+*.rbxmx -text -diff merge=binary
+*.rbxl  -text -diff
+*.rbxlx -text -diff
+
+# Shell scripts must keep LF even if someone forces CRLF globally -- a CRLF shebang
+# line fails with a "bad interpreter" error that names a binary that plainly exists.
+*.sh text eol=lf
