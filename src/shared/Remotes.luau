@@ -237,10 +237,6 @@ export type RemoteName =
 	-- "I want to sell this suburb house." Carries the house id string. The
 	-- server clears any linked home job first, then refunds the resale value.
 	| "RequestSellHouse"
-	-- "I want to link this job to my house." Carries houseId and jobId; the server
-	-- checks ownership, that the job exists, and that the job's placeId matches the
-	-- house before committing the link.
-	| "RequestSetHomeJob"
 	-- The dealership queue in progress, pushed as a whole snapshot: how many
 	-- are waiting, who is at the front, and where the counter is. Its own remote
 	-- rather than a field on ShiftUpdated because the queue is independent of
@@ -487,7 +483,6 @@ local REMOTE_NAMES: { RemoteName } = {
 	"HouseUpdated",
 	"RequestBuyHouse",
 	"RequestSellHouse",
-	"RequestSetHomeJob",
 	"CarDealerUpdated",
 	"RequestCarDealerServe",
 	"FightUpdated",

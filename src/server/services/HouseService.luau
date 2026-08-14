@@ -30,7 +30,6 @@ local HOUSE = Config.House
 local HOUSE_UPDATED = Remotes.Get("HouseUpdated")
 local REQUEST_BUY = Remotes.Get("RequestBuyHouse")
 local REQUEST_SELL = Remotes.Get("RequestSellHouse")
-local REQUEST_SET_JOB = Remotes.Get("RequestSetHomeJob")
 
 -- Check whether a house id is a known suburb place in the walkable list.
 local function isValidHouseId(houseId: string): boolean
@@ -207,16 +206,6 @@ function HouseService:Init()
 		local ok, err = HouseService.SellHouse(player, houseId)
 		if not ok then
 			warn(`[AGES] SellHouse failed for {player.Name}: {err}`)
-		end
-	end)
-
-	REQUEST_SET_JOB.OnServerEvent:Connect(function(player: Player, houseId: any, jobId: any)
-		if typeof(houseId) ~= "string" or typeof(jobId) ~= "string" then
-			return
-		end
-		local ok, err = HouseService.SetHomeJob(player, houseId, jobId)
-		if not ok then
-			warn(`[AGES] SetHomeJob failed for {player.Name}: {err}`)
 		end
 	end)
 
