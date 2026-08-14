@@ -20,9 +20,12 @@
 --   system, and a witness who reported somebody the police could not identify would make
 --   the one verb the chase has worthless.
 --
---   They react before they cost anything. The person stops, turns and faces you for
---   SeeSeconds before the report lands. That is not decoration -- it is the entire warning
---   this system gives, in the world rather than on the HUD, the same way the shop camera is.
+--   They react before they cost anything. The person stops and turns to face you the
+--   moment they begin to notice, and the report only lands once that notice fills. That is
+--   not decoration -- it is the entire warning this system gives, in the world rather than
+--   on the HUD, the same way the shop camera is. It matters more now than it did: how long
+--   the gap lasts depends on how conspicuous the player is, so the warning is short exactly
+--   when the player is most exposed, and the turn is the only thing telling them so.
 --
 --   One person reports once every CooldownSeconds. Without it, standing in front of a
 --   single pedestrian is a heat firehose, and the tier climbs on its own with nothing
@@ -30,6 +33,10 @@
 --
 -- What a report actually does is drag the sighting back onto you. The heat is small on
 -- purpose: a witness is not a disaster, it is a reason to keep moving.
+--
+-- How fast anybody places you is not decided here. It is world/Spotting, shared with the
+-- police, because "how much do you stand out" is one question and the day the crowd and the
+-- officers answer it differently is the day neither can be reasoned about.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -40,6 +47,7 @@ local BountyService = require(script.Parent.BountyService)
 local PeopleService = require(script.Parent.PeopleService)
 
 local Ground = require(script.Parent.Parent.world.Ground)
+local Spotting = require(script.Parent.Parent.world.Spotting)
 
 local WitnessService = {}
 
@@ -48,10 +56,16 @@ local WITNESS = CRIME.Witness
 
 -- One person's opinion of one player, this chase.
 type Look = {
-	-- How long they have had the player in view without a break. Reset the moment the line
+	-- How close this person is to placing the face, from 0 to 1. Reset the moment the line
 	-- is lost, so ducking behind a van genuinely restarts their count rather than pausing it
 	-- -- which is what makes breaking sight a move rather than a delay.
-	heldFor: number,
+	--
+	-- This used to be `heldFor`, a count of seconds against a flat 2.2. It fills at a rate
+	-- now, and the rate is how conspicuous the player is -- so a citywide manhunt sprinting
+	-- past in gang colors is placed in a fraction of the time a clean stranger walking is.
+	-- That is the whole of what changed here, and it is the reason the bounty finally means
+	-- something to the people in the street rather than only to the police.
+	notice: number,
 	-- Seconds until they will report again. Counts down whether or not they can see anybody,
 	-- because it is about them having already made the call, not about the player.
 	cooldown: number,
@@ -78,7 +92,7 @@ local function lookFor(here: { [string]: Look }, personId: string): Look
 	if existing ~= nil then
 		return existing
 	end
-	local made: Look = { heldFor = 0, cooldown = 0, alarmed = false }
+	local made: Look = { notice = 0, cooldown = 0, alarmed = false }
 	here[personId] = made
 	return made
 end
@@ -161,20 +175,27 @@ local function tickPlayer(player: Player, elapsed: number)
 	-- not register a hit on a part the ray starts inside.
 	local ignore = Ground.IgnoreList()
 
+	-- Read once for the whole street rather than per person: it is a property of the player
+	-- being looked at, not of whoever is looking, and recomputing it inside the loop would
+	-- price a busy pavement at one velocity read per pedestrian for an identical answer.
+	local loud = BountyService.Conspicuousness(player)
+
 	for _, bystander in PeopleService.Bystanders(player) do
 		local look = lookFor(here, bystander.personId)
-		local near = Ground.FlatDistance(at, bystander.position) <= WITNESS.SeeStuds
+		local distance = Ground.FlatDistance(at, bystander.position)
 		-- Line of sight is only asked for once the distance passes, because it is a raycast
 		-- per person per tick and the distance is arithmetic. On a busy street that is the
 		-- difference between a handful of casts and one for everybody in town.
 		--
 		-- Cast from them to you rather than the other way around, which is not symmetric
 		-- here: the origin is what the engine forgives for being inside a body, and the
-		-- destination is what the ignore list has to cover.
-		local sees = near and Ground.Reachable(bystander.position, at, 0, ignore)
+		-- destination is what the ignore list has to cover. The 0 eyeline is what this
+		-- check has always used and is kept deliberately -- a pedestrian is not worth a
+		-- second raycast profile.
+		local sees = Spotting.CanSee(bystander.position, at, WITNESS.SeeStuds, 0, ignore)
 
 		if not sees then
-			look.heldFor = 0
+			look.notice = 0
 			if look.alarmed then
 				look.alarmed = false
 				PeopleService.Alarm(player, bystander.personId, nil)
@@ -200,9 +221,15 @@ local function tickPlayer(player: Player, elapsed: number)
 			continue
 		end
 
-		look.heldFor += elapsed
-		if look.heldFor >= WITNESS.SeeSeconds then
-			look.heldFor = 0
+		-- SeeSeconds is now what it takes to place a face of conspicuousness exactly 1 at
+		-- point-blank, rather than a flat wait every observer served. A player who is
+		-- barely wanted and walking is under 1 and takes longer than the old number; one
+		-- at the top of the ladder, running, in colors is well over it and is placed in
+		-- well under a second. The warning -- them stopping and turning -- still lands at
+		-- the start of the fill either way, so the fast case is fast, not silent.
+		look.notice += Spotting.NoticeRate(distance, WITNESS.SeeStuds, loud, WITNESS.SeeSeconds) * elapsed
+		if look.notice >= 1 then
+			look.notice = 0
 			look.cooldown = WITNESS.CooldownSeconds
 			-- Their position, not the player's, and this is the point of the whole system.
 			-- A witness reports the corner they saw somebody on; by the time an officer gets
@@ -260,15 +287,21 @@ function WitnessService.Describe(player: Player): string
 		end
 	end
 
+	-- Conspicuousness is on here because it is the number that changed the behaviour and
+	-- the one the player cannot see. A crowd that reports instantly and a crowd that never
+	-- reports look like the same bug from outside, and this is what tells them apart.
+	local loud = BountyService.Conspicuousness(player)
 	return string.format(
-		"witnesses %s · described %s · %d within %d studs (%d staring, %d already called it in) · reports at %.1fs",
+		"witnesses %s · described %s · %d within %d studs (%d staring, %d already called it in)"
+			.. " · conspicuousness %.2f · places a face in %.1fs at point blank",
 		if enabled then "on" else "off",
 		if BountyService.Described(player) then "yes" else "no -- nobody recognises you",
 		inRange,
 		WITNESS.SeeStuds,
 		watching,
 		cooling,
-		WITNESS.SeeSeconds
+		loud,
+		if loud > 0 then WITNESS.SeeSeconds / loud else math.huge
 	)
 end
 

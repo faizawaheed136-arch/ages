@@ -38,12 +38,15 @@ local GangService = require(script.Parent.GangService)
 local LifeService = require(script.Parent.LifeService)
 local MoneyService = require(script.Parent.MoneyService)
 
+local Spotting = require(script.Parent.Parent.world.Spotting)
+
 type LifeData = Types.LifeData
 type BountyState = Types.BountyState
 
 local BountyService = {}
 
 local CRIME = Config.Crime
+local SPOT = CRIME.Spotting
 
 local BountyUpdatedRemote = Remotes.Get("BountyUpdated")
 
@@ -479,6 +482,64 @@ end
 -- many bodies should be in the world and how far they can see.
 function BountyService.TierOf(player: Player): Tier
 	return tierFor(BountyService.Get(player))
+end
+
+-- How much this player stands out, right now, to anybody who happens to look.
+--
+-- Lives here because two of the three things that make somebody conspicuous are already
+-- owned by this file -- the bounty itself and whether they are wearing colors -- and the
+-- third is read straight off the body. Putting it anywhere else would mean a second module
+-- that needs the heat, the colors and a profile lookup, which is this one with a different
+-- name on it. Both observers that use it, the police and the crowd, already require this
+-- service, so it also costs no new edge in the require graph.
+--
+-- A player with no profile, or a dead one, reads as nil here and 0 to callers: nobody
+-- notices a person who is not there. Every caller is mid-tick doing something else and none
+-- of them has a sensible branch for "we do not know yet", which is the same reasoning
+-- HasRecord gives below.
+local function spottingFactors(player: Player): Spotting.Factors?
+	local data = dataFor(player)
+	if data == nil or not data.alive then
+		return nil
+	end
+	return {
+		heatShare = math.clamp(data.bounty / CRIME.MaxBounty, 0, 1),
+		speedStuds = Spotting.SpeedOf(player.Character),
+		wearingColors = Lives.WearingColors(data),
+	}
+end
+
+function BountyService.Conspicuousness(player: Player): number
+	local factors = spottingFactors(player)
+	if factors == nil then
+		return 0
+	end
+	return Spotting.Conspicuousness(factors)
+end
+
+-- The same number with its working shown, for the harness.
+--
+-- Worth its own function rather than a print at the call site, because the whole complaint
+-- this system was built to answer is that a player could not tell why they were being
+-- found. The first person who needs to see the three terms separately is whoever is tuning
+-- them, and the second is whoever wonders why standing still did not help -- and if the
+-- answer is "you are wearing colors and carrying half the cap in heat", that is a sentence
+-- somebody should be able to read rather than infer.
+function BountyService.DescribeConspicuousness(player: Player): string
+	local factors = spottingFactors(player)
+	if factors == nil then
+		return "not in a life — nothing to notice"
+	end
+	return string.format(
+		"conspicuousness %.2f = base %.2f + heat %.2f (%d%% of cap) + movement %.2f (%.1f studs/s) + colors %.2f",
+		Spotting.Conspicuousness(factors),
+		SPOT.Base,
+		SPOT.HeatShare * factors.heatShare,
+		math.floor(factors.heatShare * 100 + 0.5),
+		SPOT.MovementShare * math.clamp(factors.speedStuds / SPOT.RunSpeedStuds, 0, 1),
+		factors.speedStuds,
+		if factors.wearingColors then SPOT.ColorsBonus else 0
+	)
 end
 
 -- The record, for callers holding a Player rather than a life.

@@ -12,11 +12,21 @@
 -- The other thing to read before changing anything is what an officer actually knows.
 -- It is not where the player is. Every tick, one at a time, each officer asks whether it
 -- can *see* the player -- near enough, and with nothing solid in between -- and only a
--- yes produces a sighting. A no means it carries on walking toward a spot that may be
+-- yes feeds the thing below. A no means it carries on walking toward a spot that may be
 -- half a minute out of date. That is not an approximation of better AI. It is the game:
 -- the whole of hiding is the gap between where they are going and where you are, and any
 -- change here that lets an officer read the player's live position without seeing them
 -- deletes the feature while leaving every test passing.
+--
+-- Seeing is not the same as having made you, and that gap is new. An officer in view of
+-- the player fills a `notice` from 0 to 1 at a rate set by how conspicuous the player is
+-- right now -- see world/Spotting, which the crowd uses too so the two cannot drift apart
+-- on what any of this means. Only a full notice produces a sighting and starts a pursuit.
+-- Before this the sight test *was* the sighting, which meant a player's bounty bought more
+-- officers and longer sight lines and had no effect whatsoever on how quickly the ones
+-- already looking at them worked it out. Now walking calmly across the top of an officer's
+-- range is a thing you can survive, and sprinting in gang colors across the same ground is
+-- not, and the difference is a decision the player gets to make.
 --
 -- What is deliberately absent: any way for an officer to affect the player except by
 -- standing next to them. No weapons, no damage, no shoving. An arrest is proximity held
@@ -32,6 +42,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local BountyService = require(script.Parent.BountyService)
 local NPCService = require(script.Parent.NPCService)
 local Ground = require(script.Parent.Parent.world.Ground)
+local Spotting = require(script.Parent.Parent.world.Spotting)
 local Police = require(script.Parent.Parent.content.Police)
 
 type Visitor = NPCService.Visitor
@@ -39,6 +50,7 @@ type Visitor = NPCService.Visitor
 local PoliceService = {}
 
 local CRIME = Config.Crime
+local SPOT = CRIME.Spotting
 
 -- One officer in the world, and what it currently believes it is doing.
 type Officer = {
@@ -48,9 +60,19 @@ type Officer = {
 	-- line -- and so those two things stay stable across ticks rather than being re-rolled
 	-- into a twitch.
 	post: number,
-	-- "pursue" once it can see the player, "search" the rest of the time. Held rather than
-	-- recomputed by every reader because the walk legs below key off the transition.
+	-- "pursue" once this officer has made the player, "search" the rest of the time. Held
+	-- rather than recomputed by every reader because the walk legs below key off the
+	-- transition.
 	mode: string,
+	-- How far this officer has got toward placing the player, 0 to 1. Fills only while they
+	-- are actually in view, at a rate set by how conspicuous the player is; **reset to 0 the
+	-- moment the view breaks, not decayed**. That rule is what makes stepping behind a van a
+	-- move rather than a pause, and it is the same rule the crowd plays by -- see
+	-- world/Spotting, which is the only place either of them is allowed to define it.
+	--
+	-- Per officer rather than per response, because six officers looking at you from six
+	-- distances are six different opinions and the near one should get there first.
+	notice: number,
 	-- Where a search leg is currently walking to, and whether one is in flight. A leg is a
 	-- yielding pathfind on its own thread, so this is the handshake that stops the tick
 	-- from starting a second one on top of it four times a second.
@@ -105,17 +127,14 @@ local function sightIgnore(): { Instance }
 	return Ground.IgnoreList(extra)
 end
 
--- Whether this officer can see that point. Distance first because it is arithmetic and
--- the raycast is not -- at the top tier this runs six times per player per tick, and the
--- overwhelming majority of those are answered by the cheap half.
+-- Whether this officer can see that point.
+--
+-- Thin, because the test itself now lives in world/Spotting where the crowd can reach it
+-- too. What stays here is the two things that are genuinely the police's own: they look
+-- from head height because they are bodies, and they look through `sightIgnore()` because
+-- an officer must not be blinded by the officer standing in front of them.
 local function canSee(from: Vector3, to: Vector3, sightStuds: number): boolean
-	if sightStuds <= 0 then
-		return false
-	end
-	if Ground.FlatDistance(from, to) > sightStuds then
-		return false
-	end
-	return Ground.Reachable(from, to, Config.NPC.BodyHeight, sightIgnore())
+	return Spotting.CanSee(from, to, sightStuds, Config.NPC.BodyHeight, sightIgnore())
 end
 
 -- A standable spot on a bearing out from a centre point, or nil if the town has nothing
@@ -226,6 +245,7 @@ local function spawnOfficer(player: Player, post: number, near: Vector3, radiusS
 			visitor = visitor,
 			post = post,
 			mode = "search",
+			notice = 0,
 			legTarget = nil,
 			legRunning = false,
 			contactFor = 0,
@@ -260,9 +280,20 @@ local function walkLeg(player: Player, officer: Officer, to: Vector3)
 	end)
 end
 
--- One officer, for one tick. Returns true if this officer can see the player, which the
--- caller folds into the single sighting the whole response is allowed to produce.
-local function tickOfficer(player: Player, officer: Officer, playerAt: Vector3?, elapsed: number): boolean
+-- One officer, for one tick. Returns true if this officer has *made* the player -- not
+-- merely got them in view -- which the caller folds into the single sighting the whole
+-- response is allowed to produce.
+--
+-- `loud` is how conspicuous the player is right now, computed once for the whole response
+-- rather than per officer: it is a fact about the player, not about who is looking, and
+-- six officers reading it six times would be the same number six times.
+local function tickOfficer(
+	player: Player,
+	officer: Officer,
+	playerAt: Vector3?,
+	loud: number,
+	elapsed: number
+): boolean
 	local visitor = officer.visitor
 	if visitor.gone() then
 		return false
@@ -271,9 +302,27 @@ local function tickOfficer(player: Player, officer: Officer, playerAt: Vector3?,
 	local tier = BountyService.TierOf(player)
 	local at = visitor.at()
 
-	local sees = playerAt ~= nil and canSee(at, playerAt, tier.sightStuds)
+	if playerAt ~= nil and canSee(at, playerAt, tier.sightStuds) then
+		-- Capped at 1 rather than allowed to run, so that an officer who has been staring at
+		-- a wanted player for a minute is not carrying thirty seconds of credit that would
+		-- let them re-acquire instantly through a wall they cannot see through anyway.
+		officer.notice = math.min(
+			1,
+			officer.notice
+				+ Spotting.NoticeRate(
+						Ground.FlatDistance(at, playerAt),
+						tier.sightStuds,
+						loud,
+						SPOT.OfficerSeconds
+					)
+					* elapsed
+		)
+	else
+		-- Reset, not decay. See the field comment: this is the rule that makes cover work.
+		officer.notice = 0
+	end
 
-	if sees and playerAt ~= nil then
+	if officer.notice >= 1 and playerAt ~= nil then
 		if officer.mode ~= "pursue" then
 			officer.mode = "pursue"
 			dropLeg(officer)
@@ -294,7 +343,12 @@ local function tickOfficer(player: Player, officer: Officer, playerAt: Vector3?,
 		return true
 	end
 
-	-- Lost them, or never had them.
+	-- Lost them, never had them, or has them in plain view and has not placed them yet.
+	-- The third case is the point of the whole system and it deliberately falls through to
+	-- here: an officer part-way up their notice keeps walking their search leg, so what the
+	-- player sees is somebody who has not reacted to them *yet*. There is no tell for it,
+	-- and there should not be -- the read is the distance and your own behaviour, not the
+	-- officer's animation.
 	if officer.mode ~= "search" then
 		officer.mode = "search"
 		officer.contactFor = 0
@@ -377,11 +431,15 @@ local function tickPlayer(player: Player, elapsed: number)
 	end
 
 	local playerAt = characterPosition(player)
+	-- Once, above the loop. Every officer is filling their notice against the same player,
+	-- and reading a speed off the same body six times a tick would be six answers to one
+	-- question.
+	local loud = BountyService.Conspicuousness(player)
 
 	local anySighting = false
 	for _, officer in list do
 		local fine, problem = pcall(function()
-			if tickOfficer(player, officer, playerAt, elapsed) then
+			if tickOfficer(player, officer, playerAt, loud, elapsed) then
 				anySighting = true
 			end
 		end)
@@ -471,10 +529,11 @@ function PoliceService.IsEnabled(): boolean
 	return enabled
 end
 
--- What the harness prints: every officer, where it is, what it thinks it is doing and how
--- close it is to making an arrest. The mode and the contact clock are the two things that
--- cannot be seen by standing in the street -- an officer walking toward you looks the same
--- whether it has seen you or is going to where you were.
+-- What the harness prints: every officer, where it is, what it thinks it is doing, how far
+-- up its notice the player is, and how close it is to making an arrest. Those three are
+-- exactly the things that cannot be seen by standing in the street -- an officer walking
+-- toward you looks the same whether it has made you, is halfway to making you, or is going
+-- to where you were half a minute ago.
 function PoliceService.Describe(player: Player): string
 	local list = officers[player]
 	if list == nil or #list == 0 then
@@ -489,18 +548,26 @@ function PoliceService.Describe(player: Player): string
 			table.insert(
 				parts,
 				string.format(
-					"post %d: %s at %d,%d contact %.1f/%.1f",
+					"post %d: %s at %d,%d notice %.2f contact %.1f/%.1f",
 					officer.post,
 					officer.mode,
 					at.X,
 					at.Z,
+					officer.notice,
 					officer.contactFor,
 					CRIME.ContactSeconds
 				)
 			)
 		end
 	end
-	return `{#list} out — {table.concat(parts, " · ")} — {if enabled then "on" else "off"}`
+	local loud = BountyService.Conspicuousness(player)
+	return string.format(
+		"%d out — %s — conspicuousness %.2f — %s",
+		#list,
+		table.concat(parts, " · "),
+		loud,
+		if enabled then "on" else "off"
+	)
 end
 
 function PoliceService:Start()
