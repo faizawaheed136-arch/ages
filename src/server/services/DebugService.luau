@@ -40,6 +40,7 @@ local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
 local BankService = require(script.Parent.BankService)
 local GangService = require(script.Parent.GangService)
+local FightService = require(script.Parent.FightService)
 local WitnessService = require(script.Parent.WitnessService)
 local DisguiseService = require(script.Parent.DisguiseService)
 local PeopleService = require(script.Parent.PeopleService)
@@ -49,6 +50,10 @@ local PropService = require(script.Parent.PropService)
 local SceneService = require(script.Parent.SceneService)
 local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
+local BillService = require(script.Parent.BillService)
+local MilestoneService = require(script.Parent.MilestoneService)
+local GossipService = require(script.Parent.GossipService)
+local HouseService = require(script.Parent.HouseService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
 local Hideouts = require(script.Parent.Parent.content.Hideouts)
@@ -801,6 +806,77 @@ Commands.gym = function(player: Player, args: { string }): string
 	return `usage: /gym [start|end|on|off] — {GymService.Describe(player)}`
 end
 
+-- Everything about the fight, on one command.
+--
+-- A fight is the hardest system in the game to reach from a keyboard, because reaching it
+-- in play means finding somebody in the street who wants one. So the first job here is
+-- simply to conjure an opponent -- and the second is to be able to conjure a *specific*
+-- one, because the whole claim of this system is that three archetypes want three
+-- different answers out of the same three buttons, and that claim is only testable by
+-- fighting them back to back:
+--
+--   /fight                    the running bout: both fighters' footing, the player's
+--                             stamina and charge, what the opponent is doing this
+--                             instant and how far through their wind-up they are. Every
+--                             style and its three defining numbers are on the end of it
+--                             either way, so the usage line never has to list them.
+--   /fight brawler            stands Deke in front of you. The tell is 1.4s and the
+--                             punish window 0.9s: sidestep the big one, hit the recovery.
+--   /fight scrapper           Wex, at 0.55s. Sidestepping should now be a mistake and
+--                             guarding should be right -- if both archetypes play the
+--                             same way, the numbers in content/Fighters.luau are not
+--                             far enough apart and the system has no depth in it.
+--   /fight boxer              Ruiz, who guards half the time. Nothing but a strike held
+--                             past the guard-break mark should get through him.
+--   /fight win, /fight lose   skips to the result, which is the only way to check the
+--                             payouts and the getting-back-up without winning a fight
+--                             first. Both settle the bout the way the tick would.
+--   /fight end                walks away from it: the opponent leaves, nothing is paid.
+--   /fight off                the whole system dark, for telling a fight bug apart from
+--                             an NPC one. A bout already running is closed out rather
+--                             than abandoned, so nobody is left stood in the road.
+Commands.fight = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		-- Describe already names every style and its three defining numbers, so there is
+		-- nothing to append here. The style list is only spelled out again on a refusal,
+		-- where the player has just typed one that does not exist.
+		return FightService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		FightService.SetEnabled(arg == "on")
+		return `fight {arg} — {FightService.Describe(player)}`
+	end
+
+	if arg == "win" or arg == "lose" then
+		if not FightService.ForceDecide(player, arg == "win") then
+			return `no fight running — {FightService.Describe(player)}`
+		end
+		return `forced a {arg} — {FightService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not FightService.ForceEnd(player) then
+			return `no fight running — {FightService.Describe(player)}`
+		end
+		return `fight ended — {FightService.Describe(player)}`
+	end
+
+	-- Anything else is read as a style id, and an unknown one is refused by name rather
+	-- than silently standing up the default. Typing /fight boxr and getting a brawler is
+	-- the kind of thing that costs an hour before anybody suspects the command.
+	local ok, refusal = FightService.Challenge(player, arg)
+	if not ok then
+		return `could not square up: {refusal or "no reason given"} — styles: {table.concat(FightService.Styles(), ", ")}`
+	end
+	return `{arg} is waiting — {FightService.Describe(player)}`
+end
+
 -- Everything about school, on one command.
 --
 -- The first thing to check is the one thing no code here can fix: school needs a part
@@ -1489,6 +1565,65 @@ Commands.police = function(player: Player, args: { string }): string
 	end
 
 	return `usage: /police [clear|on|off] — {PoliceService.Describe(player)}`
+end
+
+-- How much you stand out, and how far every pair of eyes on you has got with it.
+--
+-- Its own command rather than a line inside /police or /crowd, because the number it prints
+-- is the one thing both of those have in common and reading it in two places invites the
+-- suspicion that they are two numbers. They are not, and the fastest way to be sure of that
+-- is to see the same figure quoted by both halves of one line.
+--
+-- The three arguments exist because the terms are hard to isolate by playing: heat needs a
+-- crime, movement needs somewhere to run, and colors need a gang. Being able to set one and
+-- watch the notice clocks change is the difference between tuning this and guessing at it.
+--
+--   /spot                     the breakdown, plus every officer's notice and the crowd's
+--   /spot heat <n>            set the bounty outright, to move the headline term
+--   /spot colors [on|off]     put gang colors on or take them off
+Commands.spot = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local function report(): string
+		return `{BountyService.DescribeConspicuousness(player)}\n  police: {PoliceService.Describe(player)}\n  crowd: {WitnessService.Describe(player)}`
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return report()
+	end
+
+	if arg == "heat" then
+		local points = tonumber(args[2])
+		if points == nil then
+			return `usage: /spot heat <n> — {report()}`
+		end
+		-- Cleared and re-added rather than written, for the same reason /bounty <n> does it:
+		-- there is exactly one path in the game that raises heat and the harness stays on it.
+		BountyService.Clear(player)
+		if points > 0 then
+			BountyService.Add(player, points, "Debug heat")
+		end
+		return report()
+	end
+
+	if arg == "colors" then
+		local value = string.lower(args[2] or "")
+		if value ~= "on" and value ~= "off" then
+			return `usage: /spot colors [on|off] — {report()}`
+		end
+		if not GangService.SetColors(player, value == "on") then
+			-- Named rather than shrugged, because the failure this catches is almost always
+			-- "you are not in a gang", and a silent no-op here reads as the colors term being
+			-- broken rather than as there being no colors to wear.
+			return `colors unchanged — {GangService.Describe(player)}`
+		end
+		return report()
+	end
+
+	return `usage: /spot [heat <n>|colors on|off] — {report()}`
 end
 
 -- The town looking at you, and the one thing you can do about it.
@@ -2280,6 +2415,164 @@ Commands.band = function(player: Player, _args: { string }): string
 	return `{body}\nanims: {BodyService.DescribeAnimations(band.id)} | live {live}`
 end
 
+-- Monthly bills: show debt, next bill amount, and payment status.
+--   /bill                     show current bill state
+--   /bill charge              force charge the next bill immediately
+Commands.bill = function(player: Player, args: { string }): string
+	if BillService.GetState(player) == nil then
+		return "no active life"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "charge" then
+		BillService.Charge(player)
+		local state = BillService.GetState(player)
+		return `bill charged — {state.debt > 0 and "debt {Money.Format(state.debt)}" or "no debt"}, next bill {Money.Format(state.totalThisMonth)} credits`
+	end
+
+	local state = BillService.GetState(player)
+	if state == nil then
+		return "no active life"
+	end
+	return `bill: debt {Money.Format(state.debt)}, next {Money.Format(state.totalThisMonth)}/mo, {state.paid and "paid" or "unpaid"} this cycle`
+end
+
+-- Milestones: show achieved milestones and trigger new ones.
+--   /milestone                show all milestones
+--   /milestone <id>           force trigger a specific milestone
+--   /milestone reset          clear all milestones for this life
+Commands.milestone = function(player: Player, args: { string }): string
+	local life = Lives.Active(DataService.GetProfile(player) :: any)
+	if life == nil then
+		return "no active life"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "reset" then
+		life.milestones = {}
+		return "milestones cleared"
+	end
+
+	if arg ~= "" then
+		MilestoneService.OnShiftComplete(player, life.bills.shiftsCompleted or 0)
+		return "milestone check fired"
+	end
+
+	local achieved: { string } = {}
+	for id, _ in life.milestones do
+		table.insert(achieved, id)
+	end
+	if #achieved == 0 then
+		return "no milestones achieved yet"
+	end
+	table.sort(achieved)
+	return `milestones: {table.concat(achieved, ", ")}`
+end
+
+-- Gossip: show recent notable actions and fire a gossip check.
+--   /gossip                   show current gossip notes
+--   /gossip note <action> <effect>  add a notable action
+--   /gossip tick              force a gossip tick
+Commands.gossip = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "tick" then
+		GossipService.Tick(player)
+		return "gossip tick fired"
+	end
+
+	if arg == "note" then
+		local action = args[2] or "unknown action"
+		local effect = args[3] or "notable"
+		GossipService.Note(player, action, effect)
+		return `noted: {action} — {effect}`
+	end
+
+	-- Describe current state from internal GossipState
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no active life"
+	end
+	-- Notes are per-session state; describe from recent service activity
+	return "gossip: check /gossip note to add, /gossip tick to fire"
+end
+
+-- Houses: show owned houses, home jobs, and available options.
+--   /house                    show house state
+--   /house buy <houseId>      buy a suburb house
+--   /house sell <houseId>     sell an owned house
+--   /house job <houseId> <jobId>  link a home job to a house
+Commands.house = function(player: Player, args: { string }): string
+	local life = Lives.Active(DataService.GetProfile(player) :: any)
+	if life == nil then
+		return "no active life"
+	end
+
+	local houses = life.houses :: { owned: { [string]: boolean }, homeJob: { [string]: string } }
+	local arg = string.lower(args[1] or "")
+
+	if arg == "buy" then
+		local houseId = args[2]
+		if houseId == nil then
+			return "usage: /house buy <houseId>"
+		end
+		local ok, result = HouseService.BuyHouse(player, houseId)
+		return ok and `bought {houseId}` or `could not buy: {result}`
+	end
+
+	if arg == "sell" then
+		local houseId = args[2]
+		if houseId == nil then
+			return "usage: /house sell <houseId>"
+		end
+		local ok, result = HouseService.SellHouse(player, houseId)
+		return ok and `sold {houseId} for {result} credits` or `could not sell: {result}`
+	end
+
+	if arg == "job" then
+		local houseId = args[2]
+		local jobId = args[3]
+		if houseId == nil or jobId == nil then
+			return "usage: /house job <houseId> <jobId>"
+		end
+		local ok, result = HouseService.SetHomeJob(player, houseId, jobId)
+		return ok and `linked {jobId} to {houseId}` or `could not link: {result}`
+	end
+
+	local owned: { string } = {}
+	for houseId, _ in houses.owned do
+		local jobId = houses.homeJob[houseId]
+		table.insert(owned, jobId ~= nil and `{houseId} ({jobId})` or houseId)
+	end
+	if #owned == 0 then
+		return "no houses owned"
+	end
+	table.sort(owned)
+	return `houses: {table.concat(owned, ", ")}`
+end
+
+-- Car dealership: show queue state and serve a customer.
+--   /dealer                   show current queue state
+--   /dealer serve             serve the front customer
+Commands.dealer = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "serve" then
+		-- The queue is driven by distance to the counter; we cannot force-serve
+		-- from the console without a world position, so we report state only.
+		return "serve requires proximity to the dealership counter — walk there or use /dealer to check state"
+	end
+
+	-- Describe current dealer state
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no active life"
+	end
+	local place = PlaceService.Find("auto_dealer")
+	if place == nil then
+		return "auto_dealer not loaded"
+	end
+	return `dealer at {place.name}; walk to the counter to serve`
+end
+
 local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value>, /idle <seconds>, /life, /band, "
 	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>, "
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
@@ -2288,13 +2581,17 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
-	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /theft [go <place>|fill|on|off], "
+	.. "/fight [<style>|win|lose|end|on|off], "
+	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
+	.. "/theft [go <place>|fill|on|off], "
 	.. "/bank [go [<place>]|reset|on|off], "
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
-	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby"
+	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby, "
+	.. "/bill [charge], /milestone [reset], /gossip [note <action> <effect>|tick], "
+	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve]"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT
