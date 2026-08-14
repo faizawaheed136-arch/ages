@@ -4,6 +4,15 @@ Roblox / Luau 3D open-world life simulator, Rojo-synced to Studio. Source in `sr
 
 North star: an interactive, playable BitLife world — life as a game.
 
+## Read these first
+
+- **[`HANDOVER.md`](HANDOVER.md)** — three agents work on this tree across two machines.
+  Which files you may touch, and which you may not, is decided there. If you were not
+  told which agent you are, ask before editing anything.
+- **[`docs/README.md`](docs/README.md)** — the settled design decisions. Most exist
+  because something was built, rejected and rebuilt, and the rejection is the valuable
+  part. Read before proposing a feature, not after it is turned down.
+
 ## Toolchain
 
 Rojo 7.7.0 lives at `~/.aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo`. Plain `rojo`
