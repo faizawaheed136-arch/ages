@@ -162,7 +162,13 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- different failure modes worth keeping apart: a Person can refuse you and that is content,
 -- whereas a boss refusing to promote you is the ladder working and has to say which rung
 -- and how far off you are.
-export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss"
+-- "Fight" is a person too, and it is separate for the same reason "Boss" is: dispatch is by
+-- kind alone, and what this one opens is not a conversation. It is on somebody who is stood
+-- in the street waiting to be squared up to, and the only thing their dots can say is yes or
+-- walk away. Keeping it off "Person" also keeps the two populations honest -- the people you
+-- can befriend are not the people who want a fight, and a shopkeeper who could be challenged
+-- from the same panel that sells you bread would make every tie in the game feel negotiable.
+export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss" | "Fight"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.
