@@ -822,6 +822,7 @@ end)
 
 Remotes.Get("HouseUpdated").OnClientEvent:Connect(function(state: Types.HouseState?)
 	house:Set(state)
+	ui:SetHouse(state)
 end)
 
 Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarDealerState?)
