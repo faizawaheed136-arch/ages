@@ -31,6 +31,7 @@ local TaskMark = require(script.world.TaskMark)
 local Prompts = require(script.world.Prompts)
 local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
+local DealerMark = require(script.world.DealerMark)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -96,6 +97,7 @@ local gang = GangUI.new()
 local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
+local dealerMark = DealerMark.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -823,6 +825,11 @@ end)
 Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarDealerState?)
 	carDealer:Set(state)
 	ui:SetCarDealer(state)
+	if state ~= nil then
+		dealerMark:Set(state.counter)
+	else
+		dealerMark:Set(nil)
+	end
 end)
 
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
