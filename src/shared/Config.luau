@@ -1206,11 +1206,6 @@ Config.Bills = {
 	-- exists so the number never becomes abstract.
 	-- Safe range: 2000-10000.
 	MaxDebt = 5000,
-	-- How often bills are charged, in game months. Twelve means once per
-	-- year on the birthday; six means twice and gives a second chance to
-	-- dig out before the next hit.
-	-- Safe range: 6-12.
-	BillIntervalMonths = 12,
 }
 
 --
@@ -4342,7 +4337,6 @@ Config.Milestones = {
 	FirstHouse = { label = "Homeowner", bonus = 1000 },
 	TenShifts = { label = "Steady Worker", bonus = 300 },
 	FiftyShifts = { label = "Dedicated", bonus = 1000 },
-	FirstCar = { label = "Car Owner", bonus = 500 },
 	MaxStanding = { label = "Top Performer", bonus = 2000 },
 	Age30 = { label = "Thirty", bonus = 1000 },
 	Age50 = { label = "Fifty", bonus = 2000 },
@@ -4353,16 +4347,9 @@ Config.Milestones = {
 -- something notable, one may share a line about the player with the other.
 -- The gossip fades over time and nudges bonds among nearby people.
 Config.Gossip = {
-	-- How close two NPCs need to be for gossip to happen.
-	-- Safe range: 15-50.
-	RangeStuds = 30,
 	-- How many game hours gossip stays active before fading.
 	-- Safe range: 24-96.
 	FadeHours = 48,
-	-- Bond change when an NPC gossips about the player to someone nearby.
-	-- Positive if the gossip was about something good, negative otherwise.
-	-- Safe range: -5 to 5.
-	BondModifier = 2,
 	-- How often the gossip system checks for new opportunities.
 	-- Safe range: 30-120 seconds.
 	TickSeconds = 60,
