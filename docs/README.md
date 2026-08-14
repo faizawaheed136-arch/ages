@@ -25,6 +25,7 @@ written down here rather than in anybody's head.
 |---|---|
 | [`lifesim_design.md`](lifesim_design.md) | The ribbon/verdict layer as the highest-ROI feature. No decaying need bars, inverse autonomy, ties without romance, horizontal-only meta. |
 | [`school_and_sports.md`](school_and_sports.md) | One distinct verb per subject, a mastery ladder that buys the right to skip, and the charge-and-release input spec. |
+| [`school_sports_plan.md`](school_sports_plan.md) | The ordered build queue for the above — eight phases, and the seams where it touches the other two agents. |
 | [`gangs_spec.md`](gangs_spec.md) | Four gangs, one per city side; bright per-gang bandana; a four-rung ladder conferred face to face. Territory and the city map are deferred. |
 | [`lobby_spec.md`](lobby_spec.md) | Separate lobby place, Robux spins with numeric odds, three deletable slots, real avatar on screen. Settled — do not re-open. |
 | [`economy_direction.md`](economy_direction.md) | Currency arrives with the world in step 3. Paid revives were rejected, and why. |
