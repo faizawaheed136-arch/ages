@@ -3739,6 +3739,14 @@ Config.Death = {
 	RespawnDelaySeconds = 5,
 }
 
+Config.Verdict = {
+	-- Under this age, a life gets no ribbon and the death screen stays blank.
+	-- Childhood deaths and early deaths are honest rather than forced into a
+	-- category they did not earn.
+	-- Safe range: 14-18. Sixteen matches the age the working life begins.
+	MinAge = 16,
+}
+
 -- The menu a life is chosen in, before it starts running.
 --
 -- The load-bearing idea, and the reason this is not just a cosmetic screen: **the world

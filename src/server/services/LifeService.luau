@@ -29,6 +29,7 @@ local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
+local VerdictService = require(script.Parent.VerdictService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
@@ -242,7 +243,9 @@ function LifeService.Die(player: Player)
 	-- corpse is exactly the frame the rest of this teardown exists to prevent.
 	PocketMoneyService.ResetForNewLife(player)
 	pushProgress(player, dying)
-	PlayerDiedRemote:FireClient(player, ageYearsOf(dying))
+	local ribbon = VerdictService.Compute(player)
+	dying.verdict = ribbon
+	PlayerDiedRemote:FireClient(player, ageYearsOf(dying), ribbon)
 
 	-- And then they go back to the menu.
 	--

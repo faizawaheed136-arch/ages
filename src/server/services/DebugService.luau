@@ -131,6 +131,33 @@ Commands.die = function(player: Player, _args: { string }): string
 	return "forced death"
 end
 
+local VerdictService = require(script.Parent.VerdictService)
+
+Commands.verdict = function(player: Player, args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local ribbonId = args[1]
+	if ribbonId ~= nil then
+		-- Force a specific ribbon for testing.
+		local data = Lives.Active(profile.Data)
+		data.verdict = {
+			id = ribbonId,
+			title = ribbonId,
+			description = "forced for debug",
+			moments = {},
+			nearMisses = nil,
+		} :: Types.Ribbon
+		return `forced {ribbonId}`
+	end
+	local ribbon = VerdictService.Compute(player)
+	if ribbon == nil then
+		return "no ribbon (under MinAge or not enough data)"
+	end
+	return `ribbon: {ribbon.title} — {ribbon.description}`
+end
+
 Commands.stat = function(player: Player, args: { string }): string
 	local name = string.lower(args[1] or "")
 	local value = tonumber(args[2])
@@ -2613,7 +2640,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby, "
 	.. "/bill [charge], /milestone [reset], /gossip [note <action> <effect>|tick], "
-	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve]"
+	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve], "
+	.. "/verdict [name] — show or force a ribbon"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

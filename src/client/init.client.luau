@@ -905,7 +905,7 @@ end)
 -- still standing behind a death notice is a decision nobody can make any more. The HUD is
 -- the deliberate exception: it stays up, showing the stats and the age this person finished
 -- on, which is the only thing on screen worth reading while the summary holds.
-Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
+Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbon: Types.Ribbon?)
 	panel:Hide()
 	-- The lab comes down with everything else. The server drops the session on death and
 	-- pushes nil, but the order of those two arriving is not guaranteed, and a bench
@@ -955,7 +955,7 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	workoutPanelKey = nil
 	reportPanelKey = nil
 	gangPanelKey = nil
-	ui:ShowDeath(ageYears)
+	ui:ShowDeath(ageYears, ribbon)
 end)
 
 -- The trip back did not happen. Almost always Studio, where teleports do not work at all, or

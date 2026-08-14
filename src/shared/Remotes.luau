@@ -282,11 +282,12 @@ local REMOTE_NAMES: { RemoteName } = {
 	"AgeUpdated",
 	"AgeUpProgress",
 	"LifeStageChanged",
-	-- A life ending, carrying the age it ended at. There is no `PlayerRespawned` to pair
-	-- with it any more, and its absence is the whole of part 3 in one line: a life does not
-	-- restart in place. It stays dead in the slot it was lived in, and the player goes back
-	-- to the lobby to pick another card. The death screen is therefore the last thing this
-	-- place ever says to that life -- nothing takes it down, the place going away does.
+	-- A life ending, carrying the age it ended at and the ribbon it earned. There is no
+	-- `PlayerRespawned` to pair with it any more, and its absence is the whole of part 3
+	-- in one line: a life does not restart in place. It stays dead in the slot it was lived
+	-- in, and the player goes back to the lobby to pick another card. The death screen is
+	-- therefore the last thing this place ever says to that life -- nothing takes it down,
+	-- the place going away does.
 	"PlayerDied",
 	"RequestAgeUp",
 	-- "Take me back to the menu." Pressed off the death screen, and available from the HUD

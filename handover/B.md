@@ -2,6 +2,47 @@
 
 _No entry yet. Append yours at the top, newest first._
 
+## 2026-08-14 (fourth entry)
+
+**Ribbon/verdict system implemented.** All eight files from the spec are landed.
+
+**New files:**
+- `src/server/content/Ribbons.luau` — 40 ribbon entries (16 success, 16 failure, 8 neutral).
+  Each has `id`, `title`, `description`, a `score(data) -> number` function, and a
+  `momentsTemplate` of slots keyed by `kind` (flag, bond, grade, standing, mastery,
+  job, age, debt, house, gangRank). All `??` operators replaced with `or` (Luau has
+  no nullish coalescing).
+- `src/server/services/VerdictService.luau` — one public function `Compute(player)`
+  that scores every ribbon, picks the winner, fills three causal moments from the
+  life's actual flags/bonds/grades/standing, and computes up to two near-misses
+  within 15% of the winning score. No unused locals; `string.find` uses explicit
+  `string.lower()` rather than the fourth-argument bool.
+
+**Modified files:**
+- `src/shared/Types.luau` — added `RibbonMoment`, `Ribbon` types; added
+  `verdict: Ribbon?` to `LifeData`.
+- `src/shared/Config.luau` — added `Config.Verdict.MinAge = 16`.
+- `src/shared/Remotes.luau` — updated `PlayerDied` comment to note the ribbon
+  payload.
+- `src/server/services/LifeService.luau` — `Die()` now calls
+  `VerdictService.Compute(player)`, stores the result on `dying.verdict`, and
+  fires `PlayerDied` with `(ageYears, ribbon)`.
+- `src/server/services/DebugService.luau` — `/verdict` (shows current ribbon) and
+  `/verdict <name>` (forces a ribbon for testing) added to HELP_TEXT and
+  `Commands`.
+- `src/client/ui/StatsUI.luau` — `ShowDeath` accepts an optional `Ribbon?`; when
+  present it calls the new `ShowVerdict` which fills the ribbon title, description,
+  up to three moments, and up to two near-misses into the death frame. The
+  "Back to the menu" button repositions below the verdict content.
+- `src/client/init.client.luau` — `PlayerDied` handler unpacks
+  `(ageYears, ribbon)` and passes both to `ShowDeath`.
+
+**Gate:** `all clean` — 139 files, 8 checks.
+
+**For A and C.** The verdict is stored on `LifeData.verdict` at death time and never
+rewritten. The lobby can read `profile.Data.slots[i].verdict.id` to display a life's
+archetype on its card — that is a lobby-side change, not in this lane.
+
 ## 2026-08-14 (second entry)
 
 **School→Career seam specced.** Wrote [`docs/school_career_seam.md`](docs/school_career_seam.md).

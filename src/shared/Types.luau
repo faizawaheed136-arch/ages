@@ -339,6 +339,27 @@ export type JobShiftEvent = {
 	happiness: number?,
 }
 
+-- A named archetype at the end of a life. Computed from the life's data — job
+-- history, bonds, grades, convictions, money, age — and authored as content
+-- rather than code so adding a new ribbon is a table edit, not a rebuild.
+--
+-- Three causal moments are selected from the life's actual flags, bonds, grades
+-- and standing so the player can trace each one back to a moment they lived.
+-- Near-misses answer "what was one step away from a different ending?" and are
+-- computed by scoring every other ribbon against the same data.
+export type RibbonMoment = {
+	age: number,
+	line: string,
+}
+
+export type Ribbon = {
+	id: string,
+	title: string,
+	description: string,
+	moments: { RibbonMoment },
+	nearMisses: { string }?,
+}
+
 -- What the HUD is told about the shift in progress. A snapshot rather than a
 -- stream of deltas, because it is redrawn wholesale anyway and a client that
 -- missed one push would otherwise be permanently wrong about the total.
@@ -2498,6 +2519,11 @@ export type LifeData = {
 	-- Bond milestones already fired this life, keyed by "personId_milestoneValue".
 	-- Reset on death so each life gets its own relationship arc.
 	bondMilestones: { [string]: boolean },
+	-- The ribbon this life was judged to have earned, or nil if the life ended
+	-- before the minimum age or before the verdict system existed. Set by
+	-- VerdictService at death and never rewritten; the lobby reads the id to
+	-- display the life's archetype on the slot card.
+	verdict: Ribbon?,
 }
 
 -- The account: one player, several lives, and the few things that outlive all of them.

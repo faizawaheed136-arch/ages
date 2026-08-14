@@ -26,6 +26,8 @@ type LessonState = Types.LessonState
 type PersonState = Types.PersonState
 type PersonRosterEntry = Types.PersonRosterEntry
 type WorkoutState = Types.WorkoutState
+type Ribbon = Types.Ribbon
+type RibbonMoment = Types.RibbonMoment
 
 local STAT_ORDER: { { name: StatName, label: string } } = {
 	{ name = "health", label = "Health" },
@@ -154,6 +156,11 @@ export type StatsUIHandle = typeof(setmetatable(
 		deathLabel: TextLabel,
 		deathButton: TextButton,
 		deathNoteLabel: TextLabel,
+		-- Verdict UI elements, created once and hidden until a ribbon is earned.
+		verdictTitle: TextLabel,
+		verdictDesc: TextLabel,
+		verdictMoments: TextLabel,
+		verdictNearMiss: TextLabel,
 		statBars: { [StatName]: { fill: Frame, label: TextLabel } },
 		rosterFrame: Frame,
 		rosterList: ScrollingFrame,
@@ -887,6 +894,67 @@ function StatsUI.new(): StatsUIHandle
 	deathNoteLabel.ZIndex = 11
 	deathNoteLabel.Parent = deathFrame
 
+	-- Verdict content, hidden until a ribbon is earned.
+	local verdictTitle = Instance.new("TextLabel")
+	verdictTitle.Name = "VerdictTitle"
+	verdictTitle.Size = UDim2.new(0, 520, 0, 48)
+	verdictTitle.AnchorPoint = Vector2.new(0.5, 0)
+	verdictTitle.Position = UDim2.new(0.5, 0, 0.5, 100)
+	verdictTitle.BackgroundTransparency = 1
+	verdictTitle.Font = Enum.Font.GothamBold
+	verdictTitle.TextSize = 24
+	verdictTitle.TextColor3 = Color3.fromRGB(255, 230, 180)
+	verdictTitle.TextWrapped = false
+	verdictTitle.Text = ""
+	verdictTitle.ZIndex = 11
+	verdictTitle.Visible = false
+	verdictTitle.Parent = deathFrame
+
+	local verdictDesc = Instance.new("TextLabel")
+	verdictDesc.Name = "VerdictDesc"
+	verdictDesc.Size = UDim2.new(0, 520, 0, 36)
+	verdictDesc.AnchorPoint = Vector2.new(0.5, 0)
+	verdictDesc.Position = UDim2.new(0.5, 0, 0.5, 152)
+	verdictDesc.BackgroundTransparency = 1
+	verdictDesc.Font = Enum.Font.Gotham
+	verdictDesc.TextSize = 14
+	verdictDesc.TextColor3 = Color3.fromRGB(200, 190, 175)
+	verdictDesc.TextWrapped = true
+	verdictDesc.Text = ""
+	verdictDesc.ZIndex = 11
+	verdictDesc.Visible = false
+	verdictDesc.Parent = deathFrame
+
+	local verdictMoments = Instance.new("TextLabel")
+	verdictMoments.Name = "VerdictMoments"
+	verdictMoments.Size = UDim2.new(0, 520, 0, 100)
+	verdictMoments.AnchorPoint = Vector2.new(0.5, 0)
+	verdictMoments.Position = UDim2.new(0.5, 0, 0.5, 194)
+	verdictMoments.BackgroundTransparency = 1
+	verdictMoments.Font = Enum.Font.Gotham
+	verdictMoments.TextSize = 13
+	verdictMoments.TextColor3 = Color3.fromRGB(180, 180, 195)
+	verdictMoments.TextWrapped = true
+	verdictMoments.Text = ""
+	verdictMoments.ZIndex = 11
+	verdictMoments.Visible = false
+	verdictMoments.Parent = deathFrame
+
+	local verdictNearMiss = Instance.new("TextLabel")
+	verdictNearMiss.Name = "VerdictNearMiss"
+	verdictNearMiss.Size = UDim2.new(0, 520, 0, 56)
+	verdictNearMiss.AnchorPoint = Vector2.new(0.5, 0)
+	verdictNearMiss.Position = UDim2.new(0.5, 0, 0.5, 300)
+	verdictNearMiss.BackgroundTransparency = 1
+	verdictNearMiss.Font = Enum.Font.GothamItalic
+	verdictNearMiss.TextSize = 12
+	verdictNearMiss.TextColor3 = Color3.fromRGB(160, 155, 145)
+	verdictNearMiss.TextWrapped = true
+	verdictNearMiss.Text = ""
+	verdictNearMiss.ZIndex = 11
+	verdictNearMiss.Visible = false
+	verdictNearMiss.Parent = deathFrame
+
 	-- The one button that asks the player for timing. Bottom-centre, where a
 	-- rhythm-action button belongs: it is the only thing on screen during a rep
 	-- that is meant to be pressed, and it has to be findable while the eyes are
@@ -1458,9 +1526,61 @@ end
 -- life stays dead in the slot it was lived in, and the player goes back to the menu to pick
 -- another card or delete this one. The wording says so, because a screen that promises a
 -- restart and then teleports somewhere else is a screen that lied.
-function StatsUI.ShowDeath(self: StatsUIHandle, ageYears: number)
+function StatsUI.ShowDeath(self: StatsUIHandle, ageYears: number, ribbon: Ribbon?)
+	if ribbon ~= nil then
+		self:ShowVerdict(ribbon)
+		return
+	end
 	self.deathLabel.Text = `You died at age {ageYears}.`
 	self.deathNoteLabel.Text = ""
+	self.deathFrame.Visible = true
+end
+
+function StatsUI.ShowVerdict(self: StatsUIHandle, ribbon: Ribbon)
+	self.deathLabel.Text = ribbon.title
+	self.deathLabel.Size = UDim2.new(0, 520, 0, 48)
+	self.deathLabel.Position = UDim2.new(0.5, 0, 0.5, 100)
+	self.deathLabel.AnchorPoint = Vector2.new(0.5, 0)
+	self.deathLabel.TextColor3 = Color3.fromRGB(255, 230, 180)
+
+	self.deathNoteLabel.Text = ribbon.description
+	self.deathNoteLabel.Size = UDim2.new(0, 520, 0, 36)
+	self.deathNoteLabel.Position = UDim2.new(0.5, 0, 0.5, 152)
+	self.deathNoteLabel.AnchorPoint = Vector2.new(0.5, 0)
+	self.deathNoteLabel.TextColor3 = Color3.fromRGB(200, 190, 175)
+	self.deathNoteLabel.TextWrapped = true
+
+	self.verdictMoments.Text = ""
+	for i, moment in ribbon.moments do
+		if i > 1 then
+			self.verdictMoments.Text = self.verdictMoments.Text .. "\n"
+		end
+		self.verdictMoments.Text = self.verdictMoments.Text
+			.. `  {moment.line}`
+	end
+	self.verdictMoments.Size = UDim2.new(0, 520, 0, 100)
+	self.verdictMoments.Position = UDim2.new(0.5, 0, 0.5, 194)
+	self.verdictMoments.AnchorPoint = Vector2.new(0.5, 0)
+	self.verdictMoments.Visible = #ribbon.moments > 0
+
+	self.verdictNearMiss.Text = ""
+	if ribbon.nearMisses ~= nil then
+		for i, miss in ribbon.nearMisses do
+			if i > 1 then
+				self.verdictNearMiss.Text = self.verdictNearMiss.Text .. "\n"
+			end
+			self.verdictNearMiss.Text = self.verdictNearMiss.Text .. "· " .. miss
+		end
+		self.verdictNearMiss.Visible = true
+	else
+		self.verdictNearMiss.Visible = false
+	end
+	self.verdictNearMiss.Size = UDim2.new(0, 520, 0, 56)
+	self.verdictNearMiss.Position = UDim2.new(0.5, 0, 0.5, 300)
+	self.verdictNearMiss.AnchorPoint = Vector2.new(0.5, 0)
+
+	self.deathButton.Position = UDim2.new(0.5, 0, 0.5, 365)
+
 	self.deathFrame.Visible = true
 end
 
