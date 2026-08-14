@@ -2416,10 +2416,6 @@ function WorkService.SetEnabled(value: boolean)
 	enabled = value
 end
 
-function WorkService.IsEnabled(): boolean
-	return enabled
-end
-
 -- Whether the player is currently on an active shift at the given place.
 -- Used by other services to coordinate around shift ownership of a location.
 function WorkService.IsWorkingAt(player: Player, placeId: string): boolean
