@@ -50,10 +50,16 @@ be worked on by two people. A also owns the crime and combat stack: `FightServic
     src/server/services/SchoolService.luau      school content modules
     the lobby place: lobby.project.json tree, join codes
 
-Both are self-contained and touch nothing A or B has in flight. C's first jobs are
-school parts 4c/4d and lobby part 5 (join codes). **Spec either one back before building
-it** — one-line feature requests get specced and agreed first in this project, never
-implemented directly.
+Sports is unbuilt and school is five 20-second multiple-choice questions with a teacher
+NPC that nothing branches on. So C is not maintaining a system — it is building two from
+a settled spec, and they are **one lane rather than two** because PE class is a graded
+sports drill.
+
+**C's queue is [`docs/school_sports_plan.md`](docs/school_sports_plan.md)**, eight phases
+in order, with the seams against A and B named at the bottom. The design it implements is
+`docs/school_and_sports.md`; the law it answers to is `docs/activity_design_law.md`.
+**Spec each phase back before building it** — one-line feature requests get agreed first
+in this project, never implemented directly.
 
 ## Ownership — the one rule with no exceptions
 
