@@ -822,10 +822,6 @@ function BankService.SetEnabled(value: boolean)
 	end
 end
 
-function BankService.IsEnabled(): boolean
-	return enabled
-end
-
 -- For the harness, and phrased as the questions a broken bank raises: is the room built,
 -- what is the alarm doing, and where is the guard.
 function BankService.Describe(player: Player): string
