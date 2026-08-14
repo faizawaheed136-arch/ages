@@ -568,7 +568,6 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 		-- this job gates. The bonus comes from Config.SubjectPerks, keyed by subject
 		-- id; absent keys contribute nothing, which is how C leaves a subject without
 		-- a perk.
-		local subjectGates = job.subjectGates
 		if subjectGates ~= nil then
 			for subjectId, _ in subjectGates do
 				local perk = Config.SubjectPerks[subjectId]
