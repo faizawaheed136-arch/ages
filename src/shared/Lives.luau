@@ -143,6 +143,23 @@ function Lives.New(): LifeData
 		-- silent, and wrong only for the lives that predate the field. False is also
 		-- correct: a life not in a gang is not wearing anybody's colors.
 		wearingColors = false,
+		-- No houses owned, no home job linked. True of a newborn, and the right
+		-- thing to hand a save written before house ownership existed.
+		houses = {
+			owned = {},
+			homeJob = {},
+		},
+		-- Bills start at zero debt, first bill charged at month 0, zero shifts completed.
+		bills = {
+			debt = 0,
+			lastBillMonth = 0,
+			shiftsCompleted = 0,
+		},
+		-- No XP earned yet this life. Reset on death like money.
+		workXp = 0,
+		-- No milestones achieved, no bond milestones fired.
+		milestones = {},
+		bondMilestones = {},
 	}
 end
 
