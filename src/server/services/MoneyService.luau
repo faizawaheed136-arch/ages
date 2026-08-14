@@ -42,10 +42,11 @@ local function ledger(player: Player, delta: number, balance: number, reason: st
 	print(`[AGES money] {player.Name} {sign}{Money.Format(math.abs(delta))} -> {Money.Format(balance)} ({reason})`)
 end
 
--- Pushed on every change and on join, so the HUD never has to ask. One number, so
--- there is nothing to diff and nothing to get out of order.
-local function push(player: Player, balance: number)
-	MoneyUpdatedRemote:FireClient(player, balance)
+-- Pushed on every change and on join, so the HUD never has to ask. Carries the
+-- previous balance and the reason so the client can show a directional pop and
+-- pick the right colour for tips, bonuses, interest and the rest.
+local function push(player: Player, previous: number, balance: number, reason: string)
+	MoneyUpdatedRemote:FireClient(player, balance, reason)
 end
 
 -- Whole units only. Content validation rejects a fractional price at load, so in
@@ -122,9 +123,10 @@ function MoneyService.Add(player: Player, amount: number, reason: string): numbe
 	end
 
 	local data = Lives.Active(profile.Data)
+	local previous = data.money
 	data.money = math.min(data.money + gain, Config.Money.MaxBalance)
 	ledger(player, gain, data.money, reason)
-	push(player, data.money)
+	push(player, previous, data.money, reason)
 	return data.money
 end
 
@@ -156,9 +158,10 @@ function MoneyService.Spend(player: Player, amount: number, reason: string): boo
 		return false
 	end
 
+	local previous = data.money
 	data.money -= price
 	ledger(player, -price, data.money, reason)
-	push(player, data.money)
+	push(player, previous, data.money, reason)
 	return true
 end
 
@@ -173,10 +176,11 @@ function MoneyService.Set(player: Player, amount: number): boolean
 	end
 
 	local data = Lives.Active(profile.Data)
+	local previous = data.money
 	local target = math.clamp(whole(amount), 0, Config.Money.MaxBalance)
 	ledger(player, target - data.money, target, "debug /money")
 	data.money = target
-	push(player, data.money)
+	push(player, previous, data.money, "debug /money")
 	return true
 end
 
@@ -188,7 +192,8 @@ end
 function MoneyService.Push(player: Player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
-		push(player, Lives.Active(profile.Data).money)
+		local data = Lives.Active(profile.Data)
+		push(player, data.money, data.money, "join")
 	end
 end
 
@@ -199,7 +204,8 @@ function MoneyService:Start()
 		task.spawn(function()
 			local profile = DataService.WaitForProfile(player)
 			if profile ~= nil then
-				push(player, Lives.Active(profile.Data).money)
+				local data = Lives.Active(profile.Data)
+				push(player, data.money, data.money, "join")
 			end
 		end)
 	end)
