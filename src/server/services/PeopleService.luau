@@ -81,6 +81,7 @@ local Ties = require(script.Parent.Parent.content.Ties)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Roam = require(script.Parent.Parent.world.Roam)
 local Routes = require(script.Parent.Parent.world.Routes)
+local GossipService = require(script.Parent.GossipService)
 
 type LifeData = Types.LifeData
 type CastMember = Types.CastMember
@@ -100,6 +101,7 @@ local RequestPersonOfferRemote = Remotes.Get("RequestPersonOffer")
 local PeopleRosterUpdatedRemote = Remotes.Get("PeopleRosterUpdated")
 local RequestPersonContactRemote = Remotes.Get("RequestPersonContact")
 local NoticeRemote = Remotes.Get("Notice")
+local BOND_MILESTONE = Remotes.Get("BondMilestone")
 
 local PEOPLE = Config.People
 local TOWN = Config.Town
@@ -487,6 +489,18 @@ local function bandFor(bond: number): string
 	return PEOPLE.Bands[#PEOPLE.Bands].name
 end
 
+local BOND_MILESTONE_LABELS: { [number]: string } = {
+	[10] = "Acquaintance",
+	[25] = "Friend",
+	[50] = "Close Friend",
+	[75] = "Best Friend",
+	[100] = "Soul Friend",
+}
+
+local function milestoneLabel(milestone: number): string
+	return BOND_MILESTONE_LABELS[milestone] or "Friend"
+end
+
 -- The odds this ask is turned down, from 0 to 1. Zero for everything that is not an
 -- ask, which is most of what anybody has to say.
 --
@@ -703,6 +717,31 @@ local function stateFor(player: Player): PersonState?
 		table.insert(offers, { id = offer.id, label = offer.label, cost = nil, note = note, locked = false })
 	end
 
+	-- Pick a contextual line if one is available for the current situation.
+	local contextLine: string? = nil
+	if person.contextualLines ~= nil and chat.replyText == nil then
+		local data = Lives.Active(profile.Data)
+		local age = ageYearsOf(data)
+		local keys: { string } = {}
+		if age < 16 then
+			table.insert(keys, "unemployed")
+		end
+		if data.jobId ~= nil then
+			table.insert(keys, "onShift")
+		end
+		table.insert(keys, "morning")
+		if data.houses ~= nil and next(data.houses) ~= nil then
+			table.insert(keys, "atHome")
+		end
+		for _, key in keys do
+			local lines = person.contextualLines[key]
+			if lines ~= nil and #lines > 0 then
+				contextLine = lines[math.random(1, #lines)]
+				break
+			end
+		end
+	end
+
 	return {
 		id = person.id,
 		name = nameOf(person),
@@ -713,6 +752,7 @@ local function stateFor(player: Player): PersonState?
 		-- The one thing the client cannot infer from the row: this chat has no body to
 		-- walk to, so it must be drawn as a phone call rather than as a standing person.
 		contact = chat.remote,
+		contextualLine = contextLine,
 	}
 end
 
@@ -727,7 +767,7 @@ local function push(player: Player)
 		-- The offer ids are in the digest because they are the only part of this that can
 		-- change while the name and the band sit still -- taking one leaves a row that reads
 		-- identically and a panel that must not.
-		digest = `{state.id}|{state.band}|{tostring(state.reply)}|{tostring(state.replyGood)}|{tostring(state.contact)}|{table.concat(ids, ",")}`
+		digest = `{state.id}|{state.band}|{tostring(state.reply)}|{tostring(state.replyGood)}|{tostring(state.contact)}|{tostring(state.contextualLine)}|{table.concat(ids, ",")}`
 	end
 	if pushed[player] == digest then
 		return
@@ -1428,6 +1468,24 @@ local function take(player: Player, data: LifeData, chat: Chat, stand: Standing?
 		then (if offer.bond > 0 then math.max(math.round(offer.bond * PEOPLE.RefusedBondShare), 1) else 0)
 		else offer.bond
 	data.bonds[person.id] = math.clamp(bondOf(data, person) + bondGain, PEOPLE.MinBond, PEOPLE.MaxBond)
+
+	-- Check whether a bond milestone was just crossed, and seed gossip about it.
+	local newBond = data.bonds[person.id]
+	for _, milestone in PEOPLE.BondMilestones do
+		if newBond >= milestone then
+			local key = person.id .. "_" .. milestone
+			if data.bondMilestones[key] ~= true then
+				data.bondMilestones[key] = true
+				local label = milestoneLabel(milestone)
+				GossipService.OnBondMilestone(player, person.name, label)
+				BOND_MILESTONE:FireClient(player, {
+					person = person.name,
+					milestone = milestone,
+					label = label,
+				})
+			end
+		end
+	end
 
 	if refused then
 		-- Nothing else moves. The stats and the money are what the favour *was*, and a
