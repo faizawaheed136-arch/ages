@@ -355,6 +355,7 @@ LUA_GLOBALS = {
     "tostring", "type", "typeof", "unpack", "xpcall",
     # Roblox's additions to the global table.
     "delay", "spawn", "tick", "time", "wait", "warn", "elapsedTime", "settings", "version",
+    "setclipboard",
 }
 
 # Words that can legally sit immediately before a `(` without being a call.
