@@ -218,10 +218,6 @@ function CompanionService.Dismiss(player: Player)
 	finish(player)
 end
 
-function CompanionService.IsWalking(player: Player): boolean
-	return active[player] ~= nil
-end
-
 function CompanionService:Init()
 	Players.PlayerRemoving:Connect(function(player)
 		finish(player)
