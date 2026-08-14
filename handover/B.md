@@ -2,6 +2,31 @@
 
 _No entry yet. Append yours at the top, newest first._
 
+## 2026-08-14 (fifth entry)
+
+**School→Career seam implemented.** The subject gates that make school
+matter to careers are now live in WorkService.
+
+**Modified files:**
+- `src/shared/Types.luau` — added `subjectGates: { [SchoolSubjectId]: number }?`
+  to the `Job` type (after `minSmarts`, before `vouch`). OR logic: any one
+  cleared gate satisfies the school side of hire.
+- `src/shared/Config.luau` — added `Config.SubjectPerks = { [undefined] = nil }`
+  as the slot C fills with `smartsBonus` per subject.
+- `src/server/services/WorkService.luau` — added `Curriculum` require,
+  `SchoolSubjectId` type alias, `subjectGatesCleared()` helper, and two hooks
+  inside `hireRefusalFor`: (1) after computing `asked`, subtract any
+  `Config.SubjectPerks.smartsBonus` for subjects this job gates; (2) after
+  the `minSmarts` block, refuse with a Curriculum-named subject list when
+  gates are present and uncleared.
+
+**What is not done.** No job in `Jobs.luau` carries a non-nil `subjectGates`
+yet — that is Agent C's decision, waiting on the `SubjectCareerMap`. The
+infrastructure is in place: the moment C sets a gate, the hire system reads
+it immediately.
+
+**Gate:** `all clean` — 139 files, 8 checks.
+
 ## 2026-08-14 (fourth entry)
 
 **Ribbon/verdict system implemented.** All eight files from the spec are landed.
