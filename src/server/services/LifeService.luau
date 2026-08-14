@@ -363,8 +363,9 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- childhood unpaid.
 	PocketMoneyService.OnAgeUp(player)
 
-	-- Bills are due every game year (Config.Bills.BillIntervalMonths months).
-	-- They run after pocket money so a life that cannot afford them falls into debt
+	-- Bills are due every birthday. They run after pocket money so a life that
+	-- cannot afford them falls into debt rather than being patched over by
+	-- childhood allowance.
 	-- rather than being patched over by childhood allowance.
 	BillService.Charge(player)
 
