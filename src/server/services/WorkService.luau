@@ -952,6 +952,7 @@ local function taskStateFor(task: ActiveTask, paused: boolean): TaskState
 		secondsTotal = task.secondsTotal,
 		paused = paused,
 		missed = task.expired,
+		rush = task.rush ~= nil,
 	}
 end
 

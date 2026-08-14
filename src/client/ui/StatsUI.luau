@@ -56,6 +56,11 @@ local TASK_COLOR = Color3.fromRGB(235, 200, 120)
 -- The last third. Not red -- nothing dies here, you just miss one -- but a clear
 -- enough change to be caught out of the corner of an eye while you are running.
 local TASK_URGENT_COLOR = Color3.fromRGB(228, 140, 80)
+-- Rush tasks use this colour so the player can tell at a glance that the whole
+-- task is a repeat cycle rather than a single fetch-or-carry. Different from
+-- TASK_URGENT_COLOR because urgency is time-based and a rush is urgent from the
+-- first second.
+local TASK_RUSH_COLOR = Color3.fromRGB(220, 100, 80)
 -- Held while a prompt is open. Grey and still, the same language the locked choice
 -- markers use: this is not a clock that has broken, it is one that is not running.
 local TASK_PAUSED_COLOR = Color3.fromRGB(120, 118, 128)
@@ -1110,7 +1115,8 @@ local function drawTask(parts: TaskRow, state: TaskState)
 	-- Ceiling rather than floor, so the number reaches zero exactly as the time does
 	-- instead of sitting on "0s" for a whole second while the task is still winnable.
 	parts.caption.Text = `{math.ceil(left)}s left`
-	parts.fill.BackgroundColor3 = if share <= TASK_URGENT_SHARE then TASK_URGENT_COLOR else TASK_COLOR
+	local baseColor = if state.rush then TASK_RUSH_COLOR else TASK_COLOR
+	parts.fill.BackgroundColor3 = if share <= TASK_URGENT_SHARE then TASK_URGENT_COLOR else baseColor
 end
 
 -- Every task the shift is currently asking for, all of them every time.

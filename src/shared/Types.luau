@@ -558,6 +558,11 @@ export type TaskState = {
 	-- client takes the mark off the floor and keeps the row. Which is the honest shape
 	-- of it -- the task is over, the fact of it is not.
 	missed: boolean,
+	-- Whether this is a rush task (repeating serve cycle) rather than a fetch/hand.
+	-- The client uses it to colour the bar differently: a rush is visually urgent
+	-- even when the clock is not in its last third, because the whole shape of the
+	-- task is "keep the line moving" rather than "get to the mark and back."
+	rush: boolean,
 }
 
 -- One thing a lesson asks you.
