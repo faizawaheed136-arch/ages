@@ -318,6 +318,15 @@ export type Job = {
 	-- for. A childhood spent sitting lessons and a childhood spent skipping them end
 	-- twenty or thirty points apart, and this is the door that difference opens.
 	minSmarts: number?,
+	-- Subjects that must be cleared to open this job, and to what level.
+	-- Nil means the job does not care about school beyond `minSmarts`.
+	--
+	-- Multiple entries are OR, not AND: a player who cleared any one of them
+	-- satisfies the gate. A life with smarts 70 but zero subject mastery can
+	-- still apply to a job that only has `minSmarts`; a life with smarts 55 but
+	-- science level 3 can apply to a job that has both `minSmarts = 50` and a
+	-- science gate. The two gates are independent.
+	subjectGates: { [SchoolSubjectId]: number }?,
 	-- Who could put in a word for you here, if anyone would. Only ever read alongside
 	-- `minSmarts`, because lowering a bar that does not exist is not a favour.
 	vouch: JobVouch?,

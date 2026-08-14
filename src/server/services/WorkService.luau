@@ -42,6 +42,7 @@ local WorkSpots = require(script.Parent.Parent.world.WorkSpots)
 local MoneyPop = require(script.Parent.Parent.world.MoneyPop)
 local MilestoneService = require(script.Parent.MilestoneService)
 local StatService = require(script.Parent.StatService)
+local Curriculum = require(script.Parent.Parent.content.Curriculum)
 
 type Job = Types.Job
 type JobTask = Types.JobTask
@@ -52,6 +53,7 @@ type LifeEvent = Types.LifeEvent
 type EventChoice = Types.EventChoice
 type JobPostState = Types.JobPostState
 type Customer = Customers.Customer
+type SchoolSubjectId = Types.SchoolSubjectId
 
 local ShiftUpdatedRemote = Remotes.Get("ShiftUpdated")
 local GuideUpdatedRemote = Remotes.Get("GuideUpdated")
@@ -361,6 +363,19 @@ local function standingAt(data: LifeData, jobId: string): number
 	return data.jobStanding[jobId] or 0
 end
 
+-- Whether every subject gate on a job has been cleared to the required level by this
+-- life. Multiple gates are OR, not AND: clearing any one of them satisfies the school
+-- side of the hire check. Returns true when `gates` is nil (the job does not care
+-- about subject mastery beyond `minSmarts`).
+local function subjectGatesCleared(data: LifeData, gates: { [SchoolSubjectId]: number }): boolean
+	for subjectId, level in gates do
+		if (data.subjectMastery[subjectId] or 0) >= level then
+			return true
+		end
+	end
+	return false
+end
+
 -- The name of a job as a person would say it, for a notice. Falls back to the raw
 -- id only if the job table vanished under a running server, which the load-time
 -- validation makes all but impossible -- but a notice reading "as a nil" is worse,
@@ -523,6 +538,11 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 		end
 	end
 
+	-- Subject gates are independent of minSmarts: they ask a different question
+	-- (did you spend time on this subject?) rather than a general smarts threshold.
+	-- Declared here so both the perk reduction and the gate check below can see it.
+	local subjectGates = job.subjectGates
+
 	-- Last of the three because it is the one nothing can be done about now. Age comes
 	-- with waiting and standing comes with working, but the smarts a desk job asks for
 	-- were earned or not earned in a classroom years before anybody stood here -- so it
@@ -543,6 +563,20 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 		local asks = asked
 		local vouched = false
 		local voucherName = ""
+
+		-- Subject perks reduce the smarts bar when the life has cleared a subject
+		-- this job gates. The bonus comes from Config.SubjectPerks, keyed by subject
+		-- id; absent keys contribute nothing, which is how C leaves a subject without
+		-- a perk.
+		local subjectGates = job.subjectGates
+		if subjectGates ~= nil then
+			for subjectId, _ in subjectGates do
+				local perk = Config.SubjectPerks[subjectId]
+				if perk ~= nil and perk.smartsBonus ~= nil then
+					asks = asks - perk.smartsBonus
+				end
+			end
+		end
 
 		-- A word from somebody who thinks well of you, read live off the bond rather than
 		-- spent out of a store of favours. There is no reference to hand in: the office
@@ -583,6 +617,22 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 			end
 			return `This desk needs {asked} smarts and you have {held}. School was where that came from.{record}`
 		end
+	end
+
+	-- Subject gates are the second school-side check, read alongside minSmarts.
+	-- They answer a different question: not "how smart are you" but "did you
+	-- spend time on this subject". Multiple gates are OR — any one cleared is
+	-- enough — because a player who specialised in one area should not need to
+	-- specialise in all of them.
+	if subjectGates ~= nil and not subjectGatesCleared(data, subjectGates) then
+		local needed = {}
+		for subjectId, level in subjectGates do
+			if (data.subjectMastery[subjectId] or 0) < level then
+				local subject = Curriculum.Get(subjectId)
+				table.insert(needed, subject ~= nil and subject.name or subjectId)
+			end
+		end
+		return `This desk wants experience in {table.concat(needed, ", ")}.`
 	end
 
 	return nil

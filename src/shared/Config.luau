@@ -1930,6 +1930,19 @@ Config.School = {
 -- Nothing in here restates a verdict share or a smarts payout. A procedure's score is
 -- a 0-1 share like a lesson's, so it lands on Config.School's GoodShare/OkShare and
 -- SmartsPer*Lesson and there is deliberately no second ladder to keep in step.
+
+-- Passive bonuses a life earns when a subject reaches mastery level 5 (cleared).
+-- Applied as a reduction to `minSmarts` on jobs that have both `minSmarts` and a
+-- gate for that subject. A life with smarts 50 and science level 5 hires for a
+-- job that asks for smarts 50 and science = 3, even though the raw number is
+-- exactly at the line -- the perk pushed it just over.
+--
+-- C decides which subjects get perks and at what level; B consumes them.
+-- Map entry keyed by subject id; absent key means no perk for that subject.
+Config.SubjectPerks = {
+	[undefined] = nil,
+}
+
 Config.School.Science = {
 	-- Benches running at once. Two, because one is a queue and three is a spectacle you
 	-- watch rather than a room you work: with two, every trip to a station is a choice
