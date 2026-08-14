@@ -822,6 +822,7 @@ end)
 
 Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarDealerState?)
 	carDealer:Set(state)
+	ui:SetCarDealer(state)
 end)
 
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)

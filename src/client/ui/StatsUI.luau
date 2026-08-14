@@ -174,6 +174,8 @@ export type StatsUIHandle = typeof(setmetatable(
 		houseRow: Frame,
 		houseLabel: TextLabel,
 		houseCaption: TextLabel,
+		dealerRow: Frame,
+		dealerLabel: TextLabel,
 		billRow: Frame,
 		billLabel: TextLabel,
 	},
@@ -549,6 +551,29 @@ function StatsUI.new(): StatsUIHandle
 	houseCaption.TextColor3 = Color3.fromRGB(140, 140, 155)
 	houseCaption.Text = ""
 	houseCaption.Parent = houseRow
+
+	-- AutoPia dealership: how many walk-ins are waiting and whether the front
+	-- customer is currently being served. Hidden when there is nobody in queue
+	-- and the player is not inside interact range, because a row that reads
+	-- "0 waiting" every time the player walks past the dealership is noise.
+	local dealerRow = Instance.new("Frame")
+	dealerRow.Name = "DealerRow"
+	dealerRow.Size = UDim2.new(1, 0, 0, 24)
+	dealerRow.LayoutOrder = 4.25
+	dealerRow.BackgroundTransparency = 1
+	dealerRow.Visible = false
+	dealerRow.Parent = panel
+
+	local dealerLabel = Instance.new("TextLabel")
+	dealerLabel.Name = "Label"
+	dealerLabel.Size = UDim2.new(1, 0, 1, 0)
+	dealerLabel.BackgroundTransparency = 1
+	dealerLabel.Font = Enum.Font.GothamMedium
+	dealerLabel.TextSize = 12
+	dealerLabel.TextXAlignment = Enum.TextXAlignment.Left
+	dealerLabel.TextColor3 = Color3.fromRGB(210, 195, 140)
+	dealerLabel.Text = ""
+	dealerLabel.Parent = dealerRow
 
 	-- What you are doing this minute, as opposed to what you are doing this year.
 	--
@@ -938,6 +963,8 @@ function StatsUI.new(): StatsUIHandle
 		houseRow = houseRow,
 		houseLabel = houseLabel,
 		houseCaption = houseCaption,
+		dealerRow = dealerRow,
+		dealerLabel = dealerLabel,
 		billRow = billRow,
 		billLabel = billLabel,
 	}, StatsUI)
@@ -1553,6 +1580,30 @@ function StatsUI.SetHouse(self: StatsUIHandle, state: Types.HouseState?)
 			then "Work-from-home: " .. job
 			else "No home job linked"
 		break
+	end
+end
+
+-- The dealership queue state. Shown when the player is near the counter and
+-- there are walk-ins waiting, or when the front customer is currently being
+-- served. Hidden when there is no queue and the player is out of range.
+function StatsUI.SetCarDealer(self: StatsUIHandle, state: Types.CarDealerState?)
+	if state == nil then
+		self.dealerRow.Visible = false
+		return
+	end
+	if state.waiting == 0 and not state.served then
+		self.dealerRow.Visible = false
+		return
+	end
+	self.dealerRow.Visible = true
+	if state.greeting ~= nil and state.greeting ~= "" then
+		self.dealerLabel.Text = state.greeting
+	elseif state.waiting > 0 then
+		self.dealerLabel.Text = `AutoPia: {state.waiting} customer{if state.waiting > 1 then "s" else ""} waiting`
+	elseif state.served then
+		self.dealerLabel.Text = "AutoPia: serving customer"
+	else
+		self.dealerLabel.Text = "AutoPia: no customers"
 	end
 end
 
