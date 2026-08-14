@@ -135,11 +135,23 @@ GARAGE_DOOR = -186.0
 #
 # The imported house model is much bigger than its rooms. The rooms this town
 # was planned around sit in X -12.5..30 by Z -27.5..20, but the model that
-# contains them reaches X -55.9..46.9 by Z -44.3..78.1 -- its yard, paths and
+# contains them reaches X -55.9..32.5 by Z -44.3..56.8 -- its yard, paths and
 # garden beds lap well past the interior. A new house on that same ground reads
 # as a mistake even when the boxes do not touch, so every new house stands clear
-# of the band entirely rather than tight against it: nothing on the east side
-# below Z 88 or above Z -52. Each is a simple west-facing shell.
+# of the band rather than tight against it. Each is a simple west-facing shell.
+#
+# Those bounds are measured from House.rbxmx, and the previous version of this
+# comment had the north edge at Z 78.1 -- 21.3 studs further north than the model
+# actually reaches, and 46.9 rather than 32.5 in X. The exclusion was sized off
+# that wrong number, which is why the clearance is lopsided: 7.7 studs south of
+# the model at Z -52, and 31.2 studs north of it at Z 88. The south figure is the
+# one that was chosen on purpose. The northern gap is the largest bare frontage
+# left on the main road and it is an accident, not a design.
+HOUSE_MODEL_Z0, HOUSE_MODEL_Z1 = -44.3, 56.8
+# How close a new building may stand to the imported model's own ground.
+# Safe range 6-12: under 6 the yards read as one plot, over 12 the street opens
+# a hole in itself.
+HOUSE_MODEL_CLEAR = 8.0
 HOUSE_X0, HOUSE_X1 = -42.0, 2.0
 # (z0, z1, door_z, door number)
 HOUSES = [
