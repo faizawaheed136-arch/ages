@@ -145,6 +145,44 @@ Three bugs fell out, and the first two are the same disease as always:
 
 Measured off the generated file: 9131 parts, all ten checks pass, both places build.
 
+**8. The corner shop, and the twenty-three studs it stands on.** `gen_town.py` carried a
+comment claiming the imported house model reached `z 78.1`. Measured off `House.rbxmx` it
+reaches `56.8`. The exclusion band around the player's own plot had been sized off that
+wrong number, so the clearance was 7.7 studs on the south side and 31.2 on the north, and
+only the southern figure was ever chosen. Twenty-three studs of the main road's frontage —
+the stretch directly opposite the player's front gate, which is the one piece of street a
+new player certainly sees — were fenced off by a measurement that was wrong.
+
+Both bounds are now derived from what they are measurements *of*: `SHOP_Z0` is the model
+clearance every building on that side already keeps, `SHOP_Z1` is the gap houses 14 and 16
+already keep from each other. This is the same defect as the depot container pitch — a
+number measured once, typed in as a literal, outliving the thing it measured — and the fix
+is the same one: stop typing it.
+
+Seventeen studs of frontage is too narrow for a house (the four on this street are 34
+deep) and exactly right for a shop, so the mistake left behind the one footprint the
+street did not have. Built as a **service spine and a customer floor**: the north strip
+runs from the back wall to behind the counter and is the only way to reach either the
+stock at the far end or the till at the front, so working the shop is a lap of the
+building rather than a stand at one spot. Customer aisles hang south of that spine,
+against a glazed flank that looks straight at the player's own front gate.
+
+That plan is an argument, not a decoration — the activity law wants a consumable that
+forces traversal every 40–60s, and putting the crates forty-one studs from the till is
+what makes the run exist. The verb it is a stage for is spec'd in section A below, and it
+is **not** built here: it is a job, and jobs are Agent B's.
+
+Nothing in the shop is tagged. A tag no service reads is orphaned code by this tree's own
+rules, and tagging is a one-line change the day the verb lands. One place point,
+`corner_shop`, stood in front of the counter where every other "at the counter" point in
+town is stood.
+
+Measured off the generated file: `Town.rbxmx` 687 parts in 17 pieces. Every station inside
+the shop is reachable by a body of half-width 1.40 — the figure `read_house.py` holds
+routes to — and the narrowest point on the whole walkable floor is exactly 1.40. The only
+overlapping colliding parts are wall corners and gondola spines, both of which every
+existing building in the file already does.
+
 ## Owed, in the order I would do it
 
 ### A. Shops — the *function* half, which is a spec question, not a build one
@@ -191,6 +229,72 @@ Three reasons not to just build it:
 *when a player walks into a shop, what do they physically do?* Everything else follows from
 that. Filling the 30 jobless points with more `Jobs.luau` rows would raise the number of
 "functional" shops without adding a single thing to do, and is not worth doing.
+
+#### The answer, spec'd: fetch and bag
+
+Asked for a verb, this is the one. It is written against the seven requirements in
+`docs/activity_design_law.md` one at a time, because a shop minigame that fails any of
+them is the job system with a different sign on it.
+
+A customer comes to the counter and names two to four things. You read the order, run the
+aisles, pick them up, bag them at the counter and hand the bag over.
+
+1. **One verb, one commit, one undo window.** The verb is *fetch*. The commit is handing
+   the bag across the counter; nothing is scored until then. The undo is pulling an item
+   back out of the bag and swapping it — available right up to the commit, and paid for in
+   the only currency the activity has, which is the customer's patience. An undo that costs
+   the thing you are protecting is an undo worth having.
+2. **Two queues, each at about half load.** Customers at the counter, up to three deep,
+   each with a patience bar. *And* the shelves: every shelf face holds a stock level and a
+   face at zero cannot be picked from, so restocking is its own queue with its own clock.
+   Tuned so neither one alone fills the shift — serving only customers strands you on an
+   empty face, stocking only shelves strands the queue. The decision between them is the
+   game.
+3. **A consumable that forces traversal.** Stock, and the traversal is the length of the
+   building. Crates live in the bay at the back, forty-one studs from the till, and one
+   crate is worth a fixed number of restocks. Tune the crate so it empties every 45s or
+   so. This is why the floor plan puts the stock at the far end — see the comment in
+   `gen_town.py`; a shop with its stock behind the counter passes every other requirement
+   and is still a game about standing still.
+4. **Soft failure, never binary.** Patience is a multiplier on the payout, not a pass. A
+   customer who runs out does not vanish: they take whatever is in the bag, pay for that
+   much and tip nothing. A wrong item is handed back, which costs time, not the order.
+   Nothing in the shop can be failed, only done slower and for less.
+5. **Escalation changes the space, not the numbers.** Five levels, and not one of them is
+   a faster arrival rate. L1 two aisles, orders of two. L2 the chiller opens — a third
+   destination, and the only one that costs a beat to open. **L3 the shelf plan is
+   reshuffled overnight**, which kills the route the player memorised and is the best
+   escalation on the list because it attacks their knowledge rather than their reflexes.
+   L4 a pallet lands in the north spine mid-shift and the one service corridor narrows. L5
+   a second register opens and the queue splits.
+6. **Progression widens the player's own tolerance.** The basket. You start able to carry
+   one item, and buy your way to two, three, four. That is the size of what a player can
+   hold in their head, made physical: at one it is a trip per item, at four it is a route
+   problem. The player watches their own capacity grow, and route-planning is the skill
+   that grows with it.
+7. **Same input, different opponent.** Five customers, one verb. *The list* — four items,
+   long patience, a pure route problem. *The dawdler* — orders one thing, adds a second
+   while you are gone, and punishes over-optimising. *The rush* — two items, very short
+   fuse. *The kid* — pays in coins, so the commit itself takes an extra beat and bagging
+   early starts to matter. *The regular* — always the same order, which is the one you can
+   have bagged before they reach the counter. That last one is the discovered technique
+   the law asks to leave room for, and it is not taught anywhere.
+
+Supporting rules, also from the law: reward $7–$25 an order with the tip carrying the
+patience multiplier; a shift is *N orders served*, not a clock; the 3-dot prompt over the
+shopkeeper starts it, per the interaction grammar.
+
+**The degenerate strategy, audited before it ships.** The exploit is to ignore the shelves
+and serve only orders you can already fill. It fails because orders are drawn from the
+whole floor, so one face at zero blocks roughly every second order within a minute. The
+second exploit is parking at the counter with a basket of the most common item; the L3
+reshuffle and the dawdler both break it.
+
+**Whose code this is.** The stage is built — see "Done" — but the service is not, and it
+must not be built here. Fetch-and-bag is a job: it lands in `WorkService`,
+`content/Jobs.luau` and `JobTasks.luau`, and all three are **Agent B's** by `HANDOVER.md`.
+This section is the hand-over, not the start of one. Agent A's remaining obligations to it
+are geometry and tags, both of which are one-line changes on request.
 
 ### B. Behind the spawn house feels empty
 
