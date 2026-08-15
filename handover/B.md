@@ -2,6 +2,68 @@
 
 _No entry yet. Append yours at the top, newest first._
 
+## 2026-08-15 (seventh entry)
+
+**Queue written, phase 0 done.** [`docs/life_layer_plan.md`](docs/life_layer_plan.md) is
+the ordered build plan for the life layer, mirroring `docs/school_sports_plan.md`. Phase
+0 orientation complete: read `lifesim_design.md`, `step3_scope.md`,
+`activity_design_law.md`.
+
+### What I think phase 1 is
+
+The chapter spine. Six age bands summing to ~35–60 minutes per life, broken at birthdays
+the player presses through. The "months passed" reel is part of phase 1, not phase 5,
+because its content source has to exist before its screen does — a news-less reel is
+worse than no reel, and the news source is the same "what happened" query the verdict
+already speaks. Building the screen before the source would teach the player to skip it
+the way a decorative slide teaches them to skip it: permanently. Same feature, two
+scales: ribbon at the end of a life, reel at the end of a chapter. **One shared "what
+happened" query.**
+
+### Two contradictions, adjudicated
+
+**(C1) Bond decay is wrong.** `Config.People.DecayPerYearAway = -3` and `Ties.luau`'s
+header both claim decay is how a friendship ends in this game. `lifesim_design.md`
+explicitly names decay-on-neglect as a trap in the same family as decaying need bars
+and locks the rule that **positives ratchet**. The design wins. The config and the
+header comment are both wrong, but I am not patching the code yet — the rewrite is
+phase 5, and any change now would create a desync between the comment and the code
+that a future reader has to reconcile. **Resolution: delete `DecayPerYearAway`, remove
+the decay call from the yearly tick, keep the header comment saying gains stick.**
+Phasing it with the riv/mentor/family slots means the visible shape changes at one
+moment (rival appears, decay disappears) rather than two unconnected ones.
+
+**(C2) Events-only-on-age-up is wrong, but the diagnosis is right.** `step3_scope.md`
+records the owner commitment 2026-07-28 verbatim: *"events are only happening only when i
+grow up they should happen at random in my world as i decide them."* `LifeService`
+calls `EventService.OfferForAge` at five sites (lines 412, 415, 438, 533, 565), all
+inside or directly triggered by `AgeUp`. Nothing else calls it. **Diagnosis stands.**
+Resolution lives in phase 3: ambient trigger source (timers + proximity) feeding the
+existing `EventService.OfferForAge` selection, plus the four world-delivery handlers
+(NPCApproach, Location, Letter, PhoneCall) as `EventUI` kinds. **Extend, do not
+duplicate**, because `DeliveryService` already does two-phase staging with
+`deliveringEventId`/`pendingEventId` — parallel machinery would orphan it.
+
+The owner rule **"events advance the year in ages 0–5 only"** is honoured by the
+existing code: `NextEventDelaySeconds` is gated on childhood in `LifeService`
+(line 404), and the `OfferForAge` chain is only entered from a birthday or childhood
+event response. **Adult events do not call AgeUp today and must continue not to. No
+code changes required to honour it — this is already correct.** Confirming the
+existing guard rather than building one.
+
+### Gate
+
+`all clean` — 139 files, 8 checks, before any code touched.
+
+### Not done yet
+
+- Phase 1 spec is unwritten. The "what happened" query shape is the first thing to
+  design — without it, the reel and the verdict stay two queries and the duplication
+  is the first thing a future refactor has to undo.
+- A's overnight changes (MAP_PLAN.md, Town.rbxmx, gen_town.py) are still uncommitted.
+  Hand-over acknowledgement only — `life_layer_plan.md` phase 6 references the corner
+  shop geometry but does not depend on this session's diff landing.
+
 ## 2026-08-14 (sixth entry)
 
 **Lane clean.** Gate `all clean` — 139 files, 8 checks. One small fix landed in this session: removed a duplicate `local subjectGates = job.subjectGates` declaration inside `hireRefusalFor` (commit `d298a54`).
