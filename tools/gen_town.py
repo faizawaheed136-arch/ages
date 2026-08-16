@@ -49,7 +49,7 @@ from rbxmx import at, box, group, part, point_light, sign
 
 from world_plan import (
     CEIL_1, DOORWAY, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1, FORECOURT_X0,
-    FRONT_X, GROUND, NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
+    FRONT_X, GATE_CLEAR, GROUND, NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, PROPERTY_X,
     ROAD_MID, ROAD_X0, ROAD_X1, SLAB, STREET_Z0, STREET_Z1, WALL,
 )
@@ -168,23 +168,38 @@ HOUSES = [
 # stops being a row and becomes separate objects with grass between them.
 NEIGHBOUR_GAP = 6.0
 
-# The corner shop, in the gap between the player's own plot and number 14.
+# The corner shop, on the east frontage opposite the bakery.
 #
-# That gap is the frontage the stale house-model bound above was fencing off.
-# Recovered, it is 17 studs wide -- too narrow for a house, since the four on
-# this street are 34 deep, and exactly the shape a corner shop wants: a short
-# front on the street and a long room behind it. The mistake left behind the one
-# footprint this street did not already have.
+# It was first built in the gap between the player's own plot and number 14,
+# z 64.8..82, on the reading that this was the largest bare frontage on the
+# street and that the stale house-model bound above had been fencing it off.
+# Both edges were derived rather than typed and both derivations were right. The
+# building still had to be torn down and moved, because the gap is not frontage:
+# it is the window the gate road leaves town through, GATE_CLEAR is 60..82, and
+# the shop stood square across the only link between the town and the city.
 #
-# Both edges are derived, not typed, because both are measurements of something
-# else -- the south edge is the clearance every building on this side already
-# keeps from the imported model, the north edge is the gap the houses keep from
-# each other. Typing either as a literal is exactly how the bound above went
-# stale, and it went stale for years without anything noticing.
+# Nothing in this file could see it. The road is drawn in gen_city.py, in another
+# asset, against another generator's constants; check_city's check 7 reads every
+# asset's walls against the city's streets and does catch it, and it was not run.
+# Importing GATE_CLEAR is the fix that outlives remembering: the exclusion is now
+# a fact this file holds rather than one it has to be told.
+#
+# The plot it moved to is the same shape in the same frontage line, one street
+# further south, chosen so the shop faces the bakery across the road and the two
+# read as a small parade rather than as one shop dropped into a gap. Its north
+# edge keeps the row's own spacing from number 20; its depth is carried over
+# unchanged because the interior below is laid out for it and was measured
+# walkable at it.
 SHOP_X0, SHOP_X1 = HOUSE_X0, HOUSE_X1
-SHOP_Z0 = HOUSE_MODEL_Z1 + HOUSE_MODEL_CLEAR
-SHOP_Z1 = HOUSES[0][0] - NEIGHBOUR_GAP
+# Safe range 14-24: under 14 the aisles and the service spine stop both fitting,
+# over 24 the shop is as deep as a house and stops reading as a shop.
+SHOP_DEPTH = 17.2
+SHOP_Z1 = HOUSES[3][0] - NEIGHBOUR_GAP
+SHOP_Z0 = SHOP_Z1 - SHOP_DEPTH
 SHOP_DOOR = (SHOP_Z0 + SHOP_Z1) / 2
+assert SHOP_Z1 <= GATE_CLEAR[0] or SHOP_Z0 >= GATE_CLEAR[1], (
+    f"the corner shop at z {SHOP_Z0}..{SHOP_Z1} stands in the gate road's "
+    f"window at z {GATE_CLEAR[0]}..{GATE_CLEAR[1]}")
 
 # The park, east of the road, at the top of the houses. Open ground with a pond,
 # so the town has one place whose only purpose is being somewhere to be. Sits
@@ -921,7 +936,12 @@ _SD0, _SD1 = SHOP_DOOR - DOORWAY / 2, SHOP_DOOR + DOORWAY / 2
 # walking body needs -- read_house.py measures routes at a half-width of 1.40 --
 # and a width that has to be added to a start to be checked is a width that gets
 # checked wrong.
-SHOP_SPINE_Z0 = 76.4            # north of this is the service strip, kept clear
+# Everything below is written as a depth from the shop's own south wall rather
+# than as a world z. The first version was written in world coordinates, and when
+# the building had to move off the gate road every fitting in it would have had
+# to be retyped one at a time -- which is the way a shelf ends up standing in a
+# wall. Depths move with the shop; world coordinates do not.
+SHOP_SPINE_Z0 = SHOP_Z0 + 11.6  # north of this is the service strip, kept clear
 SHOP_COUNTER_X0, SHOP_COUNTER_X1 = -30.0, -27.0
 SHOP_CLERK_X1 = -24.0           # the standing room behind the counter
 SHOP_BAY_X = -8.0               # the stock bay's rail, east of the aisles
@@ -960,10 +980,17 @@ with group("CornerShop"):
         wall("WallEast", (SHOP_IX1, SHOP_X1, SHOP_Z0, SHOP_Z1, FLOOR_1, CEIL_1),
              SHOP_WALL, along="z")
 
-        # The south flank is the face the player meets first: it looks straight
-        # at their own front gate, and they walk past it every time they leave
-        # home. It gets the long window for that reason and no other. Sill at
-        # three studs so the shelving inside reads over it rather than behind it.
+        # The long window goes on the south flank because that is the side the
+        # customer floor is on -- the aisles, the chiller and the till are all
+        # south of the service spine, so this is the only flank with anything
+        # behind it worth seeing. The north flank backs onto the spine and stays
+        # solid; a window onto a staff corridor is a window into nothing.
+        #
+        # It used to be here for a different and now false reason: the shop stood
+        # north of the player's plot and this face looked at their front gate.
+        # The building moved and the face did not, which is how a comment outlives
+        # the thing it describes. Sill at three studs so the shelving inside reads
+        # over it rather than behind it.
         wall("WallSouth", (SHOP_X0, SHOP_X1, SHOP_Z0, SHOP_IZ0, FLOOR_1, CEIL_1),
              SHOP_WALL, along="x", doors=((-34.0, -14.0),))
         box("FlankSill", (-34.0, -14.0, SHOP_Z0, SHOP_IZ0, FLOOR_1, FLOOR_1 + 3.0),
@@ -975,15 +1002,17 @@ with group("CornerShop"):
         wall("WallNorth", (SHOP_X0, SHOP_X1, SHOP_IZ1, SHOP_Z1, FLOOR_1, CEIL_1),
              SHOP_WALL, along="x")
 
-        # The fascia wraps the two faces that are seen from the road, so the shop
-        # announces itself both to somebody walking up the street and to somebody
-        # stepping out of their own front door.
+        # The fascia wraps the west face and the north one. West because that is
+        # the shopfront; north because the player lives at the top of this street
+        # and every walk here is a walk south, so the north flank is the face they
+        # see from a hundred studs off and the one that has to say what this is.
+        # The south return is not signed -- it faces the empty end of the street.
         box("FasciaWest", (SHOP_X0 - 0.5, SHOP_X0, SHOP_Z0, SHOP_Z1,
                            FLOOR_1 + DOOR_HEIGHT, CEIL_1), SHOP_FASCIA, SMOOTH,
             children=sign("CORNER SHOP", "left", color=(244, 240, 228), size=64))
-        box("FasciaSouth", (SHOP_X0, -10.0, SHOP_Z0 - 0.5, SHOP_Z0,
+        box("FasciaNorth", (SHOP_X0, -10.0, SHOP_Z1, SHOP_Z1 + 0.5,
                             FLOOR_1 + DOOR_HEIGHT, CEIL_1), SHOP_FASCIA, SMOOTH,
-            children=sign("CORNER SHOP", "front", color=(244, 240, 228), size=64))
+            children=sign("CORNER SHOP", "back", color=(244, 240, 228), size=64))
 
     with group("ShopFittings"):
         # Mat inside the door: the only thing in the entry bay, because the entry
@@ -998,7 +1027,12 @@ with group("CornerShop"):
         # decision instead of a keystroke.
         box("CounterBase", (SHOP_COUNTER_X0, SHOP_COUNTER_X1, SHOP_IZ0 + 1.2,
                             SHOP_SPINE_Z0, FLOOR_1, FLOOR_1 + 3.2), DESK_TOP, WOOD)
-        box("CounterTop", (SHOP_COUNTER_X0 - 0.4, SHOP_COUNTER_X1 + 0.4, SHOP_IZ0 + 0.8,
+        # The top overhangs on the customer side only. A 0.4 lip on the staff side
+        # as well left 2.6 studs of standing room behind the counter at chest
+        # height -- under the 2.8 a walking body needs, and invisible from the
+        # floor plan because the base underneath it is 3.0 clear. A capsule does
+        # not duck.
+        box("CounterTop", (SHOP_COUNTER_X0 - 0.4, SHOP_COUNTER_X1, SHOP_IZ0 + 0.8,
                            SHOP_SPINE_Z0 + 0.4, FLOOR_1 + 3.2, FLOOR_1 + 3.5),
             (208, 180, 140), WOOD)
         box("Till", (SHOP_COUNTER_X0 + 0.3, SHOP_COUNTER_X1 - 0.3, SHOP_SPINE_Z0 - 3.4,
@@ -1014,8 +1048,10 @@ with group("CornerShop"):
         # Two runs and a chiller, all south of the spine. The south aisle lines up
         # with the front door so a player walking straight in is in an aisle, not
         # facing the end of a gondola.
-        aisle_run(68.0, SHOP_CLERK_X1 + 1.0, -16.0, FLOOR_1, label="AisleSouth")
-        aisle_run(74.8, SHOP_CLERK_X1 + 1.0, SHOP_BAY_X - 1.0, FLOOR_1, label="AisleCentre")
+        aisle_run(SHOP_Z0 + 3.2, SHOP_CLERK_X1 + 1.0, -16.0, FLOOR_1,
+                  label="AisleSouth")
+        aisle_run(SHOP_Z0 + 10.0, SHOP_CLERK_X1 + 1.0, SHOP_BAY_X - 1.0, FLOOR_1,
+                  label="AisleCentre")
         # End-stops the south run rather than standing beside it: the chiller is
         # the tall thing you see through the flank window, and it is the far end
         # of the shortest errand a customer can send you on.
@@ -1034,16 +1070,17 @@ with group("CornerShop"):
         # spine. Nothing is stacked in the spine itself -- the run along the north
         # wall is the one corridor that has to stay walkable, and a crate in it is
         # the difference between a shop and a maze.
-        for i, (cx, cz) in enumerate(((-5.5, 68.5), (-5.5, 72.5),
-                                      (-1.5, 70.0), (-1.5, 74.0))):
+        for i, (cx, cd) in enumerate(((-5.5, 3.7), (-5.5, 7.7),
+                                      (-1.5, 5.2), (-1.5, 9.2))):
+            cz = SHOP_Z0 + cd
             box(f"Crate{i + 1}", (cx - 2.0, cx + 2.0, cz - 2.0, cz + 2.0,
                                   FLOOR_1, FLOOR_1 + 4.0), CRATE, WOOD)
-        box("CrateTop", (-7.5, -3.5, 68.5, 72.5, FLOOR_1 + 4.0, FLOOR_1 + 8.0),
-            CRATE, WOOD)
+        box("CrateTop", (-7.5, -3.5, SHOP_Z0 + 3.7, SHOP_Z0 + 7.7,
+                         FLOOR_1 + 4.0, FLOOR_1 + 8.0), CRATE, WOOD)
 
-        for lx, lz in ((-35.0, SHOP_DOOR), (-28.0, 78.0), (-17.0, 70.0),
-                       (-17.0, 78.0), (-4.0, 73.0)):
-            ceiling_light(lx, lz, CEIL_1)
+        for lx, ld in ((-35.0, None), (-28.0, 13.2), (-17.0, 5.2),
+                       (-17.0, 13.2), (-4.0, 8.2)):
+            ceiling_light(lx, SHOP_DOOR if ld is None else SHOP_Z0 + ld, CEIL_1)
 
 # ---------------------------------------------------------------------------
 # The park

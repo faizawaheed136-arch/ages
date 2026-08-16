@@ -59,6 +59,23 @@ STREET_BITE = 0.5
 # here is a gap a player can see.
 STREET_JOIN = 0.05
 
+# How far a building the game sends you to may stand from the nearest
+# *carriageway* -- not a pavement, because the precinct had pavements and no road
+# at all, which is the defect this exists to catch.
+#
+# Measured, not chosen: across the 159 destinations in the city the worst honest
+# case is 18.0 studs (a suburb house set back behind its verge) and the median is
+# 8.0. With the precinct loop deleted, the eight north-strip shops it serves come
+# out at 47 and 88. Anything in 20..45 separates the two populations; 32 is the
+# middle of that gap.
+# Safe range 24-44: under 24 the set-back houses start to report, over 44 the
+# precinct defect walks back in.
+ROAD_ACCESS = 32.0
+# A place point is counted as belonging to a building if it lands inside the
+# building's walls or within this of them. Doors are drawn in the wall line and
+# their point is stood just outside it.
+DOOR_SLACK = 3.0
+
 # The band either side of the ground plane that counts as "surface": road, kerb,
 # pavement, lawn, sand. Anything whose box crosses this band is something a
 # player stands on, which is the only class of part that can be duplicated
@@ -729,6 +746,10 @@ def main():
     # way: an avenue ran through the middle of the cinema, the arcade, the
     # police station, the warehouse, the post office and all eight north shops.
     streets, walls = parse_streets_and_walls(CITY_PATH)
+    # Kept before the other assets are folded in, because check 11 asks a
+    # question about the city's own buildings against the city's own roads and
+    # would otherwise be holding the town to a road network it is not on.
+    city_walls = list(walls)
     # ...and every other asset's buildings too. The city's roads are drawn in
     # world coordinates and the town is at the other end of them.
     for _other in sorted(ASSETS.glob("*.rbxmx")):
@@ -864,6 +885,70 @@ def main():
               f"surface, both topping at y={top:.3f}", file=sys.stderr)
     check("no two assets share a surface plane", not laps,
           f"{len(laps)} coplanar pair(s)")
+    print()
+
+    # --- 11. A road to every door ---
+    print("11. A road to every door")
+    # Check 8 proves the road network is one piece. It says nothing about whether
+    # that one piece goes anywhere: a whole district can be built with pavements,
+    # lawns and no carriageway, and every other check here stays green. That is
+    # exactly what the civic precinct was -- thirteen buildings at z 968..1116
+    # with no road in them -- and it was found by a person reading the map.
+    #
+    # Two decisions make this a check rather than a heuristic:
+    #
+    # A destination is a *model that contains a place point*. Not "a model with
+    # walls" -- the earlier attempt at that reported Sea0-3, the scrap piles, the
+    # depot stacks and the switchyard, because a heap of scrap is wall-shaped.
+    # Containing a place point is not a guess about what a building is, it is the
+    # game saying out loud that it sends players here. `wp_` waypoints are
+    # excluded: a waypoint is a step on a route, and routes cross parks and piers
+    # where there is correctly no road.
+    #
+    # Distance is measured to the carriageway only, and between axis-aligned
+    # bounding boxes. The AABB of a slab spun off the grid is bigger than the
+    # slab, so the distance it yields is a lower bound on the true one -- this
+    # check can be too forgiving, never wrong. Given the gap between the worst
+    # honest case (18) and the smallest real defect (47), forgiving is the side
+    # to err on.
+    road = [b for n, _f, b in streets
+            if "Road" in n or n.startswith("X") or n == "CircleMouth"]
+    bounds = {}
+    for model, _part, _foot, (x0, x1, z0, z1) in city_walls:
+        prev = bounds.get(model)
+        bounds[model] = ((min(prev[0], x0), max(prev[1], x1),
+                          min(prev[2], z0), max(prev[3], z1))
+                         if prev else (x0, x1, z0, z1))
+    served = {}
+    for pid, px, pz, _f in city_points:
+        if pid.startswith("wp_"):
+            continue
+        for model, (x0, x1, z0, z1) in bounds.items():
+            if (x0 - DOOR_SLACK <= px <= x1 + DOOR_SLACK
+                    and z0 - DOOR_SLACK <= pz <= z1 + DOOR_SLACK):
+                served.setdefault(model, set()).add(pid)
+
+    def box_gap(a, b):
+        ax0, ax1, az0, az1 = a
+        bx0, bx1, bz0, bz1 = b
+        return math.hypot(max(bx0 - ax1, ax0 - bx1, 0.0),
+                          max(bz0 - az1, az0 - bz1, 0.0))
+
+    stranded = []
+    worst = 0.0
+    for model in sorted(served):
+        rect = bounds[model]
+        d = min(box_gap(rect, b) for b in road)
+        worst = max(worst, d)
+        if d > ROAD_ACCESS:
+            stranded.append((d, model, sorted(served[model])))
+    print(f"  {len(served)} destinations, farthest {worst:.1f} studs from a "
+          f"carriageway")
+    for d, model, pids in sorted(stranded, reverse=True):
+        print(f"    {model} is {d:.0f} studs from any road "
+              f"({', '.join(pids[:4])})", file=sys.stderr)
+    check(f"every destination is within {ROAD_ACCESS:.0f} studs of a road",
+          not stranded, f"{len(stranded)} stranded building(s)")
 
     # --- Summary ---
     print()

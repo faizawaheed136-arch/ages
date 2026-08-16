@@ -145,27 +145,40 @@ Three bugs fell out, and the first two are the same disease as always:
 
 Measured off the generated file: 9131 parts, all ten checks pass, both places build.
 
-**8. The corner shop, and the twenty-three studs it stands on.** `gen_town.py` carried a
-comment claiming the imported house model reached `z 78.1`. Measured off `House.rbxmx` it
-reaches `56.8`. The exclusion band around the player's own plot had been sized off that
-wrong number, so the clearance was 7.7 studs on the south side and 31.2 on the north, and
-only the southern figure was ever chosen. Twenty-three studs of the main road's frontage —
-the stretch directly opposite the player's front gate, which is the one piece of street a
-new player certainly sees — were fenced off by a measurement that was wrong.
+**8. The corner shop — built in the road, and moved.** It was first put in the gap between
+the player's plot and number 14, on the reading that a stale comment (`z 78.1` where
+`House.rbxmx` actually reaches `56.8`) had been fencing off the largest bare frontage on
+the street. Both its bounds were derived rather than typed, and both derivations were
+right. It still had to be torn down and moved, because the gap is not frontage: it is the
+window the **gate road** leaves town through, and a 44-stud building was standing across
+the only link between the town and the city.
 
-Both bounds are now derived from what they are measurements *of*: `SHOP_Z0` is the model
-clearance every building on that side already keeps, `SHOP_Z1` is the gap houses 14 and 16
-already keep from each other. This is the same defect as the depot container pitch — a
-number measured once, typed in as a literal, outliving the thing it measured — and the fix
-is the same one: stop typing it.
+Nothing in `gen_town.py` could see it. The road is drawn by `gen_city.py`, into another
+asset, off another file's constants. `check_city` check 7 reads every asset's walls against
+the city's streets and catches it in one line — and it was not run before the commit. Two
+fixes, because the procedural one alone is worthless:
 
-Seventeen studs of frontage is too narrow for a house (the four on this street are 34
-deep) and exactly right for a shop, so the mistake left behind the one footprint the
-street did not have. Built as a **service spine and a customer floor**: the north strip
-runs from the back wall to behind the counter and is the only way to reach either the
-stock at the far end or the till at the front, so working the shop is a lap of the
-building rather than a stand at one spot. Customer aisles hang south of that spine,
-against a glazed flank that looks straight at the player's own front gate.
+- `GATE_Z0/Z1/WALK` and the derived `GATE_CLEAR` moved into `world_plan.py`, which both
+  generators already import. `gen_town.py` now asserts the shop clears it. The exclusion is
+  a fact the file holds rather than one somebody has to remember.
+- The interior was written in world coordinates, so moving the building would have meant
+  retyping every fitting one at a time. It is now written as depths from the shop's own
+  south wall. Verified faithful by regenerating at the old bounds and diffing the
+  `CornerShop` group against the committed file: identical but for float noise.
+
+It now stands on the east frontage opposite the bakery, one street south, in the same
+17.2-stud shape — too narrow for a house (the four on this street are 34 deep) and exactly
+right for a shop. Facing the bakery is a gain rather than a consolation: two shops across a
+road read as a small parade, where one dropped into a gap reads as an intruder. Its north
+edge keeps the row's own spacing from number 20.
+
+Built as a **service spine and a customer floor**: the north strip runs from the back wall
+to behind the counter and is the only way to reach either the stock at the far end or the
+till at the front, so working the shop is a lap of the building rather than a stand at one
+spot. Customer aisles hang south of that spine, against a glazed flank — glazed on that
+side because the customer floor is what is behind it, the north flank backing onto a staff
+corridor and staying solid. The signed fascia wraps west and north, north being the face a
+player walking down from home sees from a hundred studs off.
 
 That plan is an argument, not a decoration — the activity law wants a consumable that
 forces traversal every 40–60s, and putting the crates forty-one studs from the till is
@@ -177,11 +190,22 @@ rules, and tagging is a one-line change the day the verb lands. One place point,
 `corner_shop`, stood in front of the counter where every other "at the counter" point in
 town is stood.
 
-Measured off the generated file: `Town.rbxmx` 687 parts in 17 pieces. Every station inside
-the shop is reachable by a body of half-width 1.40 — the figure `read_house.py` holds
-routes to — and the narrowest point on the whole walkable floor is exactly 1.40. The only
-overlapping colliding parts are wall corners and gondola spines, both of which every
-existing building in the file already does.
+Measured off the generated file: `Town.rbxmx` 687 parts in 17 pieces. Flood-filled from the
+doorway at a body half-width of 1.40 — the figure `read_house.py` holds routes to — 100% of
+the free floor is reachable and every station is on it.
+
+That probe caught one thing the first one missed, because the first one only looked at the
+floor plan. The counter top overhung 0.4 studs on **both** sides, leaving 2.6 studs of
+standing room behind the counter at chest height over a base that is 3.0 clear — under the
+2.8 a walking body needs, and invisible from above. A capsule does not duck. The overhang
+is now on the customer side only, which is where a person leans anyway.
+
+**9. `City.rbxmx` is reproducible again.** Regenerating it twice in a row produced two
+different files. `mall_shop` picked its wall tone with `STORE_WALLS[hash(pid) % 10]`, and
+Python randomises string hashing per process — so the mall's eight shopfronts were
+repainted on every run and the one generated asset in the tree could not be diffed. Now
+`zlib.crc32`. Same class as the stale bounds above: a value that looks derived and is
+actually arbitrary. Verified by three consecutive runs to the same md5.
 
 ## Owed, in the order I would do it
 
@@ -319,22 +343,47 @@ Confirm with an occupancy map before designing anything:
 This is the same tool that found the real void (below) and corrected a wrong assumption
 about where it was. Measure first.
 
-### C. Dead ends, and roads to buildings that have none
+### C. Dead ends, and roads to buildings that have none — *the check is written; it finds nothing*
 
-Owner reports "too many dead ends" and buildings without road access. There is an older
-note about 19 of them. The civic precinct was the worst of them and is fixed (item 5 above),
-but it was found by *reading the map*, not by a check — which is the whole problem.
-`check_city` check 8 only proves the street network is *one connected piece* — it does not
-prove there are no stubs, and it does not check that every building has a road. So:
+**Done: `check_city` check 11, "A road to every door".** For every model in the city that
+contains a place point, the gap to the nearest carriageway. 159 destinations, worst 18.0
+studs, median 8.0, threshold 32. It passes. **There is no building in the city without road
+access**, and the older note about 19 of them is stale — the civic precinct (item 5) was
+the last of them.
 
-1. Write the missing check first, as a new check in `check_city.py`: for every place point
-   with a door, is there a street slab within N studs? Report the offenders. **Do not fix
-   dead ends by eye** — the whole reason the two hardcoded radii survived is that geometry
-   bugs are invisible until something tests for them.
-2. Then fix what it finds, most likely with a perimeter ring road plus spurs.
+Two definitions do the work, and both were arrived at by measuring formulations that
+failed:
 
-Hold any new check to CLAUDE.md's bar: it must catch a defect that has actually shipped,
-and it must not produce false positives.
+- *A destination is a model that contains a place point.* The obvious formulation — every
+  model with walls — reports `Sea0-3`, the scrap piles, the depot stacks, the switchyard
+  and the cooling towers, because a heap of scrap is wall-shaped. Containing a place point
+  is not a guess about what a building is; it is the game saying out loud that it sends
+  players there. `wp_` waypoints are excluded: a waypoint is a step on a route, and routes
+  legitimately cross parks and piers.
+- *Distance is to the carriageway, not to any street slab.* The precinct had pavements. It
+  had no road.
+
+Negative-tested rather than asserted: with `PrecinctAve` and `NorthSvc` deleted from
+`gen_city.py` the check fails and exits non-zero, reporting the eight north-strip shops at
+47 and 88 studs. That is a 29-stud gap between the worst honest case and the smallest real
+defect, which is what makes the threshold a measurement rather than a taste.
+
+**A dead-end check was attempted and abandoned, and the reason is worth keeping.** The
+formulation was: project a probe box past each end of each road slab along its long axis;
+if nothing is there, the road ends in nothing. It reported twelve dead ends around the
+Circle. They were all false. The ring is not a chain of segments laid end to end — it is a
+paved annulus tiled by twenty overlapping *radial* planks, each 34 long by 18.8 wide with
+its long axis pointing outward from the centre. The "ends" of a plank are the inner and
+outer kerbs of the ring, and probing past them is probing off the road on purpose. The
+assumption that a road slab's long axis is the direction of travel is false in the one
+place it matters. **A per-part end probe cannot answer this question**; anything that
+replaces it has to work on the connected road *surface*, the way check 8 does, and ask
+about reachable area rather than about part ends. Until then, check 11 covers the half of
+the complaint that has real defects behind it.
+
+Remaining, if it turns out to matter: `ConnRoad` at (30.5, 60.0) and the three `XW79_*`
+crossing stubs were the only non-Circle candidates the probe found, and none of them
+strands a destination — check 11 passes with all four in place.
 
 ### D. Poor neighbourhoods should have narrower roads
 

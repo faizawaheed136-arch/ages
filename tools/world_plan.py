@@ -107,6 +107,22 @@ ROAD_X0, ROAD_X1 = -87.5, -64.5
 FAR_WALK_X0, FAR_WALK_X1 = -98.0, -87.5
 ROAD_MID = (ROAD_X0 + ROAD_X1) / 2
 
+# The gate road: the one link between the town and the city, leaving the street
+# eastwards through this window in the east frontage. The carriageway is
+# GATE_Z0..GATE_Z1 and its paving reaches GATE_WALK further out on each side.
+#
+# These four numbers live here rather than in gen_city.py, where the road is
+# actually drawn, because they are the only piece of the city that gen_town.py
+# has to obey. The gap in the east frontage between the player's plot and number
+# 14 exists *for this road*. Read as a plain gap it looks like the largest bare
+# frontage on the street, and the corner shop was built into it on exactly that
+# reading -- a 44-stud building standing across the only road out of town, in a
+# different asset from the road, so neither generator could see it. Anything new
+# on the east side has to be checked against GATE_CLEAR.
+GATE_Z0, GATE_Z1 = 64.0, 78.0
+GATE_WALK = 4.0
+GATE_CLEAR = (GATE_Z0 - GATE_WALK, GATE_Z1 + GATE_WALK)
+
 # ---------------------------------------------------------------------------
 # The front garden
 # ---------------------------------------------------------------------------

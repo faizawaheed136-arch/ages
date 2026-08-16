@@ -42,6 +42,7 @@ successor and it must not take a worse deal:
 """
 
 import math
+import zlib
 
 import rbxmx
 from rbxmx import (
@@ -57,6 +58,7 @@ from world_plan import (
     # The town's own street, so the gate road can tee off it by name instead of
     # a copied literal that silently stops matching when the town moves.
     PROPERTY_X, ROAD_X1,
+    GATE_CLEAR, GATE_WALK, GATE_Z0, GATE_Z1,
 )
 
 from house_plan import _ASSETS
@@ -113,12 +115,10 @@ CONN_WALK = 6.0
 CONN_MID = (CONN_X0 + CONN_X1) / 2
 
 # The gate road -- the only link between the town and the city -- and the window
-# it has to thread. See the note at its call site for how the band was measured;
-# the numbers live up here because the connector's own west pavement has to be
-# carved around them, and a road and the hole it needs cannot be two facts.
-GATE_Z0, GATE_Z1 = 64.0, 78.0
-GATE_WALK = 4.0
-GATE_FULL = [(GATE_Z0 - GATE_WALK, GATE_Z1 + GATE_WALK)]
+# it has to thread. See the note at its call site for how the band was measured.
+# GATE_Z0/Z1/WALK come from world_plan because gen_town.py has to keep the east
+# frontage clear of them and cannot import this file to find out where they are.
+GATE_FULL = [GATE_CLEAR]
 
 # Six avenues, north-south, 24 studs wide, sidewalks 6 wide.
 #
@@ -2097,7 +2097,12 @@ def mall_shop(pid, label, x0, x1, z0, z1, front, kind):
     ix0, ix1 = x0 + WALL, x1 - WALL
     iz0, iz1 = z0 + WALL, z1 - WALL
     cx = (x0 + x1) / 2
-    wall_color = STORE_WALLS[hash(pid) % len(STORE_WALLS)]
+    # crc32 rather than hash(): Python randomises string hashing per process, so
+    # `hash(pid)` gave the mall a different set of shopfront colours on every run
+    # and made City.rbxmx the one generated asset that could not be diffed --
+    # regenerate it twice and git reports a change with no change in it. Any
+    # stable scatter would do; crc32 is in the standard library and will not move.
+    wall_color = STORE_WALLS[zlib.crc32(pid.encode()) % len(STORE_WALLS)]
 
     with group(f"MallShop_{pid}"):
         box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)

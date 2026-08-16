@@ -1,5 +1,52 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-16
+
+**The corner shop was built standing in the road, and has been moved.** It went into the
+gap between the player's plot and number 14 on the reading that the gap was the street's
+largest bare frontage. It is not: it is the window the gate road leaves town through, so a
+44-stud building stood across the only link between the town and the city. `check_city`
+check 7 catches this in one line and I did not run it before committing `fda3290`. The
+lesson is not "run the checker" — it is that the exclusion lived in the other generator, so
+`GATE_Z0/Z1/WALK` and a derived `GATE_CLEAR` now live in `world_plan.py`, which both
+generators import, and `gen_town.py` asserts against it. City output verified byte-identical
+across that refactor.
+
+The shop now stands opposite the bakery, same 17.2-stud shape, one street south. Its
+interior was written in world coordinates and is now written as depths from its own south
+wall — verified faithful by regenerating at the old bounds and diffing the group.
+
+**New: `check_city` check 11, "A road to every door."** Task C's missing check. For every
+city model containing a non-`wp_` place point, the gap to the nearest carriageway. 159
+destinations, worst 18.0, median 8.0, threshold 32 — **it passes**, so there is no building
+in the city without road access and the old note about 19 of them is stale. Negative-tested:
+delete `PrecinctAve` and `NorthSvc` from `gen_city.py` and it fails, naming the eight
+north-strip shops at 47 and 88.
+
+Two formulations were measured and rejected before this one, and both rejections are
+written up in `MAP_PLAN.md` section C. So is the **dead-end probe, which was abandoned**:
+the Circle is not a chain of segments but an annulus tiled by twenty overlapping *radial*
+planks, so a road slab's long axis is not the direction of travel and a per-part end probe
+cannot answer the question. Anything replacing it has to work on the connected road surface
+the way check 8 does.
+
+**`City.rbxmx` is reproducible again.** `mall_shop` picked its wall tone with `hash(pid)`,
+which Python randomises per process, so regenerating repainted the mall and the asset could
+not be diffed. Now `zlib.crc32`.
+
+**Also caught by the new walkability probe:** the shop's counter top overhung on both
+sides, leaving 2.6 studs behind the counter at chest height over a base 3.0 clear — under
+the 2.8 a body needs, and invisible from a floor plan. Overhang is now customer-side only.
+
+`check_city` exits 0 on all eleven. `check.py` all clean. Both places build.
+
+**Still not done:** task D (per-avenue road widths, ~22 sites), task B (behind the spawn
+house), map stages 2–4, the job code for the works place points and `north_shop_2/4/6`.
+Task A's *verb* is spec'd in `MAP_PLAN.md` and belongs to B — the shop is a stage with
+nothing tagged in it, and tagging is a one-line change the day the verb lands.
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-14
 
 **Landed.** The financial district steps down instead of falling off a cliff. Two rows
