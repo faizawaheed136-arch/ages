@@ -293,15 +293,36 @@ PLACE_LABEL_ATTRIBUTE = "PlaceLabel"
 # are written for somebody standing in the game wondering where they can go.
 PLACE_POINTS = [
     ("home", 0.0, DOOR_LINE, PATH_TOP, "the front path, outside your own door"),
-    # Also where the world's SpawnLocation stands, at (-49.6, 1.32, -2) in
-    # default.project.json -- PATH_TOP plus the pad's own half-height. It used to
-    # sit at (13, 1.387, -18.6), which is over nothing at all: the front garden
-    # ends at x=3.4 and the city's ground does not begin until x=8, z=60, so a
-    # player who arrived before any service had teleported them landed on the bare
-    # baseplate ten studs below. The gate rather than "home" because a spawn is
-    # where several people can appear at once, and the front path here is six
-    # studs wide where the doorway is two. If this moves, move the pad -- a
-    # .project.json cannot hold a comment, which is why the note is here.
+    # **The world's SpawnLocation is not here.** It stands at (8, 1.14, -21.5) in
+    # default.project.json, which is inside the nursery, and this note used to say
+    # it was at the gate -- the pad was moved twice and the note was not, so it had
+    # become an instruction to undo both moves. It is written out here rather than
+    # left to the project file because a .project.json cannot hold a comment.
+    #
+    # Three positions, each overruling the last, and the reasons are worth keeping
+    # because two of them are not about geometry at all:
+    #
+    #   (13, 1.387, -18.6)  over nothing. The front garden ends at x=3.4 and the
+    #                       city's ground does not start until x=8, z=60, so a
+    #                       player who arrived before a service teleported them
+    #                       fell to the baseplate. This is what check_city's check
+    #                       9 was written for, and check 9 still reads the real
+    #                       value out of the project file every run.
+    #   the front gate      solid, and wrong for the game: a life begins as a
+    #                       crawler and it should begin where the events are, not
+    #                       out on the lawn.
+    #   (8, 1.14, -21.5)    in the nursery, at the *far* side of it. It sat seven
+    #                       studs from the rug against an interact radius of six,
+    #                       so the first event of a life fired after about a
+    #                       quarter second of crawling. Nine studs now -- a little
+    #                       over two seconds at a crawler's speed, on a path that
+    #                       clears the furniture.
+    #
+    # So if the nursery furniture moves, this moves, and the number that matters is
+    # the distance to the rug rather than the coordinate. The pad is also thin and
+    # non-collidable on purpose: a default 12x1x12 collidable slab is a one-stud
+    # lip that an adult steps over without noticing and a crawler at jumpPower 0
+    # cannot climb at all.
     ("gate", PROPERTY_X + 3.0, DOOR_LINE, PATH_TOP, "your front gate, on the street"),
     ("crossing", -58.0, DOOR_LINE, PAVING, "the crossing outside your house"),
     ("school", -105.0, SCHOOL_DOOR, PAVING, "the school forecourt"),
