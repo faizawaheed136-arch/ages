@@ -390,8 +390,8 @@ with group("Fence"):
     fence_run(FENCE_Z0, DOOR_LINE - GATE_HALF, 1)
     fence_run(DOOR_LINE + GATE_HALF, FENCE_Z1, 2)
     # The south boundary, and the return north up to the house's own east wall.
-    # The return is now the plot's frontage onto the Backs, so it takes a gate
-    # in the middle of it -- see BACK_GATE_Z0/Z1 in world_plan. The south
+    # The return is the plot's frontage onto the green, so it takes a gate in
+    # the middle of it -- see BACK_GATE_Z0/Z1 in world_plan. The south
     # boundary keeps none: it faces the gate road's verge, which is grass, and
     # a gate onto grass is a hole with nothing on the other side.
     fence_run(FENCE_X, PLOT_X1 - FENCE_HALF, 3, axis="x", line=FENCE_Z0)

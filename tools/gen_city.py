@@ -59,10 +59,11 @@ from world_plan import (
     # a copied literal that silently stops matching when the town moves.
     PROPERTY_X, ROAD_X0, ROAD_X1,
     GATE_CLEAR, GATE_WALK, GATE_Z0, GATE_Z1,
-    # The second link out of town, and the east edge of the plot the Backs runs
+    # The second link out of town, and the east edge of the plot the Green lies
     # behind. HOUSE_EAST_X is a measurement of House.rbxmx, which this file never
-    # opens -- build_street.py re-measures it every run.
-    BACK_GATE_MID, HOUSE_EAST_X,
+    # opens -- build_street.py re-measures it every run. PATH_HALF is the front
+    # path's width, borrowed so the back one matches it.
+    BACK_GATE_MID, HOUSE_EAST_X, PATH_HALF,
     SOUTHGATE_CLEAR, SOUTHGATE_WALK, SOUTHGATE_Z0, SOUTHGATE_Z1,
 )
 
@@ -80,6 +81,16 @@ KERB_WIDTH = 0.8
 SLAB_SINK = 0.6
 GROUND_BOTTOM = -1.0
 DOOR_HEIGHT = 9.0
+# How far apart to space waypoints along a straight run. PlaceService joins
+# points within 70 studs (check_city's ROUTE_LINK), so this is that less a
+# two-stud margin: the margin is what stops a chain silently breaking when a
+# road's ends get rounded or a run is shortened by a stud at one end.
+#
+# It was a bare 68 in nine separate `range(...)` calls, which is the shape of a
+# number that gets changed in eight places. Safe range 40-68: below 40 the
+# point count grows for no routing benefit, above 68 there is no margin left
+# and the next small edit anywhere breaks a chain nobody is looking at.
+ROUTE_STEP = 68
 # The city's own grass sits two hundredths under the town's ground so that
 # roads laid on top (top GROUND) never share a plane with the grass underneath
 # them and z-fight. The seam where the city meets the town is a hairline.
@@ -471,46 +482,42 @@ assert SOUTHGATE_WALK == CS_WALK, (
     f"link's pavements have to meet W1's at the avenue or there is a step in the "
     f"kerb. Update world_plan.py.")
 
-# The Backs: a north-south street filling the corridor between the player's plot
-# and avenue 1, from the W2 mouth to the W3 mouth. It is the road the complaint
-# about the back of the house was actually about.
+# The Green: the corridor between the player's plot and avenue 1, left as
+# parkland.
 #
-# The corridor is 40.5 studs and every edge of it belongs to something else, so
-# nothing here is chosen:
+# **This was a street, and building it was a mistake.** It was drawn as the
+# Backs -- a full carriageway with two pavements and an elbow onto avenue 1 at
+# each end. It generated clean, it passed all twelve checks, and it was still
+# wrong, because avenue 1 runs the whole height of the map thirty-five studs
+# east of here on the same axis. A second carriageway that close and that
+# parallel is not a route, it is the same route again. Its only distinguishing
+# feature was being nearer the player's fence.
 #
-#   west   HOUSE_EAST_X, the furthest east anything in House.rbxmx reaches.
-#   east   avenue 1's west pavement, AVE[0] - AVE_WALK.
-#   road   the town's own carriageway width, so the street the player walks out
-#          of town on and the street behind their house are the same size.
-#   walks  the east one is the city's standard AVE_WALK; the west one is
-#          whatever is left, and it comes out at 11.5 -- within four tenths of
-#          the town's own near sidewalk. That is the residential side, it faces
-#          a row of garden fences, and it is where the back gate lands.
+# The lesson is narrower than "don't build redundant roads". Every check in
+# check_city measures a road against *itself* -- is it connected, is it carved,
+# does it reach the buildings. Nothing measures a road against the road next to
+# it, and nothing ever will, because "these two are the same street twice" is a
+# judgement about a map and not a property of geometry. The green checks
+# exactly as well as the street did. Passing is not the same as being right.
 #
-# It is deliberately not carried north to the gate road. CAFE ASTER stands at
-# x 44.4..72, z 64..92, square across the only line that would take it, and the
-# cafe was there first.
-BACKS_CORRIDOR_X0 = HOUSE_EAST_X
-BACKS_CORRIDOR_X1 = AVE[0] - AVE_WALK
-BACKS_W = ROAD_X1 - ROAD_X0
-BACKS_WALK_E = AVE_WALK
-BACKS_X1 = BACKS_CORRIDOR_X1 - BACKS_WALK_E
-BACKS_X0 = BACKS_X1 - BACKS_W
-BACKS_WALK_W = BACKS_X0 - BACKS_CORRIDOR_X0
-# Safe range 6-14: under 6 a fence and a lamp column stop both fitting on it,
-# over 14 the corridor cannot also hold the carriageway. It is not a free number
-# -- it is the remainder -- so this asserts rather than clamps.
-assert 6.0 <= BACKS_WALK_W <= 14.0, (
-    f"the corridor between the plot and avenue 1 leaves {BACKS_WALK_W:.2f} studs "
-    f"of west pavement, from {BACKS_CORRIDOR_X1 - BACKS_CORRIDOR_X0:.2f} of "
-    f"corridor less {BACKS_W} of carriageway and {BACKS_WALK_E} of east "
-    f"pavement. Something east of the plot has moved. Narrowing BACKS_W is the "
-    f"only safe direction -- widening it takes the pavement, not the grass.")
-# South end at the W2 mouth, north end at the W3 mouth. The carriageway runs the
-# whole way through both bands, so each end *is* the junction and no separate
-# corner tile is needed.
-BACKS_Z0 = SOUTH_CS[2]
-BACKS_Z1 = SOUTH_CS[3] + WCS_W
+# What the corridor is for is the thing the plot's back fence looks at. So:
+# grass the full 40.5 studs, a tree belt down the avenue side, and one footpath
+# from the back gate straight east to avenue 1's pavement. That path is a
+# *shorter* walk into the city than the street it replaces, because a path can
+# go straight where the road had to bend twice to find a junction.
+GREEN_X0 = HOUSE_EAST_X
+GREEN_X1 = AVE[0] - AVE_WALK
+# The same two ends the street had: the W2 mouth south, the W3 mouth north.
+# Those are gaps cut in avenue 1's west pavement by the south-street plan
+# whether or not anything lands in them -- they opened onto bare grass before
+# the Backs existed and they open onto the green now, which is the first time
+# they have looked deliberate.
+GREEN_Z0 = SOUTH_CS[2]
+GREEN_Z1 = SOUTH_CS[3] + WCS_W
+# The footpath leaves by the back gate, so its line is the gate's line. Same
+# half-width as the front path: one house, two paths, one width.
+GREEN_PATH_Z = BACK_GATE_MID
+GREEN_PATH_HALF = PATH_HALF
 
 # The main street: storefronts on the strip between the connector's east
 # sidewalk and the first avenue's west sidewalk, fronting the connector. Carved
@@ -1534,41 +1541,6 @@ with group("Streets"):
     dashes_ew((SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2, ROAD_X1, AVE[0], [], "Southgate",
               lift=GRASS_LIFT)
 
-    # The Backs, and its two elbows onto avenue 1. Wholly on city ground -- the
-    # corridor starts at HOUSE_EAST_X, which is 24 studs east of the seam -- so
-    # no lift.
-    #
-    # Each end runs the whole way through its south street's band, so the corner
-    # square is part of the carriageway and there is no separate tile. The
-    # elbows start at BACKS_X1 for the same reason the gate road starts at
-    # ROAD_X1: starting them inside the Backs would lay the same tarmac twice.
-    road_ns(BACKS_X0, BACKS_X1, BACKS_Z0, BACKS_Z1, "Backs")
-    for _c in (BACKS_Z0, SOUTH_CS[3]):
-        road_ew(_c, _c + WCS_W, BACKS_X1, AVE[0], f"BacksLink{_c:.0f}")
-    # The west pavement is the long one, it is uncarved because nothing crosses
-    # it, and it runs four studs past each bend so that it -- not the elbow --
-    # owns the outside corner. The east pavement is the inside of both bends and
-    # is carved back to the elbows' full bands, so the elbows own those corners.
-    # This is the same "one and only one box owns every square" rule the avenues
-    # and cross streets already follow, applied to a road that bends.
-    walks_ns(BACKS_X0, BACKS_X1, BACKS_Z0 - CS_WALK, BACKS_Z1 + CS_WALK,
-             BACKS_WALK_W, "Backs", sides="west")
-    walks_ns(BACKS_X0, BACKS_X1, BACKS_Z0 + WCS_W + CS_WALK,
-             SOUTH_CS[3] - CS_WALK, BACKS_WALK_E, "Backs", sides="east")
-    for _c, _outer in ((BACKS_Z0, "south"), (SOUTH_CS[3], "north")):
-        _inner = "north" if _outer == "south" else "south"
-        # Outer: from the Backs' own west kerb, so it carries the corner square
-        # across the full width of the carriageway.
-        walks_ew(_c, _c + WCS_W, BACKS_X0, AVE[0], CS_WALK,
-                 f"BacksLink{_c:.0f}", sides=_outer)
-        walks_ew(_c, _c + WCS_W, BACKS_X1, AVE[0], CS_WALK,
-                 f"BacksLink{_c:.0f}", sides=_inner)
-    # Carved at both elbows: a dash inside a junction is a lane marking through a
-    # place where there are no lanes. The elbows themselves are twelve studs long
-    # and take none -- dashes_ew needs a dash and a gap at each end.
-    dashes_ns((BACKS_X0 + BACKS_X1) / 2, BACKS_Z0, BACKS_Z1,
-              [(BACKS_Z0, BACKS_Z0 + WCS_W), (SOUTH_CS[3], BACKS_Z1)], "Backs")
-
     # Avenues: road carved at cross streets, sidewalks carved at the cross
     # streets' own sidewalks so they yield the corners. Avenue 3 is carved a
     # second time at the Circle, and its road and its pavement stop at different
@@ -1723,6 +1695,70 @@ with group("Streets"):
                  _mz + _tan[1] * _off),
                 (CIRCLE_ROAD_W - 2.0, PAINT_TOP - PAINT_BOTTOM, 2.4),
                 radial_yaw(_phi), ROAD_PAINT, SMOOTH)
+
+
+# ---------------------------------------------------------------------------
+# The Green, behind the player's plot
+# ---------------------------------------------------------------------------
+
+# No grass box. CityGround already lays the whole city in LAWN/GRASS topping at
+# CITY_GRASS_TOP, so pulling the carriageway out *is* the grass -- and laying a
+# second lawn of the same colour and height on top of the first is the coplanar
+# pair the terrace lane already made once and had removed. This is the same
+# note, in the second place that would have made the same mistake.
+with group("BackGreen"):
+    # The spur: the walk from the back gate to avenue 1. It goes straight,
+    # which is more than the street it replaced managed.
+    box("GreenPath", (GREEN_X0, GREEN_X1,
+                      GREEN_PATH_Z - GREEN_PATH_HALF,
+                      GREEN_PATH_Z + GREEN_PATH_HALF,
+                      GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
+
+    # The spine, running the length of the green. This is not decoration and it
+    # is not symmetry: without it the connector at (30,60) -- 85 studs from the
+    # spawn, just past the plot's north fence -- is a 203-stud walk out of the
+    # front gate and round, and check 12 fails at 2.40. The street that used to
+    # be here carried that route and taking it out took the route with it.
+    #
+    # Drawn in two pieces so the spur owns the crossing square. Two path slabs
+    # laid across each other at the same height is the coplanar pair this file
+    # has already been bitten by twice.
+    _spine_x = GREEN_X0 + 12.0
+    box("GreenSpineS", (_spine_x - GREEN_PATH_HALF, _spine_x + GREEN_PATH_HALF,
+                        GREEN_Z0, GREEN_PATH_Z - GREEN_PATH_HALF,
+                        GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
+    box("GreenSpineN", (_spine_x - GREEN_PATH_HALF, _spine_x + GREEN_PATH_HALF,
+                        GREEN_PATH_Z + GREEN_PATH_HALF, GREEN_Z1,
+                        GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
+
+    # Trees down the avenue side rather than scattered. A belt reads as a screen
+    # between a garden and an arterial road, which is what it is for; scattered
+    # trees read as an unmown field. The gap at the path is the point of it --
+    # the player should be able to see the avenue from their own back gate and
+    # know that is where they are walking to.
+    _belt_x = GREEN_X1 - 6.0
+    for _i, _tz in enumerate(range(int(GREEN_Z0) + 10, int(GREEN_Z1) - 8, 16)):
+        if abs(_tz - GREEN_PATH_Z) < 12.0:
+            continue
+        # Alternating the belt in and out by seven studs: a single file of
+        # evenly spaced trunks reads as fenceposts, not as woodland.
+        tree(_belt_x - (0.0 if _i % 2 else 7.0), float(_tz), GROUND,
+             height=14.0, spread=9.0)
+    # A second, looser line against the fence, far enough off it that the rails
+    # stay visible -- a fence you cannot see is a boundary the player does not
+    # know they have.
+    for _tz in range(int(GREEN_Z0) + 22, int(GREEN_Z1) - 8, 34):
+        if abs(_tz - GREEN_PATH_Z) < 14.0:
+            continue
+        tree(GREEN_X0 + 8.0, float(_tz), GROUND, height=12.0, spread=7.5)
+
+    # Facing each other across the path, at the gate end: somewhere to sit that
+    # looks back at your own house is the cheapest way to make a green read as
+    # somewhere rather than as the space between two things.
+    bench(GREEN_X0 + 22.0, GREEN_PATH_Z - GREEN_PATH_HALF - 2.5, 1,
+          label="GreenBenchS")
+    bench(GREEN_X0 + 22.0, GREEN_PATH_Z + GREEN_PATH_HALF + 2.5, -1,
+          label="GreenBenchN")
 
 
 # ---------------------------------------------------------------------------
@@ -5582,7 +5618,7 @@ waypoint("wp_bridge_1", -55.0, _gate_mid, "the gate road, by the town's east edg
 waypoint("wp_bridge_2", 8.0, _gate_mid, "the gate road, at the city's south edge", GROUND)
 
 # The connector, chained every 68 studs.
-for i, z in enumerate(range(60, 1120, 68)):
+for i, z in enumerate(range(60, 1120, ROUTE_STEP)):
     waypoint(f"wp_conn_{i}", CONN_MID, float(z), "the connector road")
 
 # Avenue road centres, one point every 68 studs so a walk up any avenue chains
@@ -5601,14 +5637,14 @@ def in_circle(x, z):
 
 
 for k, a in enumerate(AVE):
-    for i, z in enumerate(range(int(ave_z0(k)), int(AVE_Z1), 68)):
+    for i, z in enumerate(range(int(ave_z0(k)), int(AVE_Z1), ROUTE_STEP)):
         if in_circle(a + AVE_W[k] / 2, float(z)):
             continue
         waypoint(f"wp_ave{k}_{i}", a + AVE_W[k] / 2, float(z), f"avenue {k + 1}")
 
 # Cross street road centres.
 for j, c in enumerate(CS):
-    for i, x in enumerate(range(int(CS_X0), int(CS_X1), 68)):
+    for i, x in enumerate(range(int(CS_X0), int(CS_X1), ROUTE_STEP)):
         if in_circle(float(x), c + CS_W[j] / 2):
             continue
         waypoint(f"wp_cs{j}_{i}", float(x), c + CS_W[j] / 2, f"cross street {j + 1}")
@@ -5618,7 +5654,7 @@ for j, c in enumerate(CS):
 # the city's grid rather than given a plan of its own: the lattice is four lines
 # of code instead of a bespoke chain per yard.
 for j, c in enumerate(SOUTH_CS):
-    for i, x in enumerate(range(int(WORKS_X0), int(WORKS_X1), 68)):
+    for i, x in enumerate(range(int(WORKS_X0), int(WORKS_X1), ROUTE_STEP)):
         waypoint(f"wp_ws{j}_{i}", float(x), c + WCS_W / 2, f"south street {j + 1}")
 
 # The two new links out of town. Without these the roads are geometry nothing
@@ -5633,28 +5669,32 @@ for j, c in enumerate(SOUTH_CS):
 # southernmost road point and its east end 7.5 from wp_ws1_0, so the two networks
 # join at both ends of it.
 _southgate_mid = (SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2
-for _i, _x in enumerate(range(int(ROAD_X1), int(AVE[0]), 68)):
+for _i, _x in enumerate(range(int(ROAD_X1), int(AVE[0]), ROUTE_STEP)):
     waypoint(f"wp_southgate_{_i}", float(_x), _southgate_mid,
              "the southern link, between the town and the works", GROUND)
 
-# The Backs is chained from elbow centre to elbow centre rather than end to end,
-# because the elbows *are* the junctions -- a point in each is what makes the
-# corner routable onto avenue 1, and each sits 23.5 studs from that avenue's own
-# south-street point.
-_backs_mid_x = (BACKS_X0 + BACKS_X1) / 2
-_backs_s = BACKS_Z0 + WCS_W / 2
-_backs_n = SOUTH_CS[3] + WCS_W / 2
-for _i, _z in enumerate(range(int(_backs_s), int(_backs_n), 68)):
-    waypoint(f"wp_backs_{_i}", _backs_mid_x, float(_z), "the Backs")
-waypoint("wp_backs_n", _backs_mid_x, _backs_n, "the Backs, at avenue 1")
+# The green's paths. The spur's east end lands 21 studs from wp_ave0_6 and its
+# west end 33 from the spawn, so the back gate is still the short way into the
+# city -- and it is shorter than it was, because the street this replaced had to
+# bend east twice to find a junction and the path does not.
+waypoint("wp_green_gate", GREEN_X0 + 6.0, GREEN_PATH_Z,
+         "the green, outside your back gate")
+waypoint("wp_green_ave", GREEN_X1 - 2.0, GREEN_PATH_Z,
+         "the green, at avenue 1")
 
-# Outside the back gate, on the Backs' west pavement. This is the point that
-# makes the gate worth cutting: it puts the spawn 34 studs from a chain that
-# runs to avenue 1, instead of routing every journey out of the front door,
-# the length of the town and round the loop. A gate with no point outside it
-# is a hole in a fence that no route uses.
-waypoint("wp_backs_gate", (BACKS_CORRIDOR_X0 + BACKS_X0) / 2, BACK_GATE_MID,
-         "the Backs, outside your back gate")
+# The spine, ending six studs inside each end so both points sit on path rather
+# than on the mouth. The north one is what puts the connector back within reach
+# of the spawn; the south one hands off to the works cross street. Spaced by
+# division rather than by a fixed step so the two ends are always the ends --
+# a fixed step leaves a remainder, and the remainder lands at the north end,
+# which is the one end that has to be close to something.
+_green_spine_x = GREEN_X0 + 12.0
+_green_s, _green_n = GREEN_Z0 + 6.0, GREEN_Z1 - 6.0
+_green_steps = math.ceil((_green_n - _green_s) / ROUTE_STEP)
+for _i in range(_green_steps + 1):
+    waypoint(f"wp_green_{_i}", _green_spine_x,
+             _green_s + (_green_n - _green_s) * _i / _green_steps,
+             "the green")
 
 # The step-down band's mews. Two per column rather than one in the middle: a
 # single point at the centre of a 102-stud band is 72 studs from the avenue
@@ -5719,7 +5759,7 @@ waypoint("wp_cpark_n", 151.0, 792.0, "the park's north edge", GROUND)
 # sidewalk (x = CONN_X1 + CONN_WALK = 48) down to the plaza, so the bank and
 # towers are reachable from the connector without a 125-stud jump.
 _fin_x = CONN_X1 + CONN_WALK + 1.0
-for z in range(60, 200, 68):
+for z in range(60, 200, ROUTE_STEP):
     waypoint(f"wp_fin_{z:.0f}", _fin_x, float(z), "the financial district plaza")
 # On avenue 1's *east* pavement, which is the side the bank fronts. It used to
 # sit at x 100, which was pavement when the avenue was 14 wide and is the middle
@@ -5743,7 +5783,7 @@ waypoint("wp_fin_plaza_n", 300.0, 180.0, "the financial plaza, north", PAVING)
 for z in (234, 470):
     waypoint(f"wp_fade_{z}", 300.0, float(z), "the fade offices, by the entrance")
 _waypoint_fade_x = CONN_X1 + CONN_WALK + 1.0
-for z in range(200, 500, 68):
+for z in range(200, 500, ROUTE_STEP):
     waypoint(f"wp_fade_conn_{z:.0f}", _waypoint_fade_x, float(z), "the fade district, by the road")
 
 # Office plaza waypoints. The three towers are place points and chain to each
@@ -5789,7 +5829,7 @@ for _i, (_z0, _z1, _sx, _edge) in enumerate(SHORE):
     else:
         _wx = _sx - BEACH_W - BAYWALK_W / 2
         _label = "the baywalk"
-    for _z in range(int(_z0) + 34, int(_z1), 68):
+    for _z in range(int(_z0) + 34, int(_z1), ROUTE_STEP):
         waypoint(f"wp_bay{_i}_{_z}", _wx, float(_z), _label, PAVING)
 
 # East end of every cross street: the avenue-6 junction, which the cross-street

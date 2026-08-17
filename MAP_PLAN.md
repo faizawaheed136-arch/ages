@@ -502,14 +502,16 @@ construction.
   the job place points are.
 - **The Backs** — north-south, `x 44..67`, `z -132..56`, filling the corridor behind the
   spawn plot, with an elbow east onto avenue 1 at each end. Its 11.5-stud west pavement
-  fronts the plot's rear fence.
+  fronts the plot's rear fence. **Reverted the same day — see "The Backs was the same
+  street twice" below.**
 
 **The back gate.** `INNER_DOORWAY` wide, not `GATE_HALF`. Written independently it came out
 at 3.1 studs of clear gap — narrower than any interior door in the game, a number that looks
 fine in a plan and plays like a turnstile. `DOORWAY`/`INNER_DOORWAY` moved up
 `world_plan.py` to sit with the gate constants, because every opening a player walks through
-wants to be one of those two numbers. `wp_backs_gate` sits outside it: a gate with no point
-on the far side is a hole in a fence that no route uses.
+wants to be one of those two numbers. A point sits outside it — `wp_backs_gate` then,
+`wp_green_gate` now: a gate with no point on the far side is a hole in a fence that no
+route uses.
 
 **B2, three houses**, numbers 22/24/26, on the east frontage below the corner shop. Not
 four, and not typed: `SOUTH_ROW` reads the depth, pitch and numbering off houses 14/16 and
@@ -524,6 +526,41 @@ The west frontage (`z -280..-204`) is still bare. One house fits at the civic si
 depth and spacing; a second overruns the loop's bottom road by two studs. Left alone
 deliberately — the west side being clinic/bakery/garage is what makes this read as a town
 rather than a subdivision.
+
+#### The Backs was the same street twice, and is now a green
+
+**It generated clean, it passed all twelve checks, and it was wrong.** Avenue 1 runs the
+full height of the map thirty-five studs east of the Backs on the same axis. Two parallel
+carriageways that close are not two routes; they are one route drawn twice, and the only
+thing distinguishing the second one was being nearer the player's fence. The 40.65 studs
+was read as "a slot exactly one street wide", and *fits* was allowed to stand in for
+*belongs*.
+
+The lesson is narrower than "do not build redundant roads", and it is a lesson about the
+checker. **Every check in `check_city` measures a road against itself** — is it connected
+(8), is it carved (10), does it reach the buildings (11), can the spawn get to everything
+(12). Nothing measures a road against the road beside it, and nothing ever will, because
+"these two are the same street twice" is a judgement about a map, not a property of
+geometry. The green passes exactly as well as the street did. **Passing is not being
+right**, and this file should stop treating a green run as the end of the argument.
+
+**What is there now.** The corridor is what the plot's back fence looks at: grass (no new
+slab — `CityGround` already lays lawn there, and a second lawn at the same height and tone
+is the coplanar pair check 10 exists for), a two-line tree belt down the avenue side with a
+deliberate gap on the path's line so the player can see the avenue from their own gate, a
+footpath straight east from the back gate, and two benches facing each other across it.
+
+**The load-bearing find, and it was check 12 that made it.** Taking the street out took a
+*route* with it, which the geometry gave no sign of: the connector's mouth at (30, 60) is
+85 studs from the spawn, and with only the gate spur there it became a 203-stud walk out of
+the front door and around — check 12 at **2.40**, a fail. The fix is a footpath spine down
+the length of the green, and it is not decoration or symmetry; it is the route. With it,
+worst detour **1.51**, all 636 points reachable. A path is a road for this purpose, which
+is the useful thing to know: what the corridor needed was a *way through*, not a
+carriageway, and those are not the same requirement.
+
+`ROUTE_STEP` (68) replaced a bare `68` repeated in nine `range()` calls — the shape of a
+number that gets changed in eight places.
 
 #### The check that was missing
 

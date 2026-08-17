@@ -1,5 +1,54 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-17 (late night)
+
+**I built the Backs, it passed all twelve checks, and it was the wrong thing to build.**
+Avenue 1 runs the full height of the map thirty-five studs east of it on the same axis. A
+second carriageway that close and that parallel is not a route, it is the same route drawn
+twice, and the only thing distinguishing mine was being nearer the player's fence. I had
+measured a 40.65-stud corridor, found it was exactly one street wide, and let *fits* stand
+in for *belongs*. It is now **the Green**.
+
+The lesson is narrower than "no redundant roads", and it is about the checker rather than
+the road. **Every check in `check_city` measures a road against itself** — connected (8),
+carved (10), reaches the buildings (11), reachable from the spawn (12). Nothing measures a
+road against the road beside it, and nothing ever should, because "these two are the same
+street twice" is a judgement about a map and not a property of geometry. The green passes
+exactly as well as the street did. *Passing is not being right.* Four consecutive entries
+in this file end with "all checks green" as though that settled something.
+
+**And taking the street out took a route with it, invisibly.** The connector's mouth at
+(30, 60) is 85 studs from the spawn; with only the gate spur left it became a 203-stud walk
+out of the front door and round — **check 12 at 2.40**, a fail, on a change that was pure
+subtraction. The fix is a footpath spine down the length of the green. It is not decoration
+and it is not symmetry, it is the route, and the general form is worth carrying: **what
+that corridor needed was a way through, not a carriageway**, and those are not the same
+requirement. A path routes as well as a road and costs a strip of stone. Worst detour
+**1.51** with it, 636 points, all reachable.
+
+Written so the spur owns the crossing square and the spine is two boxes, because two path
+slabs laid across each other at one height is the coplanar pair this file has been bitten
+by twice. **No grass box**: `CityGround` already lays lawn there at that tone and height,
+and a second one is the same defect a third time — pulling the carriageway out *is* the
+grass. Trees in a two-line belt down the avenue side with a gap on the path's line, so the
+player can see the avenue from their own back gate and knows where they are walking to.
+
+`ROUTE_STEP` (68) replaced a bare `68` in nine separate `range()` calls — the shape of a
+number that gets changed in eight places. Value unchanged, so `City.rbxmx` is affected only
+by the green.
+
+Negative-tested by emptying the spine loop: 2.40 at `wp_conn_0`, named. `City.rbxmx`
+reproducible to one md5 (11859 parts in 499 pieces) across the restore. `build_street.py`
+comment corrected and `Street.rbxmx` verified byte-identical. `MAP_PLAN.md` B1 says
+"reverted" at the point it claims the Backs was built, rather than being quietly rewritten.
+
+**Unchanged from the entry below**: no `check_town.py`, the town's west frontage
+`z -280..-204` still deliberately bare, B3 deferred. `check.py` still **FAILS**, still
+entirely in Agent B's lane — the same two require cycles plus `recordInteraction` called
+and never defined in `PeopleService.luau:507` and an unused `yearJustEnded` at 2044.
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-17 (night)
 
 **B1 and B2 are built, and the thing they found is worse than the thing they were asked
