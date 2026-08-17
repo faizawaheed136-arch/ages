@@ -668,6 +668,25 @@ generators disagree about where a road lives — `build_street.py` uses a `Road`
 `gen_town.py` puts its four carriageways in `Ground` as `RoadN`/`RoadEast`/`RoadBottom`/
 `RoadReturn` — which check 6 has to special-case and which wants unifying.
 
+**And the hole underneath both checkers, found the next day.** Both of them discover their
+inputs by globbing `assets/*.rbxmx`. `assets/SchoolFurniture.rbxmx` was mounted in *neither*
+project file, so for as long as it has existed both checkers have been reading it, measuring
+it and reporting it green while it shipped into no place at all. It carries the four
+invisible `AgesEvent` anchors for the four school life events, `WorldEventService` finds an
+anchor by tag and by nothing else, and those four events have therefore never been able to
+fire in any build.
+
+`rojo build` could not catch this: it reports on what a project file *does* mention, and
+silence about a file it was never told about is not an error. The general statement is the
+one to keep — **a checker that discovers its own inputs will certify a file that ships
+nowhere**, and the fix belongs upstream of geometry. It is `check.py` check 3, "every asset
+is mounted": glob the assets, recursively collect every `$path` in both project files, fail
+on any asset no `$path` covers (a directory mount counting as covering what is under it, so
+it does not assume assets are mounted one file at a time). Negative-tested in both
+directions, and the fix verified by decoding the built place rather than trusting the build
+— the anchor's `Tags` deserialises to `AgesEvent` and its `AttributesSerialize` to
+`EventId = school_notice_board` inside the built `.rbxlx`.
+
 ### C. Dead ends, and roads to buildings that have none — *the check is written; it finds nothing*
 
 **Done: `check_city` check 11, "A road to every door".** For every model in the city that

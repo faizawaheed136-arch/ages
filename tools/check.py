@@ -21,6 +21,7 @@ every check is built on top of it rather than on a regex.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -190,6 +191,53 @@ def check_builds(files, code):
         )
         if r.returncode != 0:
             print(f"  {project}: {(r.stderr or r.stdout).strip()}")
+            bad += 1
+    return bad
+
+
+def _mounted_paths(project: Path) -> set[Path]:
+    """Every `$path` in a project tree, resolved against the repo root."""
+    found: set[Path] = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "$path" and isinstance(value, str):
+                    found.add((ROOT / value).resolve())
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(json.loads(project.read_text()))
+    return found
+
+
+def check_mounts(files, code):
+    """A generated asset that is in no project file is in no place.
+
+    Both world checkers glob `assets/*.rbxmx`, so an unmounted asset is measured,
+    reported green, and then not shipped -- the checkers are validating geometry
+    that no player can stand in. That is exactly what happened to
+    `SchoolFurniture.rbxmx`: it holds the four `AgesEvent` anchors for the four
+    school life events, WorldEventService resolves anchors by tag and by nothing
+    else, and the file was mounted in neither place. The four events existed in
+    content, passed every check in this tree, and could never fire. Nothing else
+    could see it -- `rojo build` only reports what a project *does* mention, and
+    silence about a file it was never told about is not an error.
+    """
+    mounted: set[Path] = set()
+    for project in ("default.project.json", "lobby.project.json"):
+        if (ROOT / project).exists():
+            mounted |= _mounted_paths(ROOT / project)
+    bad = 0
+    for asset in sorted((ROOT / "assets").glob("*.rbxmx")):
+        # A directory mount covers everything under it, so ask about ancestors
+        # too rather than only the file itself.
+        if not any(p == asset or p in asset.parents for p in mounted):
+            print(f"  assets/{asset.name} is mounted in no project file, "
+                  f"so it is in neither built place")
             bad += 1
     return bad
 
@@ -488,6 +536,7 @@ def check_undefined_calls(files, code):
 CHECKS = [
     ("syntax (luau-compile)", check_compile),
     ("both places build (rojo)", check_builds),
+    ("every asset is mounted", check_mounts),
     ("dangling Config refs", check_config),
     ("require cycles", check_cycles),
     ("remote name consistency", check_remotes),

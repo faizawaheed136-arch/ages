@@ -70,12 +70,12 @@ reported as "builds clean" has not been type-checked.
 ## Verifying a change without Studio
 
 **Run `python3 tools/check.py` from the repo root.** It does everything in this section
-in one pass — syntax, both builds, dangling Config refs, require cycles, remote-name
-consistency, unused locals, declaration order, calls to undefined names — and exits
-non-zero if anything is wrong. Run it before you hand any change over. The rest of this
+in one pass — syntax, both builds, every asset mounted, dangling Config refs, require
+cycles, remote-name consistency, unused locals, declaration order, calls to undefined
+names — and exits non-zero if anything is wrong. Run it before you hand any change over. The rest of this
 section is what it does and why, which matters when it reports something.
 
-Three things it has already caught that nothing else could:
+Four things it has already caught that nothing else could:
 
 - `schoolFolder()` called forty lines above its `local function`, which is a *global* read
   in Lua and therefore nil. Legal Luau, so the syntax check passed; `rojo build` never
@@ -87,6 +87,12 @@ Three things it has already caught that nothing else could:
   renamed to `beginLesson`. Same nil-call class as the first, but the name is nowhere in
   the file at all, so the declaration-order check could never see it. It shipped, and
   `/school start` would have died the first time it ran.
+- `assets/SchoolFurniture.rbxmx` mounted in neither project file, so the four `AgesEvent`
+  anchors for the four school life events were in no built place and those events could
+  never fire. `rojo build` reports on what a project *does* mention; silence about a file
+  it was never told about is not an error. Worse, both world checkers glob `assets/*.rbxmx`
+  and had been reading it, measuring it and calling it green the whole time — a checker
+  that discovers its own inputs will certify a file that ships nowhere.
 
 It is deliberately not a linter. Every check in it is there because that exact defect
 already shipped into this tree at least once, and anything that produced false positives

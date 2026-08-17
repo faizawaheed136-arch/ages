@@ -80,6 +80,9 @@
       "Street": {
         "$path": "assets/Street.rbxmx"
       },
+      "SchoolFurniture": {
+        "$path": "assets/SchoolFurniture.rbxmx"
+      },
       "Town": {
         "$path": "assets/Town.rbxmx"
       },
