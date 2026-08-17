@@ -325,7 +325,7 @@ must not be built here. Fetch-and-bag is a job: it lands in `WorkService`,
 This section is the hand-over, not the start of one. Agent A's remaining obligations to it
 are geometry and tags, both of which are one-line changes on request.
 
-### B. Behind the spawn house feels empty
+### B. The spawn house is alone at the edge of the world — *spec below, awaiting a go*
 
 The spawn is at `(8.0, 1.14, -21.5)`, standing on `House.rbxmx` — so this is the *town*,
 not the city, and it is `tools/gen_town.py` / `world_plan.py`, not `gen_city.py`.
@@ -377,16 +377,102 @@ carrying a comment that points at the other. They agree today. Nothing makes the
 and this is the shape of defect this tree keeps being repaired for — so whatever lands here
 should put that seam in `world_plan.py` once, where both generators already import from.
 
-**What the measurement says the design question actually is.** Not "what do we put in the
-gap" but "where does the plot end". The front of the plot has a property line, a fence over
-`FENCE_Z0..Z1 = -44..22`, and a gate in it. The other three sides have nothing — the fence
-is a single line on the street side only, so the player walks out of the front door, around
-either end of it, and is on city ground without ever crossing anything. Give the plot a
-rear boundary and the 75 studs stop being one undifferentiated void and become two things
-with an edge between them: a back garden that is yours, and the financial district's western
-approach, which is the city's problem and belongs in stage 4.
+**Correction, 2026-08-17 (evening): the strip is 40 studs, not 75, and Avenue 0 is in it.**
 
-Per the standing rule, that is a spec to agree before it is built, not a thing to build.
+The 74.5-stud figure above is the distance to the first thing that stands *above* y 3. A
+road does not. `Ave0Road` is a 24-stud arterial at **x 79..103**, and it runs the full
+height of the map, `z -434..200`, forty studs from the player's back fence. With its
+pavements (`Ave0PavW` x 73..78.2, `Ave0PavE` x 103.8..109) it occupies half of what this
+entry called a void. The actual bare ground behind the house is **x 32.35..73 — 40.65
+studs**, which is one street wide and not one stud more.
+
+Same defect as the retraction below, one layer down: a probe that filters for obstructions
+cannot see a road, and I read "nothing is in the way" as "nothing is there".
+
+**What is actually wrong back there is not emptiness. It is that the town has no way onto
+that road.** The gate road (`z 64..78`) runs east from the town's main road and stops at
+`CONN_X0 = 19`; the connector runs *north* from `CITY_Z0 = 60`. Avenue 0's west pavement is
+continuous from z -430 to z 196 except at its own cross-street junctions, and nothing joins
+it from the west below z 200. So the walk from the spawn house's back garden to the road
+forty studs behind it is: out the front gate, north up the main road, east along the gate
+road, **140 studs north up the connector to cross street 1 at z 200**, east to Avenue 0,
+then two hundred studs back south to stand level with where you started. Call it six hundred
+studs to cross forty.
+
+`check_city` does not catch this and is not wrong not to. Check 8 measures the connected
+road surface *inside* the city; check 11 measures every city model's distance to a
+carriageway. Both pass. Neither of them asks how many ways there are from the town into
+the city, and the answer is one.
+
+#### The spec — "populate around the spawn house"
+
+Asked for: a theme park (good, farther away, **explicitly deferred**), a few more
+medium houses, roads back into the main city, generally more populated. Three parts, in
+the order the measurements say they should be done.
+
+**B1. The Backs — a street down the town's east edge.** Fills the whole 40.65-stud
+corridor, because that is exactly what fits in it.
+
+    west pavement   x 32.35 .. 38.1     against the plot's rear fence
+    carriageway     x 38.1  .. 61.1     23 wide == ROAD_DEPTH, the town's own road width
+    east pavement   x 61.1  .. 73.0     11.9 wide == NEAR_WALK_X1 - NEAR_WALK_X0,
+                                        meeting Ave0PavW's west face at 73.0
+
+Every one of those is derived: the west edge is `PLOT_X1`, the east edge is Avenue 0's
+pavement, the carriageway is the town's road width, and the two pavements are what is left.
+`73.0` is a `gen_city.py` number that `gen_town.py` would need, so it goes in `world_plan.py`
+with `CITY_X0` — which is the same duplicate-literal problem this section already flags.
+
+- **North end**: into the gate road / connector junction at `z 60..78`. The Backs'
+  carriageway (38.1..61.1) and the connector's (19..42) overlap by 3.9 studs, which is a
+  bad junction, so the junction is paved as one square, `x 19..61.1, z 60..78`. Gate road in
+  from the west, connector north into the city, Backs south along the town's edge. Cafe
+  Aster's west wall is at x 44.4 from z 64 — it currently fronts a pavement shared with the
+  connector and would front this junction instead, which is better, but **it does mean the
+  Backs cannot simply run north past it**; z 60 is the hard north end.
+- **South end**: turns east at `z -136..-106` and joins Avenue 0. That is not a chosen
+  number — it is the existing gap in `Ave0PavW` where cross street W2 already crosses, so
+  the Backs lands on a junction that is built rather than making a new one. No dead end,
+  and check 11 stays green by construction.
+- **What it buys**: the six-hundred-stud detour becomes forty studs, and the town gets a
+  *second* road into the city. Today it has one, and that one is a 14-stud lane.
+
+**B2. Houses — and they cannot go behind the house.** 40.65 studs holds a street and
+nothing else, and the block between the Backs and Avenue 0 is 11.9 studs of pavement. So
+"a few more medium houses" is not a thing that can be built where the complaint points.
+Where it *can* be built is the town's own street, which is where the player actually walks:
+
+- **East frontage, `z -328..-153.2`** — 174.8 studs of bare grass south of the corner shop,
+  on the same `HOUSE_X0..X1 = -42..2` line as houses 14/16/18/20. At the row's existing
+  pitch (34 frontage + `NEIGHBOUR_GAP` 6) that is **four houses**, numbers 22–28.
+- **West frontage, `z -280..-204`** — 76 studs south of the garage, above where the far
+  sidewalk hands the kerb back at `FAR_END_Z`. One or two buildings on the `FRONT_X` line.
+  Better used for something that is not a house; see B3's front door.
+
+Four to six new buildings on the street the player walks down every day will read as
+"more populated". Four houses in a field behind a fence will not.
+
+**B3. The theme park — deferred, and here is what "functioning" has to mean.** Site: south,
+past the road loop. The main road's east leg already runs down to `CURL_Z = -290` and the
+loop bottom sits at `z -313..-290`, so the park's front door is an extension of a road that
+already points at it, on new ground below `z -328`. Far enough to be a trip, walkable, and
+it does not collide with stage 2 (west, `x -1024..-280`) or the works district (east of
+`x 119`, `z -426..-142`).
+
+Before any of it is built: **a ride the player watches is a prop, and a ride that pays out
+for standing on it is the idle-payout pad the activity design law exists to forbid.** Each
+ride needs the same shape as any other activity — a queue you join, a boarding verb, an
+input while it runs, and an outcome that could have gone the other way. A park with four
+rides and one verb between them is worse than a park with one ride that is actually a game.
+That is the spec to write before the geometry, and it is why this is "save it for later"
+rather than "build it last".
+
+**Open, and needs an answer before B1 is built:** the rear fence built for option A seals
+the plot so the front gate is the only way off it. With the Backs behind it the fence is
+right — it becomes a garden fence onto a street instead of a wall against a field — but the
+"front gate is the only link" reasoning that justified it is now overruled, and the plot
+wants a **back gate** onto the Backs' west pavement. Otherwise the player walks the length
+of their own garden to reach a road six studs from their back door.
 
 **Retraction, and what caused it.** The first pass of this measurement loaded `Town`,
 `House`, `Street` and `Furniture` and concluded there was no ground east of x 8 — that the
