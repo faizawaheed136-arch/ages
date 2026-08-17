@@ -94,8 +94,11 @@ was removed rather than tuned — see the comment on `check_decl_order` for one 
 tried, measured and dropped. If you add a check, hold it to the same bar: a scanner nobody
 trusts is a scanner nobody runs.
 
-`tools/check_city.py` is a separate thing — it validates the generated `City.rbxmx`
-geometry, not the Luau. Both are worth running when the world changes.
+`tools/check_city.py` and `tools/check_town.py` are a separate thing — they validate the
+generated world geometry, not the Luau. Run both when the world changes; they cover
+different halves of it and almost nothing in one is asking about the other's. Most of
+`check_city`'s checks are scoped to the city by construction and their names do not say
+so, which is why the town needed its own gate rather than more entries in that file.
 
 **Syntax-check every file first. This is the only check that catches a fatal error.**
 `luau-compile` lives at `~/.aftman/tool-storage/luau/luau-compile` (from the official

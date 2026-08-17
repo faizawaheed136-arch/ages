@@ -4550,8 +4550,8 @@
 <Item class="Part" referent="RBXTOWN0332">
 <Properties>
 <string name="Name">Counter</string>
-<CoordinateFrame name="CFrame"><X>-121.0</X><Y>3.12</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>10.0</X><Y>3.2000000000000006</Y><Z>10.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>-124.5</X><Y>3.12</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>3.2000000000000006</Y><Z>10.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">512</token>
@@ -12545,7 +12545,7 @@
 </Item><Item class="Part" referent="RBXTOWN0949">
 <Properties>
 <string name="Name">Place_wp_loop_n</string>
-<CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-213.5</X><Y>1.52</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -12575,7 +12575,7 @@
 </Item><Item class="Part" referent="RBXTOWN0951">
 <Properties>
 <string name="Name">Place_wp_loop_m</string>
-<CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-213.5</X><Y>1.52</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -12590,7 +12590,7 @@
 </Item><Item class="Part" referent="RBXTOWN0952">
 <Properties>
 <string name="Name">Place_wp_loop_m2</string>
-<CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-255.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-213.5</X><Y>1.52</Y><Z>-255.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -12635,7 +12635,7 @@
 </Item><Item class="Part" referent="RBXTOWN0955">
 <Properties>
 <string name="Name">Place_wp_loop_s</string>
-<CoordinateFrame name="CFrame"><X>-207.0</X><Y>1.52</Y><Z>-300.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-213.5</X><Y>1.52</Y><Z>-300.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>

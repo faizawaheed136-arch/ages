@@ -133,6 +133,40 @@ GARAGE_X0, GARAGE_X1 = -152.0, FRONT_X
 GARAGE_Z0, GARAGE_Z1 = -204.0, -168.0
 GARAGE_DOOR = -186.0
 
+# Where the game stands a player inside any of the five buildings above: eight
+# studs in from the front wall, on the door's own line.
+#
+# It was the literal -120.0, written five times in PLACE_POINTS, and that is how
+# the bakery came to have a counter built on top of it. A coordinate typed in
+# one table and a solid typed in another, four hundred lines apart, with nothing
+# in the tree comparing them -- see check_town.py check 3, which is what finally
+# did. Named here so the assertion below has something to assert about.
+WEST_SPOT_X = FRONT_X - 8.0
+# How deep a counter is. One number because a counter is one thing: the corner
+# shop's was arrived at by measuring what a customer needs on their side of it,
+# and there is no reason the bakery's should be different.
+#
+# Safe range 2.5-6.0. Under 2.5 it stops reading as a counter and becomes a
+# rail; over 6 the customer side of the bakery starts eating the aisle to the
+# display shelf. It is a shape, not a fit -- the assertions are what check that
+# it fits.
+COUNTER_DEPTH = 3.0
+# The bakery's counter, against the door end of the room. Its back stays where
+# it was; only its front moves, from ten studs deep to three.
+BAKERY_COUNTER_X0 = BAKERY_X1 - 14.0
+BAKERY_COUNTER_X1 = BAKERY_COUNTER_X0 + COUNTER_DEPTH
+# The width a body needs, which is the number the corner shop's counter was
+# rebuilt around when its top was found overhanging into the only standing room
+# behind it. A place point closer than this to a solid is a spot the game sends
+# a player to and cannot put them in.
+BODY_WIDTH = 2.8
+assert WEST_SPOT_X - BAKERY_COUNTER_X1 >= BODY_WIDTH, (
+    f"the bakery's place point stands {WEST_SPOT_X - BAKERY_COUNTER_X1:.2f} "
+    f"studs in front of its counter, and a body needs {BODY_WIDTH}. The point "
+    f"is WEST_SPOT_X, shared with four other buildings, so move the counter "
+    f"rather than the point: lower COUNTER_DEPTH or take BAKERY_COUNTER_X0 "
+    f"further west.")
+
 # Four houses on the east side: two north of the player's yard and two south.
 #
 # The imported house model is much bigger than its rooms. The rooms this town
@@ -270,11 +304,11 @@ GYM_KIND_ATTR = "GymKind"
 # waypoint within that of the next, all the way from the bottom of the street to
 # the top.
 PLACE_POINTS = [
-    ("gym", -120.0, GYM_DOOR, FLOOR_1, "the gym, past the treadmills"),
-    ("library", -120.0, LIB_DOOR, FLOOR_1, "the library, by the desk"),
-    ("clinic", -120.0, CLINIC_DOOR, FLOOR_1, "the clinic reception"),
-    ("bakery", -120.0, BAKERY_DOOR, FLOOR_1, "the bakery, at the counter"),
-    ("garage", -120.0, GARAGE_DOOR, FLOOR_1, "the garage workshop"),
+    ("gym", WEST_SPOT_X, GYM_DOOR, FLOOR_1, "the gym, past the treadmills"),
+    ("library", WEST_SPOT_X, LIB_DOOR, FLOOR_1, "the library, by the desk"),
+    ("clinic", WEST_SPOT_X, CLINIC_DOOR, FLOOR_1, "the clinic reception"),
+    ("bakery", WEST_SPOT_X, BAKERY_DOOR, FLOOR_1, "the bakery, at the counter"),
+    ("garage", WEST_SPOT_X, GARAGE_DOOR, FLOOR_1, "the garage workshop"),
     ("park", PARK_SPOT[0], PARK_SPOT[1], GROUND, "the park, by the pond"),
     # Stood in front of the counter rather than behind it: this is where the
     # player is told to be, and the same spot a customer walks to, which is what
@@ -298,13 +332,22 @@ PLACE_POINTS = [
     # link radius, down the long return road and back.
     ("wp_inner", -155.0, -160.0, GROUND, "the grass by the return road"),
     ("wp_inner_n", -170.0, -145.0, GROUND, "the grass between the stores and the return road"),
-    ("wp_loop_n", -207.0, -145.0, PAVING, "the return road, north end"),
+    # All four of these stand at RETURN_MID, in the middle of the return road's
+    # carriageway, which tops at GROUND. Three of them said PAVING, half a stud
+    # up, and floated -- and wp_loop_s said GROUND and was right, which is what
+    # one line getting fixed and its three neighbours not looks like. Half a
+    # stud is nothing to look at; the reason it is a defect is that the height a
+    # point declares is a claim about which surface it is standing on, and these
+    # three claimed a pavement fifteen studs east of them. Found by check_town
+    # check 2, the town's half of a question check_city had only ever asked of
+    # the city.
+    ("wp_loop_n", RETURN_MID, -145.0, GROUND, "the return road, north end"),
     ("wp_loop_m_grass", -187.0, -195.0, GROUND, "the grass behind the garage"),
-    ("wp_loop_m", -207.0, -195.0, PAVING, "the return road, by the garage"),
-    ("wp_loop_m2", -207.0, -255.0, PAVING, "the return road, mid-town"),
+    ("wp_loop_m", RETURN_MID, -195.0, GROUND, "the return road, by the garage"),
+    ("wp_loop_m2", RETURN_MID, -255.0, GROUND, "the return road, mid-town"),
     ("wp_inner_m", -172.0, -250.0, GROUND, "the grass between the roads, south"),
     ("wp_inner_s", -150.0, -262.0, GROUND, "the grass between the roads"),
-    ("wp_loop_s", -207.0, -300.0, GROUND, "the south turn of the road"),
+    ("wp_loop_s", RETURN_MID, -300.0, GROUND, "the south turn of the road"),
     # East sidewalk: the new houses and the park, off the crossing.
     ("wp_east_n1", -58.0, 40.0, PAVING, "outside number 14"),
     ("wp_east_n2", -58.0, 88.0, PAVING, "outside number 16"),
@@ -878,7 +921,8 @@ with group("Bakery"):
     with group("BakeryFittings"):
         # A counter along the east wall by the door, the oven bank against the
         # west wall, and a display shelf of stock between them.
-        box("Counter", (BAKERY_X1 - 14.0, BAKERY_X1 - 4.0, BAKERY_DOOR - 8.0, BAKERY_DOOR + 2.0,
+        box("Counter", (BAKERY_COUNTER_X0, BAKERY_COUNTER_X1,
+                        BAKERY_DOOR - 8.0, BAKERY_DOOR + 2.0,
                         FLOOR_1, FLOOR_1 + 3.2), DESK_TOP, WOOD)
         box("Ovens", (BAKERY_X0, BAKERY_X0 + 3.0, BAKERY_Z0 + 3.0, BAKERY_Z1 - 3.0,
                       FLOOR_1, FLOOR_1 + 6.5), STEEL, METAL)
@@ -1011,7 +1055,8 @@ _SD0, _SD1 = SHOP_DOOR - DOORWAY / 2, SHOP_DOOR + DOORWAY / 2
 # to be retyped one at a time -- which is the way a shelf ends up standing in a
 # wall. Depths move with the shop; world coordinates do not.
 SHOP_SPINE_Z0 = SHOP_Z0 + 11.6  # north of this is the service strip, kept clear
-SHOP_COUNTER_X0, SHOP_COUNTER_X1 = -30.0, -27.0
+SHOP_COUNTER_X0 = -30.0
+SHOP_COUNTER_X1 = SHOP_COUNTER_X0 + COUNTER_DEPTH
 SHOP_CLERK_X1 = -24.0           # the standing room behind the counter
 SHOP_BAY_X = -8.0               # the stock bay's rail, east of the aisles
 

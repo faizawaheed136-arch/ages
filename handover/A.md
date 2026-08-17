@@ -1,5 +1,71 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18
+
+**`check_town.py` exists, and the town was not clean.** Four entries in this file say the
+town has no geometry gate and that I would write the checker first. It found two defects on
+its first run, and the more interesting one is that **the bakery's place point was standing
+inside the bakery counter** — a 10x10 solid, the point four studs in. The game's own
+instruction for that building is "the bakery, at the counter", and the spot it named was in
+the furniture. Two lines above it in the same table, the corner shop's point carries a
+comment claiming it is stood in front of its counter "which is what every other 'at the
+counter' point in town already means". It did not. A comment that documents a rule the file
+breaks two lines earlier is worth more attention than a comment that is merely stale.
+
+Nothing could see it, and the reason is worth stating exactly: **the fittings are laid out
+by a generator that never reads the place point table, and the place point table is a list
+of coordinates that never reads the fittings.** Ground-under-the-point passes — there is a
+floor, the counter is standing on it. Building-overlap compares buildings with buildings and
+a place point is neither. The two were never compared anywhere until now.
+
+**The second: three of the four return-road waypoints floated half a stud**, written at
+`PAVING` while standing on a carriageway that tops at `GROUND`. The fourth said `GROUND` and
+was right — one line getting fixed and its three neighbours not. Half a stud is nothing to
+look at. It is a failure because the height a point declares is a *claim about which surface
+it is on*, and three of them claimed a pavement fifteen studs east.
+
+**Why a second file rather than more checks in `check_city.py`, which is the thing I
+expected to conclude the opposite.** Almost every check over there is scoped to the city by
+construction and **the scoping is invisible in the check's own name** — "ground under place
+points" walks `city_points`, "building overlap" walks `city_models`. The one exception is
+check 7, widened to all assets after the gate road was found running through a town house,
+and widening it is what showed the rest had the same hole. The town has been carrying twelve
+green checks that were never asking about the town. Readers and geometry are *imported* from
+`check_city`, not copied — a second rotation-aware rbxmx reader is two copies of one
+measurement, which is this tree's most-repaired defect.
+
+**The one genuinely new check is 3, "room to stand".** A place point is not a label on a
+map, it is where the game leaves a player standing, and nothing here had asked whether a
+body fits. Two things make it report signal: the band starts at `STAND_STEP` 2.0 rather than
+at the floor, because a humanoid walks over anything below its hip and a band starting at
+the floor reports every rug, kerb and book in the game; and `STAND_CLEAR` 1.0 is *derived* —
+`HumanoidRootPart` is two studs wide — with the measurement confirming the margin rather
+than setting it (worst honest 1.51, next 2.00, defect *inside*).
+
+**What it deliberately does not check, which took as long to decide as the checks did.**
+"Is the road network one piece" **does not transfer from the city.** In the city a road is a
+slab on top of the ground; in the town it is a tile *of* the ground, so unioning the jigsaw
+returns "one piece" for a town with no roads in it. I wrote it, measured it, saw it answer a
+different question, and removed it. That reading also turned up that the two generators
+disagree about where a road lives — `build_street.py` uses a `Road` group, `gen_town.py`
+puts its four carriageways in `Ground` — which check 6 special-cases and which wants
+unifying. **Left open on purpose.**
+
+Fixes: `COUNTER_DEPTH` is one constant shared by the bakery's counter and the corner shop's,
+with an assertion in the generator that fails on its own line and names the fix; the five
+west-side literals `-120.0` are `WEST_SPOT_X = FRONT_X - 8.0`; all four loop waypoints derive
+x from `RETURN_MID`. All six checks negative-tested by making the change each forbids, plus
+2 and 3 against `git show HEAD:assets/Town.rbxmx`. The assertion negative-tested too.
+`Town.rbxmx` reproducible to one md5, `City.rbxmx` and `Street.rbxmx` untouched, all twelve
+city checks still green.
+
+**Still open in my lane**: the town's west frontage `z -280..-204`, B3 (deferred), map
+stages 2–4, the road-group naming split above. `check.py` still FAILS, still entirely Agent
+B's — two require cycles, `recordInteraction` undefined at `PeopleService.luau:507`, unused
+`yearJustEnded` at 2044.
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-17 (late night)
 
 **I built the Backs, it passed all twelve checks, and it was the wrong thing to build.**

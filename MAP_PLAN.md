@@ -598,10 +598,75 @@ mounts five assets into one place and the world is only the union of them — so
 that answers "what is at this coordinate" has to load all five or it is answering a
 different question. The occupancy script printed at the top of this section loads four.
 
-**This is also the argument for `check_town.py`, which still does not exist.** Not because
-it would have caught a hole — there is no hole — but because the checker is where a probe
-like this gets written down once, with the right asset list, instead of being rebuilt from
-memory by whoever next wonders what is behind the house.
+**This is also the argument for `check_town.py`, which now exists.** Not because it would
+have caught a hole — there is no hole — but because the checker is where a probe like this
+gets written down once, with the right asset list, instead of being rebuilt from memory by
+whoever next wonders what is behind the house.
+
+#### `check_town.py` — six checks, and two defects that were already in the town
+
+**Why a second file and not more checks in `check_city.py`.** Almost every check over
+there is scoped to the city by construction, and *the scoping is invisible in the check's
+own name*. "Ground under place points" walks `city_points`. "Building overlap" walks
+`city_models`. The one exception is check 7, which was widened to test the city's roads
+against every asset's walls after the gate road was found running through a town house —
+and widening it is what showed the others had the same shape of hole. The town had been
+carrying twelve green checks that were never asking about the town at all.
+
+The readers and the geometry are imported from `check_city` rather than copied. A second
+rotation-aware rbxmx reader is two copies of one measurement, which is the defect this
+tree has been repaired for more often than any other.
+
+**Two defects were in the town when it was first run, and nothing else could see either.**
+
+- **The bakery's place point stood inside the bakery counter.** The counter was
+  `BAKERY_X1 - 14 .. BAKERY_X1 - 4` — ten studs deep, a round number that made a neat
+  rectangle — and the point is at `BAKERY_X1 - 8`, four studs inside it. The game's own
+  instruction for that building is *"the bakery, at the counter"*, and the spot it names is
+  in the furniture. Two lines above it in the same table, the corner shop's point carries a
+  comment saying it is stood in front of its counter "which is what every other 'at the
+  counter' point in town already means". It did not.
+  Fixed by making the counter a counter: `COUNTER_DEPTH = 3.0`, one constant now shared
+  with the corner shop's, whose depth was arrived at by measuring what a customer needs on
+  their side of it. The point did not move — `WEST_SPOT_X` is shared with four other
+  buildings, so the counter was the thing that was wrong.
+- **Three of the four return-road waypoints floated half a stud**, declared at `PAVING`
+  height while standing on a carriageway that tops at `GROUND`. The fourth said `GROUND`
+  and was right, which is what one line getting fixed and its three neighbours not looks
+  like. Half a stud is nothing to look at; it is a failure because *the height a point
+  declares is a claim about which surface it is standing on*, and these three claimed a
+  pavement fifteen studs east of them. All four now derive their x from `RETURN_MID`.
+
+**The new check is 3, "room to stand".** A place point is not a label on a map — it is the
+coordinate the game walks a player to and leaves them standing on, and nothing in this repo
+had ever asked whether a body fits there. The fittings are laid out by a generator that
+never reads the place point table, and the place point table is a list of coordinates that
+never reads the fittings; the two are only ever compared here.
+
+Two decisions make it report something worth reading rather than noise:
+
+- **The band starts at `STAND_STEP` (2.0), not at the floor.** A Roblox humanoid walks over
+  what is below its hip without noticing, so a band starting at the floor reports every rug,
+  doorstep, kerb and book in the game and the real find drowns in them. Two studs is the
+  default `HipHeight` — below it, it is not an obstruction.
+- **`STAND_CLEAR` (1.0) is derived, not chosen.** `HumanoidRootPart` is two studs wide, so
+  half of it is one. The measurement confirms the margin rather than setting it: across the
+  50 town place points the worst honest clearance is 1.51 and the next is 2.00, while the
+  defect measures as *inside*.
+
+Checks 1, 4, 5 and 6 are the town's half of questions the city already asks: unique ids, a
+place point in every building (which `gen_town.py`'s own comment says nothing checks), no
+two buildings in each other, no road through a building. All six negative-tested by making
+the change each forbids; checks 2 and 3 additionally against `git show HEAD:assets/Town.rbxmx`.
+
+**What it deliberately does not check.** *Is the road network one connected piece* — check
+8's town analogue — **does not transfer and is not faked.** In the city a road is a slab
+laid on top of the ground; in the town it is a tile *of* the ground, so unioning the ground
+jigsaw would return "one piece" for a town with no roads in it at all. That check needs a
+real formulation before it needs a threshold. The same reading turned up that the two
+generators disagree about where a road lives — `build_street.py` uses a `Road` group,
+`gen_town.py` puts its four carriageways in `Ground` as `RoadN`/`RoadEast`/`RoadBottom`/
+`RoadReturn` — which check 6 has to special-case and which wants unifying.
 
 ### C. Dead ends, and roads to buildings that have none — *the check is written; it finds nothing*
 
