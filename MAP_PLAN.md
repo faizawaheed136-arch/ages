@@ -348,6 +348,66 @@ Confirm with an occupancy map before designing anything:
 This is the same tool that found the real void (below) and corrected a wrong assumption
 about where it was. Measure first.
 
+**Measured 2026-08-17. There is 74.5 studs of bare grass back there, and then a
+134-stud office tower.**
+
+Read the retraction below before the finding: the first version of this entry said there
+was no ground behind the house at all, and it was wrong.
+
+The strip. The house's back wall is at **x 32.5** — rotation-aware `max(x1)` over every
+part in `House.rbxmx`. The nearest built thing east of it is at **x 107**: the portico of a
+financial-district tower whose parapet tops out at **y 134.5**, with a second one of 86.5
+behind it at z -105..-51. Between the two there is nothing at all, over roughly
+`x 32.5..107, z -112..56` — about 75 studs deep and 170 long, all of it flat grass.
+
+So the complaint is right and the phrase is exact: it is empty. What the measurement adds
+is *what it is empty between*. A player who walks around their own house is looking at the
+back of downtown across three-quarters of a block of mown nothing, with no fence, no
+change of surface and no boundary of any kind to say where their garden stops being theirs.
+
+**And the plan above had the file wrong.** This is not `gen_town.py`. The ground behind
+the house is `CityGround1` — `gen_city.py`, `(CITY_X0, ...) = (8.0, ...)`, grass, top y 1.00
+— which meets the town's `GrassEast` (grass, top y 1.02) at x 8.0 on the same two-hundredth
+step the whole world uses for a seam. The town's grass stopping at x 8 is correct and
+deliberate, not a shortfall. The land behind the player's house belongs to the city.
+
+That matters for who does the work, because `EAST_X1 = 8.0` in `gen_town.py` and
+`CITY_X0 = 8.0` in `gen_city.py` are two literals in two files describing one seam, each
+carrying a comment that points at the other. They agree today. Nothing makes them agree,
+and this is the shape of defect this tree keeps being repaired for — so whatever lands here
+should put that seam in `world_plan.py` once, where both generators already import from.
+
+**What the measurement says the design question actually is.** Not "what do we put in the
+gap" but "where does the plot end". The front of the plot has a property line, a fence over
+`FENCE_Z0..Z1 = -44..22`, and a gate in it. The other three sides have nothing — the fence
+is a single line on the street side only, so the player walks out of the front door, around
+either end of it, and is on city ground without ever crossing anything. Give the plot a
+rear boundary and the 75 studs stop being one undifferentiated void and become two things
+with an edge between them: a back garden that is yours, and the financial district's western
+approach, which is the city's problem and belongs in stage 4.
+
+Per the standing rule, that is a spec to agree before it is built, not a thing to build.
+
+**Retraction, and what caused it.** The first pass of this measurement loaded `Town`,
+`House`, `Street` and `Furniture` and concluded there was no ground east of x 8 — that the
+house overhung its own slab by 24 studs and the world ended at its back wall. Every number
+in that finding was correct. The conclusion was wrong, because `City.rbxmx` was not in the
+list, and `City.rbxmx` is where the ground behind the house lives. Two edits were made on
+that premise and have been reverted.
+
+Worth keeping for two reasons. First, the tell was there and was ignored: the same probe
+reported the town's grass ending at exactly x 8.0 and, when the city was finally included,
+the city's ground *starting* at exactly x 8.0. A boundary that lands on a round number
+shared with the file you left out is a seam, not a cliff. Second, `default.project.json`
+mounts five assets into one place and the world is only the union of them — so any probe
+that answers "what is at this coordinate" has to load all five or it is answering a
+different question. The occupancy script printed at the top of this section loads four.
+
+**This is also the argument for `check_town.py`, which still does not exist.** Not because
+it would have caught a hole — there is no hole — but because the checker is where a probe
+like this gets written down once, with the right asset list, instead of being rebuilt from
+memory by whoever next wonders what is behind the house.
+
 ### C. Dead ends, and roads to buildings that have none — *the check is written; it finds nothing*
 
 **Done: `check_city` check 11, "A road to every door".** For every model in the city that

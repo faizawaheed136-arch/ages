@@ -1,5 +1,50 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-17 (later)
+
+**Task B is measured, not built, and I got it wrong once on the way.** The plan says
+"confirm with an occupancy map before designing anything", so I did, and my first answer
+was that there is no ground behind the spawn house at all — that the building overhangs
+its slab by 24 studs and the world ends at its back wall. I had loaded `Town`, `House`,
+`Street` and `Furniture`. The ground behind the house is in `City.rbxmx`. Every number I
+measured was right and the conclusion was wrong, and I had already written it into
+`MAP_PLAN.md` and started editing `world_plan.py` and `gen_town.py` against it. Both edits
+are reverted; the entry now leads with the retraction.
+
+The tell was in my own output and I read past it: the town's grass ends at exactly x 8.0
+and the city's ground begins at exactly x 8.0. A boundary that lands on a round number
+shared with the file you left out is a seam, not a cliff. `default.project.json` mounts
+**five** assets into one place and the world is only their union — the occupancy script
+printed in `MAP_PLAN.md` section B loads four, which is how the wrong answer was available
+to be reached at all.
+
+The real finding: **74.5 studs of bare grass between the house's back wall (x 32.5) and
+the portico of a 134-stud office tower (x 107)**, over about `x 32.5..107, z -112..56`.
+The complaint is right. What the measurement adds is that the plot has *no rear boundary* —
+the fence is a single line on the street side over `FENCE_Z0..Z1`, so the player walks out
+of the front door, round either end of it, and is on city ground having crossed nothing.
+So the question is not "what fills the gap", it is "where does the plot end", and that is
+a spec to agree before it is built.
+
+Two things for whoever takes it. It is `gen_city.py`, not `gen_town.py` — the plan asserts
+the opposite and is wrong. And `EAST_X1 = 8.0` in `gen_town.py` and `CITY_X0 = 8.0` in
+`gen_city.py` are two literals in two files for one seam, each commented to point at the
+other; they agree today and nothing makes them. That belongs in `world_plan.py`.
+
+Also do not size anything off an axis-aligned bounding box in `House.rbxmx`. Two of its
+panels are 31.3 studs on their local X and turned ninety degrees, so an AABB puts the east
+wall at 46.9 and is wrong by fourteen studs. `read_house.load()` applies the rotation.
+
+`check_city.py` green on all eleven. Nothing in `tools/` or `assets/` changed, so both
+assets are untouched. **`check.py` currently FAILS**, on `EventService.luau` — a stray
+`end` at line 381 and a call to an undefined `characterPosition` at 245. That is Agent B's
+file, uncommitted and mid-edit, and I have not touched it.
+
+Committed separately today: the spawn note in `world_plan.py`, which claimed the
+SpawnLocation was at the front gate. It is in the nursery, moved there by `ec34680` and
+`326137b`, and the note had become an instruction to undo both. Comment-only; both assets
+regenerate to identical md5s.
+
 ## 2026-08-17
 
 **Task D is done, and the plan's own instruction for it was wrong.** `MAP_PLAN.md` said
