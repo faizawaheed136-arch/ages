@@ -1,5 +1,56 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-17
+
+**Task D is done, and the plan's own instruction for it was wrong.** `MAP_PLAN.md` said
+"make `AVE_W` a per-avenue list", so that is what I started. Avenues run north-south.
+The city's wealth gradient does not: `house_tier` picks a block's houses from its
+Chebyshev distance to the Circle, the Circle is near the *south* of the grid, and every
+residential block is north of it — so all five HOUSE blocks in sband 4 come out at 3.5
+rings and all four in sband 3 at 2.5, **whatever their avenue band**. The houses get
+smaller as you walk north and they do not care which avenue you are on. Following the
+instruction as written would have been a 23-site refactor that changed nothing anyone
+could see. `CS_W` is a list too, and that is the half that carries the ask.
+
+Which streets narrow was read off things `gen_city.py` already states, not chosen:
+`WORKS_AVE = (0, 3, 5)` ("those are the ones with somewhere to go") and `CIRCLE_AVE`
+between them account for four of the six avenues, leaving 2 and 5; `ROLES` puts the park
+and nine of the ten house blocks in the two sbands bounded by cross streets 4 and 5.
+Measured off the generated file: avenues 2 and 5 at 16 against 24, cross streets 4 and 5
+at 14 against 22, works streets untouched at 22. The narrow streets land exactly where
+the small houses already are, so the two gradients now agree.
+
+Narrowing is the only safe direction — a carriageway is subtracted from the block
+interior either side of it, so every stud off a road is a stud back to the blocks, and
+the interior was *only just* affordable at 24. Nothing had to move to pay for this.
+
+**Six assertions, each negative-tested by making the change it forbids.** The one worth
+knowing about: narrowing cross street 2 takes the Circle off its own junction, and that
+*is* already caught — by check 10, as **1004 coplanar pairs**, naming no street, no
+number and no file. Diagnosis is not detection. The assertion fails in the generator on
+the line that is wrong.
+
+Also caught before it shipped rather than after: `AVE_Z1` was the literal `972.0`, which
+is `CS[5] + 22` and was true only while every cross street was 22 wide. Derived now.
+That is this file's recurring defect for the fifth time and the first one found early.
+
+`WCS_W` is held separately on purpose — the works' streets and the precinct service road
+keep 22, so narrowing a residential street can never quietly narrow the one the timber
+mill loads from.
+
+Eleven `check_city` checks green, `check.py` all clean, both places build, `City.rbxmx`
+reproducible to one md5, `Town.rbxmx` byte-identical. 11784 parts, one more than before:
+one extra centre-line dash, because dash runs are carved at the crossing roads and four
+of those moved. I accounted for that part rather than assuming it.
+
+**Still not done:** task B (behind the spawn house), task E / map stages 2–4, the job
+code for the works place points and `north_shop_2/4/6`, and there is still **no
+`check_town.py`**. Task E is now the only thing left in my lane that is a build rather
+than a decision, and it needs the coastline call first (docks want water: bay or a new
+west shore).
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-16
 
 **The corner shop was built standing in the road, and has been moved.** It went into the
@@ -40,7 +91,7 @@ the 2.8 a body needs, and invisible from a floor plan. Overhang is now customer-
 
 `check_city` exits 0 on all eleven. `check.py` all clean. Both places build.
 
-**Still not done:** task D (per-avenue road widths, ~22 sites), task B (behind the spawn
+**Still not done:** task D (per-avenue road widths, ~22 sites — *done 08-17*), task B (behind the spawn
 house), map stages 2–4, the job code for the works place points and `north_shop_2/4/6`.
 Task A's *verb* is spec'd in `MAP_PLAN.md` and belongs to B — the shop is a stage with
 nothing tagged in it, and tagging is a one-line change the day the verb lands.
@@ -82,6 +133,7 @@ behind — that crash killed the server twice in one morning.
   waiting on a coastline decision), stage 4 (downtown densification, must come after the
   grid is final).
 - Task D: poor neighbourhoods get narrower roads (`AVE_W` -> a per-avenue list, ~22 sites).
+  *Done 2026-08-17 — and the per-avenue framing was wrong; see that entry.*
 - Task C: dead ends and buildings with no road. Write the missing `check_city` check first.
 - Task A: shops. Blocked on a design question — when a player walks into a shop, what do
   they physically do?

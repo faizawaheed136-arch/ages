@@ -131,7 +131,7 @@ GATE_FULL = [GATE_CLEAR]
 # model of itself.
 #
 # **The positions below are chosen so the grid's east edge does not move.**
-# AVE[5] + AVE_W is still exactly 793, which is CS_X1 and the west shore of the
+# AVE[5] + AVE_W[5] is still exactly 793, which is CS_X1 and the west shore of the
 # bay -- so the beach, the baywalk, the piers and the sports park are all
 # untouched by this change. What paid for the extra asphalt is the block
 # interior, which goes from 114 studs to 102: the avenue pitch dropped from 140
@@ -152,11 +152,37 @@ GATE_FULL = [GATE_CLEAR]
 # north strip's own docstring has claimed all along ("facing south toward the
 # civic plaza") and what its benches and lamps were always positioned for.
 AVE = [79.0, 217.0, 355.0, 493.0, 631.0, 769.0]
-AVE_W = 24.0
 AVE_WALK = 6.0
-AVE_Z0, AVE_Z1 = 60.0, 972.0
+AVE_Z0 = 60.0
 
-# Six cross streets, east-west, 22 studs wide, sidewalks 4 wide.
+# **Not every avenue is the same road, and the width is how the city says so.**
+#
+# This used to be one number for all six. The owner asked for poorer
+# neighbourhoods to have narrower streets and the answer was that every street in
+# the city was 24 studs wide, everywhere, which is a city with no districts in it
+# -- the block plan says the north is houses and the south is towers, and a
+# player walking between them crossed the same road six times.
+#
+# Which avenues narrow is *not* a taste call, because the file already knows the
+# answer and states it 100 lines down: `WORKS_AVE = (0, 3, 5)`, "those are the
+# ones with somewhere to go". Avenues 1, 4 and 6 carry through the city and on
+# into the works, so they are the arterials; avenue 3 is the Circle's own spine
+# and feeds a roundabout. That leaves 2 and 5, which begin at the step-down band
+# and end at the last cross street and serve nothing but the blocks either side
+# of them. They are the local roads and they are the ones that come down.
+#
+# 16 rather than 24 is one lane each way plus kerbside room, against the
+# arterials' two lanes each way. The contrast is a third of the width, which is
+# what makes it read from across a block -- 20 would have been safer and
+# invisible, and an invisible change to a road network is not worth the 23 sites
+# it costs. Safe range 14 .. 20: below 14 two cars cannot pass, and above 20 you
+# are back to a grid with one road in it.
+AVE_W_MAIN = 24.0
+AVE_W_LOCAL = 16.0
+AVE_W = [AVE_W_MAIN, AVE_W_LOCAL, AVE_W_MAIN,
+         AVE_W_MAIN, AVE_W_LOCAL, AVE_W_MAIN]
+
+# Six cross streets, east-west, sidewalks 4 wide.
 #
 # Two studs narrower than the avenues, and deliberately: the avenues are the
 # arterials a driver crosses the city on, and a cross street reading as slightly
@@ -170,12 +196,60 @@ AVE_Z0, AVE_Z1 = 60.0, 972.0
 # cross street (beginning at 49), so the only route from the town to the city
 # touched the city's street network nowhere at all. Six T-junctions now.
 CS = [200.0, 350.0, 500.0, 650.0, 800.0, 950.0]
-CS_W = 22.0
 CS_WALK = 4.0
 CS_X0, CS_X1 = CONN_X1, 793.0
 # The last cross street, whose north pavement is the civic precinct's frontage
 # rather than a row of street corners -- nothing crosses it from the north.
 CS_LAST = 5
+
+# **The cross streets are the axis the wealth gradient actually runs on, and
+# doing only the avenues would have been a 23-site refactor with nothing to show
+# for it.** The plan for this task said "AVE_W becomes a per-avenue list" and
+# stopped there. But `house_tier` decides what kind of house a block gets from
+# its Chebyshev distance to the Circle, the Circle is at (avenue 3, cross street
+# 2) near the *south* of the grid, and the residential blocks are all north --
+# so every HOUSE block in sband 4 comes out at 3.5 rings and every one in sband 3
+# at 2.5, whatever their avenue band is. The houses get smaller as you walk
+# north and they do not care which avenue you are on. Wealth here is a
+# north-south gradient, and the avenues run north-south, so an avenue cannot
+# express it.
+#
+# Which streets narrow follows the same "what does this road do" rule as the
+# avenues, read against the block plan in ROLES:
+#
+#   * cross street 6 is the civic precinct's frontage and cross street 2 is the
+#     Circle's spine. Both stay.
+#   * cross streets 1 and 3 bound the financial fade, the mall, the offices and
+#     the apartments -- the dense southern half. Both stay.
+#   * cross streets 4 and 5 bound sband 3 and sband 4, which between them are the
+#     park and nine of the city's ten house blocks, at the two outermost house
+#     tiers. Nothing but homes fronts these two streets. They come down.
+#
+# So the narrow streets land exactly where the small houses already are, and the
+# two gradients say the same thing instead of contradicting each other: walking
+# north out of downtown the houses shrink *and* the road pinches.
+#
+# 14 against 22 for the same reason 16 is set against 24 above -- a third off, so
+# it reads. Safe range 12 .. 18: below 12 the centre line has no lane either side
+# of it to be the centre of, above 18 it stops reading as a lesser street.
+CS_W_MAIN = 22.0
+CS_W_LOCAL = 14.0
+CS_W = [CS_W_MAIN, CS_W_MAIN, CS_W_MAIN,
+        CS_W_LOCAL, CS_W_LOCAL, CS_W_MAIN]
+
+# The works' south streets and the precinct's service road are not part of this:
+# a freight street is not a poor neighbourhood's street, it is a road articulated
+# lorries turn on. They keep the standard width, and they keep it under their own
+# name so that narrowing a *residential* street can never quietly narrow the one
+# the timber mill loads from.
+WCS_W = CS_W_MAIN
+
+# How far north the avenues run: the far kerb of the last cross street, where
+# they all stop. This was the literal 972.0, which is CS[5] + 22 and was correct
+# only for as long as every cross street was 22 wide -- exactly the defect class
+# this file keeps being repaired for. Derived now, so narrowing a cross street
+# cannot leave the avenues hanging 8 studs past their own junction.
+AVE_Z1 = CS[CS_LAST] + CS_W[CS_LAST]
 
 # ---------------------------------------------------------------------------
 # The precinct loop
@@ -209,7 +283,7 @@ CS_LAST = 5
 # pavement, the civic row and the north strip. Those are four separate numbers
 # that all have to agree, so they are all derived from PRECINCT_AVE_X0.
 PRECINCT_AVE_X0 = AVE[5]
-PRECINCT_AVE_X1 = AVE[5] + AVE_W
+PRECINCT_AVE_X1 = AVE[5] + AVE_W[5]
 # Where everything else in the precinct has to stop: the new avenue's west
 # pavement starts here.
 PRECINCT_INNER_X1 = PRECINCT_AVE_X0 - AVE_WALK
@@ -217,7 +291,7 @@ PRECINCT_INNER_X1 = PRECINCT_AVE_X0 - AVE_WALK
 # 1117.2, which clears the north strip's back wall at 1116 by 1.2 studs -- the
 # strip is not moved and its buildings are not resized.
 NORTH_ROAD_Z0 = 1124.0
-NORTH_ROAD_Z1 = NORTH_ROAD_Z0 + CS_W
+NORTH_ROAD_Z1 = NORTH_ROAD_Z0 + WCS_W
 
 # ---------------------------------------------------------------------------
 # The works
@@ -276,7 +350,7 @@ WORKS_AVE = (0, 3, 5)
 # number, not forty.
 SOUTH_ROW_DEPTH = [136.0, 154.0, 110.0]
 # What a cross street costs the map, kerb to kerb with both pavements.
-CS_PITCH = CS_W + 2 * CS_WALK
+CS_PITCH = WCS_W + 2 * CS_WALK
 
 
 def _south_streets():
@@ -284,7 +358,7 @@ def _south_streets():
 
     The northernmost is placed so its *north* pavement finishes exactly on the
     city's south edge, which is the financial district's front wall."""
-    zs = [CITY_Z0 - CS_W - CS_WALK]
+    zs = [CITY_Z0 - WCS_W - CS_WALK]
     for depth in SOUTH_ROW_DEPTH:
         zs.append(zs[-1] - CS_PITCH - depth)
     zs.reverse()
@@ -303,15 +377,15 @@ WORKS_Z1 = SOUTH_CS[2]
 # East and west ends of the south streets: they tee into avenue 1 at one end and
 # avenue 6 at the other, so they are bounded by those avenues' carriageways.
 WORKS_X0 = AVE[0]
-WORKS_X1 = AVE[5] + AVE_W
+WORKS_X1 = AVE[5] + AVE_W[5]
 
 # The blocks the grid leaves, west-to-east and south-to-north, measured off the
 # roads rather than typed: this is the fourth time in this file a district has
 # been written in literal coordinates and had to be repaired when a road moved,
 # and the works is not going to be the fifth.
-WORKS_COL_X = [(AVE[0] + AVE_W + AVE_WALK, AVE[3] - AVE_WALK),
-               (AVE[3] + AVE_W + AVE_WALK, AVE[5] - AVE_WALK)]
-SOUTH_ROW_Z = [(lo + CS_W + CS_WALK, hi - CS_WALK)
+WORKS_COL_X = [(AVE[0] + AVE_W[0] + AVE_WALK, AVE[3] - AVE_WALK),
+               (AVE[3] + AVE_W[3] + AVE_WALK, AVE[5] - AVE_WALK)]
+SOUTH_ROW_Z = [(lo + WCS_W + CS_WALK, hi - CS_WALK)
                for lo, hi in zip(SOUTH_CS, SOUTH_CS[1:])]
 WORKS_ROW_Z = SOUTH_ROW_Z[:2]   # the two industrial rows
 STEP_ROW_Z = SOUTH_ROW_Z[2]     # the step-down band
@@ -341,18 +415,18 @@ def cs_aves(c):
 # Gaps used to carve roads and sidewalks out of each other at crossings. A road
 # is carved at the roads it crosses; a north-south sidewalk yields its corner to
 # the east-west sidewalk, so one and only one box owns every square.
-CS_ROAD = [(c, c + CS_W) for c in CS]
-CS_FULL = [(c - CS_WALK, c + CS_W + CS_WALK) for c in CS]
-AVE_ROAD = [(a, a + AVE_W) for a in AVE]
-AVE_FULL = [(a - AVE_WALK, a + AVE_W + AVE_WALK) for a in AVE]
+CS_ROAD = [(c, c + CS_W[j]) for j, c in enumerate(CS)]
+CS_FULL = [(c - CS_WALK, c + CS_W[j] + CS_WALK) for j, c in enumerate(CS)]
+AVE_ROAD = [(a, a + AVE_W[k]) for k, a in enumerate(AVE)]
+AVE_FULL = [(a - AVE_WALK, a + AVE_W[k] + AVE_WALK) for k, a in enumerate(AVE)]
 # The same lists for the south streets. The avenue carve is one list *per
 # street* and not one list for all of them: the two northern streets are crossed
 # by all six avenues and the two southern ones only by the three that carry on
 # into the works, and a street carved at an avenue that is not there leaves a
 # twenty-four-stud hole in it.
-WCS_ROAD = [(c, c + CS_W) for c in SOUTH_CS]
-WCS_FULL = [(c - CS_WALK, c + CS_W + CS_WALK) for c in SOUTH_CS]
-SOUTH_AVE_ROAD = [[(AVE[k], AVE[k] + AVE_W) for k in cs_aves(c)] for c in SOUTH_CS]
+WCS_ROAD = [(c, c + WCS_W) for c in SOUTH_CS]
+WCS_FULL = [(c - CS_WALK, c + WCS_W + CS_WALK) for c in SOUTH_CS]
+SOUTH_AVE_ROAD = [[(AVE[k], AVE[k] + AVE_W[k]) for k in cs_aves(c)] for c in SOUTH_CS]
 
 # The main street: storefronts on the strip between the connector's east
 # sidewalk and the first avenue's west sidewalk, fronting the connector. Carved
@@ -388,18 +462,78 @@ MAIN_X0, MAIN_X1 = 48.0, 72.0
 #    72 ..102   the tower arc, three per quadrant, all facing the monument
 CIRCLE_AVE = 2   # index into AVE  -- avenue 3
 CIRCLE_CS = 1    # index into CS   -- cross street 2
-CIRCLE_X = AVE[CIRCLE_AVE] + AVE_W / 2
-CIRCLE_Z = CS[CIRCLE_CS] + CS_W / 2
+CIRCLE_X = AVE[CIRCLE_AVE] + AVE_W[CIRCLE_AVE] / 2
+CIRCLE_Z = CS[CIRCLE_CS] + CS_W[CIRCLE_CS] / 2
 
 CIRCLE_ISLAND = 38.0
-CIRCLE_ROAD_W = 34.0    # two lanes each way, matching the avenues at 24 plus a
-                        # ring's worth of weaving room. Must stay *above* AVE_W:
-                        # a roundabout narrower than the road feeding it reads as
-                        # a pinch and drives like one. Safe range: 28 .. 40.
+CIRCLE_ROAD_W = 34.0    # two lanes each way, matching the arterials at 24 plus a
+                        # ring's worth of weaving room. Must stay above the width
+                        # of every road that feeds it -- a roundabout narrower
+                        # than its own spokes reads as a pinch and drives like
+                        # one, and the assertion below holds it to that.
+                        # Safe range: 28 .. 40.
 CIRCLE_WALK_W = 8.0     # wider than an avenue's 6: this pavement is a promenade
                         # and it is where the tower entrances are read from.
 CIRCLE_R_ROAD = CIRCLE_ISLAND + CIRCLE_ROAD_W
 CIRCLE_R_WALK = CIRCLE_R_ROAD + CIRCLE_WALK_W
+
+# ---------------------------------------------------------------------------
+# What the street widths are not allowed to do
+# ---------------------------------------------------------------------------
+#
+# AVE_W and CS_W are the two lists a person will reach for when they want a
+# district to feel different, and four of their twelve entries are load bearing
+# for something a long way from where they are typed. None of the four can be
+# derived -- they are the *inputs* the rest of the grid is measured from -- so
+# they are asserted instead, here, where WORKS_AVE and CIRCLE_AVE both exist.
+#
+# Every one of these was negative-tested by making the change it forbids. The
+# point is not that the defect goes uncaught otherwise -- check_city catches the
+# Circle one -- it is *what it is caught as*: narrowing cross street 2 by eight
+# studs takes the Circle off its own junction and check 10 reports it as 1004
+# coplanar pairs, which names no street, no number and no file. An assertion here
+# fails in the generator, on the line that is wrong, before an asset is written.
+assert AVE[5] + AVE_W[5] == CS_X1, (
+    f"avenue 6 runs x {AVE[5]}..{AVE[5] + AVE_W[5]} and the bay's west shore is "
+    f"at {CS_X1}. Its far kerb *is* that shore: the beach, the baywalk, the piers "
+    f"and the sports park all start there. To change AVE_W[5] you must move AVE[5] "
+    f"to {CS_X1 - AVE_W[5]} in the same edit, and the block west of it loses or "
+    f"gains that width -- check the interior assertion below before you do.")
+assert all(AVE_W[k] == AVE_W_MAIN for k in WORKS_AVE), (
+    f"avenue {[k + 1 for k in WORKS_AVE if AVE_W[k] != AVE_W_MAIN]} is in "
+    f"WORKS_AVE but is not at the arterial width. Those three are the only routes "
+    f"from the city into the works and they carry its freight. If one of them "
+    f"should really be a local street, take it out of WORKS_AVE first and re-read "
+    f"ave_z0(), which decides how far south it is drawn.")
+# The Circle is not diverted round its junction, it *is* the junction: avenue 3
+# and cross street 2 run into it and become its four spokes, and CIRCLE_X/
+# CIRCLE_Z are the middles of those two carriageways. Change either width and
+# the ring slides off the corner the four CIRCUS blocks are cut to, because the
+# blocks are measured from CS/AVE and the ring is measured from the road centres.
+assert AVE_W[CIRCLE_AVE] == AVE_W_MAIN and CS_W[CIRCLE_CS] == CS_W_MAIN, (
+    f"avenue {CIRCLE_AVE + 1} is {AVE_W[CIRCLE_AVE]} wide and cross street "
+    f"{CIRCLE_CS + 1} is {CS_W[CIRCLE_CS]}. They are the Circle's four spokes and "
+    f"they have to stay at the arterial widths ({AVE_W_MAIN} and {CS_W_MAIN}) -- "
+    f"the ring is centred on where they cross, and moving that centre leaves the "
+    f"monument, the twelve towers and the four CIRCUS blocks in three different "
+    f"places. Narrow a street that is not a spoke.")
+assert max(AVE_W[CIRCLE_AVE], CS_W[CIRCLE_CS]) < CIRCLE_ROAD_W, (
+    f"the Circle's ring is {CIRCLE_ROAD_W} wide against spokes of "
+    f"{AVE_W[CIRCLE_AVE]} and {CS_W[CIRCLE_CS]}. A roundabout no wider than the "
+    f"roads feeding it reads as a pinch and drives like one -- widen "
+    f"CIRCLE_ROAD_W to match.")
+
+# The blocks pay for the roads out of their own interiors, so the widths are only
+# legal while what is left still holds two facing rows of houses. HOUSE_STYLES
+# tops out at a 42-stud width plus setback (see the note on HOUSE_TIERS), twice,
+# plus the 18-stud lane between the back gardens.
+BLOCK_MIN_INTERIOR = 2 * 42.0 + 18.0
+for _b in range(len(AVE) - 1):
+    _interior = (AVE[_b + 1] - AVE_WALK) - (AVE[_b] + AVE_W[_b] + AVE_WALK)
+    assert _interior >= BLOCK_MIN_INTERIOR, (
+        f"avenue band {_b} has {_interior:.0f} studs of interior against the "
+        f"{BLOCK_MIN_INTERIOR:.0f} two facing house rows need. Narrow AVE_W[{_b}] "
+        f"or move the avenues apart.")
 
 # How many boxes make the circle. Twenty-four is a multiple of four, so a segment
 # is centred on each of the four spokes rather than straddling it, and the facets
@@ -1283,10 +1417,10 @@ with group("Streets"):
         at_circle = k == CIRCLE_AVE
         for za, zb in carve((ave_z0(k), AVE_Z1),
                             CS_ROAD + WCS_ROAD + (CIRCLE_Z_ROAD if at_circle else [])):
-            road_ns(a, a + AVE_W, za, zb, f"Ave{k}")
+            road_ns(a, a + AVE_W[k], za, zb, f"Ave{k}")
         for za, zb in carve((ave_z0(k), AVE_Z1),
                             CS_FULL + WCS_FULL + (CIRCLE_Z_WALK if at_circle else [])):
-            walks_ns(a, a + AVE_W, za, zb, AVE_WALK, f"Ave{k}")
+            walks_ns(a, a + AVE_W[k], za, zb, AVE_WALK, f"Ave{k}")
 
     # Cross streets: carved at the avenues, and taking the corner squares --
     # which is why they are carved at AVE_ROAD and the avenues at CS_FULL.
@@ -1294,10 +1428,10 @@ with group("Streets"):
         at_circle = j == CIRCLE_CS
         for xa, xb in carve((CS_X0, CS_X1),
                             AVE_ROAD + (CIRCLE_X_ROAD if at_circle else [])):
-            road_ew(c, c + CS_W, xa, xb, f"C{j}")
+            road_ew(c, c + CS_W[j], xa, xb, f"C{j}")
         for xa, xb in carve((CS_X0, CS_X1),
                             AVE_ROAD + (CIRCLE_X_WALK if at_circle else [])):
-            walks_ew(c, c + CS_W, xa, xb, CS_WALK, f"C{j}",
+            walks_ew(c, c + CS_W[j], xa, xb, CS_WALK, f"C{j}",
                      sides="south" if j == CS_LAST else "both")
 
     # The four south streets. Same carriageway and same pavements as a cross
@@ -1306,13 +1440,14 @@ with group("Streets"):
     # so the carve leaves nothing at either end and all four terminate in a T.
     for j, c in enumerate(SOUTH_CS):
         for xa, xb in carve((WORKS_X0, WORKS_X1), SOUTH_AVE_ROAD[j]):
-            road_ew(c, c + CS_W, xa, xb, f"W{j}")
-            walks_ew(c, c + CS_W, xa, xb, CS_WALK, f"W{j}")
+            road_ew(c, c + WCS_W, xa, xb, f"W{j}")
+            walks_ew(c, c + WCS_W, xa, xb, CS_WALK, f"W{j}")
 
     # The last cross street's north pavement, unbroken from end to end. No
     # avenue crosses it -- they all stop at this junction -- so carving it at the
     # avenues would leave six holes in the civic precinct's frontage.
-    walks_ew(CS[CS_LAST], CS[CS_LAST] + CS_W, CS_X0, PRECINCT_INNER_X1, CS_WALK, "CivicFront",
+    walks_ew(CS[CS_LAST], CS[CS_LAST] + CS_W[CS_LAST], CS_X0, PRECINCT_INNER_X1, CS_WALK,
+             "CivicFront",
              sides="north")
 
     # Intersection tiles: the square both roads carved away, so every junction
@@ -1324,13 +1459,14 @@ with group("Streets"):
         for j, c in enumerate(CS):
             if k == CIRCLE_AVE and j == CIRCLE_CS:
                 continue
-            box(f"X{a:.0f}_{c:.0f}", (a, a + AVE_W, c, c + CS_W, GROUND_BOTTOM, GROUND),
+            box(f"X{a:.0f}_{c:.0f}",
+                (a, a + AVE_W[k], c, c + CS_W[j], GROUND_BOTTOM, GROUND),
                 TARMAC, ASPHALT)
     # ...and the south streets' own, one per street per avenue that reaches it.
     for c in SOUTH_CS:
         for k in cs_aves(c):
             box(f"XW{AVE[k]:.0f}_{c:.0f}",
-                (AVE[k], AVE[k] + AVE_W, c, c + CS_W, GROUND_BOTTOM, GROUND),
+                (AVE[k], AVE[k] + AVE_W[k], c, c + WCS_W, GROUND_BOTTOM, GROUND),
                 TARMAC, ASPHALT)
 
     # The Circle's own roadway, drawn with the streets because that is what it is
@@ -1366,9 +1502,9 @@ with group("Streets"):
     # back of nothing. Its west side is carved at the service road, for the same
     # reason the connector's verge is carved at the cross streets -- a pavement
     # drawn across the mouth of a side road is a kerb the road runs under.
-    road_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W, NORTH_ROAD_Z0,
+    road_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
             "PrecinctAve")
-    walks_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W, NORTH_ROAD_Z0,
+    walks_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
              AVE_WALK, "PrecinctAve", sides="west")
     # From the connector's east kerb, not from its centre: the connector is
     # already tarmac at x 19..42, and starting this one inside it would lay two
@@ -1380,18 +1516,18 @@ with group("Streets"):
 
     # Centre lines.
     dashes_ns(CONN_MID, CONN_Z0, CONN_Z1, [], "Conn")
-    dashes_ns(PRECINCT_AVE_X0 + AVE_W / 2, CS[CS_LAST] + CS_W, NORTH_ROAD_Z0,
+    dashes_ns(PRECINCT_AVE_X0 + AVE_W[5] / 2, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
               [], "PrecinctAve")
-    dashes_ew(NORTH_ROAD_Z0 + CS_W / 2, CONN_X1, PRECINCT_AVE_X1, [], "NorthSvc")
+    dashes_ew(NORTH_ROAD_Z0 + WCS_W / 2, CONN_X1, PRECINCT_AVE_X1, [], "NorthSvc")
     for k, a in enumerate(AVE):
-        dashes_ns(a + AVE_W / 2, ave_z0(k), AVE_Z1,
+        dashes_ns(a + AVE_W[k] / 2, ave_z0(k), AVE_Z1,
                   CS_ROAD + WCS_ROAD + (CIRCLE_Z_WALK if k == CIRCLE_AVE else []),
                   f"Ave{k}")
     for j, c in enumerate(CS):
-        dashes_ew(c + CS_W / 2, CS_X0, CS_X1,
+        dashes_ew(c + CS_W[j] / 2, CS_X0, CS_X1,
                   AVE_ROAD + (CIRCLE_X_WALK if j == CIRCLE_CS else []), f"C{j}")
     for j, c in enumerate(SOUTH_CS):
-        dashes_ew(c + CS_W / 2, WORKS_X0, WORKS_X1, SOUTH_AVE_ROAD[j], f"W{j}")
+        dashes_ew(c + WCS_W / 2, WORKS_X0, WORKS_X1, SOUTH_AVE_ROAD[j], f"W{j}")
 
     # The Circle's own lane line, one dash per facet round the middle of the
     # carriageway. Named "Dash" like every other painted marking, which is how
@@ -1612,8 +1748,8 @@ def block_bounds(band, sband):
     avenues' sidewalks and the two cross streets' sidewalks."""
     a0, a1 = AVE[band], AVE[band + 1]
     c0, c1 = CS[sband], CS[sband + 1]
-    return a0 + AVE_W + AVE_WALK, a1 - AVE_WALK, \
-        c0 + CS_W + CS_WALK + 4.0, c1 - CS_WALK - 4.0
+    return a0 + AVE_W[band] + AVE_WALK, a1 - AVE_WALK, \
+        c0 + CS_W[sband] + CS_WALK + 4.0, c1 - CS_WALK - 4.0
 
 
 # ---------------------------------------------------------------------------
@@ -4272,13 +4408,13 @@ FIN_GLASS = RISE_GLASS
 
 with group("FinancialDistrict"):
     # The grand bank in the first band.
-    bank_x0 = AVE[0] + AVE_W + AVE_WALK
+    bank_x0 = AVE[0] + AVE_W[0] + AVE_WALK
     bank_x1 = AVE[1] - AVE_WALK
     grand_bank(bank_x0, bank_x1, FIN_Z0, FIN_Z1)
 
     # High-rises in the remaining four bands.
     for band in range(1, 5):
-        bx0 = AVE[band] + AVE_W + AVE_WALK
+        bx0 = AVE[band] + AVE_W[band] + AVE_WALK
         bx1 = AVE[band + 1] - AVE_WALK
         # Two towers per band, split the width roughly in half with a plaza.
         mid_x = (bx0 + bx1) / 2
@@ -4296,11 +4432,11 @@ with group("FinancialDistrict"):
     # box (x0 215 > x1 213) and its trees and benches stood inside the bank and
     # inside the towers. The pavements are the only open ground in the
     # district, and street trees are what actually belongs on them.
-    for _a in AVE[:5]:
+    for _k, _a in enumerate(AVE[:5]):
         _px = _a - AVE_WALK / 2  # centre of that avenue's west pavement
         for _z in (88.0, 132.0, 176.0):
             tree(_px, _z, PAVING, height=11.0, spread=7.0)
-        bench(_a + AVE_W + AVE_WALK / 2, 110.0, -1)
+        bench(_a + AVE_W[_k] + AVE_WALK / 2, 110.0, -1)
 
 
 # ---------------------------------------------------------------------------
@@ -4363,7 +4499,7 @@ def step_storeys(band, row):
 def step_band(band, counter):
     """One column of the step-down: two offices at the front, two behind, and
     the mews between them. Returns the next free office number."""
-    bx0 = AVE[band] + AVE_W + AVE_WALK
+    bx0 = AVE[band] + AVE_W[band] + AVE_WALK
     bx1 = AVE[band + 1] - AVE_WALK
     z0, z1 = STEP_ROW_Z
     front_z0 = z1 - STEP_FRONT_DEPTH
@@ -5231,13 +5367,13 @@ def surface_floor(x, z):
     if CONN_X0 < x < CONN_X1 and CONN_Z0 < z < CONN_Z1:
         return GROUND
     for k, a in enumerate(AVE):
-        if a < x < a + AVE_W and ave_z0(k) < z < AVE_Z1:
+        if a < x < a + AVE_W[k] and ave_z0(k) < z < AVE_Z1:
             return GROUND
-    for c in CS:
-        if c < z < c + CS_W and CS_X0 < x < CS_X1:
+    for j, c in enumerate(CS):
+        if c < z < c + CS_W[j] and CS_X0 < x < CS_X1:
             return GROUND
     for c in SOUTH_CS:
-        if c < z < c + CS_W and WORKS_X0 < x < WORKS_X1:
+        if c < z < c + WCS_W and WORKS_X0 < x < WORKS_X1:
             return GROUND
     if CONN_X0 - CONN_WALK < x < CONN_X0 and CONN_Z0 < z < CONN_Z1:
         return PAVING
@@ -5246,17 +5382,17 @@ def surface_floor(x, z):
     for k, a in enumerate(AVE):
         if a - AVE_WALK < x < a and ave_z0(k) < z < AVE_Z1:
             return PAVING
-        if a + AVE_W < x < a + AVE_W + AVE_WALK and ave_z0(k) < z < AVE_Z1:
+        if a + AVE_W[k] < x < a + AVE_W[k] + AVE_WALK and ave_z0(k) < z < AVE_Z1:
             return PAVING
-    for c in CS:
+    for j, c in enumerate(CS):
         if CS_X0 < x < CS_X1 and c - CS_WALK < z < c:
             return PAVING
-        if CS_X0 < x < CS_X1 and c + CS_W < z < c + CS_W + CS_WALK:
+        if CS_X0 < x < CS_X1 and c + CS_W[j] < z < c + CS_W[j] + CS_WALK:
             return PAVING
     for c in SOUTH_CS:
         if WORKS_X0 < x < WORKS_X1 and c - CS_WALK < z < c:
             return PAVING
-        if WORKS_X0 < x < WORKS_X1 and c + CS_W < z < c + CS_W + CS_WALK:
+        if WORKS_X0 < x < WORKS_X1 and c + WCS_W < z < c + WCS_W + CS_WALK:
             return PAVING
     return GROUND
 
@@ -5298,16 +5434,16 @@ def in_circle(x, z):
 
 for k, a in enumerate(AVE):
     for i, z in enumerate(range(int(ave_z0(k)), int(AVE_Z1), 68)):
-        if in_circle(a + AVE_W / 2, float(z)):
+        if in_circle(a + AVE_W[k] / 2, float(z)):
             continue
-        waypoint(f"wp_ave{k}_{i}", a + AVE_W / 2, float(z), f"avenue {k + 1}")
+        waypoint(f"wp_ave{k}_{i}", a + AVE_W[k] / 2, float(z), f"avenue {k + 1}")
 
 # Cross street road centres.
 for j, c in enumerate(CS):
     for i, x in enumerate(range(int(CS_X0), int(CS_X1), 68)):
-        if in_circle(float(x), c + CS_W / 2):
+        if in_circle(float(x), c + CS_W[j] / 2):
             continue
-        waypoint(f"wp_cs{j}_{i}", float(x), c + CS_W / 2, f"cross street {j + 1}")
+        waypoint(f"wp_cs{j}_{i}", float(x), c + CS_W[j] / 2, f"cross street {j + 1}")
 
 # The south streets, the same way. Nothing south of the city is more than a
 # block from one of these four, which is the whole reason the works was laid on
@@ -5315,7 +5451,7 @@ for j, c in enumerate(CS):
 # of code instead of a bespoke chain per yard.
 for j, c in enumerate(SOUTH_CS):
     for i, x in enumerate(range(int(WORKS_X0), int(WORKS_X1), 68)):
-        waypoint(f"wp_ws{j}_{i}", float(x), c + CS_W / 2, f"south street {j + 1}")
+        waypoint(f"wp_ws{j}_{i}", float(x), c + WCS_W / 2, f"south street {j + 1}")
 
 # The step-down band's mews. Two per column rather than one in the middle: a
 # single point at the centre of a 102-stud band is 72 studs from the avenue
@@ -5324,7 +5460,7 @@ for j, c in enumerate(SOUTH_CS):
 # sent down.
 _mews_z = STEP_ROW_Z[1] - STEP_FRONT_DEPTH - STEP_MEWS_W / 2
 for _b in range(5):
-    for _i, _mx in enumerate((AVE[_b] + AVE_W + AVE_WALK + 20.0,
+    for _i, _mx in enumerate((AVE[_b] + AVE_W[_b] + AVE_WALK + 20.0,
                               AVE[_b + 1] - AVE_WALK - 20.0)):
         waypoint(f"wp_step{_b}_{_i}", _mx, _mews_z,
                  "the step-down mews", GROUND)
@@ -5386,7 +5522,7 @@ for z in range(60, 200, 68):
 # sit at x 100, which was pavement when the avenue was 14 wide and is the middle
 # of the carriageway now that it is 24. Derived from the avenue rather than
 # typed, so the next widening moves it instead of stranding it.
-waypoint("wp_fin_gap1", AVE[0] + AVE_W + AVE_WALK / 2, 62.0,
+waypoint("wp_fin_gap1", AVE[0] + AVE_W[0] + AVE_WALK / 2, 62.0,
          "the financial district, bank approach", PAVING)
 waypoint("wp_fin_gap2", 200.0, 80.0, "the financial district, mid-plaza", PAVING)
 waypoint("wp_fin_gap3", 250.0, 100.0, "the financial district, east plaza", PAVING)
@@ -5456,7 +5592,7 @@ for _i, (_z0, _z1, _sx, _edge) in enumerate(SHORE):
 # East end of every cross street: the avenue-6 junction, which the cross-street
 # chain already reaches from the west.
 for _j, _c in enumerate(CS):
-    waypoint(f"wp_bay_cs{_j}", AVE[5] + AVE_W / 2, _c + CS_W / 2,
+    waypoint(f"wp_bay_cs{_j}", AVE[5] + AVE_W[5] / 2, _c + CS_W[_j] / 2,
              f"cross street {_j + 1}, at the bay end", GROUND)
 
 # Across the headland, clear of the pitch to the south and the courts to the
@@ -5506,7 +5642,8 @@ for _i, (_px0, _px1) in enumerate(CIVIC_PASSAGES):
 # Both x and z are derived from the road constants rather than typed, for the
 # reason the comment above wp_forecourt gives at length.
 _precinct_ave_walk_x = PRECINCT_INNER_X1 + AVE_WALK / 2
-for _i, _z in enumerate(range(int(CS[CS_LAST] + CS_W) + 4, int(NORTH_ROAD_Z0), 64)):
+for _i, _z in enumerate(range(int(CS[CS_LAST] + CS_W[CS_LAST]) + 4,
+                             int(NORTH_ROAD_Z0), 64)):
     waypoint(f"wp_precinct_ave_{_i}", _precinct_ave_walk_x, float(_z),
              "the precinct avenue's west pavement", PAVING)
 

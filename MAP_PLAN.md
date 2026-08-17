@@ -13,7 +13,7 @@ caught two hardcoded radii that a visual inspection would never have found.
 ## Done
 
 **1. Road grid widened.** Avenues 14 -> 24, cross streets 14 -> 22, Circle ring 24 -> 34.
-Avenue positions were rechosen so `AVE[5] + AVE_W` still lands exactly on 793 — the bay,
+Avenue positions were rechosen so `AVE[5] + AVE_W[5]` still lands exactly on 793 — the bay,
 beach, baywalk, piers and sports park did not move. Paid for out of block interior, which
 went 114 -> 102 studs. **That is now the binding constraint: two house rows at 42 studs
 each leave an 18-stud lane. There is no more room in the blocks.** Any further widening
@@ -207,6 +207,11 @@ repainted on every run and the one generated asset in the tree could not be diff
 `zlib.crc32`. Same class as the stale bounds above: a value that looks derived and is
 actually arbitrary. Verified by three consecutive runs to the same md5.
 
+**10. Streets are no longer all one width** — see section D, which is now done. `AVE_W` and
+`CS_W` are per-street lists, four of the twelve streets narrow, and the six ways a future
+edit could break something a thousand studs away are assertions in the generator rather
+than things you find out from the beach.
+
 ## Owed, in the order I would do it
 
 ### A. Shops — the *function* half, which is a spec question, not a build one
@@ -385,15 +390,81 @@ Remaining, if it turns out to matter: `ConnRoad` at (30.5, 60.0) and the three `
 crossing stubs were the only non-Circle candidates the probe found, and none of them
 strands a destination — check 11 passes with all four in place.
 
-### D. Poor neighbourhoods should have narrower roads
+### D. Poor neighbourhoods should have narrower roads — *done*
 
-Explicitly asked for and **not delivered** — every street in the city is currently the same
-width. Needs `AVE_W` to become a per-avenue list, which is a ~22-site refactor (`grep -n
-'AVE_W\b'`). Most sites are inside `for k, a in enumerate(AVE)` loops so they can index
-directly; `block_bounds` has `band`; `CIRCLE_X` has `CIRCLE_AVE`.
+`AVE_W` and `CS_W` are lists now. Avenues 2 and 5 are 16 studs against the arterials' 24;
+cross streets 4 and 5 are 14 against 22. Measured off the generated file, not intended:
+`Ave1 16, Ave4 16`, the other four avenues 24, `C3 14, C4 14`, the other four cross streets
+22, and all four works streets 22.
 
-Worth doing at the same time as E, because the new districts need their own street widths
-anyway — doing both at once touches those 22 sites once instead of twice.
+**This section said "make `AVE_W` a per-avenue list" and that instruction was wrong on its
+own.** Avenues run north-south. The city's wealth gradient does not: `house_tier` picks a
+block's house styles from its Chebyshev distance to the Circle, the Circle sits near the
+*south* of the grid at (avenue 3, cross street 2), and every residential block is north of
+it — so all five HOUSE blocks in sband 4 come out at 3.5 rings and all four in sband 3 at
+2.5, **whatever avenue band they are in**. The houses get smaller as you walk north and they
+do not care which avenue you are on. Doing only the avenues would have been a 23-site
+refactor that changed nothing a player could see, which is the worst possible outcome for a
+change this wide. The cross streets are the axis that carries the ask, so `CS_W` was split
+too.
+
+Which streets narrow is not a taste call — both lists were read off things the file already
+states:
+
+- `WORKS_AVE = (0, 3, 5)`, whose own comment is *"those are the ones with somewhere to go"*.
+  Avenues 1, 4 and 6 carry freight south into the works. They stay.
+- `CIRCLE_AVE = 2`. Avenue 3 runs into the roundabout and becomes two of its four spokes.
+  It stays, and so does cross street 2 for the same reason.
+- That leaves avenues 2 and 5, which begin at the step-down band and end at the last cross
+  street and serve nothing but the blocks either side.
+- On the other axis, `ROLES` puts the park and nine of the ten house blocks in sbands 3 and
+  4, which are bounded by cross streets 4 and 5. Nothing but homes fronts those two. Cross
+  street 6 is the civic precinct's frontage and 1 and 3 bound the mall, the offices, the
+  apartments and the financial fade — all stay.
+
+So the narrow streets land exactly where the small houses already are, and the two gradients
+now say the same thing instead of being unaware of each other: walking north out of downtown
+the houses shrink *and* the road pinches. A third off in both cases (24→16, 22→14) because
+that is what reads from across a block; 20 and 18 were rejected as safe and invisible, and an
+invisible change is not worth a 40-site refactor.
+
+**Narrowing is the only safe direction and this is what made the change cheap.** A
+carriageway is subtracted from the block interior either side of it, so every stud off a
+road is a stud back to the blocks — and the note above `AVE` records that the interior was
+*only just* affordable at 24. Nothing had to move to pay for this.
+
+Six things a future edit could break are now assertions in `gen_city.py`, each negative-
+tested by making the change it forbids:
+
+- `AVE[5] + AVE_W[5]` is the bay's west shore. Touch avenue 6's width in either direction
+  and you must move `AVE[5]` in the same edit or re-lay the beach, baywalk, piers and sports
+  park.
+- No avenue in `WORKS_AVE` may leave the arterial width.
+- Avenue 3 and cross street 2 must stay arterial: they are the Circle's spokes and
+  `CIRCLE_X`/`CIRCLE_Z` are their carriageway centres.
+- `CIRCLE_ROAD_W` must exceed both.
+- Every avenue band must keep the 102 studs two facing house rows need.
+
+The Circle one is worth keeping for the reason it exists rather than for the check: narrowing
+cross street 2 by eight studs *is* already caught, by `check_city` check 10 — as **1004
+coplanar pairs**, naming no street, no number and no file. The assertion fails in the
+generator on the line that is wrong, before an asset is written.
+
+Also fixed in passing: `AVE_Z1` was the literal `972.0`, which is `CS[5] + 22` and was only
+correct while every cross street was 22 wide. It is derived from `CS[CS_LAST] + CS_W[CS_LAST]`
+now. That is the fifth time this file's recurring defect — a number measured from other
+numbers and then typed in — has been repaired, and the first time one was caught *before* it
+shipped rather than after.
+
+`WCS_W` is separate and deliberately so: the works' south streets and the precinct's service
+road keep the standard 22. A freight street is not a poor neighbourhood's street, and holding
+it under its own name means narrowing a residential road can never quietly narrow the one the
+timber mill loads from.
+
+Verified: all eleven `check_city` checks pass, `check.py` all clean, both places build,
+`City.rbxmx` reproducible to one md5 across runs, `Town.rbxmx` byte-identical. The one extra
+part (11783 → 11784) is one extra centre-line dash, because the dash runs are carved at the
+crossing roads and four of those moved.
 
 ### E. The empty half
 
