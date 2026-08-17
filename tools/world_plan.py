@@ -142,6 +142,50 @@ GATE_HALF = 4.2
 FENCE_X = PROPERTY_X + 0.2
 FENCE_Z0, FENCE_Z1 = -44.0, 22.0
 FENCE_HEIGHT = 3.2
+# Half the thickness of a fence rail. Was a literal inside build_street's
+# fence_run; it is here now because the south boundary below is placed by
+# subtracting it from the plot's edge, so the two have to be the same number.
+FENCE_HALF = 0.25
+
+# ---------------------------------------------------------------------------
+# The rest of the property line
+# ---------------------------------------------------------------------------
+
+# The fence above is the *street* frontage, and it was being read as the whole
+# boundary. It is not. The plot's own ground runs x -52.75..32.35, z -44.33..22,
+# and three of its four sides are already closed by things that exist:
+#
+#   north, z 22   House.rbxmx's own 7-stud picket fence from x -55.9 to -15.6,
+#                 then the house's north wall from -15.6 to 32.5. Unbroken --
+#                 probed at quarter-stud steps across the full width. The land
+#                 beyond it belongs to the neighbouring building in that asset,
+#                 which is also why FENCE_Z1 is 22 and not the plot's north edge.
+#   east          the house *is* the boundary. Its east wall stands full height
+#                 from z -31.8 to 22.
+#   west          the street fence, with the gate in it.
+#
+# That leaves the south completely open -- 85 studs of it, with nothing above
+# knee height anywhere near the line. So a player who leaves by the front gate
+# and turns left walks round the end of the fence, past the back of their own
+# house, and onto city grass having crossed nothing whatsoever. That is how the
+# town and the city came to have no boundary between them at all while the gate
+# road was being described everywhere as the only link between them: the gate
+# road is the only *road*, and the two grasses are flush.
+#
+# Closing it is the decision recorded as option A in MAP_PLAN section B. The
+# 75 studs between the house and downtown stay empty and become the financial
+# district's western approach, which is stage 4's problem, not the plot's.
+#
+# Both numbers measured off House.rbxmx with read_house.load(), which applies
+# rotation, and re-measured by an assertion in build_street.py every run. Do not
+# take them off an axis-aligned bounding box: two of that asset's panels are
+# 31.3 studs on their local X and turned ninety degrees, so an AABB puts the
+# east wall at 46.9 and is wrong by fourteen studs.
+PLOT_X1 = 32.35        # east edge of the plot's own ground
+PLOT_SEAL_Z1 = -31.8   # where the house's east wall takes over, going north
+# The south run sits on FENCE_Z0 rather than on the ground's own edge at -44.33,
+# so that it closes the corner with the street fence by construction instead of
+# by a second number that has to be kept equal to the first.
 
 # ---------------------------------------------------------------------------
 # The crossing

@@ -31,11 +31,12 @@ from rbxmx import at, box, group, part, point_light, sign
 import world_plan as W
 from world_plan import (
     CEIL_1, CEIL_2, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
-    FAR_WALK_X0, FAR_WALK_X1, FENCE_HEIGHT, FENCE_X, FENCE_Z0, FENCE_Z1,
-    FLOOR_1, FLOOR_2, FORECOURT_X0, FRONT_X, GATE_HALF, GROUND, INNER_DOORWAY,
-    NEAR_WALK_X0, NEAR_WALK_X1, PARTITION, PATH_HALF, PATH_TOP, PATH_X0,
-    PATH_X1, PAVING, PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_POINTS,
-    PLACE_TAG, PROPERTY_X, ROAD_MID, ROAD_X0, ROAD_X1, SCHOOL_DOOR, SCHOOL_X0,
+    FAR_WALK_X0, FAR_WALK_X1, FENCE_HALF, FENCE_HEIGHT, FENCE_X, FENCE_Z0,
+    FENCE_Z1, FLOOR_1, FLOOR_2, FORECOURT_X0, FRONT_X, GATE_HALF, GROUND,
+    INNER_DOORWAY, NEAR_WALK_X0, NEAR_WALK_X1, PARTITION, PATH_HALF, PATH_TOP,
+    PATH_X0, PATH_X1, PAVING, PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE,
+    PLACE_POINTS, PLACE_TAG, PLOT_SEAL_Z1, PLOT_X1, ROUTE_RADIUS,
+    PROPERTY_X, ROAD_MID, ROAD_X0, ROAD_X1, SCHOOL_DOOR, SCHOOL_X0,
     SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1, SLAB, STAIR_GOING, STAIR_RISE,
     STAIR_STEPS, STAIR_X0, STAIR_X1, STAIR_Z0, STAIR_Z1, STREET, STREET_Z0,
     STREET_Z1, WALL, WORK_DOOR, WORK_X0, WORK_X1, WORK_Z0, WORK_Z1,
@@ -273,24 +274,109 @@ with group("FrontPath"):
                  PATH_TOP - 0.6, PATH_TOP - 0.01), PATH_STONE, PEBBLE)
 
 
-def fence_run(z0, z1, index):
-    """Rails and posts between two points on the property line."""
-    x0, x1 = FENCE_X - 0.25, FENCE_X + 0.25
+def check_plot_boundary():
+    """Re-measure the three sides of the plot this file does not build.
+
+    PLOT_X1 and PLOT_SEAL_Z1 describe House.rbxmx, and nothing else in this
+    generator opens House.rbxmx -- it is a 1,082-part imported model that gets
+    dropped in whole. So they are two numbers copied out of an asset, which is
+    this tree's oldest way of shipping a bug: the asset moves, the copy does
+    not, and the only symptom is a gap in a fence that nobody walks into for a
+    month. Re-reading the model costs a tenth of a second.
+
+    The north side is checked too even though this file does not touch it,
+    because the *reason* it is not built here is that House.rbxmx already
+    closes it. That is an assumption, not an observation, until it is probed.
+    """
+    import read_house
+
+    parts = read_house.load(str(W.STREET.parent / "House.rbxmx"))
+    walls = [q for q in parts if q["y0"] < 3.0 < q["y1"]]
+    floors = [q for q in parts if q["y1"] <= 2.0]
+
+    def blocked(x, z):
+        return any(q["x0"] <= x <= q["x1"] and q["z0"] <= z <= q["z1"]
+                   for q in walls)
+
+    east = max(q["x1"] for q in floors if q["z0"] < FENCE_Z0 + 1.0)
+    assert abs(east - PLOT_X1) < 0.1, (
+        f"the plot's ground now ends at x {east:.2f}, not PLOT_X1 {PLOT_X1}. "
+        f"The south fence is drawn to PLOT_X1 - FENCE_HALF and the return "
+        f"stands on it, so both are now {'short of' if east > PLOT_X1 else 'past'} "
+        f"the edge. Update PLOT_X1 in world_plan.py.")
+
+    seal = next(z / 10 for z in range(int(FENCE_Z0 * 10), 0)
+                if blocked(PLOT_X1 - FENCE_HALF, z / 10))
+    assert abs(seal - PLOT_SEAL_Z1) < 0.3, (
+        f"the house's east wall now starts at z {seal:.2f}, not PLOT_SEAL_Z1 "
+        f"{PLOT_SEAL_Z1}. The return run stops at PLOT_SEAL_Z1, so the "
+        f"boundary now has a {abs(seal - PLOT_SEAL_Z1):.1f}-stud "
+        f"{'gap' if seal > PLOT_SEAL_Z1 else 'overlap'} in it. Update "
+        f"PLOT_SEAL_Z1 in world_plan.py.")
+
+    # A hole is only a hole if a body fits through it. The north side is a
+    # picket fence, so it is mostly gaps -- six-tenths of a stud between every
+    # pair of pickets -- and a probe that reports any unblocked sample reports
+    # the whole run as open, which is what the first version of this did.
+    gaps, start = [], None
+    for step in range(int(PROPERTY_X * 4), int(PLOT_X1 * 4) + 1):
+        if blocked(step / 4, FENCE_Z1):
+            if start is not None:
+                gaps.append((start, step / 4))
+                start = None
+        elif start is None:
+            start = step / 4
+    if start is not None:
+        gaps.append((start, PLOT_X1))
+    gaps = [g for g in gaps if g[1] - g[0] >= 2 * ROUTE_RADIUS]
+    assert not gaps, (
+        f"House.rbxmx no longer closes the plot's north side at z {FENCE_Z1}: a "
+        f"body fits through x " + ", ".join(f"{a:.1f}..{b:.1f}" for a, b in gaps)
+        + ". That side is unbuilt *because* the asset's own picket fence and "
+        f"north wall cover it. They no longer do, so a fourth run has to be "
+        f"added below.")
+
+
+check_plot_boundary()
+
+
+def fence_run(a0, a1, index, axis="z", line=FENCE_X):
+    """Rails and posts between two points on a boundary line.
+
+    `axis` is the direction the run travels; `line` is the fixed coordinate on
+    the other one. The street frontage runs north-south, which is why that is
+    the default, but the south boundary runs east-west and is the same fence.
+    """
+    lo, hi = line - FENCE_HALF, line + FENCE_HALF
+
+    def across(b0, b1, out=0.0):
+        """(x0, x1, z0, z1) for a piece spanning b0..b1 along `axis`."""
+        if axis == "z":
+            return (lo - out, hi + out, b0, b1)
+        return (b0, b1, lo - out, hi + out)
+
     top = 1.04 + FENCE_HEIGHT
-    box(f"RailTop{index}", (x0, x1, z0, z1, top - 0.4, top), TRIM_WHITE, WOOD)
-    box(f"RailLow{index}", (x0, x1, z0, z1, top - 2.0, top - 1.6), TRIM_WHITE, WOOD)
-    span = z1 - z0
+    box(f"RailTop{index}", across(a0, a1) + (top - 0.4, top), TRIM_WHITE, WOOD)
+    box(f"RailLow{index}", across(a0, a1) + (top - 2.0, top - 1.6),
+        TRIM_WHITE, WOOD)
+    span = a1 - a0
     posts = max(2, int(span // 5.5) + 1)
     for i in range(posts):
-        z = z0 + span * i / (posts - 1)
-        z = min(max(z, z0 + 0.3), z1 - 0.3)
-        box(f"Post{index}_{i + 1}", (x0 - 0.2, x1 + 0.2, z - 0.3, z + 0.3,
-                                     1.04, top + 0.3), TRIM_WHITE, WOOD)
+        a = a0 + span * i / (posts - 1)
+        a = min(max(a, a0 + 0.3), a1 - 0.3)
+        box(f"Post{index}_{i + 1}", across(a - 0.3, a + 0.3, 0.2)
+            + (1.04, top + 0.3), TRIM_WHITE, WOOD)
 
 
 with group("Fence"):
     fence_run(FENCE_Z0, DOOR_LINE - GATE_HALF, 1)
     fence_run(DOOR_LINE + GATE_HALF, FENCE_Z1, 2)
+    # The south boundary, and the short return north up to the house's own east
+    # wall. No gate in either: the whole point of closing this side is that the
+    # front gate becomes the only way off the plot, so the gate road stops being
+    # a route the player has no reason to take. See world_plan's note above.
+    fence_run(FENCE_X, PLOT_X1 - FENCE_HALF, 3, axis="x", line=FENCE_Z0)
+    fence_run(FENCE_Z0, PLOT_SEAL_Z1, 4, line=PLOT_X1 - FENCE_HALF)
     for i, z in enumerate((DOOR_LINE - GATE_HALF, DOOR_LINE + GATE_HALF)):
         box(f"GatePost{i + 1}",
             (FENCE_X - 0.55, FENCE_X + 0.55, z - 0.55, z + 0.55, 1.04, 1.04 + 4.6),
