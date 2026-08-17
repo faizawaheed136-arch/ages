@@ -1,5 +1,59 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-17 (evening)
+
+**I got task B wrong a second way, and the second way is more interesting than the
+first.** This morning's entry says there are 74.5 studs of bare grass behind the spawn
+house. That number is the distance to the first thing standing above y 3, and **a road
+does not stand above y 3**. `Ave0Road` is a 24-stud arterial at x 79..103 running the full
+height of the map, z -434..200, forty studs from the player's back fence. The genuinely
+bare ground is **x 32.35..73 — 40.65 studs**, which is one street wide and not one stud
+more. My probe filtered for obstructions and I read "nothing is in the way" as "nothing is
+there". That is the same mistake as the missing fifth asset, one layer down, and both were
+in output I had already printed.
+
+**The real fault is not emptiness, it is that the town has exactly one way into the city.**
+The gate road stops at `CONN_X0 = 19`; the connector runs *north* from `CITY_Z0 = 60`;
+`Ave0PavW` is unbroken from z -430 to 196 except at its own junctions and nothing meets it
+from the west below cross street 1 at z 200. So the walk from the back garden to the road
+forty studs behind it is about **six hundred studs**. `check_city` 8 and 11 both pass and
+are right to — 8 measures the road surface inside the city, 11 measures models to
+carriageways. Neither asks how many links there are between the two places. That is a
+missing check and I have not written it.
+
+**The owner's brief redirected the section**: populate around the spawn house — a theme
+park (good, farther away, *explicitly deferred*), a few medium houses, roads back into the
+city. `MAP_PLAN.md` B1/B2/B3 is the spec, awaiting a go. The load-bearing finding is B2:
+40.65 studs holds a street and nothing else, so the houses **cannot** go where the
+complaint points; they go on the town's own frontage, 174.8 bare studs south of the corner
+shop, which is where the player actually walks. B1's south end elbows onto Avenue 0 at
+`z -136..-106` because that gap in `Ave0PavW` is a junction that already exists — landing
+on it rather than cutting a new one keeps check 11 green by construction.
+
+**Committed: the option-A fence** (`1a003c1`) — the plot's south and east boundaries, 96
+studs not 170 because three sides were already closed. `fence_run` takes an axis now;
+byte-identical for the two pre-existing runs. `check_plot_boundary()` re-measures what it
+does not build, all three assertions negative-tested. Its reasoning ("the front gate
+becomes the only link") is now overruled by the brief, but the fence itself survives it —
+it becomes a garden fence onto the Backs. **It wants a back gate**, which is the one open
+question blocking B1.
+
+**Half a day lost to a stale `.pyc` in a directory that is not in the tree.** macOS system
+Python 3.9 writes bytecode to `~/Library/Caches/com.apple.python/<abs path>/`, not to
+`tools/__pycache__`, so `ls tools/` shows nothing and `git checkout` cannot clear it. A
+negative test had set `FENCE_Z1 = 30.0`; `30.0` and `22.0` are the same byte length, the
+restore landed in the same second, mtime and size both matched, and the cache was reused.
+`build_street.py` then failed for an hour against a source line that plainly read `22.0`.
+If a generator disagrees with its own constants, `rm -rf ~/Library/Caches/com.apple.python`
+before believing anything else.
+
+`check_city` green on all eleven. `check.py` **FAILS**, entirely in Agent B's lane —
+require cycles `EventService -> DeliveryService -> WorldEventService -> EventService` and
+two unused locals in `Zones.luau`/`EventService.luau`. Syntax clean and both places build,
+so this morning's `EventService` syntax error is fixed. Nothing of mine is implicated.
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-17 (later)
 
 **Task B is measured, not built, and I got it wrong once on the way.** The plan says
