@@ -262,6 +262,24 @@ SOUTHGATE_WALK = 4.0
 SOUTHGATE_CLEAR = (SOUTHGATE_Z0 - SOUTHGATE_WALK, SOUTHGATE_Z1 + SOUTHGATE_WALK)
 
 # ---------------------------------------------------------------------------
+# The south edge of the world
+# ---------------------------------------------------------------------------
+
+# Where the map stops, and it is the city that decides. The works district ends
+# at its own apron -- a boundary treeline wide enough to say "the map ends here"
+# without a wall -- and that apron's south face is the southernmost thing in the
+# world. gen_city.py derives it as `WORKS_Z0` from the works' street plan, so
+# this is a transcription of a number computed over there, and gen_city asserts
+# the two agree the moment either moves.
+#
+# It lives here rather than in gen_town.py for exactly the reason SOUTHGATE_Z0
+# does: the town has to end level with the city and cannot import gen_city.py to
+# find out where that is. Before this existed the town stopped at a typed -328,
+# 172 studs short of the city's edge, and the gap read as the map running out
+# early on one side.
+MAP_SOUTH_EDGE = -500.0
+
+# ---------------------------------------------------------------------------
 # The crossing
 # ---------------------------------------------------------------------------
 

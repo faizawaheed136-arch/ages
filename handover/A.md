@@ -1,5 +1,95 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18 (latest)
+
+**The street the player spawns on now goes somewhere, and gets worse on the way.** Asked
+for the area around the spawn house to feel poorer, for almost-broken houses past that
+part of the neighbourhood, for a landfill, and for the map to expand south. Approved
+scope: residential frontage only, scavenging as a real verb, gangs deferred.
+
+**Decay is a function of distance from your own front door, not a list.** The one design
+decision worth keeping. A hand-written list of which houses are run-down is a second
+table describing something the layout already knows, and this file has been bitten by
+that class four times. `house()` takes a `decay` 0..1 solved from the door's z against
+the street, everything visual goes through `worn(color, amount, toward)`, and features
+switch on thresholds of the same number. Measured out of the built asset, house / door z
+/ decay / parts / boarded windows:
+
+| 14 | 105 | 0.30 | 25 | 0 |
+| 16 | 145 | 0.30 | 25 | 0 |
+| 18 | -69 | 0.42 | 26 | 0 |
+| 20 | -113 | 0.50 | 28 | 0 |
+| 22 | -176 | 0.62 | 32 | 0 |
+| 24 | -216 | 0.69 | 32 | 0 |
+| 26 | -256 | 0.77 | 33 | 1 |
+| 28 | -343 | 0.93 | 34 | 2 |
+| 30 | -383 | 1.00 | 34 | 2 |
+
+Monotone in the geometry, not just in the source. Move a house and its condition moves
+with it; add house 32 further south and it is the worst one without anybody deciding so.
+
+**The street runs out.** The loop closed at z -290..-313 and simply stopped. A dead-end
+spur continues south in the same x band to the tip gate, with plots 28 and 30 on it, and
+the tip fills z -500..-400 across the full town width — chain-link, a gate the spur dead
+-ends into, spoil mounds, skips, wrecks, two floodlight masts, a weighbridge plate and a
+weighbridge hut, and the city's boundary treeline continued west so the south edge of the
+world closes in one line rather than two treatments meeting in the middle.
+
+**Three things nothing in this tree could have caught, now assertions.**
+
+- *The route graph would have broken silently.* House 26's waypoint is z -256.2 and house
+  28's is -343 — 87 studs against a 70-stud link radius. Everything south of house 26,
+  the entire tip included, would have been unreachable, and `check_city`'s connectivity
+  check passes because the town points it can reach are still one component. Fixed with a
+  crossing either side of the link road (`wp_cross_n`/`wp_cross_s`) and a `ROUTE_LINK`
+  assertion that walks the whole south chain in z order and names the two points that are
+  too far apart. Negative-tested by deleting the crossing: it reports the 87-stud gap.
+- *A hand-typed yard layout had five real collisions* — a floodlight mast standing inside
+  a spoil heap, two heaps through the hut, a wreck in a mound. A table of centres says
+  nothing about extents, and `check_town`'s overlap check compares *buildings*: a spoil
+  heap has no `Roof` part, so it is not a building and was never in scope. The separation
+  rule is now in the generator as a pairwise assertion over everything placed in the yard,
+  at `TIP_CLEAR = 2 * BODY_WIDTH`. Derived, not chosen: `BODY_WIDTH` is already this
+  file's answer to how much room a person needs, and twice it is a gap two people pass in
+  — the difference between a yard with routes through it and a maze of dead ends.
+- *The gate that got built was not the gate that was declared.* `TIP_GATE_MARGIN = 5.0`
+  says a 33-stud opening at x -92.5..-59.5. The built opening was 24 studs at -88..-64,
+  because `chainlink()` laid panels on one pitch across the whole boundary and dropped the
+  ones whose midpoint fell in the gap — and **no posts survived at the opening at all**,
+  because the post rule needed an adjacent surviving panel and at the gate neither
+  neighbour had one. The constant said 5.0 the entire time and nothing compared the
+  constant to the geometry. `fence_runs()` now splits at the gate's exact edges and
+  subdivides each run independently, and an assertion asks `fence_runs()` what it produced
+  rather than trusting the constant. **A declared measurement quietly rounded to a
+  construction grid** goes on the list next to the other four recurring defect classes.
+
+**Signposting.** The player walks 300 studs of worsening street, crosses the link road and
+arrives at a chain-link fence. Unnamed, that reads as the edge of the map and they turn
+round six strides short of the only yard in town with anything in it. `TipSignBoard` is as
+wide as the hole it names and butts against the west gatepost, so sign and entrance are one
+object; `TipNotice` under it says salvage is permitted, which is the *permission*, not the
+prompt — the prompt is the three dots on the skips. Both boards derive their canvas from
+their own size at a fixed `SIGN_PX`, because `sign()` stretches its canvas over whatever
+face it lands on and a text size quoted in canvas pixels means nothing until you know how
+many studs a pixel is.
+
+**For B — a tag contract, half-built on purpose.** Eleven parts in the tip carry
+`AgesScavenge` with a `ScavengeKind` attribute: 4 `skip`, 4 `pile`, 3 `wreck`. Same shape
+as `AgesGymEquipment`/`GymKind` — geometry stamps the tag, the service finds it by tag and
+never by name or position, and the two rebuild independently. **There is no `Config` entry
+behind it and I did not write one**: `Config.luau` is yours. The geometry being ready first
+is the point of a tag contract, not a gap in it. Place points to hang it off: `tip`,
+`wp_tip_gate`, `tip_office`.
+
+Town.rbxmx 1079 parts in 25 pieces, md5 `50563a826cdf4bd298f883db4eb6ae96`, reproducible
+across consecutive runs. `check_town` all six green (59 place points, 18 buildings),
+`check_city` all twelve green (159 destinations, farthest 18.0 from a carriageway; all 645
+place points reachable, worst detour 1.51). `check.py` clean in every check in my lane —
+the require cycles among `EventService`/`DeliveryService`/`WorldEventService` and the unused
+`yearJustEnded` at `PeopleService.luau:2044` are yours and are untouched.
+
+**Nothing here has been Studio-tested.**
+
 ## 2026-08-18 (later)
 
 **Four school events have never been able to fire, in any build, and every check in

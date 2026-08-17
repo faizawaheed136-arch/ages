@@ -821,3 +821,82 @@ that settles gets built twice.
 Docks want water, so they belong against the bay or on a new west shore — decide which
 before laying any of it, because it determines whether the empty west half is coastline or
 inland.
+
+### F. The poor end, and the tip — *built 2026-08-18*
+
+Not on the original owed list; it came from the owner: *"make the area around it poorer,
+add a land fill, almost broken houses after that part of the neighbourhood, expand that
+map"*, approved as residential-only, scavenging as a real verb, gangs deferred.
+
+**The spec, which is what the build was measured against.**
+
+1. **Decay is a function of distance from your front door, not a list.** A hand-written
+   list of which houses are run-down is a second table describing something the layout
+   already knows, and two tables that describe one thing are never compared. `house()`
+   takes a `decay` 0..1 solved from the door's z; `worn(color, amount, toward)` is the one
+   place that decides what run-down does to a colour; features (cracked path, roof patch,
+   yard junk, boarded windows) switch on thresholds of the same number. Verified by
+   measuring the built asset, not the source: parts per house climb 25 → 34 and boarded
+   windows 0 → 1 → 2 monotonically with z, so moving a house moves its condition.
+2. **The street runs out.** The loop closed at z -290..-313. A dead-end spur continues
+   south in the same x band to the tip gate, with plots 28 and 30 on it at z -360..-326
+   and -400..-366, south of the road to the factories.
+3. **The tip fills z -500..-400, the full town width.** Chain-link, a gate the spur
+   dead-ends into, spoil mounds, skips, wrecks, two floodlight masts over the yard rather
+   than street lamps, a weighbridge plate in the track and a weighbridge hut, and the
+   city's boundary treeline continued west at the same 30-stud pitch `works_boundary()`
+   uses, so the bottom of the world is one edge rather than two ideas meeting in the
+   middle.
+
+**The sidewalk could not be one slab, and this is the trap to remember.**
+`gen_city.py`'s `road_ew(SOUTHGATE_Z0, SOUTHGATE_Z1, ROAD_X1, AVE[0], ...)` starts at
+x = `ROAD_X1` = -64.5, which is exactly where the town's near sidewalk band begins. A
+single kerb-and-paving run from the tip up to the street would have laid a raised kerb
+across the middle of that carriageway — **in another asset, from a generator that never
+looks at it.** Two runs with a 30-stud crossing between them, plus an assertion that
+`SOUTHGATE_CLEAR[1]` and `CURL_Z` are still the same number, which is the only reason
+there is no third slab between them.
+
+**Three defects nothing in the tree could have caught, each now an assertion in
+`gen_town.py`, each negative-tested by making the change it forbids:**
+
+- **`ROUTE_LINK`** — house 26 at z -256.2 and house 28 at -343 are 87 studs apart against
+  a 70-stud link radius. Everything south of house 26 would have been off the route graph,
+  and `check_city` check 4 passes anyway because the town points it *can* reach are still
+  one component. Fixed with `wp_cross_n`/`wp_cross_s` either side of the link road; the
+  assertion walks the whole south chain in z order and names the offending pair.
+- **`TIP_CLEAR = 2 * BODY_WIDTH`** — the hand-typed yard had five real collisions,
+  including a floodlight mast inside a spoil heap. A table of centres says nothing about
+  extents, and `check_town` check 5 compares *buildings*: a spoil heap has no `Roof` part,
+  so it was never in scope. Pairwise over everything placed in the yard, plus the haul
+  track and the yard edge. Derived, not chosen — `BODY_WIDTH` is already the file's answer
+  to how much room a person needs, and twice it is a gap two people can pass in.
+- **The gate assertion** — `TIP_GATE_MARGIN = 5.0` declares a 33-stud opening; the built
+  opening was 24 studs, with **no posts at the opening at all**, because `chainlink()` laid
+  panels on one pitch across the whole boundary and dropped the ones whose midpoint fell in
+  the gap. `fence_runs()` now splits at the gate's exact edges and subdivides each run
+  independently, and the assertion asks `fence_runs()` what it built rather than trusting
+  the constant. **A declared measurement quietly rounded to a construction grid** joins the
+  recurring defect classes at the top of this file.
+
+**Signposting is part of the mechanic.** A player who walks 300 studs of worsening street
+to an unnamed chain-link fence reads it as the edge of the map and turns round. The board
+is as wide as the hole it names and butts against the west gatepost, so sign and entrance
+are one object; the notice under it grants permission to salvage, which is not the same
+thing as the prompt — the prompt is the three dots on the skips, per the interaction
+grammar. Both boards derive their canvas from their own size at a fixed pixels-per-stud,
+because `sign()` stretches its canvas over whatever face it lands on.
+
+**The seam that is deliberately half-built.** Eleven parts carry `AgesScavenge` with a
+`ScavengeKind` attribute — 4 `skip`, 4 `pile`, 3 `wreck` — in the shape of
+`AgesGymEquipment`/`GymKind`. There is no `Config` entry behind it because `Config.luau`
+belongs to another agent. Geometry first is how a tag contract is supposed to work.
+
+**Gangs deferred by the owner** — *"we can do the gangs later will probably be included in
+their territory"*. Nothing gang-specific was built. The tip and the poor end are laid out
+so they can become territory later: one dead-end approach, one gate, a fenced compound with
+a single way in, and a run of houses whose condition already grades toward it.
+
+Verified: `Town.rbxmx` 1079 parts in 25 pieces, md5 `50563a826cdf4bd298f883db4eb6ae96`,
+reproducible across consecutive runs. `check_town` all six green, `check_city` all twelve
+green, `check.py` clean in every check in this lane.

@@ -65,6 +65,8 @@ from world_plan import (
     # path's width, borrowed so the back one matches it.
     BACK_GATE_MID, HOUSE_EAST_X, PATH_HALF,
     SOUTHGATE_CLEAR, SOUTHGATE_WALK, SOUTHGATE_Z0, SOUTHGATE_Z1,
+    # The south edge of the world. Transcribed over there, asserted here.
+    MAP_SOUTH_EDGE,
 )
 
 from house_plan import _ASSETS
@@ -481,6 +483,16 @@ assert SOUTHGATE_WALK == CS_WALK, (
     f"SOUTHGATE_WALK is {SOUTHGATE_WALK} against a cross street's {CS_WALK}. The "
     f"link's pavements have to meet W1's at the avenue or there is a step in the "
     f"kerb. Update world_plan.py.")
+
+# Where the world stops in the south, asserted here for the third time and the
+# same reason: the works apron's south face is the southernmost thing in the
+# world, gen_town.py has to end its own ground level with it, and gen_town
+# cannot import this file to ask.
+assert MAP_SOUTH_EDGE == WORKS_Z0, (
+    f"MAP_SOUTH_EDGE in world_plan.py says {MAP_SOUTH_EDGE}, but the works apron "
+    f"now ends at {WORKS_Z0}. The town's south edge is laid against that number, "
+    f"so leaving them apart puts a {abs(WORKS_Z0 - MAP_SOUTH_EDGE):.0f}-stud step "
+    f"in the bottom of the map. Update world_plan.py.")
 
 # The Green: the corridor between the player's plot and avenue 1, left as
 # parkland.

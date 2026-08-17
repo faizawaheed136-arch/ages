@@ -40,10 +40,12 @@ walks north out of the school onto a sidewalk that has silently become a lawn
 has found a bug, not a hedge.
 """
 
+import math
+
 import rbxmx
 from rbxmx import (
-    ASPHALT, BRICK, CONCRETE, FABRIC, GLASS, GRASS, LEAFY_GRASS, MARBLE,
-    METAL, NEON, PEBBLE, PLASTIC, PLANKS, SLATE, SMOOTH, WOOD,
+    ASPHALT, BRICK, CONCRETE, CORRODED_METAL, FABRIC, GLASS, GRASS, LEAFY_GRASS,
+    MARBLE, METAL, NEON, PEBBLE, PLASTIC, PLANKS, SLATE, SMOOTH, WOOD,
 )
 from rbxmx import at, box, group, part, point_light, sign
 
@@ -52,6 +54,7 @@ from world_plan import (
     FORECOURT_X0,
     FRONT_X, GATE_CLEAR, GROUND, NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, PROPERTY_X,
+    MAP_SOUTH_EDGE,
     ROAD_MID, ROAD_X0, ROAD_X1, SLAB, SOUTHGATE_CLEAR, STREET_Z0, STREET_Z1,
     WALL,
 )
@@ -67,18 +70,23 @@ rbxmx.begin("RBXTOWN")
 # ---------------------------------------------------------------------------
 
 # Where the new ground starts. The original street ran Z -132..132; the town
-# continues the same bands outward from there. -328 is far enough that the
-# southernmost building has a meadow beyond it and room past the loop for the
-# town to keep growing.
+# continues the same bands outward from there.
+#
+# The south edge is not chosen. It used to be a typed -328, which left the town
+# ending 172 studs north of the city's own southern boundary -- so the bottom of
+# the map was a straight line on one side and stopped early on the other, and
+# nothing in either file could see it because neither knew the other's edge.
+# MAP_SOUTH_EDGE is the works apron's south face, transcribed into world_plan.py
+# and asserted against `WORKS_Z0` in gen_city.py the moment either moves.
 NORTH_Z0, NORTH_Z1 = STREET_Z1, 232.0          # 132..232
-SOUTH_Z0, SOUTH_Z1 = -328.0, STREET_Z0          # -328..-132
+SOUTH_Z0, SOUTH_Z1 = MAP_SOUTH_EDGE, STREET_Z0  # -500..-132
 
 # East of the player's own plot the corridor opens out. The near sidewalk ends
 # at the property line; from there the ground is the town's until it runs into
 # the field on the far side of the new houses.
 EAST_X0 = PROPERTY_X                            # -52.6
 EAST_X1 = 8.0
-EAST_Z0, EAST_Z1 = -328.0, NORTH_Z1             # -328..232
+EAST_Z0, EAST_Z1 = SOUTH_Z0, NORTH_Z1           # -500..232
 
 # The west side's buildings all front the same line the school and workplace
 # front -- FRONT_X -- so the town agrees about where the front of a building is.
@@ -257,6 +265,22 @@ assert HOUSES[1][0] - HOUSES[0][0] == HOUSE_DEPTH + NEIGHBOUR_GAP, (
     f"a {HOUSE_DEPTH}-stud house plus a {NEIGHBOUR_GAP}-stud gap. The south row "
     f"copies that pitch, so it can no longer tell what the pitch is.")
 
+# How deep the tip has to be before the row is allowed to stop laying houses.
+#
+# Two house plots, pitch included, because the street is the only ruler this
+# file has and the question the number answers is a question about scale: under
+# two plots the tip reads as somebody's back yard with rubbish in it, and the
+# thing at the bottom of the road has to read as *land* -- a place the town
+# takes its refuse to, not a bin. Typed as a multiple rather than as 80 so that
+# widening a plot widens the tip with it instead of leaving it looking cramped
+# against houses that grew.
+TIP_PLOTS = 2
+TIP_MIN_DEPTH = TIP_PLOTS * (HOUSE_DEPTH + NEIGHBOUR_GAP)
+# The line the row may not cross. The tip then takes everything the row left,
+# which is why there is no second constant saying where the tip starts: two
+# numbers for one boundary is how a gap opens between them.
+TIP_LIMIT = SOUTH_Z0 + TIP_MIN_DEPTH
+
 # The row is laid north to south, so each plot's *north* edge is what carries
 # forward. It steps over the southern link's window rather than stopping at it:
 # stopping would silently shorten the row if that window ever moved north,
@@ -267,7 +291,11 @@ _z1 = SHOP_Z0 - NEIGHBOUR_GAP
 _number = int(HOUSES[-1][3])
 while True:
     _z0 = _z1 - HOUSE_DEPTH
-    if _z0 < SOUTH_Z0:
+    # Stops at the tip's line, not at the bottom of the map: the row's last
+    # plot has to leave a neighbour's gap in front of the fence for the same
+    # reason every other plot leaves one, or the last house has a chain-link
+    # panel up against its back wall.
+    if _z0 - NEIGHBOUR_GAP < TIP_LIMIT:
         break
     if _z0 < SOUTHGATE_CLEAR[1] and _z1 > SOUTHGATE_CLEAR[0]:
         _z1 = SOUTHGATE_CLEAR[0] - NEIGHBOUR_GAP
@@ -282,9 +310,175 @@ while True:
 # field. Either way the number is a symptom, so this reports rather than clamps.
 assert 2 <= len(SOUTH_ROW) <= 6, (
     f"the south row came out at {len(SOUTH_ROW)} houses between the shop at "
-    f"z {SHOP_Z0} and the bottom of town at z {SOUTH_Z0}. Check SHOP_DEPTH, "
-    f"SOUTH_Z0 and SOUTHGATE_CLEAR in world_plan.py.")
+    f"z {SHOP_Z0} and the tip's line at z {TIP_LIMIT}. Check SHOP_DEPTH, "
+    f"TIP_PLOTS, MAP_SOUTH_EDGE and SOUTHGATE_CLEAR in world_plan.py.")
 HOUSES.extend(SOUTH_ROW)
+
+# The tip's north edge: whatever the row left, one neighbour's gap south of the
+# last house. Read off the row rather than declared, so a plot added or removed
+# up the street moves the fence instead of opening a strip of nothing between
+# the two.
+TIP_Z1 = SOUTH_ROW[-1][0] - NEIGHBOUR_GAP
+TIP_Z0 = SOUTH_Z0
+# Guaranteed by the break above, and asserted anyway because the guarantee lives
+# in a loop three screens up and the next person to edit that loop is the one
+# this catches.
+assert TIP_Z1 - TIP_Z0 >= TIP_MIN_DEPTH, (
+    f"the tip came out {TIP_Z1 - TIP_Z0:.0f} studs deep against a minimum of "
+    f"{TIP_MIN_DEPTH:.0f}. The south row's break condition is what leaves it "
+    f"room; it has stopped doing so.")
+
+# The tip is the full width of the town, seam to seam: the map's west margin to
+# the line the city's ground starts on. Not a plot in the corner -- the thing at
+# the bottom of the road has to read as land the town uses, and a compound that
+# stopped short of either edge would leave two strips of nothing whose only
+# purpose was to be the reason the tip is not the width of the map.
+TIP_X0, TIP_X1 = SOUTH_WEST_X0, EAST_X1
+
+# The road runs out into the gate. The gate is wider than the carriageway on
+# both sides, which is not decoration: the fence is drawn as panels between the
+# gate's edges and the compound's corners, so a gate narrower than the road
+# would put a chain-link panel standing in the middle of the spur. Deriving the
+# opening from ROAD_X0/ROAD_X1 rather than typing two numbers means widening the
+# road widens the gate instead of walling it off.
+#
+# Safe range 3-10. Under 3 a player running down the middle of the road clips a
+# gatepost; over 10 the fence stops reading as a boundary with a way in and
+# becomes two unrelated runs of wire.
+TIP_GATE_MARGIN = 5.0
+TIP_GATE_X0 = ROAD_X0 - TIP_GATE_MARGIN
+TIP_GATE_X1 = ROAD_X1 + TIP_GATE_MARGIN
+assert TIP_GATE_X0 < ROAD_X0 and TIP_GATE_X1 > ROAD_X1, (
+    f"the tip's gate is x {TIP_GATE_X0}..{TIP_GATE_X1} and the spur is "
+    f"{ROAD_X0}..{ROAD_X1}. The fence fills everything the gate does not, so a "
+    f"gate no wider than the road puts a panel across the carriageway.")
+# The gate that gets built is asserted to be the gate that was declared, down
+# where fence_runs() exists to be asked.
+
+# How far the scrub verge reaches in from the south and west edges. The city
+# closes its own south edge with a treeline on a verge (works_boundary in
+# gen_city.py) and this is the same line continued west, so the bottom of the
+# map is one edge rather than two treatments that meet in the middle. Trees
+# rather than a wall for the reason given over there: an edge a player can see
+# the far side of is an edge they walk to.
+TIP_VERGE = 20.0
+# The working yard: what the verge leaves. One name for it, because the yard's
+# south edge is the verge's north edge and writing it twice is how the two come
+# apart.
+TIP_YARD_Z0 = TIP_Z0 + TIP_VERGE
+TIP_YARD_X0 = TIP_X0 + TIP_VERGE
+# Where the trees stand within that verge, and how far apart. 30 is the city's
+# own spacing -- `int((x1 - x0) / 30.0)` in works_boundary -- carried over so
+# the two halves of the treeline have the same density where they meet.
+TIP_TREE_PITCH = 30.0
+
+# The sign on the gate. A player reaches this fence having walked the length of
+# a street that gets worse the further down it they go, crossed the link road
+# and passed two boarded houses -- three hundred studs of signal that they are
+# leaving town, and nothing at the end of it saying what they arrived at. A
+# named place is a destination; an unnamed chain-link fence is the edge of the
+# map, and a player who reads it that way turns round six strides short of the
+# only yard in the town with anything in it to find.
+#
+# The board is as wide as the hole it names and butts against the west gatepost,
+# so the sign and the way in are one object rather than a notice somewhere near
+# an opening. Derived rather than typed for the usual reason: widening the gate
+# widens the sign, and the two cannot drift apart into a board that overhangs
+# the entrance it is pointing at.
+TIP_SIGN_W = TIP_GATE_X1 - TIP_GATE_X0
+TIP_SIGN_H = 9.0
+TIP_SIGN_X1 = TIP_GATE_X0
+TIP_SIGN_X0 = TIP_SIGN_X1 - TIP_SIGN_W
+assert TIP_SIGN_X0 >= TIP_X0, (
+    f"the gate sign runs x {TIP_SIGN_X0}..{TIP_SIGN_X1} and the fence it hangs "
+    f"on starts at x {TIP_X0}. The board is the width of the gate laid west of "
+    f"it, so a gate this wide has run the sign off the end of the compound.")
+# The small board under it, at the height a player reads standing still rather
+# than the height they read walking towards it.
+TIP_NOTICE_W = 12.0
+TIP_NOTICE_H = 3.0
+TIP_NOTICE_Y0 = 3.5
+
+# sign()'s canvas is stretched over whatever face it lands on, so a canvas whose
+# aspect does not match the board's stretches the lettering -- and a text size
+# quoted in canvas pixels means nothing until you know how many studs a pixel
+# is. Both boards therefore derive their canvas from their own size at a fixed
+# scale, and quote their letter height in studs, which is the only unit anyone
+# reading this can check against the world.
+SIGN_PX = 24.0
+TIP_SIGN_LETTER = 4.0
+TIP_NOTICE_LETTER = 1.5
+
+# The tag the rules read to find something worth searching, and the attribute
+# that says what kind of thing it is. Same shape as AgesGymEquipment/GymKind:
+# geometry stamps the tag, the service finds it by tag and never by name or
+# position, and the two can be rebuilt independently.
+#
+# There is no Config entry behind this yet. Config.luau is not this generator's
+# to write, so the tag is laid down here and handed over -- the geometry being
+# ready first is the point of a tag contract, not a gap in it.
+SCAVENGE_TAG = "AgesScavenge"
+SCAVENGE_KIND_ATTR = "ScavengeKind"
+
+# The weighbridge and its office, just inside the gate on the west side: the
+# first thing you meet, which is what a weighbridge is. Its east wall faces the
+# haul track across a clear apron, so the building is read side-on from the gate
+# and front-on from inside the yard. Its place point stands eight studs in from
+# that wall, which is what WEST_SPOT_X means for every other building in town.
+HUT_X0, HUT_X1 = -130.0, -108.0
+HUT_Z0, HUT_Z1 = -436.0, -418.0
+HUT_DOOR = (HUT_Z0 + HUT_Z1) / 2
+HUT_SPOT_X = HUT_X1 - 8.0
+
+# ---------------------------------------------------------------------------
+# Wear
+# ---------------------------------------------------------------------------
+# How run-down each house is, on 0..1, and it is **one number read off the map
+# rather than a list of which houses are broken**.
+#
+# The reason to derive it is the reason everything else in this section is
+# derived: a list would be right on the day it was written and wrong the first
+# time a plot moved, and "number 26 is the boarded-up one" is a fact about a
+# coordinate, not about a house. Deriving it also means the row cannot develop a
+# hole -- there is no house the list forgot.
+#
+# The scale runs south, away from the player's own front door, because that is
+# the direction the town already thins out: the park, the library and the gym
+# are north of the spawn plot, the clinic, the bakery and the garage are south
+# of it, and the last thing on the road is now the tip. The gradient agrees with
+# a layout that was settled before it existed, which is why it reads as a town
+# with a bad end rather than as an effect applied to houses.
+#
+# WEAR_BASE is where the row starts rather than zero: every house on this street
+# is meant to be more modest than the imported model the player spawns in, which
+# is the one saturated, cared-for building in the world. Safe range 0.2-0.45 --
+# under 0.2 the north end is indistinguishable from the player's own house, over
+# 0.45 the whole town is a slum and the gradient has nothing left to say.
+WEAR_BASE = 0.30
+WEAR_Z_NORTH = DOOR_LINE
+WEAR_Z_SOUTH = min(door_z for _z0, _z1, door_z, _n in HOUSES)
+
+
+def wear_at(door_z: float) -> float:
+    """0 at the player's own door line, 1 at the last house before the tip."""
+    span = WEAR_Z_NORTH - WEAR_Z_SOUTH
+    t = min(1.0, max(0.0, (WEAR_Z_NORTH - door_z) / span))
+    return WEAR_BASE + (1.0 - WEAR_BASE) * t
+
+
+# What each kind of damage costs. Thresholds rather than a continuous ramp for
+# the three that are binary in the world -- a window is boarded or it is not --
+# and read straight off `wear` for the two that are not.
+#
+# Safe ranges are set by the row they have to land in. There are nine houses
+# spread over 0.30..1.00, so a threshold moved by more than about 0.08 changes
+# how many houses show the damage, and any threshold below WEAR_BASE applies it
+# to every house in town including the two at the good end.
+PATH_CRACK_WEAR = 0.45   # the front path breaks into slabs with weeds between
+ROOF_PATCH_WEAR = 0.55   # mismatched felt patches appear on the roof
+JUNK_WEAR = 0.62         # something dumped in the front yard
+BOARD_WEAR = 0.72        # one window boarded
+BOARD_BOTH_WEAR = 0.90   # both of them, and the house is empty
 
 # The park, east of the road, at the top of the houses. Open ground with a pond,
 # so the town has one place whose only purpose is being somewhere to be. Sits
@@ -363,6 +557,13 @@ PLACE_POINTS = [
     ("wp_east_s1", -58.0, -36.0, PAVING, "outside number 18"),
     ("wp_east_s2", -58.0, -80.0, PAVING, "outside number 20"),
     ("wp_east_s3", -58.0, -124.0, PAVING, "the south end of the near sidewalk"),
+    # Either side of the southern link road. The near walk is two slabs with a
+    # thirty-stud carriageway between them, so the route graph needs a point on
+    # each -- one hop across the crossing rather than an 87-stud jump from the
+    # last maintained house to the first neglected one, which is over the link
+    # radius and would have left the bottom of the street unreachable.
+    ("wp_cross_n", -58.0, CURL_Z + 2.0, PAVING, "the crossing, town side"),
+    ("wp_cross_s", -58.0, SOUTHGATE_CLEAR[0] - 2.0, PAVING, "the crossing, tip side"),
 ]
 
 # One point in every house, and one on the sidewalk outside every house in the
@@ -377,6 +578,37 @@ PLACE_POINTS.extend(
     (f"wp_east_s{4 + i}", -58.0, door_z, PAVING,
      f"outside number {number}")
     for i, (_hz0, _hz1, door_z, number) in enumerate(SOUTH_ROW))
+
+# The tip. The gate point stands in the gap in the fence, on the haul track, so
+# a route into the yard goes through the opening rather than at the wire; the
+# yard point is where a player is put down when the game says "the tip".
+PLACE_POINTS.extend([
+    ("wp_tip_gate", ROAD_MID, TIP_Z1 - 6.0, GROUND, "the gate of the tip"),
+    ("tip", ROAD_MID, TIP_Z1 - 44.0, GROUND, "the tip, in the yard"),
+    ("tip_office", HUT_SPOT_X, HUT_DOOR, FLOOR_1, "the tip office, at the desk"),
+])
+
+# Every hop the route graph has to make down the new half of the street, checked
+# against the radius that makes it a hop at all. Routes joins two points within
+# ROUTE_LINK of each other and nothing else joins them, so a chain with one gap
+# in it is not a long walk -- it is a piece of the map the game cannot reach.
+# The rest of this table's spacing was eyeballed and got away with it; the tip
+# is 87 studs from the last house that has a waypoint, which is where eyeballing
+# stopped getting away with it.
+ROUTE_LINK = 70.0
+_chain = ["wp_east_s3", "wp_cross_n", "wp_cross_s"]
+_chain += [f"wp_east_s{4 + i}" for i in range(len(SOUTH_ROW))]
+_chain += ["wp_tip_gate", "tip"]
+_by_id = {pid: (x, z) for pid, x, z, _f, _l in PLACE_POINTS}
+_ordered = sorted(_chain, key=lambda pid: -_by_id[pid][1])
+for _a, _b in zip(_ordered, _ordered[1:]):
+    _ax, _az = _by_id[_a]
+    _bx, _bz = _by_id[_b]
+    _d = math.hypot(_bx - _ax, _bz - _az)
+    assert _d <= ROUTE_LINK, (
+        f"{_a} at ({_ax:.0f},{_az:.0f}) and {_b} at ({_bx:.0f},{_bz:.0f}) are "
+        f"{_d:.0f} studs apart, over the {ROUTE_LINK:.0f}-stud link radius. "
+        f"Everything south of {_a} is off the route graph.")
 
 # ---------------------------------------------------------------------------
 # Palette
@@ -426,6 +658,42 @@ BAKERY_WALL = (204, 176, 132)   # warm cream
 GARAGE_WALL = (122, 126, 132)   # sheet steel
 
 HOUSE_WALL = (166, 118, 92)
+# Where that brick ends up at the bottom of the road: the same hue with the life
+# gone out of it -- damp-stained, greyed, never repainted. Deliberately not a
+# different colour. A house at the bad end has to read as *the same house* that
+# nobody has looked after, because a differently-coloured row would look like a
+# different builder put it there, which is the opposite of the point.
+HOUSE_WALL_WORN = (112, 96, 88)
+ROOF_PATCH = (58, 56, 58)       # felt, laid over a hole and not matched
+BOARD_PLY = (150, 122, 84)      # plywood over a window
+WEED = (96, 112, 58)
+RUBBLE = (128, 122, 112)
+
+# The tip. Nothing here is allowed a clean colour: this is the one place in the
+# town where a surface is meant to look spoiled, the same licence the works
+# district has in the city.
+TIP_DIRT = (104, 92, 76)        # compacted earth and ash, the haul surface
+TIP_SPOIL = (86, 78, 66)        # older, capped, grassed-over in patches
+TIP_SCRUB = (112, 120, 78)      # the grass that comes back on a capped bank
+SKIP_YELLOW = (168, 132, 44)    # a skip that was yellow a long time ago
+SKIP_RUST = (128, 82, 52)
+CHAINLINK = (118, 122, 126)
+WRECK_BODY = (96, 100, 104)
+TIP_SIGN_BOARD = (46, 72, 58)   # municipal green -- the one clean thing here,
+TIP_SIGN_INK = (238, 240, 232)  # because a sign nobody can read is not a sign
+
+
+def worn(color, amount, toward=None):
+    """`color` faded `amount` of the way toward its worn form, 0..1.
+
+    Everything the wear gradient touches goes through here, so there is exactly
+    one place that decides what "run-down" does to a colour. Written as a lerp
+    rather than as a per-house palette because nine hand-picked browns is nine
+    chances to pick one that reads as a different material.
+    """
+    target = HOUSE_WALL_WORN if toward is None else toward
+    t = min(1.0, max(0.0, amount))
+    return tuple(round(a + (b - a) * t) for a, b in zip(color, target))
 
 # The shop is the only non-residential thing on the east side, so it is allowed
 # one saturated colour the houses do not have -- a painted fascia. That band is
@@ -672,6 +940,163 @@ def place_point(pid, x, z, floor, label):
 
 
 # ---------------------------------------------------------------------------
+# The tip's own helpers
+# ---------------------------------------------------------------------------
+
+# How tall the chain-link stands, and how far apart its posts are. A tip fence
+# is taller than a garden one because the thing it is keeping out is people, and
+# the height is the whole reason the gate reads as the way in.
+# Safe range 7-11: under 7 a player reads it as something to vault, over 11 the
+# yard is a pit you look down into rather than a place you walk about in.
+FENCE_HEIGHT = 8.0
+FENCE_POST_PITCH = 12.0
+# Thin on purpose. A panel is 12 x 0.4 = 4.8 studs in plan, well under
+# check_town's WALL_MIN_AREA of 20, so a fence never registers as a building
+# wall and never gets reported as standing in a road. That is correct rather
+# than convenient: a fence is a boundary, and a boundary in a carriageway is a
+# gate, which is what the gap in this one is for.
+FENCE_THICK = 0.4
+
+
+def fence_runs(a0, a1, gaps):
+    """`a0..a1` with every range in `gaps` cut out of it."""
+    runs = [(a0, a1)]
+    for g0, g1 in sorted(gaps):
+        cut = []
+        for r0, r1 in runs:
+            if g0 > r0:
+                cut.append((r0, min(g0, r1)))
+            if g1 < r1:
+                cut.append((max(g1, r0), r1))
+        runs = [(r0, r1) for r0, r1 in cut if r1 - r0 > 0.01]
+    return runs
+
+
+def chainlink(label, a0, a1, at_coord, along="x", gaps=()):
+    """A run of chain-link along one axis, minus its gates.
+
+    `gaps` are ranges on the `along` axis that get no fence -- the same argument
+    shape `wall()` takes for doorways, so a hole in a boundary is reasoned about
+    the same way everywhere in this file.
+
+    Each surviving run is then divided into a whole number of panels *of its
+    own*. The obvious implementation is one pitch across the whole length with
+    the panels whose middle lands in a gap skipped, and that is what this
+    replaced: it silently rounded the gate to the panel grid. A gate declared
+    five studs wider than the carriageway on each side came out half a stud
+    wider, and both posts that should have framed the opening were dropped,
+    because the rule that kept a post asked whether either of its neighbouring
+    panels had survived and at the opening neither had. The declared gate and
+    the built gate were different numbers and nothing compared them. A gate is
+    a measurement, not a rounding.
+    """
+    i = j = 0
+    for r0, r1 in fence_runs(a0, a1, gaps):
+        n = max(1, int(round((r1 - r0) / FENCE_POST_PITCH)))
+        step = (r1 - r0) / n
+        for k in range(n):
+            i += 1
+            a, b = r0 + k * step, r0 + (k + 1) * step
+            bounds = ((a, b, at_coord - FENCE_THICK / 2, at_coord + FENCE_THICK / 2,
+                       GROUND, GROUND + FENCE_HEIGHT) if along == "x"
+                      else (at_coord - FENCE_THICK / 2, at_coord + FENCE_THICK / 2,
+                            a, b, GROUND, GROUND + FENCE_HEIGHT))
+            box(f"{label}Mesh{i}", bounds, CHAINLINK, METAL, transparency=0.4)
+        # Both ends of every run get a post, which is what puts one on each side
+        # of the opening: the two places the fence has to look finished are the
+        # corners and the gate.
+        for k in range(n + 1):
+            j += 1
+            a = r0 + k * step
+            bounds = ((a - 0.3, a + 0.3, at_coord - 0.3, at_coord + 0.3,
+                       GROUND, GROUND + FENCE_HEIGHT + 0.6) if along == "x"
+                      else (at_coord - 0.3, at_coord + 0.3, a - 0.3, a + 0.3,
+                            GROUND, GROUND + FENCE_HEIGHT + 0.6))
+            box(f"{label}Post{j}", bounds, STEEL, METAL)
+
+
+def spoil_mound(x, z, radius, height, label="Spoil"):
+    """A heap of covered spoil: three shrinking tiers rather than a cone.
+
+    Tiers because the world is boxes and a box heap reads as a heap at this
+    scale, and because a mound the player can get up is a mound they will get
+    up -- each tier is a step, not a wall.
+    """
+    with group(label):
+        for i in range(3):
+            r = radius * (1.0 - i * 0.28)
+            y0 = GROUND + height * i / 3.0
+            y1 = GROUND + height * (i + 1) / 3.0
+            box(f"{label}Tier{i + 1}", (x - r, x + r, z - r, z + r, y0, y1),
+                worn(TIP_SPOIL, i * 0.3, TIP_DIRT), PEBBLE)
+
+
+# How much room each searchable thing takes in plan, as a half-extent from its
+# own centre. Named because two readers need them: the helper that draws the
+# thing, and the assertion below that checks nothing is standing in the haul
+# track. A footprint written once in a helper and again in a check is a
+# footprint that will disagree with itself the first time a skip gets longer.
+SKIP_HALF_X, SKIP_HALF_Z = 5.0, 3.0
+# The wreck is not symmetric -- its open door reaches further east than its body
+# does west -- and one number that covers the widest side is the right kind of
+# wrong for a clearance check.
+WRECK_HALF_X, WRECK_HALF_Z = 5.4, 7.0
+
+
+def scavenge_skip(x, z, label="Skip", rusty=False):
+    """An open-top skip. The tagged part is the load, which is what a player
+    reaches into -- so the marker sits at the height of the thing you do."""
+    body = SKIP_RUST if rusty else SKIP_YELLOW
+    hx, hz = SKIP_HALF_X, SKIP_HALF_Z
+    with group(label):
+        box(f"{label}Floor", (x - hx, x + hx, z - hz, z + hz,
+                              GROUND, GROUND + 0.4), body, CORRODED_METAL)
+        for name, bounds in (
+            ("SideW", (x - hx, x - hx + 0.4, z - hz, z + hz, GROUND, GROUND + 4.2)),
+            ("SideE", (x + hx - 0.4, x + hx, z - hz, z + hz, GROUND, GROUND + 4.2)),
+            ("SideS", (x - hx, x + hx, z - hz, z - hz + 0.4, GROUND, GROUND + 4.2)),
+            ("SideN", (x - hx, x + hx, z + hz - 0.4, z + hz, GROUND, GROUND + 4.2)),
+        ):
+            box(f"{label}{name}", bounds, body, CORRODED_METAL)
+        box(f"{label}Load", (x - hx + 0.6, x + hx - 0.6, z - hz + 0.6, z + hz - 0.6,
+                             GROUND + 0.4, GROUND + 3.4), RUBBLE, PEBBLE,
+            collide=False, tags=[SCAVENGE_TAG],
+            attrs={SCAVENGE_KIND_ATTR: "skip"})
+
+
+def scavenge_pile(x, z, label="Pile", size=5.0):
+    """A heap of loose rubbish tipped straight onto the dirt."""
+    with group(label):
+        box(f"{label}Base", (x - size, x + size, z - size * 0.8, z + size * 0.8,
+                             GROUND, GROUND + 1.6), RUBBLE, PEBBLE,
+            tags=[SCAVENGE_TAG], attrs={SCAVENGE_KIND_ATTR: "pile"})
+        box(f"{label}Crown", (x - size * 0.6, x + size * 0.6,
+                              z - size * 0.5, z + size * 0.5,
+                              GROUND + 1.6, GROUND + 2.6),
+            worn(RUBBLE, 0.5, TIP_SPOIL), PEBBLE)
+        box(f"{label}Board", (x + size * 0.2, x + size * 0.9, z - 0.2, z + 0.2,
+                              GROUND + 1.6, GROUND + 4.4), BOARD_PLY, PLANKS,
+            collide=False)
+
+
+def scavenge_wreck(x, z, label="Wreck"):
+    """A car that got as far as the tip. No wheels, no glass, one door hanging
+    open -- a shape the player reads as finished, not as a vehicle to try."""
+    with group(label):
+        box(f"{label}Body", (x - 3.0, x + 3.0, z - WRECK_HALF_Z, z + WRECK_HALF_Z,
+                             GROUND + 0.4, GROUND + 3.2), WRECK_BODY, CORRODED_METAL,
+            tags=[SCAVENGE_TAG], attrs={SCAVENGE_KIND_ATTR: "wreck"})
+        box(f"{label}Cabin", (x - 2.6, x + 2.6, z - 3.0, z + 3.2,
+                              GROUND + 3.2, GROUND + 5.4),
+            worn(WRECK_BODY, 0.6, RUBBLE), CORRODED_METAL)
+        box(f"{label}Axle", (x - 3.2, x + 3.2, z - 5.0, z - 4.2,
+                             GROUND, GROUND + 0.6), (52, 50, 50), METAL)
+        box(f"{label}Door", (x + 2.6, x + WRECK_HALF_X, z - 1.0, z + 2.6,
+                             GROUND + 0.8, GROUND + 3.6),
+            worn(WRECK_BODY, 0.4, RUBBLE), CORRODED_METAL)
+
+
+# ---------------------------------------------------------------------------
 # Ground, road, sidewalks
 # ---------------------------------------------------------------------------
 
@@ -690,13 +1115,13 @@ with group("Ground"):
     # back up the return leg. The grass tiles around it exactly, the way the
     # bands north of the street do, so the loop reads as road-in-grass rather
     # than as a line of separate boxes.
-    box("GrassBottom", (SOUTH_WEST_X0, ROAD_X1, SOUTH_Z0, RETURN_Z0, GROUND_BOTTOM, GROUND),
+    box("GrassBottom", (SOUTH_WEST_X0, ROAD_X0, TIP_Z1, RETURN_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
     box("GrassWestLoop", (SOUTH_WEST_X0, RETURN_X0, RETURN_Z0, STREET_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
     box("GrassInner", (RETURN_X1, ROAD_X0, CURL_Z, STREET_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
-    box("GrassEastS", (ROAD_X1, EAST_X0, SOUTH_Z0, STREET_Z0, GROUND_BOTTOM, GROUND),
+    box("GrassEastS", (ROAD_X1, EAST_X0, TIP_Z1, STREET_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
     box("RoadEast", (ROAD_X0, ROAD_X1, CURL_Z, STREET_Z0, GROUND_BOTTOM, GROUND),
         TARMAC, ASPHALT)
@@ -705,10 +1130,40 @@ with group("Ground"):
     box("RoadReturn", (RETURN_X0, RETURN_X1, RETURN_Z0, STREET_Z0, GROUND_BOTTOM, GROUND),
         TARMAC, ASPHALT)
 
+    # The spur: the loop's bottom band carried on south, in the same band and
+    # the same width, to dead-end at the tip's gate. It is what makes the last
+    # two houses a street rather than two buildings in a field -- and it is
+    # named Road* inside Ground because in this town a road is a tile of the
+    # ground jigsaw, not a slab on top of one, which is the rule check_town's
+    # check 6 reads carriageways by.
+    box("RoadSpur", (ROAD_X0, ROAD_X1, TIP_Z1, RETURN_Z0, GROUND_BOTTOM, GROUND),
+        TARMAC, ASPHALT)
+
     # East of the property line: one continuous bed of grass the length of the
-    # new quarter, under the houses and the park.
-    box("GrassEast", (EAST_X0, EAST_X1, EAST_Z0, EAST_Z1, GROUND_BOTTOM, GROUND),
+    # new quarter, under the houses and the park. It stops at the tip's fence
+    # line, where the ground stops being anybody's lawn.
+    box("GrassEast", (EAST_X0, EAST_X1, TIP_Z1, EAST_Z1, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
+
+    # The tip's own ground, the full width of the town, tiled rather than laid
+    # over the grass: two boxes sharing a top height z-fight, and every other
+    # surface in this file is a tile for that reason. Five tiles, not one with
+    # decoration on it -- the scrub verge the boundary trees stand on, and the
+    # haul track running in from the gate, are both different ground rather than
+    # strips painted over the same slab.
+    box("TipScrub", (TIP_X0, TIP_X1, TIP_Z0, TIP_Z0 + TIP_VERGE, GROUND_BOTTOM, GROUND),
+        TIP_SCRUB, GRASS)
+    box("TipScrubWest", (TIP_X0, TIP_X0 + TIP_VERGE, TIP_YARD_Z0, TIP_Z1,
+                         GROUND_BOTTOM, GROUND), TIP_SCRUB, GRASS)
+    box("TipGroundWest", (TIP_X0 + TIP_VERGE, TIP_GATE_X0, TIP_YARD_Z0, TIP_Z1,
+                          GROUND_BOTTOM, GROUND), TIP_DIRT, PEBBLE)
+    # The track is the gate's own width carried all the way to the back fence:
+    # what the player can see of where they are allowed to walk is the width of
+    # the hole they came in through, so the yard cannot close behind them.
+    box("TipTrack", (TIP_GATE_X0, TIP_GATE_X1, TIP_YARD_Z0, TIP_Z1,
+                     GROUND_BOTTOM, GROUND), TIP_SPOIL, PEBBLE)
+    box("TipGroundEast", (TIP_GATE_X1, TIP_X1, TIP_YARD_Z0, TIP_Z1,
+                          GROUND_BOTTOM, GROUND), TIP_DIRT, PEBBLE)
 
     # The grass west of the original street edge widens north of the loop too,
     # so the return leg ends against its own meadow rather than a cliff.
@@ -743,6 +1198,14 @@ with group("Road"):
                                     float(z), float(z) + DASH_LENGTH,
                                     GROUND + PAINT_LIFT - PAINT_THICK, GROUND + PAINT_LIFT),
             ROAD_PAINT, SMOOTH)
+    # The spur, dashed the same way and then stopping. Where the paint stops is
+    # the only warning a driver's road gives that it has become a yard, and it
+    # stops one dash short of the gate rather than running into the fence.
+    for z in range(int(RETURN_Z0) - 12, int(TIP_Z1 + DASH_LENGTH + DASH_GAP), -12):
+        box(f"DashSpur{abs(z)}", (ROAD_MID - CENTRE_WIDTH / 2, ROAD_MID + CENTRE_WIDTH / 2,
+                                  float(z), float(z) + DASH_LENGTH,
+                                  GROUND + PAINT_LIFT - PAINT_THICK, GROUND + PAINT_LIFT),
+            ROAD_PAINT, SMOOTH)
 
 with group("Sidewalks"):
     # The four bands north of the street, unchanged: kerb at the road edge,
@@ -766,6 +1229,28 @@ with group("Sidewalks"):
                       GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
     box("NearPavingS", (NEAR_WALK_X0 + KERB_WIDTH, NEAR_WALK_X1, CURL_Z, STREET_Z0,
                         GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+    # ...and the same two bands again south of the southern link, so the last
+    # two houses and the tip gate have a walk instead of a verge.
+    #
+    # It is two runs and not one because the link road from the city crosses
+    # this band. `road_ew(SOUTHGATE_Z0, SOUTHGATE_Z1, ROAD_X1, ...)` in
+    # gen_city.py starts at ROAD_X1, which is exactly where the near walk starts
+    # -- so a single slab from the tip to the street would lay a raised kerb
+    # across the middle of that carriageway, in another asset, where nothing in
+    # this file would ever look. The existing run already ends at CURL_Z, which
+    # is SOUTHGATE_CLEAR[1] to the stud; the new one starts at the other side of
+    # the same window, read from it rather than typed, and the thirty studs
+    # between them are a road crossing, which is what they look like.
+    assert SOUTHGATE_CLEAR[1] == CURL_Z, (
+        f"the near sidewalk's existing south run ends at {CURL_Z} and the "
+        f"southern link's clearance ends at {SOUTHGATE_CLEAR[1]}. They were the "
+        f"same number, which is why there is no third slab between them; they "
+        f"are not any more, so there is now a {abs(SOUTHGATE_CLEAR[1] - CURL_Z):.0f} "
+        f"stud hole in the walk or a slab lying in the link road.")
+    box("NearKerbTip", (NEAR_WALK_X0, NEAR_WALK_X0 + KERB_WIDTH, TIP_Z1, SOUTHGATE_CLEAR[0],
+                        GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
+    box("NearPavingTip", (NEAR_WALK_X0 + KERB_WIDTH, NEAR_WALK_X1, TIP_Z1, SOUTHGATE_CLEAR[0],
+                          GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
     box("FarKerbS", (FAR_WALK_X1 - KERB_WIDTH, FAR_WALK_X1, FAR_END_Z, STREET_Z0,
                      GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
     box("FarPavingS", (FAR_WALK_X0, FAR_WALK_X1 - KERB_WIDTH, FAR_END_Z, STREET_Z0,
@@ -968,6 +1453,9 @@ def house(z0, z1, door_z, number):
     iz0, iz1 = z0 + WALL, z1 - WALL
     d0, d1 = door_z - DOORWAY / 2, door_z + DOORWAY / 2
 
+    decay = wear_at(door_z)
+    wall_colour = worn(HOUSE_WALL, decay)
+
     with group(f"House{number}"):
         # Starts at the back of the sidewalk, not at the kerb. The sidewalk is
         # already paved from the kerb to the property line -- by build_street.py
@@ -975,26 +1463,90 @@ def house(z0, z1, door_z, number):
         # so a path drawn from the kerb laid eleven studs of stone in the same
         # plane as eleven studs of paving, in two different files, and the two
         # flickered against each other outside every front door in town.
-        box("Path", (NEAR_WALK_X1, HOUSE_X0, door_z - 2.2, door_z + 2.2,
-                     PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
+        #
+        # Past PATH_CRACK_WEAR it stops being one slab and becomes three with
+        # weeds through the joints. The pieces are cut out of the same span the
+        # whole path occupies, so a broken path is exactly as long as a sound
+        # one and the door is never left with a step of bare grass in front of
+        # it -- a decorative crack that a player has to walk round is a trip
+        # hazard, not a detail.
+        if decay < PATH_CRACK_WEAR:
+            box("Path", (NEAR_WALK_X1, HOUSE_X0, door_z - 2.2, door_z + 2.2,
+                         PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
+        else:
+            span = HOUSE_X0 - NEAR_WALK_X1
+            for i in range(3):
+                a = NEAR_WALK_X1 + span * i / 3
+                b = NEAR_WALK_X1 + span * (i + 1) / 3
+                # The gap grows with the decay, and only between slabs -- the
+                # two ends stay put against the paving and the doorstep.
+                nick = 0.5 * (decay - PATH_CRACK_WEAR) / (1.0 - PATH_CRACK_WEAR)
+                box(f"PathSlab{i + 1}",
+                    (a if i == 0 else a + nick, b if i == 2 else b - nick,
+                     door_z - 2.2, door_z + 2.2, PAVING - 0.5, PAVING),
+                    worn(PATH_STONE, decay, RUBBLE), PEBBLE)
 
         with group("HouseStructure"):
             box("Slab", (HOUSE_X0, HOUSE_X1, z0, z1, FLOOR_1 - SLAB, FLOOR_1),
                 FLOOR_INDOOR, MARBLE)
             box("Roof", (HOUSE_X0, HOUSE_X1, z0, z1, CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
-            wall("WallWest", (HOUSE_X0, ix0, z0, z1, FLOOR_1, CEIL_1), HOUSE_WALL,
+            # Felt patches, laid on the roof rather than cut into it: a hole in
+            # the roof of a house the player can walk into is a hole in the
+            # ceiling of a room, and every one of these houses has a bed in it.
+            # The count is read off the wear so it climbs with everything else
+            # instead of being a second decision.
+            if decay >= ROOF_PATCH_WEAR:
+                patches = 1 + int((decay - ROOF_PATCH_WEAR) * 6)
+                for i in range(patches):
+                    pz = z0 + (z1 - z0) * (i + 1) / (patches + 1)
+                    box(f"RoofPatch{i + 1}",
+                        (HOUSE_X0 + 4.0 + 3.0 * i, HOUSE_X0 + 14.0 + 3.0 * i,
+                         pz - 4.0, pz + 4.0, CEIL_1 + SLAB, CEIL_1 + SLAB + 0.12),
+                        ROOF_PATCH, FABRIC, collide=False)
+            wall("WallWest", (HOUSE_X0, ix0, z0, z1, FLOOR_1, CEIL_1), wall_colour,
                  along="z", doors=((d0, d1),))
-            wall("WallEast", (ix1, HOUSE_X1, z0, z1, FLOOR_1, CEIL_1), HOUSE_WALL, along="z")
-            wall("WallSouth", (HOUSE_X0, HOUSE_X1, z0, iz0, FLOOR_1, CEIL_1), HOUSE_WALL, along="x")
-            wall("WallNorth", (HOUSE_X0, HOUSE_X1, iz1, z1, FLOOR_1, CEIL_1), HOUSE_WALL, along="x")
+            wall("WallEast", (ix1, HOUSE_X1, z0, z1, FLOOR_1, CEIL_1), wall_colour, along="z")
+            wall("WallSouth", (HOUSE_X0, HOUSE_X1, z0, iz0, FLOOR_1, CEIL_1), wall_colour, along="x")
+            wall("WallNorth", (HOUSE_X0, HOUSE_X1, iz1, z1, FLOOR_1, CEIL_1), wall_colour, along="x")
+            # A boarded window is the same opening with plywood in it instead of
+            # glass, so the wall behind is unchanged and the house stays a house
+            # a player can be sent into. The south window goes first because it
+            # is the one furthest from the door.
+            boards = (2 if decay >= BOARD_BOTH_WEAR
+                      else 1 if decay >= BOARD_WEAR else 0)
             for i, (a, b) in enumerate(((iz0 + 3.0, iz0 + 7.0), (iz1 - 7.0, iz1 - 3.0))):
-                glazing(f"Window{i + 1}",
-                        (ix1 + 0.4, HOUSE_X1 - 0.4, a, b, FLOOR_1 + 3.0, FLOOR_1 + 7.0),
-                        along="z", panes=2)
+                opening = (ix1 + 0.4, HOUSE_X1 - 0.4, a, b, FLOOR_1 + 3.0, FLOOR_1 + 7.0)
+                if i < boards:
+                    box(f"WindowBoard{i + 1}", opening, BOARD_PLY, PLANKS, collide=False)
+                else:
+                    glazing(f"Window{i + 1}", opening, along="z", panes=2)
             box("Numberplate", (HOUSE_X0 - 0.6, HOUSE_X0 - 0.1, door_z - 1.5, door_z + 1.5,
                                 FLOOR_1 + 8.0, FLOOR_1 + 9.5),
-                TRIM_WHITE, SMOOTH,
+                worn(TRIM_WHITE, decay, RUBBLE), SMOOTH,
                 children=sign(number, "left", color=(60, 66, 84), size=48))
+
+        # The front yard, which is the half of a house a player actually reads:
+        # they walk past it at eye level and they only ever see the roof from a
+        # distance. Weeds first, then dumped rubbish, both kept east of the
+        # property line so nothing here can reach the sidewalk the route graph
+        # walks down -- a tyre standing on the pavement is an obstruction on the
+        # only path through town.
+        with group("HouseYard"):
+            for i in range(round(decay * 6)):
+                wx = NEAR_WALK_X1 + 1.5 + (i % 3) * 3.0
+                wz = z0 + 3.0 + (z1 - z0 - 6.0) * ((i * 7) % 11) / 10.0
+                if abs(wz - door_z) < 3.4:      # not in the path itself
+                    wz += 5.0
+                box(f"Weed{i + 1}", (wx, wx + 1.1, wz, wz + 1.1,
+                                     GROUND, GROUND + 0.9 + 0.4 * (i % 3)),
+                    WEED, LEAFY_GRASS, collide=False)
+            if decay >= JUNK_WEAR:
+                box("YardTyre", (NEAR_WALK_X1 + 2.0, NEAR_WALK_X1 + 5.4,
+                                 door_z + 5.0, door_z + 8.4, GROUND, GROUND + 1.1),
+                    (44, 44, 46), PEBBLE)
+                box("YardAppliance", (HOUSE_X0 - 4.2, HOUSE_X0 - 1.4,
+                                      door_z - 9.0, door_z - 6.0, GROUND, GROUND + 4.2),
+                    worn(TRIM_WHITE, decay, RUBBLE), CORRODED_METAL)
 
         with group("HouseFittings"):
             # The partition runs the depth of the house, so it is an along-z wall
@@ -1231,6 +1783,234 @@ with group("Park"):
         box(f"PicnicSeat{dx}",
             (PARK_X0 + 30.0 + dx - 2.0, PARK_X0 + 30.0 + dx + 2.0,
              PARK_Z1 - 15.0, PARK_Z1 - 7.0, GROUND + 1.2, GROUND + 1.6), DESK_TOP, WOOD)
+
+# ---------------------------------------------------------------------------
+# The tip
+# ---------------------------------------------------------------------------
+# What the road runs out into. The street's decay gradient has to arrive
+# somewhere, and a gradient that ends at a fence with a field behind it says the
+# houses got worse for no reason; a gradient that ends at the place the town
+# takes its refuse says why.
+#
+# Everything searchable in here carries SCAVENGE_TAG. That is the whole of this
+# generator's share of scavenging: geometry stamps a tag, and the rules find it
+# by tag and by nothing else -- the same seam AgesGymEquipment already runs on,
+# and the reason a real art pass can replace every box below without touching a
+# line of Luau.
+
+# Where each object stands, as (x, z) with its own plan half-extents, so the
+# clearance rule below is reading the same numbers the geometry is drawn from.
+# Laid out by hand rather than scattered by a rule: a tip is a place where
+# somebody dumped things where there was room, and a grid reads as a car park.
+TIP_MOUNDS = [
+    # x, z, radius, height
+    (-230.0, -455.0, 18.0, 16.0),
+    (-145.0, -458.0, 14.0, 12.0),
+    (-178.0, -428.0, 11.0, 9.0),
+    (-25.0, -458.0, 12.0, 10.0),
+]
+TIP_SKIPS = [
+    # x, z, rusty
+    (-180.0, -466.0, False),
+    (-110.0, -468.0, True),
+    (-15.0, -424.0, False),
+    (-198.0, -466.0, True),
+]
+TIP_PILES = [
+    # x, z, size
+    (-245.0, -420.0, 5.0),
+    (-118.0, -448.0, 5.0),
+    (-48.0, -455.0, 4.0),
+    (-195.0, -450.0, 4.0),
+]
+TIP_WRECKS = [
+    (-215.0, -422.0),
+    (-148.0, -422.0),
+    (-42.0, -422.0),
+]
+TIP_MASTS = [
+    (-105.0, -450.0),
+    (-28.0, -416.0),
+]
+MAST_HALF = 1.8
+
+# How much room the yard leaves between one thing and the next, and between
+# anything and the edge of the working ground.
+#
+# Derived, not chosen: BODY_WIDTH is already this file's answer to "how much
+# room does a person need", arrived at when the corner shop's counter was found
+# overhanging the only standing room behind it. Twice that is a gap two people
+# could pass in, which is the difference between a yard with routes through it
+# and a yard that is a maze of dead ends. A tip is meant to be picked through,
+# and a player who has to reverse out of every gap has been given scenery rather
+# than a place.
+TIP_CLEAR = 2 * BODY_WIDTH
+
+# This is the check that mattered. The first version of this layout was typed
+# out by eye and read as fine in the table: every number was inside the yard and
+# none was in the track. Measured, it had a floodlight mast standing inside a
+# spoil mound, a wreck buried in another one, and a heap a stud off the office
+# wall -- because a table of centres says nothing about extents, and four kinds
+# of object with four different footprints is exactly where reading coordinates
+# stops working. Nothing else in the tree would have caught it: check_town's
+# overlap check compares *buildings*, and a spoil heap is not a building.
+_placed = (
+    [(x, z, r, r, f"mound at ({x:.0f},{z:.0f})") for x, z, r, _h in TIP_MOUNDS]
+    + [(x, z, SKIP_HALF_X, SKIP_HALF_Z, f"skip at ({x:.0f},{z:.0f})")
+       for x, z, _r in TIP_SKIPS]
+    + [(x, z, s, s * 0.8, f"pile at ({x:.0f},{z:.0f})") for x, z, s in TIP_PILES]
+    + [(x, z, WRECK_HALF_X, WRECK_HALF_Z, f"wreck at ({x:.0f},{z:.0f})")
+       for x, z in TIP_WRECKS]
+    + [(x, z, MAST_HALF, MAST_HALF, f"mast at ({x:.0f},{z:.0f})")
+       for x, z in TIP_MASTS]
+    + [((HUT_X0 + HUT_X1) / 2, (HUT_Z0 + HUT_Z1) / 2,
+        (HUT_X1 - HUT_X0) / 2, (HUT_Z1 - HUT_Z0) / 2, "the weighbridge office")]
+)
+
+
+def _plan_gap(a, b):
+    """Distance between two axis-aligned footprints, 0 if they touch or overlap."""
+    ax, az, ahx, ahz, _ = a
+    bx, bz, bhx, bhz, _ = b
+    return math.hypot(max(abs(bx - ax) - ahx - bhx, 0.0),
+                      max(abs(bz - az) - ahz - bhz, 0.0))
+
+
+for _i, _a in enumerate(_placed):
+    _x, _z, _hx, _hz, _what = _a
+    assert _x + _hx <= TIP_GATE_X0 - TIP_CLEAR or _x - _hx >= TIP_GATE_X1 + TIP_CLEAR, (
+        f"{_what} reaches x {_x - _hx:.1f}..{_x + _hx:.1f} and the haul track is "
+        f"{TIP_GATE_X0}..{TIP_GATE_X1}. The track is the width of the gate on "
+        f"purpose -- it is the only thing telling the player where they may walk "
+        f"-- so nothing may stand in it or within {TIP_CLEAR:.1f} of it.")
+    assert (TIP_YARD_X0 + TIP_CLEAR <= _x - _hx and _x + _hx <= TIP_X1 - TIP_CLEAR
+            and TIP_YARD_Z0 + TIP_CLEAR <= _z - _hz
+            and _z + _hz <= TIP_Z1 - TIP_CLEAR), (
+        f"{_what} reaches x {_x - _hx:.1f}..{_x + _hx:.1f} "
+        f"z {_z - _hz:.1f}..{_z + _hz:.1f}, which leaves under {TIP_CLEAR:.1f} "
+        f"studs against the edge of the working yard at x {TIP_YARD_X0}..{TIP_X1} "
+        f"z {TIP_YARD_Z0}..{TIP_Z1}. Either it is outside the yard or a player "
+        f"cannot get round the back of it.")
+    for _b in _placed[_i + 1:]:
+        _d = _plan_gap(_a, _b)
+        assert _d >= TIP_CLEAR, (
+            f"{_what} and {_b[4]} are {_d:.1f} studs apart, under the "
+            f"{TIP_CLEAR:.1f} the yard leaves between two things. At 0.0 they "
+            f"are standing in each other.")
+
+# The gate that gets built is the gate that was declared. The first version of
+# chainlink() laid panels on one pitch across the whole boundary and dropped the
+# ones whose middle landed in the gap, which rounded this opening from 33 studs
+# to 24 and left a five-stud shoulder reading as half a stud -- while
+# TIP_GATE_MARGIN still said 5.0 in the source. Asked of fence_runs() rather
+# than of the constants, because the constants were never what was wrong.
+_gate = fence_runs(TIP_X0, TIP_X1, ((TIP_GATE_X0, TIP_GATE_X1),))
+assert len(_gate) == 2 and _gate[0][1] == TIP_GATE_X0 and _gate[1][0] == TIP_GATE_X1, (
+    f"the tip's fence comes out as {_gate}, which does not leave an opening at "
+    f"exactly x {TIP_GATE_X0}..{TIP_GATE_X1}. The haul track is drawn to the "
+    f"declared width, so a narrower hole in the fence is two panels standing in "
+    f"the track.")
+
+with group("Tip"):
+    # The boundary. Chain-link across the north with the gate in it and up the
+    # east seam against the city; trees on the south and west, which is what the
+    # map does instead of stopping -- the same treatment works_boundary() gives
+    # the city's south edge, continued west so the bottom of the world is one
+    # line rather than two ideas meeting in the middle.
+    chainlink("TipFenceN", TIP_X0, TIP_X1, TIP_Z1, along="x",
+              gaps=((TIP_GATE_X0, TIP_GATE_X1),))
+    chainlink("TipFenceE", TIP_Z0, TIP_Z1, TIP_X1, along="z")
+
+    # The gates themselves, swung back into the yard against nothing, which is
+    # what a working tip's gates look like at every hour a player will ever see
+    # them. They are the reason the opening reads as a gate rather than as a
+    # length of missing fence, and they are the length of one panel so the eye
+    # gets the width of the hole from the width of the leaf.
+    for i, gx in enumerate((TIP_GATE_X0, TIP_GATE_X1)):
+        box(f"TipGateLeaf{i + 1}",
+            (gx - FENCE_THICK / 2, gx + FENCE_THICK / 2,
+             TIP_Z1 - FENCE_POST_PITCH, TIP_Z1, GROUND, GROUND + FENCE_HEIGHT),
+            CHAINLINK, METAL, transparency=0.4)
+        box(f"TipGateEdge{i + 1}",
+            (gx - 0.25, gx + 0.25, TIP_Z1 - FENCE_POST_PITCH - 0.25,
+             TIP_Z1 - FENCE_POST_PITCH + 0.25, GROUND, GROUND + FENCE_HEIGHT),
+            STEEL, METAL)
+
+    # The sign, on the north face of the fence so it is read on the way in. It
+    # sits a hair proud of the posts rather than in the same plane as the mesh:
+    # two slabs sharing a face z-fight, and the fence is the one surface in this
+    # compound a player looks straight through.
+    #
+    # "back" is +z. The player walks south down the spur, so +z is the face
+    # turned towards them; a sign on the other face would be legible only from
+    # inside the yard they have not gone into yet.
+    box("TipSignBoard",
+        (TIP_SIGN_X0, TIP_SIGN_X1, TIP_Z1 + 0.3, TIP_Z1 + 0.9,
+         GROUND + FENCE_HEIGHT, GROUND + FENCE_HEIGHT + TIP_SIGN_H),
+        TIP_SIGN_BOARD, SMOOTH,
+        children=sign("TOWN TIP", "back", color=TIP_SIGN_INK,
+                      size=round(TIP_SIGN_LETTER * SIGN_PX),
+                      width=round(TIP_SIGN_W * SIGN_PX),
+                      height=round(TIP_SIGN_H * SIGN_PX)))
+    # What the sign above it does not say, and the reason a player walks in
+    # rather than looking at the gate and turning round. It is not a prompt --
+    # the prompt is the three dots on the skips -- it is the permission that
+    # makes walking into somebody else's yard a thing this town does.
+    box("TipNotice",
+        (TIP_SIGN_X1 - TIP_NOTICE_W, TIP_SIGN_X1, TIP_Z1 + 0.3, TIP_Z1 + 0.9,
+         GROUND + TIP_NOTICE_Y0, GROUND + TIP_NOTICE_Y0 + TIP_NOTICE_H),
+        worn(TRIM_WHITE, 0.5, RUBBLE), SMOOTH,
+        children=sign("SALVAGE PERMITTED", "back", color=(52, 56, 64),
+                      size=round(TIP_NOTICE_LETTER * SIGN_PX),
+                      width=round(TIP_NOTICE_W * SIGN_PX),
+                      height=round(TIP_NOTICE_H * SIGN_PX)))
+
+    # The weighbridge plate: a steel deck set into the track at the gate, so the
+    # first ten strides inside the fence are on something that says what this
+    # place does. Low enough to run straight over.
+    box("Weighplate", (TIP_GATE_X0 + 1.0, TIP_GATE_X1 - 1.0, -432.0, -414.0,
+                       GROUND, GROUND + 0.3), STEEL, METAL)
+
+    for i, (x, z, radius, height) in enumerate(TIP_MOUNDS):
+        spoil_mound(x, z, radius, height, label=f"Spoil{i + 1}")
+    for i, (x, z, rusty) in enumerate(TIP_SKIPS):
+        scavenge_skip(x, z, label=f"Skip{i + 1}", rusty=rusty)
+    for i, (x, z, size) in enumerate(TIP_PILES):
+        scavenge_pile(x, z, label=f"Pile{i + 1}", size=size)
+    for i, (x, z) in enumerate(TIP_WRECKS):
+        scavenge_wreck(x, z, label=f"Wreck{i + 1}")
+
+    # Two masts over the yard rather than street lamps: a lamp on a pavement arm
+    # leaning over a dirt yard is the wrong object, and its base would stand at
+    # PAVING half a stud above ground that tops at GROUND.
+    for i, (x, z) in enumerate(TIP_MASTS):
+        with group(f"TipMast{i + 1}"):
+            with at(x, z, floor=GROUND):
+                part("Base", (0, 0, 0), (2 * MAST_HALF, 0.6, 2 * MAST_HALF),
+                     STEEL, CONCRETE)
+                part("Mast", (0, 0.6, 0), (0.8, 22.0, 0.8), STEEL, METAL)
+                part("Head", (0, 22.0, 0), (3.6, 1.0, 1.6), FITTING, NEON,
+                     children=point_light(LAMP_LIGHT, 2.0, 40.0))
+
+    # The boundary treeline, spaced the way gen_city.py spaces its own so the
+    # two halves have the same density where they meet at x = 8.
+    for i in range(int((TIP_X1 - TIP_X0) / TIP_TREE_PITCH)):
+        tx = TIP_X0 + TIP_TREE_PITCH / 2 + i * TIP_TREE_PITCH
+        tree(tx, TIP_Z0 + 6.0 + (i % 3) * 4.0, GROUND,
+             height=17.0 + (i % 4) * 3.0, spread=12.0 + (i % 3) * 2.0,
+             label=f"TipTreeS{i + 1}")
+    for i in range(int((TIP_Z1 - TIP_YARD_Z0) / TIP_TREE_PITCH)):
+        tz = TIP_YARD_Z0 + TIP_TREE_PITCH / 2 + i * TIP_TREE_PITCH
+        tree(TIP_X0 + 6.0 + (i % 3) * 4.0, tz, GROUND,
+             height=16.0 + (i % 3) * 3.0, spread=11.0 + (i % 2) * 3.0,
+             label=f"TipTreeW{i + 1}")
+
+shell("Weighbridge", HUT_X0, HUT_X1, HUT_Z0, HUT_Z1, HUT_DOOR, worn(BRICK_PALE, 0.7),
+      wall_mat=CONCRETE)
+with group("WeighbridgeFittings"):
+    desk(HUT_X0 + 6.0, HUT_DOOR, FLOOR_1, side="east")
+    chair(HUT_X0 + 9.0, HUT_DOOR, FLOOR_1, side="east")
+    ceiling_light((HUT_X0 + HUT_X1) / 2, HUT_DOOR, CEIL_1)
 
 # ---------------------------------------------------------------------------
 # Street furniture
