@@ -57,8 +57,13 @@ from world_plan import (
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, SLAB, STOREY, WALL,
     # The town's own street, so the gate road can tee off it by name instead of
     # a copied literal that silently stops matching when the town moves.
-    PROPERTY_X, ROAD_X1,
+    PROPERTY_X, ROAD_X0, ROAD_X1,
     GATE_CLEAR, GATE_WALK, GATE_Z0, GATE_Z1,
+    # The second link out of town, and the east edge of the plot the Backs runs
+    # behind. HOUSE_EAST_X is a measurement of House.rbxmx, which this file never
+    # opens -- build_street.py re-measures it every run.
+    BACK_GATE_MID, HOUSE_EAST_X,
+    SOUTHGATE_CLEAR, SOUTHGATE_WALK, SOUTHGATE_Z0, SOUTHGATE_Z1,
 )
 
 from house_plan import _ASSETS
@@ -427,6 +432,85 @@ AVE_FULL = [(a - AVE_WALK, a + AVE_W[k] + AVE_WALK) for k, a in enumerate(AVE)]
 WCS_ROAD = [(c, c + WCS_W) for c in SOUTH_CS]
 WCS_FULL = [(c - CS_WALK, c + WCS_W + CS_WALK) for c in SOUTH_CS]
 SOUTH_AVE_ROAD = [[(AVE[k], AVE[k] + AVE_W[k]) for k in cs_aves(c)] for c in SOUTH_CS]
+
+# ---------------------------------------------------------------------------
+# Two more ways out of town
+# ---------------------------------------------------------------------------
+#
+# Until now there was one, the gate road, and it is a 14-stud lane. The walk
+# from the spawn house's back garden to avenue 1 -- forty studs due east of it --
+# was out the front gate, north, east along the gate road, a hundred and forty
+# studs north up the connector to cross street 1, east, and two hundred studs
+# back south: about six hundred studs to cross forty. Nothing caught it. Check 8
+# walks the road surface *inside* the city and check 11 measures models to
+# carriageways; neither asks how many ways there are between the two places.
+#
+# Both of the roads below land on mouths that already exist. Every south street
+# has a gap cut in avenue 1's west pavement where it meets it, and three of those
+# gaps -- W1, W2, W3 -- open onto nothing, because the works streets they were
+# cut for all run *east*. Using them means no new junction on the avenue, no new
+# entry in any carve list, and a junction tile that is already drawn.
+
+# The southern link: works cross street 1, carried west from avenue 1, across the
+# seam, to the town road's east kerb at the bottom of the loop. The town's own
+# road turns west there (CURL_Z), so this makes that corner a crossroads and puts
+# the ironworks, the sawmill and the timber yard on a straight road from the
+# town's south end -- which is where the works place points, and the jobs, are.
+#
+# SOUTHGATE_* live in world_plan.py because gen_town.py has to keep the east
+# frontage clear of them and cannot import this file. They are asserted rather
+# than derived there for the same reason: world_plan is imported *by* this file,
+# so it cannot see SOUTH_CS.
+assert (SOUTHGATE_Z0, SOUTHGATE_Z1) == (SOUTH_CS[1], SOUTH_CS[1] + WCS_W), (
+    f"SOUTHGATE_Z0/Z1 in world_plan.py say {SOUTHGATE_Z0}..{SOUTHGATE_Z1}, but "
+    f"works cross street 1 is at {SOUTH_CS[1]}..{SOUTH_CS[1] + WCS_W}. The "
+    f"southern link is that street carried west, so it has to be that band or it "
+    f"lands beside the junction instead of on it. Update world_plan.py.")
+assert SOUTHGATE_WALK == CS_WALK, (
+    f"SOUTHGATE_WALK is {SOUTHGATE_WALK} against a cross street's {CS_WALK}. The "
+    f"link's pavements have to meet W1's at the avenue or there is a step in the "
+    f"kerb. Update world_plan.py.")
+
+# The Backs: a north-south street filling the corridor between the player's plot
+# and avenue 1, from the W2 mouth to the W3 mouth. It is the road the complaint
+# about the back of the house was actually about.
+#
+# The corridor is 40.5 studs and every edge of it belongs to something else, so
+# nothing here is chosen:
+#
+#   west   HOUSE_EAST_X, the furthest east anything in House.rbxmx reaches.
+#   east   avenue 1's west pavement, AVE[0] - AVE_WALK.
+#   road   the town's own carriageway width, so the street the player walks out
+#          of town on and the street behind their house are the same size.
+#   walks  the east one is the city's standard AVE_WALK; the west one is
+#          whatever is left, and it comes out at 11.5 -- within four tenths of
+#          the town's own near sidewalk. That is the residential side, it faces
+#          a row of garden fences, and it is where the back gate lands.
+#
+# It is deliberately not carried north to the gate road. CAFE ASTER stands at
+# x 44.4..72, z 64..92, square across the only line that would take it, and the
+# cafe was there first.
+BACKS_CORRIDOR_X0 = HOUSE_EAST_X
+BACKS_CORRIDOR_X1 = AVE[0] - AVE_WALK
+BACKS_W = ROAD_X1 - ROAD_X0
+BACKS_WALK_E = AVE_WALK
+BACKS_X1 = BACKS_CORRIDOR_X1 - BACKS_WALK_E
+BACKS_X0 = BACKS_X1 - BACKS_W
+BACKS_WALK_W = BACKS_X0 - BACKS_CORRIDOR_X0
+# Safe range 6-14: under 6 a fence and a lamp column stop both fitting on it,
+# over 14 the corridor cannot also hold the carriageway. It is not a free number
+# -- it is the remainder -- so this asserts rather than clamps.
+assert 6.0 <= BACKS_WALK_W <= 14.0, (
+    f"the corridor between the plot and avenue 1 leaves {BACKS_WALK_W:.2f} studs "
+    f"of west pavement, from {BACKS_CORRIDOR_X1 - BACKS_CORRIDOR_X0:.2f} of "
+    f"corridor less {BACKS_W} of carriageway and {BACKS_WALK_E} of east "
+    f"pavement. Something east of the plot has moved. Narrowing BACKS_W is the "
+    f"only safe direction -- widening it takes the pavement, not the grass.")
+# South end at the W2 mouth, north end at the W3 mouth. The carriageway runs the
+# whole way through both bands, so each end *is* the junction and no separate
+# corner tile is needed.
+BACKS_Z0 = SOUTH_CS[2]
+BACKS_Z1 = SOUTH_CS[3] + WCS_W
 
 # The main street: storefronts on the strip between the connector's east
 # sidewalk and the first avenue's west sidewalk, fronting the connector. Carved
@@ -1320,30 +1404,54 @@ def walks_ew(z0, z1, x0, x1, walk, prefix, sides="both"):
             PAVING_GREY, PEBBLE)
 
 
-PAINT_TOP = GROUND + 0.02
-PAINT_BOTTOM = PAINT_TOP - 0.12
+# How far a centre line stands proud of the tarmac it is painted on. It is a
+# clearance, not a height, and every dash is placed at its own road's surface
+# plus this -- which is the whole reason `lift` is threaded through the two
+# functions below.
+#
+# It used to be an absolute `GROUND + 0.02`, correct for the seventy-odd roads
+# laid at GROUND and wrong for the one that is not. The gate road is lifted by
+# GRASS_LIFT so it beats the town's grass, which puts its surface at exactly
+# GROUND + 0.02 as well -- so all eleven of its centre dashes were coincident
+# with the road underneath them, six studs by six tenths each, and would have
+# flickered. check 10 could not see it: it compares assets against each other,
+# and both of these are City.rbxmx.
+PAINT_LIFT = 0.02
+PAINT_THICK = 0.12
+# The same two numbers for the paint that is *not* on a road: the Circle's
+# markings and the sports courts' lines, all of which are laid on surfaces at
+# GROUND. Derived from the pair above so there is one thickness of paint in the
+# city and not two.
+PAINT_TOP = GROUND + PAINT_LIFT
+PAINT_BOTTOM = PAINT_TOP - PAINT_THICK
 DASH = 6.0
 GAP = 6.0
 
 
-def dashes_ns(x, z_lo, z_hi, gaps, prefix):
-    """Centre dashes along a north-south road, carved at its crossings."""
+def dashes_ns(x, z_lo, z_hi, gaps, prefix, lift=0.0):
+    """Centre dashes along a north-south road, carved at its crossings.
+
+    ``lift`` must match the road's own -- see PAINT_LIFT."""
+    top = GROUND + lift + PAINT_LIFT
     for za, zb in carve((z_lo, z_hi), gaps):
         z = za + DASH
         while z + DASH <= zb - DASH:
             box(f"{prefix}Dash{z:.0f}",
-                (x - 0.3, x + 0.3, z, z + DASH, PAINT_BOTTOM, PAINT_TOP),
+                (x - 0.3, x + 0.3, z, z + DASH, top - PAINT_THICK, top),
                 ROAD_PAINT, SMOOTH)
             z += DASH + GAP
 
 
-def dashes_ew(z, x_lo, x_hi, gaps, prefix):
-    """Centre dashes along an east-west road."""
+def dashes_ew(z, x_lo, x_hi, gaps, prefix, lift=0.0):
+    """Centre dashes along an east-west road.
+
+    ``lift`` must match the road's own -- see PAINT_LIFT."""
+    top = GROUND + lift + PAINT_LIFT
     for xa, xb in carve((x_lo, x_hi), gaps):
         x = xa + DASH
         while x + DASH <= xb - DASH:
             box(f"{prefix}Dash{x:.0f}",
-                (x, x + DASH, z - 0.3, z + 0.3, PAINT_BOTTOM, PAINT_TOP),
+                (x, x + DASH, z - 0.3, z + 0.3, top - PAINT_THICK, top),
                 ROAD_PAINT, SMOOTH)
             x += DASH + GAP
 
@@ -1399,7 +1507,67 @@ with group("Streets"):
     # z 79.3..80.7 and z 83.3..84.7.
     road_ew(GATE_Z0, GATE_Z1, ROAD_X1, CONN_X0, "Gate", lift=GRASS_LIFT)
     walks_ew(GATE_Z0, GATE_Z1, PROPERTY_X, CONN_X0, GATE_WALK, "Gate")
-    dashes_ew((GATE_Z0 + GATE_Z1) / 2, ROAD_X1, CONN_X0, [], "Gate")
+    dashes_ew((GATE_Z0 + GATE_Z1) / 2, ROAD_X1, CONN_X0, [], "Gate",
+              lift=GRASS_LIFT)
+
+    # The southern link. Works cross street 1 carried west to the town road's
+    # east kerb, on the same lift and for the same reason as the gate road: its
+    # first twelve studs cross ground the town generator laid, and the town's
+    # grass tops at exactly GROUND.
+    #
+    # It tees off at ROAD_X1, not ROAD_X0 -- see the gate road's note. The town's
+    # own bottom band already runs east to that kerb over z -313..-290, so this
+    # meets it along nineteen of its twenty-two studs and the junction is a
+    # crossroads. The three-stud step at each side is real and is left alone: the
+    # alternative is retyping W1's band as a number of its own, which is the
+    # defect this file keeps being repaired for.
+    #
+    # The pavements start at PROPERTY_X rather than at the kerb, again like the
+    # gate road, so the mouth of the junction stays open instead of being closed
+    # by a pavement the road runs under. Unlike the gate road there is no town
+    # sidewalk to run beneath here -- the near walk stops at z -290 where the
+    # road used to turn -- so those 11.9 studs are bare tarmac by design.
+    road_ew(SOUTHGATE_Z0, SOUTHGATE_Z1, ROAD_X1, AVE[0], "Southgate",
+            lift=GRASS_LIFT)
+    walks_ew(SOUTHGATE_Z0, SOUTHGATE_Z1, PROPERTY_X, AVE[0], SOUTHGATE_WALK,
+             "Southgate")
+    dashes_ew((SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2, ROAD_X1, AVE[0], [], "Southgate",
+              lift=GRASS_LIFT)
+
+    # The Backs, and its two elbows onto avenue 1. Wholly on city ground -- the
+    # corridor starts at HOUSE_EAST_X, which is 24 studs east of the seam -- so
+    # no lift.
+    #
+    # Each end runs the whole way through its south street's band, so the corner
+    # square is part of the carriageway and there is no separate tile. The
+    # elbows start at BACKS_X1 for the same reason the gate road starts at
+    # ROAD_X1: starting them inside the Backs would lay the same tarmac twice.
+    road_ns(BACKS_X0, BACKS_X1, BACKS_Z0, BACKS_Z1, "Backs")
+    for _c in (BACKS_Z0, SOUTH_CS[3]):
+        road_ew(_c, _c + WCS_W, BACKS_X1, AVE[0], f"BacksLink{_c:.0f}")
+    # The west pavement is the long one, it is uncarved because nothing crosses
+    # it, and it runs four studs past each bend so that it -- not the elbow --
+    # owns the outside corner. The east pavement is the inside of both bends and
+    # is carved back to the elbows' full bands, so the elbows own those corners.
+    # This is the same "one and only one box owns every square" rule the avenues
+    # and cross streets already follow, applied to a road that bends.
+    walks_ns(BACKS_X0, BACKS_X1, BACKS_Z0 - CS_WALK, BACKS_Z1 + CS_WALK,
+             BACKS_WALK_W, "Backs", sides="west")
+    walks_ns(BACKS_X0, BACKS_X1, BACKS_Z0 + WCS_W + CS_WALK,
+             SOUTH_CS[3] - CS_WALK, BACKS_WALK_E, "Backs", sides="east")
+    for _c, _outer in ((BACKS_Z0, "south"), (SOUTH_CS[3], "north")):
+        _inner = "north" if _outer == "south" else "south"
+        # Outer: from the Backs' own west kerb, so it carries the corner square
+        # across the full width of the carriageway.
+        walks_ew(_c, _c + WCS_W, BACKS_X0, AVE[0], CS_WALK,
+                 f"BacksLink{_c:.0f}", sides=_outer)
+        walks_ew(_c, _c + WCS_W, BACKS_X1, AVE[0], CS_WALK,
+                 f"BacksLink{_c:.0f}", sides=_inner)
+    # Carved at both elbows: a dash inside a junction is a lane marking through a
+    # place where there are no lanes. The elbows themselves are twelve studs long
+    # and take none -- dashes_ew needs a dash and a gap at each end.
+    dashes_ns((BACKS_X0 + BACKS_X1) / 2, BACKS_Z0, BACKS_Z1,
+              [(BACKS_Z0, BACKS_Z0 + WCS_W), (SOUTH_CS[3], BACKS_Z1)], "Backs")
 
     # Avenues: road carved at cross streets, sidewalks carved at the cross
     # streets' own sidewalks so they yield the corners. Avenue 3 is carved a
@@ -5452,6 +5620,41 @@ for j, c in enumerate(CS):
 for j, c in enumerate(SOUTH_CS):
     for i, x in enumerate(range(int(WORKS_X0), int(WORKS_X1), 68)):
         waypoint(f"wp_ws{j}_{i}", float(x), c + WCS_W / 2, f"south street {j + 1}")
+
+# The two new links out of town. Without these the roads are geometry nothing
+# routes down: Routes joins place points within 70 studs and knows nothing about
+# tarmac, so a carriageway with no chain on it shortens no journey for anyone but
+# a player who already knows it is there. Shortening the journey is the whole
+# reason both roads exist, so these chains are not optional decoration.
+#
+# Southgate takes GROUND explicitly for the same reason wp_bridge_1/2 do: its
+# west half stands on ground the *town* generator laid, which surface_floor
+# cannot see from in here. Its west end lands 43 studs from the town's
+# southernmost road point and its east end 7.5 from wp_ws1_0, so the two networks
+# join at both ends of it.
+_southgate_mid = (SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2
+for _i, _x in enumerate(range(int(ROAD_X1), int(AVE[0]), 68)):
+    waypoint(f"wp_southgate_{_i}", float(_x), _southgate_mid,
+             "the southern link, between the town and the works", GROUND)
+
+# The Backs is chained from elbow centre to elbow centre rather than end to end,
+# because the elbows *are* the junctions -- a point in each is what makes the
+# corner routable onto avenue 1, and each sits 23.5 studs from that avenue's own
+# south-street point.
+_backs_mid_x = (BACKS_X0 + BACKS_X1) / 2
+_backs_s = BACKS_Z0 + WCS_W / 2
+_backs_n = SOUTH_CS[3] + WCS_W / 2
+for _i, _z in enumerate(range(int(_backs_s), int(_backs_n), 68)):
+    waypoint(f"wp_backs_{_i}", _backs_mid_x, float(_z), "the Backs")
+waypoint("wp_backs_n", _backs_mid_x, _backs_n, "the Backs, at avenue 1")
+
+# Outside the back gate, on the Backs' west pavement. This is the point that
+# makes the gate worth cutting: it puts the spawn 34 studs from a chain that
+# runs to avenue 1, instead of routing every journey out of the front door,
+# the length of the town and round the loop. A gate with no point outside it
+# is a hole in a fence that no route uses.
+waypoint("wp_backs_gate", (BACKS_CORRIDOR_X0 + BACKS_X0) / 2, BACK_GATE_MID,
+         "the Backs, outside your back gate")
 
 # The step-down band's mews. Two per column rather than one in the middle: a
 # single point at the centre of a 102-stud band is 72 studs from the avenue

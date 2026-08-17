@@ -1,5 +1,69 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-17 (night)
+
+**B1 and B2 are built, and the thing they found is worse than the thing they were asked
+to fix.** The brief was "the spawn house is at the end of the map, make it more populated".
+Measuring the result properly turned up this: **the spawn could reach 23 of 620 place
+points, and not one of them was in the city.**
+
+The near sidewalk had no place point outside the player's own front gate. That left a
+76-stud hole in the chain — six studs over `ROUTE_LINK` — which severed the spawn from the
+north half of its own street, and the only road into the city left from that half. So every
+route out of the spawn went south, round the loop, and stopped. Not a slow path: no path.
+
+Nothing in this tree could see it, and it is worth being precise about why. `check_city`
+check 4 asks two questions — is the city one connected component, and does the city reach
+**at least one** town point. Both were true. The city reached the town at the far end of a
+chain the player was not standing on. *"At least one" was the bug*, and I wrote in
+yesterday's entry that the missing check was "how many links are there between the two
+places". That was the right instinct pointed at the wrong quantity: link *count* is a proxy.
+The quantity is "can the player get there, and how far out of their way".
+
+**`check_city` check 12, "Every place reachable from the spawn"** — Dijkstra from the spawn
+pad over the route graph, asking both. Reachability, and a detour ratio (`MAX_DETOUR` 1.9)
+of walked distance against straight-line. Both halves are load-bearing and the numbers prove
+it: before this session, 597 unreachable and a worst ratio of 1.20; after the two new roads,
+0 unreachable and a worst ratio of **2.56**; after the missing waypoint, 1.47. The
+reachability half is blind to the middle row, the ratio half is blind to the first — a ratio
+can only be computed for somewhere you can already get to. Negative-tested against
+`git show HEAD:assets/*.rbxmx`: exit 1, "597 stranded".
+
+The threshold is 1.9, not the 1.47 the world measures. A ratio gate is a smoke alarm, not a
+tape measure; tightened to the current worst it fails the next time somebody adds an honest
+cul-de-sac, and a check that cries wolf gets deleted.
+
+**Built.** *Southgate* — works cross street 1 carried west to the town's kerb, the second
+link, straight into the works district where the job points are. *The Backs* — north-south
+behind the spawn plot, `x 44..67`, elbowing onto avenue 1 at both ends. Both land on mouths
+that already exist in `Ave0PavW`, so no new junction tiles and no carve-list entries. *The
+back gate*, with `wp_backs_gate` outside it. *Three houses*, 22/24/26, on the town's east
+frontage below the corner shop.
+
+**Two things I got wrong inside this build and want the next person to see.**
+
+The back gate was first `GATE_HALF / 2`, which reads fine in a plan and gives **3.1 studs of
+clear gap** — narrower than any interior door in the game. Fixed by deriving it from
+`INNER_DOORWAY`, a width the player has already been proven able to walk through, and
+`DOORWAY`/`INNER_DOORWAY` moved up `world_plan.py` to sit beside the gate constants. Every
+opening a player walks through should be one of those two numbers or say why not.
+
+The south row was specced as "four houses, numbers 22–28". It is three, and it is not typed:
+`SOUTH_ROW` reads depth, pitch and numbering off houses 14/16 and lays plots until one will
+not fit, so the frontage decides the count. It steps *over* `SOUTHGATE_CLEAR` rather than
+stopping at it. Negative-tested by disabling that exclusion — the row puts house 28 across
+the new carriageway and check 7 says so, which is the corner-shop/`GATE_CLEAR` story
+repeating word for word. House place points are generated from `HOUSES` now; the four
+originals were literals, which works right up until a fifth house exists with no point in it.
+
+**Still open.** The town's west frontage `z -280..-204` is bare and takes exactly one house
+at the civic side's spacing — left alone on purpose, since clinic/bakery/garage is what makes
+that side read as a town. B3, the theme park, is deferred by the owner; the spec in
+`MAP_PLAN.md` is the part that matters (a ride you watch is a prop, a ride that pays out for
+standing on it is the idle pad). `check_town.py` still does not exist. `tools/check.py` still
+FAILS on three require cycles in `src/` — `DeliveryService`/`WorldEventService`/
+`EventService` — which are Agent B's and untouched.
+
 ## 2026-08-17 (evening)
 
 **I got task B wrong a second way, and the second way is more interesting than the

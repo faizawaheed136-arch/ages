@@ -30,6 +30,7 @@ from rbxmx import at, box, group, part, point_light, sign
 
 import world_plan as W
 from world_plan import (
+    BACK_GATE_Z0, BACK_GATE_Z1,
     CEIL_1, CEIL_2, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
     FAR_WALK_X0, FAR_WALK_X1, FENCE_HALF, FENCE_HEIGHT, FENCE_X, FENCE_Z0,
     FENCE_Z1, FLOOR_1, FLOOR_2, FORECOURT_X0, FRONT_X, GATE_HALF, GROUND,
@@ -368,22 +369,37 @@ def fence_run(a0, a1, index, axis="z", line=FENCE_X):
             + (1.04, top + 0.3), TRIM_WHITE, WOOD)
 
 
+def gate_posts(line, z0, z1, tag):
+    """The pair of capped posts either side of a gap in a north-south fence.
+
+    Both gates in this plot are gaps in a run travelling along z, so both get
+    the same posts on the same construction -- which is the point: a player who
+    has learned what the front gate looks like should recognise the back one as
+    a gate without being told.
+    """
+    for i, z in enumerate((z0, z1)):
+        box(f"{tag}Post{i + 1}",
+            (line - 0.55, line + 0.55, z - 0.55, z + 0.55, 1.04, 1.04 + 4.6),
+            TRIM_WHITE, WOOD)
+        box(f"{tag}Cap{i + 1}",
+            (line - 0.85, line + 0.85, z - 0.85, z + 0.85,
+             1.04 + 4.6, 1.04 + 5.1), TRIM_WHITE, WOOD)
+
+
 with group("Fence"):
     fence_run(FENCE_Z0, DOOR_LINE - GATE_HALF, 1)
     fence_run(DOOR_LINE + GATE_HALF, FENCE_Z1, 2)
-    # The south boundary, and the short return north up to the house's own east
-    # wall. No gate in either: the whole point of closing this side is that the
-    # front gate becomes the only way off the plot, so the gate road stops being
-    # a route the player has no reason to take. See world_plan's note above.
+    # The south boundary, and the return north up to the house's own east wall.
+    # The return is now the plot's frontage onto the Backs, so it takes a gate
+    # in the middle of it -- see BACK_GATE_Z0/Z1 in world_plan. The south
+    # boundary keeps none: it faces the gate road's verge, which is grass, and
+    # a gate onto grass is a hole with nothing on the other side.
     fence_run(FENCE_X, PLOT_X1 - FENCE_HALF, 3, axis="x", line=FENCE_Z0)
-    fence_run(FENCE_Z0, PLOT_SEAL_Z1, 4, line=PLOT_X1 - FENCE_HALF)
-    for i, z in enumerate((DOOR_LINE - GATE_HALF, DOOR_LINE + GATE_HALF)):
-        box(f"GatePost{i + 1}",
-            (FENCE_X - 0.55, FENCE_X + 0.55, z - 0.55, z + 0.55, 1.04, 1.04 + 4.6),
-            TRIM_WHITE, WOOD)
-        box(f"GateCap{i + 1}",
-            (FENCE_X - 0.85, FENCE_X + 0.85, z - 0.85, z + 0.85,
-             1.04 + 4.6, 1.04 + 5.1), TRIM_WHITE, WOOD)
+    back_line = PLOT_X1 - FENCE_HALF
+    fence_run(FENCE_Z0, BACK_GATE_Z0, 4, line=back_line)
+    fence_run(BACK_GATE_Z1, PLOT_SEAL_Z1, 5, line=back_line)
+    gate_posts(FENCE_X, DOOR_LINE - GATE_HALF, DOOR_LINE + GATE_HALF, "Gate")
+    gate_posts(back_line, BACK_GATE_Z0, BACK_GATE_Z1, "BackGate")
 
 
 def tree(x, z, floor, height=15.0, spread=10.0, label="Tree"):

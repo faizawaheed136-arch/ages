@@ -48,10 +48,12 @@ from rbxmx import (
 from rbxmx import at, box, group, part, point_light, sign
 
 from world_plan import (
-    CEIL_1, DOORWAY, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1, FORECOURT_X0,
+    CEIL_1, DOORWAY, DOOR_LINE, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1,
+    FORECOURT_X0,
     FRONT_X, GATE_CLEAR, GROUND, NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, PROPERTY_X,
-    ROAD_MID, ROAD_X0, ROAD_X1, SLAB, STREET_Z0, STREET_Z1, WALL,
+    ROAD_MID, ROAD_X0, ROAD_X1, SLAB, SOUTHGATE_CLEAR, STREET_Z0, STREET_Z1,
+    WALL,
 )
 
 from house_plan import _ASSETS
@@ -201,6 +203,55 @@ assert SHOP_Z1 <= GATE_CLEAR[0] or SHOP_Z0 >= GATE_CLEAR[1], (
     f"the corner shop at z {SHOP_Z0}..{SHOP_Z1} stands in the gate road's "
     f"window at z {GATE_CLEAR[0]}..{GATE_CLEAR[1]}")
 
+# ---------------------------------------------------------------------------
+# The south row
+# ---------------------------------------------------------------------------
+# From the corner shop to the bottom of town was 137 studs of frontage with a
+# paved sidewalk down the whole length of it and not one thing on the other
+# side. It was the longest walk in the world with nothing at the end of it, and
+# it is the half of town the spawn house looks out at.
+#
+# Nothing about the row is typed. The depth, the spacing and the numbering are
+# all read off the four houses that already exist, and the row keeps laying
+# plots until the next one will not fit -- so the frontage decides how many
+# there are, and a change to the frontage moves the row instead of leaving a
+# stale count behind it. That is the same defect this file has already shipped
+# once, in HOUSE_MODEL_Z0/Z1 above.
+HOUSE_DEPTH = HOUSES[0][1] - HOUSES[0][0]
+assert HOUSES[1][0] - HOUSES[0][0] == HOUSE_DEPTH + NEIGHBOUR_GAP, (
+    f"numbers 14 and 16 are {HOUSES[1][0] - HOUSES[0][0]} apart, which is not "
+    f"a {HOUSE_DEPTH}-stud house plus a {NEIGHBOUR_GAP}-stud gap. The south row "
+    f"copies that pitch, so it can no longer tell what the pitch is.")
+
+# The row is laid north to south, so each plot's *north* edge is what carries
+# forward. It steps over the southern link's window rather than stopping at it:
+# stopping would silently shorten the row if that window ever moved north,
+# which is exactly the kind of quiet truncation nobody notices until the street
+# is short and no one can say why.
+SOUTH_ROW = []
+_z1 = SHOP_Z0 - NEIGHBOUR_GAP
+_number = int(HOUSES[-1][3])
+while True:
+    _z0 = _z1 - HOUSE_DEPTH
+    if _z0 < SOUTH_Z0:
+        break
+    if _z0 < SOUTHGATE_CLEAR[1] and _z1 > SOUTHGATE_CLEAR[0]:
+        _z1 = SOUTHGATE_CLEAR[0] - NEIGHBOUR_GAP
+        continue
+    _number += 2
+    SOUTH_ROW.append((_z0, _z1, (_z0 + _z1) / 2, str(_number)))
+    _z1 = _z0 - NEIGHBOUR_GAP
+
+# Safe range 2-6. Under 2 the row is not a row and the frontage has gone
+# missing somewhere; over 6 something has opened up 250 studs of new frontage
+# without anyone deciding to, and a wall of identical houses is worse than a
+# field. Either way the number is a symptom, so this reports rather than clamps.
+assert 2 <= len(SOUTH_ROW) <= 6, (
+    f"the south row came out at {len(SOUTH_ROW)} houses between the shop at "
+    f"z {SHOP_Z0} and the bottom of town at z {SOUTH_Z0}. Check SHOP_DEPTH, "
+    f"SOUTH_Z0 and SOUTHGATE_CLEAR in world_plan.py.")
+HOUSES.extend(SOUTH_ROW)
+
 # The park, east of the road, at the top of the houses. Open ground with a pond,
 # so the town has one place whose only purpose is being somewhere to be. Sits
 # past the last house rather than between them: the east side reads as a row of
@@ -229,10 +280,7 @@ PLACE_POINTS = [
     # player is told to be, and the same spot a customer walks to, which is what
     # every other "at the counter" point in town already means.
     ("corner_shop", SHOP_X0 + 6.0, SHOP_DOOR - 2.0, FLOOR_1, "the corner shop, at the counter"),
-    ("home_1", HOUSE_X0 + 2.0, HOUSES[0][2], FLOOR_1, "number 14"),
-    ("home_2", HOUSE_X0 + 2.0, HOUSES[1][2], FLOOR_1, "number 16"),
-    ("home_3", HOUSE_X0 + 2.0, HOUSES[2][2], FLOOR_1, "number 18"),
-    ("home_4", HOUSE_X0 + 2.0, HOUSES[3][2], FLOOR_1, "number 20"),
+    # The houses' own points are generated from HOUSES below, not listed here.
     # West sidewalk: the school's north corner up to the top of the street.
     ("corner_n", -92.0, 84.0, PAVING, "the sidewalk north of the school"),
     ("wp_north_1", -92.0, 128.0, PAVING, "outside the gym"),
@@ -261,10 +309,31 @@ PLACE_POINTS = [
     ("wp_east_n1", -58.0, 40.0, PAVING, "outside number 14"),
     ("wp_east_n2", -58.0, 88.0, PAVING, "outside number 16"),
     ("wp_east_n3", -58.0, 136.0, PAVING, "the way to the park"),
+    # The player's own front door. Without this the near sidewalk has a 76-stud
+    # hole in it across the frontage of the one plot that matters, and 76 is
+    # over PlaceService's link radius -- so the spawn was joined to the south of
+    # town and to nothing else. It could not reach the gate road, and therefore
+    # could not reach the city at all. Nothing caught it: check_city asks
+    # whether the city reaches *a* town point, and it did, at the far end of a
+    # chain the player was not on. See check 12, which now asks from the spawn.
+    ("wp_east_home", -58.0, DOOR_LINE, PAVING, "the sidewalk outside your front gate"),
     ("wp_east_s1", -58.0, -36.0, PAVING, "outside number 18"),
     ("wp_east_s2", -58.0, -80.0, PAVING, "outside number 20"),
     ("wp_east_s3", -58.0, -124.0, PAVING, "the south end of the near sidewalk"),
 ]
+
+# One point in every house, and one on the sidewalk outside every house in the
+# south row -- both generated from HOUSES rather than typed next to it. The
+# original four were literals, which works right up until a fifth house exists
+# with no point inside it: a home the game cannot send anybody to, in a world
+# where nothing checks that a building has a door the route graph knows about.
+PLACE_POINTS.extend(
+    (f"home_{i + 1}", HOUSE_X0 + 2.0, door_z, FLOOR_1, f"number {number}")
+    for i, (_hz0, _hz1, door_z, number) in enumerate(HOUSES))
+PLACE_POINTS.extend(
+    (f"wp_east_s{4 + i}", -58.0, door_z, PAVING,
+     f"outside number {number}")
+    for i, (_hz0, _hz1, door_z, number) in enumerate(SOUTH_ROW))
 
 # ---------------------------------------------------------------------------
 # Palette

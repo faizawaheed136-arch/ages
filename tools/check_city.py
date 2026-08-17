@@ -19,6 +19,7 @@ asserts the things the plan promised:
 """
 
 import base64
+import heapq
 import math
 import struct
 import sys
@@ -58,6 +59,36 @@ STREET_BITE = 0.5
 # a hair: the plan is corner-to-corner and every join in it is exact, so a gap
 # here is a gap a player can see.
 STREET_JOIN = 0.05
+
+# Check 12's ceiling: the worst ratio of walked distance to straight-line
+# distance, from the spawn, that any place point may have.
+#
+# Safe range 1.6-2.5. Below 1.6 it fails on geometry that is simply correct --
+# a point across the river has to reach a bridge, and wp_bridge_2 walks 1.47 of
+# its own straight line doing it. Above 2.5 it stops firing on the thing it was
+# written for.
+#
+# Measured, in the order the world was in:
+#
+#   before this check existed   spawn reached 23 of 620 points; worst ratio
+#                               among those 23 was 1.20
+#   two new roads later         0 unreachable, worst 2.56 -- wp_east_n1, 40
+#                               studs up the player's own street, walked to
+#                               via the south of town and the city
+#   the 76-stud hole closed     0 unreachable, worst 1.47
+#
+# That middle row is why the ratio half is here. The reachability half alone
+# caught the first state and would have said nothing about the second, where
+# every point was reachable and the sidewalk outside the front door was still
+# missing. The ratio half alone would have caught the second and passed the
+# first at 1.20, because a ratio can only be computed for somewhere you can
+# get to. Neither question subsumes the other; both are asked.
+#
+# Set at 1.9 rather than at the 1.47 the world now measures because a ratio
+# gate is a smoke alarm, not a tape measure. Tightened to the current worst it
+# would fail the next time somebody adds an honest cul-de-sac, and a check that
+# cries wolf gets deleted.
+MAX_DETOUR = 1.9
 
 # How far a building the game sends you to may stand from the nearest
 # *carriageway* -- not a pavement, because the precinct had pavements and no road
@@ -949,6 +980,88 @@ def main():
               f"({', '.join(pids[:4])})", file=sys.stderr)
     check(f"every destination is within {ROAD_ACCESS:.0f} studs of a road",
           not stranded, f"{len(stranded)} stranded building(s)")
+    print()
+
+    # --- 12. Every place reachable from the spawn ---
+    print("12. Every place reachable from the spawn")
+    # Check 4 asks whether the city is one component and whether it touches the
+    # town. Both of those were true on the day the spawn could reach 23 of 620
+    # place points and not one of them was in the city.
+    #
+    # The hole was 76 studs of missing sidewalk across the frontage of the
+    # player's own plot -- six studs over ROUTE_LINK. It severed the spawn from
+    # the north half of its own street, and the only road into the city left
+    # from that half. Check 4 could not see it because the city did reach a
+    # town point: the far one, at the other end of a chain the player was not
+    # standing on. "At least one" was the bug.
+    #
+    # So this check starts where the player starts and asks two questions a
+    # component count cannot: can you get there at all, and is the way there
+    # anything like the way it looks. The second is what turns "the town has
+    # one road into the city" from an observation into a failure -- one link
+    # still connects, it just costs six hundred studs.
+    if spawn is None:
+        check("spawn found in the project file", False,
+              "cannot measure reachability without it")
+    else:
+        n = len(all_points)
+        adj = [[] for _ in range(n)]
+        for i in range(n):
+            xi, zi = all_points[i][1], all_points[i][2]
+            for j in range(i + 1, n):
+                xj, zj = all_points[j][1], all_points[j][2]
+                d = math.hypot(xi - xj, zi - zj)
+                if d <= ROUTE_LINK:
+                    adj[i].append((j, d))
+                    adj[j].append((i, d))
+        walked = [math.inf] * n
+        for i in range(n):
+            d = math.hypot(all_points[i][1] - sx, all_points[i][2] - sz)
+            if d <= ROUTE_LINK:
+                walked[i] = d
+        queue = [(walked[i], i) for i in range(n) if walked[i] < math.inf]
+        heapq.heapify(queue)
+        while queue:
+            d, i = heapq.heappop(queue)
+            if d > walked[i]:
+                continue
+            for j, w in adj[i]:
+                if d + w < walked[j]:
+                    walked[j] = d + w
+                    heapq.heappush(queue, (walked[j], j))
+
+        unreachable = [all_points[i] for i in range(n) if walked[i] == math.inf]
+        for pid, x, z, _f in unreachable[:8]:
+            print(f"    {pid} at ({x:.0f},{z:.0f}) cannot be walked to",
+                  file=sys.stderr)
+        if len(unreachable) > 8:
+            print(f"    ...and {len(unreachable) - 8} more", file=sys.stderr)
+        check(f"all {n} place points reachable from the spawn",
+              not unreachable, f"{len(unreachable)} stranded")
+
+        # Points nearer than one link are excluded: their straight line is
+        # short enough that the ratio is dominated by rounding, not by routing.
+        detours = []
+        for i in range(n):
+            straight = math.hypot(all_points[i][1] - sx, all_points[i][2] - sz)
+            if straight < ROUTE_LINK or walked[i] == math.inf:
+                continue
+            detours.append((walked[i] / straight, all_points[i], walked[i],
+                            straight))
+        detours.sort(reverse=True, key=lambda t: t[0])
+        worst_ratio = detours[0][0] if detours else 0.0
+        if detours:
+            r, (pid, x, z, _f), w, s = detours[0]
+            print(f"  worst detour {r:.2f} at {pid} ({x:.0f},{z:.0f}): "
+                  f"walks {w:.0f} for {s:.0f} straight")
+        for r, (pid, x, z, _f), w, s in detours:
+            if r <= MAX_DETOUR:
+                break
+            print(f"    {pid} at ({x:.0f},{z:.0f}) walks {w:.0f} studs to "
+                  f"cover {s:.0f} -- the way round is {r:.2f}x the way there",
+                  file=sys.stderr)
+        check(f"no place is more than {MAX_DETOUR}x its straight line away",
+              worst_ratio <= MAX_DETOUR, f"worst is {worst_ratio:.2f}")
 
     # --- Summary ---
     print()

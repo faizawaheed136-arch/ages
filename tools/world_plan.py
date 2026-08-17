@@ -136,7 +136,22 @@ DOOR_LINE = -2.0
 PATH_X1 = 3.4
 PATH_X0 = PROPERTY_X
 PATH_HALF = 3.0
-# The gap in the fence. Wider than the path so the gateposts stand clear of it.
+
+# How wide a door opening is. Twice a body's width, because both of these are
+# doors a crowd is meant to go through and because a doorway a player has to aim
+# at is a doorway they will bounce off.
+#
+# These sat two hundred lines below, with the school and the workplace, until
+# the back gate needed one. They are up here now because every opening in this
+# world that a player walks through wants to be one of these two numbers, and
+# the gate below is the case that proves it: written independently it came out
+# at 3.1 studs of clear gap, narrower than any interior door in the game.
+DOORWAY = 8.0
+# And how wide an internal one is.
+INNER_DOORWAY = 6.0
+
+# The gap in the fence. Wider than the path so the gateposts stand clear of it,
+# and a shade over DOORWAY because the posts eat into it from both sides.
 GATE_HALF = 4.2
 
 FENCE_X = PROPERTY_X + 0.2
@@ -173,8 +188,10 @@ FENCE_HALF = 0.25
 # road is the only *road*, and the two grasses are flush.
 #
 # Closing it is the decision recorded as option A in MAP_PLAN section B. The
-# 75 studs between the house and downtown stay empty and become the financial
-# district's western approach, which is stage 4's problem, not the plot's.
+# reasoning written here at the time -- "the gate road becomes the only link" --
+# has since been overruled: the corridor east of the plot now carries a street,
+# and this fence is what it fronts. A boundary that faces a road is a garden
+# fence and wants a gate in it, which is BACK_GATE_Z0/Z1 below.
 #
 # Both numbers measured off House.rbxmx with read_house.load(), which applies
 # rotation, and re-measured by an assertion in build_street.py every run. Do not
@@ -186,6 +203,63 @@ PLOT_SEAL_Z1 = -31.8   # where the house's east wall takes over, going north
 # The south run sits on FENCE_Z0 rather than on the ground's own edge at -44.33,
 # so that it closes the corner with the street fence by construction instead of
 # by a second number that has to be kept equal to the first.
+
+# The furthest east *anything* in House.rbxmx reaches, which is not the same as
+# PLOT_X1: the plot's ground stops at 32.35, but the house's east wall and the
+# north garden's east edge stand at 32.50. The corridor east of the plot is
+# measured from this one, because a pavement has to clear the wall, not the lawn.
+# Re-measured by build_street.py's check_plot_boundary() every run.
+HOUSE_EAST_X = 32.5
+
+# The back gate. The rear fence returns north from the south-east corner to the
+# house's east wall over FENCE_Z0..PLOT_SEAL_Z1 -- 12.2 studs -- and the gate
+# takes the middle of it.
+#
+# One INNER_DOORWAY wide, which is the narrowest opening this world already
+# asks a player to walk through. The front gate is 8.4 against a DOORWAY of 8;
+# the back gate takes the inner width for the same reason a house's inner doors
+# are narrower than its front one, and the player has walked through six of
+# those before ever reaching this fence.
+#
+# It was first written as GATE_HALF / 2. That left 3.1 studs of clear gap
+# between the posts -- narrower than any door in the game -- which is the sort
+# of number that looks fine in a plan and plays like a turnstile. Deriving it
+# from a width the player has already been proven able to walk through is the
+# version that cannot make that mistake twice. At 6.0 each end of the run keeps
+# 3.1 studs of real fence, so it still reads as a fence with a gate in it.
+#
+# Without any gate the player walks the full length of their own garden and out
+# the front to reach a carriageway six studs from their back door. The fence is
+# what makes the plot a plot; the gate is what stops it being a pen.
+BACK_GATE_HALF = INNER_DOORWAY / 2
+BACK_GATE_MID = (FENCE_Z0 + PLOT_SEAL_Z1) / 2
+BACK_GATE_Z0 = BACK_GATE_MID - BACK_GATE_HALF
+BACK_GATE_Z1 = BACK_GATE_MID + BACK_GATE_HALF
+
+# ---------------------------------------------------------------------------
+# The southern link
+# ---------------------------------------------------------------------------
+
+# The town had exactly one road into the city -- the gate road above -- and the
+# only other window in the east frontage wide enough to take one is the 175
+# studs south of the corner shop. This is the road that uses it: east from the
+# town road's east kerb at the bottom of the loop, across the seam, to avenue 1.
+#
+# The band is not chosen. It is works cross street 1, which already runs east
+# from avenue 1 into the ironworks, already has a junction tile at that corner,
+# and already has a mouth cut in avenue 1's west pavement that until now opened
+# onto grass. Landing on it adds no junction to the city and no carve to any
+# avenue. gen_city.py asserts these three against SOUTH_CS[1], WCS_W and
+# CS_WALK, which are the numbers they were read off -- the assertion is there
+# rather than an import here because world_plan.py is imported *by* gen_city and
+# cannot see them.
+#
+# It lives here for the same reason GATE_Z0/Z1 do: gen_town.py has to keep the
+# east frontage clear of it and cannot import gen_city.py to find out where it
+# is. Anything new on the east side is checked against SOUTHGATE_CLEAR.
+SOUTHGATE_Z0, SOUTHGATE_Z1 = -316.0, -294.0
+SOUTHGATE_WALK = 4.0
+SOUTHGATE_CLEAR = (SOUTHGATE_Z0 - SOUTHGATE_WALK, SOUTHGATE_Z1 + SOUTHGATE_WALK)
 
 # ---------------------------------------------------------------------------
 # The crossing
@@ -214,13 +288,6 @@ SCHOOL_DOOR = 43.0
 WORK_X0, WORK_X1 = -142.0, FRONT_X
 WORK_Z0, WORK_Z1 = -74.0, -22.0
 WORK_DOOR = -48.0
-
-# How wide a door opening is. Twice a body's width, because both of these are
-# doors a crowd is meant to go through and because a doorway a player has to aim
-# at is a doorway they will bounce off.
-DOORWAY = 8.0
-# And how wide an internal one is.
-INNER_DOORWAY = 6.0
 
 # Floor heights. Ground floors sit level with the paving outside them.
 FLOOR_1 = PAVING

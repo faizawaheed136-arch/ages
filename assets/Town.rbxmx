@@ -7009,11 +7009,1226 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXTOWN0602">
+<Item class="Model" referent="RBXTOWN0549">
+<Properties>
+<string name="Name">House22</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0519">
+<Properties>
+<string name="Name">Path</string>
+<CoordinateFrame name="CFrame"><X>-47.3</X><Y>1.27</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>10.600000000000001</X><Y>0.5</Y><Z>4.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">864</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290557094</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0535">
+<Properties>
+<string name="Name">HouseStructure</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0520">
+<Properties>
+<string name="Name">Slab</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>1.02</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">784</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291215540</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0521">
+<Properties>
+<string name="Name">Roof</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>17.02</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">800</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283979868</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0522">
+<Properties>
+<string name="Name">WallWest1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-186.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0523">
+<Properties>
+<string name="Name">WallWest2</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-165.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0524">
+<Properties>
+<string name="Name">WallWestHead1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>6.0</Y><Z>8.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0525">
+<Properties>
+<string name="Name">WallEast1</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>9.02</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0526">
+<Properties>
+<string name="Name">WallSouth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-192.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0527">
+<Properties>
+<string name="Name">WallNorth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-159.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0528">
+<Properties>
+<string name="Name">Window11</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-187.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0529">
+<Properties>
+<string name="Name">Window12</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-185.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0530">
+<Properties>
+<string name="Name">Window21</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-166.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0531">
+<Properties>
+<string name="Name">Window22</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-164.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0534">
+<Properties>
+<string name="Name">Numberplate</string>
+<CoordinateFrame name="CFrame"><X>-42.35</X><Y>10.27</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>1.5</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="SurfaceGui" referent="RBXTOWN0532">
+<Properties>
+<string name="Name">Sign</string>
+<token name="Face">3</token>
+<bool name="AlwaysOnTop">false</bool>
+<token name="SizingMode">0</token>
+<Vector2 name="CanvasSize"><X>800</X><Y>200</Y></Vector2>
+<float name="LightInfluence">0</float>
+<bool name="Enabled">true</bool>
+</Properties>
+<Item class="TextLabel" referent="RBXTOWN0533">
+<Properties>
+<string name="Name">Text</string>
+<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+<UDim2 name="Position"><XS>0</XS><XO>0</XO><YS>0</YS><YO>0</YO></UDim2>
+<float name="BackgroundTransparency">1</float>
+<string name="Text">22</string>
+<token name="Font">4</token>
+<bool name="TextScaled">false</bool>
+<float name="TextSize">48</float>
+<Color3 name="TextColor3"><R>0.23529411764705882</R><G>0.25882352941176473</G><B>0.32941176470588235</B></Color3>
+<token name="TextXAlignment">2</token>
+<token name="TextYAlignment">1</token>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXTOWN0548">
+<Properties>
+<string name="Name">HouseFittings</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0536">
+<Properties>
+<string name="Name">Partition1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-183.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0537">
+<Properties>
+<string name="Name">Partition2</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-168.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0538">
+<Properties>
+<string name="Name">PartitionHead1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>13.52</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0539">
+<Properties>
+<string name="Name">Sofa</string>
+<CoordinateFrame name="CFrame"><X>-27.5</X><Y>3.12</Y><Z>-167.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.8000000000000003</Y><Z>4.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287389776</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0543">
+<Properties>
+<string name="Name">Table</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0540">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>4.07</Y><Z>-174.2</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0541">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-172.6</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0542">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-175.79999999999998</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXTOWN0544">
+<Properties>
+<string name="Name">Bed</string>
+<CoordinateFrame name="CFrame"><X>-29.0</X><Y>2.72</Y><Z>-184.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>7.0</X><Y>0.7999999999999998</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292270816</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0547">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0546">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-22.5</X><Y>16.22</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXTOWN0545">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item>
+</Item>
+<Item class="Model" referent="RBXTOWN0580">
+<Properties>
+<string name="Name">House24</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0550">
+<Properties>
+<string name="Name">Path</string>
+<CoordinateFrame name="CFrame"><X>-47.3</X><Y>1.27</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>10.600000000000001</X><Y>0.5</Y><Z>4.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">864</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290557094</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0566">
+<Properties>
+<string name="Name">HouseStructure</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0551">
+<Properties>
+<string name="Name">Slab</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>1.02</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">784</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291215540</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0552">
+<Properties>
+<string name="Name">Roof</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>17.02</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">800</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283979868</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0553">
+<Properties>
+<string name="Name">WallWest1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-226.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0554">
+<Properties>
+<string name="Name">WallWest2</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-205.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0555">
+<Properties>
+<string name="Name">WallWestHead1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>6.0</Y><Z>8.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0556">
+<Properties>
+<string name="Name">WallEast1</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>9.02</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0557">
+<Properties>
+<string name="Name">WallSouth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-232.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0558">
+<Properties>
+<string name="Name">WallNorth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-199.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0559">
+<Properties>
+<string name="Name">Window11</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-227.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0560">
+<Properties>
+<string name="Name">Window12</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-225.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0561">
+<Properties>
+<string name="Name">Window21</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-206.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0562">
+<Properties>
+<string name="Name">Window22</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-204.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0565">
+<Properties>
+<string name="Name">Numberplate</string>
+<CoordinateFrame name="CFrame"><X>-42.35</X><Y>10.27</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>1.5</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="SurfaceGui" referent="RBXTOWN0563">
+<Properties>
+<string name="Name">Sign</string>
+<token name="Face">3</token>
+<bool name="AlwaysOnTop">false</bool>
+<token name="SizingMode">0</token>
+<Vector2 name="CanvasSize"><X>800</X><Y>200</Y></Vector2>
+<float name="LightInfluence">0</float>
+<bool name="Enabled">true</bool>
+</Properties>
+<Item class="TextLabel" referent="RBXTOWN0564">
+<Properties>
+<string name="Name">Text</string>
+<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+<UDim2 name="Position"><XS>0</XS><XO>0</XO><YS>0</YS><YO>0</YO></UDim2>
+<float name="BackgroundTransparency">1</float>
+<string name="Text">24</string>
+<token name="Font">4</token>
+<bool name="TextScaled">false</bool>
+<float name="TextSize">48</float>
+<Color3 name="TextColor3"><R>0.23529411764705882</R><G>0.25882352941176473</G><B>0.32941176470588235</B></Color3>
+<token name="TextXAlignment">2</token>
+<token name="TextYAlignment">1</token>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXTOWN0579">
+<Properties>
+<string name="Name">HouseFittings</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0567">
+<Properties>
+<string name="Name">Partition1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-223.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0568">
+<Properties>
+<string name="Name">Partition2</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-208.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0569">
+<Properties>
+<string name="Name">PartitionHead1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>13.52</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0570">
+<Properties>
+<string name="Name">Sofa</string>
+<CoordinateFrame name="CFrame"><X>-27.5</X><Y>3.12</Y><Z>-207.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.8000000000000003</Y><Z>4.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287389776</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0574">
+<Properties>
+<string name="Name">Table</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0571">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>4.07</Y><Z>-214.2</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0572">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-212.6</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0573">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-215.79999999999998</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXTOWN0575">
+<Properties>
+<string name="Name">Bed</string>
+<CoordinateFrame name="CFrame"><X>-29.0</X><Y>2.72</Y><Z>-224.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>7.0</X><Y>0.7999999999999998</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292270816</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0578">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0577">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-22.5</X><Y>16.22</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXTOWN0576">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item>
+</Item>
+<Item class="Model" referent="RBXTOWN0611">
+<Properties>
+<string name="Name">House26</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0581">
+<Properties>
+<string name="Name">Path</string>
+<CoordinateFrame name="CFrame"><X>-47.3</X><Y>1.27</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>10.600000000000001</X><Y>0.5</Y><Z>4.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">864</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290557094</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0597">
+<Properties>
+<string name="Name">HouseStructure</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0582">
+<Properties>
+<string name="Name">Slab</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>1.02</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">784</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291215540</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0583">
+<Properties>
+<string name="Name">Roof</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>17.02</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>1.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">800</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283979868</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0584">
+<Properties>
+<string name="Name">WallWest1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-266.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0585">
+<Properties>
+<string name="Name">WallWest2</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-245.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>13.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0586">
+<Properties>
+<string name="Name">WallWestHead1</string>
+<CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>6.0</Y><Z>8.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0587">
+<Properties>
+<string name="Name">WallEast1</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>9.02</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0588">
+<Properties>
+<string name="Name">WallSouth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-272.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0589">
+<Properties>
+<string name="Name">WallNorth1</string>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-239.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>44.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4289099356</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0590">
+<Properties>
+<string name="Name">Window11</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-267.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0591">
+<Properties>
+<string name="Name">Window12</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-265.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0592">
+<Properties>
+<string name="Name">Window21</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-246.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0593">
+<Properties>
+<string name="Name">Window22</string>
+<CoordinateFrame name="CFrame"><X>1.25</X><Y>6.52</Y><Z>-244.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000001</X><Y>4.0</Y><Z>1.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0596">
+<Properties>
+<string name="Name">Numberplate</string>
+<CoordinateFrame name="CFrame"><X>-42.35</X><Y>10.27</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>1.5</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="SurfaceGui" referent="RBXTOWN0594">
+<Properties>
+<string name="Name">Sign</string>
+<token name="Face">3</token>
+<bool name="AlwaysOnTop">false</bool>
+<token name="SizingMode">0</token>
+<Vector2 name="CanvasSize"><X>800</X><Y>200</Y></Vector2>
+<float name="LightInfluence">0</float>
+<bool name="Enabled">true</bool>
+</Properties>
+<Item class="TextLabel" referent="RBXTOWN0595">
+<Properties>
+<string name="Name">Text</string>
+<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+<UDim2 name="Position"><XS>0</XS><XO>0</XO><YS>0</YS><YO>0</YO></UDim2>
+<float name="BackgroundTransparency">1</float>
+<string name="Text">26</string>
+<token name="Font">4</token>
+<bool name="TextScaled">false</bool>
+<float name="TextSize">48</float>
+<Color3 name="TextColor3"><R>0.23529411764705882</R><G>0.25882352941176473</G><B>0.32941176470588235</B></Color3>
+<token name="TextXAlignment">2</token>
+<token name="TextYAlignment">1</token>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXTOWN0610">
+<Properties>
+<string name="Name">HouseFittings</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0598">
+<Properties>
+<string name="Name">Partition1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-263.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0599">
+<Properties>
+<string name="Name">Partition2</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>9.02</Y><Z>-248.95</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>8.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0600">
+<Properties>
+<string name="Name">PartitionHead1</string>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>13.52</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0601">
+<Properties>
+<string name="Name">Sofa</string>
+<CoordinateFrame name="CFrame"><X>-27.5</X><Y>3.12</Y><Z>-247.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.8000000000000003</Y><Z>4.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287389776</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0605">
+<Properties>
+<string name="Name">Table</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0602">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>4.07</Y><Z>-254.2</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0603">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-252.6</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0604">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-21.4</X><Y>2.7199999999999998</Y><Z>-255.79999999999998</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXTOWN0606">
+<Properties>
+<string name="Name">Bed</string>
+<CoordinateFrame name="CFrame"><X>-29.0</X><Y>2.72</Y><Z>-264.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>7.0</X><Y>0.7999999999999998</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292270816</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXTOWN0609">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXTOWN0608">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-22.5</X><Y>16.22</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXTOWN0607">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item>
+</Item>
+<Item class="Model" referent="RBXTOWN0695">
 <Properties>
 <string name="Name">CornerShop</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0519">
+<Item class="Part" referent="RBXTOWN0612">
 <Properties>
 <string name="Name">Forecourt</string>
 <CoordinateFrame name="CFrame"><X>-47.3</X><Y>1.27</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7028,11 +8243,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXTOWN0548">
+</Item><Item class="Model" referent="RBXTOWN0641">
 <Properties>
 <string name="Name">ShopStructure</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0520">
+<Item class="Part" referent="RBXTOWN0613">
 <Properties>
 <string name="Name">Slab</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>1.02</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7047,7 +8262,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0521">
+</Item><Item class="Part" referent="RBXTOWN0614">
 <Properties>
 <string name="Name">Roof</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>17.02</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7062,7 +8277,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0522">
+</Item><Item class="Part" referent="RBXTOWN0615">
 <Properties>
 <string name="Name">WallWest1</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7077,7 +8292,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0523">
+</Item><Item class="Part" referent="RBXTOWN0616">
 <Properties>
 <string name="Name">WallWest2</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>9.02</Y><Z>-136.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7092,7 +8307,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0524">
+</Item><Item class="Part" referent="RBXTOWN0617">
 <Properties>
 <string name="Name">WallWestHead1</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-150.14999999999998</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7107,7 +8322,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0525">
+</Item><Item class="Part" referent="RBXTOWN0618">
 <Properties>
 <string name="Name">WallWestHead2</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7122,7 +8337,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0526">
+</Item><Item class="Part" referent="RBXTOWN0619">
 <Properties>
 <string name="Name">WallWestHead3</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>13.52</Y><Z>-139.05</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7137,7 +8352,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0527">
+</Item><Item class="Part" referent="RBXTOWN0620">
 <Properties>
 <string name="Name">Shopfront11</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>6.02</Y><Z>-150.14999999999998</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7152,7 +8367,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0528">
+</Item><Item class="Part" referent="RBXTOWN0621">
 <Properties>
 <string name="Name">Shopfront21</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>6.02</Y><Z>-139.05</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7167,7 +8382,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0529">
+</Item><Item class="Part" referent="RBXTOWN0622">
 <Properties>
 <string name="Name">DoorPost1</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>6.02</Y><Z>-148.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7182,7 +8397,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0530">
+</Item><Item class="Part" referent="RBXTOWN0623">
 <Properties>
 <string name="Name">DoorPost2</string>
 <CoordinateFrame name="CFrame"><X>-41.25</X><Y>6.02</Y><Z>-140.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7197,7 +8412,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0531">
+</Item><Item class="Part" referent="RBXTOWN0624">
 <Properties>
 <string name="Name">WallEast1</string>
 <CoordinateFrame name="CFrame"><X>1.25</X><Y>9.02</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7212,7 +8427,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0532">
+</Item><Item class="Part" referent="RBXTOWN0625">
 <Properties>
 <string name="Name">WallSouth1</string>
 <CoordinateFrame name="CFrame"><X>-38.0</X><Y>9.02</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7227,7 +8442,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0533">
+</Item><Item class="Part" referent="RBXTOWN0626">
 <Properties>
 <string name="Name">WallSouth2</string>
 <CoordinateFrame name="CFrame"><X>-6.0</X><Y>9.02</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7242,7 +8457,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0534">
+</Item><Item class="Part" referent="RBXTOWN0627">
 <Properties>
 <string name="Name">WallSouthHead1</string>
 <CoordinateFrame name="CFrame"><X>-24.0</X><Y>13.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7257,7 +8472,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0535">
+</Item><Item class="Part" referent="RBXTOWN0628">
 <Properties>
 <string name="Name">FlankSill</string>
 <CoordinateFrame name="CFrame"><X>-24.0</X><Y>3.0199999999999996</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7272,7 +8487,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0536">
+</Item><Item class="Part" referent="RBXTOWN0629">
 <Properties>
 <string name="Name">FlankWindow1</string>
 <CoordinateFrame name="CFrame"><X>-32.0</X><Y>7.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7287,7 +8502,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0537">
+</Item><Item class="Part" referent="RBXTOWN0630">
 <Properties>
 <string name="Name">FlankWindow2</string>
 <CoordinateFrame name="CFrame"><X>-28.0</X><Y>7.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7302,7 +8517,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0538">
+</Item><Item class="Part" referent="RBXTOWN0631">
 <Properties>
 <string name="Name">FlankWindow3</string>
 <CoordinateFrame name="CFrame"><X>-24.0</X><Y>7.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7317,7 +8532,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0539">
+</Item><Item class="Part" referent="RBXTOWN0632">
 <Properties>
 <string name="Name">FlankWindow4</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>7.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7332,7 +8547,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0540">
+</Item><Item class="Part" referent="RBXTOWN0633">
 <Properties>
 <string name="Name">FlankWindow5</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>7.52</Y><Z>-152.45</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7347,7 +8562,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0541">
+</Item><Item class="Part" referent="RBXTOWN0634">
 <Properties>
 <string name="Name">WallNorth1</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>9.02</Y><Z>-136.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7362,7 +8577,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0544">
+</Item><Item class="Part" referent="RBXTOWN0637">
 <Properties>
 <string name="Name">FasciaWest</string>
 <CoordinateFrame name="CFrame"><X>-42.25</X><Y>13.52</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7376,7 +8591,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="SurfaceGui" referent="RBXTOWN0542">
+<Item class="SurfaceGui" referent="RBXTOWN0635">
 <Properties>
 <string name="Name">Sign</string>
 <token name="Face">3</token>
@@ -7386,7 +8601,7 @@
 <float name="LightInfluence">0</float>
 <bool name="Enabled">true</bool>
 </Properties>
-<Item class="TextLabel" referent="RBXTOWN0543">
+<Item class="TextLabel" referent="RBXTOWN0636">
 <Properties>
 <string name="Name">Text</string>
 <UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
@@ -7402,7 +8617,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXTOWN0547">
+</Item><Item class="Part" referent="RBXTOWN0640">
 <Properties>
 <string name="Name">FasciaNorth</string>
 <CoordinateFrame name="CFrame"><X>-26.0</X><Y>13.52</Y><Z>-135.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7416,7 +8631,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="SurfaceGui" referent="RBXTOWN0545">
+<Item class="SurfaceGui" referent="RBXTOWN0638">
 <Properties>
 <string name="Name">Sign</string>
 <token name="Face">2</token>
@@ -7426,7 +8641,7 @@
 <float name="LightInfluence">0</float>
 <bool name="Enabled">true</bool>
 </Properties>
-<Item class="TextLabel" referent="RBXTOWN0546">
+<Item class="TextLabel" referent="RBXTOWN0639">
 <Properties>
 <string name="Name">Text</string>
 <UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
@@ -7443,11 +8658,11 @@
 </Item>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0601">
+</Item><Item class="Model" referent="RBXTOWN0694">
 <Properties>
 <string name="Name">ShopFittings</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0549">
+<Item class="Part" referent="RBXTOWN0642">
 <Properties>
 <string name="Name">Mat</string>
 <CoordinateFrame name="CFrame"><X>-38.5</X><Y>1.56</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7462,7 +8677,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0550">
+</Item><Item class="Part" referent="RBXTOWN0643">
 <Properties>
 <string name="Name">CounterBase</string>
 <CoordinateFrame name="CFrame"><X>-28.5</X><Y>3.12</Y><Z>-146.05</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7477,7 +8692,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0551">
+</Item><Item class="Part" referent="RBXTOWN0644">
 <Properties>
 <string name="Name">CounterTop</string>
 <CoordinateFrame name="CFrame"><X>-28.7</X><Y>4.87</Y><Z>-146.04999999999998</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7492,7 +8707,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0552">
+</Item><Item class="Part" referent="RBXTOWN0645">
 <Properties>
 <string name="Name">Till</string>
 <CoordinateFrame name="CFrame"><X>-28.5</X><Y>5.569999999999999</Y><Z>-143.8</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7507,7 +8722,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0553">
+</Item><Item class="Part" referent="RBXTOWN0646">
 <Properties>
 <string name="Name">BagStack</string>
 <CoordinateFrame name="CFrame"><X>-28.5</X><Y>5.27</Y><Z>-148.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7522,11 +8737,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXTOWN0563">
+</Item><Item class="Model" referent="RBXTOWN0656">
 <Properties>
 <string name="Name">AisleSouth</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0554">
+<Item class="Part" referent="RBXTOWN0647">
 <Properties>
 <string name="Name">AisleSouthBase</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>1.82</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7541,7 +8756,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0555">
+</Item><Item class="Part" referent="RBXTOWN0648">
 <Properties>
 <string name="Name">AisleSouthDeck1</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>4.67</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7556,7 +8771,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0556">
+</Item><Item class="Part" referent="RBXTOWN0649">
 <Properties>
 <string name="Name">AisleSouthDeck2</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>7.27</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7571,7 +8786,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0557">
+</Item><Item class="Part" referent="RBXTOWN0650">
 <Properties>
 <string name="Name">AisleSouthDeck3</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>9.87</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7586,7 +8801,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0558">
+</Item><Item class="Part" referent="RBXTOWN0651">
 <Properties>
 <string name="Name">AisleSouthSpine</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>6.27</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7601,7 +8816,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0559">
+</Item><Item class="Part" referent="RBXTOWN0652">
 <Properties>
 <string name="Name">AisleSouthStock</string>
 <CoordinateFrame name="CFrame"><X>-21.25</X><Y>5.720000000000001</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7616,7 +8831,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0560">
+</Item><Item class="Part" referent="RBXTOWN0653">
 <Properties>
 <string name="Name">AisleSouthStock</string>
 <CoordinateFrame name="CFrame"><X>-21.25</X><Y>8.32</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7631,7 +8846,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0561">
+</Item><Item class="Part" referent="RBXTOWN0654">
 <Properties>
 <string name="Name">AisleSouthStock</string>
 <CoordinateFrame name="CFrame"><X>-17.75</X><Y>5.720000000000001</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7646,7 +8861,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0562">
+</Item><Item class="Part" referent="RBXTOWN0655">
 <Properties>
 <string name="Name">AisleSouthStock</string>
 <CoordinateFrame name="CFrame"><X>-17.75</X><Y>8.32</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7662,11 +8877,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0577">
+</Item><Item class="Model" referent="RBXTOWN0670">
 <Properties>
 <string name="Name">AisleCentre</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0564">
+<Item class="Part" referent="RBXTOWN0657">
 <Properties>
 <string name="Name">AisleCentreBase</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>1.82</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7681,7 +8896,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0565">
+</Item><Item class="Part" referent="RBXTOWN0658">
 <Properties>
 <string name="Name">AisleCentreDeck1</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>4.67</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7696,7 +8911,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0566">
+</Item><Item class="Part" referent="RBXTOWN0659">
 <Properties>
 <string name="Name">AisleCentreDeck2</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>7.27</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7711,7 +8926,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0567">
+</Item><Item class="Part" referent="RBXTOWN0660">
 <Properties>
 <string name="Name">AisleCentreDeck3</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>9.87</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7726,7 +8941,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0568">
+</Item><Item class="Part" referent="RBXTOWN0661">
 <Properties>
 <string name="Name">AisleCentreSpine</string>
 <CoordinateFrame name="CFrame"><X>-16.0</X><Y>6.27</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7741,7 +8956,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0569">
+</Item><Item class="Part" referent="RBXTOWN0662">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-21.25</X><Y>5.720000000000001</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7756,7 +8971,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0570">
+</Item><Item class="Part" referent="RBXTOWN0663">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-21.25</X><Y>8.32</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7771,7 +8986,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0571">
+</Item><Item class="Part" referent="RBXTOWN0664">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-17.75</X><Y>5.720000000000001</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7786,7 +9001,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0572">
+</Item><Item class="Part" referent="RBXTOWN0665">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-17.75</X><Y>8.32</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7801,7 +9016,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0573">
+</Item><Item class="Part" referent="RBXTOWN0666">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-14.25</X><Y>5.720000000000001</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7816,7 +9031,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0574">
+</Item><Item class="Part" referent="RBXTOWN0667">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-14.25</X><Y>8.32</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7831,7 +9046,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0575">
+</Item><Item class="Part" referent="RBXTOWN0668">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-10.75</X><Y>5.720000000000001</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7846,7 +9061,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0576">
+</Item><Item class="Part" referent="RBXTOWN0669">
 <Properties>
 <string name="Name">AisleCentreStock</string>
 <CoordinateFrame name="CFrame"><X>-10.75</X><Y>8.32</Y><Z>-143.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7862,7 +9077,7 @@
 </Properties>
 
 </Item>
-</Item><Item class="Part" referent="RBXTOWN0578">
+</Item><Item class="Part" referent="RBXTOWN0671">
 <Properties>
 <string name="Name">Chiller</string>
 <CoordinateFrame name="CFrame"><X>-12.0</X><Y>6.02</Y><Z>-150.39999999999998</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7877,7 +9092,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0579">
+</Item><Item class="Part" referent="RBXTOWN0672">
 <Properties>
 <string name="Name">ChillerGlass</string>
 <CoordinateFrame name="CFrame"><X>-12.0</X><Y>6.119999999999999</Y><Z>-151.59999999999997</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7892,7 +9107,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0580">
+</Item><Item class="Part" referent="RBXTOWN0673">
 <Properties>
 <string name="Name">BayRail</string>
 <CoordinateFrame name="CFrame"><X>-7.8</X><Y>3.2699999999999996</Y><Z>-146.64999999999998</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7907,7 +9122,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0581">
+</Item><Item class="Part" referent="RBXTOWN0674">
 <Properties>
 <string name="Name">Crate1</string>
 <CoordinateFrame name="CFrame"><X>-5.5</X><Y>3.5199999999999996</Y><Z>-149.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7922,7 +9137,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0582">
+</Item><Item class="Part" referent="RBXTOWN0675">
 <Properties>
 <string name="Name">Crate2</string>
 <CoordinateFrame name="CFrame"><X>-5.5</X><Y>3.5199999999999996</Y><Z>-145.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7937,7 +9152,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0583">
+</Item><Item class="Part" referent="RBXTOWN0676">
 <Properties>
 <string name="Name">Crate3</string>
 <CoordinateFrame name="CFrame"><X>-1.5</X><Y>3.5199999999999996</Y><Z>-148.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7952,7 +9167,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0584">
+</Item><Item class="Part" referent="RBXTOWN0677">
 <Properties>
 <string name="Name">Crate4</string>
 <CoordinateFrame name="CFrame"><X>-1.5</X><Y>3.5199999999999996</Y><Z>-144.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7967,7 +9182,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0585">
+</Item><Item class="Part" referent="RBXTOWN0678">
 <Properties>
 <string name="Name">CrateTop</string>
 <CoordinateFrame name="CFrame"><X>-5.5</X><Y>7.52</Y><Z>-147.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7982,11 +9197,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXTOWN0588">
+</Item><Item class="Model" referent="RBXTOWN0681">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0587">
+<Item class="Part" referent="RBXTOWN0680">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-35.0</X><Y>16.22</Y><Z>-144.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8000,7 +9215,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0586">
+<Item class="PointLight" referent="RBXTOWN0679">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8011,11 +9226,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0591">
+</Item><Item class="Model" referent="RBXTOWN0684">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0590">
+<Item class="Part" referent="RBXTOWN0683">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-28.0</X><Y>16.22</Y><Z>-140.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8029,7 +9244,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0589">
+<Item class="PointLight" referent="RBXTOWN0682">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8040,11 +9255,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0594">
+</Item><Item class="Model" referent="RBXTOWN0687">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0593">
+<Item class="Part" referent="RBXTOWN0686">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-17.0</X><Y>16.22</Y><Z>-148.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8058,7 +9273,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0592">
+<Item class="PointLight" referent="RBXTOWN0685">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8069,11 +9284,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0597">
+</Item><Item class="Model" referent="RBXTOWN0690">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0596">
+<Item class="Part" referent="RBXTOWN0689">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-17.0</X><Y>16.22</Y><Z>-140.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8087,7 +9302,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0595">
+<Item class="PointLight" referent="RBXTOWN0688">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8098,11 +9313,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0600">
+</Item><Item class="Model" referent="RBXTOWN0693">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0599">
+<Item class="Part" referent="RBXTOWN0692">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-4.0</X><Y>16.22</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8116,7 +9331,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0598">
+<Item class="PointLight" referent="RBXTOWN0691">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8130,11 +9345,11 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXTOWN0644">
+<Item class="Model" referent="RBXTOWN0737">
 <Properties>
 <string name="Name">Park</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0603">
+<Item class="Part" referent="RBXTOWN0696">
 <Properties>
 <string name="Name">Pond</string>
 <CoordinateFrame name="CFrame"><X>-30.0</X><Y>0.72</Y><Z>180.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8149,7 +9364,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0604">
+</Item><Item class="Part" referent="RBXTOWN0697">
 <Properties>
 <string name="Name">PondRim</string>
 <CoordinateFrame name="CFrame"><X>-30.0</X><Y>1.17</Y><Z>180.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8164,7 +9379,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0605">
+</Item><Item class="Part" referent="RBXTOWN0698">
 <Properties>
 <string name="Name">PathA</string>
 <CoordinateFrame name="CFrame"><X>-15.0</X><Y>1.27</Y><Z>182.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8179,7 +9394,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0606">
+</Item><Item class="Part" referent="RBXTOWN0699">
 <Properties>
 <string name="Name">PathB</string>
 <CoordinateFrame name="CFrame"><X>-31.5</X><Y>1.27</Y><Z>197.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8194,11 +9409,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXTOWN0610">
+</Item><Item class="Model" referent="RBXTOWN0703">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0607">
+<Item class="Part" referent="RBXTOWN0700">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>5.359999999999999</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8213,7 +9428,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0608">
+</Item><Item class="Part" referent="RBXTOWN0701">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>11.26</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8228,7 +9443,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0609">
+</Item><Item class="Part" referent="RBXTOWN0702">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>14.77</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8244,11 +9459,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0614">
+</Item><Item class="Model" referent="RBXTOWN0707">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0611">
+<Item class="Part" referent="RBXTOWN0704">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>5.359999999999999</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8263,7 +9478,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0612">
+</Item><Item class="Part" referent="RBXTOWN0705">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>11.26</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8278,7 +9493,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0613">
+</Item><Item class="Part" referent="RBXTOWN0706">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>14.77</Y><Z>225.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8294,11 +9509,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0618">
+</Item><Item class="Model" referent="RBXTOWN0711">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0615">
+<Item class="Part" referent="RBXTOWN0708">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>5.359999999999999</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8313,7 +9528,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0616">
+</Item><Item class="Part" referent="RBXTOWN0709">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>11.26</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8328,7 +9543,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0617">
+</Item><Item class="Part" referent="RBXTOWN0710">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>14.77</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8344,11 +9559,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0622">
+</Item><Item class="Model" referent="RBXTOWN0715">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0619">
+<Item class="Part" referent="RBXTOWN0712">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-12.0</X><Y>5.359999999999999</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8363,7 +9578,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0620">
+</Item><Item class="Part" referent="RBXTOWN0713">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-12.0</X><Y>11.26</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8378,7 +9593,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0621">
+</Item><Item class="Part" referent="RBXTOWN0714">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-12.0</X><Y>14.77</Y><Z>171.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8394,11 +9609,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0626">
+</Item><Item class="Model" referent="RBXTOWN0719">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0623">
+<Item class="Part" referent="RBXTOWN0716">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>5.359999999999999</Y><Z>194.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8413,7 +9628,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0624">
+</Item><Item class="Part" referent="RBXTOWN0717">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>11.26</Y><Z>194.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8428,7 +9643,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0625">
+</Item><Item class="Part" referent="RBXTOWN0718">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-41.0</X><Y>14.77</Y><Z>194.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8444,11 +9659,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0630">
+</Item><Item class="Model" referent="RBXTOWN0723">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0627">
+<Item class="Part" referent="RBXTOWN0720">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>5.359999999999999</Y><Z>208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8463,7 +9678,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0628">
+</Item><Item class="Part" referent="RBXTOWN0721">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>11.26</Y><Z>208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8478,7 +9693,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0629">
+</Item><Item class="Part" referent="RBXTOWN0722">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>1.0</X><Y>14.77</Y><Z>208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8494,11 +9709,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0635">
+</Item><Item class="Model" referent="RBXTOWN0728">
 <Properties>
 <string name="Name">Bench</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0631">
+<Item class="Part" referent="RBXTOWN0724">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-18.0</X><Y>2.695</Y><Z>192.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8513,7 +9728,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0632">
+</Item><Item class="Part" referent="RBXTOWN0725">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-18.0</X><Y>3.77</Y><Z>192.1</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8528,7 +9743,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0633">
+</Item><Item class="Part" referent="RBXTOWN0726">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-20.5</X><Y>1.77</Y><Z>192.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8543,7 +9758,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0634">
+</Item><Item class="Part" referent="RBXTOWN0727">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-15.5</X><Y>1.77</Y><Z>192.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8559,11 +9774,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0640">
+</Item><Item class="Model" referent="RBXTOWN0733">
 <Properties>
 <string name="Name">Bench</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0636">
+<Item class="Part" referent="RBXTOWN0729">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-22.0</X><Y>2.695</Y><Z>203.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -8578,7 +9793,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0637">
+</Item><Item class="Part" referent="RBXTOWN0730">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-22.0</X><Y>3.77</Y><Z>203.9</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -8593,7 +9808,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0638">
+</Item><Item class="Part" referent="RBXTOWN0731">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-19.5</X><Y>1.77</Y><Z>203.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -8608,7 +9823,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0639">
+</Item><Item class="Part" referent="RBXTOWN0732">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-24.5</X><Y>1.77</Y><Z>203.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -8624,7 +9839,7 @@
 </Properties>
 
 </Item>
-</Item><Item class="Part" referent="RBXTOWN0641">
+</Item><Item class="Part" referent="RBXTOWN0734">
 <Properties>
 <string name="Name">PicnicTable</string>
 <CoordinateFrame name="CFrame"><X>-19.0</X><Y>3.2199999999999998</Y><Z>217.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8639,7 +9854,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0642">
+</Item><Item class="Part" referent="RBXTOWN0735">
 <Properties>
 <string name="Name">PicnicSeat-6.0</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>2.42</Y><Z>217.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8654,7 +9869,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0643">
+</Item><Item class="Part" referent="RBXTOWN0736">
 <Properties>
 <string name="Name">PicnicSeat6.0</string>
 <CoordinateFrame name="CFrame"><X>-8.0</X><Y>2.42</Y><Z>217.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8671,15 +9886,15 @@
 
 </Item>
 </Item>
-<Item class="Model" referent="RBXTOWN0837">
+<Item class="Model" referent="RBXTOWN0930">
 <Properties>
 <string name="Name">StreetFurniture</string>
 </Properties>
-<Item class="Model" referent="RBXTOWN0650">
+<Item class="Model" referent="RBXTOWN0743">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0645">
+<Item class="Part" referent="RBXTOWN0738">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8694,7 +9909,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0646">
+</Item><Item class="Part" referent="RBXTOWN0739">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8709,7 +9924,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0647">
+</Item><Item class="Part" referent="RBXTOWN0740">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8724,7 +9939,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0649">
+</Item><Item class="Part" referent="RBXTOWN0742">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8738,7 +9953,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0648">
+<Item class="PointLight" referent="RBXTOWN0741">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -8749,11 +9964,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0656">
+</Item><Item class="Model" referent="RBXTOWN0749">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0651">
+<Item class="Part" referent="RBXTOWN0744">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8768,7 +9983,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0652">
+</Item><Item class="Part" referent="RBXTOWN0745">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8783,7 +9998,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0653">
+</Item><Item class="Part" referent="RBXTOWN0746">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8798,7 +10013,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0655">
+</Item><Item class="Part" referent="RBXTOWN0748">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8812,7 +10027,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0654">
+<Item class="PointLight" referent="RBXTOWN0747">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -8823,11 +10038,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0662">
+</Item><Item class="Model" referent="RBXTOWN0755">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0657">
+<Item class="Part" referent="RBXTOWN0750">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8842,7 +10057,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0658">
+</Item><Item class="Part" referent="RBXTOWN0751">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8857,7 +10072,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0659">
+</Item><Item class="Part" referent="RBXTOWN0752">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8872,7 +10087,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0661">
+</Item><Item class="Part" referent="RBXTOWN0754">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8886,7 +10101,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0660">
+<Item class="PointLight" referent="RBXTOWN0753">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -8897,11 +10112,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0668">
+</Item><Item class="Model" referent="RBXTOWN0761">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0663">
+<Item class="Part" referent="RBXTOWN0756">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8916,7 +10131,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0664">
+</Item><Item class="Part" referent="RBXTOWN0757">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8931,7 +10146,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0665">
+</Item><Item class="Part" referent="RBXTOWN0758">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8946,7 +10161,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0667">
+</Item><Item class="Part" referent="RBXTOWN0760">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8960,7 +10175,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0666">
+<Item class="PointLight" referent="RBXTOWN0759">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -8971,11 +10186,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0674">
+</Item><Item class="Model" referent="RBXTOWN0767">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0669">
+<Item class="Part" referent="RBXTOWN0762">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8990,7 +10205,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0670">
+</Item><Item class="Part" referent="RBXTOWN0763">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9005,7 +10220,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0671">
+</Item><Item class="Part" referent="RBXTOWN0764">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9020,7 +10235,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0673">
+</Item><Item class="Part" referent="RBXTOWN0766">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9034,7 +10249,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0672">
+<Item class="PointLight" referent="RBXTOWN0765">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9045,11 +10260,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0680">
+</Item><Item class="Model" referent="RBXTOWN0773">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0675">
+<Item class="Part" referent="RBXTOWN0768">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9064,7 +10279,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0676">
+</Item><Item class="Part" referent="RBXTOWN0769">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9079,7 +10294,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0677">
+</Item><Item class="Part" referent="RBXTOWN0770">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9094,7 +10309,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0679">
+</Item><Item class="Part" referent="RBXTOWN0772">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9108,7 +10323,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0678">
+<Item class="PointLight" referent="RBXTOWN0771">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9119,11 +10334,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0686">
+</Item><Item class="Model" referent="RBXTOWN0779">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0681">
+<Item class="Part" referent="RBXTOWN0774">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9138,7 +10353,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0682">
+</Item><Item class="Part" referent="RBXTOWN0775">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9153,7 +10368,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0683">
+</Item><Item class="Part" referent="RBXTOWN0776">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9168,7 +10383,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0685">
+</Item><Item class="Part" referent="RBXTOWN0778">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9182,7 +10397,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0684">
+<Item class="PointLight" referent="RBXTOWN0777">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9193,11 +10408,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0692">
+</Item><Item class="Model" referent="RBXTOWN0785">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0687">
+<Item class="Part" referent="RBXTOWN0780">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9212,7 +10427,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0688">
+</Item><Item class="Part" referent="RBXTOWN0781">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9227,7 +10442,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0689">
+</Item><Item class="Part" referent="RBXTOWN0782">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9242,7 +10457,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0691">
+</Item><Item class="Part" referent="RBXTOWN0784">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9256,7 +10471,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0690">
+<Item class="PointLight" referent="RBXTOWN0783">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9267,11 +10482,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0698">
+</Item><Item class="Model" referent="RBXTOWN0791">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0693">
+<Item class="Part" referent="RBXTOWN0786">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9286,7 +10501,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0694">
+</Item><Item class="Part" referent="RBXTOWN0787">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9301,7 +10516,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0695">
+</Item><Item class="Part" referent="RBXTOWN0788">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9316,7 +10531,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0697">
+</Item><Item class="Part" referent="RBXTOWN0790">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9330,7 +10545,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0696">
+<Item class="PointLight" referent="RBXTOWN0789">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9341,11 +10556,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0704">
+</Item><Item class="Model" referent="RBXTOWN0797">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0699">
+<Item class="Part" referent="RBXTOWN0792">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9360,7 +10575,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0700">
+</Item><Item class="Part" referent="RBXTOWN0793">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9375,7 +10590,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0701">
+</Item><Item class="Part" referent="RBXTOWN0794">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9390,7 +10605,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0703">
+</Item><Item class="Part" referent="RBXTOWN0796">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-100.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9404,7 +10619,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0702">
+<Item class="PointLight" referent="RBXTOWN0795">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9415,11 +10630,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0710">
+</Item><Item class="Model" referent="RBXTOWN0803">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0705">
+<Item class="Part" referent="RBXTOWN0798">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9434,7 +10649,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0706">
+</Item><Item class="Part" referent="RBXTOWN0799">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9449,7 +10664,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0707">
+</Item><Item class="Part" referent="RBXTOWN0800">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9464,7 +10679,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0709">
+</Item><Item class="Part" referent="RBXTOWN0802">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9478,7 +10693,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0708">
+<Item class="PointLight" referent="RBXTOWN0801">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9489,11 +10704,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0716">
+</Item><Item class="Model" referent="RBXTOWN0809">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0711">
+<Item class="Part" referent="RBXTOWN0804">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9508,7 +10723,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0712">
+</Item><Item class="Part" referent="RBXTOWN0805">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9523,7 +10738,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0713">
+</Item><Item class="Part" referent="RBXTOWN0806">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9538,7 +10753,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0715">
+</Item><Item class="Part" referent="RBXTOWN0808">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9552,7 +10767,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0714">
+<Item class="PointLight" referent="RBXTOWN0807">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9563,11 +10778,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0722">
+</Item><Item class="Model" referent="RBXTOWN0815">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0717">
+<Item class="Part" referent="RBXTOWN0810">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9582,7 +10797,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0718">
+</Item><Item class="Part" referent="RBXTOWN0811">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9597,7 +10812,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0719">
+</Item><Item class="Part" referent="RBXTOWN0812">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9612,7 +10827,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0721">
+</Item><Item class="Part" referent="RBXTOWN0814">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9626,7 +10841,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0720">
+<Item class="PointLight" referent="RBXTOWN0813">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9637,11 +10852,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0728">
+</Item><Item class="Model" referent="RBXTOWN0821">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0723">
+<Item class="Part" referent="RBXTOWN0816">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9656,7 +10871,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0724">
+</Item><Item class="Part" referent="RBXTOWN0817">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9671,7 +10886,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0725">
+</Item><Item class="Part" referent="RBXTOWN0818">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9686,7 +10901,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0727">
+</Item><Item class="Part" referent="RBXTOWN0820">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-190.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9700,7 +10915,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0726">
+<Item class="PointLight" referent="RBXTOWN0819">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9711,11 +10926,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0734">
+</Item><Item class="Model" referent="RBXTOWN0827">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0729">
+<Item class="Part" referent="RBXTOWN0822">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9730,7 +10945,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0730">
+</Item><Item class="Part" referent="RBXTOWN0823">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9745,7 +10960,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0731">
+</Item><Item class="Part" referent="RBXTOWN0824">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9760,7 +10975,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0733">
+</Item><Item class="Part" referent="RBXTOWN0826">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9774,7 +10989,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0732">
+<Item class="PointLight" referent="RBXTOWN0825">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9785,11 +11000,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0740">
+</Item><Item class="Model" referent="RBXTOWN0833">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0735">
+<Item class="Part" referent="RBXTOWN0828">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9804,7 +11019,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0736">
+</Item><Item class="Part" referent="RBXTOWN0829">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9819,7 +11034,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0737">
+</Item><Item class="Part" referent="RBXTOWN0830">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9834,7 +11049,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0739">
+</Item><Item class="Part" referent="RBXTOWN0832">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-208.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9848,7 +11063,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0738">
+<Item class="PointLight" referent="RBXTOWN0831">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9859,11 +11074,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0746">
+</Item><Item class="Model" referent="RBXTOWN0839">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0741">
+<Item class="Part" referent="RBXTOWN0834">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9878,7 +11093,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0742">
+</Item><Item class="Part" referent="RBXTOWN0835">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9893,7 +11108,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0743">
+</Item><Item class="Part" referent="RBXTOWN0836">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9908,7 +11123,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0745">
+</Item><Item class="Part" referent="RBXTOWN0838">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9922,7 +11137,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0744">
+<Item class="PointLight" referent="RBXTOWN0837">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -9933,11 +11148,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0752">
+</Item><Item class="Model" referent="RBXTOWN0845">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0747">
+<Item class="Part" referent="RBXTOWN0840">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9952,7 +11167,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0748">
+</Item><Item class="Part" referent="RBXTOWN0841">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9967,7 +11182,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0749">
+</Item><Item class="Part" referent="RBXTOWN0842">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9982,7 +11197,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0751">
+</Item><Item class="Part" referent="RBXTOWN0844">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -9996,7 +11211,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0750">
+<Item class="PointLight" referent="RBXTOWN0843">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10007,11 +11222,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0758">
+</Item><Item class="Model" referent="RBXTOWN0851">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0753">
+<Item class="Part" referent="RBXTOWN0846">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>1.77</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10026,7 +11241,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0754">
+</Item><Item class="Part" referent="RBXTOWN0847">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-89.5</X><Y>8.02</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10041,7 +11256,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0755">
+</Item><Item class="Part" referent="RBXTOWN0848">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-88.1</X><Y>13.719999999999999</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10056,7 +11271,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0757">
+</Item><Item class="Part" referent="RBXTOWN0850">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-86.6</X><Y>13.27</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10070,7 +11285,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0756">
+<Item class="PointLight" referent="RBXTOWN0849">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10081,11 +11296,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0764">
+</Item><Item class="Model" referent="RBXTOWN0857">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0759">
+<Item class="Part" referent="RBXTOWN0852">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>1.77</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10100,7 +11315,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0760">
+</Item><Item class="Part" referent="RBXTOWN0853">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>8.02</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10115,7 +11330,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0761">
+</Item><Item class="Part" referent="RBXTOWN0854">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-63.9</X><Y>13.719999999999999</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10130,7 +11345,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0763">
+</Item><Item class="Part" referent="RBXTOWN0856">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-65.4</X><Y>13.27</Y><Z>-275.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10144,7 +11359,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0762">
+<Item class="PointLight" referent="RBXTOWN0855">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10155,11 +11370,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0770">
+</Item><Item class="Model" referent="RBXTOWN0863">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0765">
+<Item class="Part" referent="RBXTOWN0858">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>1.77</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10174,7 +11389,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0766">
+</Item><Item class="Part" referent="RBXTOWN0859">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>8.02</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10189,7 +11404,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0767">
+</Item><Item class="Part" referent="RBXTOWN0860">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-199.9</X><Y>13.719999999999999</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10204,7 +11419,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0769">
+</Item><Item class="Part" referent="RBXTOWN0862">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-201.4</X><Y>13.27</Y><Z>-150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10218,7 +11433,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0768">
+<Item class="PointLight" referent="RBXTOWN0861">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10229,11 +11444,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0776">
+</Item><Item class="Model" referent="RBXTOWN0869">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0771">
+<Item class="Part" referent="RBXTOWN0864">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>1.77</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10248,7 +11463,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0772">
+</Item><Item class="Part" referent="RBXTOWN0865">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>8.02</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10263,7 +11478,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0773">
+</Item><Item class="Part" referent="RBXTOWN0866">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-199.9</X><Y>13.719999999999999</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10278,7 +11493,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0775">
+</Item><Item class="Part" referent="RBXTOWN0868">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-201.4</X><Y>13.27</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10292,7 +11507,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0774">
+<Item class="PointLight" referent="RBXTOWN0867">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10303,11 +11518,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0782">
+</Item><Item class="Model" referent="RBXTOWN0875">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0777">
+<Item class="Part" referent="RBXTOWN0870">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>1.77</Y><Z>-240.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10322,7 +11537,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0778">
+</Item><Item class="Part" referent="RBXTOWN0871">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>8.02</Y><Z>-240.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10337,7 +11552,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0779">
+</Item><Item class="Part" referent="RBXTOWN0872">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-199.9</X><Y>13.719999999999999</Y><Z>-240.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10352,7 +11567,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0781">
+</Item><Item class="Part" referent="RBXTOWN0874">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-201.4</X><Y>13.27</Y><Z>-240.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10366,7 +11581,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0780">
+<Item class="PointLight" referent="RBXTOWN0873">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10377,11 +11592,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0788">
+</Item><Item class="Model" referent="RBXTOWN0881">
 <Properties>
 <string name="Name">StreetLamp</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0783">
+<Item class="Part" referent="RBXTOWN0876">
 <Properties>
 <string name="Name">Base</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>1.77</Y><Z>-280.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10396,7 +11611,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0784">
+</Item><Item class="Part" referent="RBXTOWN0877">
 <Properties>
 <string name="Name">Pole</string>
 <CoordinateFrame name="CFrame"><X>-198.5</X><Y>8.02</Y><Z>-280.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10411,7 +11626,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0785">
+</Item><Item class="Part" referent="RBXTOWN0878">
 <Properties>
 <string name="Name">Arm</string>
 <CoordinateFrame name="CFrame"><X>-199.9</X><Y>13.719999999999999</Y><Z>-280.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10426,7 +11641,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0787">
+</Item><Item class="Part" referent="RBXTOWN0880">
 <Properties>
 <string name="Name">Head</string>
 <CoordinateFrame name="CFrame"><X>-201.4</X><Y>13.27</Y><Z>-280.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10440,7 +11655,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXTOWN0786">
+<Item class="PointLight" referent="RBXTOWN0879">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9254901960784314</G><B>0.7686274509803922</B></Color3>
@@ -10451,11 +11666,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0792">
+</Item><Item class="Model" referent="RBXTOWN0885">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0789">
+<Item class="Part" referent="RBXTOWN0882">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>5.67</Y><Z>160.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10470,7 +11685,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0790">
+</Item><Item class="Part" referent="RBXTOWN0883">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>12.12</Y><Z>160.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10485,7 +11700,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0791">
+</Item><Item class="Part" referent="RBXTOWN0884">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>16.02</Y><Z>160.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10501,11 +11716,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0796">
+</Item><Item class="Model" referent="RBXTOWN0889">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0793">
+<Item class="Part" referent="RBXTOWN0886">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>5.67</Y><Z>220.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10520,7 +11735,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0794">
+</Item><Item class="Part" referent="RBXTOWN0887">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>12.12</Y><Z>220.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10535,7 +11750,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0795">
+</Item><Item class="Part" referent="RBXTOWN0888">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-104.0</X><Y>16.02</Y><Z>220.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10551,11 +11766,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0800">
+</Item><Item class="Model" referent="RBXTOWN0893">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0797">
+<Item class="Part" referent="RBXTOWN0890">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>5.67</Y><Z>-120.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10570,7 +11785,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0798">
+</Item><Item class="Part" referent="RBXTOWN0891">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>12.12</Y><Z>-120.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10585,7 +11800,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0799">
+</Item><Item class="Part" referent="RBXTOWN0892">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>16.02</Y><Z>-120.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10601,11 +11816,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0804">
+</Item><Item class="Model" referent="RBXTOWN0897">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0801">
+<Item class="Part" referent="RBXTOWN0894">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>5.67</Y><Z>-164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10620,7 +11835,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0802">
+</Item><Item class="Part" referent="RBXTOWN0895">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>12.12</Y><Z>-164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10635,7 +11850,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0803">
+</Item><Item class="Part" referent="RBXTOWN0896">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>16.02</Y><Z>-164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10651,11 +11866,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0808">
+</Item><Item class="Model" referent="RBXTOWN0901">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0805">
+<Item class="Part" referent="RBXTOWN0898">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-140.0</X><Y>5.67</Y><Z>-214.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10670,7 +11885,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0806">
+</Item><Item class="Part" referent="RBXTOWN0899">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-140.0</X><Y>12.12</Y><Z>-214.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10685,7 +11900,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0807">
+</Item><Item class="Part" referent="RBXTOWN0900">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-140.0</X><Y>16.02</Y><Z>-214.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10701,11 +11916,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0812">
+</Item><Item class="Model" referent="RBXTOWN0905">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0809">
+<Item class="Part" referent="RBXTOWN0902">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>5.67</Y><Z>-50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10720,7 +11935,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0810">
+</Item><Item class="Part" referent="RBXTOWN0903">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>12.12</Y><Z>-50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10735,7 +11950,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0811">
+</Item><Item class="Part" referent="RBXTOWN0904">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>16.02</Y><Z>-50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10751,11 +11966,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0816">
+</Item><Item class="Model" referent="RBXTOWN0909">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0813">
+<Item class="Part" referent="RBXTOWN0906">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>5.67</Y><Z>50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10770,7 +11985,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0814">
+</Item><Item class="Part" referent="RBXTOWN0907">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>12.12</Y><Z>50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10785,7 +12000,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0815">
+</Item><Item class="Part" referent="RBXTOWN0908">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>16.02</Y><Z>50.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10801,11 +12016,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0820">
+</Item><Item class="Model" referent="RBXTOWN0913">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0817">
+<Item class="Part" referent="RBXTOWN0910">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>5.67</Y><Z>150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10820,7 +12035,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0818">
+</Item><Item class="Part" referent="RBXTOWN0911">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>12.12</Y><Z>150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10835,7 +12050,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0819">
+</Item><Item class="Part" referent="RBXTOWN0912">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>16.02</Y><Z>150.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10851,11 +12066,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0824">
+</Item><Item class="Model" referent="RBXTOWN0917">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0821">
+<Item class="Part" referent="RBXTOWN0914">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>5.67</Y><Z>200.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10870,7 +12085,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0822">
+</Item><Item class="Part" referent="RBXTOWN0915">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>12.12</Y><Z>200.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10885,7 +12100,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0823">
+</Item><Item class="Part" referent="RBXTOWN0916">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-220.0</X><Y>16.02</Y><Z>200.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10901,11 +12116,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0828">
+</Item><Item class="Model" referent="RBXTOWN0921">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0825">
+<Item class="Part" referent="RBXTOWN0918">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-215.0</X><Y>5.67</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10920,7 +12135,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0826">
+</Item><Item class="Part" referent="RBXTOWN0919">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-215.0</X><Y>12.12</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10935,7 +12150,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0827">
+</Item><Item class="Part" referent="RBXTOWN0920">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-215.0</X><Y>16.02</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10951,11 +12166,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0832">
+</Item><Item class="Model" referent="RBXTOWN0925">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0829">
+<Item class="Part" referent="RBXTOWN0922">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-150.0</X><Y>5.67</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10970,7 +12185,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0830">
+</Item><Item class="Part" referent="RBXTOWN0923">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-150.0</X><Y>12.12</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -10985,7 +12200,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0831">
+</Item><Item class="Part" referent="RBXTOWN0924">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-150.0</X><Y>16.02</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11001,11 +12216,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXTOWN0836">
+</Item><Item class="Model" referent="RBXTOWN0929">
 <Properties>
 <string name="Name">Tree</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0833">
+<Item class="Part" referent="RBXTOWN0926">
 <Properties>
 <string name="Name">Trunk</string>
 <CoordinateFrame name="CFrame"><X>-100.0</X><Y>5.67</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11020,7 +12235,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0834">
+</Item><Item class="Part" referent="RBXTOWN0927">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-100.0</X><Y>12.12</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11035,7 +12250,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0835">
+</Item><Item class="Part" referent="RBXTOWN0928">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-100.0</X><Y>16.02</Y><Z>-320.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11053,11 +12268,11 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXTOWN0873">
+<Item class="Model" referent="RBXTOWN0973">
 <Properties>
 <string name="Name">PlacePoints</string>
 </Properties>
-<Item class="Part" referent="RBXTOWN0838">
+<Item class="Part" referent="RBXTOWN0931">
 <Properties>
 <string name="Name">Place_gym</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>124.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11072,7 +12287,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgMAAABneW0KAAAAUGxhY2VMYWJlbAIcAAAAdGhlIGd5bSwgcGFzdCB0aGUgdHJlYWRtaWxscw==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0839">
+</Item><Item class="Part" referent="RBXTOWN0932">
 <Properties>
 <string name="Name">Place_library</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>188.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11087,7 +12302,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgcAAABsaWJyYXJ5CgAAAFBsYWNlTGFiZWwCGAAAAHRoZSBsaWJyYXJ5LCBieSB0aGUgZGVzaw==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0840">
+</Item><Item class="Part" referent="RBXTOWN0933">
 <Properties>
 <string name="Name">Place_clinic</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>-98.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11102,7 +12317,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABjbGluaWMKAAAAUGxhY2VMYWJlbAIUAAAAdGhlIGNsaW5pYyByZWNlcHRpb24=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0841">
+</Item><Item class="Part" referent="RBXTOWN0934">
 <Properties>
 <string name="Name">Place_bakery</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>-142.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11117,7 +12332,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABiYWtlcnkKAAAAUGxhY2VMYWJlbAIaAAAAdGhlIGJha2VyeSwgYXQgdGhlIGNvdW50ZXI=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0842">
+</Item><Item class="Part" referent="RBXTOWN0935">
 <Properties>
 <string name="Name">Place_garage</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>-186.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11132,7 +12347,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABnYXJhZ2UKAAAAUGxhY2VMYWJlbAITAAAAdGhlIGdhcmFnZSB3b3Jrc2hvcA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0843">
+</Item><Item class="Part" referent="RBXTOWN0936">
 <Properties>
 <string name="Name">Place_park</string>
 <CoordinateFrame name="CFrame"><X>-20.0</X><Y>1.52</Y><Z>176.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11147,7 +12362,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgQAAABwYXJrCgAAAFBsYWNlTGFiZWwCFQAAAHRoZSBwYXJrLCBieSB0aGUgcG9uZA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0844">
+</Item><Item class="Part" referent="RBXTOWN0937">
 <Properties>
 <string name="Name">Place_corner_shop</string>
 <CoordinateFrame name="CFrame"><X>-36.0</X><Y>2.02</Y><Z>-146.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11162,67 +12377,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgsAAABjb3JuZXJfc2hvcAoAAABQbGFjZUxhYmVsAh8AAAB0aGUgY29ybmVyIHNob3AsIGF0IHRoZSBjb3VudGVy</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0845">
-<Properties>
-<string name="Name">Place_home_1</string>
-<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>105.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">272</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-<float name="Transparency">1.0</float>
-<float name="Reflectance">0</float>
-<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzEKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE0</BinaryString>
-</Properties>
-
-</Item><Item class="Part" referent="RBXTOWN0846">
-<Properties>
-<string name="Name">Place_home_2</string>
-<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">272</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-<float name="Transparency">1.0</float>
-<float name="Reflectance">0</float>
-<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzIKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE2</BinaryString>
-</Properties>
-
-</Item><Item class="Part" referent="RBXTOWN0847">
-<Properties>
-<string name="Name">Place_home_3</string>
-<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-69.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">272</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-<float name="Transparency">1.0</float>
-<float name="Reflectance">0</float>
-<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzMKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE4</BinaryString>
-</Properties>
-
-</Item><Item class="Part" referent="RBXTOWN0848">
-<Properties>
-<string name="Name">Place_home_4</string>
-<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-113.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">272</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
-<float name="Transparency">1.0</float>
-<float name="Reflectance">0</float>
-<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzQKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDIw</BinaryString>
-</Properties>
-
-</Item><Item class="Part" referent="RBXTOWN0849">
+</Item><Item class="Part" referent="RBXTOWN0938">
 <Properties>
 <string name="Name">Place_corner_n</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>84.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11237,7 +12392,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAggAAABjb3JuZXJfbgoAAABQbGFjZUxhYmVsAiAAAAB0aGUgc2lkZXdhbGsgbm9ydGggb2YgdGhlIHNjaG9vbA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0850">
+</Item><Item class="Part" referent="RBXTOWN0939">
 <Properties>
 <string name="Name">Place_wp_north_1</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>128.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11252,7 +12407,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9ub3J0aF8xCgAAAFBsYWNlTGFiZWwCDwAAAG91dHNpZGUgdGhlIGd5bQ==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0851">
+</Item><Item class="Part" referent="RBXTOWN0940">
 <Properties>
 <string name="Name">Place_wp_north_2</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>172.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11267,7 +12422,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9ub3J0aF8yCgAAAFBsYWNlTGFiZWwCEwAAAG91dHNpZGUgdGhlIGxpYnJhcnk=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0852">
+</Item><Item class="Part" referent="RBXTOWN0941">
 <Properties>
 <string name="Name">Place_wp_north_3</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>216.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11282,7 +12437,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9ub3J0aF8zCgAAAFBsYWNlTGFiZWwCFQAAAHRoZSB0b3Agb2YgdGhlIHN0cmVldA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0853">
+</Item><Item class="Part" referent="RBXTOWN0942">
 <Properties>
 <string name="Name">Place_corner_s</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>-80.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11297,7 +12452,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAggAAABjb3JuZXJfcwoAAABQbGFjZUxhYmVsAh8AAAB0aGUgc2lkZXdhbGsgc291dGggb2YgdGhlIHN0b3Jl</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0854">
+</Item><Item class="Part" referent="RBXTOWN0943">
 <Properties>
 <string name="Name">Place_wp_south_1</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>-124.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11312,7 +12467,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9zb3V0aF8xCgAAAFBsYWNlTGFiZWwCEgAAAG91dHNpZGUgdGhlIGNsaW5pYw==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0855">
+</Item><Item class="Part" referent="RBXTOWN0944">
 <Properties>
 <string name="Name">Place_wp_south_2</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11327,7 +12482,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9zb3V0aF8yCgAAAFBsYWNlTGFiZWwCEgAAAG91dHNpZGUgdGhlIGJha2VyeQ==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0856">
+</Item><Item class="Part" referent="RBXTOWN0945">
 <Properties>
 <string name="Name">Place_wp_south_3</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>-212.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11342,7 +12497,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9zb3V0aF8zCgAAAFBsYWNlTGFiZWwCEgAAAG91dHNpZGUgdGhlIGdhcmFnZQ==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0857">
+</Item><Item class="Part" referent="RBXTOWN0946">
 <Properties>
 <string name="Name">Place_wp_south_4</string>
 <CoordinateFrame name="CFrame"><X>-92.0</X><Y>2.02</Y><Z>-272.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11357,7 +12512,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9zb3V0aF80CgAAAFBsYWNlTGFiZWwCHQAAAHRoZSBzb3V0aCBlbmQgb2YgdGhlIGZhciB3YWxr</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0858">
+</Item><Item class="Part" referent="RBXTOWN0947">
 <Properties>
 <string name="Name">Place_wp_inner</string>
 <CoordinateFrame name="CFrame"><X>-155.0</X><Y>1.52</Y><Z>-160.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11372,7 +12527,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAggAAAB3cF9pbm5lcgoAAABQbGFjZUxhYmVsAhwAAAB0aGUgZ3Jhc3MgYnkgdGhlIHJldHVybiByb2Fk</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0859">
+</Item><Item class="Part" referent="RBXTOWN0948">
 <Properties>
 <string name="Name">Place_wp_inner_n</string>
 <CoordinateFrame name="CFrame"><X>-170.0</X><Y>1.52</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11387,7 +12542,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9pbm5lcl9uCgAAAFBsYWNlTGFiZWwCMAAAAHRoZSBncmFzcyBiZXR3ZWVuIHRoZSBzdG9yZXMgYW5kIHRoZSByZXR1cm4gcm9hZA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0860">
+</Item><Item class="Part" referent="RBXTOWN0949">
 <Properties>
 <string name="Name">Place_wp_loop_n</string>
 <CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11402,7 +12557,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgkAAAB3cF9sb29wX24KAAAAUGxhY2VMYWJlbAIaAAAAdGhlIHJldHVybiByb2FkLCBub3J0aCBlbmQ=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0861">
+</Item><Item class="Part" referent="RBXTOWN0950">
 <Properties>
 <string name="Name">Place_wp_loop_m_grass</string>
 <CoordinateFrame name="CFrame"><X>-187.0</X><Y>1.52</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11417,7 +12572,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAg8AAAB3cF9sb29wX21fZ3Jhc3MKAAAAUGxhY2VMYWJlbAIbAAAAdGhlIGdyYXNzIGJlaGluZCB0aGUgZ2FyYWdl</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0862">
+</Item><Item class="Part" referent="RBXTOWN0951">
 <Properties>
 <string name="Name">Place_wp_loop_m</string>
 <CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11432,7 +12587,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgkAAAB3cF9sb29wX20KAAAAUGxhY2VMYWJlbAIeAAAAdGhlIHJldHVybiByb2FkLCBieSB0aGUgZ2FyYWdl</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0863">
+</Item><Item class="Part" referent="RBXTOWN0952">
 <Properties>
 <string name="Name">Place_wp_loop_m2</string>
 <CoordinateFrame name="CFrame"><X>-207.0</X><Y>2.02</Y><Z>-255.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11447,7 +12602,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9sb29wX20yCgAAAFBsYWNlTGFiZWwCGQAAAHRoZSByZXR1cm4gcm9hZCwgbWlkLXRvd24=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0864">
+</Item><Item class="Part" referent="RBXTOWN0953">
 <Properties>
 <string name="Name">Place_wp_inner_m</string>
 <CoordinateFrame name="CFrame"><X>-172.0</X><Y>1.52</Y><Z>-250.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11462,7 +12617,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9pbm5lcl9tCgAAAFBsYWNlTGFiZWwCIgAAAHRoZSBncmFzcyBiZXR3ZWVuIHRoZSByb2Fkcywgc291dGg=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0865">
+</Item><Item class="Part" referent="RBXTOWN0954">
 <Properties>
 <string name="Name">Place_wp_inner_s</string>
 <CoordinateFrame name="CFrame"><X>-150.0</X><Y>1.52</Y><Z>-262.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11477,7 +12632,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9pbm5lcl9zCgAAAFBsYWNlTGFiZWwCGwAAAHRoZSBncmFzcyBiZXR3ZWVuIHRoZSByb2Fkcw==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0866">
+</Item><Item class="Part" referent="RBXTOWN0955">
 <Properties>
 <string name="Name">Place_wp_loop_s</string>
 <CoordinateFrame name="CFrame"><X>-207.0</X><Y>1.52</Y><Z>-300.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11492,7 +12647,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgkAAAB3cF9sb29wX3MKAAAAUGxhY2VMYWJlbAIaAAAAdGhlIHNvdXRoIHR1cm4gb2YgdGhlIHJvYWQ=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0867">
+</Item><Item class="Part" referent="RBXTOWN0956">
 <Properties>
 <string name="Name">Place_wp_east_n1</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>40.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11507,7 +12662,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X24xCgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDE0</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0868">
+</Item><Item class="Part" referent="RBXTOWN0957">
 <Properties>
 <string name="Name">Place_wp_east_n2</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>88.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11522,7 +12677,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X24yCgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDE2</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0869">
+</Item><Item class="Part" referent="RBXTOWN0958">
 <Properties>
 <string name="Name">Place_wp_east_n3</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>136.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11537,7 +12692,22 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X24zCgAAAFBsYWNlTGFiZWwCEwAAAHRoZSB3YXkgdG8gdGhlIHBhcms=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0870">
+</Item><Item class="Part" referent="RBXTOWN0959">
+<Properties>
+<string name="Name">Place_wp_east_home</string>
+<CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgwAAAB3cF9lYXN0X2hvbWUKAAAAUGxhY2VMYWJlbAIkAAAAdGhlIHNpZGV3YWxrIG91dHNpZGUgeW91ciBmcm9udCBnYXRl</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0960">
 <Properties>
 <string name="Name">Place_wp_east_s1</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-36.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11552,7 +12722,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3MxCgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDE4</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0871">
+</Item><Item class="Part" referent="RBXTOWN0961">
 <Properties>
 <string name="Name">Place_wp_east_s2</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-80.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11567,7 +12737,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3MyCgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDIw</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXTOWN0872">
+</Item><Item class="Part" referent="RBXTOWN0962">
 <Properties>
 <string name="Name">Place_wp_east_s3</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-124.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -11580,6 +12750,156 @@
 <float name="Transparency">1.0</float>
 <float name="Reflectance">0</float>
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3MzCgAAAFBsYWNlTGFiZWwCIgAAAHRoZSBzb3V0aCBlbmQgb2YgdGhlIG5lYXIgc2lkZXdhbGs=</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0963">
+<Properties>
+<string name="Name">Place_home_1</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>105.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzEKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE0</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0964">
+<Properties>
+<string name="Name">Place_home_2</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>145.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzIKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE2</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0965">
+<Properties>
+<string name="Name">Place_home_3</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-69.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzMKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDE4</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0966">
+<Properties>
+<string name="Name">Place_home_4</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-113.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzQKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDIw</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0967">
+<Properties>
+<string name="Name">Place_home_5</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzUKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDIy</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0968">
+<Properties>
+<string name="Name">Place_home_6</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzYKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDI0</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0969">
+<Properties>
+<string name="Name">Place_home_7</string>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>2.02</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABob21lXzcKAAAAUGxhY2VMYWJlbAIJAAAAbnVtYmVyIDI2</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0970">
+<Properties>
+<string name="Name">Place_wp_east_s4</string>
+<CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-176.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3M0CgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDIy</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0971">
+<Properties>
+<string name="Name">Place_wp_east_s5</string>
+<CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-216.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3M1CgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDI0</BinaryString>
+</Properties>
+
+</Item><Item class="Part" referent="RBXTOWN0972">
+<Properties>
+<string name="Name">Place_wp_east_s6</string>
+<CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-256.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+<float name="Transparency">1.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgoAAAB3cF9lYXN0X3M2CgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgbnVtYmVyIDI2</BinaryString>
 </Properties>
 
 </Item>

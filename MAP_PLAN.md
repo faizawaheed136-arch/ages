@@ -325,7 +325,23 @@ must not be built here. Fetch-and-bag is a job: it lands in `WorkService`,
 This section is the hand-over, not the start of one. Agent A's remaining obligations to it
 are geometry and tags, both of which are one-line changes on request.
 
-### B. The spawn house is alone at the edge of the world — *spec below, awaiting a go*
+### B. The spawn house is alone at the edge of the world — *B1 and B2 built; B3 deferred by the owner*
+
+**Built 2026-08-17.** Two roads, three houses, a back gate, one waypoint that turned out to
+matter more than any of them, and a new check. What follows is the spec as it was written,
+then the build notes; the spec is left standing because the reasoning in it is what the
+build was measured against.
+
+**The thing this actually found.** The complaint was "the spawn house is at the end of the
+map". The defect underneath it was that **the spawn could reach 23 of 620 place points, and
+not one of them was in the city.** The near sidewalk had no point on it outside the player's
+own front gate, leaving a 76-stud hole — six studs over `ROUTE_LINK` — which cut the spawn
+off from the north half of its own street, and the only road into the city left from that
+half. Every existing check passed: the city was one component and it did touch the town, at
+the far end of a chain the player was not standing on. "At least one" was the bug. One line
+in `PLACE_POINTS` (`wp_east_home`) fixed it; `check_city` check 12 is what stops it coming
+back. See "the check that was missing" below.
+
 
 The spawn is at `(8.0, 1.14, -21.5)`, standing on `House.rbxmx` — so this is the *town*,
 not the city, and it is `tools/gen_town.py` / `world_plan.py`, not `gen_city.py`.
@@ -473,6 +489,62 @@ right — it becomes a garden fence onto a street instead of a wall against a fi
 "front gate is the only link" reasoning that justified it is now overruled, and the plot
 wants a **back gate** onto the Backs' west pavement. Otherwise the player walks the length
 of their own garden to reach a road six studs from their back door.
+*Answered: built, `BACK_GATE_Z0/Z1`.*
+
+#### What was built
+
+**B1, the roads.** Both land on mouths that already exist in avenue 1's west pavement, so
+neither adds a junction tile or a carve-list entry and checks 8/10/11 stay green by
+construction.
+
+- **Southgate** — works cross street 1 (`SOUTH_CS[1]`, z -316..-294) carried west to the
+  town road's east kerb. The town's **second** link, straight into the works district where
+  the job place points are.
+- **The Backs** — north-south, `x 44..67`, `z -132..56`, filling the corridor behind the
+  spawn plot, with an elbow east onto avenue 1 at each end. Its 11.5-stud west pavement
+  fronts the plot's rear fence.
+
+**The back gate.** `INNER_DOORWAY` wide, not `GATE_HALF`. Written independently it came out
+at 3.1 studs of clear gap — narrower than any interior door in the game, a number that looks
+fine in a plan and plays like a turnstile. `DOORWAY`/`INNER_DOORWAY` moved up
+`world_plan.py` to sit with the gate constants, because every opening a player walks through
+wants to be one of those two numbers. `wp_backs_gate` sits outside it: a gate with no point
+on the far side is a hole in a fence that no route uses.
+
+**B2, three houses**, numbers 22/24/26, on the east frontage below the corner shop. Not
+four, and not typed: `SOUTH_ROW` reads the depth, pitch and numbering off houses 14/16 and
+lays plots until the next will not fit, so the frontage decides the count. It steps *over*
+`SOUTHGATE_CLEAR` rather than stopping at it — stopping would silently shorten the row if
+that window ever moved. Negative-tested by disabling the exclusion: the row runs house 28
+across the new carriageway and check 7 names it, which is the corner-shop/`GATE_CLEAR` story
+repeating exactly. The houses' place points are now generated from `HOUSES` too; the four
+originals were literals, which works until a fifth house exists with no point inside it.
+
+The west frontage (`z -280..-204`) is still bare. One house fits at the civic side's own
+depth and spacing; a second overruns the loop's bottom road by two studs. Left alone
+deliberately — the west side being clinic/bakery/garage is what makes this read as a town
+rather than a subdivision.
+
+#### The check that was missing
+
+**`check_city` check 12, "Every place reachable from the spawn".** Dijkstra over the route
+graph from the spawn pad, asking two things a component count cannot: can you get there at
+all, and is the way there anything like the way it looks (`MAX_DETOUR`, 1.9).
+
+Both halves are needed and neither subsumes the other, which the measurements show:
+
+| world state | unreachable | worst ratio |
+|---|---|---|
+| before this session | 597 of 620 | 1.20 |
+| two new roads later | 0 | **2.56** |
+| the 76-stud hole closed | 0 | 1.47 |
+
+The reachability half catches row one and says nothing about row two. The ratio half catches
+row two and passes row one at 1.20 — because a ratio can only be computed for somewhere you
+can already get to. Negative-tested against the pre-change assets: exit 1, "597 stranded".
+
+This is also the check that turns "the town has one road into the city" from an observation
+into a failure. One link still connects; it just costs six hundred studs.
 
 **Retraction, and what caused it.** The first pass of this measurement loaded `Town`,
 `House`, `Street` and `Furniture` and concluded there was no ground east of x 8 — that the
