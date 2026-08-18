@@ -1003,3 +1003,133 @@ Verified: `Town.rbxmx` 1592 parts in 37 pieces, md5 `a225bfd1225cee2098329cb7987
 runs. `check_town` all six green (101 place points and 30 buildings, from 59 and 18),
 `check_city` all twelve green (688 place points reachable, worst detour 1.51), `check.py`
 all clean. Every new assertion negative-tested.
+
+### H. Filling the tip end and the library line — *built 2026-08-20*
+
+From the owner: *"add more houses and shops near the landfill area to fill it in then move
+onto the community hall and everything along the line of the library to fill it up"*.
+Spec'd back with measurements and approved with **"go"**. Two builds in that order.
+
+**Build A — the tip end.** The return road carried the rest of the way south to the tip
+line; `BACK_ROW` extended to meet it; `TipParade`, a two-unit terrace facing west at the
+poor end; service yards behind. `BACK_ROW_Z0` moved from `GARAGE_Z0` to
+`TIP_Z1 + NEIGHBOUR_GAP` and is asserted equal to `SOUTH_ROW[-1][0]`, so the back row and
+the east row now stop level against the same fence **because the same fact stops both** —
+not because two numbers agree today. The row went 10 → 15 houses with no count typed.
+
+A terrace and not detached units, for a measured reason: the band is 76.5 studs, and two
+units plus a gap need 80. The style follows the constraint rather than the other way round.
+
+**Build B — the library line.** `NorthParade`: POST OFFICE and TOWN BARBERS at
+x −52.6..−12.6, z 228..308, facing **west** across the main street at the café and the
+community hall. That side was houses as far as the park and then eighty studs of nothing —
+a street with buildings down one side only is a street with a back to it. Here the band is
+80 to the stud, so the units *are* detached with `WEST_GAP` between them, and the gap earns
+its keep as the only way off that pavement into the ground behind. It is deliberately
+narrower than `ALLEY_MIN`: claiming a passage the file has not paved would put a footpath
+in the route graph that nothing on the ground says is there.
+
+No forecourt, against nine set-back civic buildings opposite. That contrast is the point,
+not an economy — a shopfront standing on the footway is what tells a player which side of
+the street is which from the far pavement, before they have read a sign.
+
+**Geometry and tag seams only, no `Config` entries.** `Config.luau` belongs to another
+agent. Both units are untagged for now: a tag no service reads is orphaned code by this
+tree's rules.
+
+**No betting shop.** It was the obvious fourth name for a poor-end parade and it is banned
+outright at 13+.
+
+#### The park was being drawn inside a house, and all three gates passed it
+
+`PARK_Z0, PARK_Z1` had moved from `168..228` to `-88..-28`, comment rewritten to match. The
+park is x −44..4; number 18 stands at x −42..2, z −86..−52. A **44 × 34 overlap with a
+standing house** — pond, both paths, both benches and the picnic table inside its front
+room.
+
+Three checks live next door to that question and none of them asks it: check 5 compares
+*buildings to buildings* and a park is surface geometry, check 6 asks about carriageways,
+check 7 asks about trees. The guard is now an assertion in `gen_town.py` under `HOUSES`
+rather than a ninth check, because a generator that can draw a park on a house should not
+be allowed to finish.
+
+The same edit silently broke Build B. `NORTH_PARADE_Z0 = PARK_Z1` was written when
+`PARK_Z1` was 228 and the band was the documented 80. With the park moved it became 336,
+the shops did not move, and **256 studs of empty frontage** were left on a finished
+pavement — the defect the parade exists to remove, four times worse, reported by nothing.
+
+#### The assertion over it could never have fired
+
+It read `assert 2 <= len(NORTH_PARADE) <= 3`. The row is built from a fixed tuple of two
+names, so `n` is 0, 1 or 2 and **never 3**. A bound no generator can reach is not a loose
+check; it is the appearance of one.
+
+| replaced by | catches |
+|---|---|
+| `len(NORTH_PARADE) == 2` | the band shrinking and dropping units off the south end |
+| `NORTH_PARADE_SLACK < STORE_FRONT + WEST_GAP` | the band growing and leaving a plot nobody built |
+
+The second is the half that was missing and the half that mattered.
+
+#### One pavement, two halves, one of them checked
+
+`wp_south_3` had moved from z −212 to −106 — "outside the garage", up beside the bakery,
+out of order with its neighbours, leaving a **127-stud hop** to `wp_south_4` against a
+70-stud `ROUTE_LINK`. The bottom of the far walk came off the route graph.
+
+`_check_chain` was already running on `corner_n, wp_north_1..5, wp_top_junction`, the north
+half of that same walk, and on nothing south of the school. Five points each side, all at
+x −92, neighbouring lines in the same literal, and only one half checked — and the defect
+landed in the unchecked half. `_southwalk` now covers the other five.
+
+#### `roof_groups`: a building is a thing with a roof on it
+
+check_town's unit of "a building" was the **top-level group**, which is the same thing for
+a house and quietly wrong for a parade — `TipParade` is one top-level group with two shops
+in it. Check 4 asked whether *the parade* had a place point anywhere in it and said yes on
+the strength of one unit's; check 5 could not see two units of one terrace standing in each
+other at all. Four buildings were being checked as two, and the header printed the symptom
+for two days: 36 before a parade of two went in, 37 after. Nobody read it, because nobody
+had said what the number counted.
+
+Keyed on the innermost group holding a `Roof`, chained through the whole group path —
+every house's inner group is called `HouseStructure`, and fifteen under one key is the
+exact merge it exists to undo. **37 → 39 buildings**; ground-floor walls 145 → 141, the
+four dropped (`BoxBank`, `HallEast1`, `HallEast2`, `Ovens`) all interior fittings.
+
+#### Smaller repairs in the same pass
+
+- **`clear_of_forecourts` had a zero-width x band.** `min/max(FRONT_X, FORECOURT_X0)` are
+  two names for the same number, −112, so it answered "clear" for every point in the world
+  including the tree it was written to catch. Both names are worth keeping; the width
+  between them was never a width.
+- **`TRUNK_WIDTH = 1.6` into `world_plan.py`.** `tree()` is written three times and all
+  three had their own 1.6. They agreed; nothing made them. Canopies are `CanCollide false`
+  by design and check 7 measures trunks, so asking the filter with the canopy refuses real
+  trees over a one-stud overhang — a filter stricter than its checker is a second opinion
+  nobody asked for.
+- **`build_street.py` asked `clear_of_alleys` where it needed `clear_of_paving`**, and a
+  tree stood six studs inside the clinic's forecourt. A call site that enumerates hazards
+  only knows the hazards already paid for. 486 → 483 parts.
+- **check_town filed failures under the wrong heading.** stdout block-buffers when piped,
+  so FAIL lines surfaced above their own section header and check 7's first negative test
+  read as a check 6 failure. `line_buffering=True` on both streams. A report filed under
+  the wrong heading is worse than none, because it is believed.
+
+**`tools/check_asserts.py` is new.** It breaks one input per case and checks the *right*
+assertion fires, matched on a phrase only that assertion prints, with a control run that
+catches a guard firing unconditionally. 6/6. It covers the north parade block and nothing
+else — six of the forty-odd assertions in `gen_town.py` — and says so at the top, because a
+harness read as coverage it does not have is how `2 <= n <= 3` survived.
+
+Verified: `Town.rbxmx` 2064 parts in 44 pieces, `Street.rbxmx` 483 in 14, `City.rbxmx`
+11874 in 499 — all md5-stable across consecutive runs. `check_town` **8/8** (121 place
+points, 39 buildings, 10671 colliding parts), `check_city` **12/12** (708 place points
+reachable, 159 destinations, worst detour 1.51 at `wp_bridge_2`), `check.py` all clean.
+Nothing Studio-tested.
+
+**Open.** The `wp_south_*` and `wp_north_*` chains are typed literals on a ~44-stud pitch
+whose labels are approximate — `wp_south_1` is "outside the clinic" at −124 against
+`CLINIC_DOOR = -98`. The positions are defensible as route-graph nodes; the *labels* are
+what lie. Worth deriving both halves from the door constants in one pass, which moves
+points and needs `check_city` re-run.

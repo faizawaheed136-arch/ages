@@ -409,17 +409,41 @@ assert WEST_GAP == BAKERY_Z0 - GARAGE_Z1, (
     f"and {BAKERY_Z0 - GARAGE_Z1} between the garage and the bakery. The cafe "
     f"and the hall are spaced by that number, and it has stopped being one "
     f"number.")
-STORE_DEPTH = BAKERY_Z1 - BAKERY_Z0
-LIB_DEPTH = LIB_Z1 - LIB_Z0
+# These two were called STORE_DEPTH and LIB_DEPTH and they are not depths. Every
+# building on this frontage faces the road across its *x* axis, so the distance
+# back from its front wall is the x extent -- 40 studs, the same for all nine --
+# and the z extent these measure is how much frontage it takes up along the
+# street. The old names said the opposite of what the numbers were, and the
+# first thing built against them from outside this file (the parade at the tip
+# end, which is 40 back and 36 wide) was written 36 back and 40 wide before the
+# footprint was printed out and read. Renamed rather than commented, because a
+# comment does not travel to the call site and a name does.
+STORE_FRONT = BAKERY_Z1 - BAKERY_Z0
+LIB_FRONT = LIB_Z1 - LIB_Z0
+
+# The one that really is a depth: how far back from the front wall a building on
+# this frontage goes. Derived from the garage and then asserted against all of
+# them, because a row where one building is deeper than its neighbours has a
+# back wall standing in somebody's yard, and the parades built elsewhere in the
+# town read this number rather than choosing their own.
+BUILDING_DEPTH = GARAGE_X1 - GARAGE_X0
+for _bn, _bx0, _bx1 in (("the garage", GARAGE_X0, GARAGE_X1),
+                        ("the bakery", BAKERY_X0, BAKERY_X1),
+                        ("the clinic", CLINIC_X0, CLINIC_X1),
+                        ("the library", LIB_X0, LIB_X1)):
+    assert _bx1 - _bx0 == BUILDING_DEPTH, (
+        f"{_bn} is {_bx1 - _bx0} studs deep and the frontage is built {BUILDING_DEPTH}. "
+        f"Every building on the west side shares one depth, and the two parades "
+        f"read that number rather than choosing one, so this is now two depths.")
 
 CAFE_X0, CAFE_X1 = -152.0, FRONT_X
 CAFE_Z0 = LIB_Z1 + WEST_GAP
-CAFE_Z1 = CAFE_Z0 + STORE_DEPTH
+CAFE_Z1 = CAFE_Z0 + STORE_FRONT
 CAFE_DOOR = (CAFE_Z0 + CAFE_Z1) / 2
 
 HALL_X0, HALL_X1 = -152.0, FRONT_X
 HALL_Z0 = CAFE_Z1 + WEST_GAP
-HALL_Z1 = HALL_Z0 + LIB_DEPTH
+HALL_Z1 = HALL_Z0 + LIB_FRONT
 HALL_DOOR = (HALL_Z0 + HALL_Z1) / 2
 
 # The frontage in z order, which is the only order any question about it wants
@@ -481,6 +505,19 @@ assert 2 <= len(ALLEYS) <= 5, (
     f"Check the west frontage footprints and ALLEY_MIN.")
 
 
+# A tree's trunk, and therefore the only part of a tree that stands on the
+# ground. The canopy is CanCollide false in all three generators on purpose --
+# it hangs at head height and a player is meant to brush through it -- so the
+# square a tree occupies is this wide and not `spread` wide.
+#
+# It lives here because `tree()` is written out three times, in gen_town.py,
+# build_street.py and gen_city.py, and all three had their own 1.6. That is the
+# same shape as every other defect this week: one measurement, several files,
+# no way for any of them to notice the others disagreeing. They agreed, this
+# time. Nothing made them.
+TRUNK_WIDTH = 1.6
+
+
 def alley_slug(blurb: str) -> str:
     """`the gym and the library` -> `GymLibrary`, for part names."""
     return "".join(w.title() for w in blurb.split() if w not in ("the", "and"))
@@ -499,6 +536,75 @@ def clear_of_alleys(z: float, spread: float) -> bool:
     """
     return all(z + spread / 2 <= z0 or z - spread / 2 >= z1
                for _blurb, z0, z1 in ALLEYS)
+
+
+def clear_of_forecourts(x: float, z: float, spread: float) -> bool:
+    """The same question about the paved aprons in front of the nine buildings.
+
+    This exists because check_town's check 7 found a nine-stud tree standing in
+    the middle of the clinic's forecourt on the check's first run. The tree is
+    planted in `build_street.py`; the forecourt is drawn in `gen_town.py`; the
+    two are in different assets and neither file can see the other's, so nothing
+    anywhere in the tree was wrong and nothing anywhere could have said so.
+    That is the third time this exact shape has cost something -- the duplicate
+    trunk at (-104, 88), the tree in the finished alley, and now this -- and all
+    three were two files placing objects into one strip.
+
+    A forecourt runs from the building line to the far sidewalk, over the z the
+    building occupies, so the answer is read off WEST_FRONTAGE rather than from
+    a list of aprons: a building added to that tuple gets a forecourt that trees
+    already avoid, without anybody remembering to say so.
+
+    The x band is FORECOURT_X0..FAR_WALK_X0 because that is the span both
+    generators pass to `box`. It is emphatically *not* FRONT_X..FORECOURT_X0:
+    those are two names for the same number, -112, and this function was first
+    written that way -- a zero-width band that answered "clear" for every point
+    in the world including the tree it was written to catch. The two names exist
+    because a building's front and its apron's near edge are the same line today
+    and might not be tomorrow; that is a reason to keep both names, not a reason
+    to measure a width between them.
+    """
+    if not (min(FORECOURT_X0, FAR_WALK_X0) - spread / 2 <= x
+            <= max(FORECOURT_X0, FAR_WALK_X0) + spread / 2):
+        return True
+    return all(z + spread / 2 <= z0 or z - spread / 2 >= z1
+               for _blurb, z0, z1 in WEST_FRONTAGE)
+
+
+def clear_of_paving(x: float, z: float, width: float) -> bool:
+    """Is this square still grass? One question, both generators, every surface.
+
+    `width` is the footprint of the thing that stands on the ground, which for
+    a tree is `TRUNK_WIDTH` and not its canopy: check_town's check 7 measures
+    trunks and deliberately ignores canopies, because a branch over a pavement
+    is what a street tree is for. A filter that refuses what the checker would
+    pass is not caution, it is a second opinion nobody asked for, and it costs
+    real trees -- asked with the canopy instead, this drops the tree outside the
+    school over a one-stud overhang of its forecourt.
+
+    The two rules above are separate because they are separate measurements, and
+    composed here because a call site should be asking "may I plant this" rather
+    than enumerating the ways the answer could be no -- the alley tree survived
+    a call site that asked only about alleys, and the forecourt tree survived
+    one that asked about nothing at all.
+
+    This prevents. It is not the guarantee: it can only know about the surfaces
+    it has been taught, and both trees it was written for were standing on a
+    surface nobody had thought to teach it. check_town's check 7 measures the
+    built asset and is what actually holds the line.
+
+    The alley half is asked without checking x, which makes it conservative:
+    it will refuse a spot that merely shares a z with an alley even if it is two
+    hundred studs away from one. That is deliberate for now -- the alleys' z
+    bands are measured here but their x span is `RETURN_X1 + SIDEWALK` to
+    `FAR_WALK_X0`, and RETURN_X1 belongs to the return road, which only
+    gen_town.py draws. Narrowing it means moving that road into the plan, which
+    is a real change and not one to make in passing. Refusing too much plants
+    one tree fewer; refusing too little is the defect this whole function is
+    about, so the error is taken in the safe direction and written down rather
+    than left to be rediscovered.
+    """
+    return clear_of_alleys(z, width) and clear_of_forecourts(x, z, width)
 
 # Floor heights. Ground floors sit level with the paving outside them.
 FLOOR_1 = PAVING

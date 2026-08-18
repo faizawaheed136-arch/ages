@@ -31,7 +31,7 @@ from rbxmx import at, box, group, part, point_light, sign
 import world_plan as W
 from world_plan import (
     BACK_GATE_Z0, BACK_GATE_Z1,
-    CEIL_1, CEIL_2, clear_of_alleys, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
+    CEIL_1, CEIL_2, clear_of_paving, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
     FAR_WALK_X0, FAR_WALK_X1, FENCE_HALF, FENCE_HEIGHT, FENCE_X, FENCE_Z0,
     FENCE_Z1, FLOOR_1, FLOOR_2, FORECOURT_X0, FRONT_X, GATE_HALF, GROUND,
     INNER_DOORWAY, NEAR_WALK_X0, NEAR_WALK_X1, PARTITION, PATH_HALF, PATH_TOP,
@@ -40,7 +40,7 @@ from world_plan import (
     PROPERTY_X, ROAD_MID, ROAD_X0, ROAD_X1, SCHOOL_DOOR, SCHOOL_X0,
     SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1, SLAB, STAIR_GOING, STAIR_RISE,
     STAIR_STEPS, STAIR_X0, STAIR_X1, STAIR_Z0, STAIR_Z1, STREET, STREET_Z0,
-    STREET_Z1, WALL, WORK_DOOR, WORK_X0, WORK_X1, WORK_Z0, WORK_Z1,
+    STREET_Z1, TRUNK_WIDTH, WALL, WORK_DOOR, WORK_X0, WORK_X1, WORK_Z0, WORK_Z1,
 )
 
 rbxmx.begin("RBXSTREET")
@@ -411,7 +411,8 @@ def tree(x, z, floor, height=15.0, spread=10.0, label="Tree"):
     """
     with group(label):
         with at(x, z, floor=floor):
-            part("Trunk", (0, 0, 0), (1.6, height * 0.62, 1.6), BARK, WOOD)
+            part("Trunk", (0, 0, 0), (TRUNK_WIDTH, height * 0.62, TRUNK_WIDTH),
+                 BARK, WOOD)
             part("Canopy", (0, height * 0.5, 0), (spread, spread * 0.72, spread),
                  LEAF, LEAFY_GRASS, collide=False)
             part("CanopyTop", (0, height * 0.5 + spread * 0.5, 0),
@@ -455,9 +456,15 @@ with group("StreetFurniture"):
     # deleting a line here: this file has already had one tree land inside a tree
     # gen_town.py planted, and the fix for that was the same fix -- ask the shared
     # plan instead of keeping a second copy of the answer.
+    # `clear_of_paving` and not `clear_of_alleys`: the alley question was the
+    # only one asked here, and the tree at (-104, -86) passed it while standing
+    # six studs inside the clinic's forecourt. Asking one question about paving
+    # rather than one question per kind of paving is the difference -- a call
+    # site that enumerates hazards only ever knows about the hazards that have
+    # already been paid for.
     TREE_SPREAD = 10.0
     for x, z in ((-104.0, -16.0), (-104.0, 6.0), (-104.0, 88.0), (-104.0, -86.0)):
-        if not clear_of_alleys(z, TREE_SPREAD):
+        if not clear_of_paving(x, z, TRUNK_WIDTH):
             continue
         tree(x, z, GROUND, spread=TREE_SPREAD)
     for x, z in ((-20.0, -22.0), (-34.0, 14.0), (-13.0, 20.0), (-40.0, -34.0)):

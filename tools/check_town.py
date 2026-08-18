@@ -100,6 +100,15 @@ DOOR_SLACK = 4.0
 
 assertions_failed = 0
 
+# Failures go to stderr and everything else to stdout, and stdout is block
+# buffered the moment this is piped into anything -- so every FAIL line and
+# every measurement under it surfaced *above* the header of the section it
+# belonged to, and the first negative test of check 7 read as a check 6 failure
+# until the whole output was laid out side by side. A report filed under the
+# wrong heading is worse than no report, because it is believed.
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 
 def check(label, condition, detail=""):
     global assertions_failed
@@ -214,6 +223,68 @@ def gap_to(x, z, foot):
     return math.hypot(max(abs(lx) - hx, 0.0), max(abs(lz) - hz, 0.0))
 
 
+def roof_groups(path: Path):
+    """{group path: [(part_name, footprint, box)]} for every group holding a roof.
+
+    A building is a thing with a roof on it, and until now the unit of a building
+    was the *top-level* group instead. Those are the same thing for a house or
+    the bakery, and quietly wrong for a parade: `TipParade` is one top-level
+    group with two shops inside it and `NorthParade` is one with two more. So
+    check 4 was asking whether *the parade* had a place point anywhere in it and
+    answering yes on the strength of one unit's, and check 5 could not see two
+    units of one terrace standing in each other at all. Four buildings in this
+    town were being checked as two, and the count printed in the header said so
+    -- 36 buildings before a parade of two went in, 37 after -- which nobody read
+    as a symptom because nobody had said what the number counted.
+
+    Keyed by the whole chain of group names and not by the group's own, because
+    every house's inner group is called `HouseStructure` and fifteen of them
+    under one key is the exact merge this function exists to undo.
+
+    The limit it keeps: a group holding two roofs is still one entry. That
+    cannot happen from `shell()` or `house()`, which each emit one roof into
+    their own group, and it is written down here rather than guarded because a
+    guard against something no generator can currently produce is a check with
+    nothing behind it.
+    """
+    root = ET.parse(path).getroot()
+    parent = {}
+    for p in root.iter("Item"):
+        for c in p.findall("Item"):
+            parent[c] = p
+
+    def name_of(item):
+        props = item.find("Properties")
+        el = props.find("string[@name='Name']") if props is not None else None
+        return el.text if el is not None else "?"
+
+    out = {}
+    for item in root.iter("Item"):
+        if item.get("class") != "Part" or name_of(item) != ROOF_PART:
+            continue
+        grp = parent.get(item)
+        if grp is None:
+            continue
+        chain, cur = [], grp
+        while cur is not None:
+            chain.append(name_of(cur))
+            cur = parent.get(cur)
+        # chain is innermost-first and ends with the file's root model, whose
+        # name is dropped in favour of the file stem.
+        key = f"{path.stem}/" + "/".join(reversed(chain[:-1]))
+        if key in out:
+            continue
+        acc = out[key] = []
+        for sub in grp.iter("Item"):
+            if sub.get("class") != "Part":
+                continue
+            p = sub.find("Properties")
+            b = part_box(p) if p is not None else None
+            if b is not None:
+                acc.append((b[0], part_footprint(p), b[1:]))
+    return out
+
+
 def ground_floor_walls(parts):
     """The parts of a group that are walls standing on the ground floor.
 
@@ -245,9 +316,12 @@ def main():
     for f in SOLID_ASSETS:
         obstacles.extend(solids(ASSETS / f"{f}.rbxmx"))
 
-    buildings = {g: ground_floor_walls(parts) for g, parts in groups.items()
-                 if g.split("/", 1)[1] not in SURFACE_GROUPS
-                 and any(n == ROOF_PART for n, _f, _b in parts)}
+    roofed = {}
+    for f in TOWN_ASSETS:
+        roofed.update(roof_groups(ASSETS / f"{f}.rbxmx"))
+
+    buildings = {g: ground_floor_walls(parts) for g, parts in roofed.items()
+                 if g.split("/", 1)[1].split("/", 1)[0] not in SURFACE_GROUPS}
 
     print(f"Parsing {', '.join(TOWN_ASSETS)}...")
     print(f"  {len(points)} place points, {len(buildings)} buildings, "
@@ -424,6 +498,91 @@ def main():
               file=sys.stderr)
     check("no road runs through a building", not struck,
           f"{len(struck)} building(s) with a road in them")
+    print()
+
+    # --- 7. Trees in a surface people walk or drive on ---
+    print("7. Trees in a walked surface")
+    # Three times now a tree has been planted on a square that later stopped
+    # being grass, and all three built clean:
+    #
+    #   * (-104, 88) and (-104, 160): the second was left standing dead centre
+    #     of the eight-stud alley that was cut between the gym and the library,
+    #     trunk in the middle of the path, with every check green.
+    #   * (-215, -320), (-150, -320), (-100, -320): the south meadow's trees.
+    #     The meadow became the extended back street, its two pavements and the
+    #     loop's south walk; one trunk ended up in the carriageway and two on
+    #     the new footway.
+    #
+    # Every one of those lines was correct when it was written. That is the
+    # point: the defect is not a bad coordinate, it is a *coordinate that was
+    # right and then the ground under it changed*, and no amount of care at the
+    # call site catches that. gen_town.py has a `clear_of_alleys` filter which
+    # is real and worth keeping -- it prevents rather than reports -- but it can
+    # only ever know about the surfaces somebody remembered to tell it about,
+    # and the three at z -320 were not standing in an alley.
+    #
+    # So this measures the built asset instead. A tree is found by its `Trunk`
+    # part, which nothing but `tree()` emits, and it is tested against the
+    # carriageways check 6 already collects plus every slab in a paved group.
+    # Canopies are deliberately not tested: a canopy is non-colliding and a
+    # branch over a pavement is what a street tree is for.
+    # `Crossing` is deliberately not in here. A zebra crossing is paint lying on
+    # a carriageway -- that is what it is for -- so including it made check 8
+    # report all five of its stripes as pavements in the road on the first run.
+    # Removed rather than special-cased in check 8, because a crossing is not a
+    # footway that happens to be allowed in the road, it is road markings, and
+    # the list is called PAVED_GROUPS.
+    PAVED_GROUPS = {"Sidewalks", "FrontPath", "Forecourts"}
+    paved = [(f"{g}/{name}", foot)
+             for g, parts in groups.items()
+             for name, foot, _box in parts
+             if g.split("/", 1)[1] in PAVED_GROUPS]
+    trunks = [(f"{g}/{name}", foot)
+              for g, parts in groups.items()
+              for name, foot, _box in parts
+              if name.startswith("Trunk")]
+    planted = []
+    for tname, tfoot in trunks:
+        for sname, sfoot in roads + paved:
+            bite = plan_overlap(tfoot, sfoot)
+            if bite > COPLANAR:
+                planted.append((tname, sname, bite))
+    for tname, sname, bite in sorted(planted, key=lambda p: -p[2]):
+        print(f"    {tname} stands {bite:.2f} studs into {sname}", file=sys.stderr)
+    print(f"  {len(trunks)} tree trunks against {len(roads)} carriageways "
+          f"and {len(paved)} paved slabs.")
+    check("no tree stands in a road or on a pavement", not planted,
+          f"{len(planted)} trunk(s) in a walked surface")
+    print()
+
+    # --- 8. Pavements in a carriageway ---
+    print("8. Pavements in a carriageway")
+    # The other half of the same defect, from the other side. A sidewalk slab is
+    # raised half a stud above the road; one laid across a carriageway is a kerb
+    # standing in the middle of the traffic lane, and it is the specific thing
+    # that happens when a pavement is extended past a junction that was not
+    # there when it was written.
+    #
+    # gen_town.py guards this today with a hand-written assertion over exactly
+    # one pair of slabs -- the near walk either side of the southern link -- and
+    # that assertion cannot see the two carve points added since, at the loop's
+    # bottom road and at the top junction. An assertion about one pair is a note
+    # about the pair somebody was thinking about; this asks the question of all
+    # of them.
+    #
+    # Kerb and paving both count. The kerb is the part that actually sticks up,
+    # but a paving slab in a lane is the same mistake and reporting only half of
+    # it would leave the other half looking deliberate.
+    laid = []
+    for sname, sfoot in paved:
+        for rname, rfoot in roads:
+            bite = plan_overlap(sfoot, rfoot)
+            if bite > STREET_BITE:
+                laid.append((sname, rname, bite))
+    for sname, rname, bite in sorted(laid, key=lambda p: -p[2]):
+        print(f"    {sname} lies {bite:.1f} studs into {rname}", file=sys.stderr)
+    check("no pavement lies in a carriageway", not laid,
+          f"{len(laid)} paved slab(s) in a road")
 
     print()
     if assertions_failed == 0:

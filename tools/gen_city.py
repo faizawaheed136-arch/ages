@@ -54,7 +54,8 @@ from rbxmx import at, box, group, part, point_light, sign
 
 from world_plan import (
     CEIL_1, CEIL_2, DOORWAY, FLOOR_1, FLOOR_2, GROUND, KERB, PAVING,
-    PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, SLAB, STOREY, WALL,
+    PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, SLAB, STOREY,
+    TRUNK_WIDTH, WALL,
     # The town's own street, so the gate road can tee off it by name instead of
     # a copied literal that silently stops matching when the town moves.
     PROPERTY_X, ROAD_X0, ROAD_X1,
@@ -1154,7 +1155,8 @@ def chair(x, z, floor, side="north", label="Chair"):
 def tree(x, z, floor, height=15.0, spread=10.0, label="Tree"):
     with group(label):
         with at(x, z, floor=floor):
-            part("Trunk", (0, 0, 0), (1.6, height * 0.62, 1.6), BARK, WOOD)
+            part("Trunk", (0, 0, 0), (TRUNK_WIDTH, height * 0.62, TRUNK_WIDTH),
+                 BARK, WOOD)
             part("Canopy", (0, height * 0.5, 0), (spread, spread * 0.72, spread),
                  LEAF, LEAFY_GRASS, collide=False)
             part("CanopyTop", (0, height * 0.5 + spread * 0.5, 0),

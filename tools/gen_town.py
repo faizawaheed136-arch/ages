@@ -50,7 +50,7 @@ from rbxmx import (
 from rbxmx import at, box, group, part, point_light, sign
 
 from world_plan import (
-    ALLEYS, ALLEY_MARGIN, ALLEY_MIN, ALLEY_WIDTH, alley_slug, clear_of_alleys,
+    ALLEYS, ALLEY_MARGIN, ALLEY_MIN, ALLEY_WIDTH, alley_slug, clear_of_paving,
     BAKERY_DOOR, BAKERY_X0, BAKERY_X1, BAKERY_Z0, BAKERY_Z1,
     CAFE_DOOR, CAFE_X0, CAFE_X1, CAFE_Z0, CAFE_Z1,
     CEIL_1, CLINIC_DOOR, CLINIC_X0, CLINIC_X1, CLINIC_Z0, CLINIC_Z1,
@@ -59,13 +59,13 @@ from world_plan import (
     FRONT_X, GARAGE_DOOR, GARAGE_X0, GARAGE_X1, GARAGE_Z0, GARAGE_Z1,
     GATE_CLEAR, GROUND, GYM_DOOR, GYM_X0, GYM_X1, GYM_Z0, GYM_Z1,
     HALL_DOOR, HALL_X0, HALL_X1, HALL_Z0, HALL_Z1,
-    LIB_DEPTH, LIB_DOOR, LIB_X0, LIB_X1, LIB_Z0, LIB_Z1,
+    BUILDING_DEPTH, LIB_FRONT, LIB_DOOR, LIB_X0, LIB_X1, LIB_Z0, LIB_Z1,
     NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, PROPERTY_X,
     MAP_SOUTH_EDGE,
     NORTHGATE_CLEAR, NORTHGATE_MID, NORTHGATE_WALK, NORTHGATE_Z0, NORTHGATE_Z1,
-    ROAD_MID, ROAD_X0, ROAD_X1, SLAB, SOUTHGATE_CLEAR, STORE_DEPTH,
-    STREET_Z0, STREET_Z1, WEST_FRONTAGE, WEST_GAP,
+    ROAD_MID, ROAD_X0, ROAD_X1, SLAB, SOUTHGATE_CLEAR, STORE_FRONT,
+    STREET_Z0, STREET_Z1, TRUNK_WIDTH, WEST_FRONTAGE, WEST_GAP,
     WALL,
 )
 
@@ -261,39 +261,9 @@ BACK_HOUSE_X0 = BACK_HOUSE_X1 - HOUSE_WIDTH
 # behind the last house is the same bare margin this row was built to remove.
 WEST_EDGE = BACK_HOUSE_X0 - BACK_GARDEN
 
-# The row runs exactly as long as the frontage it backs: from the garage, the
-# southernmost thing on the west side, to the library, the northernmost. Longer
-# and it stands behind open grass at one end; shorter and it stops in the middle
-# of the block for no reason a player can see.
-#
-# The count is not typed. Plots are laid north to south at the street's own
-# pitch until the next one will not fit, so moving the garage or the library
-# moves the row instead of leaving a stale number behind -- the same rule the
-# south row is built by, and for the same reason.
-#
-# Odd numbers, where the main street is even. That is the one thing about these
-# houses that is not copied: a different series is how a player is told this is
-# a different road, and it costs nothing.
-BACK_ROW_Z1 = LIB_Z1
-BACK_ROW_Z0 = GARAGE_Z0
-BACK_ROW = []
-_bz1 = BACK_ROW_Z1
-_bn = 1
-while True:
-    _bz0 = _bz1 - HOUSE_DEPTH
-    if _bz0 < BACK_ROW_Z0:
-        break
-    BACK_ROW.append((_bz0, _bz1, (_bz0 + _bz1) / 2, str(_bn)))
-    _bn += 2
-    _bz1 = _bz0 - NEIGHBOUR_GAP
-
-# Safe range 8-12. The frontage is 412 studs at a 40-stud pitch, so ten is what
-# it holds; under 8 something has eaten a third of the west side and over 12 the
-# pitch has collapsed. Reports rather than clamps -- the number is a symptom.
-assert 8 <= len(BACK_ROW) <= 12, (
-    f"the back row came out at {len(BACK_ROW)} houses over the "
-    f"{BACK_ROW_Z1 - BACK_ROW_Z0:.0f} studs between the garage and the library. "
-    f"Check GARAGE_Z0, LIB_Z1, HOUSE_DEPTH and NEIGHBOUR_GAP.")
+# The row itself is built further down the file, under the tip, because its
+# south end is read off the tip's fence line and that line does not exist yet
+# here. See BACK_ROW.
 
 # The alleys, and they are not decoration.
 #
@@ -440,6 +410,146 @@ assert TIP_Z1 - TIP_Z0 >= TIP_MIN_DEPTH, (
 # stopped short of either edge would leave two strips of nothing whose only
 # purpose was to be the reason the tip is not the width of the map.
 TIP_X0, TIP_X1 = WEST_EDGE, EAST_X1
+
+# The back street's row of houses, laid now that there is a fence line to stop
+# it against.
+#
+# The top end is the library, the northernmost thing on the frontage this row
+# backs. The bottom end used to be the garage, the southernmost, and that was
+# right while the back street stopped at the loop's bottom corner: a row longer
+# than the frontage would have stood behind open grass. The back street now
+# carries on south to the tip, so the ground behind the garage is no longer the
+# end of anything, and a row that stopped there left five plots of frontage on a
+# finished road standing empty -- the same defect at the other end of the same
+# street that the north gate was built to fix.
+#
+# The new bottom end is the east row's, not a number of this row's own.
+# `TIP_Z1` is one neighbour's gap north of the last house on the main street, so
+# adding that gap back gives the line the last house on this one may reach. The
+# two rows therefore stop level with each other against the same fence, and they
+# do so because they are stopped by the same fact rather than by two numbers
+# that happen to agree today.
+#
+# The count is not typed. Plots are laid north to south at the street's own
+# pitch until the next one will not fit, so moving the library or the tip moves
+# the row instead of leaving a stale number behind -- the same rule the south
+# row is built by, and for the same reason.
+#
+# Odd numbers, where the main street is even. That is the one thing about these
+# houses that is not copied: a different series is how a player is told this is
+# a different road, and it costs nothing.
+BACK_ROW_Z1 = LIB_Z1
+BACK_ROW_Z0 = TIP_Z1 + NEIGHBOUR_GAP
+assert BACK_ROW_Z0 == SOUTH_ROW[-1][0], (
+    f"the back row is set to stop at z {BACK_ROW_Z0} and the last house on the "
+    f"main street stops at z {SOUTH_ROW[-1][0]}. Both are meant to be the line "
+    f"one neighbour's gap north of the tip fence, so the two rows no longer end "
+    f"level and one of them is nearer the fence than a plot is allowed to be.")
+BACK_ROW = []
+_bz1 = BACK_ROW_Z1
+_bn = 1
+while True:
+    _bz0 = _bz1 - HOUSE_DEPTH
+    if _bz0 < BACK_ROW_Z0:
+        break
+    BACK_ROW.append((_bz0, _bz1, (_bz0 + _bz1) / 2, str(_bn)))
+    _bn += 2
+    _bz1 = _bz0 - NEIGHBOUR_GAP
+
+# Safe range 12-18. The street is 608 studs at a 40-stud pitch, so fifteen is
+# what it holds; under 12 something has eaten a fifth of the west side and over
+# 18 the pitch has collapsed. Reports rather than clamps -- the number is a
+# symptom, and the last time this range was checked it was written for a row
+# that ran to the garage and would have passed silently for one that ran to the
+# tip and lost five houses on the way.
+assert 12 <= len(BACK_ROW) <= 18, (
+    f"the back row came out at {len(BACK_ROW)} houses over the "
+    f"{BACK_ROW_Z1 - BACK_ROW_Z0:.0f} studs between the tip fence and the "
+    f"library. Check TIP_Z1, LIB_Z1, HOUSE_DEPTH and NEIGHBOUR_GAP.")
+
+# ---------------------------------------------------------------------------
+# The parade at the tip end
+# ---------------------------------------------------------------------------
+#
+# The houses on the west side of the new road want something on the east side to
+# look at, and the poor end of the town has had no shop of its own at all: the
+# nearest bread is the bakery, 250 studs north, which is the whole length of the
+# street from a doorstep at the bottom of it.
+#
+# It is a terrace and not a row of detached units. Every building on the west
+# frontage stands in its own footprint with WEST_GAP between it and the next,
+# because those are a school, a clinic, a library -- separate institutions that
+# happen to share a street. A parade is one building subdivided, which is both
+# what a row of small shops actually is and the only thing that fits: the band
+# is 76 studs, and two 36-stud units with a WEST_GAP between them need 80.
+#
+# The footprint is the frontage's, read off it rather than chosen. BUILDING_DEPTH
+# is how far back from its front wall anything on the west side goes, and
+# STORE_FRONT is how much street a store takes up along it -- so a store is one
+# shape in this town rather than one shape per road.
+TIP_PARADE_X0 = RETURN_X1 + SIDEWALK
+TIP_PARADE_X1 = TIP_PARADE_X0 + BUILDING_DEPTH
+# North end: clear of the loop's bottom road by the width of the walk that runs
+# under the gable. South end: the line the last house stops on, so the parade and
+# the row opposite finish level against the same fence.
+TIP_PARADE_Z1 = RETURN_Z0 - SIDEWALK
+TIP_PARADE_Z0 = BACK_ROW_Z0
+
+# The narrowest unit that is still a shop. `shell()` puts a DOORWAY-wide door on
+# the centre line and a glazed panel either side of it, and drops any panel under
+# 4 studs wide -- so below this figure a unit is a door in a blank wall, which is
+# a lock-up, not a shopfront. Derived from the same numbers that function uses
+# rather than guessed at, because the failure is silent: the glazing simply does
+# not appear and the building still generates.
+UNIT_MIN_FRONT = 2 * (WALL + 3.0 + 4.0 + 1.0 + DOORWAY / 2)
+
+# Units laid north to south at their own width, sharing party walls, until the
+# next one would cross the south line. The count is not typed for the same
+# reason no row in this file is.
+TIP_PARADE = []
+_pz1 = TIP_PARADE_Z1
+for _pname, _pkind in (("COIN LAUNDROMAT", "shop"),
+                       ("SECOND CHANCE RESALE", "shop")):
+    _pz0 = _pz1 - STORE_FRONT
+    if _pz0 < TIP_PARADE_Z0:
+        break
+    TIP_PARADE.append((_pname, _pkind, _pz0, _pz1, (_pz0 + _pz1) / 2))
+    _pz1 = _pz0
+
+assert STORE_FRONT >= UNIT_MIN_FRONT, (
+    f"a parade unit is {STORE_FRONT} studs of frontage against the "
+    f"{UNIT_MIN_FRONT} a shopfront needs to fit a door and a window either side "
+    f"of it. Every unit down there is now a door in a blank wall, and shell() "
+    f"will not say so -- it drops the glazing and builds the rest.")
+
+# Safe range 2-4. One unit is not a parade, it is a corner shop, and the tip end
+# already has the tip office for that. Over four and the band has grown past the
+# 93 studs the loop and the fence leave between them, which means one of those
+# two has moved and the parade is standing in a road or against a fence.
+assert 2 <= len(TIP_PARADE) <= 4, (
+    f"the parade came out at {len(TIP_PARADE)} units over the "
+    f"{TIP_PARADE_Z1 - TIP_PARADE_Z0:.0f} studs between the loop's bottom walk and the "
+    f"line the last house stops on, at {STORE_FRONT} studs each. Check "
+    f"RETURN_Z0, TIP_Z1, SIDEWALK and STORE_FRONT.")
+
+# The parade must not reach the spur, which is the tip's only vehicle approach
+# and is meant to stay a dead end with nothing fronting onto it.
+assert TIP_PARADE_X1 < ROAD_X0, (
+    f"the parade's back wall is at x {TIP_PARADE_X1} and the spur's west kerb is at "
+    f"x {ROAD_X0}, so the terrace is standing in the road to the tip.")
+
+# The back land behind the parade: everything between its rear wall and the
+# spur, and between the loop's south walk and the tip fence. It is a service
+# yard because that is what is behind a parade of shops, and because the one
+# thing it must not become is a second frontage -- the spur is the tip's only
+# vehicle approach and is meant to stay a dead end with nothing facing it, which
+# is the shape the gang layout was deferred against.
+#
+# All four edges are read off things that already exist. Nothing here is a
+# number of its own, so moving the parade, the loop or the fence moves the yard
+# rather than leaving it overlapping one of them.
+YARD_X0, YARD_X1 = TIP_PARADE_X1, ROAD_X0
+YARD_Z0, YARD_Z1 = TIP_Z1, TIP_PARADE_Z1
 
 # The road runs out into the gate. The gate is wider than the carriageway on
 # both sides, which is not decoration: the fence is drawn as panels between the
@@ -590,9 +700,132 @@ BOARD_BOTH_WEAR = 0.90   # both of them, and the house is empty
 # so the town has one place whose only purpose is being somewhere to be. Sits
 # past the last house rather than between them: the east side reads as a row of
 # houses that ends at a green, not a house wedged into a hedge.
+#
+# The z band is not free to move. It was briefly set to -88..-28 to put the green
+# "beside the garage", and that drew the pond, both paths, the benches and the
+# picnic table inside number 18 -- a 44x34 overlap with a standing house, which
+# every gate in this tree passed. check 5 compares buildings to buildings and the
+# park is surface geometry; check 6 asks about carriageways; check 7 asks about
+# trees. Three checks in the neighbourhood of the question and not one of them
+# asking it. The assertion under HOUSES is what now asks it, and it is here
+# rather than in the checker because a generator that can draw a park on a house
+# should not be able to finish.
 PARK_X0, PARK_X1 = -44.0, 4.0
 PARK_Z0, PARK_Z1 = 168.0, 228.0
 PARK_SPOT = (-20.0, 176.0)
+
+# The green stands on empty ground. Every house on this row is at HOUSE_X0..X1,
+# which is inside the park's x band by construction -- the two share a frontage
+# line -- so overlap is decided by z alone and the test is one line. It reports
+# the house rather than the park because the number on the door is what a person
+# can find on the ground.
+for _hz0, _hz1, _hdoor, _hnum in HOUSES:
+    assert _hz1 <= PARK_Z0 or _hz0 >= PARK_Z1, (
+        f"the park runs z {PARK_Z0:.0f}..{PARK_Z1:.0f} and number {_hnum} stands "
+        f"at z {_hz0:.0f}..{_hz1:.0f} on the same frontage, so the pond is being "
+        f"drawn through its front room. Check PARK_Z0, PARK_Z1 and the east row's "
+        f"break condition -- the park goes past the last house, not between them.")
+
+# ---------------------------------------------------------------------------
+# The parade at the top of town, east side of the main street
+# ---------------------------------------------------------------------------
+
+# The west side of this street is a solid frontage from the garage to the
+# community hall. The east side is houses as far as the park, then the park, and
+# then eighty studs of nothing between the park's north edge and the top
+# junction -- the stretch opposite the cafe and the hall, with a finished
+# pavement down one side of it and a field on the other. A street with buildings
+# on one side only is a street with a back to it, and this is the last of it.
+#
+# It fronts straight onto the near walk with no forecourt, and the contrast with
+# the row opposite is the point rather than an economy. The nine buildings on
+# the west side are civic -- library, clinic, hall -- and every one of them is
+# set back behind a paved apron. Shops are not set back. A shopfront standing on
+# the footway is what tells a player which side of this street is which from the
+# far pavement, before they have read a single sign.
+NORTH_PARADE_X0 = NEAR_WALK_X1
+NORTH_PARADE_X1 = NORTH_PARADE_X0 + BUILDING_DEPTH
+
+# North end: where the near walk stops for the top junction's own pavement, so
+# the end gable lands on the corner rather than a few studs short of it or a few
+# studs into it. Both are read off NORTHGATE_CLEAR[0], which is the one number
+# that says where this street stops being a street.
+#
+# South end: the park's north edge. The green stops and the shops start, with
+# nothing between them that would need explaining.
+NORTH_PARADE_Z1 = NORTHGATE_CLEAR[0]
+NORTH_PARADE_Z0 = PARK_Z1
+
+# Detached with a gap between, where the parade at the tip is a terrace. Not a
+# style choice either time: down there the band is 76.5 studs and two units plus
+# a gap need 80, so a terrace was the only thing that fitted. Up here the band
+# is 80 to the stud. Where there is room for the gap the gap earns its keep --
+# it is the only way off this pavement into the ground behind the shops, and the
+# frontage opposite already reads its gaps as the way through.
+#
+# The gap is WEST_GAP, the same one the west frontage leaves between neighbours,
+# so the two sides of the street agree about how far apart two buildings stand.
+# It is deliberately *not* wide enough to be an alley: ALLEY_MIN is that plus a
+# margin of grass against each wall, and claiming a passage this file has not
+# paved would put a footpath in the route graph that nothing on the ground says
+# is there.
+NORTH_PARADE = []
+_nz1 = NORTH_PARADE_Z1
+for _nname, _nkind in (("POST OFFICE", "shop"), ("TOWN BARBERS", "shop")):
+    _nz0 = _nz1 - STORE_FRONT
+    if _nz0 < NORTH_PARADE_Z0:
+        break
+    NORTH_PARADE.append((_nname, _nkind, _nz0, _nz1, (_nz0 + _nz1) / 2))
+    _nz1 = _nz0 - WEST_GAP
+
+# Every name in the tuple above has to fit. This is the band getting shorter --
+# the park's north edge coming up to meet the top junction -- and it drops units
+# off the south end silently, because `break` is how the row is sized.
+assert len(NORTH_PARADE) == 2, (
+    f"the top parade came out at {len(NORTH_PARADE)} units over the "
+    f"{NORTH_PARADE_Z1 - NORTH_PARADE_Z0:.0f} studs between the park's north "
+    f"edge and the top junction, at {STORE_FRONT} studs each with {WEST_GAP} "
+    f"between. Check PARK_Z1, NORTHGATE_CLEAR, STORE_FRONT and WEST_GAP.")
+
+# And this is the band getting *longer*, which is the half that was missing and
+# the half that mattered. The range check above was written `2 <= n <= 3` and the
+# upper bound could never fire: the row is built from a fixed tuple of two names,
+# so `n` is 0, 1 or 2 and never 3. A bound no generator can reach is not a loose
+# check, it is the appearance of one.
+#
+# What it was standing in for is this. The park moved 256 studs south, the band
+# went from 80 to 336, the two shops stayed exactly where they were -- and the
+# assertion passed, because two units still fitted. What was left behind was 256
+# studs of empty frontage on a finished pavement, which is the precise defect the
+# parade was built to remove, now four times worse and reported by nothing.
+#
+# The row must therefore reach the bottom of its band. One unit plus its gap is
+# the margin: less than that is rounding, more than that is a plot nobody built.
+NORTH_PARADE_SLACK = NORTH_PARADE[-1][2] - NORTH_PARADE_Z0
+assert NORTH_PARADE_SLACK < STORE_FRONT + WEST_GAP, (
+    f"the top parade stops at z {NORTH_PARADE[-1][2]:.0f} and its band runs down "
+    f"to z {NORTH_PARADE_Z0:.0f}, leaving {NORTH_PARADE_SLACK:.0f} studs of "
+    f"frontage on a made pavement with nothing on it -- room for "
+    f"{int(NORTH_PARADE_SLACK // (STORE_FRONT + WEST_GAP))} more unit(s). Either "
+    f"the park has moved south, or the parade needs the names to fill it.")
+
+# Nothing on this side may cross the town's east edge. Past EAST_X1 is
+# gen_city.py's ground plane, and neither this file nor check_town can see it --
+# check_city's check 10 is what catches two assets sharing a surface, and it
+# reports the collision, not the reason. A back wall that oversteps here would
+# be read as the city having moved.
+assert NORTH_PARADE_X1 < EAST_X1, (
+    f"the top parade's back wall is at x {NORTH_PARADE_X1} and the town's grass "
+    f"stops at x {EAST_X1}, where the city's ground plane begins. The parade is "
+    f"{NORTH_PARADE_X1 - EAST_X1:.1f} studs into the city. Check BUILDING_DEPTH "
+    f"and EAST_X1.")
+
+# The gap between two units, so the passage paved through it and the bins put
+# behind it are read off the row rather than measured again. Fails loudly rather
+# than silently picking the wrong pair if the row ever comes out as one unit.
+NORTH_PARADE_GAPS = tuple(
+    (NORTH_PARADE[i + 1][3], NORTH_PARADE[i][2])
+    for i in range(len(NORTH_PARADE) - 1))
 
 # The tag GymService reads to find a machine. Mirrors Config.Gym.EquipmentTag.
 GYM_TAG = "AgesGymEquipment"
@@ -768,6 +1001,52 @@ PLACE_POINTS.extend(
      f"the back street, outside number {number}")
     for i, (_bz0, _bz1, door_z, number) in enumerate(BACK_ROW))
 
+# The parade: one point inside each unit, so check 4 can find it and the game can
+# send somebody there, and one on the walk outside each door. The walk points are
+# on the east side of the road and the houses' are on the west, which is the pair
+# of chains that makes the bottom of the back street a street rather than a
+# corridor -- and both are generated from TIP_PARADE for the same reason every other
+# row's are generated from its row.
+# The middle of the return road's east walk, which runs from the kerb at
+# RETURN_X1 to the parade's front wall. Written as the midpoint of those two
+# rather than as RETURN_X1 + SIDEWALK / 2 so that it stays in the middle of the
+# walk if the parade is ever set back off it, and to match how BACK_WALK_MID is
+# taken on the other side.
+TIP_PARADE_WALK_MID = (RETURN_X1 + TIP_PARADE_X0) / 2
+PLACE_POINTS.extend(
+    (f"shop_tip_parade{i + 1}", TIP_PARADE_X0 + 4.0, door_z, FLOOR_1, name.lower())
+    for i, (name, _kind, _pz0, _pz1, door_z) in enumerate(TIP_PARADE))
+PLACE_POINTS.extend(
+    (f"wp_tip_parade{i + 1}", TIP_PARADE_WALK_MID, door_z, PAVING,
+     f"the back street, outside the {name.lower()}")
+    for i, (name, _kind, _pz0, _pz1, door_z) in enumerate(TIP_PARADE))
+
+# The bottom of the back street, where its carriageway meets the loop and then
+# runs on to the fence. Without these the extended road is 93 studs of tarmac
+# with no point on it, and the parade and the last two houses hang off the
+# pavement chains alone.
+PLACE_POINTS.extend([
+    ("wp_back_bottom", RETURN_MID, RETURN_Z0 + ROAD_DEPTH / 2, GROUND,
+     "the back street at the bottom corner"),
+    ("wp_back_fence", RETURN_MID, TIP_Z1 + ROAD_DEPTH / 2, GROUND,
+     "the bottom of the back street, at the tip fence"),
+])
+
+# The top parade, the same two chains as the one at the tip. The walk here is
+# the main street's near pavement, which was already there and already had
+# `wp_north_*` points along it -- these are the doors, not the route, and they
+# are added anyway because a shop nobody can be *sent to* is scenery. Check 4
+# would catch the missing inside point; nothing would catch the missing outside
+# one except a player watching an NPC walk to the middle of the road.
+NORTH_PARADE_WALK_MID = (NEAR_WALK_X0 + NEAR_WALK_X1) / 2
+PLACE_POINTS.extend(
+    (f"shop_north_parade{i + 1}", NORTH_PARADE_X0 + 4.0, door_z, FLOOR_1, name.lower())
+    for i, (name, _kind, _nz0, _nz1, door_z) in enumerate(NORTH_PARADE))
+PLACE_POINTS.extend(
+    (f"wp_north_parade{i + 1}", NORTH_PARADE_WALK_MID, door_z, PAVING,
+     f"the top of the street, outside the {name.lower()}")
+    for i, (name, _kind, _nz0, _nz1, door_z) in enumerate(NORTH_PARADE))
+
 
 def _check_chain(chain, axis, blurb):
     """Assert every consecutive hop along a chain is inside the link radius.
@@ -814,6 +1093,26 @@ _check_chain(_top, 0, "the top road, from the back street to the main street")
 _north = ["corner_n", "wp_north_1", "wp_north_2", "wp_north_3", "wp_north_4",
           "wp_north_5", "wp_top_junction"]
 _check_chain(_north, 1, "the main street's west walk up to the top junction")
+
+# The same pavement going the other way, which had no chain on it at all. That is
+# not a gap someone forgot to fill so much as one nobody could see: the north
+# half of one continuous walk was checked and the south half was not, and both
+# halves look identical in the list above -- five points, all at x -92, evenly
+# spaced, neighbouring lines in the same literal.
+#
+# It cost exactly what an unchecked half costs. wp_south_3 was moved from -212 to
+# -106, which puts "outside the garage" up beside the bakery, out of order with
+# its neighbours, and leaves a 127-stud hop down to wp_south_4 -- nearly twice
+# ROUTE_LINK, so the bottom of the far walk came off the route graph. Every other
+# gate passed it: check_town does not ask about routing, check_city's reachability
+# is scoped to the city, and the label still read "outside the garage", so nothing
+# about the line looked wrong to a person reading it either.
+#
+# `_check_chain` sorts before pairing, so the reordering and the stranding are
+# caught as one thing -- a point that has drifted out of sequence shows up as the
+# oversized hop it leaves behind.
+_southwalk = ["corner_s", "wp_south_1", "wp_south_2", "wp_south_3", "wp_south_4"]
+_check_chain(_southwalk, 1, "the main street's west walk down to the far end")
 
 # The two new buildings, each to the walk outside it. A building whose place
 # point is out of reach of the chain is a door the game can name and cannot
@@ -921,6 +1220,14 @@ BAKERY_WALL = (204, 176, 132)   # warm cream
 GARAGE_WALL = (122, 126, 132)   # sheet steel
 CAFE_WALL = (186, 196, 178)     # sage render
 HALL_WALL = BRICK_WARM          # the one warm-brick civic building
+# The top parade, across the road from the cafe and the hall. Both are picked
+# against the two they stand opposite rather than against each other: a sage
+# cafe and a warm-brick hall on one side want a cool pale stone and a dark
+# painted front on the other, or the junction reads as one colour.
+POST_WALL = (194, 190, 180)     # pale stone, the civic one on this side
+BARBER_WALL = (74, 96, 110)     # painted slate blue, the darkest front in town
+POST_RED = (168, 46, 42)        # pillar box, post box, and the barber's stripe
+MIRROR = (206, 218, 222)        # glass with a room behind it, not a window
 # The cafe's furniture and the hall's stage: one timber in the town, because the
 # two buildings that went up together should look like they went up together.
 CAFE_TIMBER = (162, 118, 74)
@@ -947,6 +1254,8 @@ TIP_SPOIL = (86, 78, 66)        # older, capped, grassed-over in patches
 TIP_SCRUB = (112, 120, 78)      # the grass that comes back on a capped bank
 SKIP_YELLOW = (168, 132, 44)    # a skip that was yellow a long time ago
 SKIP_RUST = (128, 82, 52)
+BIN_GREEN = (62, 84, 58)        # municipal wheelie bin, the one green down here
+PALLET_TIMBER = (136, 112, 78)  # softwood gone grey, stacked behind a back door
 CHAINLINK = (118, 122, 126)
 WRECK_BODY = (96, 100, 104)
 TIP_SIGN_BOARD = (46, 72, 58)   # municipal green -- the one clean thing here,
@@ -1039,8 +1348,9 @@ def glazing(name, bounds, along="z", panes=1):
             transparency=0.55, collide=False)
 
 
-def shell(name, x0, x1, z0, z1, door_z, wall_color, wall_mat=BRICK, front="shop"):
-    """A single-storey shell with the door in the east wall.
+def shell(name, x0, x1, z0, z1, door_z, wall_color, wall_mat=BRICK, front="shop",
+          facing="east"):
+    """A single-storey shell with the door in the wall that faces the road.
 
     The west-side buildings face the road the way the school does, so their door
     is in the east wall, with a windowed front either side of it and the name
@@ -1048,17 +1358,48 @@ def shell(name, x0, x1, z0, z1, door_z, wall_color, wall_mat=BRICK, front="shop"
     businesses rather than as one long building: the glazed shopfront, the
     bakery's under a striped awning, and the garage's wide roll-up door with no
     window at all.
+
+    `facing` exists because two later parades stand on the *other* side of their
+    road -- the poor end's, east of the back street, and the north end's, east of
+    the main street -- and a shopfront has to face the pavement it is serving or
+    it is a blank wall to everyone who walks past it. It is a parameter and not a
+    mirrored copy of this function for the same reason `house()` has one: the
+    alternative is two implementations of one shopfront, one awning and one
+    nameplate, and this file has been bitten by that class more than any other.
+    Everything below is written from `inward`/`outward` off the front face, and
+    every x-span is `sorted()` -- a box whose x0 exceeds its x1 is a
+    negative-size part, not a mirror.
     """
     ix0, ix1 = x0 + WALL, x1 - WALL
     iz0, iz1 = z0 + WALL, z1 - WALL
     d0, d1 = door_z - DOORWAY / 2, door_z + DOORWAY / 2
+    front_x = x1 if facing == "east" else x0
+    s = -1.0 if facing == "east" else 1.0
+
+    def inward(d):
+        return front_x + s * d
+
+    def outward(d):
+        return front_x - s * d
+
+    face = "right" if facing == "east" else "left"
 
     with group(f"{name}Structure"):
         box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
         box("Roof", (x0, x1, z0, z1, CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
-        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, CEIL_1), wall_color, wall_mat, along="z")
+        # The back wall, whichever side that is. Named for where it stands, not
+        # for what it does, so the two names still mean the same thing in every
+        # building in the file. Emitted before the side walls purely to keep the
+        # part order this function had before it learned to face west, so that
+        # generalising it left `Town.rbxmx` byte-identical -- the cheapest
+        # possible proof that a refactor moved nothing.
+        back = ("WallWest", (x0, ix0)) if facing == "east" else ("WallEast", (ix1, x1))
+        wall(back[0], (back[1][0], back[1][1], z0, z1, FLOOR_1, CEIL_1),
+             wall_color, wall_mat, along="z")
         wall("WallSouth", (x0, x1, z0, iz0, FLOOR_1, CEIL_1), wall_color, wall_mat, along="x")
         wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, CEIL_1), wall_color, wall_mat, along="x")
+        front_name = "WallEast" if facing == "east" else "WallWest"
+        front_span = sorted((front_x, inward(WALL)))
 
         if front == "garage":
             # A workshop front: no shop window, just a wide door the work drives
@@ -1067,41 +1408,50 @@ def shell(name, x0, x1, z0, z1, door_z, wall_color, wall_mat=BRICK, front="shop"
             # the same thing they do to a glazed shop door -- the wall's job is
             # to say what the room is, not to stop the player.
             gd0, gd1 = door_z - 7.0, door_z + 7.0
-            wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, CEIL_1), wall_color, wall_mat,
-                 along="z", doors=((gd0, gd1),), head=CEIL_1 - FLOOR_1)
-            box("RollupDoor", (ix1 + 0.4, x1 - 0.4, gd0, gd1,
+            wall(front_name, (front_span[0], front_span[1], z0, z1, FLOOR_1, CEIL_1),
+                 wall_color, wall_mat, along="z", doors=((gd0, gd1),),
+                 head=CEIL_1 - FLOOR_1)
+            _d = sorted((inward(WALL - 0.4), inward(0.4)))
+            box("RollupDoor", (_d[0], _d[1], gd0, gd1,
                                FLOOR_1 + 4.0, FLOOR_1 + 14.0), STEEL, METAL, collide=False)
+            _s = sorted((inward(WALL - 0.6), inward(0.6)))
             for i in range(7):
                 zz = gd0 + (gd1 - gd0) * (i + 0.5) / 7
-                box(f"RollupSlat{i}", (ix1 + 0.6, x1 - 0.6, zz - 0.12, zz + 0.12,
+                box(f"RollupSlat{i}", (_s[0], _s[1], zz - 0.12, zz + 0.12,
                                        FLOOR_1 + 4.0, FLOOR_1 + 14.0),
                     (96, 98, 102), METAL, collide=False)
-            box("Nameplate", (x1 - 2.5, x1, door_z - 6.0, door_z + 6.0,
+            _n = sorted((front_x, inward(2.5)))
+            box("Nameplate", (_n[0], _n[1], door_z - 6.0, door_z + 6.0,
                               CEIL_1 + SLAB, 24.0),
                 wall_color, BRICK,
-                children=sign(name, "right", color=(250, 246, 234), size=72))
+                children=sign(name, face, color=(250, 246, 234), size=72))
         else:
-            wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, CEIL_1), wall_color, wall_mat,
-                 along="z", doors=((d0, d1),))
+            wall(front_name, (front_span[0], front_span[1], z0, z1, FLOOR_1, CEIL_1),
+                 wall_color, wall_mat, along="z", doors=((d0, d1),))
+            _g = sorted((inward(WALL - 0.4), inward(0.4)))
             for i, (a, b) in enumerate(((iz0 + 3.0, d0 - 1.0), (d1 + 1.0, iz1 - 3.0))):
                 if b - a > 4.0:
                     glazing(f"Shopfront{i + 1}",
-                            (ix1 + 0.4, x1 - 0.4, a, b, FLOOR_1 + 1.5, FLOOR_1 + 10.5),
+                            (_g[0], _g[1], a, b, FLOOR_1 + 1.5, FLOOR_1 + 10.5),
                             along="z", panes=4)
-            box("Nameplate", (x1 - 2.5, x1, door_z - 9.0, door_z + 9.0,
+            _n = sorted((front_x, inward(2.5)))
+            box("Nameplate", (_n[0], _n[1], door_z - 9.0, door_z + 9.0,
                               CEIL_1 + SLAB, 24.0),
                 wall_color, BRICK,
-                children=sign(name, "right", color=(250, 246, 234), size=72))
+                children=sign(name, face, color=(250, 246, 234), size=72))
             if front == "awning":
                 # A striped canopy over the shopfront, standing a little proud
                 # of the wall, so the bakery is the one with a face on the
                 # street. Non-colliding: a player walks under it, not through a
                 # wall of fabric.
-                box("Awning", (x1 - 0.4, x1 + 3.2, iz0 + 2.0, iz1 - 2.0,
+                _a = sorted((inward(0.4), outward(3.2)))
+                box("Awning", (_a[0], _a[1], iz0 + 2.0, iz1 - 2.0,
                                FLOOR_1 + 8.0, FLOOR_1 + 10.5), AWNING_RED, FABRIC, collide=False)
-                box("AwningTrim", (x1 + 3.2, x1 + 3.4, iz0 + 2.0, iz1 - 2.0,
+                _t = sorted((outward(3.2), outward(3.4)))
+                box("AwningTrim", (_t[0], _t[1], iz0 + 2.0, iz1 - 2.0,
                                    FLOOR_1 + 8.0, FLOOR_1 + 10.5), AWNING_CREAM, FABRIC, collide=False)
-                box("AwningValance", (x1 + 2.9, x1 + 3.2, iz0 + 2.0, iz1 - 2.0,
+                _v = sorted((outward(2.9), outward(3.2)))
+                box("AwningValance", (_v[0], _v[1], iz0 + 2.0, iz1 - 2.0,
                                       FLOOR_1 + 8.0, FLOOR_1 + 9.2), AWNING_RED, FABRIC, collide=False)
 
 
@@ -1173,7 +1523,8 @@ def tree(x, z, floor, height=15.0, spread=10.0, label="Tree"):
     """Trunk you can walk into, canopy you cannot."""
     with group(label):
         with at(x, z, floor=floor):
-            part("Trunk", (0, 0, 0), (1.6, height * 0.62, 1.6), BARK, WOOD)
+            part("Trunk", (0, 0, 0), (TRUNK_WIDTH, height * 0.62, TRUNK_WIDTH),
+                 BARK, WOOD)
             part("Canopy", (0, height * 0.5, 0), (spread, spread * 0.72, spread),
                  LEAF, LEAFY_GRASS, collide=False)
             part("CanopyTop", (0, height * 0.5 + spread * 0.5, 0),
@@ -1401,7 +1752,15 @@ with group("Ground"):
     # back up the return leg. The grass tiles around it exactly, the way the
     # bands north of the street do, so the loop reads as road-in-grass rather
     # than as a line of separate boxes.
-    box("GrassBottom", (WEST_EDGE, ROAD_X0, TIP_Z1, RETURN_Z0, GROUND_BOTTOM, GROUND),
+    # The band between the loop's bottom road and the tip fence. It was one box
+    # -- 209 by 93 studs of undifferentiated lawn, the largest single thing left
+    # in the town by area, with a finished road down one side of it and a
+    # rubbish tip across the end. The return road now runs through it to the
+    # gate line, so it is grass, road, grass, the same three bands as every
+    # other street here and for the same reason.
+    box("GrassTipWest", (WEST_EDGE, RETURN_X0, TIP_Z1, RETURN_Z0, GROUND_BOTTOM, GROUND),
+        LAWN, GRASS)
+    box("GrassTipEast", (RETURN_X1, ROAD_X0, TIP_Z1, RETURN_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
     box("GrassWestLoop", (WEST_EDGE, RETURN_X0, RETURN_Z0, STREET_Z0, GROUND_BOTTOM, GROUND),
         LAWN, GRASS)
@@ -1413,11 +1772,16 @@ with group("Ground"):
         TARMAC, ASPHALT)
     box("RoadBottom", (RETURN_X1, ROAD_X1, RETURN_Z0, CURL_Z, GROUND_BOTTOM, GROUND),
         TARMAC, ASPHALT)
-    # The return leg, carried the whole way north to the top road. It used to
-    # stop at STREET_Z0 -- 181 studs of finished carriageway that ended in a
-    # meadow -- and stopping there is what made the back of the town a field
-    # with a road lying in it.
-    box("RoadReturn", (RETURN_X0, RETURN_X1, RETURN_Z0, NORTHGATE_Z1, GROUND_BOTTOM, GROUND),
+    # The return leg, carried the whole way from the tip fence in the south to
+    # the top road in the north. It used to stop at STREET_Z0 -- 181 studs of
+    # finished carriageway that ended in a meadow -- and stopping there is what
+    # made the back of the town a field with a road lying in it. The south end
+    # had the same problem in reverse: it stopped at the loop's bottom corner,
+    # so the corner was a turn rather than a junction and everything south of it
+    # was field. One tile, TIP_Z1 to NORTHGATE_Z1, rather than the loop's leg
+    # plus a stub -- two tiles meeting on a shared edge is a seam to keep in
+    # register forever, and this road has no reason to have one.
+    box("RoadReturn", (RETURN_X0, RETURN_X1, TIP_Z1, NORTHGATE_Z1, GROUND_BOTTOM, GROUND),
         TARMAC, ASPHALT)
 
     # The spur: the loop's bottom band carried on south, in the same band and
@@ -1491,12 +1855,25 @@ with group("Road"):
                                     ROAD_BOTTOM_MID + CENTRE_WIDTH / 2,
                                     GROUND + PAINT_LIFT - PAINT_THICK, GROUND + PAINT_LIFT),
             ROAD_PAINT, SMOOTH)
-    # The return leg's line runs the whole length of it now, bottom corner to
-    # top junction, and stops a dash short of each the way the main road's does.
-    for z in range(int(RETURN_Z0) + 12, int(NORTHGATE_Z0) - int(DASH_LENGTH), 12):
+    # The return leg's line, in two runs with the loop's bottom road between
+    # them. It used to be one run starting at RETURN_Z0 + 12, which put two
+    # dashes inside the band the bottom road occupies -- harmless while that
+    # corner was a turn, wrong now that the road carries on south through it and
+    # the corner is a T-junction. Paint laid across a junction mouth tells a
+    # driver the road goes straight on, and here it tells them the opposite of
+    # which way the turn is. So the north run starts on the far side of the
+    # junction and the south run stops a dash short of the fence, both read off
+    # the bottom road's own edges.
+    for z in range(int(CURL_Z) + 12, int(NORTHGATE_Z0) - int(DASH_LENGTH), 12):
         box(f"DashReturn{z:+d}", (RETURN_MID - CENTRE_WIDTH / 2, RETURN_MID + CENTRE_WIDTH / 2,
                                   float(z), float(z) + DASH_LENGTH,
                                   GROUND + PAINT_LIFT - PAINT_THICK, GROUND + PAINT_LIFT),
+            ROAD_PAINT, SMOOTH)
+    for z in range(int(RETURN_Z0) - 12, int(TIP_Z1 + DASH_LENGTH + DASH_GAP), -12):
+        box(f"DashReturnTip{abs(z)}",
+            (RETURN_MID - CENTRE_WIDTH / 2, RETURN_MID + CENTRE_WIDTH / 2,
+             float(z), float(z) + DASH_LENGTH,
+             GROUND + PAINT_LIFT - PAINT_THICK, GROUND + PAINT_LIFT),
             ROAD_PAINT, SMOOTH)
     # The top road, west of the main street's junction: the return leg's traffic
     # crosses the main road here, so the line runs up to the junction mouth and
@@ -1532,6 +1909,20 @@ with group("Sidewalks"):
                                  GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
         box(f"FarPaving{prefix}", (FAR_WALK_X0, FAR_WALK_X1 - KERB_WIDTH, z0, z1,
                                    GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+
+    # The passage between the two units of the top parade, from the near walk
+    # through to the ground behind them.
+    #
+    # It is emitted here, in Sidewalks, rather than in the parade's own group,
+    # and that is the whole reason it exists as a named slab at all. check_town's
+    # checks 7 and 8 read PAVED_GROUPS -- a walked surface filed anywhere else is
+    # a walked surface neither of them can see, which is a tree in a footpath
+    # waiting to happen for the fourth time. A group is not a folder here, it is
+    # what the checkers use to decide what a thing is.
+    for _gz0, _gz1 in NORTH_PARADE_GAPS:
+        box("NorthParadePassage",
+            (NORTH_PARADE_X0, NORTH_PARADE_X1, _gz0, _gz1,
+             GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
 
     # South of the street, the same two bands plus the return leg's own. The
     # near band runs out flush with the east leg's turn, the far band runs past
@@ -1577,10 +1968,32 @@ with group("Sidewalks"):
                        GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
     box("ReturnPaving", (RETURN_X1 + KERB_WIDTH, RETURN_X1 + SIDEWALK, CURL_Z,
                          NORTHGATE_CLEAR[0], GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
-    box("BackKerb", (BACK_WALK_X1 - KERB_WIDTH, BACK_WALK_X1, CURL_Z, NORTHGATE_CLEAR[0],
+    # The east walk south of the loop, in front of the parade. Two runs and not
+    # one for the same reason the near walk is two: the loop's bottom road
+    # crosses this band at x RETURN_X1, so a single slab from the top junction to
+    # the tip fence would lay a raised kerb down the middle of that carriageway.
+    # The gap between the two runs is RETURN_Z0..CURL_Z, which is the bottom road
+    # itself, read from it rather than typed.
+    box("ReturnKerbTip", (RETURN_X1, RETURN_X1 + KERB_WIDTH, TIP_Z1, RETURN_Z0,
+                          GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
+    box("ReturnPavingTip", (RETURN_X1 + KERB_WIDTH, RETURN_X1 + SIDEWALK, TIP_Z1,
+                            RETURN_Z0, GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+    # The west walk runs the whole way in one piece, because nothing crosses it:
+    # the bottom road starts at RETURN_X1, on the other side of the carriageway,
+    # and there is no junction on this side between the top road and the fence.
+    box("BackKerb", (BACK_WALK_X1 - KERB_WIDTH, BACK_WALK_X1, TIP_Z1, NORTHGATE_CLEAR[0],
                      GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
-    box("BackPaving", (BACK_WALK_X0, BACK_WALK_X1 - KERB_WIDTH, CURL_Z, NORTHGATE_CLEAR[0],
+    box("BackPaving", (BACK_WALK_X0, BACK_WALK_X1 - KERB_WIDTH, TIP_Z1, NORTHGATE_CLEAR[0],
                        GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+    # The bottom road's south walk, which the parade's north gable stands on.
+    # It starts at TIP_PARADE_X0 and not at RETURN_X1 because the return road's own
+    # east walk already occupies the corner square: two pavements meeting at a
+    # corner have to decide which of them the corner belongs to, and two slabs
+    # that both claim it are coplanar and flicker. The through road gets it.
+    box("BottomKerbS", (TIP_PARADE_X0, ROAD_X0, RETURN_Z0 - KERB_WIDTH, RETURN_Z0,
+                        GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
+    box("BottomPavingS", (TIP_PARADE_X0, ROAD_X0, RETURN_Z0 - SIDEWALK, RETURN_Z0 - KERB_WIDTH,
+                          GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
 
     # The top road's own pavements. The north one is continuous -- nothing
     # crosses it, because neither north-south road carries on past the junction
@@ -2290,6 +2703,316 @@ with group("Park"):
              PARK_Z1 - 15.0, PARK_Z1 - 7.0, GROUND + 1.2, GROUND + 1.6), DESK_TOP, WOOD)
 
 # ---------------------------------------------------------------------------
+# The parade at the tip end
+# ---------------------------------------------------------------------------
+#
+# Two units facing west across the back street at the last houses on it. See
+# TIP_PARADE for the footprint and why it is a terrace; this is what goes in it.
+#
+# They are worn to the same law as the houses opposite. `wear_at` is one
+# southward ramp over the whole town and these stand at the bottom of it, so
+# they are the most neglected buildings in the world without a second table
+# saying so -- and if a plot is ever added further south the ramp rescales and
+# takes the parade with it, because WEAR_Z_SOUTH is read off the row rather than
+# declared.
+#
+# Nothing in either unit is tagged. The verbs are not agreed -- a laundromat and
+# a resale shop are both obvious activities and neither has a spec -- and a tag
+# no service reads is orphaned code by this tree's own rules. What is here is the
+# geometry those verbs will want: a machine bank a player walks along rather than
+# stands at, and a floor of racks with a counter at the far end of it.
+#
+# There is no betting shop down here, which is the first thing a real parade at
+# the poor end of a town would have. 13+ forbids gambling outright, so it is not
+# a thing to build carefully -- it is a thing that cannot exist in this game, and
+# the resale shop is what stands in its place: the same idea, money out of things
+# you already own, with none of the rating problem.
+with group("TipParade"):
+    # The terrace is one building, so the party walls between units are drawn
+    # once here rather than by each shell. shell() draws all four of its own
+    # walls, which for a terrace would put two 1.5-stud walls back to back on
+    # every join -- coplanar faces, and twice the parts.
+    #
+    # Rather than teach shell() about neighbours, each unit is generated as its
+    # own shell and the seam is left as it falls: the units abut on a shared
+    # plane and the two walls are exactly coincident in z, which is the one case
+    # that is not a z-fight because they are not the same surface -- they are the
+    # north face of one wall and the south face of the next. The cost is one
+    # redundant wall per join, which is two parts, and the alternative is a
+    # `neighbours=` argument threaded through every caller of shell() in the file.
+    for _pname, _pkind, _pz0, _pz1, _pdoor in TIP_PARADE:
+        _slug = "".join(w.title() for w in _pname.split())
+        with group(_slug):
+            shell(_pname, TIP_PARADE_X0, TIP_PARADE_X1, _pz0, _pz1, _pdoor,
+                  worn(BRICK_PALE, wear_at(_pdoor)), front=_pkind, facing="west")
+
+    with group("LaundromatFittings"):
+        _lz0, _lz1, _ldoor = TIP_PARADE[0][2], TIP_PARADE[0][3], TIP_PARADE[0][4]
+        # The machines are a bank down the long wall, not a block in the middle.
+        # A player waiting on a wash walks the length of the room past every
+        # drum; a block would be one object to stand next to, which is the idle
+        # payout pad this town already has too many of.
+        for _i in range(6):
+            _mz = _lz0 + 5.0 + _i * 4.5
+            box(f"Washer{_i + 1}",
+                (TIP_PARADE_X1 - 6.0, TIP_PARADE_X1 - WALL, _mz, _mz + 3.6,
+                 FLOOR_1, FLOOR_1 + 4.2), STEEL, METAL)
+            box(f"Drum{_i + 1}",
+                (TIP_PARADE_X1 - 6.2, TIP_PARADE_X1 - 6.0, _mz + 0.9, _mz + 2.7,
+                 FLOOR_1 + 1.4, FLOOR_1 + 3.2), (40, 44, 50), SMOOTH)
+        # A folding bench opposite the drums and a row of chairs against the
+        # front glazing, so the room has a place to wait that is not the doorway.
+        box("FoldBench", (TIP_PARADE_X0 + 8.0, TIP_PARADE_X0 + 11.0, _lz0 + 6.0, _lz1 - 6.0,
+                          FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
+        for _i in range(3):
+            box(f"WaitChair{_i + 1}",
+                (TIP_PARADE_X0 + WALL + 1.0, TIP_PARADE_X0 + WALL + 4.0,
+                 _ldoor + 6.0 + _i * 4.0, _ldoor + 9.0 + _i * 4.0,
+                 FLOOR_1, FLOOR_1 + 1.6), (96, 100, 108), SMOOTH)
+        ceiling_light(TIP_PARADE_X0 + 12.0, _ldoor, CEIL_1)
+        ceiling_light(TIP_PARADE_X1 - 12.0, _ldoor, CEIL_1)
+
+    with group("ResaleFittings"):
+        _rz0, _rz1, _rdoor = TIP_PARADE[1][2], TIP_PARADE[1][3], TIP_PARADE[1][4]
+        # Racks across the floor rather than along the walls, so the room is
+        # walked through in a zigzag instead of round the edge, and the counter
+        # is at the back where the till in every shop in this file is.
+        for _i in range(3):
+            _rx = TIP_PARADE_X0 + 10.0 + _i * 8.0
+            box(f"Rack{_i + 1}", (_rx, _rx + 2.0, _rz0 + 4.0 + (_i % 2) * 6.0,
+                                  _rz1 - 10.0 + (_i % 2) * 6.0,
+                                  FLOOR_1 + 4.0, FLOOR_1 + 4.4), STEEL, METAL)
+            box(f"RackLeg{_i + 1}", (_rx + 0.8, _rx + 1.2, _rz0 + 4.0 + (_i % 2) * 6.0,
+                                     _rz0 + 4.4 + (_i % 2) * 6.0, FLOOR_1, FLOOR_1 + 4.0),
+                STEEL, METAL)
+        shelf_run(TIP_PARADE_X1 - 5.0, _rz0 + 4.0, _rz1 - 4.0, FLOOR_1, label="Bric")
+        box("Counter", (TIP_PARADE_X1 - 12.0, TIP_PARADE_X1 - 12.0 + COUNTER_DEPTH,
+                        _rdoor - 6.0, _rdoor + 4.0, FLOOR_1, FLOOR_1 + 3.2),
+            DESK_TOP, WOOD)
+        ceiling_light(TIP_PARADE_X0 + 12.0, _rdoor, CEIL_1)
+        ceiling_light(TIP_PARADE_X1 - 12.0, _rdoor, CEIL_1)
+
+    # The service yard behind the terrace. See YARD_* for its bounds and for why
+    # it is a yard rather than a second frontage.
+    #
+    # It is fenced off the spur rather than left open to it. An open yard on a
+    # dead-end road is a road with buildings' backsides along it, which is worse
+    # than the field it replaced; a fenced one is a boundary the player reads as
+    # "not for you" from the carriageway, and it is the same chain-link, at the
+    # same height, as the tip's, because down here they are the same kind of
+    # edge and drawing them differently would say they were not.
+    #
+    # The gap in it is a delivery opening, one unit's frontage wide, set against
+    # the terrace's own join so a truck's way in lines up with the party wall
+    # rather than with somebody's back door.
+    with group("TipParadeYard"):
+        _yard_gate0 = TIP_PARADE[0][2] - STORE_FRONT / 2
+        _yard_gate1 = TIP_PARADE[0][2] + STORE_FRONT / 2
+        chainlink("YardFenceE", YARD_Z0, YARD_Z1, YARD_X1, along="z",
+                  gaps=((_yard_gate0, _yard_gate1),))
+        chainlink("YardFenceS", YARD_X0, YARD_X1, YARD_Z0, along="x")
+
+        # Bins against the back wall, two per unit, on the unit's own centre
+        # line -- so which door they belong to is legible from the yard rather
+        # than a row of identical boxes along a wall.
+        for _i, (_pname, _pkind, _pz0, _pz1, _pdoor) in enumerate(TIP_PARADE):
+            for _j, _dz in enumerate((-6.0, 6.0)):
+                box(f"Bin{_i + 1}_{_j + 1}",
+                    (YARD_X0 + 2.0, YARD_X0 + 5.6, _pdoor + _dz - 1.8,
+                     _pdoor + _dz + 1.8, GROUND, GROUND + 4.4),
+                    worn(BIN_GREEN, wear_at(_pdoor)), SMOOTH)
+                box(f"BinLid{_i + 1}_{_j + 1}",
+                    (YARD_X0 + 1.8, YARD_X0 + 5.8, _pdoor + _dz - 2.0,
+                     _pdoor + _dz + 2.0, GROUND + 4.4, GROUND + 4.8),
+                    worn(BIN_GREEN, wear_at(_pdoor), toward=SKIP_RUST), SMOOTH)
+            # A stack of pallets by each back door, because a delivery that
+            # arrives has to have been put down somewhere.
+            for _k in range(3):
+                box(f"Pallet{_i + 1}_{_k + 1}",
+                    (YARD_X0 + 9.0, YARD_X0 + 15.0, _pdoor - 10.0, _pdoor - 6.0,
+                     GROUND + _k * 0.7, GROUND + _k * 0.7 + 0.5),
+                    PALLET_TIMBER, WOOD)
+
+        # The skip, in the delivery opening's own line so it is reached from the
+        # gap rather than from behind the bins.
+        _skip_z = (_yard_gate0 + _yard_gate1) / 2
+        box("Skip", (YARD_X1 - 22.0, YARD_X1 - 10.0, _skip_z - 5.0, _skip_z + 5.0,
+                     GROUND, GROUND + 5.6), worn(SKIP_YELLOW, 0.7, toward=SKIP_RUST), METAL)
+        box("SkipLoad", (YARD_X1 - 21.0, YARD_X1 - 11.0, _skip_z - 4.2, _skip_z + 4.2,
+                         GROUND + 5.6, GROUND + 6.6), PALLET_TIMBER, WOOD)
+
+
+# ---------------------------------------------------------------------------
+# The parade at the top of town
+# ---------------------------------------------------------------------------
+#
+# Two units facing west across the main street at the cafe and the community
+# hall. See NORTH_PARADE for the footprint and why these two are detached where
+# the pair at the tip are terraced.
+#
+# No wear on either. `wear_at` is one southward ramp and this is the top of it,
+# so these would come out at WEAR_BASE anyway -- but they are painted from the
+# palette rather than run through the ramp, because a shop at the good end of a
+# town is not a shop that happens to have scored well. The ramp is about houses
+# and the row it was written for; borrowing it here would have made a second
+# claim about what wear means.
+#
+# Nothing in either unit is tagged, on the same rule the tip parade is under: a
+# tag no service reads is orphaned code, and neither a post office counter nor a
+# barber's chair has a spec yet. What is here is the geometry those verbs will
+# want when they do. The post office is deliberately the one with a queue rail
+# and three serving positions -- if `DeliveryService` ever wants somewhere in
+# town that a parcel comes from, this is a building with a front and a back and
+# a counter between them, rather than a pad to stand on.
+#
+# The barber is the other half of that bet. It is the cheapest activity in this
+# whole world to make legible: the player walks in looking one way and walks out
+# looking another, and Roblox renders the difference for free. Three chairs and
+# not one, because an activity with a single station is a queue.
+
+# The two units' wall colours, keyed by name rather than by position. Asserted
+# against the row rather than indexed into it: a unit renamed in the plan and
+# not here would be a KeyError, which is loud, but a unit *removed* from the
+# plan would leave a stale entry that nothing would ever mention. That is the
+# two-tables-one-thing shape this file keeps paying for, so it is compared.
+NORTH_PARADE_WALLS = {
+    "POST OFFICE": POST_WALL,
+    "TOWN BARBERS": BARBER_WALL,
+}
+assert set(NORTH_PARADE_WALLS) == {_n for _n, *_rest in NORTH_PARADE}, (
+    f"NORTH_PARADE_WALLS is painted for {sorted(NORTH_PARADE_WALLS)} and the "
+    f"row is {sorted(_n for _n, *_rest in NORTH_PARADE)}. One of the two has "
+    f"been changed without the other.")
+
+with group("NorthParade"):
+    for _nname, _nkind, _nz0, _nz1, _ndoor in NORTH_PARADE:
+        with group("".join(_w.title() for _w in _nname.split())):
+            shell(_nname, NORTH_PARADE_X0, NORTH_PARADE_X1, _nz0, _nz1, _ndoor,
+                  NORTH_PARADE_WALLS[_nname], front=_nkind, facing="west")
+
+    with group("PostOfficeFittings"):
+        _oz0, _oz1, _odoor = NORTH_PARADE[0][2], NORTH_PARADE[0][3], NORTH_PARADE[0][4]
+        _oback = NORTH_PARADE_X1 - WALL
+
+        # The counter is across the back, so the walk from the door to it is the
+        # depth of the room and the queue forms in the space between. Same rule
+        # as the cafe's: a counter by the door makes the room a queue, and this
+        # is the one building in town where the queue is the point.
+        box("Counter", (_oback - 10.5, _oback - 10.5 + COUNTER_DEPTH,
+                        _oz0 + 6.0, _oz1 - 6.0, FLOOR_1, FLOOR_1 + 3.2),
+            DESK_TOP, WOOD)
+        # The screen over it, in three panes with a gap between each -- the gaps
+        # are the serving positions, which is the only thing that makes this a
+        # post office counter rather than a shop counter.
+        glazing("Screen", (_oback - 10.5, _oback - 10.2, _oz0 + 6.0, _oz1 - 6.0,
+                           FLOOR_1 + 3.2, FLOOR_1 + 8.2), along="z", panes=3)
+        for _i, _dz in enumerate((-9.0, 0.0, 9.0)):
+            box(f"Scale{_i + 1}",
+                (_oback - 9.8, _oback - 8.4, _odoor + _dz - 1.2, _odoor + _dz + 1.2,
+                 FLOOR_1 + 3.2, FLOOR_1 + 3.9), STEEL, METAL)
+
+        # Parcel shelving behind the counter, where the staff side is.
+        shelf_run(_oback - 4.0, _oz0 + 6.0, _oz1 - 6.0, FLOOR_1, label="Parcel")
+
+        # The queue rail. Three posts and a rope, standing off the counter far
+        # enough that somebody being served is not standing in it.
+        _qx = _oback - 17.0
+        for _i, _qz in enumerate((_oz0 + 6.0, _odoor, _oz1 - 6.0)):
+            box(f"QueuePost{_i + 1}", (_qx - 0.35, _qx + 0.35, _qz - 0.35, _qz + 0.35,
+                                       FLOOR_1, FLOOR_1 + 3.4), STEEL, METAL)
+        box("QueueRope", (_qx - 0.15, _qx + 0.15, _oz0 + 6.0, _oz1 - 6.0,
+                          FLOOR_1 + 3.1, FLOOR_1 + 3.4), POST_RED, FABRIC, collide=False)
+
+        # The wall of boxes down the south side. Doors on a backing panel rather
+        # than one textured slab, because the thing that reads as a post office
+        # from the door is a grid of small identical doors.
+        _bank_x0 = NORTH_PARADE_X0 + 10.0
+        box("BoxBank", (_bank_x0, _bank_x0 + 18.0, _oz0 + WALL, _oz0 + WALL + 1.4,
+                        FLOOR_1, FLOOR_1 + 9.4), SHELF, METAL)
+        for _c in range(6):
+            for _r in range(3):
+                _dx = _bank_x0 + 0.6 + _c * 3.0
+                box(f"BoxDoor{_c + 1}_{_r + 1}",
+                    (_dx, _dx + 2.4, _oz0 + WALL + 1.4, _oz0 + WALL + 1.6,
+                     FLOOR_1 + 1.4 + _r * 2.6, FLOOR_1 + 3.6 + _r * 2.6),
+                    STEEL, METAL, collide=False)
+
+        ceiling_light(NORTH_PARADE_X0 + 12.0, _odoor, CEIL_1)
+        ceiling_light(_oback - 8.0, _odoor, CEIL_1)
+
+        # The pillar box, on the pavement outside. It is the one piece of this
+        # building visible from the far side of the road, which is the job: a
+        # player who has never been in does not have to read the sign to know
+        # what the building is.
+        _pil_x1 = NORTH_PARADE_X0 - 2.5
+        _pil_z = _odoor - 9.0
+        box("PillarBox", (_pil_x1 - 3.0, _pil_x1, _pil_z - 1.5, _pil_z + 1.5,
+                          PAVING, PAVING + 6.2), POST_RED, SMOOTH)
+        box("PillarCap", (_pil_x1 - 3.3, _pil_x1 + 0.3, _pil_z - 1.8, _pil_z + 1.8,
+                          PAVING + 6.2, PAVING + 7.0), POST_RED, SMOOTH)
+        box("PillarSlot", (_pil_x1 - 3.2, _pil_x1 - 3.0, _pil_z - 0.9, _pil_z + 0.9,
+                           PAVING + 4.6, PAVING + 5.0), (34, 34, 38), SMOOTH,
+            collide=False)
+
+    with group("BarbersFittings"):
+        _rz0, _rz1, _rdoor = NORTH_PARADE[1][2], NORTH_PARADE[1][3], NORTH_PARADE[1][4]
+        _rback = NORTH_PARADE_X1 - WALL
+
+        # The mirror runs the length of the back wall, and the chairs face it,
+        # so the room has one direction everybody in it is pointing. Sitting in
+        # the chair is meant to put the player's own avatar in the glass.
+        box("Mirror", (_rback - 0.25, _rback, _rz0 + 5.0, _rz1 - 5.0,
+                       FLOOR_1 + 3.4, FLOOR_1 + 10.4), MIRROR, SMOOTH, collide=False)
+        box("MirrorFrame", (_rback - 0.35, _rback - 0.25, _rz0 + 4.6, _rz1 - 4.6,
+                            FLOOR_1 + 3.0, FLOOR_1 + 10.8), TRIM_WHITE, SMOOTH,
+            collide=False)
+        box("StationShelf", (_rback - 2.6, _rback, _rz0 + 5.0, _rz1 - 5.0,
+                             FLOOR_1 + 2.8, FLOOR_1 + 3.2), DESK_TOP, WOOD)
+
+        # Three chairs, spaced off the door line rather than off the wall, so
+        # the middle one is the one the door looks at.
+        _chair_x = _rback - 8.0
+        for _i, _dz in enumerate((-9.0, 0.0, 9.0)):
+            _cz = _rdoor + _dz
+            box(f"ChairBase{_i + 1}", (_chair_x - 1.8, _chair_x + 1.8, _cz - 1.8, _cz + 1.8,
+                                       FLOOR_1, FLOOR_1 + 0.4), STEEL, METAL)
+            box(f"ChairStem{_i + 1}", (_chair_x - 0.5, _chair_x + 0.5, _cz - 0.5, _cz + 0.5,
+                                       FLOOR_1 + 0.4, FLOOR_1 + 2.4), STEEL, METAL)
+            box(f"ChairSeat{_i + 1}", (_chair_x - 1.6, _chair_x + 1.6, _cz - 1.6, _cz + 1.6,
+                                       FLOOR_1 + 2.4, FLOOR_1 + 3.0), SEAT, FABRIC)
+            box(f"ChairBack{_i + 1}", (_chair_x - 1.9, _chair_x - 1.3, _cz - 1.6, _cz + 1.6,
+                                       FLOOR_1 + 3.0, FLOOR_1 + 6.4), SEAT, FABRIC)
+            box(f"ChairRest{_i + 1}", (_chair_x + 1.3, _chair_x + 2.6, _cz - 1.0, _cz + 1.0,
+                                       FLOOR_1 + 1.2, FLOOR_1 + 1.6), STEEL, METAL)
+
+        # The basin at the far end, and the bench under the window at the near
+        # end, so waiting and being washed happen at opposite ends of the room
+        # and the middle of it is the walk between them.
+        box("Basin", (_rback - 4.0, _rback, _rz1 - 9.0, _rz1 - 5.5,
+                      FLOOR_1 + 2.6, FLOOR_1 + 3.6), TRIM_WHITE, SMOOTH)
+        box("BasinBowl", (_rback - 3.4, _rback - 0.6, _rz1 - 8.4, _rz1 - 6.1,
+                          FLOOR_1 + 2.2, FLOOR_1 + 2.6), (226, 230, 232), SMOOTH)
+        bench(NORTH_PARADE_X0 + 4.0, _rdoor + 11.0, FLOOR_1, side="east")
+        bench(NORTH_PARADE_X0 + 4.0, _rdoor - 11.0, FLOOR_1, side="east")
+
+        ceiling_light(NORTH_PARADE_X0 + 12.0, _rdoor, CEIL_1)
+        ceiling_light(_rback - 8.0, _rdoor, CEIL_1)
+
+        # The pole beside the door. Bands rather than a helix because everything
+        # in this file is a box, and the read at a distance is the same.
+        _pole_z = _rdoor - 6.0
+        for _i in range(5):
+            box(f"PoleBand{_i + 1}",
+                (NORTH_PARADE_X0 - 0.9, NORTH_PARADE_X0,
+                 _pole_z - 0.45, _pole_z + 0.45,
+                 FLOOR_1 + 3.0 + _i * 1.1, FLOOR_1 + 4.1 + _i * 1.1),
+                POST_RED if _i % 2 == 0 else TRIM_WHITE, SMOOTH, collide=False)
+        box("PoleCap", (NORTH_PARADE_X0 - 1.1, NORTH_PARADE_X0,
+                        _pole_z - 0.65, _pole_z + 0.65,
+                        FLOOR_1 + 8.5, FLOOR_1 + 9.1), STEEL, METAL, collide=False)
+
+
+# ---------------------------------------------------------------------------
 # The tip
 # ---------------------------------------------------------------------------
 # What the road runs out into. The street's decay gradient has to arrive
@@ -2533,13 +3256,33 @@ with group("StreetFurniture"):
     # The back street, lit both sides now that it has houses on one of them.
     # Laid at the row's own pitch rather than at a step of their own, so a lamp
     # stands between every second pair of front doors all the way up.
+    # Stops at the tip fence and not at the loop's corner: the walk it lights
+    # runs the whole way now, and a lamp run that stopped at CURL_Z would have
+    # left the five houses south of it in the dark on a lit street -- which is
+    # the same "it ended where the road used to end" mistake in the fixture
+    # layer rather than the geometry.
     for _i in range(len(BACK_ROW) + 1):
         _lz = BACK_ROW_Z1 - _i * 2 * (HOUSE_DEPTH + NEIGHBOUR_GAP)
-        if _lz < CURL_Z:
+        if _lz < TIP_Z1:
             break
         street_lamp(BACK_WALK_X1 - 3.5, _lz, 1)
     for z in (-150.0, -195.0, -240.0, -280.0):
         street_lamp(RETURN_X1 + 3.5, z, -1)
+    # The parade's own, one outside each unit's door. Generated from TIP_PARADE for
+    # the same reason the west side's are generated from the row: a unit added
+    # to the terrace should arrive with a light over its door, not with a note
+    # to remember one.
+    for _pname, _pkind, _pz0, _pz1, _pdoor in TIP_PARADE:
+        street_lamp(RETURN_X1 + 3.5, _pdoor, -1)
+    # The top of the street, both sides. The near walk's lamps stopped at z 216
+    # and the frontage now runs to 308 -- the same "it ended where the town used
+    # to end" mistake the back street's run above is written about, one street
+    # over. One outside each unit's door, generated from the row; and one on the
+    # far walk against the community hall, which is the last building up there
+    # and was lit only as far as the cafe.
+    for _nname, _nkind, _nz0, _nz1, _ndoor in NORTH_PARADE:
+        street_lamp(NEAR_WALK_X0 + 2.0, _ndoor, -1)
+    street_lamp(FAR_WALK_X1 - 2.0, HALL_DOOR, 1)
     # ...and up the east walk, which used to end with the road at STREET_Z0.
     for _i in range(1, 6):
         _lz = STREET_Z0 + _i * 88.0
@@ -2574,16 +3317,43 @@ with group("StreetFurniture"):
     # it, trunk dead centre of an eight-stud path, and the asset built and both
     # checkers passed for it. Nothing either of them measures is "is there a tree
     # in this footpath". So the list is filtered rather than edited -- a deleted
-    # line is a fact about today's alleys, and clear_of_alleys is a fact about
+    # line is a fact about today's alleys, and `clear_of_paving` is a fact about
     # whatever the alleys turn out to be.
+    #
+    # The three at z -320 have now gone the same way, and they are why the alley
+    # question alone was not enough. They were the south meadow's, planted when
+    # the pocket between the loop and the tip was 209 by 93 studs of grass. That
+    # pocket is now a road, two pavements and a parade: the one at x -215 stood
+    # in the middle of the extended carriageway, and the other two stood on the
+    # loop's new south walk. Every one of them was a *correct* line when it was
+    # written, none of them is filtered by a rule about alleys, and the asset
+    # built clean. A trunk in a surface a player walks on is the same defect
+    # three times now, so it has stopped being a thing to remember and become
+    # check_town's check 7 -- measured off the built asset, where a filter that
+    # has to be told what to look at cannot reach.
+    #
+    # They have moved into the service yard behind the parade, which is the only
+    # ground down there that is still nobody's road, derived from that yard's own
+    # bounds rather than nudged until they looked clear.
     VERGE_MID = (RETURN_X1 + SIDEWALK + WEST_X0) / 2
     TREE_SPREAD = 10.0
-    for x, z in ((-104.0, 160.0),
-                 (-130.0, -120.0), (-130.0, -164.0), (-140.0, -214.0),
-                 (VERGE_MID, -50.0), (VERGE_MID, 50.0), (VERGE_MID, 150.0),
-                 (VERGE_MID, 200.0), (VERGE_MID, 260.0),
-                 (-215.0, -320.0), (-150.0, -320.0), (-100.0, -320.0)):
-        if ALLEY_X0 <= x <= ALLEY_X1 and not clear_of_alleys(z, TREE_SPREAD):
+    YARD_TREE_X = YARD_X1 - TREE_SPREAD
+    # The strip behind the top parade, between its back wall and the town's east
+    # edge. Twenty studs of grass with a row of shops in front of it and the
+    # city's ground plane behind, and the only thing it can usefully be is the
+    # green those shops back onto. Midpoint of the two, so a deeper building or a
+    # wider town moves the trees instead of leaving them in a wall.
+    NORTH_BACK_X = (NORTH_PARADE_X1 + EAST_X1) / 2
+    for x, z in (*((-104.0, 160.0),
+                   (-130.0, -120.0), (-130.0, -164.0), (-140.0, -214.0),
+                   (VERGE_MID, -50.0), (VERGE_MID, 50.0), (VERGE_MID, 150.0),
+                   (VERGE_MID, 200.0), (VERGE_MID, 260.0),
+                   (YARD_TREE_X, YARD_Z0 + 14.0),
+                   (YARD_TREE_X, (YARD_Z0 + YARD_Z1) / 2),
+                   (YARD_TREE_X, YARD_Z1 - 14.0)),
+                 *((NORTH_BACK_X, _ndoor)
+                   for _nn, _nk, _nz0, _nz1, _ndoor in NORTH_PARADE)):
+        if not clear_of_paving(x, z, TRUNK_WIDTH):
             continue
         tree(x, z, GROUND, spread=TREE_SPREAD)
 

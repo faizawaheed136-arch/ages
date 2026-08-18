@@ -1335,7 +1335,7 @@
 
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0209">
+<Item class="Model" referent="RBXSTREET0205">
 <Properties>
 <string name="Name">StreetFurniture</string>
 </Properties>
@@ -2334,8 +2334,8 @@
 <Item class="Part" referent="RBXSTREET0174">
 <Properties>
 <string name="Name">Trunk</string>
-<CoordinateFrame name="CFrame"><X>-104.0</X><Y>5.67</Y><Z>-86.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.6</X><Y>9.3</Y><Z>1.6</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>5.07</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.6</X><Y>8.06</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">512</token>
@@ -2349,8 +2349,8 @@
 </Item><Item class="Part" referent="RBXSTREET0175">
 <Properties>
 <string name="Name">Canopy</string>
-<CoordinateFrame name="CFrame"><X>-104.0</X><Y>12.12</Y><Z>-86.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>10.0</X><Y>7.199999999999999</Y><Z>10.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>10.78</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>6.4799999999999995</Y><Z>9.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1284</token>
@@ -2364,8 +2364,8 @@
 </Item><Item class="Part" referent="RBXSTREET0176">
 <Properties>
 <string name="Name">CanopyTop</string>
-<CoordinateFrame name="CFrame"><X>-104.0</X><Y>16.02</Y><Z>-86.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>6.6000000000000005</X><Y>5.0</Y><Z>6.6000000000000005</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>-20.0</X><Y>14.29</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.94</X><Y>4.5</Y><Z>5.94</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1284</token>
@@ -2384,7 +2384,7 @@
 <Item class="Part" referent="RBXSTREET0178">
 <Properties>
 <string name="Name">Trunk</string>
-<CoordinateFrame name="CFrame"><X>-20.0</X><Y>5.07</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>5.07</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.6</X><Y>8.06</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -2399,7 +2399,7 @@
 </Item><Item class="Part" referent="RBXSTREET0179">
 <Properties>
 <string name="Name">Canopy</string>
-<CoordinateFrame name="CFrame"><X>-20.0</X><Y>10.78</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>10.78</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>9.0</X><Y>6.4799999999999995</Y><Z>9.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -2414,7 +2414,7 @@
 </Item><Item class="Part" referent="RBXSTREET0180">
 <Properties>
 <string name="Name">CanopyTop</string>
-<CoordinateFrame name="CFrame"><X>-20.0</X><Y>14.29</Y><Z>-22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-34.0</X><Y>14.29</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.94</X><Y>4.5</Y><Z>5.94</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -2434,7 +2434,7 @@
 <Item class="Part" referent="RBXSTREET0182">
 <Properties>
 <string name="Name">Trunk</string>
-<CoordinateFrame name="CFrame"><X>-34.0</X><Y>5.07</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-13.0</X><Y>5.07</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.6</X><Y>8.06</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -2449,7 +2449,7 @@
 </Item><Item class="Part" referent="RBXSTREET0183">
 <Properties>
 <string name="Name">Canopy</string>
-<CoordinateFrame name="CFrame"><X>-34.0</X><Y>10.78</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-13.0</X><Y>10.78</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>9.0</X><Y>6.4799999999999995</Y><Z>9.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -2464,7 +2464,7 @@
 </Item><Item class="Part" referent="RBXSTREET0184">
 <Properties>
 <string name="Name">CanopyTop</string>
-<CoordinateFrame name="CFrame"><X>-34.0</X><Y>14.29</Y><Z>14.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-13.0</X><Y>14.29</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.94</X><Y>4.5</Y><Z>5.94</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -2484,7 +2484,7 @@
 <Item class="Part" referent="RBXSTREET0186">
 <Properties>
 <string name="Name">Trunk</string>
-<CoordinateFrame name="CFrame"><X>-13.0</X><Y>5.07</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-40.0</X><Y>5.07</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.6</X><Y>8.06</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -2499,56 +2499,6 @@
 </Item><Item class="Part" referent="RBXSTREET0187">
 <Properties>
 <string name="Name">Canopy</string>
-<CoordinateFrame name="CFrame"><X>-13.0</X><Y>10.78</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>9.0</X><Y>6.4799999999999995</Y><Z>9.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">1284</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4283332158</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0188">
-<Properties>
-<string name="Name">CanopyTop</string>
-<CoordinateFrame name="CFrame"><X>-13.0</X><Y>14.29</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>5.94</X><Y>4.5</Y><Z>5.94</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">1284</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4283332158</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0193">
-<Properties>
-<string name="Name">Tree</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0190">
-<Properties>
-<string name="Name">Trunk</string>
-<CoordinateFrame name="CFrame"><X>-40.0</X><Y>5.07</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.6</X><Y>8.06</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">512</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4284369466</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0191">
-<Properties>
-<string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-40.0</X><Y>10.78</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>9.0</X><Y>6.4799999999999995</Y><Z>9.0</Z></Vector3>
 <bool name="Anchored">true</bool>
@@ -2561,7 +2511,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0192">
+</Item><Item class="Part" referent="RBXSTREET0188">
 <Properties>
 <string name="Name">CanopyTop</string>
 <CoordinateFrame name="CFrame"><X>-40.0</X><Y>14.29</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2577,11 +2527,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0198">
+</Item><Item class="Model" referent="RBXSTREET0194">
 <Properties>
 <string name="Name">Bench</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0194">
+<Item class="Part" referent="RBXSTREET0190">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>3.195</Y><Z>33.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2596,7 +2546,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0195">
+</Item><Item class="Part" referent="RBXSTREET0191">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-95.1</X><Y>4.2700000000000005</Y><Z>33.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2611,7 +2561,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0196">
+</Item><Item class="Part" referent="RBXSTREET0192">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>2.27</Y><Z>30.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2626,7 +2576,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0197">
+</Item><Item class="Part" referent="RBXSTREET0193">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>2.27</Y><Z>35.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2642,11 +2592,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0203">
+</Item><Item class="Model" referent="RBXSTREET0199">
 <Properties>
 <string name="Name">Bench</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0199">
+<Item class="Part" referent="RBXSTREET0195">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>3.195</Y><Z>-38.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2661,7 +2611,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0200">
+</Item><Item class="Part" referent="RBXSTREET0196">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-95.1</X><Y>4.2700000000000005</Y><Z>-38.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2676,7 +2626,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0201">
+</Item><Item class="Part" referent="RBXSTREET0197">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>2.27</Y><Z>-40.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2691,7 +2641,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0202">
+</Item><Item class="Part" referent="RBXSTREET0198">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-95.9</X><Y>2.27</Y><Z>-35.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2707,11 +2657,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0208">
+</Item><Item class="Model" referent="RBXSTREET0204">
 <Properties>
 <string name="Name">Bench</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0204">
+<Item class="Part" referent="RBXSTREET0200">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-54.7</X><Y>3.195</Y><Z>18.0</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2726,7 +2676,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0205">
+</Item><Item class="Part" referent="RBXSTREET0201">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-55.5</X><Y>4.2700000000000005</Y><Z>18.0</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2741,7 +2691,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0206">
+</Item><Item class="Part" referent="RBXSTREET0202">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-54.7</X><Y>2.27</Y><Z>20.5</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2756,7 +2706,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0207">
+</Item><Item class="Part" referent="RBXSTREET0203">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-54.7</X><Y>2.27</Y><Z>15.5</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -2774,11 +2724,11 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0214">
+<Item class="Model" referent="RBXSTREET0210">
 <Properties>
 <string name="Name">StreetSign</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0210">
+<Item class="Part" referent="RBXSTREET0206">
 <Properties>
 <string name="Name">Post</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>6.02</Y><Z>-13.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2793,7 +2743,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0213">
+</Item><Item class="Part" referent="RBXSTREET0209">
 <Properties>
 <string name="Name">Plate</string>
 <CoordinateFrame name="CFrame"><X>-62.5</X><Y>10.42</Y><Z>-13.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2807,7 +2757,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="SurfaceGui" referent="RBXSTREET0211">
+<Item class="SurfaceGui" referent="RBXSTREET0207">
 <Properties>
 <string name="Name">Sign</string>
 <token name="Face">3</token>
@@ -2817,7 +2767,7 @@
 <float name="LightInfluence">0</float>
 <bool name="Enabled">true</bool>
 </Properties>
-<Item class="TextLabel" referent="RBXSTREET0212">
+<Item class="TextLabel" referent="RBXSTREET0208">
 <Properties>
 <string name="Name">Text</string>
 <UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
@@ -2835,15 +2785,15 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0277">
+<Item class="Model" referent="RBXSTREET0273">
 <Properties>
 <string name="Name">School</string>
 </Properties>
-<Item class="Model" referent="RBXSTREET0243">
+<Item class="Model" referent="RBXSTREET0239">
 <Properties>
 <string name="Name">SchoolStructure</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0215">
+<Item class="Part" referent="RBXSTREET0211">
 <Properties>
 <string name="Name">Slab</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>1.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2858,7 +2808,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0216">
+</Item><Item class="Part" referent="RBXSTREET0212">
 <Properties>
 <string name="Name">Roof</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>17.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2873,7 +2823,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0217">
+</Item><Item class="Part" referent="RBXSTREET0213">
 <Properties>
 <string name="Name">WallWest1</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2888,7 +2838,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0218">
+</Item><Item class="Part" referent="RBXSTREET0214">
 <Properties>
 <string name="Name">WallEast1</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>24.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2903,7 +2853,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0219">
+</Item><Item class="Part" referent="RBXSTREET0215">
 <Properties>
 <string name="Name">WallEast2</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>61.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2918,7 +2868,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0220">
+</Item><Item class="Part" referent="RBXSTREET0216">
 <Properties>
 <string name="Name">WallEastHead1</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>13.52</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2933,7 +2883,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0221">
+</Item><Item class="Part" referent="RBXSTREET0217">
 <Properties>
 <string name="Name">WallSouth1</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>9.02</Y><Z>10.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2948,7 +2898,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0222">
+</Item><Item class="Part" referent="RBXSTREET0218">
 <Properties>
 <string name="Name">WallNorth1</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>9.02</Y><Z>75.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2963,7 +2913,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0223">
+</Item><Item class="Part" referent="RBXSTREET0219">
 <Properties>
 <string name="Name">WindowWest11</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>16.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2978,7 +2928,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0224">
+</Item><Item class="Part" referent="RBXSTREET0220">
 <Properties>
 <string name="Name">WindowWest12</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -2993,7 +2943,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0225">
+</Item><Item class="Part" referent="RBXSTREET0221">
 <Properties>
 <string name="Name">WindowWest13</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>24.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3008,7 +2958,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0226">
+</Item><Item class="Part" referent="RBXSTREET0222">
 <Properties>
 <string name="Name">WindowWest14</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>28.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3023,7 +2973,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0227">
+</Item><Item class="Part" referent="RBXSTREET0223">
 <Properties>
 <string name="Name">WindowWest21</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>37.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3038,7 +2988,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0228">
+</Item><Item class="Part" referent="RBXSTREET0224">
 <Properties>
 <string name="Name">WindowWest22</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>41.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3053,7 +3003,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0229">
+</Item><Item class="Part" referent="RBXSTREET0225">
 <Properties>
 <string name="Name">WindowWest23</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>45.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3068,7 +3018,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0230">
+</Item><Item class="Part" referent="RBXSTREET0226">
 <Properties>
 <string name="Name">WindowWest24</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>49.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3083,7 +3033,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0231">
+</Item><Item class="Part" referent="RBXSTREET0227">
 <Properties>
 <string name="Name">WindowWest31</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>58.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3098,7 +3048,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0232">
+</Item><Item class="Part" referent="RBXSTREET0228">
 <Properties>
 <string name="Name">WindowWest32</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>62.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3113,7 +3063,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0233">
+</Item><Item class="Part" referent="RBXSTREET0229">
 <Properties>
 <string name="Name">WindowWest33</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>66.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3128,7 +3078,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0234">
+</Item><Item class="Part" referent="RBXSTREET0230">
 <Properties>
 <string name="Name">WindowWest34</string>
 <CoordinateFrame name="CFrame"><X>-151.25</X><Y>9.02</Y><Z>70.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3143,7 +3093,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0235">
+</Item><Item class="Part" referent="RBXSTREET0231">
 <Properties>
 <string name="Name">WindowEast11</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>16.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3158,7 +3108,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0236">
+</Item><Item class="Part" referent="RBXSTREET0232">
 <Properties>
 <string name="Name">WindowEast12</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>20.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3173,7 +3123,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0237">
+</Item><Item class="Part" referent="RBXSTREET0233">
 <Properties>
 <string name="Name">WindowEast13</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>24.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3188,7 +3138,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0238">
+</Item><Item class="Part" referent="RBXSTREET0234">
 <Properties>
 <string name="Name">WindowEast14</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>28.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3203,7 +3153,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0239">
+</Item><Item class="Part" referent="RBXSTREET0235">
 <Properties>
 <string name="Name">WindowEast21</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>58.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3218,7 +3168,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0240">
+</Item><Item class="Part" referent="RBXSTREET0236">
 <Properties>
 <string name="Name">WindowEast22</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>62.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3233,7 +3183,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0241">
+</Item><Item class="Part" referent="RBXSTREET0237">
 <Properties>
 <string name="Name">WindowEast23</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>66.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3248,7 +3198,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0242">
+</Item><Item class="Part" referent="RBXSTREET0238">
 <Properties>
 <string name="Name">WindowEast24</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>9.02</Y><Z>70.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3264,11 +3214,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0262">
+</Item><Item class="Model" referent="RBXSTREET0258">
 <Properties>
 <string name="Name">SchoolPartitions</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0244">
+<Item class="Part" referent="RBXSTREET0240">
 <Properties>
 <string name="Name">HallEast1</string>
 <CoordinateFrame name="CFrame"><X>-130.5</X><Y>9.02</Y><Z>25.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3283,7 +3233,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0245">
+</Item><Item class="Part" referent="RBXSTREET0241">
 <Properties>
 <string name="Name">HallEast2</string>
 <CoordinateFrame name="CFrame"><X>-130.5</X><Y>9.02</Y><Z>60.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3298,7 +3248,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0246">
+</Item><Item class="Part" referent="RBXSTREET0242">
 <Properties>
 <string name="Name">HallEastHead1</string>
 <CoordinateFrame name="CFrame"><X>-130.5</X><Y>13.52</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3313,7 +3263,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0247">
+</Item><Item class="Part" referent="RBXSTREET0243">
 <Properties>
 <string name="Name">HallWest1</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>9.02</Y><Z>15.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3328,7 +3278,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0248">
+</Item><Item class="Part" referent="RBXSTREET0244">
 <Properties>
 <string name="Name">HallWest2</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>9.02</Y><Z>33.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3343,7 +3293,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0249">
+</Item><Item class="Part" referent="RBXSTREET0245">
 <Properties>
 <string name="Name">HallWest3</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>9.02</Y><Z>54.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3358,7 +3308,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0250">
+</Item><Item class="Part" referent="RBXSTREET0246">
 <Properties>
 <string name="Name">HallWest4</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>9.02</Y><Z>71.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3373,7 +3323,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0251">
+</Item><Item class="Part" referent="RBXSTREET0247">
 <Properties>
 <string name="Name">HallWestHead1</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>13.52</Y><Z>23.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3388,7 +3338,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0252">
+</Item><Item class="Part" referent="RBXSTREET0248">
 <Properties>
 <string name="Name">HallWestHead2</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>13.52</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3403,7 +3353,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0253">
+</Item><Item class="Part" referent="RBXSTREET0249">
 <Properties>
 <string name="Name">HallWestHead3</string>
 <CoordinateFrame name="CFrame"><X>-138.5</X><Y>13.52</Y><Z>65.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3418,7 +3368,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0254">
+</Item><Item class="Part" referent="RBXSTREET0250">
 <Properties>
 <string name="Name">ClassSplit1</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>9.02</Y><Z>32.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3433,7 +3383,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0255">
+</Item><Item class="Part" referent="RBXSTREET0251">
 <Properties>
 <string name="Name">EastSplit11</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>9.02</Y><Z>32.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3448,7 +3398,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0256">
+</Item><Item class="Part" referent="RBXSTREET0252">
 <Properties>
 <string name="Name">EastSplit12</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>9.02</Y><Z>32.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3463,7 +3413,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0257">
+</Item><Item class="Part" referent="RBXSTREET0253">
 <Properties>
 <string name="Name">EastSplit1Head1</string>
 <CoordinateFrame name="CFrame"><X>-121.0</X><Y>13.52</Y><Z>32.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3478,7 +3428,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0258">
+</Item><Item class="Part" referent="RBXSTREET0254">
 <Properties>
 <string name="Name">ClassSplit2</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>9.02</Y><Z>53.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3493,7 +3443,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0259">
+</Item><Item class="Part" referent="RBXSTREET0255">
 <Properties>
 <string name="Name">EastSplit21</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>9.02</Y><Z>53.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3508,7 +3458,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0260">
+</Item><Item class="Part" referent="RBXSTREET0256">
 <Properties>
 <string name="Name">EastSplit22</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>9.02</Y><Z>53.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3523,7 +3473,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0261">
+</Item><Item class="Part" referent="RBXSTREET0257">
 <Properties>
 <string name="Name">EastSplit2Head1</string>
 <CoordinateFrame name="CFrame"><X>-121.0</X><Y>13.52</Y><Z>53.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3539,11 +3489,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0268">
+</Item><Item class="Model" referent="RBXSTREET0264">
 <Properties>
 <string name="Name">SchoolPortico</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0263">
+<Item class="Part" referent="RBXSTREET0259">
 <Properties>
 <string name="Name">Column1</string>
 <CoordinateFrame name="CFrame"><X>-110.0</X><Y>6.26</Y><Z>34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3558,7 +3508,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0264">
+</Item><Item class="Part" referent="RBXSTREET0260">
 <Properties>
 <string name="Name">Column2</string>
 <CoordinateFrame name="CFrame"><X>-110.0</X><Y>6.26</Y><Z>38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3573,7 +3523,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0265">
+</Item><Item class="Part" referent="RBXSTREET0261">
 <Properties>
 <string name="Name">Column3</string>
 <CoordinateFrame name="CFrame"><X>-110.0</X><Y>6.26</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3588,7 +3538,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0266">
+</Item><Item class="Part" referent="RBXSTREET0262">
 <Properties>
 <string name="Name">Column4</string>
 <CoordinateFrame name="CFrame"><X>-110.0</X><Y>6.26</Y><Z>52.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3603,7 +3553,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0267">
+</Item><Item class="Part" referent="RBXSTREET0263">
 <Properties>
 <string name="Name">Canopy</string>
 <CoordinateFrame name="CFrame"><X>-110.25</X><Y>11.6</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3619,11 +3569,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0276">
+</Item><Item class="Model" referent="RBXSTREET0272">
 <Properties>
 <string name="Name">SchoolParapet</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0269">
+<Item class="Part" referent="RBXSTREET0265">
 <Properties>
 <string name="Name">ParapetWest</string>
 <CoordinateFrame name="CFrame"><X>-151.5</X><Y>19.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3638,7 +3588,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0270">
+</Item><Item class="Part" referent="RBXSTREET0266">
 <Properties>
 <string name="Name">ParapetEast</string>
 <CoordinateFrame name="CFrame"><X>-112.5</X><Y>19.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3653,7 +3603,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0271">
+</Item><Item class="Part" referent="RBXSTREET0267">
 <Properties>
 <string name="Name">ParapetSouth</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>19.02</Y><Z>10.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3668,7 +3618,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0272">
+</Item><Item class="Part" referent="RBXSTREET0268">
 <Properties>
 <string name="Name">ParapetNorth</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>19.02</Y><Z>75.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3683,7 +3633,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0275">
+</Item><Item class="Part" referent="RBXSTREET0271">
 <Properties>
 <string name="Name">Nameplate</string>
 <CoordinateFrame name="CFrame"><X>-113.25</X><Y>20.759999999999998</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3697,7 +3647,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="SurfaceGui" referent="RBXSTREET0273">
+<Item class="SurfaceGui" referent="RBXSTREET0269">
 <Properties>
 <string name="Name">Sign</string>
 <token name="Face">0</token>
@@ -3707,7 +3657,7 @@
 <float name="LightInfluence">0</float>
 <bool name="Enabled">true</bool>
 </Properties>
-<Item class="TextLabel" referent="RBXSTREET0274">
+<Item class="TextLabel" referent="RBXSTREET0270">
 <Properties>
 <string name="Name">Text</string>
 <UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
@@ -3726,15 +3676,15 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0347">
+<Item class="Model" referent="RBXSTREET0343">
 <Properties>
 <string name="Name">Workplace</string>
 </Properties>
-<Item class="Model" referent="RBXSTREET0302">
+<Item class="Model" referent="RBXSTREET0298">
 <Properties>
 <string name="Name">WorkStructure</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0278">
+<Item class="Part" referent="RBXSTREET0274">
 <Properties>
 <string name="Name">Slab</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>1.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3749,7 +3699,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0279">
+</Item><Item class="Part" referent="RBXSTREET0275">
 <Properties>
 <string name="Name">Roof</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>33.019999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3764,7 +3714,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0280">
+</Item><Item class="Part" referent="RBXSTREET0276">
 <Properties>
 <string name="Name">WallWest1</string>
 <CoordinateFrame name="CFrame"><X>-141.25</X><Y>17.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3779,7 +3729,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0281">
+</Item><Item class="Part" referent="RBXSTREET0277">
 <Properties>
 <string name="Name">WallEast1</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>17.02</Y><Z>-63.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3794,7 +3744,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0282">
+</Item><Item class="Part" referent="RBXSTREET0278">
 <Properties>
 <string name="Name">WallEast2</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>17.02</Y><Z>-33.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3809,7 +3759,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0283">
+</Item><Item class="Part" referent="RBXSTREET0279">
 <Properties>
 <string name="Name">WallEastHead1</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>21.519999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3824,7 +3774,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0284">
+</Item><Item class="Part" referent="RBXSTREET0280">
 <Properties>
 <string name="Name">WallSouth1</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>17.02</Y><Z>-73.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3839,7 +3789,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0285">
+</Item><Item class="Part" referent="RBXSTREET0281">
 <Properties>
 <string name="Name">WallNorth1</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>17.02</Y><Z>-22.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3854,7 +3804,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0286">
+</Item><Item class="Part" referent="RBXSTREET0282">
 <Properties>
 <string name="Name">Shopfront11</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-67.4375</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3869,7 +3819,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0287">
+</Item><Item class="Part" referent="RBXSTREET0283">
 <Properties>
 <string name="Name">Shopfront12</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-63.3125</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3884,7 +3834,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0288">
+</Item><Item class="Part" referent="RBXSTREET0284">
 <Properties>
 <string name="Name">Shopfront13</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-59.1875</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3899,7 +3849,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0289">
+</Item><Item class="Part" referent="RBXSTREET0285">
 <Properties>
 <string name="Name">Shopfront14</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-55.0625</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3914,7 +3864,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0290">
+</Item><Item class="Part" referent="RBXSTREET0286">
 <Properties>
 <string name="Name">Shopfront21</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-40.9375</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3929,7 +3879,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0291">
+</Item><Item class="Part" referent="RBXSTREET0287">
 <Properties>
 <string name="Name">Shopfront22</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-36.8125</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3944,7 +3894,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0292">
+</Item><Item class="Part" referent="RBXSTREET0288">
 <Properties>
 <string name="Name">Shopfront23</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-32.6875</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3959,7 +3909,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0293">
+</Item><Item class="Part" referent="RBXSTREET0289">
 <Properties>
 <string name="Name">Shopfront24</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>7.52</Y><Z>-28.5625</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3974,7 +3924,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0294">
+</Item><Item class="Part" referent="RBXSTREET0290">
 <Properties>
 <string name="Name">OfficeGlazing1</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-66.8125</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3989,7 +3939,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0295">
+</Item><Item class="Part" referent="RBXSTREET0291">
 <Properties>
 <string name="Name">OfficeGlazing2</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-61.4375</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4004,7 +3954,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0296">
+</Item><Item class="Part" referent="RBXSTREET0292">
 <Properties>
 <string name="Name">OfficeGlazing3</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-56.0625</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4019,7 +3969,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0297">
+</Item><Item class="Part" referent="RBXSTREET0293">
 <Properties>
 <string name="Name">OfficeGlazing4</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-50.6875</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4034,7 +3984,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0298">
+</Item><Item class="Part" referent="RBXSTREET0294">
 <Properties>
 <string name="Name">OfficeGlazing5</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-45.3125</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4049,7 +3999,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0299">
+</Item><Item class="Part" referent="RBXSTREET0295">
 <Properties>
 <string name="Name">OfficeGlazing6</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-39.9375</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4064,7 +4014,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0300">
+</Item><Item class="Part" referent="RBXSTREET0296">
 <Properties>
 <string name="Name">OfficeGlazing7</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-34.5625</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4079,7 +4029,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0301">
+</Item><Item class="Part" referent="RBXSTREET0297">
 <Properties>
 <string name="Name">OfficeGlazing8</string>
 <CoordinateFrame name="CFrame"><X>-112.75</X><Y>24.52</Y><Z>-29.1875</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4095,11 +4045,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0306">
+</Item><Item class="Model" referent="RBXSTREET0302">
 <Properties>
 <string name="Name">WorkGroundFloor</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0303">
+<Item class="Part" referent="RBXSTREET0299">
 <Properties>
 <string name="Name">StockWall1</string>
 <CoordinateFrame name="CFrame"><X>-137.25</X><Y>9.02</Y><Z>-57.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4114,7 +4064,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0304">
+</Item><Item class="Part" referent="RBXSTREET0300">
 <Properties>
 <string name="Name">StockWall2</string>
 <CoordinateFrame name="CFrame"><X>-119.75</X><Y>9.02</Y><Z>-57.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4129,7 +4079,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0305">
+</Item><Item class="Part" referent="RBXSTREET0301">
 <Properties>
 <string name="Name">StockWallHead1</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>13.52</Y><Z>-57.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4145,11 +4095,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0310">
+</Item><Item class="Model" referent="RBXSTREET0306">
 <Properties>
 <string name="Name">WorkUpperSlab</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0307">
+<Item class="Part" referent="RBXSTREET0303">
 <Properties>
 <string name="Name">SlabWest</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>17.02</Y><Z>-64.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4164,7 +4114,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0308">
+</Item><Item class="Part" referent="RBXSTREET0304">
 <Properties>
 <string name="Name">SlabNorth</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>17.02</Y><Z>-31.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4179,7 +4129,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0309">
+</Item><Item class="Part" referent="RBXSTREET0305">
 <Properties>
 <string name="Name">SlabEast</string>
 <CoordinateFrame name="CFrame"><X>-124.0</X><Y>17.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4195,11 +4145,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0330">
+</Item><Item class="Model" referent="RBXSTREET0326">
 <Properties>
 <string name="Name">WorkStair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0311">
+<Item class="Part" referent="RBXSTREET0307">
 <Properties>
 <string name="Name">Step1</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>1.52</Y><Z>-55.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4214,7 +4164,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0312">
+</Item><Item class="Part" referent="RBXSTREET0308">
 <Properties>
 <string name="Name">Step2</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>2.02</Y><Z>-54.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4229,7 +4179,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0313">
+</Item><Item class="Part" referent="RBXSTREET0309">
 <Properties>
 <string name="Name">Step3</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>2.5199999999999996</Y><Z>-53.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4244,7 +4194,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0314">
+</Item><Item class="Part" referent="RBXSTREET0310">
 <Properties>
 <string name="Name">Step4</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>3.0199999999999996</Y><Z>-52.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4259,7 +4209,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0315">
+</Item><Item class="Part" referent="RBXSTREET0311">
 <Properties>
 <string name="Name">Step5</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>3.5199999999999996</Y><Z>-51.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4274,7 +4224,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0316">
+</Item><Item class="Part" referent="RBXSTREET0312">
 <Properties>
 <string name="Name">Step6</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>4.02</Y><Z>-50.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4289,7 +4239,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0317">
+</Item><Item class="Part" referent="RBXSTREET0313">
 <Properties>
 <string name="Name">Step7</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>4.52</Y><Z>-49.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4304,7 +4254,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0318">
+</Item><Item class="Part" referent="RBXSTREET0314">
 <Properties>
 <string name="Name">Step8</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>5.02</Y><Z>-48.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4319,7 +4269,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0319">
+</Item><Item class="Part" referent="RBXSTREET0315">
 <Properties>
 <string name="Name">Step9</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>5.52</Y><Z>-47.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4334,7 +4284,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0320">
+</Item><Item class="Part" referent="RBXSTREET0316">
 <Properties>
 <string name="Name">Step10</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>6.02</Y><Z>-46.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4349,7 +4299,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0321">
+</Item><Item class="Part" referent="RBXSTREET0317">
 <Properties>
 <string name="Name">Step11</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>6.52</Y><Z>-45.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4364,7 +4314,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0322">
+</Item><Item class="Part" referent="RBXSTREET0318">
 <Properties>
 <string name="Name">Step12</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>7.02</Y><Z>-44.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4379,7 +4329,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0323">
+</Item><Item class="Part" referent="RBXSTREET0319">
 <Properties>
 <string name="Name">Step13</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>7.52</Y><Z>-43.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4394,7 +4344,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0324">
+</Item><Item class="Part" referent="RBXSTREET0320">
 <Properties>
 <string name="Name">Step14</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>8.02</Y><Z>-42.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4409,7 +4359,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0325">
+</Item><Item class="Part" referent="RBXSTREET0321">
 <Properties>
 <string name="Name">Step15</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>8.52</Y><Z>-41.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4424,7 +4374,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0326">
+</Item><Item class="Part" referent="RBXSTREET0322">
 <Properties>
 <string name="Name">Step16</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>9.02</Y><Z>-40.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4439,7 +4389,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0327">
+</Item><Item class="Part" referent="RBXSTREET0323">
 <Properties>
 <string name="Name">Guard</string>
 <CoordinateFrame name="CFrame"><X>-134.0</X><Y>25.019999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4454,7 +4404,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0328">
+</Item><Item class="Part" referent="RBXSTREET0324">
 <Properties>
 <string name="Name">VoidWall</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>25.019999999999996</Y><Z>-56.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4469,7 +4419,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0329">
+</Item><Item class="Part" referent="RBXSTREET0325">
 <Properties>
 <string name="Name">Rail</string>
 <CoordinateFrame name="CFrame"><X>-134.65</X><Y>12.52</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4485,11 +4435,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0338">
+</Item><Item class="Model" referent="RBXSTREET0334">
 <Properties>
 <string name="Name">WorkUpperFloor</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0331">
+<Item class="Part" referent="RBXSTREET0327">
 <Properties>
 <string name="Name">OfficePartition1</string>
 <CoordinateFrame name="CFrame"><X>-126.5</X><Y>25.019999999999996</Y><Z>-67.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4504,7 +4454,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0332">
+</Item><Item class="Part" referent="RBXSTREET0328">
 <Properties>
 <string name="Name">OfficePartition2</string>
 <CoordinateFrame name="CFrame"><X>-126.5</X><Y>25.019999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4519,7 +4469,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0333">
+</Item><Item class="Part" referent="RBXSTREET0329">
 <Properties>
 <string name="Name">OfficePartition3</string>
 <CoordinateFrame name="CFrame"><X>-126.5</X><Y>25.019999999999996</Y><Z>-28.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4534,7 +4484,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0334">
+</Item><Item class="Part" referent="RBXSTREET0330">
 <Properties>
 <string name="Name">OfficePartitionHead1</string>
 <CoordinateFrame name="CFrame"><X>-126.5</X><Y>29.519999999999996</Y><Z>-59.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4549,7 +4499,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0335">
+</Item><Item class="Part" referent="RBXSTREET0331">
 <Properties>
 <string name="Name">OfficePartitionHead2</string>
 <CoordinateFrame name="CFrame"><X>-126.5</X><Y>29.519999999999996</Y><Z>-37.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4564,7 +4514,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0336">
+</Item><Item class="Part" referent="RBXSTREET0332">
 <Properties>
 <string name="Name">MeetingWall</string>
 <CoordinateFrame name="CFrame"><X>-119.75</X><Y>25.019999999999996</Y><Z>-47.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4579,7 +4529,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0337">
+</Item><Item class="Part" referent="RBXSTREET0333">
 <Properties>
 <string name="Name">LandingWall</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>25.019999999999996</Y><Z>-40.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4595,11 +4545,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0346">
+</Item><Item class="Model" referent="RBXSTREET0342">
 <Properties>
 <string name="Name">WorkParapet</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0339">
+<Item class="Part" referent="RBXSTREET0335">
 <Properties>
 <string name="Name">ParapetWest</string>
 <CoordinateFrame name="CFrame"><X>-141.5</X><Y>34.769999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4614,7 +4564,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0340">
+</Item><Item class="Part" referent="RBXSTREET0336">
 <Properties>
 <string name="Name">ParapetEast</string>
 <CoordinateFrame name="CFrame"><X>-112.5</X><Y>34.769999999999996</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4629,7 +4579,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0341">
+</Item><Item class="Part" referent="RBXSTREET0337">
 <Properties>
 <string name="Name">ParapetSouth</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>34.769999999999996</Y><Z>-73.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4644,7 +4594,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0342">
+</Item><Item class="Part" referent="RBXSTREET0338">
 <Properties>
 <string name="Name">ParapetNorth</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>34.769999999999996</Y><Z>-22.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4659,7 +4609,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0345">
+</Item><Item class="Part" referent="RBXSTREET0341">
 <Properties>
 <string name="Name">Fascia</string>
 <CoordinateFrame name="CFrame"><X>-113.25</X><Y>15.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4673,7 +4623,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="SurfaceGui" referent="RBXSTREET0343">
+<Item class="SurfaceGui" referent="RBXSTREET0339">
 <Properties>
 <string name="Name">Sign</string>
 <token name="Face">0</token>
@@ -4683,7 +4633,7 @@
 <float name="LightInfluence">0</float>
 <bool name="Enabled">true</bool>
 </Properties>
-<Item class="TextLabel" referent="RBXSTREET0344">
+<Item class="TextLabel" referent="RBXSTREET0340">
 <Properties>
 <string name="Name">Text</string>
 <UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
@@ -4702,11 +4652,11 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0498">
+<Item class="Model" referent="RBXSTREET0494">
 <Properties>
 <string name="Name">SchoolFittings</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0348">
+<Item class="Part" referent="RBXSTREET0344">
 <Properties>
 <string name="Name">Board1</string>
 <CoordinateFrame name="CFrame"><X>-150.35</X><Y>8.02</Y><Z>21.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4721,11 +4671,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0352">
+</Item><Item class="Model" referent="RBXSTREET0348">
 <Properties>
 <string name="Name">TeacherDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0349">
+<Item class="Part" referent="RBXSTREET0345">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>4.07</Y><Z>21.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -4740,7 +4690,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0350">
+</Item><Item class="Part" referent="RBXSTREET0346">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>19.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -4755,11 +4705,61 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0351">
+</Item><Item class="Part" referent="RBXSTREET0347">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>24.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0352">
+<Properties>
+<string name="Name">PupilDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0349">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>13.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0350">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>12.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0351">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>14.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">1088</token>
@@ -4778,7 +4778,7 @@
 <Item class="Part" referent="RBXSTREET0353">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>13.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>18.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4793,7 +4793,7 @@
 </Item><Item class="Part" referent="RBXSTREET0354">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>12.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>17.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4808,7 +4808,7 @@
 </Item><Item class="Part" referent="RBXSTREET0355">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>14.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>19.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4828,7 +4828,7 @@
 <Item class="Part" referent="RBXSTREET0357">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>18.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>24.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4843,7 +4843,7 @@
 </Item><Item class="Part" referent="RBXSTREET0358">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>17.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>23.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4858,7 +4858,7 @@
 </Item><Item class="Part" referent="RBXSTREET0359">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>19.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>25.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4878,7 +4878,7 @@
 <Item class="Part" referent="RBXSTREET0361">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>24.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>29.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -4893,56 +4893,6 @@
 </Item><Item class="Part" referent="RBXSTREET0362">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>23.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0363">
-<Properties>
-<string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>25.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0368">
-<Properties>
-<string name="Name">PupilDesk</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0365">
-<Properties>
-<string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>29.75</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">512</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0366">
-<Properties>
-<string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>28.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
@@ -4955,7 +4905,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0367">
+</Item><Item class="Part" referent="RBXSTREET0363">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>30.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -4971,11 +4921,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0371">
+</Item><Item class="Model" referent="RBXSTREET0367">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0370">
+<Item class="Part" referent="RBXSTREET0366">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>15.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4989,7 +4939,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0369">
+<Item class="PointLight" referent="RBXSTREET0365">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5000,11 +4950,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0374">
+</Item><Item class="Model" referent="RBXSTREET0370">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0373">
+<Item class="Part" referent="RBXSTREET0369">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>27.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5018,7 +4968,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0372">
+<Item class="PointLight" referent="RBXSTREET0368">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5029,7 +4979,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0375">
+</Item><Item class="Part" referent="RBXSTREET0371">
 <Properties>
 <string name="Name">Board2</string>
 <CoordinateFrame name="CFrame"><X>-150.35</X><Y>8.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5044,11 +4994,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0379">
+</Item><Item class="Model" referent="RBXSTREET0375">
 <Properties>
 <string name="Name">TeacherDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0376">
+<Item class="Part" referent="RBXSTREET0372">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>4.07</Y><Z>43.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5063,7 +5013,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0377">
+</Item><Item class="Part" referent="RBXSTREET0373">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>40.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5078,11 +5028,61 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0378">
+</Item><Item class="Part" referent="RBXSTREET0374">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>45.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0379">
+<Properties>
+<string name="Name">PupilDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0376">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>35.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0377">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>33.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0378">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>36.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">1088</token>
@@ -5101,7 +5101,7 @@
 <Item class="Part" referent="RBXSTREET0380">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>35.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>40.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5116,7 +5116,7 @@
 </Item><Item class="Part" referent="RBXSTREET0381">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>33.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>38.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5131,7 +5131,7 @@
 </Item><Item class="Part" referent="RBXSTREET0382">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>36.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>41.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5151,7 +5151,7 @@
 <Item class="Part" referent="RBXSTREET0384">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>40.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>46.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5166,7 +5166,7 @@
 </Item><Item class="Part" referent="RBXSTREET0385">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>38.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>44.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5181,7 +5181,7 @@
 </Item><Item class="Part" referent="RBXSTREET0386">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>41.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>47.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5201,7 +5201,7 @@
 <Item class="Part" referent="RBXSTREET0388">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>46.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>51.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5216,56 +5216,6 @@
 </Item><Item class="Part" referent="RBXSTREET0389">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>44.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0390">
-<Properties>
-<string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>47.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0395">
-<Properties>
-<string name="Name">PupilDesk</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0392">
-<Properties>
-<string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>51.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">512</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0393">
-<Properties>
-<string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>49.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
@@ -5278,7 +5228,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0394">
+</Item><Item class="Part" referent="RBXSTREET0390">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>52.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5294,11 +5244,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0398">
+</Item><Item class="Model" referent="RBXSTREET0394">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0397">
+<Item class="Part" referent="RBXSTREET0393">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>37.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5312,7 +5262,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0396">
+<Item class="PointLight" referent="RBXSTREET0392">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5323,11 +5273,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0401">
+</Item><Item class="Model" referent="RBXSTREET0397">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0400">
+<Item class="Part" referent="RBXSTREET0396">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>49.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5341,7 +5291,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0399">
+<Item class="PointLight" referent="RBXSTREET0395">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5352,7 +5302,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0402">
+</Item><Item class="Part" referent="RBXSTREET0398">
 <Properties>
 <string name="Name">Board3</string>
 <CoordinateFrame name="CFrame"><X>-150.35</X><Y>8.02</Y><Z>64.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5367,11 +5317,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0406">
+</Item><Item class="Model" referent="RBXSTREET0402">
 <Properties>
 <string name="Name">TeacherDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0403">
+<Item class="Part" referent="RBXSTREET0399">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>4.07</Y><Z>64.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5386,7 +5336,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0404">
+</Item><Item class="Part" referent="RBXSTREET0400">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>61.65</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5401,11 +5351,61 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0405">
+</Item><Item class="Part" referent="RBXSTREET0401">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-147.3</X><Y>2.7199999999999998</Y><Z>66.85</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0406">
+<Properties>
+<string name="Name">PupilDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0403">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>56.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0404">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>55.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0405">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>57.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
 <token name="Material">1088</token>
@@ -5424,7 +5424,7 @@
 <Item class="Part" referent="RBXSTREET0407">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>56.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>61.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5439,7 +5439,7 @@
 </Item><Item class="Part" referent="RBXSTREET0408">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>55.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>60.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5454,7 +5454,7 @@
 </Item><Item class="Part" referent="RBXSTREET0409">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>57.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>62.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5474,7 +5474,7 @@
 <Item class="Part" referent="RBXSTREET0411">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>61.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>67.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5489,7 +5489,7 @@
 </Item><Item class="Part" referent="RBXSTREET0412">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>60.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>66.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5504,7 +5504,7 @@
 </Item><Item class="Part" referent="RBXSTREET0413">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>62.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>68.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5524,7 +5524,7 @@
 <Item class="Part" referent="RBXSTREET0415">
 <Properties>
 <string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>67.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>72.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -5539,56 +5539,6 @@
 </Item><Item class="Part" referent="RBXSTREET0416">
 <Properties>
 <string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>66.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0417">
-<Properties>
-<string name="Name">Leg</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>68.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0422">
-<Properties>
-<string name="Name">PupilDesk</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0419">
-<Properties>
-<string name="Name">Top</string>
-<CoordinateFrame name="CFrame"><X>-143.6</X><Y>4.07</Y><Z>72.25</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
-<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">512</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0420">
-<Properties>
-<string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>71.15</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
@@ -5601,7 +5551,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0421">
+</Item><Item class="Part" referent="RBXSTREET0417">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-143.6</X><Y>2.7199999999999998</Y><Z>73.35</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5617,11 +5567,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0425">
+</Item><Item class="Model" referent="RBXSTREET0421">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0424">
+<Item class="Part" referent="RBXSTREET0420">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>58.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5635,7 +5585,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0423">
+<Item class="PointLight" referent="RBXSTREET0419">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5646,11 +5596,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0428">
+</Item><Item class="Model" referent="RBXSTREET0424">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0427">
+<Item class="Part" referent="RBXSTREET0423">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-144.75</X><Y>16.22</Y><Z>70.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5664,7 +5614,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0426">
+<Item class="PointLight" referent="RBXSTREET0422">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5675,11 +5625,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0432">
+</Item><Item class="Model" referent="RBXSTREET0428">
 <Properties>
 <string name="Name">Reception</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0429">
+<Item class="Part" referent="RBXSTREET0425">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>4.07</Y><Z>37.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5694,7 +5644,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0430">
+</Item><Item class="Part" referent="RBXSTREET0426">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-126.6</X><Y>2.7199999999999998</Y><Z>37.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5709,7 +5659,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0431">
+</Item><Item class="Part" referent="RBXSTREET0427">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-117.4</X><Y>2.7199999999999998</Y><Z>37.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5725,11 +5675,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0436">
+</Item><Item class="Model" referent="RBXSTREET0432">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0433">
+<Item class="Part" referent="RBXSTREET0429">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>3.27</Y><Z>34.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -5744,7 +5694,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0434">
+</Item><Item class="Part" referent="RBXSTREET0430">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>4.42</Y><Z>34.75</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -5759,7 +5709,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0435">
+</Item><Item class="Part" referent="RBXSTREET0431">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>2.3200000000000003</Y><Z>34.0</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
@@ -5775,11 +5725,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0439">
+</Item><Item class="Model" referent="RBXSTREET0435">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0438">
+<Item class="Part" referent="RBXSTREET0434">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>16.22</Y><Z>38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5793,7 +5743,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0437">
+<Item class="PointLight" referent="RBXSTREET0433">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5804,11 +5754,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0442">
+</Item><Item class="Model" referent="RBXSTREET0438">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0441">
+<Item class="Part" referent="RBXSTREET0437">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>16.22</Y><Z>48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5822,7 +5772,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0440">
+<Item class="PointLight" referent="RBXSTREET0436">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5833,7 +5783,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0443">
+</Item><Item class="Part" referent="RBXSTREET0439">
 <Properties>
 <string name="Name">Court</string>
 <CoordinateFrame name="CFrame"><X>-121.75</X><Y>1.55</Y><Z>64.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5848,7 +5798,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0444">
+</Item><Item class="Part" referent="RBXSTREET0440">
 <Properties>
 <string name="Name">CourtLine</string>
 <CoordinateFrame name="CFrame"><X>-121.75</X><Y>1.6</Y><Z>64.15</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5863,7 +5813,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0445">
+</Item><Item class="Part" referent="RBXSTREET0441">
 <Properties>
 <string name="Name">Backboard1</string>
 <CoordinateFrame name="CFrame"><X>-121.75</X><Y>11.02</Y><Z>56.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5878,7 +5828,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0446">
+</Item><Item class="Part" referent="RBXSTREET0442">
 <Properties>
 <string name="Name">Backboard2</string>
 <CoordinateFrame name="CFrame"><X>-121.75</X><Y>11.02</Y><Z>72.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5893,11 +5843,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0449">
+</Item><Item class="Model" referent="RBXSTREET0445">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0448">
+<Item class="Part" referent="RBXSTREET0444">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>16.22</Y><Z>60.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5911,7 +5861,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0447">
+<Item class="PointLight" referent="RBXSTREET0443">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5922,11 +5872,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0452">
+</Item><Item class="Model" referent="RBXSTREET0448">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0451">
+<Item class="Part" referent="RBXSTREET0447">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>16.22</Y><Z>69.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -5940,7 +5890,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0450">
+<Item class="PointLight" referent="RBXSTREET0446">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -5951,11 +5901,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0456">
+</Item><Item class="Model" referent="RBXSTREET0452">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0453">
+<Item class="Part" referent="RBXSTREET0449">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>4.07</Y><Z>16.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5970,7 +5920,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0454">
+</Item><Item class="Part" referent="RBXSTREET0450">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>13.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -5985,7 +5935,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0455">
+</Item><Item class="Part" referent="RBXSTREET0451">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>18.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6001,11 +5951,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0460">
+</Item><Item class="Model" referent="RBXSTREET0456">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0457">
+<Item class="Part" referent="RBXSTREET0453">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>3.27</Y><Z>16.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6020,7 +5970,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0458">
+</Item><Item class="Part" referent="RBXSTREET0454">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-122.65</X><Y>4.42</Y><Z>16.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6035,7 +5985,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0459">
+</Item><Item class="Part" referent="RBXSTREET0455">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>2.3200000000000003</Y><Z>16.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6051,11 +6001,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0464">
+</Item><Item class="Model" referent="RBXSTREET0460">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0461">
+<Item class="Part" referent="RBXSTREET0457">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>4.07</Y><Z>22.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6070,7 +6020,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0462">
+</Item><Item class="Part" referent="RBXSTREET0458">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>19.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6085,7 +6035,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0463">
+</Item><Item class="Part" referent="RBXSTREET0459">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>24.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6101,11 +6051,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0468">
+</Item><Item class="Model" referent="RBXSTREET0464">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0465">
+<Item class="Part" referent="RBXSTREET0461">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>3.27</Y><Z>22.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6120,7 +6070,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0466">
+</Item><Item class="Part" referent="RBXSTREET0462">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-122.65</X><Y>4.42</Y><Z>22.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6135,7 +6085,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0467">
+</Item><Item class="Part" referent="RBXSTREET0463">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>2.3200000000000003</Y><Z>22.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6151,11 +6101,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0472">
+</Item><Item class="Model" referent="RBXSTREET0468">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0469">
+<Item class="Part" referent="RBXSTREET0465">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>4.07</Y><Z>28.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6170,7 +6120,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0470">
+</Item><Item class="Part" referent="RBXSTREET0466">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>25.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6185,7 +6135,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0471">
+</Item><Item class="Part" referent="RBXSTREET0467">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-127.3</X><Y>2.7199999999999998</Y><Z>30.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6201,11 +6151,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0476">
+</Item><Item class="Model" referent="RBXSTREET0472">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0473">
+<Item class="Part" referent="RBXSTREET0469">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>3.27</Y><Z>28.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6220,7 +6170,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0474">
+</Item><Item class="Part" referent="RBXSTREET0470">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-122.65</X><Y>4.42</Y><Z>28.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6235,7 +6185,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0475">
+</Item><Item class="Part" referent="RBXSTREET0471">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-123.4</X><Y>2.3200000000000003</Y><Z>28.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -6251,11 +6201,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0479">
+</Item><Item class="Model" referent="RBXSTREET0475">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0478">
+<Item class="Part" referent="RBXSTREET0474">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>16.22</Y><Z>22.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6269,7 +6219,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0477">
+<Item class="PointLight" referent="RBXSTREET0473">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6280,11 +6230,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0482">
+</Item><Item class="Model" referent="RBXSTREET0478">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0481">
+<Item class="Part" referent="RBXSTREET0477">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>16.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6298,7 +6248,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0480">
+<Item class="PointLight" referent="RBXSTREET0476">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6309,11 +6259,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0485">
+</Item><Item class="Model" referent="RBXSTREET0481">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0484">
+<Item class="Part" referent="RBXSTREET0480">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>28.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6327,7 +6277,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0483">
+<Item class="PointLight" referent="RBXSTREET0479">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6338,11 +6288,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0488">
+</Item><Item class="Model" referent="RBXSTREET0484">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0487">
+<Item class="Part" referent="RBXSTREET0483">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>40.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6356,7 +6306,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0486">
+<Item class="PointLight" referent="RBXSTREET0482">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6367,11 +6317,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0491">
+</Item><Item class="Model" referent="RBXSTREET0487">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0490">
+<Item class="Part" referent="RBXSTREET0486">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>52.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6385,7 +6335,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0489">
+<Item class="PointLight" referent="RBXSTREET0485">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6396,11 +6346,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0494">
+</Item><Item class="Model" referent="RBXSTREET0490">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0493">
+<Item class="Part" referent="RBXSTREET0489">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>64.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6414,7 +6364,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0492">
+<Item class="PointLight" referent="RBXSTREET0488">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6425,11 +6375,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0497">
+</Item><Item class="Model" referent="RBXSTREET0493">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0496">
+<Item class="Part" referent="RBXSTREET0492">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-134.5</X><Y>16.22</Y><Z>72.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6443,7 +6393,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0495">
+<Item class="PointLight" referent="RBXSTREET0491">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6456,15 +6406,15 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0652">
+<Item class="Model" referent="RBXSTREET0648">
 <Properties>
 <string name="Name">WorkFittings</string>
 </Properties>
-<Item class="Model" referent="RBXSTREET0514">
+<Item class="Model" referent="RBXSTREET0510">
 <Properties>
 <string name="Name">Aisle1</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0499">
+<Item class="Part" referent="RBXSTREET0495">
 <Properties>
 <string name="Name">Aisle1Base</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>1.82</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6479,7 +6429,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0500">
+</Item><Item class="Part" referent="RBXSTREET0496">
 <Properties>
 <string name="Name">Aisle1Deck1</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>4.67</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6494,7 +6444,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0501">
+</Item><Item class="Part" referent="RBXSTREET0497">
 <Properties>
 <string name="Name">Aisle1Deck2</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>7.27</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6509,7 +6459,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0502">
+</Item><Item class="Part" referent="RBXSTREET0498">
 <Properties>
 <string name="Name">Aisle1Deck3</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>9.87</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6524,7 +6474,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0503">
+</Item><Item class="Part" referent="RBXSTREET0499">
 <Properties>
 <string name="Name">Aisle1Spine</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>6.27</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6539,7 +6489,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0504">
+</Item><Item class="Part" referent="RBXSTREET0500">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>5.720000000000001</Y><Z>-42.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6554,7 +6504,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0505">
+</Item><Item class="Part" referent="RBXSTREET0501">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>8.32</Y><Z>-42.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6569,7 +6519,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0506">
+</Item><Item class="Part" referent="RBXSTREET0502">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>5.720000000000001</Y><Z>-38.900000000000006</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6584,7 +6534,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0507">
+</Item><Item class="Part" referent="RBXSTREET0503">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>8.32</Y><Z>-38.900000000000006</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6599,7 +6549,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0508">
+</Item><Item class="Part" referent="RBXSTREET0504">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>5.720000000000001</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6614,7 +6564,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0509">
+</Item><Item class="Part" referent="RBXSTREET0505">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>8.32</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6629,7 +6579,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0510">
+</Item><Item class="Part" referent="RBXSTREET0506">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>5.720000000000001</Y><Z>-32.099999999999994</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6644,7 +6594,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0511">
+</Item><Item class="Part" referent="RBXSTREET0507">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>8.32</Y><Z>-32.099999999999994</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6659,7 +6609,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0512">
+</Item><Item class="Part" referent="RBXSTREET0508">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>5.720000000000001</Y><Z>-28.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6674,7 +6624,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0513">
+</Item><Item class="Part" referent="RBXSTREET0509">
 <Properties>
 <string name="Name">Aisle1Stock</string>
 <CoordinateFrame name="CFrame"><X>-132.0</X><Y>8.32</Y><Z>-28.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6690,11 +6640,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0530">
+</Item><Item class="Model" referent="RBXSTREET0526">
 <Properties>
 <string name="Name">Aisle2</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0515">
+<Item class="Part" referent="RBXSTREET0511">
 <Properties>
 <string name="Name">Aisle2Base</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>1.82</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6709,7 +6659,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0516">
+</Item><Item class="Part" referent="RBXSTREET0512">
 <Properties>
 <string name="Name">Aisle2Deck1</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>4.67</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6724,7 +6674,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0517">
+</Item><Item class="Part" referent="RBXSTREET0513">
 <Properties>
 <string name="Name">Aisle2Deck2</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>7.27</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6739,7 +6689,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0518">
+</Item><Item class="Part" referent="RBXSTREET0514">
 <Properties>
 <string name="Name">Aisle2Deck3</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>9.87</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6754,7 +6704,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0519">
+</Item><Item class="Part" referent="RBXSTREET0515">
 <Properties>
 <string name="Name">Aisle2Spine</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>6.27</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6769,7 +6719,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0520">
+</Item><Item class="Part" referent="RBXSTREET0516">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>5.720000000000001</Y><Z>-42.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6784,7 +6734,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0521">
+</Item><Item class="Part" referent="RBXSTREET0517">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>8.32</Y><Z>-42.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6799,7 +6749,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0522">
+</Item><Item class="Part" referent="RBXSTREET0518">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>5.720000000000001</Y><Z>-38.900000000000006</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6814,7 +6764,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0523">
+</Item><Item class="Part" referent="RBXSTREET0519">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>8.32</Y><Z>-38.900000000000006</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6829,7 +6779,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0524">
+</Item><Item class="Part" referent="RBXSTREET0520">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>5.720000000000001</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6844,7 +6794,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0525">
+</Item><Item class="Part" referent="RBXSTREET0521">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>8.32</Y><Z>-35.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6859,7 +6809,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0526">
+</Item><Item class="Part" referent="RBXSTREET0522">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>5.720000000000001</Y><Z>-32.099999999999994</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6874,7 +6824,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0527">
+</Item><Item class="Part" referent="RBXSTREET0523">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>8.32</Y><Z>-32.099999999999994</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6889,7 +6839,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0528">
+</Item><Item class="Part" referent="RBXSTREET0524">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>5.720000000000001</Y><Z>-28.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6904,7 +6854,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0529">
+</Item><Item class="Part" referent="RBXSTREET0525">
 <Properties>
 <string name="Name">Aisle2Stock</string>
 <CoordinateFrame name="CFrame"><X>-126.0</X><Y>8.32</Y><Z>-28.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6920,7 +6870,7 @@
 </Properties>
 
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0531">
+</Item><Item class="Part" referent="RBXSTREET0527">
 <Properties>
 <string name="Name">WallShelf</string>
 <CoordinateFrame name="CFrame"><X>-127.0</X><Y>6.02</Y><Z>-24.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6935,7 +6885,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0532">
+</Item><Item class="Part" referent="RBXSTREET0528">
 <Properties>
 <string name="Name">Counter</string>
 <CoordinateFrame name="CFrame"><X>-117.25</X><Y>3.2199999999999998</Y><Z>-35.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6950,7 +6900,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0533">
+</Item><Item class="Part" referent="RBXSTREET0529">
 <Properties>
 <string name="Name">Till</string>
 <CoordinateFrame name="CFrame"><X>-117.25</X><Y>5.42</Y><Z>-35.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6965,11 +6915,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0536">
+</Item><Item class="Model" referent="RBXSTREET0532">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0535">
+<Item class="Part" referent="RBXSTREET0531">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-137.0</X><Y>16.22</Y><Z>-52.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -6983,7 +6933,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0534">
+<Item class="PointLight" referent="RBXSTREET0530">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -6994,11 +6944,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0539">
+</Item><Item class="Model" referent="RBXSTREET0535">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0538">
+<Item class="Part" referent="RBXSTREET0534">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-129.0</X><Y>16.22</Y><Z>-52.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7012,7 +6962,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0537">
+<Item class="PointLight" referent="RBXSTREET0533">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7023,11 +6973,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0542">
+</Item><Item class="Model" referent="RBXSTREET0538">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0541">
+<Item class="Part" referent="RBXSTREET0537">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-121.0</X><Y>16.22</Y><Z>-52.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7041,7 +6991,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0540">
+<Item class="PointLight" referent="RBXSTREET0536">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7052,11 +7002,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0545">
+</Item><Item class="Model" referent="RBXSTREET0541">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0544">
+<Item class="Part" referent="RBXSTREET0540">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-137.0</X><Y>16.22</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7070,7 +7020,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0543">
+<Item class="PointLight" referent="RBXSTREET0539">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7081,11 +7031,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0548">
+</Item><Item class="Model" referent="RBXSTREET0544">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0547">
+<Item class="Part" referent="RBXSTREET0543">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-129.0</X><Y>16.22</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7099,7 +7049,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0546">
+<Item class="PointLight" referent="RBXSTREET0542">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7110,11 +7060,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0551">
+</Item><Item class="Model" referent="RBXSTREET0547">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0550">
+<Item class="Part" referent="RBXSTREET0546">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-121.0</X><Y>16.22</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7128,7 +7078,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0549">
+<Item class="PointLight" referent="RBXSTREET0545">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7139,11 +7089,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0554">
+</Item><Item class="Model" referent="RBXSTREET0550">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0553">
+<Item class="Part" referent="RBXSTREET0549">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-137.0</X><Y>16.22</Y><Z>-32.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7157,7 +7107,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0552">
+<Item class="PointLight" referent="RBXSTREET0548">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7168,11 +7118,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0557">
+</Item><Item class="Model" referent="RBXSTREET0553">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0556">
+<Item class="Part" referent="RBXSTREET0552">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-129.0</X><Y>16.22</Y><Z>-32.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7186,7 +7136,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0555">
+<Item class="PointLight" referent="RBXSTREET0551">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7197,11 +7147,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0560">
+</Item><Item class="Model" referent="RBXSTREET0556">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0559">
+<Item class="Part" referent="RBXSTREET0555">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-121.0</X><Y>16.22</Y><Z>-32.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7215,7 +7165,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0558">
+<Item class="PointLight" referent="RBXSTREET0554">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7226,7 +7176,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0561">
+</Item><Item class="Part" referent="RBXSTREET0557">
 <Properties>
 <string name="Name">Pallet1</string>
 <CoordinateFrame name="CFrame"><X>-137.5</X><Y>4.02</Y><Z>-67.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7241,7 +7191,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0562">
+</Item><Item class="Part" referent="RBXSTREET0558">
 <Properties>
 <string name="Name">Pallet2</string>
 <CoordinateFrame name="CFrame"><X>-122.0</X><Y>4.02</Y><Z>-67.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7256,7 +7206,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0563">
+</Item><Item class="Part" referent="RBXSTREET0559">
 <Properties>
 <string name="Name">Pallet3</string>
 <CoordinateFrame name="CFrame"><X>-117.0</X><Y>4.02</Y><Z>-67.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7271,11 +7221,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0566">
+</Item><Item class="Model" referent="RBXSTREET0562">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0565">
+<Item class="Part" referent="RBXSTREET0561">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-128.0</X><Y>16.22</Y><Z>-68.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7289,7 +7239,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0564">
+<Item class="PointLight" referent="RBXSTREET0560">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7300,11 +7250,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0570">
+</Item><Item class="Model" referent="RBXSTREET0566">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0567">
+<Item class="Part" referent="RBXSTREET0563">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>20.069999999999997</Y><Z>-70.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7319,7 +7269,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0568">
+</Item><Item class="Part" referent="RBXSTREET0564">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-71.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7334,7 +7284,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0569">
+</Item><Item class="Part" referent="RBXSTREET0565">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-68.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7350,11 +7300,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0574">
+</Item><Item class="Model" referent="RBXSTREET0570">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0571">
+<Item class="Part" referent="RBXSTREET0567">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>19.27</Y><Z>-70.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7369,7 +7319,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0572">
+</Item><Item class="Part" referent="RBXSTREET0568">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>20.419999999999998</Y><Z>-70.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7384,7 +7334,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0573">
+</Item><Item class="Part" referent="RBXSTREET0569">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>18.32</Y><Z>-70.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7400,11 +7350,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0578">
+</Item><Item class="Model" referent="RBXSTREET0574">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0575">
+<Item class="Part" referent="RBXSTREET0571">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>20.069999999999997</Y><Z>-65.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7419,7 +7369,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0576">
+</Item><Item class="Part" referent="RBXSTREET0572">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-66.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7434,7 +7384,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0577">
+</Item><Item class="Part" referent="RBXSTREET0573">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-63.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7450,11 +7400,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0582">
+</Item><Item class="Model" referent="RBXSTREET0578">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0579">
+<Item class="Part" referent="RBXSTREET0575">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>19.27</Y><Z>-65.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7469,7 +7419,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0580">
+</Item><Item class="Part" referent="RBXSTREET0576">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>20.419999999999998</Y><Z>-65.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7484,7 +7434,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0581">
+</Item><Item class="Part" referent="RBXSTREET0577">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>18.32</Y><Z>-65.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7500,11 +7450,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0586">
+</Item><Item class="Model" referent="RBXSTREET0582">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0583">
+<Item class="Part" referent="RBXSTREET0579">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>20.069999999999997</Y><Z>-57.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7519,7 +7469,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0584">
+</Item><Item class="Part" referent="RBXSTREET0580">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-58.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7534,7 +7484,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0585">
+</Item><Item class="Part" referent="RBXSTREET0581">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-55.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7550,11 +7500,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0590">
+</Item><Item class="Model" referent="RBXSTREET0586">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0587">
+<Item class="Part" referent="RBXSTREET0583">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>19.27</Y><Z>-57.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7569,7 +7519,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0588">
+</Item><Item class="Part" referent="RBXSTREET0584">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>20.419999999999998</Y><Z>-57.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7584,7 +7534,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0589">
+</Item><Item class="Part" referent="RBXSTREET0585">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>18.32</Y><Z>-57.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7600,11 +7550,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0594">
+</Item><Item class="Model" referent="RBXSTREET0590">
 <Properties>
 <string name="Name">OfficeDesk</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0591">
+<Item class="Part" referent="RBXSTREET0587">
 <Properties>
 <string name="Name">Top</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>20.069999999999997</Y><Z>-52.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7619,7 +7569,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0592">
+</Item><Item class="Part" referent="RBXSTREET0588">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-53.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7634,7 +7584,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0593">
+</Item><Item class="Part" referent="RBXSTREET0589">
 <Properties>
 <string name="Name">Leg</string>
 <CoordinateFrame name="CFrame"><X>-119.3</X><Y>18.72</Y><Z>-51.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7650,11 +7600,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0598">
+</Item><Item class="Model" referent="RBXSTREET0594">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0595">
+<Item class="Part" referent="RBXSTREET0591">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>19.27</Y><Z>-52.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7669,7 +7619,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0596">
+</Item><Item class="Part" referent="RBXSTREET0592">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-115.75</X><Y>20.419999999999998</Y><Z>-52.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7684,7 +7634,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0597">
+</Item><Item class="Part" referent="RBXSTREET0593">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-116.5</X><Y>18.32</Y><Z>-52.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
@@ -7700,11 +7650,11 @@
 </Properties>
 
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0601">
+</Item><Item class="Model" referent="RBXSTREET0597">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0600">
+<Item class="Part" referent="RBXSTREET0596">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>32.22</Y><Z>-68.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7718,7 +7668,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0599">
+<Item class="PointLight" referent="RBXSTREET0595">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7729,11 +7679,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0604">
+</Item><Item class="Model" referent="RBXSTREET0600">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0603">
+<Item class="Part" referent="RBXSTREET0599">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>32.22</Y><Z>-53.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7747,7 +7697,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0602">
+<Item class="PointLight" referent="RBXSTREET0598">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -7758,7 +7708,7 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0605">
+</Item><Item class="Part" referent="RBXSTREET0601">
 <Properties>
 <string name="Name">Table</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>20.119999999999997</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7773,11 +7723,11 @@
 
 </Properties>
 
-</Item><Item class="Model" referent="RBXSTREET0609">
+</Item><Item class="Model" referent="RBXSTREET0605">
 <Properties>
 <string name="Name">Chair</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0606">
+<Item class="Part" referent="RBXSTREET0602">
 <Properties>
 <string name="Name">Seat</string>
 <CoordinateFrame name="CFrame"><X>-123.0</X><Y>19.27</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7792,7 +7742,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0607">
+</Item><Item class="Part" referent="RBXSTREET0603">
 <Properties>
 <string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-123.0</X><Y>20.419999999999998</Y><Z>-42.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -7807,10 +7757,60 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0608">
+</Item><Item class="Part" referent="RBXSTREET0604">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.32</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0609">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0606">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>19.27</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0607">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>20.419999999999998</Y><Z>-38.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0608">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.32</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7830,7 +7830,7 @@
 <Item class="Part" referent="RBXSTREET0610">
 <Properties>
 <string name="Name">Seat</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>19.27</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>19.27</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7845,7 +7845,7 @@
 </Item><Item class="Part" referent="RBXSTREET0611">
 <Properties>
 <string name="Name">Back</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>20.419999999999998</Y><Z>-38.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>20.419999999999998</Y><Z>-34.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7860,7 +7860,7 @@
 </Item><Item class="Part" referent="RBXSTREET0612">
 <Properties>
 <string name="Name">Stem</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.32</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.32</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7880,7 +7880,7 @@
 <Item class="Part" referent="RBXSTREET0614">
 <Properties>
 <string name="Name">Seat</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>19.27</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7895,7 +7895,7 @@
 </Item><Item class="Part" referent="RBXSTREET0615">
 <Properties>
 <string name="Name">Back</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>20.419999999999998</Y><Z>-34.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>20.419999999999998</Y><Z>-42.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7910,7 +7910,7 @@
 </Item><Item class="Part" referent="RBXSTREET0616">
 <Properties>
 <string name="Name">Stem</string>
-<CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.32</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>18.32</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7930,7 +7930,7 @@
 <Item class="Part" referent="RBXSTREET0618">
 <Properties>
 <string name="Name">Seat</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7945,7 +7945,7 @@
 </Item><Item class="Part" referent="RBXSTREET0619">
 <Properties>
 <string name="Name">Back</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>20.419999999999998</Y><Z>-42.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>20.419999999999998</Y><Z>-38.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7960,7 +7960,7 @@
 </Item><Item class="Part" referent="RBXSTREET0620">
 <Properties>
 <string name="Name">Stem</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>18.32</Y><Z>-42.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>18.32</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7980,7 +7980,7 @@
 <Item class="Part" referent="RBXSTREET0622">
 <Properties>
 <string name="Name">Seat</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7995,56 +7995,6 @@
 </Item><Item class="Part" referent="RBXSTREET0623">
 <Properties>
 <string name="Name">Back</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>20.419999999999998</Y><Z>-38.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1312</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0624">
-<Properties>
-<string name="Name">Stem</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>18.32</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1088</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0629">
-<Properties>
-<string name="Name">Chair</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0626">
-<Properties>
-<string name="Name">Seat</string>
-<CoordinateFrame name="CFrame"><X>-117.0</X><Y>19.27</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">1312</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Part" referent="RBXSTREET0627">
-<Properties>
-<string name="Name">Back</string>
 <CoordinateFrame name="CFrame"><X>-117.0</X><Y>20.419999999999998</Y><Z>-34.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
 <bool name="Anchored">true</bool>
@@ -8057,7 +8007,7 @@
 
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0628">
+</Item><Item class="Part" referent="RBXSTREET0624">
 <Properties>
 <string name="Name">Stem</string>
 <CoordinateFrame name="CFrame"><X>-117.0</X><Y>18.32</Y><Z>-34.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8073,6 +8023,50 @@
 </Properties>
 
 </Item>
+</Item><Item class="Model" referent="RBXSTREET0628">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0627">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-120.0</X><Y>32.22</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0626">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0629">
+<Properties>
+<string name="Name">BreakTable</string>
+<CoordinateFrame name="CFrame"><X>-137.5</X><Y>20.119999999999997</Y><Z>-67.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.0</X><Y>0.40000000000000213</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
 </Item><Item class="Model" referent="RBXSTREET0632">
 <Properties>
 <string name="Name">CeilingLight</string>
@@ -8080,7 +8074,7 @@
 <Item class="Part" referent="RBXSTREET0631">
 <Properties>
 <string name="Name">Panel</string>
-<CoordinateFrame name="CFrame"><X>-120.0</X><Y>32.22</Y><Z>-38.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-137.5</X><Y>32.22</Y><Z>-67.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8102,55 +8096,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Part" referent="RBXSTREET0633">
-<Properties>
-<string name="Name">BreakTable</string>
-<CoordinateFrame name="CFrame"><X>-137.5</X><Y>20.119999999999997</Y><Z>-67.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>4.0</X><Y>0.40000000000000213</Y><Z>6.0</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">true</bool>
-<token name="Material">512</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-
-</Item><Item class="Model" referent="RBXSTREET0636">
+</Item><Item class="Model" referent="RBXSTREET0635">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0635">
-<Properties>
-<string name="Name">Panel</string>
-<CoordinateFrame name="CFrame"><X>-137.5</X><Y>32.22</Y><Z>-67.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
-<bool name="Anchored">true</bool>
-<bool name="CanCollide">false</bool>
-<token name="Material">288</token>
-<token name="shape">1</token>
-<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
-<float name="Transparency">0.0</float>
-<float name="Reflectance">0</float>
-
-</Properties>
-<Item class="PointLight" referent="RBXSTREET0634">
-<Properties>
-<string name="Name">Glow</string>
-<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
-<float name="Brightness">1.1</float>
-<float name="Range">22.0</float>
-<bool name="Shadows">true</bool>
-<bool name="Enabled">true</bool>
-</Properties>
-</Item>
-</Item>
-</Item><Item class="Model" referent="RBXSTREET0639">
-<Properties>
-<string name="Name">CeilingLight</string>
-</Properties>
-<Item class="Part" referent="RBXSTREET0638">
+<Item class="Part" referent="RBXSTREET0634">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>32.22</Y><Z>-68.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8164,7 +8114,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0637">
+<Item class="PointLight" referent="RBXSTREET0633">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8175,11 +8125,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0642">
+</Item><Item class="Model" referent="RBXSTREET0638">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0641">
+<Item class="Part" referent="RBXSTREET0637">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>32.22</Y><Z>-58.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8193,7 +8143,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0640">
+<Item class="PointLight" referent="RBXSTREET0636">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8204,11 +8154,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0645">
+</Item><Item class="Model" referent="RBXSTREET0641">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0644">
+<Item class="Part" referent="RBXSTREET0640">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>32.22</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8222,7 +8172,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0643">
+<Item class="PointLight" referent="RBXSTREET0639">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8233,11 +8183,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0648">
+</Item><Item class="Model" referent="RBXSTREET0644">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0647">
+<Item class="Part" referent="RBXSTREET0643">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>32.22</Y><Z>-37.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8251,7 +8201,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0646">
+<Item class="PointLight" referent="RBXSTREET0642">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8262,11 +8212,11 @@
 </Properties>
 </Item>
 </Item>
-</Item><Item class="Model" referent="RBXSTREET0651">
+</Item><Item class="Model" referent="RBXSTREET0647">
 <Properties>
 <string name="Name">CeilingLight</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0650">
+<Item class="Part" referent="RBXSTREET0646">
 <Properties>
 <string name="Name">Panel</string>
 <CoordinateFrame name="CFrame"><X>-130.0</X><Y>32.22</Y><Z>-28.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8280,7 +8230,7 @@
 <float name="Reflectance">0</float>
 
 </Properties>
-<Item class="PointLight" referent="RBXSTREET0649">
+<Item class="PointLight" referent="RBXSTREET0645">
 <Properties>
 <string name="Name">Glow</string>
 <Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
@@ -8293,11 +8243,11 @@
 </Item>
 </Item>
 </Item>
-<Item class="Model" referent="RBXSTREET0661">
+<Item class="Model" referent="RBXSTREET0657">
 <Properties>
 <string name="Name">PlacePoints</string>
 </Properties>
-<Item class="Part" referent="RBXSTREET0653">
+<Item class="Part" referent="RBXSTREET0649">
 <Properties>
 <string name="Name">Place_home</string>
 <CoordinateFrame name="CFrame"><X>0.0</X><Y>1.7199999999999998</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8312,7 +8262,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgQAAABob21lCgAAAFBsYWNlTGFiZWwCJQAAAHRoZSBmcm9udCBwYXRoLCBvdXRzaWRlIHlvdXIgb3duIGRvb3I=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0654">
+</Item><Item class="Part" referent="RBXSTREET0650">
 <Properties>
 <string name="Name">Place_gate</string>
 <CoordinateFrame name="CFrame"><X>-49.6</X><Y>1.7199999999999998</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8327,7 +8277,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgQAAABnYXRlCgAAAFBsYWNlTGFiZWwCHgAAAHlvdXIgZnJvbnQgZ2F0ZSwgb24gdGhlIHN0cmVldA==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0655">
+</Item><Item class="Part" referent="RBXSTREET0651">
 <Properties>
 <string name="Name">Place_crossing</string>
 <CoordinateFrame name="CFrame"><X>-58.0</X><Y>2.02</Y><Z>-2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8342,7 +8292,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAggAAABjcm9zc2luZwoAAABQbGFjZUxhYmVsAh8AAAB0aGUgY3Jvc3Npbmcgb3V0c2lkZSB5b3VyIGhvdXNl</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0656">
+</Item><Item class="Part" referent="RBXSTREET0652">
 <Properties>
 <string name="Name">Place_school</string>
 <CoordinateFrame name="CFrame"><X>-105.0</X><Y>2.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8357,7 +8307,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgYAAABzY2hvb2wKAAAAUGxhY2VMYWJlbAIUAAAAdGhlIHNjaG9vbCBmb3JlY291cnQ=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0657">
+</Item><Item class="Part" referent="RBXSTREET0653">
 <Properties>
 <string name="Name">Place_classroom</string>
 <CoordinateFrame name="CFrame"><X>-141.0</X><Y>2.02</Y><Z>43.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8372,7 +8322,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgkAAABjbGFzc3Jvb20KAAAAUGxhY2VMYWJlbAILAAAAYSBjbGFzc3Jvb20=</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0658">
+</Item><Item class="Part" referent="RBXSTREET0654">
 <Properties>
 <string name="Name">Place_work</string>
 <CoordinateFrame name="CFrame"><X>-105.0</X><Y>2.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8387,7 +8337,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgQAAAB3b3JrCgAAAFBsYWNlTGFiZWwCEQAAAG91dHNpZGUgdGhlIHN0b3Jl</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0659">
+</Item><Item class="Part" referent="RBXSTREET0655">
 <Properties>
 <string name="Name">Place_store</string>
 <CoordinateFrame name="CFrame"><X>-120.0</X><Y>2.02</Y><Z>-48.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -8402,7 +8352,7 @@
 <BinaryString name="Tags">QWdlc1BsYWNlUG9pbnQ=</BinaryString><BinaryString name="AttributesSerialize">AgAAAAcAAABQbGFjZUlkAgUAAABzdG9yZQoAAABQbGFjZUxhYmVsAg4AAAB0aGUgc2hvcCBmbG9vcg==</BinaryString>
 </Properties>
 
-</Item><Item class="Part" referent="RBXSTREET0660">
+</Item><Item class="Part" referent="RBXSTREET0656">
 <Properties>
 <string name="Name">Place_office</string>
 <CoordinateFrame name="CFrame"><X>-123.0</X><Y>18.02</Y><Z>-52.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
