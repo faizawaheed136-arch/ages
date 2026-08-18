@@ -1,5 +1,46 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18 (later) — the Circle, and a fight tell that is not a progress bar
+
+Two pieces, both committed, one of them **untested in Studio**.
+
+**The Circle's towers are now the tallest things in the city, and the skyline is derived.**
+The shoulders were 8 storeys — 135.5 studs — against a 213.5 mast in the financial district
+they were supposed to dominate. The comment above `CIRCUS_STOREYS` said they stood at 150.
+Nobody typed that to deceive; it was measured once, typed as a literal, and left while the
+generator moved underneath it. That is the defect this tree produces over and over, so the
+fix is not the new number, it is that **there is no number left to rot**: `high_rise_skyline(n)`
+and `circus_skyline(n)` compute what an eye on the ground sees, and two module-scope
+assertions fail the build if the Circle stops clearing both its rival and its own shoulders
+by `CIRCUS_CLEARANCE`. Negative-tested: `(13,16,13)` fires the first, `(14,15,14)` the
+second. `(14,16,14)` ships — shortest 231.5, exactly 18.0 over the mast; tallest 263.5.
+
+**`FightService` now draws the wind-up on the body. This has never run in Studio.**
+The opponent's `intent`, `timer` and `windTotal` were already replicated and were spent
+entirely on a bar and a caption in the bottom-centre panel — nothing in the world at all. The
+fight's whole skill is reading *when*, and the three archetypes are meant to be told apart by
+their tells, so a generic bar made all three identical to look at with only a number
+differing. `Fighters.luau` asks for the opposite in its own comment.
+
+Three things in it are worth knowing before you touch it:
+
+- **`poseOf` captures the rest `C0`s once, when the body is built.** Reading "rest" per tick
+  reads back the previous frame's own write, and the arm walks off the shoulder over a few
+  seconds. Animations drive `Transform` and posing composes onto `C0`, so the two coexist —
+  `NPCService`'s `aimNeck` is the precedent.
+- **Amplitude is derived from `strikeFooting / HARDEST_STRIKE`,** so no literal anywhere says
+  how big a tell is. A brawler sweeps 107°, a scrapper 46°, and they are ~3x apart at the
+  midpoint of their wind-ups — which is the moment the player has to decide.
+- **`aimLimb` special-cases straight up.** The cross product is degenerate there; normalising
+  it returns NaN, and a NaN `CFrame` does not error, it silently deletes the limb.
+
+Verified numerically only — every pose maps to its target within 1.6e-16. **The visual result
+on a real R15 rig is unconfirmed, and the direction signs are the likely first casualty: if an
+arm winds forward instead of back, or the torso leans the wrong way, flip the sign on the
+offending component of `ARM_WOUND` / `ARM_THROWN` / `WAIST_WOUND_DEGREES` rather than
+rewriting `aimLimb`, which is the part that is proven.** The tell runs on its own loop at
+`Config.NPC.LookTickSeconds` — borrowed, not added, because `Config.luau` is B's file.
+
 ## 2026-08-18 — the south-west band, stopped on purpose
 
 **I did not build the south district, and the reason is a measurement, not a preference.**
