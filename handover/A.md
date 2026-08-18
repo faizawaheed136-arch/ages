@@ -1,6 +1,44 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-18 (latest)
+## 2026-08-18 — the south-west band, stopped on purpose
+
+**I did not build the south district, and the reason is a measurement, not a preference.**
+The plan of record was to route around `gen_town.py` with a clear-band constant in
+`world_plan.py`, the way `GATE_*`/`SOUTHGATE_*`/`NORTHGATE_*` already do. That plan is dead:
+a clear band reserves space, and the town's back row has no space to reserve. It is 15 houses
+on a 40-stud pitch, z −386..208, and **every gap in it is 6 studs**. One of them sits across
+the `AlleyWorkplaceSchool` latitude, which is the one place a crossing would have been free.
+
+Simulated against the real 1455-point graph: north-only **2.26**, north plus a leg round the
+town's south tip **2.08**, both against a 1.9 limit. One crossing at z −6 gives **1.42**. The
+south leg buys 0.18 and is not worth building — the worst point was never at the ends, it is
+in the middle, which is exactly where the wall is. Any crossing latitude from −366 to ~210
+works, so the ask is cheap: **move or drop the back-row house at z −26..8 and carry the alley
+west from x −225 to −296.1.** That house is in `gen_town.py`. Not my file, and it was still in
+flight under another agent, so it is specced and handed over rather than edited. `MAP_PLAN.md`
+section 13 has the table.
+
+**The bigger find is that check 12 would have let me cheat.** Its route graph joins any two
+points within `ROUTE_LINK` with no idea what is between them. A probe 14 studs behind the
+town's back fence scores **1.01**, because it links to `home_b6` through the living room of
+the house at z −26..8. I could have shipped a district whose connection to the town was a hop
+across six gardens, a fence and a house, and every gate would have been green. That is the
+same defect the check was written to catch, living inside the check.
+
+Do not fix it with "no edge may cross a wall" — **505 current edges cross one**, and nearly
+all are terraces where the real walk is five studs longer along the pavement. Deleting them
+all changes the shipped world by nothing (0 stranded, worst still 1.51 at `wp_bridge_2`), but
+it also does not catch the probe: a door stands 2 studs *inside* its own wall, so its own
+building must be exempt, and that exemption is what lets a line cross a house to reach the far
+door. Pushing all 468 interior points out to their nearest face fixes it properly and the
+probe goes unreachable everywhere along the wall. **That version reports the shipped city at
+1.96 against 1.9 with 5 stranded** — `apt_4_1`, `wp_works_ironyard`, `wp_works_depotyard`,
+`wp_civic_passage_0/2`. Three are named for passages and yards, and the wall boxes are AABBs
+which check 11 already documents as bigger than the slab. Probably inflation closing real
+gaps, not five real bugs — but it needs working through one at a time, so it is written up in
+`MAP_PLAN.md` section 14 and **not committed**.
+
+## 2026-08-18 (earlier) — the west estate
 
 **The west estate is built, and it found a hole in the checker that certified it.**
 Section E of `MAP_PLAN.md` was resolved as option **(c)** — industrial and low-rise sprawl

@@ -296,6 +296,87 @@ run, which is how the earlier "a model with walls" attempt died. Measuring point
 instead of bounds-to-road does not rescue it either — that reads 62 studs for the four north
 shops, which are served by a road running along the back of them.
 
+### 13. The south-west band cannot be connected without moving one town house
+
+Section E's second half — the low-rise sprawl south of the west estate — is **measured and
+not built**, because the measurement says it cannot be built honestly yet. Recording the
+numbers so nobody has to take them on faith or measure them again.
+
+The band is x -1024..-296.1, z -500..339: 728 by 839 studs. Its east neighbour is the town,
+and the town's west boundary is the back row's back gardens. That row is **unbroken**: 15
+houses, x -290.1..-246.1, on a 40-stud pitch — 34 deep with 6-stud gaps — running z -386..208.
+594 studs of wall, and the widest gap in it is 6. One house sits at z -26..8, squarely across
+the latitude of `AlleyWorkplaceSchool` (z -10..-2), which is otherwise the natural crossing.
+
+So the band's only road connections are its ends: the estate at z 339, and a loop around the
+town's south tip. Modelling a district spine at x -601 (the southward continuation of
+`EST_AVE[-1]`, derived rather than picked) with waypoints at `ROUTE_STEP`, against the real
+1455-point route graph and the real spawn:
+
+| connection | worst detour | where it lands |
+| --- | --- | --- |
+| north only, into the estate | **2.26 FAIL** | (-601, -318) — walks 1532 for 678 |
+| north + a leg round the town's south tip | **2.08 FAIL** | (-601, -56) — walks 1269 for 610 |
+| north + one crossing of the back row at z -6 | **1.42 PASS** | (-601, -450) — walks 1056 for 745 |
+
+Two things fall straight out of that table. **The south leg is worthless** — it moves the
+worst point from the district's south end to its *middle* and buys 0.18, because the failure
+was never at the ends. And **one mid-latitude crossing is both necessary and sufficient**,
+with 0.48 of headroom at the alley's own centreline.
+
+The crossing has room to move: swept against `MAX_DETOUR`, any latitude from **z -365.6 to
+between 200 and 240** passes. That is ~575 studs of freedom, so this is a cheap ask and not a
+knife-edge one. The best of them is the alley's, both because it is near the spawn's own
+latitude and because the town already has a road there — continuing `AlleyWorkplaceSchool`
+west from the return road's west kerb (x -225) to the town's west edge (x -296.1) adds no new
+junction. It costs exactly one house: the one at z -26..8.
+
+**That house is in `gen_town.py`, which is not this lane's file.** The plan of record was to
+route around the problem with a clear-band constant in `world_plan.py`, the way `GATE_*`,
+`SOUTHGATE_*` and `NORTHGATE_*` already do. The measurement kills that plan: a clear band
+reserves space, it does not remove a house, and the row has no gap to reserve. So the district
+is specced and stopped rather than built, and the ask is one line — *move or drop the back-row
+house at z -26..8 and carry the alley west* — for whoever owns that file.
+
+### 14. Check 12 links straight through buildings — found, not yet fixed
+
+Falling out of the above, and worth more than the district was. Check 12 builds its route
+graph by joining any two place points within `ROUTE_LINK`. It has no notion of anything
+standing between them. A probe point 14 studs west of the town's back fence, at the spawn's
+own latitude, scores **1.01** — because it links to `home_b6` at (-248.1, -9), and that line
+runs through the living room of the house at z -26..8.
+
+So the check would have passed a west district whose "connection" to the town was a hop across
+six back gardens, a fence and a house. That is this tree's signature defect — *a gate that is
+green because it is not looking at the thing* — sitting inside the gate that was written to
+catch the last one.
+
+Measuring how bad it is: **505 of the current route graph's edges cross a ground-floor wall**
+belonging to neither endpoint. Almost all are benign — `cafe -- pizzeria` clips the terrace
+neighbour's wall where the real walk along the pavement is five studs longer. A raw
+"no edge crosses a wall" assertion would report hundreds of correct things on its first run,
+which is exactly how check 11's "a model with walls" attempt died. Deleting those edges and
+re-running changes the shipped world **not at all**: 0 unreachable, worst detour still 1.51 at
+`wp_bridge_2`, same top five. The pavement waypoints already carry every route; the
+wall-crossing edges are pure redundant shortcut.
+
+But deleting them does *not* catch the probe, and the reason is the interesting part. A door
+point stands 2 studs *inside* its own front wall (the -2.0 convention behind `DOOR_SLACK`), so
+the endpoint's own building has to be exempt or every door edge is blocked — and that exemption
+is what lets a line cross the whole house to reach a door on the far side. Pushing each door
+out to its building's nearest face removes the need for any exemption: 468 of 1455 points stand
+inside a building, and with them pushed out the probe is correctly **unreachable at every
+latitude along the wall**.
+
+That version is not free, and that is why it is not committed. It reports the shipped city at
+**1.96 against a limit of 1.9**, with 5 points stranded: `apt_4_1`, `wp_works_ironyard`,
+`wp_works_depotyard`, `wp_civic_passage_0` and `wp_civic_passage_2`. Three of those five are
+named for passages and yards — gaps between buildings — and the wall boxes are AABBs, which
+check 11's own comment already records as *bigger* than the slab they came from. So the
+strong suspicion is AABB inflation closing gaps that are really open, not five real defects.
+Five nameable candidates is a tractable problem, unlike 505; it just needs to be worked
+through one at a time before the check can be turned on.
+
 ## Owed, in the order I would do it
 
 ### A. Shops — the *function* half, which is a spec question, not a build one
@@ -897,6 +978,11 @@ half a 2048x2048 baseplate. The bay strip at x 793..1024 is *not* empty; that is
 and sports park, and an earlier survey got this wrong.
 
 Owner wants: industrial, docks, and low-rise sprawl, plus downtown densified.
+
+Resolved as option (c): industrial and low-rise sprawl west, docks east on the bay. The north
+half of the west band is **built** — see 11. The south half is **measured and stopped**: it
+cannot reach the detour gate without a crossing through the town's back row, which is another
+lane's file. See 13 for the numbers and the one-line ask.
 
 Sequencing note that is easy to get wrong: **downtown infill should come after the grid is
 final**, because block interiors changed once already and anything placed into them before
