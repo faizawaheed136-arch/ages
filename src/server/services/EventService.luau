@@ -232,6 +232,14 @@ local function isEligible(data: LifeData, event: LifeEvent, ageYears: number): b
 	if not Flags.Meets(data.flags, event.requires, event.forbids) then
 		return false
 	end
+	-- Cooldown is a delivery-rate limiter, not a one-time block. A missed call
+	-- should come back; the timer tracks "don't send another of these too soon."
+	if event.cooldown ~= nil and event.cooldown > 0 then
+		local started = data.cooldownTimers[event.id]
+		if started ~= nil and os.clock() < started then
+			return false
+		end
+	end
 	return not data.seenEventIds[event.id] or event.repeatable == true
 end
 
@@ -494,6 +502,13 @@ function EventService.OfferForAge(player: Player, ageYears: number)
 	-- An unanswered prompt still stands. Stacking a second one on top would let
 	-- the first quietly disappear along with the choice it was asking for.
 	if data.pendingEventId ~= nil then
+		return
+	end
+
+	-- 70/30 ratio: a chapter should be mostly world-spawned. An Immediate event
+	-- counts as modal, so refuse it if the world has not earned its share yet.
+	-- With MaxPerChapter=3 this means at most one modal event per chapter.
+	if data.worldEventsThisChapter * 10 < data.modalEventsThisChapter * 3 then
 		return
 	end
 

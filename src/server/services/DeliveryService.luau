@@ -498,12 +498,14 @@ function DeliveryService.Describe(player: Player): string
 
 	local remaining = math.max(0, data.deliveryCountdown)
 	return string.format(
-		"%s | profile says %s | next in %.0fs | %d/%d this year | ambient %s",
+		"%s | profile says %s | next in %.0fs | %d/%d this year | %d world / %d modal this chapter | ambient %s",
 		placed,
 		data.deliveringEventId or "nothing",
 		remaining,
 		data.deliveriesThisYear,
 		Config.Ambient.MaxPerYear,
+		data.worldEventsThisChapter,
+		data.modalEventsThisChapter,
 		if enabled then "on" else "off"
 	)
 end

@@ -13,8 +13,7 @@ while opening another — a shark deal writes `loan_shark_deal`, counselling wri
 The career events gate on the first job a life ever holds and ask whether the
 life goes deeper or wider: shop to office, office to trades, bakery front or
 back, trades lead or stay on the tools, deliberate retirement while still able.
-Both files are untracked; they need committing alongside the rest of this lane's
-work.
+Both files committed in `68c3064` alongside the rest of this lane's work.
 
 **Three gate bugs fixed this session:**
 - `PeopleService.luau:507` — `recordInteraction` was a bare `function` (global)
