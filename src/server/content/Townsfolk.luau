@@ -2113,6 +2113,31 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp, and the only way back is through it. This row is gated on
+				-- the rival tie specifically so it does not appear for somebody you have
+				-- merely slighted -- only when the rivalry is already set in stone.
+				id = "repair_rival",
+				label = "Tell them you owe them an apology",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 10,
+				ask = true,
+				needsTie = "rival",
+				lines = {
+					"You were right. I was wrong. I shouldn't have done that.",
+					"I've been thinking about it. I crossed a line and I'm sorry.",
+					"This doesn't have to be how it is. I want to fix it.",
+				},
+				refusedLines = {
+					"Sorry doesn't undo it. Show me you mean it.",
+					"You think words fix this? They don't.",
+					"Save it. I'm not ready to hear it.",
+				},
+			},
+			{
 				-- A sibling is chosen, not given. Offered at the very top of the ladder
 				-- when the bond is past closest and the player is old enough to mean it.
 				-- The tie is the last rung in this archetype: after this there is nothing
@@ -2617,6 +2642,31 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp, and the only way back is through it. This row is gated on
+				-- the rival tie specifically so it does not appear for somebody you have
+				-- merely slighted -- only when the rivalry is already set in stone.
+				id = "repair_rival",
+				label = "Tell them you owe them an apology",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 10,
+				ask = true,
+				needsTie = "rival",
+				lines = {
+					"You were right. I was wrong. I shouldn't have done that.",
+					"I've been thinking about it. I crossed a line and I'm sorry.",
+					"This doesn't have to be how it is. I want to fix it.",
+				},
+				refusedLines = {
+					"Sorry doesn't undo it. Show me you mean it.",
+					"You think words fix this? They don't.",
+					"Save it. I'm not ready to hear it.",
+				},
+			},
+			{
 				-- A sibling is chosen, not given. Offered at the very top of the ladder
 				-- when the bond is past closest and the player is old enough to mean it.
 				-- The tie is the last rung in this archetype: after this there is nothing
@@ -2836,6 +2886,31 @@ local ARCHETYPES: { Archetype } = {
 					"Fine. You want it this way? I'm not letting you forget it.",
 					"You think you're better than me? Prove it. Every time.",
 					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp, and the only way back is through it. This row is gated on
+				-- the rival tie specifically so it does not appear for somebody you have
+				-- merely slighted -- only when the rivalry is already set in stone.
+				id = "repair_rival",
+				label = "Tell them you owe them an apology",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 10,
+				ask = true,
+				needsTie = "rival",
+				lines = {
+					"You were right. I was wrong. I shouldn't have done that.",
+					"I've been thinking about it. I crossed a line and I'm sorry.",
+					"This doesn't have to be how it is. I want to fix it.",
+				},
+				refusedLines = {
+					"Sorry doesn't undo it. Show me you mean it.",
+					"You think words fix this? They don't.",
+					"Save it. I'm not ready to hear it.",
 				},
 			},
 			{
@@ -3073,6 +3148,31 @@ local ARCHETYPES: { Archetype } = {
 					"Fine. You want it this way? I'm not letting you forget it.",
 					"You think you're better than me? Prove it. Every time.",
 					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp, and the only way back is through it. This row is gated on
+				-- the rival tie specifically so it does not appear for somebody you have
+				-- merely slighted -- only when the rivalry is already set in stone.
+				id = "repair_rival",
+				label = "Tell them you owe them an apology",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 10,
+				ask = true,
+				needsTie = "rival",
+				lines = {
+					"You were right. I was wrong. I shouldn't have done that.",
+					"I've been thinking about it. I crossed a line and I'm sorry.",
+					"This doesn't have to be how it is. I want to fix it.",
+				},
+				refusedLines = {
+					"Sorry doesn't undo it. Show me you mean it.",
+					"You think words fix this? They don't.",
+					"Save it. I'm not ready to hear it.",
 				},
 			},
 			{
@@ -3435,6 +3535,31 @@ local ARCHETYPES: { Archetype } = {
 					"Fine. You want it this way? I'm not letting you forget it.",
 					"You think you're better than me? Prove it. Every time.",
 					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp, and the only way back is through it. This row is gated on
+				-- the rival tie specifically so it does not appear for somebody you have
+				-- merely slighted -- only when the rivalry is already set in stone.
+				id = "repair_rival",
+				label = "Tell them you owe them an apology",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 10,
+				ask = true,
+				needsTie = "rival",
+				lines = {
+					"You were right. I was wrong. I shouldn't have done that.",
+					"I've been thinking about it. I crossed a line and I'm sorry.",
+					"This doesn't have to be how it is. I want to fix it.",
+				},
+				refusedLines = {
+					"Sorry doesn't undo it. Show me you mean it.",
+					"You think words fix this? They don't.",
+					"Save it. I'm not ready to hear it.",
 				},
 			},
 			{

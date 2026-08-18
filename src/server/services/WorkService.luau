@@ -21,6 +21,7 @@
 -- persisted state is the year's hour count, and it only ever goes up.
 
 local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
@@ -169,6 +170,28 @@ type ActiveTask = {
 	-- them: every path out of a task has to send them off, including the ones that are
 	-- not about the task at all -- a shift ending, a life ending, a player leaving.
 	customer: Customer?,
+	-- Fetch-and-bag state. Nil for every task except the corner shop's signature
+	-- rhythm, where the customer names items and the player runs the aisles to
+	-- collect them, bags at the counter, and hands over.
+	fetchBag: {
+		-- Which items the customer wants, in order. Each entry is the name of an
+		-- item and the shelf zone it lives on: "bread" on "shelf_food", "milk" on
+		-- "shelf_chilled". Resolved once at issue time from the item pool.
+		order: { { name: string, zone: string } },
+		-- Which positions in `order` have already been collected. Mirrors `order`
+		-- by index so the reaching logic can check one boolean per item.
+		collected: { boolean },
+			-- How many items the player can carry in their basket at once. Grows with
+		-- standing and controls how many shelf visits happen before a counter stop.
+		basketSize: number,
+		-- How many items are currently in the basket, from 0 up to basketSize.
+		basketCount: number,
+		-- Patience runs in parallel with the task clock. When it hits zero the
+		-- customer is still there but the tip scales down to zero; if the task
+		-- clock expires first the customer leaves with whatever has been collected.
+		patienceLeft: number,
+		patienceTotal: number,
+	}?,
 }
 
 local shifts: { [Player]: Shift } = {}
@@ -334,6 +357,48 @@ if Config.Work.Customers.StandOffStuds <= Config.Work.Tasks.ReachStuds then
 			.. `on the mark the player is being sent to and gets walked into rather than served`
 	)
 end
+
+-- Shop geometry. Read once from tagged parts and cached so every fetch-and-bag
+-- task resolves its spots from the same positions. The tags are the contract
+-- with the world generator -- the service does not know part names, only tags
+-- and the zone attribute that each tagged part carries.
+local ShopGeometry = {}
+local shelfSpots: { [string]: Vector3 } = {}
+local counterSpot: Vector3? = nil
+local queueSpot: Vector3? = nil
+
+local function initShopGeometry()
+	local shop = Config.Shop
+	local attr = shop.ShopZoneAttribute
+
+	local counterParts = CollectionService:GetTagged(shop.CounterTag)
+	if #counterParts > 0 then
+		counterSpot = counterParts[math.random(#counterParts)].Position
+	end
+
+	local shelfParts = CollectionService:GetTagged(shop.ShelfTag)
+	for _, part in shelfParts do
+		local zone = part:GetAttribute(attr)
+		if zone ~= nil and shelfSpots[zone] == nil then
+			shelfSpots[zone] = part.Position
+		end
+	end
+
+	local queueParts = CollectionService:GetTagged(shop.QueueTag)
+	if #queueParts > 0 then
+		queueSpot = queueParts[math.random(#queueParts)].Position
+	end
+end
+
+function ShopGeometry.counter()
+	return counterSpot
+end
+
+function ShopGeometry.shelf(zone: string): Vector3?
+	return shelfSpots[zone]
+end
+
+initShopGeometry()
 
 -- Who a job's reference is, by the name they are known by rather than by their id.
 -- Falls back to the id, which is a poor name and a much better one than a blank space
@@ -979,6 +1044,25 @@ end
 -- does not need to tell those apart, because in neither case is there anything to be
 -- doing.
 local function taskStateFor(task: ActiveTask, paused: boolean): TaskState
+	local fetchBagState: {
+		order: { { name: string, zone: string } },
+		collected: number,
+		basketCount: number,
+		basketSize: number,
+		patienceLeft: number,
+		patienceTotal: number,
+	}? = nil
+	if task.fetchBag ~= nil then
+		local fb = task.fetchBag
+		fetchBagState = {
+			order = fb.order,
+			collected = fb.basketCount,
+			basketCount = fb.basketCount,
+			basketSize = fb.basketSize,
+			patienceLeft = math.max(fb.patienceLeft, 0),
+			patienceTotal = fb.patienceTotal,
+		}
+	end
 	return {
 		id = task.id,
 		label = task.label,
@@ -1002,6 +1086,7 @@ local function taskStateFor(task: ActiveTask, paused: boolean): TaskState
 		paused = paused,
 		missed = task.expired,
 		rush = task.rush ~= nil,
+		fetchBag = fetchBagState,
 	}
 end
 
@@ -1624,6 +1709,80 @@ local function issueTask(player: Player, shift: Shift, only: string?)
 			end
 		end
 
+		-- Fetch-and-bag tasks skip the ordinary mark resolution. Their spots come
+		-- from tagged shop geometry instead, and the task carries its own state
+		-- for order, basket, and patience. If the geometry is not in place the
+		-- task is passed over like any other failed placement -- the shift simply
+		-- asks for a different task next gap.
+		if chosen.fetchBag ~= nil then
+			local fbConf = Config.Shop.FetchBag
+			local order: { { name: string, zone: string } } = {}
+			local itemCount = math.random(fbConf.MinItems, fbConf.MaxItems)
+			for _ = 1, itemCount do
+				local itemName = fbConf.Items[math.random(#fbConf.Items)]
+				local zone = if math.random(2) == 1 then "shelf_food" else "shelf_chilled"
+				table.insert(order, { name = itemName, zone = zone })
+			end
+
+			local basketSize = fbConf.BaseBasketSize
+			local shelfPositions: { Vector3 } = {}
+			for _, item in order do
+				local spot = ShopGeometry.shelf(item.zone)
+				if spot == nil then
+					shelfPositions = nil
+					break
+				end
+				table.insert(shelfPositions, spot)
+			end
+
+			if shelfPositions == nil or ShopGeometry.counter() == nil then
+				continue
+			end
+
+			-- Interleave shelf spots with counter stops so the player returns to
+			-- the till whenever the basket fills. The last stop is always a counter
+			-- stop, because that is where the order is handed over.
+			local fbSpots: { Vector3 } = {}
+			for i, shelfSpot in shelfPositions do
+				table.insert(fbSpots, shelfSpot)
+				if i % basketSize == 0 or i == #shelfPositions then
+					table.insert(fbSpots, ShopGeometry.counter() :: Vector3)
+				end
+			end
+
+			local patienceTotal = fbConf.PatienceSeconds
+			local collected = table.create(#order, false)
+			for i = 1, #order do
+				collected[i] = false
+			end
+
+			shift.tasksUsed[chosen.id] = true
+			shift.tasksIssued += 1
+			table.insert(shift.tasks, {
+				id = chosen.id,
+				label = chosen.label,
+				mark = "Get it",
+				handMark = "Bag it",
+				spots = fbSpots,
+				at = 1,
+				rush = false,
+				secondsLeft = seconds,
+				secondsTotal = seconds,
+				expired = false,
+				expiredFor = 0,
+				customer = customer,
+				fetchBag = {
+					order = order,
+					collected = collected,
+					basketSize = basketSize,
+					basketCount = 0,
+					patienceLeft = patienceTotal,
+					patienceTotal = patienceTotal,
+				},
+			})
+			return
+		end
+
 		shift.tasksUsed[chosen.id] = true
 		shift.tasksIssued += 1
 		-- Appended, never inserted at the front. The HUD reads the list top-down, so the
@@ -1689,6 +1848,26 @@ local function completeTask(player: Player, data: LifeData, shift: Shift, job: J
 	-- rateFor already carries the raise their standing earned them.
 	local tasks = Config.Work.Tasks
 	local tip = math.floor(rateFor(data, job) * tasks.TipShareOfHour)
+
+	-- Fetch-and-bag tips scale with patience. A customer who waited the full
+	-- time tips normally; a customer who stormed off with a half-empty bag
+	-- still leaves something, but the amount drops toward the floor as patience
+	-- runs out. The task clock and the patience clock run in parallel, so the
+	-- fraction is just the ratio of patience remaining to patience total.
+	if task.fetchBag ~= nil then
+		local fbConf = Config.Shop.FetchBag
+		local patienceFraction = task.fetchBag.patienceLeft / task.fetchBag.patienceTotal
+		-- Linear ramp: at full patience the fraction is 1, at half it is the
+		-- configured floor, at zero it is the same floor. The floor prevents a
+		-- total tip wipe-out while still making impatience costly.
+		local floor = fbConf.TipFloorAtHalfPatience
+		if patienceFraction > 0.5 then
+			tip = math.floor(tip * (2.0 - patienceFraction * 2.0))
+		else
+			tip = math.floor(tip * floor)
+		end
+		tip = math.max(tip, 0)
+	end
 
 	-- Held under a ceiling for the shift, because nothing else bounds them: a task
 	-- ends on contact, so tips scale with how fast a player can walk between marks
@@ -1791,6 +1970,16 @@ local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job,
 		if task.secondsLeft <= 0 then
 			failTask(task)
 		end
+		-- Fetch-and-bag patience runs in parallel with the task clock. It does
+		-- not cause a miss on its own -- the task clock still decides that --
+		-- but it scales the tip downward as it empties, so the customer's
+		-- mood is visible even when the player finishes in time.
+		if task.fetchBag ~= nil then
+			task.fetchBag.patienceLeft -= elapsed
+			if task.fetchBag.patienceLeft < 0 then
+				task.fetchBag.patienceLeft = 0
+			end
+		end
 	end
 
 	-- 3. Feet. A player can only be standing on one mark, and issueTask keeps every
@@ -1807,7 +1996,47 @@ local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job,
 				continue
 			end
 
-			if task.at < #task.spots then
+			if task.fetchBag ~= nil then
+				-- Fetch-and-bag state machine. The spots list alternates between
+				-- shelf stops and counter stops; reaching a shelf collects the next
+				-- uncollected item (if the basket has room), reaching a counter bags
+				-- whatever is in the basket and serves the customer.
+				local fb = task.fetchBag
+				local isShelfSpot = task.at % 2 == 1
+				local isLastSpot = task.at == #task.spots
+
+				if isShelfSpot then
+					-- Look for the next uncollected item. If the basket is full the
+					-- player should have gone to the counter instead, but if they
+					-- skipped a stop we let them collect anyway rather than stranding
+					-- the item forever.
+					if fb.basketCount < fb.basketSize then
+						for i, done in fb.collected do
+							if not done then
+								fb.collected[i] = true
+								fb.basketCount += 1
+								break
+							end
+						end
+					end
+				else
+					-- Counter stop. Bag whatever is in the basket and serve the
+					-- customer. If the basket is empty the player is early -- let
+					-- them walk back to the shelf.
+					if fb.basketCount > 0 then
+						fb.basketCount = 0
+						if task.customer ~= nil then
+							task.customer.serve()
+						end
+					end
+				end
+
+				if isLastSpot then
+					completeTask(player, data, shift, job, index)
+				else
+					task.at += 1
+				end
+			elseif task.at < #task.spots then
 				-- Reaching the counter on a rush, with more of it still to come. One person
 				-- served, the line steps up, and the clock keeps running -- the only place in
 				-- this game where finishing something is not the end of the task.

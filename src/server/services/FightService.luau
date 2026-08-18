@@ -298,6 +298,187 @@ local function setFloored(humanoid: Humanoid?, floored: boolean)
 end
 
 -- -------------------------------------------------------------------
+-- The tell, on the body.
+--
+-- Everything above this line was already replicated to the client and drawn as a bar in
+-- the bottom-centre panel. That bar is a good bar and it stays. The problem it cannot
+-- solve is that **the opponent was visually inert**: the whole skill of a fight is
+-- reading *when*, and until now the only place "when" existed was a rectangle at the
+-- bottom of the screen. A player who looked at the person hitting them learned nothing,
+-- which makes this a UI game with a 3D backdrop rather than a fight.
+--
+-- It also quietly cancelled the archetypes. Fighters.luau says the brawler's build
+-- should tell you "across a street which question is about to be asked" -- but a brawler,
+-- a scrapper and a boxer all stood in the identical rest pose and differed only in how
+-- fast a bar filled. Requirement 7 of the activity law, same input different opponent,
+-- was true in the numbers and invisible in the world.
+--
+-- **Server-side, because the opponent is in workspace.Visitors and everybody can see
+-- them.** A client-side pose would leave a bystander watching two people mime a fight at
+-- a statue.
+--
+-- **Driven from `intent` and `timer`, which are the same fields the bar is drawn from**,
+-- so the body and the panel cannot drift apart. Not a second clock -- there is no new
+-- state here at all, only a reading of state that already existed.
+-- -------------------------------------------------------------------
+
+-- The hardest hit anybody in the roster throws, so a wind-up's size can be a share of it
+-- rather than a number typed per archetype. This is the whole per-fighter difference in
+-- the pose: the brawler already hits for 20 and the scrapper for 8, and drawing the
+-- rear-back at that ratio means the tell is enormous or a flick *for the reason it
+-- should be* -- because of what is about to land -- instead of because a second table
+-- said so. Add a fighter and their tell sizes itself.
+local HARDEST_STRIKE = 0
+for _, def in Fighters.All do
+	HARDEST_STRIKE = math.max(HARDEST_STRIKE, def.strikeFooting)
+end
+if HARDEST_STRIKE <= 0 then
+	error("[AGES] no fighter throws a strike worth more than zero footing, so no wind-up could be drawn")
+end
+
+-- How far the smallest hitter still leans. Without a floor the scrapper's 8-of-20 would
+-- read as barely moving at all, and "too fast to react to" is the lesson she is meant to
+-- teach -- not "invisible".
+local TELL_FLOOR = 0.45
+
+-- Where a limb points, in the upper torso's own space: -Z is forward, +Y is up, +X is the
+-- fighter's right. Written as directions rather than as Euler angles on purpose -- the
+-- rotation is then built by `aimLimb` from the arm's rest axis, so none of this depends
+-- on knowing which way R15 happens to orient a shoulder's C0. Guessing that sign is how
+-- you ship a fighter who winds up by putting his arm through his own chest.
+local ARM_REST = Vector3.new(0, -1, 0)
+local ARM_WOUND = Vector3.new(0.45, 0.30, 0.85) -- back, out and up: the cocked arm
+local ARM_THROWN = Vector3.new(0.15, -0.25, -0.95) -- through the target, still extended
+local ARM_GUARD_R = Vector3.new(0.25, 0.55, -0.80) -- hands up in front of the face
+local ARM_GUARD_L = Vector3.new(-0.25, 0.55, -0.80)
+local ARM_COVER_L = Vector3.new(-0.25, 0.45, -0.85) -- the off hand, up while the other winds
+
+-- The shoulders turn with the punch. Yaw only, so this one *is* a plain angle: rotation
+-- about Y is unambiguous in any rig.
+local WAIST_WOUND_DEGREES = 22
+local WAIST_THROWN_DEGREES = -14
+
+type Pose = {
+	rightShoulder: Motor6D,
+	leftShoulder: Motor6D,
+	waist: Motor6D?,
+	restRight: CFrame,
+	restLeft: CFrame,
+	restWaist: CFrame,
+}
+
+-- The rotation that takes a limb's rest axis onto `dir`, both in the joint's own space.
+-- Axis-and-angle rather than composed Euler terms because the question being asked is
+-- "point the arm there", and that is one rotation with one answer.
+local function aimLimb(dir: Vector3): CFrame
+	local target = dir.Unit
+	local dot = math.clamp(ARM_REST:Dot(target), -1, 1)
+	if dot > 0.9999 then
+		return CFrame.identity
+	end
+	if dot < -0.9999 then
+		-- Straight up. The cross product is degenerate here, so pick an axis rather than
+		-- normalising a zero vector -- which returns NaN and silently deletes the arm.
+		return CFrame.fromAxisAngle(Vector3.new(1, 0, 0), math.pi)
+	end
+	return CFrame.fromAxisAngle(ARM_REST:Cross(target).Unit, math.acos(dot))
+end
+
+local function poseOf(model: Model?): Pose?
+	if model == nil then
+		return nil
+	end
+	local rightArm = model:FindFirstChild("RightUpperArm")
+	local leftArm = model:FindFirstChild("LeftUpperArm")
+	local torso = model:FindFirstChild("UpperTorso")
+	if rightArm == nil or leftArm == nil then
+		return nil
+	end
+	local right = rightArm:FindFirstChild("RightShoulder") :: Motor6D?
+	local left = leftArm:FindFirstChild("LeftShoulder") :: Motor6D?
+	local waist = if torso ~= nil then torso:FindFirstChild("Waist") :: Motor6D? else nil
+	if right == nil or left == nil then
+		return nil
+	end
+	return {
+		rightShoulder = right,
+		leftShoulder = left,
+		waist = waist,
+		restRight = right.C0,
+		restLeft = left.C0,
+		restWaist = if waist ~= nil then waist.C0 else CFrame.identity,
+	}
+end
+
+-- Back to standing. Called from teardown and from going down, so a bout that ends
+-- mid-wind-up does not leave a body frozen with its arm cocked.
+local function poseRest(pose: Pose?)
+	if pose == nil then
+		return
+	end
+	pose.rightShoulder.C0 = pose.restRight
+	pose.leftShoulder.C0 = pose.restLeft
+	local waist = pose.waist
+	if waist ~= nil then
+		waist.C0 = pose.restWaist
+	end
+end
+
+local function posedTo(pose: Pose, right: Vector3, left: Vector3, waistDegrees: number)
+	pose.rightShoulder.C0 = pose.restRight * aimLimb(right)
+	pose.leftShoulder.C0 = pose.restLeft * aimLimb(left)
+	local waist = pose.waist
+	if waist ~= nil then
+		waist.C0 = pose.restWaist * CFrame.Angles(0, math.rad(waistDegrees), 0)
+	end
+end
+
+-- The one reader. `share` runs 0 at the start of whatever the opponent is doing to 1 at
+-- the end of it, and the arm's position *is* the clock -- linear, deliberately, because
+-- an eased tell is a tell that lies about how much time is left.
+local function poseFoe(bout: Bout)
+	local pose = bout.pose
+	if pose == nil then
+		return
+	end
+	if bout.phase ~= "fight" then
+		poseRest(pose)
+		return
+	end
+
+	local reach = math.max(TELL_FLOOR, bout.def.strikeFooting / HARDEST_STRIKE)
+
+	if bout.intent == "wind" then
+		local total = math.max(bout.windTotal, 1e-3)
+		local share = math.clamp(1 - bout.timer / total, 0, 1)
+		posedTo(
+			pose,
+			ARM_REST:Lerp(ARM_WOUND, share * reach),
+			ARM_REST:Lerp(ARM_COVER_L, share),
+			WAIST_WOUND_DEGREES * share * reach
+		)
+	elseif bout.intent == "recover" then
+		-- The punish window, and the reason it is drawn at all: an opponent who has just
+		-- swung and missed should *look* open. The arm returns from thrown to rest over
+		-- the recovery, so how far it has come back is how much of the window is left.
+		local total = math.max(bout.def.recoverSeconds, 1e-3)
+		local left = math.clamp(bout.timer / total, 0, 1)
+		posedTo(
+			pose,
+			ARM_THROWN:Lerp(ARM_REST, 1 - left),
+			ARM_REST,
+			WAIST_THROWN_DEGREES * left * reach
+		)
+	elseif bout.intent == "guard" then
+		posedTo(pose, ARM_GUARD_R, ARM_GUARD_L, 0)
+	else
+		-- wait and close. Hands down; the fight is not happening this instant and the
+		-- body should say so, because "nothing is coming" is a read too.
+		poseRest(pose)
+	end
+end
+
+-- -------------------------------------------------------------------
 -- Teardown. One exit, and it does not know why it is being called -- the same shape
 -- PoliceService uses for officers, and for the same reason: every way a fight can end
 -- has to leave the world in the identical state, or the one path nobody tested is the

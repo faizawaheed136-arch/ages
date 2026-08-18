@@ -1177,6 +1177,72 @@ Config.Work = {
 	HomeJobAllowed = true,
 }
 
+-- The corner shop. A place with aisles and a counter, and a job that asks you
+-- to walk them in order rather than stand at one spot and click.
+--
+-- The swap contract: the generator stamps these tags on the parts that exist in
+-- the floor plan, and the service reads by tag rather than by name. A rebuild
+-- that swaps CounterBase for a different mesh keeps working because the tag is
+-- what the service looks for, not the part's name.
+Config.Shop = {
+	-- The tagged parts the service uses to resolve fetch-and-bag geometry.
+	-- Each is a CollectionService tag; the attribute on the part says which zone
+	-- it is, so one tag covers every instance across every shop in the game.
+	CounterTag = "AgesShopCounter",
+	ShelfTag = "AgesShopShelf",
+	CrateTag = "AgesShopCrate",
+	ChillerTag = "AgesShopChiller",
+	QueueTag = "AgesShopQueue",
+
+	-- The attribute name read off every tagged part to learn which zone it is.
+	-- Values are "counter", "shelf_food", "shelf_chilled", "crate", "queue".
+	ShopZoneAttribute = "ShopZone",
+
+	-- Fetch-and-bag tuning. The corner shop's signature rhythm.
+	FetchBag = {
+		-- How many items a customer orders, per task. Randomised between these
+		-- bounds so a shift is not a metronome of identical lengths.
+		MinItems = 2,
+		MaxItems = 4,
+		-- How many items the player can carry in their basket at once. Starts at
+		-- one and grows with standing, but the config sets the baseline.
+		BaseBasketSize = 1,
+		-- How long the customer's patience bar runs, in real seconds. A full order
+		-- should be doable in well under this; the bar is a pressure dial, not a
+		-- soft lock.
+		PatienceSeconds = 45,
+		-- How much of the base tip survives when patience is half spent. At 0.5
+		-- a patient customer tips normally and an impatient one still leaves
+		-- something on the counter rather than nothing at all.
+		TipFloorAtHalfPatience = 0.5,
+		-- What the customer might ask for. Each entry is a grocery name that the
+		-- order resolver picks from at random. Kept short so every name reads as
+		-- something a person would actually say at a till.
+		Items = {
+			"bread",
+			"milk",
+			"eggs",
+			"butter",
+			"cheese",
+			"apples",
+			"bananas",
+			"cereal",
+			"coffee",
+			"tea",
+			"sugar",
+			"flour",
+			"rice",
+			"pasta",
+			"soup",
+			"sandwich",
+			"chips",
+			"yogurt",
+			"carrots",
+			"oranges",
+		},
+	},
+}
+
 -- Being hired, as opposed to working. Two different things that used to be one:
 -- standing near the counter used to hire you and clock you on in the same silent
 -- motion, so the moment a life gains its first job passed without being a moment at
@@ -1282,6 +1348,27 @@ Config.Bills = {
 	-- exists so the number never becomes abstract.
 	-- Safe range: 2000-10000.
 	MaxDebt = 5000,
+}
+
+-- A place to park money so it earns interest rather than sitting idle.
+-- The inverse of bills: debt compounds against you, savings compound for you.
+-- The gap between the two rates is what makes a life that saves feel the relief
+-- of compound growth, and what makes a life that defaults feel the squeeze of
+-- both sides of the same formula.
+Config.Savings = {
+	-- Maximum balance a life can hold. Above this extra deposits go to money,
+	-- so the cap only applies to the savings account itself and never to the
+	-- total a life carries. Small enough that most lives never hit it; large
+	-- enough that a saver who stays on track has a real difference over time.
+	-- Safe range: 5000-20000.
+	MaxBalance = 10000,
+	-- Monthly interest paid on the savings balance. Compounded: interest
+	-- earned each month is added to the balance and earns interest itself the
+	-- following month. The rate is deliberately lower than debt interest so the
+	-- gap punishes default while rewarding caution, not so that saving beats
+	-- working.
+	-- Safe range: 0.005-0.02.
+	InterestRate = 0.01,
 }
 
 --

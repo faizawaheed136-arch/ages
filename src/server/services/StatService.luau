@@ -89,6 +89,25 @@ function StatService.ApplyYearlyDecay(player: Player, ageYears: number)
 		stats.happiness = clamp(stats.happiness - Config.Health.SickHappinessPerYear)
 	end
 
+	-- Debt is the one thing in the game that compounds against the player. The
+	-- flag was set by BillService the moment the balance went negative, and it
+	-- stays until the next birthday clears it — so a life that skips years
+	-- pays the drain for each skipped year the same way it pays each skipped
+	-- bill. Read the flag directly; StatService owns the drain and nothing
+	-- else writes it.
+	if data.flags["in_debt"] ~= nil then
+		local debt = data.bills.debt
+		if debt > 0 then
+			-- Happiness drops proportionally to how deep in the red the life is,
+			-- capped so a maxed-out debt does not tank the bar in a single year.
+			-- Health drops a smaller flat amount: the body does not care about
+			-- status, only about the stress that keeps it up at night.
+			local stress = math.min(debt / Config.Bills.MaxDebt, 1)
+			stats.happiness = clamp(stats.happiness - math.floor(4 * stress))
+			stats.health = clamp(stats.health - 2)
+		end
+	end
+
 	pushStats(player, stats)
 end
 

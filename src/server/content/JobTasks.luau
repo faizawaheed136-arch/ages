@@ -179,6 +179,7 @@ local SOURCE: { [string]: { JobTask } } = {
 			spots = 2,
 			seconds = 18,
 			customer = "I'll need a bag for those, please.",
+			fetchBag = true,
 		},
 		{
 			id = "bag",

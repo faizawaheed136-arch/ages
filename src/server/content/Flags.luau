@@ -136,6 +136,26 @@ local SOURCE: { FlagDef } = {
 		id = "career_retired",
 		meaning = "Left the workforce deliberately, not because something pushed you out",
 	},
+
+	-- The park. Set by choices that make the park a regular part of a life, so
+	-- later events can treat it as a place the life already knows rather than
+	-- somewhere they are visiting for the first time.
+	{
+		id = "park_regular",
+		meaning = "Visits the park often enough that it is a real place in their life",
+	},
+	{
+		id = "park_first_swings",
+		meaning = "Went on the swings as a small child and liked it",
+	},
+	{
+		id = "park_confession",
+		meaning = "Had an important conversation at the park that changed something",
+	},
+	{
+		id = "park_gang_untouched",
+		meaning = "Was near the west gang at the park and walked away clean",
+	},
 }
 
 local byId: { [string]: FlagDef } = {}

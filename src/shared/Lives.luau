@@ -155,6 +155,11 @@ function Lives.New(): LifeData
 			lastBillMonth = 0,
 			shiftsCompleted = 0,
 		},
+		-- No savings at life start. Interest compounds monthly alongside bills
+		-- so a saver and a defaulter feel the gap from the very first month.
+		savings = {
+			balance = 0,
+		},
 		-- No XP earned yet this life. Reset on death like money.
 		workXp = 0,
 		-- No milestones achieved, no bond milestones fired.

@@ -26,10 +26,12 @@ local SOURCES: { { LifeEvent } } = {
 	require(script.Teen),
 	require(script.Adult),
 	require(script.Gym),
+	require(script.Park),
 	require(script.Ambient),
 	require(script.Work),
 	require(script.Debt),
 	require(script.CareerBranch),
+	require(script.Ties),
 }
 
 -- One option is not a choice.

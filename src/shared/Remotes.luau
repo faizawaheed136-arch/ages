@@ -237,6 +237,9 @@ export type RemoteName =
 	-- "I want to sell this suburb house." Carries the house id string. The
 	-- server clears any linked home job first, then refunds the resale value.
 	| "RequestSellHouse"
+	-- "I want to link this job to my house." Carries the house id and the job id.
+	-- The server checks ownership and that the job's placeId matches the house.
+	| "RequestSetHomeJob"
 	-- The dealership queue in progress, pushed as a whole snapshot: how many
 	-- are waiting, who is at the front, and where the counter is. Its own remote
 	-- rather than a field on ShiftUpdated because the queue is independent of
@@ -260,6 +263,12 @@ export type RemoteName =
 	| "RequestFightSquare"
 	-- Monthly bill update. Pushed whenever a bill is charged or debt changes.
 	| "BillDue"
+	-- Savings account state, pushed on every balance change and on join.
+	| "SavingsUpdated"
+	-- "Put this amount into my savings account." Carries a positive number.
+	| "RequestDeposit"
+	-- "Take this amount out of my savings account." Carries a positive number.
+	| "RequestWithdraw"
 	-- A milestone was achieved this life. Carries milestone id, label, and bonus.
 	| "MilestoneAchieved"
 	-- A bond milestone was crossed with a specific person. Carries person name and milestone.
@@ -489,12 +498,16 @@ local REMOTE_NAMES: { RemoteName } = {
 	"HouseUpdated",
 	"RequestBuyHouse",
 	"RequestSellHouse",
+	"RequestSetHomeJob",
 	"CarDealerUpdated",
 	"RequestCarDealerServe",
 	"FightUpdated",
 	"RequestFightAction",
 	"RequestFightSquare",
 	"BillDue",
+	"SavingsUpdated",
+	"RequestDeposit",
+	"RequestWithdraw",
 	"MilestoneAchieved",
 	"BondMilestone",
 	"GossipUpdate",

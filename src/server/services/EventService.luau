@@ -136,6 +136,16 @@ function EventService.OnAnswered(handler: AnsweredHandler)
 	table.insert(answeredHandlers, handler)
 end
 
+-- PeopleService injects this at Start. It returns the tie-context tags for a
+-- player as an iterator over strings, so EventService can build the full context
+-- set without requiring PeopleService back and stalling on the cycle.
+type TieContextBuilder = (player: Player) -> { string }
+local tieContextBuilder: TieContextBuilder? = nil
+
+function EventService.SetTieContextBuilder(handler: TieContextBuilder)
+	tieContextBuilder = handler
+end
+
 -- Puts the thing the event is about in the room, if it is about anything and if
 -- there is anywhere to put it, and reports where it will come to rest.
 --
@@ -274,6 +284,16 @@ function EventService.getContextTags(player: Player): { [string]: boolean }
 			local distance = (playerPos - posInfo.position).Magnitude
 			if distance <= radius then
 				add("npc:" .. posInfo.id)
+			end
+		end
+
+		-- Tie-context tags: when the player is near somebody they have a rival,
+		-- mentor, or sibling tie with, the picker can prefer events keyed to that
+		-- relationship. Set by PeopleService at Start to keep the dependency
+		-- one-way: PeopleService already requires EventService at the top level.
+		if tieContextBuilder ~= nil then
+			for _, tag in tieContextBuilder(player) do
+				add(tag)
 			end
 		end
 	end

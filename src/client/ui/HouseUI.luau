@@ -45,6 +45,7 @@ export type HouseUIHandle = typeof(setmetatable(
 		noticeLabel: TextLabel,
 		onBuyHouse: ((houseId: string) -> ())?,
 		onSellHouse: ((houseId: string) -> ())?,
+		onSetHomeJob: ((houseId: string) -> ())?,
 	},
 	HouseUI
 ))
@@ -187,6 +188,10 @@ function HouseUI.OnSellHouse(self: HouseUIHandle, handler: (houseId: string) -> 
 	self.onSellHouse = handler
 end
 
+function HouseUI.OnSetHomeJob(self: HouseUIHandle, handler: (houseId: string) -> ())
+	self.onSetHomeJob = handler
+end
+
 function HouseUI.Set(self: HouseUIHandle, state: HouseState?)
 	if state == nil then
 		self.panel.Visible = false
@@ -273,9 +278,34 @@ function HouseUI.Set(self: HouseUIHandle, state: HouseState?)
 				end
 			end)
 
-			-- No LINK button: home-job linking requires a job picker UI that
-			-- does not exist yet. The row still shows the linked job when one
-			-- is present; when it is absent the button is simply omitted.
+			-- LINK button: appears when no job is attached, lets the player
+			-- bind a work-from-home job to this house. The server validates
+			-- that the job's placeId actually points at this house.
+			if jobId == nil or jobId == "" then
+				local linkBtn = Instance.new("TextButton")
+				linkBtn.Name = "Link"
+				linkBtn.Size = UDim2.new(0, 80, 1, 0)
+				linkBtn.Position = UDim2.new(1, -80, 0, 0)
+				linkBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
+				linkBtn.BorderSizePixel = 0
+				linkBtn.AutoButtonColor = false
+				linkBtn.Font = Enum.Font.GothamBold
+				linkBtn.TextSize = 11
+				linkBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+				linkBtn.Text = "LINK"
+				linkBtn.Parent = row
+
+				local linkCorner = Instance.new("UICorner")
+				linkCorner.CornerRadius = UDim.new(0, 5)
+				linkCorner.Parent = linkBtn
+
+				linkBtn.MouseButton1Click:Connect(function()
+					local handler = self.onSetHomeJob
+					if handler ~= nil then
+						handler(houseId)
+					end
+				end)
+			end
 		end
 	else
 		self.ownedSection.Text = "OWNED"

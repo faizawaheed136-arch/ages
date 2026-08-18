@@ -106,6 +106,11 @@ local ROSTER_AVAILABLE_COLOR = Color3.fromRGB(90, 200, 120)
 local ROSTER_USED_COLOR = Color3.fromRGB(120, 118, 128)
 local ROSTER_MAX_HEIGHT = 180
 local ROSTER_ROW_HEIGHT = 26
+-- Tie badges: a small colored square on the right edge of a roster row signals a
+-- structural relationship beyond the bond ladder. Three colors, one per capped tie.
+local TIE_MENTOR_COLOR = Color3.fromRGB(235, 190, 90)
+local TIE_RIVAL_COLOR = Color3.fromRGB(220, 100, 80)
+local TIE_SIBLING_COLOR = Color3.fromRGB(220, 140, 160)
 
 local StatsUI = {}
 StatsUI.__index = StatsUI
@@ -185,6 +190,8 @@ export type StatsUIHandle = typeof(setmetatable(
 		dealerLabel: TextLabel,
 		billRow: Frame,
 		billLabel: TextLabel,
+		savingsRow: Frame,
+		savingsLabel: TextLabel,
 	},
 	StatsUI
 ))
@@ -726,6 +733,28 @@ function StatsUI.new(): StatsUIHandle
 	billLabel.Text = ""
 	billLabel.Parent = billRow
 
+	-- Savings balance row. Shown when the life has a savings account with a
+	-- non-zero balance, because a row that always reads "Savings: 0" is visual
+	-- noise during the years the player has not yet opened an account.
+	local savingsRow = Instance.new("Frame")
+	savingsRow.Name = "SavingsRow"
+	savingsRow.Size = UDim2.new(1, 0, 0, 24)
+	savingsRow.LayoutOrder = 7.75
+	savingsRow.BackgroundTransparency = 1
+	savingsRow.Visible = false
+	savingsRow.Parent = panel
+
+	local savingsLabel = Instance.new("TextLabel")
+	savingsLabel.Name = "Label"
+	savingsLabel.Size = UDim2.new(1, 0, 0, 24)
+	savingsLabel.BackgroundTransparency = 1
+	savingsLabel.Font = Enum.Font.GothamMedium
+	savingsLabel.TextSize = 12
+	savingsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	savingsLabel.TextColor3 = Color3.fromRGB(180, 210, 160)
+	savingsLabel.Text = ""
+	savingsLabel.Parent = savingsRow
+
 	local progressCaption = Instance.new("TextLabel")
 	progressCaption.Name = "Caption"
 	progressCaption.Size = UDim2.new(1, 0, 0, 14)
@@ -1035,6 +1064,8 @@ function StatsUI.new(): StatsUIHandle
 		dealerLabel = dealerLabel,
 		billRow = billRow,
 		billLabel = billLabel,
+		savingsRow = savingsRow,
+		savingsLabel = savingsLabel,
 	}, StatsUI)
 end
 
@@ -1341,9 +1372,13 @@ function StatsUI.SetPerson(self: StatsUIHandle, state: PersonState?)
 
 	local reply = state.reply
 	if reply == nil then
-		-- Emptied rather than left showing the last thing said, so a line does not hang
+		-- When there is no reply yet, show the contextual line the server picked for
+		-- the current situation (morning, on shift, unemployed, at home). Emptied
+		-- rather than left showing the last thing said, so a line does not hang
 		-- under somebody's name after the moment it belonged to has passed.
-		self.personCaption.Text = ""
+		local ctx = state.contextualLine
+		self.personCaption.Text = ctx ~= nil and `"{ctx}"` or ""
+		self.personCaption.TextColor3 = ctx ~= nil and TASK_CAPTION_COLOR or TASK_CAPTION_COLOR
 		return
 	end
 	-- Quoted, because this is the only writing on the HUD that is a person talking to the
@@ -1643,6 +1678,26 @@ function StatsUI.SetRoster(self: StatsUIHandle, entries: { PersonRosterEntry })
 		rowCorner.CornerRadius = UDim.new(0, 4)
 		rowCorner.Parent = row
 
+		-- Tie badge: a small colored square when the person holds a structural
+		-- relationship (mentor, rival, sibling). Absent for everybody else.
+		if entry.tie ~= nil then
+			local tieColor = if entry.tie == "mentor" then TIE_MENTOR_COLOR
+				elseif entry.tie == "rival" then TIE_RIVAL_COLOR
+				else TIE_SIBLING_COLOR
+			local badge = Instance.new("Frame")
+			badge.Name = "TieBadge"
+			badge.Size = UDim2.new(0, 5, 0, 5)
+			badge.Position = UDim2.new(1, -22, 0.5, 0)
+			badge.AnchorPoint = Vector2.new(0, 0.5)
+			badge.BackgroundColor3 = tieColor
+			badge.BackgroundTransparency = 0.2
+			badge.BorderSizePixel = 0
+			badge.Parent = row
+			local badgeCorner = Instance.new("UICorner")
+			badgeCorner.CornerRadius = UDim.new(1, 0)
+			badgeCorner.Parent = badge
+		end
+
 		-- Availability dot: green when there is something to say, grey when spent.
 		local dot = Instance.new("Frame")
 		dot.Name = "Dot"
@@ -1747,6 +1802,18 @@ function StatsUI.SetBill(self: StatsUIHandle, state: Types.BillState?)
 	else
 		self.billRow.Visible = false
 	end
+end
+
+-- A savings balance update. Shows the current balance when non-zero; hides
+-- when there is nothing saved. The colour is green — not the money gold — so
+-- the player can tell at a glance that this is a different kind of number.
+function StatsUI.SetSavings(self: StatsUIHandle, state: Types.SavingsState?)
+	if state == nil or state.balance <= 0 then
+		self.savingsRow.Visible = false
+		return
+	end
+	self.savingsRow.Visible = true
+	self.savingsLabel.Text = `Savings: ${Money.Format(state.balance)}`
 end
 
 -- A milestone was achieved. Shows a brief flash-style notice.

@@ -8,6 +8,9 @@
 -- Nothing here is a remote. The client is told what it owes and when it is due;
 -- it does not ask to be billed. Billing is driven by the age-up path so a life
 -- that skips years pays for each one it skips.
+--
+-- Debt consequences live in StatService: the flag is the contract there, and
+-- BillService only sets and clears it. This file never touches stats.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

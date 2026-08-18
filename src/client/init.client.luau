@@ -21,6 +21,7 @@ local GangUI = require(script.ui.GangUI)
 local FightUI = require(script.ui.FightUI)
 local HouseUI = require(script.ui.HouseUI)
 local CarDealerUI = require(script.ui.CarDealerUI)
+local SavingsUI = require(script.ui.SavingsUI)
 local ChapterReel = require(script.ui.ChapterReel)
 local MoneyPop = require(script.world.MoneyPop)
 local BonusPop = require(script.world.BonusPop)
@@ -98,6 +99,7 @@ local gang = GangUI.new()
 local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
+local savings = SavingsUI.new()
 local dealerMark = DealerMark.new()
 local chapterReel = ChapterReel.new()
 
@@ -288,6 +290,34 @@ house:OnSellHouse(function(houseId: string)
 	RequestSellHouseRemote:FireServer(houseId)
 end)
 
+house:OnSetHomeJob(function(houseId: string)
+	local RequestSetHomeJobRemote = Remotes.Get("RequestSetHomeJob")
+	RequestSetHomeJobRemote:FireServer(houseId, "")
+end)
+
+local RequestDepositRemote = Remotes.Get("RequestDeposit")
+local RequestWithdrawRemote = Remotes.Get("RequestWithdraw")
+
+savings:OnDepositAll(function()
+	if moneyPrevious ~= nil and moneyPrevious > 0 then
+		RequestDepositRemote:FireServer(moneyPrevious)
+	end
+end)
+
+savings:OnDepositHalf(function()
+	if moneyPrevious ~= nil and moneyPrevious > 0 then
+		RequestDepositRemote:FireServer(math.floor(moneyPrevious / 2))
+	end
+end)
+
+savings:OnWithdrawAll(function()
+	-- Read the current savings balance from the last known state.
+	local currentSavings = savingsBalance
+	if currentSavings ~= nil and currentSavings > 0 then
+		RequestWithdrawRemote:FireServer(currentSavings)
+	end
+end)
+
 carDealer:OnServe(function()
 	RequestCarDealerServeRemote:FireServer()
 end)
@@ -451,7 +481,7 @@ local function drawPhonePanel(state: PersonState)
 	end
 	if panel:ShowOptions({
 		key = key,
-		prompt = state.name,
+		prompt = state.contextualLine or state.name,
 		options = state.offers,
 		phone = true,
 		choose = function(offerId: string)
@@ -838,6 +868,13 @@ Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
 	ui:SetBill(state)
 end)
 
+local savingsBalance: number? = nil
+Remotes.Get("SavingsUpdated").OnClientEvent:Connect(function(state: Types.SavingsState?)
+	savingsBalance = state.balance
+	ui:SetSavings(state)
+	savings:Set(state)
+end)
+
 Remotes.Get("MilestoneAchieved").OnClientEvent:Connect(function(event: Types.MilestoneEvent)
 	MilestoneFlash.Show(event.label, event.bonus)
 	ui:ShowNotice(`Milestone: {event.label}! +{event.bonus} credits`)
@@ -967,6 +1004,7 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- who no longer has a head, and the corner is better empty.
 	house:Set(nil)
 	carDealer:Set(nil)
+	savings:Set(nil)
 	chapterReel:Hide()
 	currentPerson = nil
 	lessonPanelKey = nil

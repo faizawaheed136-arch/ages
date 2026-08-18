@@ -31,8 +31,8 @@ local SOURCE: { Job } = {
 	{
 		id = "shop_assistant",
 		title = "Shop assistant",
-		-- The shop floor, downstairs, where the tills and the aisles are.
-		placeId = "store",
+		-- The corner shop, where the till and the aisles are.
+		placeId = "corner_shop",
 		-- Sixteen, which is the age this whole system was specified around: the
 		-- first year you can trade your time for money instead of being given it.
 		minAge = 16,

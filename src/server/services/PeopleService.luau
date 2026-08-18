@@ -829,6 +829,7 @@ local function rosterFor(player: Player): { PersonRosterEntry }
 			id = person.id,
 			name = nameOf(person),
 			band = bandFor(bondOf(data, person)),
+			tie = Ties.LabelOf(data.ties[person.id]),
 			-- Callable rather than everything they have left: the dot is what a tap on
 			-- the roster is worth, and a walk that cannot transfer must not light it.
 			available = visitsAt(data, person.id, age) < PEOPLE.VisitsPerYear
@@ -2285,6 +2286,29 @@ function PeopleService.Bystanders(player: Player): { Bystander }
 	return out
 end
 
+-- Everybody who exists in the world for this player, bodied or ghost, keyed by
+-- person id. The body is what matters for tags: a person whose rig has not yet
+-- arrived is still a person, and the context builder must not lose them the
+-- moment the player steps far enough away to dissolve the model.
+function PeopleService.GetPersonPositions(player: Player): { [string]: Vector3 }
+	local out: { [string]: Vector3 } = {}
+	local here = standing[player] or {}
+	for personId, stand in here do
+		local visitor = stand.visitor
+		if visitor.gone() then
+			continue
+		end
+		out[personId] = visitor.at()
+	end
+	local mine = ghosts[player] or {}
+	for personId, ghost in mine do
+		if out[personId] == nil then
+			out[personId] = ghost.at
+		end
+	end
+	return out
+end
+
 -- Somebody stops walking and turns to look, or goes back to what they were doing.
 --
 -- The reaction, and it is the whole of the crowd's signposting: a witness is on screen for
@@ -2608,8 +2632,39 @@ local function onAnswered(player: Player, _event: Types.LifeEvent, choice: Types
 	requestRebuild(player)
 end
 
+-- Returns the tie-context tags for a player as a list of strings. Called by
+-- EventService every tick to decide whether a tie-gated event should fire.
+local function buildTieContextTags(player: Player): { string }
+	local tags: { string } = {}
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return tags
+	end
+	local data = Lives.Active(profile.Data)
+	local positions = PeopleService.GetPersonPositions(player)
+	local radius = Config.Ambient.NPCContextRadius
+	local playerPos = characterPosition(player)
+	if playerPos == nil then
+		return tags
+	end
+	for personId, position in positions do
+		local tieId = data.ties[personId]
+		if tieId == nil then
+			continue
+		end
+		if Ties.RankOf(tieId) < 4 then
+			continue
+		end
+		if (playerPos - position).Magnitude <= radius then
+			table.insert(tags, "tie:" .. tieId .. ":" .. personId)
+		end
+	end
+	return tags
+end
+
 function PeopleService:Start()
 	EventService.OnAnswered(onAnswered)
+	EventService.SetTieContextBuilder(buildTieContextTags)
 
 	RequestPersonOfferRemote.OnServerEvent:Connect(function(player: Player, personId: unknown, offerId: unknown)
 		local ok, err = pcall(onOfferRequested, player, personId, offerId)

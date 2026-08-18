@@ -540,6 +540,10 @@ export type JobTask = {
 	-- Written as speech, in their words, not the game's. "Just these, thanks" is a
 	-- person; "Customer waiting for service" is a status bar with a head.
 	customer: string?,
+	-- Whether this task is a fetch-and-bag order rather than a plain walk-to-mark.
+	-- When true the task generates its own spots from tagged shop geometry and
+	-- tracks an order of items instead of a single mark. Only used on shop_assistant.
+	fetchBag: boolean?,
 }
 
 -- One task in progress, pushed to the HUD. They arrive as a list, and an empty list
@@ -607,6 +611,25 @@ export type TaskState = {
 	-- even when the clock is not in its last third, because the whole shape of the
 	-- task is "keep the line moving" rather than "get to the mark and back."
 	rush: boolean,
+	-- Present only on fetch-and-bag tasks. The HUD reads it to show the order
+	-- line, the basket level, and the patience bar instead of the ordinary
+	-- waiting-person count. Nil on every task that is not the corner shop's
+	-- signature rhythm.
+	fetchBag: {
+		-- Which items the customer wants, in order. Each entry is the name of
+		-- an item and the shelf zone it lives on.
+		order: { { name: string, zone: string } },
+		-- How many items have already been collected from shelves.
+		collected: number,
+		-- How many items are currently in the basket, from 0 up to basketSize.
+		basketCount: number,
+		-- How many items the basket can hold at once.
+		basketSize: number,
+		-- How much patience remains out of the total. The client draws this as
+		-- a bar; when it hits zero the tip has scaled to the floor.
+		patienceLeft: number,
+		patienceTotal: number,
+	}?,
 }
 
 -- One thing a lesson asks you.
@@ -1689,6 +1712,10 @@ export type PersonRosterEntry = {
 	name: string,
 	-- The bond's name, from People.Bands, the same phrase the in-person row uses.
 	band: string,
+	-- What this person is to you beyond the bond ladder: a tie id label from Ties,
+	-- or nil when they are just somebody you know. Shown alongside the name so the
+	-- player can tell at a glance which row is their mentor, which is their rival.
+	tie: string?,
 	-- Whether calling is worth it this year: a visit not spent and something left to
 	-- offer. What the dot next to a row means.
 	available: boolean,
@@ -2567,6 +2594,12 @@ export type LifeData = {
 		lastBillMonth: number,
 		shiftsCompleted: number,
 	},
+	-- Savings account per life. Reset on death like money; a new life has no
+	-- bank history, just as it has no debt. Tied to the bill cycle so interest
+	-- compounds monthly alongside the debt it offsets.
+	savings: {
+		balance: number,
+	},
 	-- Milestones already achieved this life, keyed by milestone id. Reset on death.
 	milestones: { [string]: boolean },
 	-- Bond milestones already fired this life, keyed by "personId_milestoneValue".
@@ -2725,6 +2758,13 @@ export type BillState = {
 	paid: boolean,
 	notice: string?,
 	inDebt: boolean,
+}
+
+-- Savings account state, pushed whenever the balance changes or on join.
+export type SavingsState = {
+	balance: number,
+	maxBalance: number,
+	interestRate: number,
 }
 
 -- A milestone achievement, pushed once when a life crosses a threshold.

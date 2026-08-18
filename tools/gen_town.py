@@ -714,17 +714,24 @@ PARK_X0, PARK_X1 = -44.0, 4.0
 PARK_Z0, PARK_Z1 = 168.0, 228.0
 PARK_SPOT = (-20.0, 176.0)
 
-# The green stands on empty ground. Every house on this row is at HOUSE_X0..X1,
-# which is inside the park's x band by construction -- the two share a frontage
-# line -- so overlap is decided by z alone and the test is one line. It reports
-# the house rather than the park because the number on the door is what a person
-# can find on the ground.
-for _hz0, _hz1, _hdoor, _hnum in HOUSES:
-    assert _hz1 <= PARK_Z0 or _hz0 >= PARK_Z1, (
-        f"the park runs z {PARK_Z0:.0f}..{PARK_Z1:.0f} and number {_hnum} stands "
-        f"at z {_hz0:.0f}..{_hz1:.0f} on the same frontage, so the pond is being "
-        f"drawn through its front room. Check PARK_Z0, PARK_Z1 and the east row's "
-        f"break condition -- the park goes past the last house, not between them.")
+# A second park, south of the garage on the west side of the return road. It
+# puts a green space at the bottom of town so a player who walks the full length
+# finds somewhere to stop near both the spawn and the tip. It sits in GrassInner,
+# the undifferentiated lawn between the return road and the main street, well
+# clear of the garage (six studs south), the far pavement (six studs west) and
+# the return road's own paving (twenty or so studs east). The east-side houses
+# share none of this x band so they are not in the check.
+PARK2_X0, PARK2_X1 = -152.0, -104.0
+PARK2_Z0, PARK2_Z1 = -270.0, -210.0
+PARK2_SPOT = (-128.0, -240.0)
+
+# The second park is on the west side of the return road; the houses are on the
+# east side. The assertion below checks the only building that shares this x
+# band -- the garage -- and relies on the x separation for everything else.
+assert GARAGE_Z1 <= PARK2_Z0 or GARAGE_Z0 >= PARK2_Z1, (
+    f"the south park runs z {PARK2_Z0:.0f}..{PARK2_Z1:.0f} and the garage stands "
+    f"at z {GARAGE_Z0:.0f}..{GARAGE_Z1:.0f} on the same x band, so the pond is "
+    f"being drawn through its doorway. Check PARK2_Z0, PARK2_Z1 and GARAGE_Z0.")
 
 # ---------------------------------------------------------------------------
 # The parade at the top of town, east side of the main street
@@ -845,6 +852,7 @@ PLACE_POINTS = [
     ("bakery", WEST_SPOT_X, BAKERY_DOOR, FLOOR_1, "the bakery, at the counter"),
     ("garage", WEST_SPOT_X, GARAGE_DOOR, FLOOR_1, "the garage workshop"),
     ("park", PARK_SPOT[0], PARK_SPOT[1], GROUND, "the park, by the pond"),
+    ("south_park", PARK2_SPOT[0], PARK2_SPOT[1], GROUND, "the south park, by the pond"),
     # Stood in front of the counter rather than behind it: this is where the
     # player is told to be, and the same spot a customer walks to, which is what
     # every other "at the counter" point in town already means.
@@ -2701,6 +2709,235 @@ with group("Park"):
         box(f"PicnicSeat{dx}",
             (PARK_X0 + 30.0 + dx - 2.0, PARK_X0 + 30.0 + dx + 2.0,
              PARK_Z1 - 15.0, PARK_Z1 - 7.0, GROUND + 1.2, GROUND + 1.6), DESK_TOP, WOOD)
+
+# ---------------------------------------------------------------------------
+# The south park
+# ---------------------------------------------------------------------------
+#
+# A proper park with a gazebo as the centrepiece, a tiered fountain, flower
+# beds, a pergola walkway, and distinct activity zones so it reads as a place
+# people use rather than a pond with a path through it. The gazebo sits at the
+# centre of the park's northern half, the fountain anchors the southern half,
+# and a pergola runs along the west edge under the return road's shadow.
+# ---------------------------------------------------------------------------
+
+_GAZE_X = (PARK2_X0 + PARK2_X1) / 2         # -128, centre of the park
+_GAZE_Z = PARK2_Z0 + 28.0                    # gazebo sits in the northern half
+_GAZE_R = 7.0                                # radius of the gazebo floor
+
+_FOUNT_X = _GAZE_X                           # fountain on the same centre line
+_FOUNT_Z = PARK2_Z0 + 46.0                   # south of the gazebo
+
+with group("SouthPark"):
+    # --- Pond ---
+    box("Pond", (PARK2_X0 + 6.0, PARK2_X0 + 22.0, PARK2_Z0 + 6.0, PARK2_Z0 + 18.0,
+                 GROUND - 0.6, GROUND), (92, 128, 152), SMOOTH)
+    box("PondRim", (PARK2_X0 + 5.2, PARK2_X0 + 22.8, PARK2_Z0 + 5.2, PARK2_Z0 + 18.8,
+                    GROUND, GROUND + 0.3), (150, 150, 150), CONCRETE, collide=False)
+
+    # --- Paths: a ring around the gazebo, a line to the fountain, a cross path ---
+    # Gazebo ring: four slabs forming a rough circle
+    box("PathRingN", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, PARK2_Z0 + 12.0, PARK2_Z0 + 17.0,
+                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    box("PathRingS", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, PARK2_Z1 - 17.0, PARK2_Z1 - 12.0,
+                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    box("PathRingW", (PARK2_X0 + 12.0, PARK2_X0 + 17.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
+                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    box("PathRingE", (PARK2_X1 - 17.0, PARK2_X1 - 12.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
+                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    # Centre line from gazebo to fountain
+    box("PathCentre", (PARK2_X0 + 14.0, PARK2_X1 - 14.0,
+                       _GAZE_Z + _GAZE_R + 1.0, _FOUNT_Z - _GAZE_R - 1.0,
+                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    # Cross path east-west through the middle
+    box("PathCross", (PARK2_X0 + 8.0, PARK2_X1 - 8.0,
+                      PARK2_Z0 + 24.0, PARK2_Z0 + 36.0,
+                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+
+    # --- Gazebo ---
+    with group("Gazebo"):
+        # Octagonal floor
+        box("Floor", (_GAZE_X - _GAZE_R, _GAZE_X + _GAZE_R,
+                      _GAZE_Z - _GAZE_R, _GAZE_Z + _GAZE_R,
+                      GROUND + 0.15, GROUND + 0.5), PATH_STONE, CONCRETE)
+        # Six pillars around the perimeter
+        _pillar_angles = (0, 60, 120, 180, 240, 300)
+        for _a in _pillar_angles:
+            _rad = math.radians(_a)
+            _px = _GAZE_X + _GAZE_R * math.cos(_rad)
+            _pz = _GAZE_Z + _GAZE_R * math.sin(_rad)
+            part(f"Pillar{_a}", (0, 0.25, 0), (0.6, 8.0, 0.6), STEEL, METAL)
+        # Outer ring beam
+        box("RingBeam", (_GAZE_X - _GAZE_R - 0.3, _GAZE_X + _GAZE_R + 0.3,
+                         _GAZE_Z - _GAZE_R - 0.3, _GAZE_Z + _GAZE_R + 0.3,
+                         GROUND + 8.0, GROUND + 8.4), STEEL, METAL)
+        # Conical roof: a wide slab on top with a smaller slab above for the peak
+        box("GazeboRoof", (_GAZE_X - _GAZE_R - 1.5, _GAZE_X + _GAZE_R + 1.5,
+                     _GAZE_Z - _GAZE_R - 1.5, _GAZE_Z + _GAZE_R + 1.5,
+                     GROUND + 8.4, GROUND + 9.0), ROOF_GREY, SLATE)
+        box("RoofPeak", (_GAZE_X - 2.5, _GAZE_X + 2.5,
+                         _GAZE_Z - 2.5, _GAZE_Z + 2.5,
+                         GROUND + 9.0, GROUND + 11.0), ROOF_GREY, SLATE)
+        # Floor detail: painted circles under the gazebo
+        box("FloorPaint", (_GAZE_X - 5.0, _GAZE_X + 5.0,
+                           _GAZE_Z - 5.0, _GAZE_Z + 5.0,
+                           GROUND + 0.5, GROUND + 0.55), (160, 140, 110), CONCRETE, collide=False)
+
+    # --- Tiered fountain ---
+    with group("Fountain"):
+        # Base basin
+        box("BasinBase", (_FOUNT_X - 4.5, _FOUNT_X + 4.5,
+                          _FOUNT_Z - 4.5, _FOUNT_Z + 4.5,
+                          GROUND + 0.3, GROUND + 1.0), STEEL, METAL)
+        # Water in basin
+        box("BasinWater", (_FOUNT_X - 4.0, _FOUNT_X + 4.0,
+                           _FOUNT_Z - 4.0, _FOUNT_Z + 4.0,
+                           GROUND + 0.85, GROUND + 1.0), (92, 128, 152), SMOOTH, collide=False)
+        # Middle column
+        box("Column", (_FOUNT_X - 1.2, _FOUNT_X + 1.2,
+                       _FOUNT_Z - 1.2, _FOUNT_Z + 1.2,
+                       GROUND + 1.0, GROUND + 5.0), (200, 198, 192), CONCRETE)
+        # Upper basin
+        box("UpperBasin", (_FOUNT_X - 3.0, _FOUNT_X + 3.0,
+                           _FOUNT_Z - 3.0, _FOUNT_Z + 3.0,
+                           GROUND + 5.0, GROUND + 5.6), STEEL, METAL)
+        box("UpperWater", (_FOUNT_X - 2.7, _FOUNT_X + 2.7,
+                           _FOUNT_Z - 2.7, _FOUNT_Z + 2.7,
+                           GROUND + 5.2, GROUND + 5.5), (92, 128, 152), SMOOTH, collide=False)
+        # Top bowl
+        box("TopBowl", (_FOUNT_X - 1.5, _FOUNT_X + 1.5,
+                        _FOUNT_Z - 1.5, _FOUNT_Z + 1.5,
+                        GROUND + 5.6, GROUND + 6.4), STEEL, METAL)
+        # Water spout
+        box("Spout", (_FOUNT_X - 0.4, _FOUNT_X + 0.4,
+                      _FOUNT_Z - 0.4, _FOUNT_Z + 0.4,
+                      GROUND + 6.4, GROUND + 7.2), (140, 170, 200), SMOOTH, collide=False)
+        # Decorative rim stones
+        box("RimStoneN", (_FOUNT_X - 5.0, _FOUNT_X + 5.0,
+                          _FOUNT_Z + 4.5, _FOUNT_Z + 5.0,
+                          GROUND, GROUND + 0.3), (200, 198, 192), CONCRETE, collide=False)
+        box("RimStoneS", (_FOUNT_X - 5.0, _FOUNT_X + 5.0,
+                          _FOUNT_Z - 5.0, _FOUNT_Z - 4.5,
+                          GROUND, GROUND + 0.3), (200, 198, 192), CONCRETE, collide=False)
+        box("RimStoneW", (_FOUNT_X - 5.0, _FOUNT_X - 4.5,
+                          _FOUNT_Z - 5.0, _FOUNT_Z + 5.0,
+                          GROUND, GROUND + 0.3), (200, 198, 192), CONCRETE, collide=False)
+        box("RimStoneE", (_FOUNT_X + 4.5, _FOUNT_X + 5.0,
+                          _FOUNT_Z - 5.0, _FOUNT_Z + 5.0,
+                          GROUND, GROUND + 0.3), (200, 198, 192), CONCRETE, collide=False)
+
+    # --- Pergola walkway along the west edge ---
+    with group("Pergola"):
+        # Pergola posts
+        for _i, _pz in enumerate([-255.0, -240.0, -225.0]):
+            part(f"PergPost{_i}", (0, 0.5, 0), (0.5, 9.0, 0.5), BARK, WOOD)
+        # Cross beams
+        box("PergBeam1", (PARK2_X0 + 1.0, PARK2_X0 + 3.0,
+                          -260.0, -220.0,
+                          GROUND + 8.5, GROUND + 8.9), BARK, WOOD)
+        box("PergBeam2", (PARK2_X0 + 1.0, PARK2_X0 + 3.0,
+                          -260.0, -220.0,
+                          GROUND + 7.5, GROUND + 7.9), BARK, WOOD)
+        # Pergola roof slats
+        for _i in range(5):
+            _sz = -258.0 + _i * 8.0
+            box(f"PergSlat{_i}", (PARK2_X0 + 0.8, PARK2_X0 + 3.2,
+                                  _sz, _sz + 5.0,
+                                  GROUND + 7.9, GROUND + 8.1), BARK, WOOD)
+        # Pergola floor
+        box("PergFloor", (PARK2_X0 + 1.0, PARK2_X0 + 4.0,
+                          -262.0, -218.0,
+                          GROUND + 0.1, GROUND + 0.4), PATH_STONE, CONCRETE)
+
+    # --- Flower beds ---
+    with group("FlowerBeds"):
+        # Red flowers along the north edge
+        box("FlowerBedN1", (PARK2_X0 + 6.0, PARK2_X0 + 14.0,
+                            PARK2_Z1 - 5.0, PARK2_Z1 - 2.0,
+                            GROUND + 0.05, GROUND + 0.2), (140, 60, 60), PEBBLE)
+        box("FlowerBedN2", (PARK2_X0 + 18.0, PARK2_X0 + 26.0,
+                            PARK2_Z1 - 5.0, PARK2_Z1 - 2.0,
+                            GROUND + 0.05, GROUND + 0.2), (140, 60, 60), PEBBLE)
+        # Yellow flowers along the south edge
+        box("FlowerBedS1", (PARK2_X0 + 6.0, PARK2_X0 + 14.0,
+                            PARK2_Z0 + 2.0, PARK2_Z0 + 5.0,
+                            GROUND + 0.05, GROUND + 0.2), (180, 160, 40), PEBBLE)
+        box("FlowerBedS2", (PARK2_X0 + 18.0, PARK2_X0 + 26.0,
+                            PARK2_Z0 + 2.0, PARK2_Z0 + 5.0,
+                            GROUND + 0.05, GROUND + 0.2), (180, 160, 40), PEBBLE)
+        # Purple flowers near the gazebo
+        box("FlowerBedG1", (PARK2_X0 + 30.0, PARK2_X0 + 38.0,
+                            PARK2_Z0 + 8.0, PARK2_Z0 + 14.0,
+                            GROUND + 0.05, GROUND + 0.2), (120, 60, 140), PEBBLE)
+        box("FlowerBedG2", (PARK2_X0 + 30.0, PARK2_X0 + 38.0,
+                            PARK2_Z0 + 20.0, PARK2_Z0 + 26.0,
+                            GROUND + 0.05, GROUND + 0.2), (120, 60, 140), PEBBLE)
+
+    # --- Trees: arranged in clusters, not just at the corners ---
+    with group("Trees"):
+        # North cluster around the flower beds
+        tree(PARK2_X0 + 10.0, PARK2_Z1 - 8.0, GROUND, height=14.0, spread=9.0)
+        tree(PARK2_X0 + 32.0, PARK2_Z1 - 8.0, GROUND, height=14.0, spread=9.0)
+        # South cluster
+        tree(PARK2_X0 + 10.0, PARK2_Z0 + 8.0, GROUND, height=14.0, spread=9.0)
+        tree(PARK2_X0 + 32.0, PARK2_Z0 + 8.0, GROUND, height=14.0, spread=9.0)
+        # West cluster near the pergola
+        tree(PARK2_X0 + 5.0, -255.0, GROUND, height=12.0, spread=8.0)
+        tree(PARK2_X0 + 5.0, -230.0, GROUND, height=12.0, spread=8.0)
+        tree(PARK2_X1 - 5.0, -255.0, GROUND, height=12.0, spread=8.0)
+        tree(PARK2_X1 - 5.0, -230.0, GROUND, height=12.0, spread=8.0)
+        # Edge trees
+        tree(PARK2_X0 + 3.0, PARK2_Z1 - 3.0, GROUND, height=14.0, spread=9.0)
+        tree(PARK2_X1 - 3.0, PARK2_Z1 - 3.0, GROUND, height=14.0, spread=9.0)
+        tree(PARK2_X1 - 3.0, PARK2_Z0 + 3.0, GROUND, height=14.0, spread=9.0)
+        tree(PARK2_X0 + 3.0, PARK2_Z0 + 3.0, GROUND, height=14.0, spread=9.0)
+
+    # --- Benches: clustered around features ---
+    bench(PARK2_X0 + 14.0, PARK2_Z1 - 10.0, GROUND, side="south")   # near flower bed
+    bench(PARK2_X0 + 32.0, PARK2_Z1 - 10.0, GROUND, side="south")   # near flower bed
+    bench(PARK2_X0 + 14.0, PARK2_Z0 + 10.0, GROUND, side="north")   # near fountain
+    bench(PARK2_X0 + 32.0, PARK2_Z0 + 10.0, GROUND, side="north")   # near fountain
+    bench(_GAZE_X - 9.0, _GAZE_Z, GROUND, side="east")              # gazebo west
+    bench(_GAZE_X + 9.0, _GAZE_Z, GROUND, side="west")              # gazebo east
+    bench(_FOUNT_X, _FOUNT_Z - 6.0, GROUND, side="north")           # fountain south
+    bench(_FOUNT_X, _FOUNT_Z + 6.0, GROUND, side="south")           # fountain north
+
+    # --- Picnic area in the southeast corner ---
+    box("PicnicTable", (PARK2_X0 + 30.0, PARK2_X1 - 28.0, PARK2_Z1 - 14.0, PARK2_Z1 - 8.0,
+                        GROUND + 2.0, GROUND + 2.4), DESK_TOP, WOOD)
+    for dx in (-6.0, 6.0):
+        box(f"PicnicSeat{dx}",
+            (PARK2_X0 + 30.0 + dx - 2.0, PARK2_X0 + 30.0 + dx + 2.0,
+             PARK2_Z1 - 15.0, PARK2_Z1 - 7.0, GROUND + 1.2, GROUND + 1.6), DESK_TOP, WOOD)
+
+    # --- Lamp posts around the park ---
+    street_lamp(PARK2_X0 + 5.0, -220.0, -1)   # west edge, north
+    street_lamp(PARK2_X0 + 5.0, -260.0, -1)   # west edge, south
+    street_lamp(PARK2_X1 - 5.0, -220.0, 1)    # east edge, north
+    street_lamp(PARK2_X1 - 5.0, -260.0, 1)    # east edge, south
+    street_lamp(_GAZE_X - 10.0, _GAZE_Z, 1)   # gazebo west
+    street_lamp(_GAZE_X + 10.0, _GAZE_Z, -1)  # gazebo east
+
+    # --- Small children's play corner ---
+    with group("PlayArea"):
+        # Swing frame base
+        box("SwingBase", (PARK2_X1 - 18.0, PARK2_X1 - 8.0,
+                          PARK2_Z0 + 8.0, PARK2_Z0 + 18.0,
+                          GROUND + 0.1, GROUND + 0.3), PATH_STONE, CONCRETE)
+        # Swing frame A-frame
+        part("SwingPostA1", (0, 0.5, 0), (0.5, 10.0, 0.5), STEEL, METAL)
+        part("SwingPostA2", (8.0, 0.5, 0), (0.5, 10.0, 0.5), STEEL, METAL)
+        part("SwingBeam", (4.0, 9.5, 0), (8.0, 0.5, 0.5), STEEL, METAL)
+        # Swing chains (thin parts)
+        part("SwingChain1", (2.0, 5.0, 0), (0.2, 5.0, 0.2), STEEL, METAL)
+        part("SwingSeat1", (2.0, 0.3, 0), (1.5, 0.2, 0.8), DESK_TOP, WOOD)
+        part("SwingChain2", (6.0, 5.0, 0), (0.2, 5.0, 0.2), STEEL, METAL)
+        part("SwingSeat2", (6.0, 0.3, 0), (1.5, 0.2, 0.8), DESK_TOP, WOOD)
+        # Slide
+        part("SlidePost1", (0, 0.5, 0), (0.5, 10.0, 0.5), STEEL, METAL)
+        part("SlidePost2", (0, 0.5, 6.0), (0.5, 10.0, 0.5), STEEL, METAL)
+        part("SlidePlatform", (0, 8.0, 3.0), (5.0, 0.3, 5.0), STEEL, METAL)
+        part("SlideSlope", (-3.0, 4.0, 3.0), (4.0, 0.3, 6.0), (200, 80, 60), METAL)
 
 # ---------------------------------------------------------------------------
 # The parade at the tip end

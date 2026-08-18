@@ -25,6 +25,7 @@ local GymService = require(script.Parent.GymService)
 local FightService = require(script.Parent.FightService)
 local PeopleService = require(script.Parent.PeopleService)
 local BillService = require(script.Parent.BillService)
+local SavingsService = require(script.Parent.SavingsService)
 local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local SetupService = require(script.Parent.SetupService)
@@ -575,6 +576,7 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- childhood allowance.
 	-- rather than being patched over by childhood allowance.
 	BillService.Charge(player)
+	SavingsService.CreditInterest(player)
 
 	-- Milestone age checks run after the age has moved and bills are settled, so a
 	-- life that died from debt cannot also score the longevity bonus.
