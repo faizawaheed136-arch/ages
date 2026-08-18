@@ -101,10 +101,24 @@ end
 -- and a reader that recomputed the intent would have to recompute the clock with it.
 type FoeIntent = "wait" | "close" | "wind" | "guard" | "recover" | "down"
 
+-- The joints the tell is drawn on, and the rest pose to compose onto. Captured once
+-- when the body is built rather than read per tick: `C0` is written every frame the
+-- opponent is winding up, so a reader that took "rest" from the live joint would be
+-- reading its own last frame and the arm would walk away from the shoulder.
+type Pose = {
+	rightShoulder: Motor6D,
+	leftShoulder: Motor6D,
+	waist: Motor6D?,
+	restRight: CFrame,
+	restLeft: CFrame,
+	restWaist: CFrame,
+}
+
 type Bout = {
 	def: FighterDef,
 	visitor: Visitor,
 	dots: Interact.InteractHandle?,
+	pose: Pose?,
 
 	phase: "square" | "fight" | "down" | "over",
 
@@ -358,15 +372,6 @@ local ARM_COVER_L = Vector3.new(-0.25, 0.45, -0.85) -- the off hand, up while th
 local WAIST_WOUND_DEGREES = 22
 local WAIST_THROWN_DEGREES = -14
 
-type Pose = {
-	rightShoulder: Motor6D,
-	leftShoulder: Motor6D,
-	waist: Motor6D?,
-	restRight: CFrame,
-	restLeft: CFrame,
-	restWaist: CFrame,
-}
-
 -- The rotation that takes a limb's rest axis onto `dir`, both in the joint's own space.
 -- Axis-and-angle rather than composed Euler terms because the question being asked is
 -- "point the arm there", and that is one rotation with one answer.
@@ -486,6 +491,10 @@ end
 -- -------------------------------------------------------------------
 
 local function teardown(player: Player, bout: Bout)
+	-- Before the body goes, in case it is not going: ForceEnd and a new life both
+	-- come through here, and an opponent left standing with a cocked arm is worse
+	-- than one left standing.
+	poseRest(bout.pose)
 	local dots = bout.dots
 	if dots ~= nil then
 		dots.Destroy()
@@ -518,6 +527,7 @@ end
 -- walking away from their keyboard.
 local function decide(player: Player, bout: Bout, playerWon: boolean)
 	bout.phase = "down"
+	poseRest(bout.pose)
 	bout.downLeft = FIGHT.DownSeconds
 	bout.won = playerWon
 	bout.charging = false
@@ -997,6 +1007,10 @@ function FightService.Challenge(player: Player, fighterId: string?): (boolean, s
 		def = def,
 		visitor = visitor,
 		dots = nil,
+		-- Nil is a supported answer, not a failure: a rig that arrives without the
+		-- joints still fights, it just fights without the body tell. Warned about
+		-- rather than errored on, because losing the tell should not lose the bout.
+		pose = poseOf(visitor.model),
 		phase = "square",
 		footing = maxFooting,
 		maxFooting = maxFooting,
@@ -1161,6 +1175,36 @@ function FightService:Start()
 				local ok, err = pcall(tickPlayer, player, elapsed)
 				if not ok then
 					warn(`[AGES] fight tick failed for {player.Name}: {err}`)
+				end
+			end
+		end
+	end)
+
+	-- The body tell runs on its own clock, faster than the bout does, and that split is
+	-- the whole reason it is a second loop rather than a line in the first one.
+	--
+	-- The bout ticks at Fight.TickSeconds = 0.1. A scrapper's wind-up is 0.55s, so a
+	-- pose driven off the bout tick would draw her entire tell in five steps -- and this
+	-- file already knows what that looks like, because NPCService measured it for the
+	-- head-turn and wrote the answer down: "above ~0.2 the head visibly steps."
+	--
+	-- So the rate is NPC.LookTickSeconds, borrowed rather than added to Config. It is the
+	-- same measurement -- how often a joint on a visitor rig has to move to stop reading
+	-- as stepping -- and this project has been bitten enough times by two constants
+	-- describing one fact. If that number is ever retuned, this follows it, which is
+	-- correct: they would be retuning the thing this depends on.
+	--
+	-- Nothing here advances state. It only reads the bout the loop above owns and writes
+	-- C0, so the two cannot race in any way that matters: the worst case is one frame
+	-- posed from a timer 0.1s stale, which is a pose 6% along a wind-up it already knew
+	-- about.
+	task.spawn(function()
+		while true do
+			task.wait(Config.NPC.LookTickSeconds)
+			for _, bout in bouts do
+				local ok, err = pcall(poseFoe, bout)
+				if not ok then
+					warn(`[AGES] fight pose failed: {err}`)
 				end
 			end
 		end
