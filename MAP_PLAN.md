@@ -9,7 +9,7 @@ the town and the street share a frontage and the city and the town share two gat
     python3 tools/gen_town.py && python3 tools/build_street.py && python3 tools/gen_city.py
     python3 tools/check_town.py && python3 tools/check_city.py
 
-`check_city` has twelve checks and `check_town` six, and they are the only thing standing
+`check_city` has twelve sections and `check_town` eight, and they are the only thing standing
 between a geometry change and a town that looks fine in Studio but has NPCs standing in
 traffic. They have already caught two hardcoded radii, a road drawn through a building, and
 a pair of parallel streets that were reachable and still twice as long to walk as they
@@ -218,6 +218,83 @@ actually arbitrary. Verified by three consecutive runs to the same md5.
 `CS_W` are per-street lists, four of the twelve streets narrow, and the six ways a future
 edit could break something a thousand studs away are assertions in the generator rather
 than things you find out from the beach.
+
+**11. The west estate — section E's north district, built.** Section E was resolved as
+option (c): industrial and low-rise sprawl go west, docks stay east on the bay. This is the
+first half of that — light industrial and trade yards at x −1024..13, z 339..1148, fronting
+`ConnPavW`.
+
+*Why there.* Measured, not chosen: `ConnPavW` was a single unbroken 809-stud slab of footway
+against `ConnEPavE`'s seven runs. It was a pavement with nothing on either side of it to
+cross to. The district gives it four real junctions and something to serve. It abuts the
+city, where the jobs are, and stands ~1000 studs clear of the town's houses — which is why
+it is light industry and trade counters rather than more port: the heavy works is on the bay
+and stays there.
+
+*Built inside `gen_city.py` rather than as a new `West.rbxmx`*, which is a deviation from
+the spec and was taken on two measured grounds. The `ConnPavW` carve list is a line in
+`gen_city.py` and is unreachable from another file — a second generator could not have put
+those four junctions in. And five-plus helpers (`road_ns`, `walks_ew`, `works_shed`,
+`storefront`, `tree`) would have had to be duplicated, in a tree where `tree()` had already
+been written three times.
+
+*The plan is derived, not typed.* Row depths give street positions; column widths give
+avenue positions; the last row and the common's width fall out as remainders, each guarded
+by an assertion that fires. Two of those assertions earn their place: one bounds the
+common's width, and one asserts no estate street band overlaps `GATE_CLEAR` or
+`NORTHGATE_CLEAR`, because two overlapping gaps in one `carve` list silently remove more
+pavement than either asked for.
+
+`MAP_EDGE` came out of this. `default.project.json` declares the baseplate once as
+`[2048, 20, 2048]`, and every generator that needed to know where the world ended typed
+1024 for itself. It now lives in `world_plan.py` with check 9 reading the project file and
+asserting the two still agree — a transcription is only acceptable with a gate on the cache.
+
+*Two coplanar-surface bugs were found by reasoning rather than by a checker*, and neither
+would have been reported by anything in this tree: the common's pasture overlapped
+`WestGround` at the same top height for its whole 400-stud width, and the farm track was
+drawn *below* the pasture it was laid on, which made it invisible. A surface that loses to
+the ground it is laid on is a defect with no symptom in any gate here. Both are fixed by
+tiling rather than by lifting.
+
+*And building it exposed a hole in the gate that certified it* — see 12.
+
+**12. Check 11 was not looking at the largest buildings in the city.** The estate added 12
+place points and the destination count rose by 5. `DOOR_SLACK` was 3.0, and every
+`works_shed` place point stands `SHED_APRON / 2` = 5.0 studs out on its loading apron, so
+**no shed anywhere was a destination**: not the six new ones, and not the ironworks, sawmill,
+turbine hall or transit shed either, which had been exempt since the day the works was built.
+Check 11 was green partly because it was not asking about them.
+
+The standoffs are two clean populations — 197 points inside their own walls, 7 at 2.0 out (a
+storefront door), 9 at exactly 5.0 (a shed apron), then nothing until 36. `DOOR_SLACK` is now
+5.0 and the count is 173. All nine sheds pass at 14.0 studs from a carriageway against a
+limit of 32, and lowering the limit to 13 now reports all nine, where before it reported them
+at no limit at all.
+
+`DOOR_SLACK` is a **matcher, not a threshold**, and that decides the value. `ROAD_ACCESS` is
+set in the middle of a measured gap and is deliberately loose; a matcher has to attribute
+each point to exactly one building, so it is set at the largest standoff any generator
+actually uses. If that is ever exceeded the answer is to move the point, not to widen the
+slack — so check 11 now also asserts the attribution is unique, and it fires at 9.0 where
+`dining_1` reaches the next restaurant along.
+
+That assertion was nearly shipped wrong. Written as "one point, one model" it failed at 5.5
+on `est_electrical`, which turned out to be Kemp Electrical's *Structure* and *Fittings* —
+one building emitted as two groups, not two buildings. The invariant is geometric, not
+nominal: the models a point matches must overlap one another. The rejected alternative was a
+regex stripping `Structure|Fittings` from group names, which is a guess about naming rather
+than a statement about geometry, and would have been wrong again for the self-store office
+that stands inside its own yard's shed footprint.
+
+*What is deliberately still not checked:* nine destinations have no walls at all — the park,
+the baywalk, the marina, the playground, the four sports pitches and the estate's field gate.
+They stand 14 to 341 studs from a carriageway and every one of them is right: you walk to a
+tennis court across a park, and the field gate opens onto a farm track reached by its own
+waypoint chain. Holding them to `ROAD_ACCESS` would report nine correct things on the first
+run, which is how the earlier "a model with walls" attempt died. Measuring point-to-road
+instead of bounds-to-road does not rescue it either — that reads 62 studs for the four north
+shops, which are served by a road running along the back of them.
 
 ## Owed, in the order I would do it
 

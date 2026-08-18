@@ -308,6 +308,28 @@ NORTHGATE_CLEAR = (NORTHGATE_Z0 - NORTHGATE_WALK, NORTHGATE_Z1 + NORTHGATE_WALK)
 NORTHGATE_MID = (NORTHGATE_Z0 + NORTHGATE_Z1) / 2
 
 # ---------------------------------------------------------------------------
+# The edge of the baseplate
+# ---------------------------------------------------------------------------
+
+# Half the baseplate: solid default ground is x/z -MAP_EDGE .. +MAP_EDGE.
+#
+# The number is a transcription. The baseplate is declared once, in
+# default.project.json, as `"Size": [2048, 20, 2048]`, and until now every
+# generator that needed to know where it ended typed 1024 for itself --
+# gen_city.py's CITY_X1 was one of them. Two files holding two literals for one
+# measurement is the defect this tree keeps producing, so the number lives here
+# and check_city.py reads the project file and asserts the two still agree. That
+# check is the whole reason a transcription is acceptable: it is not a second
+# source of truth, it is a cached one with a gate on the cache.
+#
+# Not everything stops here. The city's ground runs to z 1152 and draws its own
+# floor past the baseplate's north edge, which is fine -- a slab from
+# GROUND_BOTTOM up is solid whether or not there is a baseplate under it. What
+# is not fine is *assuming* the baseplate is there, which is what putting a
+# waypoint at z 1140 over nothing would be.
+MAP_EDGE = 1024.0
+
+# ---------------------------------------------------------------------------
 # The south edge of the world
 # ---------------------------------------------------------------------------
 

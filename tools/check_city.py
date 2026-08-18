@@ -26,6 +26,10 @@ import sys
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from world_plan import MAP_EDGE  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 CITY_PATH = ASSETS / "City.rbxmx"
@@ -105,7 +109,34 @@ ROAD_ACCESS = 32.0
 # A place point is counted as belonging to a building if it lands inside the
 # building's walls or within this of them. Doors are drawn in the wall line and
 # their point is stood just outside it.
-DOOR_SLACK = 3.0
+#
+# This is a matcher, not a threshold, and the difference decides the value. A
+# threshold like ROAD_ACCESS is set in the middle of a gap between two measured
+# populations and is deliberately loose. A matcher has to attribute every point
+# to exactly one building, so it is set at the *largest standoff any generator
+# actually uses* -- and if that ever exceeds the value below, the answer is to
+# move the point, not to widen this.
+#
+# Measured across the 214 non-waypoint place points in the city:
+#
+#   -40.0 .. -0.5   197 points   inside the walls (149 of them at exactly -2.0,
+#                                a house door two studs in from its own front)
+#     2.0             7 points   a storefront door, stood in the pavement
+#     5.0             9 points   a shed's loading apron -- SHED_APRON / 2
+#    36.0 .. 109.0    9 points   not a building at all; see check 11
+#
+# It read 3.0 until this measurement was taken, which put the cut between the
+# second and third rows and meant *no shed in the world was a destination*:
+# not the six on the new estate, and not the ironworks, sawmill, turbine hall
+# or transit shed either, which had been exempt since the day the works was
+# built. Check 11 was green partly because it was not looking at the largest
+# buildings in the city. Widening to 5.0 adds those nine, and all nine pass at
+# 14.0 studs from a carriageway against a limit of 32.
+#
+# The headroom above 5.0 is 3.8 studs: at 8.83 `dining_1` reaches the next
+# restaurant along the row, and a door has to be nearer its own building than
+# anyone else's. Check 11 asserts that, so the number cannot be raised quietly.
+DOOR_SLACK = 5.0
 
 # The band either side of the ground plane that counts as "surface": road, kerb,
 # pavement, lawn, sand. Anything whose box crosses this band is something a
@@ -249,6 +280,11 @@ def plan_overlap(a, b):
         if best is None or gap < best:
             best = gap
     return best or 0.0
+
+
+def boxes_lap(a, b):
+    """True if two (x0, x1, z0, z1) rectangles overlap in plan."""
+    return a[0] < b[1] and a[1] > b[0] and a[2] < b[3] and a[3] > b[2]
 
 
 def iter_part_boxes(path: Path):
@@ -847,8 +883,43 @@ def main():
           f"{len(pieces)} pieces")
     print()
 
-    # --- 9. Ground under the spawn ---
-    print("9. Ground under the spawn")
+    # --- 9. The project file against the plan ---
+    print("9. The project file against the plan")
+    # Two things in the world are declared in JSON rather than by a generator,
+    # and nothing could see either of them from here.
+    #
+    # First the baseplate. `world_plan.MAP_EDGE` is a transcription of half of
+    # it, and the generators lay the city's east edge and the estate's west edge
+    # on that number. A transcription is only acceptable with a gate on it --
+    # otherwise it is a second source of truth, which is the defect this tree
+    # keeps producing -- so this is that gate. The position is checked as well as
+    # the size, because a baseplate of the right size shifted 100 studs east
+    # still puts 100 studs of the estate over nothing.
+    import json as _json
+    _base = None
+    def _hunt_base(node):
+        nonlocal _base
+        if isinstance(node, dict):
+            props = node.get("$properties", {})
+            if node.get("$className") == "Part" and "Size" in props:
+                if _base is None or props["Size"][0] > _base[0][0]:
+                    _base = (props["Size"], props.get("Position", [0, 0, 0]))
+            for v in node.values():
+                _hunt_base(v)
+    _hunt_base(_json.loads(GAME_PROJECT.read_text()))
+    if _base is None:
+        check("the game place has a baseplate", False, "none found in the project")
+    else:
+        (_bx, _by, _bz), (_px, _py, _pz) = _base
+        print(f"  baseplate {_bx:.0f}x{_bz:.0f} centred at ({_px:.0f},{_pz:.0f})")
+        check(f"the baseplate is 2 x MAP_EDGE ({2 * MAP_EDGE:.0f}) square",
+              _bx == 2 * MAP_EDGE and _bz == 2 * MAP_EDGE,
+              f"the project says {_bx:.0f}x{_bz:.0f}; world_plan.MAP_EDGE says "
+              f"{2 * MAP_EDGE:.0f}")
+        check("the baseplate is centred on the origin",
+              _px == 0 and _pz == 0, f"it sits at ({_px:.0f},{_pz:.0f})")
+
+    # ...and the spawn pad.
     # Everything above this line validates City.rbxmx against itself. The spawn
     # pad is not in City.rbxmx and is not in any generator -- it is four numbers
     # in default.project.json -- so nothing in this repo has ever been able to
@@ -950,14 +1021,38 @@ def main():
         bounds[model] = ((min(prev[0], x0), max(prev[1], x1),
                           min(prev[2], z0), max(prev[3], z1))
                          if prev else (x0, x1, z0, z1))
+    #
+    # Nine place points match no building at any slack: city_park, baywalk,
+    # marina, playground, the four sports pitches and the estate's field gate.
+    # They are left out on purpose. They are 14 to 341 studs from a carriageway
+    # and every one of them is right -- you walk to a tennis court across a park,
+    # and the field gate opens onto a farm track that is reached by its own
+    # waypoint chain and would be spoiled by a road. Holding them to ROAD_ACCESS
+    # would report nine correct things on the first run, which is how the "a heap
+    # of scrap is wall-shaped" attempt died. Measuring point-to-road instead of
+    # bounds-to-road does not rescue it either: that reads 62 studs for the four
+    # north shops, which are served by a road running along the back of them.
     served = {}
+    ambiguous = []
     for pid, px, pz, _f in city_points:
         if pid.startswith("wp_"):
             continue
-        for model, (x0, x1, z0, z1) in bounds.items():
-            if (x0 - DOOR_SLACK <= px <= x1 + DOOR_SLACK
-                    and z0 - DOOR_SLACK <= pz <= z1 + DOOR_SLACK):
-                served.setdefault(model, set()).add(pid)
+        matched = [model for model, (x0, x1, z0, z1) in bounds.items()
+                   if (x0 - DOOR_SLACK <= px <= x1 + DOOR_SLACK
+                       and z0 - DOOR_SLACK <= pz <= z1 + DOOR_SLACK)]
+        # Matching several models is only wrong if they are several *buildings*.
+        # One building is routinely emitted as more than one group -- Hartley
+        # Plumbing and Kemp Electrical are each a Structure and a Fittings, and
+        # the self-store office stands inside its own yard's shed footprint --
+        # and those all answer check 11 identically because they are in the same
+        # place. Overlapping bounds is what "the same building" means here; the
+        # alternative was a regex on the group names, which is a guess about
+        # naming rather than a statement about geometry.
+        if len(matched) > 1 and not all(boxes_lap(bounds[matched[0]], bounds[m])
+                                        for m in matched[1:]):
+            ambiguous.append((pid, matched))
+        for model in matched:
+            served.setdefault(model, set()).add(pid)
 
     def box_gap(a, b):
         ax0, ax1, az0, az1 = a
@@ -980,6 +1075,18 @@ def main():
               f"({', '.join(pids[:4])})", file=sys.stderr)
     check(f"every destination is within {ROAD_ACCESS:.0f} studs of a road",
           not stranded, f"{len(stranded)} stranded building(s)")
+
+    # The guard on DOOR_SLACK. Everything above is an argument about which
+    # buildings the game sends players to, and it is only worth as much as the
+    # attribution underneath it: a point that matches two buildings is naming
+    # neither, and it makes both of them "destinations" that something else is
+    # responsible for serving. This is what stops the slack being widened the
+    # next time a point falls outside it -- at 9.0 it fires.
+    for pid, models_hit in ambiguous:
+        print(f"    {pid} is a door to {len(models_hit)} buildings: "
+              f"{', '.join(sorted(models_hit))}", file=sys.stderr)
+    check(f"every door names one building at {DOOR_SLACK:.1f} studs of slack",
+          not ambiguous, f"{len(ambiguous)} ambiguous place point(s)")
     print()
 
     # --- 12. Every place reachable from the spawn ---

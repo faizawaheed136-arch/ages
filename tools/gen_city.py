@@ -73,6 +73,9 @@ from world_plan import (
     NORTHGATE_CLEAR, NORTHGATE_MID, NORTHGATE_WALK, NORTHGATE_Z0, NORTHGATE_Z1,
     # The south edge of the world. Transcribed over there, asserted here.
     MAP_SOUTH_EDGE,
+    # Half the baseplate. The city's east edge and the west estate's west edge
+    # are both this, and neither of them is a typed 1024 any more.
+    MAP_EDGE,
 )
 
 from house_plan import _ASSETS
@@ -116,9 +119,9 @@ GRASS_LIFT = 0.02
 # ---------------------------------------------------------------------------
 
 # City region: east of the town's grass (x 8), north of the town's east margin
-# (z 60), inside the enlarged 2048 baseplate (x/z +/- 1024). The connector's
+# (z 60), inside the enlarged 2048 baseplate (x/z +/- MAP_EDGE). The connector's
 # south end and the bridge waypoints land in the grass south of z 80.
-CITY_X0, CITY_X1 = 8.0, 1024.0
+CITY_X0, CITY_X1 = 8.0, MAP_EDGE
 # The north edge was 1120 -- the old top of the grid -- and the precinct loop
 # put a service road at z 1124..1146 and carried the connector to 1148, which
 # left both of them standing on nothing: their own slabs are solid, so every
@@ -454,6 +457,169 @@ AVE_FULL = [(a - AVE_WALK, a + AVE_W[k] + AVE_WALK) for k, a in enumerate(AVE)]
 WCS_ROAD = [(c, c + WCS_W) for c in SOUTH_CS]
 WCS_FULL = [(c - CS_WALK, c + WCS_W + CS_WALK) for c in SOUTH_CS]
 SOUTH_AVE_ROAD = [[(AVE[k], AVE[k] + AVE_W[k]) for k in cs_aves(c)] for c in SOUTH_CS]
+
+# ---------------------------------------------------------------------------
+# The west estate
+# ---------------------------------------------------------------------------
+#
+# MAP_PLAN section E, option (c): industrial and low-rise sprawl go west, docks
+# stay east on the bay. This is the northern half of that decision -- light
+# industrial and trade yards on the land between the town's north edge and the
+# top of the map.
+#
+# **Why here, measured rather than chosen.** The connector's west footway has run
+# from z 339 to z 1148 as one unbroken 809-stud slab ever since the northern link
+# went in. Its east twin is seven separate runs, broken by the six cross streets
+# and the service road, because on that side there is something to cross *to*. A
+# footway with a carriageway on one flank and nine hundred studs of untouched
+# baseplate on the other is not a pavement, it is the place the map was going to
+# be finished. The estate is what it fronts, and the estate's four streets are
+# what finally break the slab -- which is the same repair, in the same shape, as
+# `RoadReturn` in the town and the cross streets on the connector's east side.
+#
+# **Why light industry and not more docks.** The heavy end of this world is the
+# works, and the works is on the bay because that is where the wharf is; moving
+# freight inland to a district with no water is a port that cannot be one. What
+# goes here is what a town's residents actually work in and steal from --
+# builders' merchants, haulage, self-storage, a scrapyard, a vehicle workshop --
+# on the side of the map their houses are on. The town's north road already tees
+# into the connector 27 studs south of the estate's south edge, so the walk from
+# a front door to a yard gate is a walk, not a bus ride.
+#
+# The band. East edge is the connector's west footway, so the estate's frontage
+# *is* that pavement rather than a second one laid beside it. South edge is the
+# northern link's cleared band, the same number gen_town.py ends its lawns on.
+# North edge is the city's, so the map has one north edge and not two.
+EST_X0 = -MAP_EDGE
+EST_X1 = CONN_X0 - CONN_WALK
+EST_Z0 = NORTHGATE_CLEAR[1]
+EST_Z1 = CITY_Z1
+
+# The estate's streets and rows, on the works' own grid dimensions (WCS_W,
+# CS_WALK, CS_PITCH) rather than a set of its own. Two industrial districts
+# built to two different road standards is two vocabularies for one idea, and
+# the player crossing between them would be told nothing by the difference.
+#
+# Three depths for four rows: the last row is whatever the band has left. Typing
+# it as a fourth entry would be a fourth number that has to be right to the stud
+# or the estate either overhangs the map's north edge or stops short of it with
+# a strip of grass nothing is built on -- and nothing in this tree would say
+# which. `_south_streets` learned the same lesson from the other end.
+EST_ROW_DEPTH = [150.0, 185.0, 175.0]
+
+
+def _est_streets():
+    """The z of each estate street's south kerb, south to north.
+
+    The first is one pavement's width north of the band's edge, so the street's
+    *south* footway finishes exactly on the line gen_town.py's lawns end at."""
+    zs = [EST_Z0 + CS_WALK]
+    for depth in EST_ROW_DEPTH:
+        zs.append(zs[-1] + CS_PITCH + depth)
+    return zs
+
+
+EST_CS = _est_streets()
+EST_ROW_Z = [(c + WCS_W + CS_WALK, nxt - CS_WALK)
+             for c, nxt in zip(EST_CS, EST_CS[1:])]
+EST_ROW_Z.append((EST_CS[-1] + WCS_W + CS_WALK, EST_Z1 - WORKS_APRON))
+# The top of the map gets what the bottom of it gets: an apron wide enough for a
+# boundary treeline, and the same one, because two map edges treated two ways is
+# the player being told the world ends for two different reasons.
+EST_NORTH_APRON = (EST_ROW_Z[-1][1], EST_Z1)
+
+# The top row's depth is not checked here. What it has to be deep enough for is
+# a shed, its aprons and a container behind it, and SHED_APRON, BOX_L and
+# BOX_MARGIN are declared three thousand lines down with the helpers that use
+# them. The bound is asserted there, against those, rather than being a fifth
+# opinion here about how deep a yard is. See EST_TOP_ROW.
+
+# The two built columns, east to west, and the common beyond them.
+#
+# 230 is a frontage row plus its forecourt; 330 is a yard deep enough for a
+# transit shed with a lorry able to turn in front of it. Both are within the
+# works' own range (its two columns are 378 and 240), which is the only reason
+# they are not derived from something: the works measured them the hard way and
+# they are the same buildings.
+EST_COL_W = [230.0, 330.0]
+
+
+def _est_avenues():
+    """The x of each estate avenue's west kerb, east to west.
+
+    Walking west from the frontage line and subtracting a column and a road each
+    time, so a change to EST_COL_W moves the roads instead of stranding them."""
+    xs = []
+    east = EST_X1
+    for w in EST_COL_W:
+        xs.append(east - w - AVE_WALK - AVE_W_MAIN)
+        east = xs[-1] - AVE_WALK
+    return xs
+
+
+EST_AVE = _est_avenues()
+EST_COL_X = [(a + AVE_W_MAIN + AVE_WALK, e) for a, e in
+             zip(EST_AVE, [EST_X1] + [x - AVE_WALK for x in EST_AVE])]
+
+# **The rest of the band is not estate and is not empty either.** West of the
+# last avenue there are four hundred studs to the map edge, and an industrial
+# estate that sprawls the whole way is a bigger estate than this world has jobs
+# for. It is common: rough grazing, hedgerows, a farm track and the boundary
+# treeline `works_boundary` puts on the south of the works, for the reason that
+# function's docstring gives -- an edge a player can see the far side of is an
+# edge they walk to. It also gives the crime stack somewhere that is neither
+# street nor building, which the map has nowhere else at all.
+EST_COMMON_X0, EST_COMMON_X1 = EST_X0, EST_AVE[-1] - AVE_WALK
+
+# Carve lists, the same four the city grid keeps and for the same reasons: a
+# road is carved at the roads it crosses, a pavement at the full corridor of the
+# road it meets, and the junction square is filled once, explicitly.
+EST_CS_ROAD = [(c, c + WCS_W) for c in EST_CS]
+EST_CS_FULL = [(c - CS_WALK, c + WCS_W + CS_WALK) for c in EST_CS]
+EST_AVE_ROAD = [(a, a + AVE_W_MAIN) for a in EST_AVE]
+EST_AVE_FULL = [(a - AVE_WALK, a + AVE_W_MAIN + AVE_WALK) for a in EST_AVE]
+# The estate's streets run from the westmost avenue's west kerb to the
+# connector's west kerb, so both ends of every one of them is a T.
+EST_CS_X0, EST_CS_X1 = EST_AVE[-1], CONN_X0
+# ...and the avenues run from the first street to the last, so both of their
+# ends are T-junctions too. They do *not* carry on into the north apron: that is
+# the boundary treeline, and the works' avenues stop at its south street for the
+# same reason. Nor do they carry south past the estate's first street into the
+# empty band below -- a carriageway that ends in a field is what the town's back
+# street was before `RoadReturn` was carried the whole way, and the fix for it is
+# not to build another one.
+EST_AVE_Z0, EST_AVE_Z1 = EST_CS[0], EST_CS[-1] + WCS_W
+
+# The common has to read as country and not as a verge, and the estate has to
+# read as the thing the country stops at. Both bounds are measured off the
+# estate's own columns rather than picked: narrower than the widest yard column
+# and it is a margin, wider than the two built columns together and the estate
+# is a strip on the edge of a field that should have had a third column in it.
+EST_COMMON_W = EST_COMMON_X1 - EST_COMMON_X0
+assert max(EST_COL_W) <= EST_COMMON_W <= sum(EST_COL_W) + AVE_WALK * 2 + AVE_W_MAIN, (
+    f"the common west of the estate is {EST_COMMON_W:.0f} studs wide, against "
+    f"built columns of {', '.join(f'{w:.0f}' for w in EST_COL_W)}. Under "
+    f"{max(EST_COL_W):.0f} it is a verge with trees on it rather than open "
+    f"country; over "
+    f"{sum(EST_COL_W) + AVE_WALK * 2 + AVE_W_MAIN:.0f} there is room for another "
+    f"avenue and another column and the estate should have one. Check EST_COL_W "
+    f"and EST_X1 -- the band itself is fixed at both ends.")
+
+# No estate street may land in a band the connector's west footway has already
+# yielded to somebody else. It cannot happen today -- EST_Z0 *is* the northern
+# link's cleared edge -- but it is one edit away the moment a row depth or EST_Z0
+# moves, and what it produces is not a visible break: `carve` would hand back
+# two overlapping gaps, the footway would lose a stretch it should have kept,
+# and the symptom is a missing pavement nobody thinks to look for.
+for _band in EST_CS_FULL:
+    for _taken, _what in ((GATE_CLEAR, "the gate road"),
+                          (NORTHGATE_CLEAR, "the northern link")):
+        assert _band[1] <= _taken[0] or _band[0] >= _taken[1], (
+            f"an estate street's corridor runs z {_band[0]:.0f}..{_band[1]:.0f}, "
+            f"which overlaps {_what} at z {_taken[0]:.0f}..{_taken[1]:.0f}. Both "
+            f"carve the connector's west footway, and two overlapping gaps in one "
+            f"carve list take out more pavement than either asked for. Move EST_Z0 "
+            f"or the first entry of EST_ROW_DEPTH.")
 
 # ---------------------------------------------------------------------------
 # Two more ways out of town
@@ -1494,6 +1660,28 @@ with group("Ground"):
         box(f"CityGround{_i}", (CITY_X0, _sx1, _sz0, _sz1, GROUND_BOTTOM, CITY_GRASS_TOP),
             LAWN, GRASS)
 
+    # The west estate's ground. It stops at CITY_X0 and not at EST_X1, which is
+    # five studs further east: CityGround already starts at CITY_X0 and runs
+    # under the connector and its two footways, and a second slab reaching to
+    # the frontage line would put two boxes with the same top height in the same
+    # five studs for the whole 813-stud length of the estate. That is the one
+    # defect every surface in this file is tiled to avoid, and here it would have
+    # been a hairline of z-fight down the entire west side of the map.
+    #
+    # Its south face lands on EST_Z0, which is NORTHGATE_CLEAR[1], which is
+    # exactly where gen_town.py stops its own lawns (`NORTH_Z1`). The seam
+    # between the town's grass and the estate's is a shared edge in two files
+    # that both name it after the same road.
+    #
+    # It stops at the common's east edge rather than running under it. The
+    # common lays its own pasture at the same top height, and a slab under a
+    # slab is the whole 400-stud width of the common z-fighting -- the same
+    # mistake as the five studs at the other end, in the other direction. Grass,
+    # pasture, verge: three tiles, each owning its own ground, which is how every
+    # other surface in this file is laid.
+    box("WestGround", (EST_COMMON_X1, CITY_X0, EST_Z0, EST_Z1,
+                       GROUND_BOTTOM, CITY_GRASS_TOP), LAWN, GRASS)
+
 with group("Streets"):
     # The connector, uncarved -- it is the through route and nothing crosses it.
     # Its west verge runs the full length; its east verge is carved at the cross
@@ -1502,7 +1690,13 @@ with group("Streets"):
     # The west verge is carved at the gate road for the same reason the east one
     # is carved at the cross streets: a pavement drawn straight across the mouth
     # of a side road is a kerb the road runs under, not a junction.
-    for za, zb in carve((CONN_Z0, CONN_Z1), GATE_FULL + NORTHGATE_FULL):
+    #
+    # ...and now at the estate's four streets, which is what turns this from a
+    # footway with nothing on its west flank into a frontage. Before the estate
+    # it was a single unbroken 809-stud slab from z 339 to the top of the map --
+    # measurably the longest run of pavement in the world and the only one with
+    # no crossing on it at all.
+    for za, zb in carve((CONN_Z0, CONN_Z1), GATE_FULL + NORTHGATE_FULL + EST_CS_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "Conn", sides="west")
     for za, zb in carve((CONN_Z0, CONN_Z1), CS_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "ConnE", sides="east")
@@ -1629,6 +1823,27 @@ with group("Streets"):
             road_ew(c, c + WCS_W, xa, xb, f"W{j}")
             walks_ew(c, c + WCS_W, xa, xb, CS_WALK, f"W{j}")
 
+    # The west estate. Two avenues and four streets, on the works' dimensions,
+    # carved against each other exactly the way the city grid is: the streets
+    # take the corner squares (carved at the avenues' carriageway) and the
+    # avenues yield the whole corridor (carved at the streets' full width), so
+    # one and only one box owns every square and the junction tiles below fill
+    # what both of them gave up.
+    for _a in EST_AVE:
+        for _za, _zb in carve((EST_AVE_Z0, EST_AVE_Z1), EST_CS_ROAD):
+            road_ns(_a, _a + AVE_W_MAIN, _za, _zb, f"Est{_a:.0f}")
+        for _za, _zb in carve((EST_AVE_Z0, EST_AVE_Z1), EST_CS_FULL):
+            walks_ns(_a, _a + AVE_W_MAIN, _za, _zb, AVE_WALK, f"Est{_a:.0f}")
+    for _j, _c in enumerate(EST_CS):
+        for _xa, _xb in carve((EST_CS_X0, EST_CS_X1), EST_AVE_ROAD):
+            road_ew(_c, _c + WCS_W, _xa, _xb, f"E{_j}")
+            walks_ew(_c, _c + WCS_W, _xa, _xb, CS_WALK, f"E{_j}")
+    for _a in EST_AVE:
+        for _c in EST_CS:
+            box(f"XE{_a:.0f}_{_c:.0f}",
+                (_a, _a + AVE_W_MAIN, _c, _c + WCS_W, GROUND_BOTTOM, GROUND),
+                TARMAC, ASPHALT)
+
     # The last cross street's north pavement, unbroken from end to end. No
     # avenue crosses it -- they all stop at this junction -- so carving it at the
     # avenues would leave six holes in the civic precinct's frontage.
@@ -1702,6 +1917,11 @@ with group("Streets"):
 
     # Centre lines.
     dashes_ns(CONN_MID, CONN_Z0, CONN_Z1, [], "Conn")
+    for _a in EST_AVE:
+        dashes_ns(_a + AVE_W_MAIN / 2, EST_AVE_Z0, EST_AVE_Z1, EST_CS_ROAD,
+                  f"Est{_a:.0f}")
+    for _j, _c in enumerate(EST_CS):
+        dashes_ew(_c + WCS_W / 2, EST_CS_X0, EST_CS_X1, EST_AVE_ROAD, f"E{_j}")
     dashes_ns(PRECINCT_AVE_X0 + AVE_W[5] / 2, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
               [], "PrecinctAve")
     dashes_ew(NORTH_ROAD_Z0 + WCS_W / 2, CONN_X1, PRECINCT_AVE_X1, [], "NorthSvc")
@@ -5393,21 +5613,42 @@ def works_depot(x0, x1, z0, z1):
                 gates=[("east", z0 + 40.0, 26.0), ("south", (x0 + x1) / 2, 26.0)])
 
 
-def works_boundary(x0, x1, z0, z1):
-    """The south apron: what the map does instead of stopping.
+def works_boundary(x0, x1, z0, z1, name="WorksBoundary", label="BoundaryTree",
+                   along="x", edge="low"):
+    """An apron at the edge of the map: what the world does instead of stopping.
 
-    A treeline and a boundary fence, because the alternative down here is the
-    baseplate -- and an edge a player can see the far side of is an edge they
-    walk to. Trees, so that the thing beyond the works reads as somewhere the
-    city has not got to yet rather than as the end of the world."""
-    with group("WorksBoundary"):
+    A verge and a treeline, because the alternative out here is the baseplate --
+    and an edge a player can see the far side of is an edge they walk to. Trees,
+    so that the thing beyond reads as somewhere the city has not got to yet
+    rather than as the end of the world.
+
+    The works' south apron was the only one when this was written and every
+    argument below was a constant in the body. There are three now -- the estate
+    has one along the top of the map and one down the west side -- and the
+    alternative to parameterising this was a third and fourth copy of a treeline
+    loop, in a file where `tree` itself was written out three times before
+    somebody went looking. `along` is the axis the trees run down and `edge` says
+    which face of the apron is the map edge, so the trees stand on the outside
+    of the verge in all four orientations rather than in the middle of it.
+
+    The defaults reproduce the works' apron exactly, to the stud and to the part
+    name, so the one caller that predates the arguments is untouched by them."""
+    if along not in ("x", "z"):
+        raise ValueError(f"{name}: an apron runs along x or z, not {along}")
+    with group(name):
         box("Verge", (x0, x1, z0, z1, GROUND_BOTTOM, CITY_GRASS_TOP + GRASS_LIFT),
             PITCH_GREEN, GRASS)
-    for i in range(int((x1 - x0) / 30.0)):
-        tx = x0 + 15.0 + i * 30.0
-        tree(tx, z0 + 12.0 + (i % 3) * 7.0, GROUND,
+    a0, a1 = (x0, x1) if along == "x" else (z0, z1)
+    b0, b1 = (z0, z1) if along == "x" else (x0, x1)
+    for i in range(int((a1 - a0) / 30.0)):
+        # The three-deep stagger comes off whichever face is the map edge, so an
+        # apron on the north of the world has its trees along its north side.
+        near = b0 + 12.0 if edge == "low" else b1 - 12.0
+        step = 7.0 if edge == "low" else -7.0
+        ta, tb = a0 + 15.0 + i * 30.0, near + (i % 3) * step
+        tree(*((ta, tb) if along == "x" else (tb, ta)), GROUND,
              height=17.0 + (i % 4) * 3.0, spread=12.0 + (i % 3) * 2.0,
-             label=f"BoundaryTree{i}")
+             label=f"{label}{i}")
 
 
 def works_wharf_fittings():
@@ -5438,6 +5679,411 @@ works_scrapyard(_wx[0][0], _wx[0][1], _wz[0][0], _wz[0][1])
 works_depot(_wx[1][0], _wx[1][1], _wz[0][0], _wz[0][1])
 works_boundary(WORKS_X0, WORKS_X1, WORKS_Z0, SOUTH_CS[0] - CS_WALK)
 works_wharf_fittings()
+
+
+# ---------------------------------------------------------------------------
+# The west estate: what stands in it
+# ---------------------------------------------------------------------------
+#
+# Seven blocks, and no two of them face the same way by accident. Streets 2 and
+# 3 each get a front on both sides -- haulage south-facing against the workshop
+# north of it, plant hire against the distribution shed -- so half the estate is
+# a street with buildings down both flanks rather than a service road with backs
+# turned to it. `works_timber`'s docstring names that as the complaint that
+# started this map work at all, and an estate laid out in one pass is the one
+# place it costs nothing to fix.
+#
+# The deepest thing any row has to hold, from the parts that make it: a shed
+# with an apron in front, a container turned broadside behind it, and the
+# clearance a container keeps off the edge of its slab. This is where the top
+# row's depth gets checked, because SHED_APRON, SHED_DEPTH_MAX, BOX_L and
+# BOX_MARGIN all exist by now and none of them existed where EST_ROW_Z is built.
+SHED_DEPTH_MAX = 56.0
+EST_ROW_MIN = SHED_APRON + SHED_DEPTH_MAX + BOX_L + 2 * BOX_MARGIN
+_est_top = EST_ROW_Z[-1][1] - EST_ROW_Z[-1][0]
+assert EST_ROW_MIN <= _est_top < max(EST_ROW_DEPTH) + CS_PITCH + EST_ROW_MIN, (
+    f"the estate's top row came out {_est_top:.0f} studs deep. Under "
+    f"{EST_ROW_MIN:.0f} it cannot hold a shed with an apron in front and a "
+    f"container behind it, which is what every other row in this estate holds, "
+    f"and the block would be squashed rather than dropped -- nothing else in "
+    f"this tree would say so. Over "
+    f"{max(EST_ROW_DEPTH) + CS_PITCH + EST_ROW_MIN:.0f} there is room for a "
+    f"fifth street and a fifth row and the estate should have them. The row is "
+    f"the remainder of the band, so fix it by changing EST_ROW_DEPTH -- not by "
+    f"moving EST_Z1, which is the city's north edge and not the estate's.")
+
+# Trade-counter units on the estate's front row: the width a small trade counter
+# needs, and the gap between two of them. Both are read back out of the row by
+# `solve_row`, so this is the shape of the parade rather than four typed spans.
+EST_UNIT_GAP = 10.0
+
+
+def est_trade_park(x0, x1, z0, z1):
+    """The estate's front row, east half: four trade counters facing the town.
+
+    These are the only buildings in the estate a player walks into rather than
+    drives to, and they are on the block nearest the town's north road for that
+    reason -- a builders' merchant is a shop with a yard behind it, and the shop
+    half belongs where the footfall arrives.
+    """
+    depth = 38.0
+    spans = solve_row(x0 + 10.0, x1 - 10.0, [1, 1, 1, 1], EST_UNIT_GAP)
+    # `front_type` is the shape of the opening and `trade` is what is behind it.
+    # The tool hire gets a roll-up door because that is what a hire counter is --
+    # you drive a mixer out of it -- and it is the one of the four that reads as
+    # industry from across the street rather than as a shop with a yard.
+    units = (("est_plumbers", "Hartley Plumbing", "shop", "counter",
+              BRICK_PALE, AWNING_BLUE),
+             ("est_electrical", "Kemp Electrical", "shop", "shelves",
+              WORKS_CLAD, None),
+             ("est_toolhire", "Ridge Tool Hire", "garage", "racks",
+              WORKS_BRICK, None),
+             ("est_timber_counter", "Ashby Timber", "shop", "market",
+              LOG_BROWN, AWNING_GREEN))
+    for (ux0, ux1), (pid, name, ftype, trade, colour, awning) in zip(spans, units):
+        mid = (ux0 + ux1) / 2
+        tag = name.replace(" ", "")
+        storefront(tag, ux0, ux1, z0, z0 + depth, mid, colour,
+                   front="south", front_type=ftype, storeys=1,
+                   awning=awning, glass="high")
+        street_fittings(tag, ux0, ux1, z0, z0 + depth, "south", trade)
+        place_point(pid, mid, z0 - 2.0, PAVING, f"{name}, on the estate's front row")
+
+    # The customer yard behind them. A trade counter without somewhere to load a
+    # van is a shop with a lorry sign on it, and this is the whole difference
+    # between this row and the main street's.
+    with group("TradeParkYard"):
+        hardstanding("Loading", x0 + 6.0, x1 - 6.0, z0 + depth + 6.0, z1 - 24.0)
+        for i, (sx0, sx1) in enumerate(spans):
+            box(f"Bay{i}", (sx0 + 4.0, sx1 - 4.0, z0 + depth + 8.0, z0 + depth + 9.0,
+                            GROUND, GROUND + 0.06), SAFETY_YELLOW, SMOOTH, collide=False)
+    for i in range(4):
+        tree(x0 + 26.0 + i * (x1 - x0 - 52.0) / 3.0, z1 - 12.0, GROUND,
+             height=16.0, spread=11.0, label=f"TradeParkTree{i}")
+    for (ux0, ux1) in spans[::2]:
+        street_lamp((ux0 + ux1) / 2, z0 - 6.0, 1, label=f"TradeParkLamp{ux0:.0f}")
+
+
+def est_builders_merchant(x0, x1, z0, z1):
+    """The estate's front row, west half: aggregates and building materials.
+
+    Bays rather than a second shed. A merchant's yard is a row of three-sided
+    concrete pens with a different heap in each one, and that is a shape this
+    file has nowhere else -- the works stores things in stacks, in piles and in
+    containers, and none of them reads as *sold by the tonne*."""
+    shed_x0, shed_x1 = x0 + 14.0, x0 + 190.0
+    shed_z0 = z0 + SHED_APRON
+    shed_z1 = shed_z0 + 46.0
+    door = works_shed("MerchantShed", shed_x0, shed_x1, shed_z0, shed_z1, "south",
+                      3, GROUND + 26.0, WORKS_CLAD, sign_text="DALEY BUILDING SUPPLIES",
+                      brick=WORKS_BRICK)
+    place_point("est_merchant", door, shed_z0 - SHED_APRON / 2, GROUND,
+                "Daley Building Supplies, on the estate's front row")
+
+    yard_z0 = shed_z1 + 6.0
+    with group("MerchantYard"):
+        hardstanding("Yard", x0 + 8.0, x1 - 8.0, yard_z0, z1 - 6.0)
+    # Four aggregate bays along the back wall, each a three-sided pen with its
+    # own heap. The pen walls are what make a heap read as stock rather than as
+    # spoil, which is the difference between this yard and the scrapyard's.
+    pens = solve_row(x0 + 20.0, x1 - 20.0, [1, 1, 1, 1], 6.0)
+    heaps = ((196, 190, 176), (162, 148, 128), (120, 116, 112), (150, 108, 78))
+    for i, ((px0, px1), heap) in enumerate(zip(pens, heaps)):
+        with group(f"MerchantBay{i}"):
+            box("Back", (px0, px1, z1 - 40.0, z1 - 36.0, GROUND, GROUND + 12.0),
+                CONCRETE_GREY, CONCRETE)
+            for side, sx in (("W", px0), ("E", px1 - 4.0)):
+                box(f"Wall{side}", (sx, sx + 4.0, z1 - 40.0, z1 - 12.0,
+                                    GROUND, GROUND + 12.0), CONCRETE_GREY, CONCRETE)
+            box("Heap", (px0 + 5.0, px1 - 5.0, z1 - 35.0, z1 - 15.0,
+                         GROUND, GROUND + 9.0), heap, PEBBLE)
+            box("HeapTop", (px0 + 9.0, px1 - 9.0, z1 - 32.0, z1 - 19.0,
+                            GROUND + 9.0, GROUND + 12.5), heap, PEBBLE)
+    for i in range(2):
+        silo(f"MerchantSilo{i}", x1 - 46.0 + i * 18.0, yard_z0 + 24.0, height=30.0)
+    for i in range(2):
+        log_pile(f"MerchantTimber{i}", x0 + 210.0, x0 + 244.0, yard_z0 + 20.0 + i * 26.0)
+    works_fence("MerchantFence", x0 + 6.0, x1 - 6.0, yard_z0 - 2.0, z1 - 4.0,
+                gates=[("south", x1 - 60.0, 26.0)])
+
+
+def est_selfstore(x0, x1, z0, z1):
+    """Second row, east: self-storage. Containers on a slab, and an office.
+
+    Cheap to build and it earns its place twice: it is the one destination in
+    the estate that a *resident* has a reason to visit rather than a worker, and
+    a yard of identical locked boxes is the terrain the crime stack has nowhere
+    else on the map."""
+    off_x0, off_x1 = x1 - 76.0, x1 - 10.0
+    storefront("StoreOffice", off_x0, off_x1, z0, z0 + 30.0, (off_x0 + off_x1) / 2,
+               BRICK_PALE, front="south", front_type="counter", storeys=1,
+               glass="high")
+    street_fittings("StoreOffice", off_x0, off_x1, z0, z0 + 30.0, "south", "desk")
+    place_point("est_selfstore", (off_x0 + off_x1) / 2, z0 - 2.0, PAVING,
+                "the office at Northgate Self Storage")
+
+    yard_z0, yard_z1 = z0 + 8.0, z1 - 8.0
+    with group("SelfStoreYard"):
+        hardstanding("Yard", x0 + 8.0, off_x0 - 8.0, yard_z0, yard_z1)
+        hardstanding("Drive", off_x0 - 8.0, x1 - 8.0, z0 + 38.0, yard_z1)
+    # Four aisles of single-height containers, laid broadside so the gaps between
+    # them are aisles a player walks down rather than slots seen end-on. The
+    # pitch is solved out of the yard for the reason `works_depot` gives: a typed
+    # pitch fits the yard it was measured in and overhangs the next one.
+    rows, per_row = 4, 3
+    pitch = (yard_z1 - yard_z0 - BOX_W - 2 * BOX_MARGIN) / (rows - 1)
+    for r in range(rows):
+        rz = yard_z0 + BOX_MARGIN + BOX_W / 2 + r * pitch
+        for c in range(per_row):
+            container_stack(f"SelfStore{r}_{c}", x0 + 30.0 + c * (BOX_L + 6.0), rz,
+                            "x", 1 + (r + c) % 2, r + c)
+    works_fence("SelfStoreFence", x0 + 4.0, x1 - 6.0, yard_z0 - 2.0, yard_z1 + 2.0,
+                gates=[("south", x1 - 40.0, 24.0)])
+
+
+def est_haulage(x0, x1, z0, z1):
+    """Second row, west: a haulage yard, fronting *north* onto street 3.
+
+    The one block in the estate a lorry is the reason for. Everything in it is
+    laid out around the turn: the shed at the back of the yard rather than on
+    the street, the apron deep enough to swing a trailer, and the gate on the
+    long side rather than the short one."""
+    shed_x0, shed_x1 = x0 + 24.0, x0 + 214.0
+    shed_z1 = z1 - SHED_APRON
+    shed_z0 = shed_z1 - 48.0
+    door = works_shed("HaulageShed", shed_x0, shed_x1, shed_z0, shed_z1, "north",
+                      3, GROUND + 28.0, WORKS_CLAD_2, sign_text="MARCH & SON HAULAGE")
+    place_point("est_haulage", door, shed_z1 + SHED_APRON / 2, GROUND,
+                "March & Son Haulage, on the estate's second street")
+
+    yard_z1 = shed_z0 - 6.0
+    with group("HaulageYard"):
+        hardstanding("Yard", x0 + 8.0, x1 - 8.0, z0 + 6.0, yard_z1)
+    # Trailers parked nose-in along the south edge: box bodies on legs, which is
+    # the cheapest thing that reads as a vehicle yard without a vehicle in it.
+    for i in range(5):
+        tx = x0 + 34.0 + i * 56.0
+        with group(f"HaulageTrailer{i}"):
+            box("Body", (tx - 9.0, tx + 9.0, z0 + 14.0, z0 + 52.0,
+                         GROUND + 5.0, GROUND + 18.0),
+                CONTAINER_COLORS[i % len(CONTAINER_COLORS)], SMOOTH)
+            box("Skirt", (tx - 8.0, tx + 8.0, z0 + 16.0, z0 + 50.0,
+                          GROUND + 3.4, GROUND + 5.0), (58, 58, 60), METAL)
+            for dz in (z0 + 20.0, z0 + 46.0):
+                box(f"Bogie{dz:.0f}", (tx - 8.5, tx + 8.5, dz - 3.0, dz + 3.0,
+                                       GROUND, GROUND + 3.4), (40, 40, 42), METAL)
+            box("Legs", (tx - 7.0, tx + 7.0, z0 + 15.0, z0 + 16.5,
+                         GROUND, GROUND + 5.0), STEEL, METAL)
+    for i in range(3):
+        container_stack(f"HaulageStack{i}", x1 - 40.0, z0 + 74.0 + i * 40.0, "z",
+                        2, i + 1)
+    gantry("HaulageGantry", x0 + 16.0, x0 + 150.0, z0 + 78.0, height=34.0)
+    works_fence("HaulageFence", x0 + 6.0, x1 - 6.0, z0 + 4.0, yard_z1,
+                gates=[("east", z0 + 40.0, 28.0), ("north", x1 - 50.0, 26.0)])
+
+
+def est_workshop(x0, x1, z0, z1):
+    """Third row, east: a commercial vehicle workshop, fronting south onto the
+    same street the haulage yard's shed faces.
+
+    Two fronts on one street is what makes street 3 a street. It is also the
+    only pairing in the estate that means anything on the ground: the lorries
+    are repaired across the road from where they are parked."""
+    shed_x0, shed_x1 = x0 + 12.0, x1 - 12.0
+    shed_z0 = z0 + SHED_APRON
+    shed_z1 = shed_z0 + 44.0
+    door = works_shed("WorkshopShed", shed_x0, shed_x1, shed_z0, shed_z1, "south",
+                      3, GROUND + 24.0, WORKS_CLAD, sign_text="BRANDT COMMERCIALS",
+                      brick=CONCRETE_GREY)
+    place_point("est_workshop", door, shed_z0 - SHED_APRON / 2, GROUND,
+                "Brandt Commercials, the estate's vehicle workshop")
+
+    yard_z0 = shed_z1 + 6.0
+    with group("WorkshopYard"):
+        hardstanding("Yard", x0 + 8.0, x1 - 8.0, yard_z0, z1 - 8.0)
+    # The fuel island: a canopy on two columns with a pair of pumps under it.
+    # Every other roof in the estate is a shed roof, and this is the one that is
+    # not -- which is what makes the block legible from the street.
+    fx = x0 + 46.0
+    with group("WorkshopFuel"):
+        box("Canopy", (fx - 24.0, fx + 24.0, yard_z0 + 14.0, yard_z0 + 42.0,
+                       GROUND + 17.0, GROUND + 20.0), (236, 232, 224), SMOOTH)
+        box("Fascia", (fx - 24.0, fx + 24.0, yard_z0 + 13.0, yard_z0 + 43.0,
+                       GROUND + 20.0, GROUND + 22.5), SAFETY_YELLOW, SMOOTH)
+        for cx in (fx - 18.0, fx + 18.0):
+            box(f"Column{cx:.0f}", (cx - 1.6, cx + 1.6, yard_z0 + 26.0, yard_z0 + 30.0,
+                                    GROUND, GROUND + 17.0), STEEL, METAL)
+        for px in (fx - 9.0, fx + 9.0):
+            box(f"Pump{px:.0f}", (px - 2.2, px + 2.2, yard_z0 + 25.0, yard_z0 + 31.0,
+                                  GROUND, GROUND + 7.0), (206, 72, 60), SMOOTH)
+    for i in range(3):
+        scrap_pile(f"WorkshopParts{i}", x1 - 66.0 + (i % 2) * 30.0,
+                   yard_z0 + 18.0 + i * 26.0, 9.0 + (i % 2) * 3.0, 6.0)
+    works_fence("WorkshopFence", x0 + 6.0, x1 - 6.0, yard_z0 - 2.0, z1 - 6.0,
+                gates=[("west", yard_z0 + 30.0, 24.0)])
+
+
+def est_planthire(x0, x1, z0, z1):
+    """Third row, west: plant and tool hire, fronting north onto street 4.
+
+    Pipe racks and a spoil heap rather than another container yard. What the
+    block is for is a hire counter you walk into and a compound you can see over
+    the fence -- the compound is the thing being sold."""
+    shed_x0, shed_x1 = x1 - 190.0, x1 - 16.0
+    shed_z1 = z1 - SHED_APRON
+    shed_z0 = shed_z1 - 44.0
+    door = works_shed("PlantShed", shed_x0, shed_x1, shed_z0, shed_z1, "north",
+                      2, GROUND + 26.0, WORKS_CLAD_2, sign_text="VALE PLANT HIRE",
+                      brick=WORKS_BRICK)
+    place_point("est_planthire", door, shed_z1 + SHED_APRON / 2, GROUND,
+                "Vale Plant Hire, at the top of the estate")
+
+    yard_z1 = shed_z0 - 6.0
+    with group("PlantYard"):
+        hardstanding("Compound", x0 + 8.0, x1 - 8.0, z0 + 8.0, yard_z1)
+    for i in range(3):
+        pipe_rack(f"PlantPipes{i}", x0 + 24.0, x0 + 124.0, z0 + 24.0 + i * 22.0,
+                  height=12.0 + (i % 2) * 4.0, pipes=3)
+    for i, (sx, sz, r, h) in enumerate(((x1 - 70.0, z0 + 30.0, 15.0, 11.0),
+                                        (x1 - 118.0, z0 + 24.0, 12.0, 8.0))):
+        scrap_pile(f"PlantSpoil{i}", sx, sz, r, h)
+    for i in range(2):
+        container_stack(f"PlantStore{i}", x0 + 168.0 + i * 44.0, yard_z1 - 22.0,
+                        "x", 1, i + 2)
+    works_fence("PlantFence", x0 + 6.0, x1 - 6.0, z0 + 6.0, yard_z1,
+                gates=[("south", x0 + 90.0, 26.0)])
+
+
+def est_distribution(x0, x1, z0, z1):
+    """The top row, all of it: the distribution shed.
+
+    One block and not two. The avenues stop at street 4, so there is no road
+    down the middle of this row to divide it -- and a 632-stud frontage is the
+    one place in the estate big enough for a building that reads from the far
+    side of the map, which is what the top of the world needs standing on it."""
+    shed_x0, shed_x1 = x0 + 60.0, x0 + 420.0
+    shed_z0 = z0 + SHED_APRON
+    shed_z1 = shed_z0 + SHED_DEPTH_MAX
+    door = works_shed("DistributionShed", shed_x0, shed_x1, shed_z0, shed_z1, "south",
+                      5, GROUND + 34.0, WORKS_CLAD, sign_text="NORTHGATE DISTRIBUTION",
+                      brick=CONCRETE_GREY)
+    place_point("est_distribution", door, shed_z0 - SHED_APRON / 2, GROUND,
+                "Northgate Distribution, at the top of the map")
+
+    yard_z0 = shed_z1 + 6.0
+    with group("DistributionYard"):
+        hardstanding("Yard", x0 + 20.0, shed_x1 + 10.0, yard_z0, z1 - 8.0)
+        hardstanding("EastApron", shed_x1 + 10.0, x1 - 14.0, z0 + 8.0, z1 - 8.0)
+    for i in range(6):
+        container_stack(f"DistStack{i}", x0 + 60.0 + (i % 3) * 48.0,
+                        yard_z0 + 18.0 + (i // 3) * 18.0, "x", 2 + (i % 2), i)
+    rows = 3
+    apron_z0, apron_z1 = z0 + 8.0, z1 - 8.0
+    pitch = (apron_z1 - apron_z0 - BOX_L - 2 * BOX_MARGIN) / (rows - 1)
+    for i in range(rows):
+        container_stack(f"DistRow{i}", x1 - 44.0,
+                        apron_z0 + BOX_MARGIN + BOX_L / 2 + i * pitch, "z", 1, i + 3)
+    gantry("DistributionGantry", x0 + 34.0, x0 + 180.0, yard_z0 + 26.0, height=38.0)
+    works_fence("DistributionFence", x0 + 16.0, x1 - 10.0, yard_z0 - 2.0, z1 - 6.0,
+                gates=[("east", yard_z0 + 34.0, 28.0)])
+
+
+# How much of the common one field is, and how wide the farm track running into
+# it is. The track is the width of a vehicle and no more -- it is a track, and a
+# second carriageway out here would be a road the estate does not need and the
+# route lattice would have to be extended down.
+EST_FIELD_ROWS = 3
+EST_TRACK_W = 12.0
+# Where the track runs and where it stops. Module level rather than local to
+# `est_common`, because the route lattice has to chain along it and a second
+# copy of "the middle of the estate's second street" computed down there would
+# be the third place that phrase is written down in this file.
+EST_TRACK_Z = EST_CS[1] + WCS_W / 2
+EST_TRACK_GATE_X = EST_X0 + WORKS_APRON + 18.0
+
+
+def est_common(x0, x1, z0, z1):
+    """West of the estate: rough grazing, hedgerows and a farm track.
+
+    Four hundred studs of it, and the alternative was a wider estate. This world
+    does not have the jobs for one -- the estate is already seven yards against
+    the works' six -- and a district built to fill a rectangle is a district with
+    nothing in it. Open country is the honest answer to land the city has not
+    reached, and it is the answer `works_boundary` already gives on the south of
+    the works, just at forty studs instead of four hundred.
+
+    It is also the only ground in the world that is neither street nor building.
+    Everything the crime stack does is currently done in front of a window."""
+    with group("CommonGround"):
+        # The common's own ground, not a colour laid over the estate's: WestGround
+        # stops at this box's east face. Same top height as the estate's lawn,
+        # because they are the same ground at different colours -- what makes the
+        # seam invisible is that they abut rather than overlap.
+        box("Pasture", (x0, x1, z0, z1, GROUND_BOTTOM, CITY_GRASS_TOP),
+            PITCH_GREEN, GRASS)
+
+    # The track: west out of the junction at the west end of the estate's second
+    # street, because that junction already exists and a track that begins at a
+    # road is a track somebody drove. It stops at a field gate rather than at the
+    # treeline -- a track that runs into a hedge is a texture, a track that ends
+    # at a gate is somewhere the map used to go.
+    track_z, gate_x = EST_TRACK_Z, EST_TRACK_GATE_X
+    with group("CommonTrack"):
+        # GROUND exactly, like a road or a park path: the pasture tops a
+        # fiftieth lower, so the track always wins the pixel where they meet. At
+        # GROUND - 0.04 it was drawn *under* the pasture and was not there at all
+        # -- a surface that loses to the ground it is laid on is invisible, and
+        # nothing in this tree would have reported it.
+        box("Track", (gate_x, x1, track_z - EST_TRACK_W / 2, track_z + EST_TRACK_W / 2,
+                      GROUND_BOTTOM, GROUND), (152, 138, 112), PEBBLE)
+        for side, sz in (("S", track_z - EST_TRACK_W / 2), ("N", track_z + EST_TRACK_W / 2)):
+            box(f"Rut{side}", (gate_x, x1, sz - 1.4, sz + 1.4,
+                               GROUND, GROUND + 0.06), (128, 116, 94), PEBBLE,
+                collide=False)
+        for post_z in (track_z - EST_TRACK_W / 2 - 1.0, track_z + EST_TRACK_W / 2 + 1.0):
+            box(f"GatePost{post_z:.0f}", (gate_x - 1.4, gate_x + 1.4,
+                                          post_z - 1.4, post_z + 1.4,
+                                          GROUND, GROUND + 8.0), LOG_BROWN, WOOD)
+        for i in range(3):
+            box(f"GateRail{i}", (gate_x - 0.6, gate_x + 0.6,
+                                 track_z - EST_TRACK_W / 2, track_z + EST_TRACK_W / 2,
+                                 GROUND + 2.0 + i * 2.2, GROUND + 3.0 + i * 2.2),
+                LOG_BROWN, WOOD)
+    place_point("est_common_gate", gate_x + 8.0, track_z, GROUND,
+                "the field gate, west of the estate")
+
+    # Hedgerows dividing the common into fields, one per boundary between them.
+    # They stop short of the track so it runs through rather than into them.
+    for i in range(1, EST_FIELD_ROWS):
+        hz = z0 + (z1 - z0) * i / EST_FIELD_ROWS
+        if abs(hz - track_z) < EST_TRACK_W:
+            continue
+        with group(f"Hedgerow{i}"):
+            box("Hedge", (x0 + WORKS_APRON, x1, hz - 3.0, hz + 3.0,
+                          GROUND, GROUND + 7.0), (74, 108, 62), LEAFY_GRASS)
+        for j in range(int((x1 - x0 - WORKS_APRON) / 46.0)):
+            tree(x0 + WORKS_APRON + 24.0 + j * 46.0, hz + (2.0 if j % 2 else -2.0),
+                 GROUND, height=19.0 + (j % 3) * 3.0, spread=13.0 + (j % 2) * 3.0,
+                 label=f"HedgeTree{i}_{j}")
+
+
+_ex, _ez = EST_COL_X, EST_ROW_Z
+est_trade_park(_ex[0][0], _ex[0][1], _ez[0][0], _ez[0][1])
+est_builders_merchant(_ex[1][0], _ex[1][1], _ez[0][0], _ez[0][1])
+est_selfstore(_ex[0][0], _ex[0][1], _ez[1][0], _ez[1][1])
+est_haulage(_ex[1][0], _ex[1][1], _ez[1][0], _ez[1][1])
+est_workshop(_ex[0][0], _ex[0][1], _ez[2][0], _ez[2][1])
+est_planthire(_ex[1][0], _ex[1][1], _ez[2][0], _ez[2][1])
+est_distribution(EST_COMMON_X1, EST_X1, _ez[3][0], _ez[3][1])
+est_common(EST_COMMON_X0, EST_COMMON_X1, EST_Z0, EST_Z1)
+# The two map edges. The west one runs the full depth and the north one starts
+# where it ends, so the corner belongs to exactly one of them -- two verges
+# overlapping there would be two boxes with the same top height, which is the
+# defect every surface in this file is tiled to avoid.
+works_boundary(EST_X0, EST_X0 + WORKS_APRON, EST_Z0, EST_Z1,
+               name="WestBoundary", label="WestEdgeTree", along="z")
+works_boundary(EST_X0 + WORKS_APRON, EST_X1, EST_NORTH_APRON[0], EST_NORTH_APRON[1],
+               name="NorthBoundary", label="NorthEdgeTree", edge="high")
 
 
 # ---------------------------------------------------------------------------
@@ -5625,6 +6271,12 @@ def surface_floor(x, z):
     for c in SOUTH_CS:
         if c < z < c + WCS_W and WORKS_X0 < x < WORKS_X1:
             return GROUND
+    for a in EST_AVE:
+        if a < x < a + AVE_W_MAIN and EST_AVE_Z0 < z < EST_AVE_Z1:
+            return GROUND
+    for c in EST_CS:
+        if c < z < c + WCS_W and EST_CS_X0 < x < EST_CS_X1:
+            return GROUND
     if CONN_X0 - CONN_WALK < x < CONN_X0 and CONN_Z0 < z < CONN_Z1:
         return PAVING
     if CONN_X1 < x < CONN_X1 + CONN_WALK and CONN_Z0 < z < CONN_Z1:
@@ -5643,6 +6295,16 @@ def surface_floor(x, z):
         if WORKS_X0 < x < WORKS_X1 and c - CS_WALK < z < c:
             return PAVING
         if WORKS_X0 < x < WORKS_X1 and c + WCS_W < z < c + WCS_W + CS_WALK:
+            return PAVING
+    for a in EST_AVE:
+        if EST_AVE_Z0 < z < EST_AVE_Z1 and a - AVE_WALK < x < a:
+            return PAVING
+        if EST_AVE_Z0 < z < EST_AVE_Z1 and a + AVE_W_MAIN < x < a + AVE_W_MAIN + AVE_WALK:
+            return PAVING
+    for c in EST_CS:
+        if EST_CS_X0 < x < EST_CS_X1 and c - CS_WALK < z < c:
+            return PAVING
+        if EST_CS_X0 < x < EST_CS_X1 and c + WCS_W < z < c + WCS_W + CS_WALK:
             return PAVING
     return GROUND
 
@@ -5730,6 +6392,53 @@ for _i, _x in enumerate(range(int(ROAD_X1), int(AVE[0]), ROUTE_STEP)):
 for _i, _x in enumerate(range(int(ROAD_X1), int(CONN_X0), ROUTE_STEP)):
     waypoint(f"wp_northgate_{_i}", float(_x), NORTHGATE_MID,
              "the northern link, between the town and the connector", GROUND)
+
+# The west estate, on the same four-lines-of-code lattice the works gets, and
+# for the same reason: the grid is regular, so a bespoke chain per yard would be
+# more code that says less.
+#
+# Both chains are offset half a junction from the corner rather than started on
+# it -- streets from EST_CS_X0 + AVE_W_MAIN/2, avenues from EST_AVE_Z0 + WCS_W/2.
+# A point started exactly on a kerb line sits on the *face* of the junction tile
+# rather than inside it, and check 6 looks for ground under a point by asking
+# which part contains it. Half a carriageway in is unambiguous, and it also lands
+# the two chains on each other at every crossing instead of 12 studs apart.
+#
+# The four street chains are what tie the estate to the rest of the world: each
+# one ends between 11 and 20 studs west of the connector's carriageway, and the
+# connector's own chain runs up the middle of it. The worst of the four joins is
+# 33 studs, against ROUTE_LINK's 70 -- so the estate has four independent ways in
+# and not one. That is deliberate and it is measured: check 12 caught a
+# one-connection district at 2.02x its straight line when the town's back street
+# went in, against a 1.9 limit.
+for _j, _c in enumerate(EST_CS):
+    for _i, _x in enumerate(range(int(EST_CS_X0 + AVE_W_MAIN / 2), int(EST_CS_X1),
+                                  ROUTE_STEP)):
+        waypoint(f"wp_est_cs{_j}_{_i}", float(_x), _c + WCS_W / 2,
+                 f"the estate's {['first', 'second', 'third', 'fourth'][_j]} street")
+
+for _k, _a in enumerate(EST_AVE):
+    for _i, _z in enumerate(range(int(EST_AVE_Z0 + WCS_W / 2), int(EST_AVE_Z1),
+                                  ROUTE_STEP)):
+        waypoint(f"wp_est_ave{_k}_{_i}", _a + AVE_W_MAIN / 2, float(_z),
+                 f"the estate's {'east' if _k == 0 else 'west'} avenue")
+
+# The farm track. Chained east to west, starting at the common's edge, so the
+# first point lands 18 studs from the street chain it hands off to and the last
+# lands 5 studs short of the gate -- if it were walked the other way the
+# remainder would fall at the *east* end, which is the one end that has to be
+# close to something. The green's spine has the same note on it for the same
+# reason.
+#
+# A track with no chain on it is the defect this file has repaired three times
+# now: Routes joins place points within 70 studs and knows nothing about what is
+# under them, so the gate at the far end was a destination the game could see
+# and no player could ever be routed to. check 4 said so the moment it existed
+# -- one stranded point out of 778 -- which is the whole argument for the
+# lattice being a gate rather than a habit.
+for _i, _x in enumerate(range(int(EST_COMMON_X1), int(EST_TRACK_GATE_X), -ROUTE_STEP)):
+    waypoint(f"wp_est_track_{_i}", float(_x), EST_TRACK_Z,
+             "the farm track, west of the estate", GROUND)
 
 # The green's paths. The spur's east end lands 21 studs from wp_ave0_6 and its
 # west end 33 from the spawn, so the back gate is still the short way into the

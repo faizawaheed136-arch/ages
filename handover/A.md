@@ -1,6 +1,75 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-20 (latest)
+## 2026-08-18 (latest)
+
+**The west estate is built, and it found a hole in the checker that certified it.**
+Section E of `MAP_PLAN.md` was resolved as option **(c)** — industrial and low-rise sprawl
+west, docks stay east on the bay — and the north district was approved with **"go"**. It is
+built: light industrial and trade yards at x −1024..13, z 339..1148, `City.rbxmx` 11874 →
+13956 parts in 681 pieces. All three gates green, and the asset regenerates to the same md5
+twice running. Full write-up in `MAP_PLAN.md` sections 11 and 12; the two things worth
+knowing here are below.
+
+(Dated today. The entry below is dated two days later — the two machines disagree about the
+date and I have not touched someone else's header to hide it.)
+
+**It is inside `gen_city.py`, not a new `West.rbxmx`.** That is a deviation from the
+approved spec and it was taken for two reasons that can be checked: the `ConnPavW` carve
+list is a line in `gen_city.py` and no second generator could have reached it to put those
+four junctions in, and five-plus helpers would have been duplicated in a tree where `tree()`
+had already been written three times.
+
+**Check 11 was not looking at the largest buildings in the city.** The estate added 12 place
+points and the destination count went up by 5. `DOOR_SLACK` was 3.0; every `works_shed`
+place point stands `SHED_APRON / 2` = 5.0 studs out on its loading apron. So no shed
+anywhere was a "destination" — not the six new ones, and not the ironworks, sawmill, turbine
+hall or transit shed either, which had been exempt since the works was built. It is 5.0 now,
+173 destinations, and lowering `ROAD_ACCESS` to 13 reports all nine sheds where before it
+reported them at no limit at all.
+
+The guard on that number nearly shipped wrong, which is the part worth reading. Written as
+"one point matches one model" it failed at 5.5 on `est_electrical` — which is Kemp
+Electrical's *Structure* and *Fittings*, one building emitted as two groups. The invariant
+is geometric, not nominal: the models a point matches must overlap one another. The rejected
+fix was a regex stripping `Structure|Fittings` from group names, which is a guess about
+naming rather than a statement about geometry, and would have been wrong a second time on
+the self-store office that stands inside its own yard's shed footprint.
+
+**`MAP_EDGE` now exists in `world_plan.py`** because `default.project.json` declares the
+baseplate once and every generator that needed the world's edge typed 1024 for itself.
+Check 9 reads the project file and asserts the two agree, including that the plate is
+centred — a plate of the right size shifted 100 studs east still puts 100 studs of the
+estate over nothing. A transcription is only acceptable with a gate on the cache.
+
+**Two coplanar-surface bugs were found by reasoning, not by a gate**, and nothing in this
+tree could have reported either: the common's pasture overlapped `WestGround` at the same
+top height across its whole 400-stud width, and the farm track was drawn *below* the pasture
+it was laid on, so it was invisible. A surface that loses to the ground it is laid on has no
+symptom in any checker here. Worth a check of its own; I have not written one.
+
+**Not done, carried forward.**
+
+- **The south district** (low-rise sprawl, x −1024..−296, z −512..339) is the other half of
+  section E and is next. It has to join the town's return road at both corners, so it
+  depends on `gen_town.py` — which carries 49 uncommitted lines that are **not mine** (a
+  `SouthPark` block) and currently fails my park-on-house assertion. The plan is to route
+  around it with a clear-band constant in `world_plan.py`, the `NORTHGATE_CLEAR` pattern,
+  rather than edit an in-flight file on someone else's list.
+- The estate has no tags yet. `AgesPlacePoint` is there via `place_point`; `AgesScavenge`
+  in the yards is a one-line change and is owed. No `Config.luau` entries — B's file.
+- `wp_south_*` / `wp_north_*` are still typed literals whose labels lie about where they
+  are. The road-group naming split between `build_street.py` and `gen_town.py` is still
+  unreconciled, and `clear_of_paving`'s alley half is still unwritten.
+
+**For whoever owns `gen_town.py` right now:** its `SouthPark` block fails `check_town`'s
+park-on-house assertion. The cheapest correct fix is rewording line 2 of
+`src/server/content/LifeEvents/Park.luau` to "The park at the top of the houses" — your
+file, not mine, so I have left both alone.
+
+**Nothing here has been Studio-tested.** Three green gates mean it compiles, packages and
+measures correctly; they do not mean it plays.
+
+## 2026-08-20
 
 **Both builds the owner asked for are in, and the session's real finding was two edits
 nobody could account for.** The request was *"add more houses and shops near the landfill
