@@ -220,6 +220,19 @@ local pushed: { [Player]: string } = {}
 -- every rebuild. Same reason `pushed` exists one block up, for the row.
 local pushedRoster: { [Player]: string } = {}
 
+-- Approach tracking. Records the timestamp of each time the player walked into reach
+-- of a new NPC. Used by the autonomy-rate debug command to report the real number,
+-- so the quota is a thing you can see failing rather than a thing you assume.
+--
+-- Each entry is { at: number, personId: string }. The list is kept small: after twenty
+-- approaches the oldest is dropped, which is roughly a minute at the tick rate and
+-- enough for a rolling average that does not bounce on a single outlying visit.
+type ApproachEntry = { at: number, personId: string }
+local approaches: { [Player]: { ApproachEntry } } = {}
+-- The person the player was last recorded approaching, so a player standing still
+-- next to the same person does not flood the log on every tick.
+local approachTarget: { [Player]: string } = {}
+
 -- Studio harness switch. Off takes everybody out of the world, so the shop and the
 -- school can be tested in a street that is not also full of relatives.
 local enabled = true
@@ -1877,6 +1890,26 @@ local function tickPlayer(player: Player, elapsed: number)
 		-- conversation that just opened.
 		holdFor(player, found, position)
 		open(player, data, found)
+
+		-- Record the approach the first tick the player reaches this person. A player
+		-- standing still next to the same NPC does not count as a new approach on every
+		-- tick; the target is cleared when the player walks away or a different person
+		-- is reached.
+		local target = approachTarget[player]
+		if target == nil or target ~= found.person.id then
+			local list = approaches[player]
+			if list == nil then
+				list = {}
+				approaches[player] = list
+			end
+			table.insert(list, { at = os.clock(), personId = found.person.id })
+			if #list > 20 then
+				table.remove(list, 1)
+			end
+			approachTarget[player] = found.person.id
+		end
+	else
+		approachTarget[player] = nil
 	end
 end
 
@@ -2026,6 +2059,8 @@ local function forget(player: Player)
 	pushedRoster[player] = nil
 	rebuilding[player] = nil
 	rebuildAgain[player] = nil
+	approaches[player] = nil
+	approachTarget[player] = nil
 end
 
 -- A birthday. Positives ratchet; decay is removed. Bonds only rise when you turn up;
@@ -2151,6 +2186,31 @@ function PeopleService.DescribeTies(player: Player): string
 		return `{head} | nobody in particular yet`
 	end
 	return `{head} | {table.concat(rows, " · ")}`
+end
+
+-- Approach-rate debug. Reports seconds-since-last-approach and the rolling average of
+-- the last twenty intervals, so the quota ("at least one approach per sixty seconds
+-- of walking") is visible rather than assumed.
+--
+-- Returns nil when there is no data to report.
+function PeopleService.DescribeApproaches(player: Player): string?
+	local list = approaches[player]
+	if list == nil or #list < 2 then
+		return nil
+	end
+
+	local now = os.clock()
+	local last = list[#list]
+	local secondsSince = now - last.at
+
+	-- Rolling average of the intervals between the last twenty approaches.
+	local total = 0.0
+	for i = 2, #list do
+		total += list[i].at - list[i - 1].at
+	end
+	local average = total / (#list - 1)
+
+	return `approaches | last {math.floor(secondsSince)}s ago | rolling avg {math.floor(average)}s | {#list} recorded`
 end
 
 -- Studio harness: makes somebody what they would otherwise take a childhood of turning up

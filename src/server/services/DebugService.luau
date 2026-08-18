@@ -2125,6 +2125,22 @@ Commands.ties = function(player: Player, args: { string }): string
 	return `usage: /ties [set <personId> <tieId>|clear <personId>] — {PeopleService.DescribeTies(player)}`
 end
 
+-- Approach-rate debug. Shows seconds-since-last-NPC-approach and the rolling average of
+-- the last twenty intervals, so the quota ("at least one NPC-initiated interaction per
+-- 60 seconds of walking") is visible rather than assumed.
+--
+--   /approach              prints the current rate; empty when there is not yet enough data.
+Commands.approach = function(player: Player, _args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+	local result = PeopleService.DescribeApproaches(player)
+	if result == nil then
+		return "approaches | no data yet — walk up to an NPC and wait a moment"
+	end
+	return result
+end
+
 -- Every interactable in the world, nearest first, and why the near ones are or are not
 -- usable. The command for "I walked up to her and clicking did nothing".
 --
@@ -2674,7 +2690,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
-	.. "/ties [set <id> <tie>|clear <id>], /dots, /slots [list|use <n>|delete <n>], "
+	.. "/ties [set <id> <tie>|clear <id>], /approach, /dots, /slots [list|use <n>|delete <n>], "
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby, "
 	.. "/bill [charge], /milestone [reset], /gossip [note <action> <effect>|tick], "
 	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve], "
