@@ -2906,6 +2906,28 @@ def office_tower(office_no, x0, x1, z0, z1):
                 f"tower {office_no}, the ground-floor office")
 
 
+RISE_LOBBY_H = 18.0
+# The mast only goes on a tower of this many storeys or more, and since the mast is
+# the tallest thing the financial district owns, this is the threshold that decides
+# what the Circle has to beat.
+RISE_MAST_STOREYS = 9
+RISE_MAST_H = 18.0
+
+
+def high_rise_skyline(storeys):
+    """The highest point of a high-rise: its mast if it has one, else its setback.
+
+    Split out of `high_rise` because the Circle's towers are sized against it and
+    the alternative was measuring the generated file by hand and typing the answer
+    into a comment -- which is exactly how the shoulder line in CIRCUS_STOREYS came
+    to claim 150 for a tower that measures 135.5.
+    """
+    tower_top = FLOOR_1 + RISE_LOBBY_H + (storeys - 1) * (STOREY + SLAB)
+    if storeys >= RISE_MAST_STOREYS:
+        return tower_top + RISE_MAST_H
+    return tower_top + SLAB + STOREY * 0.6 + SLAB
+
+
 def high_rise(no, x0, x1, z0, z1, storeys, glass_color):
     """A varied-height skyscraper with a stepped setback roof and ground-floor
     lobby. `storeys` is the number of 15-stud floors; lobby is extra 3 studs."""
@@ -2914,7 +2936,7 @@ def high_rise(no, x0, x1, z0, z1, storeys, glass_color):
     cx = (x0 + x1) / 2
     cz = (z0 + z1) / 2
     # Each storey is STOREY tall with a SLAB on top; the lobby is slightly taller.
-    lobby_h = 18.0
+    lobby_h = RISE_LOBBY_H
     tower_top = FLOOR_1 + lobby_h + (storeys - 1) * (STOREY + SLAB)
 
     with group(f"HighRise_{no}"):
@@ -2935,12 +2957,14 @@ def high_rise(no, x0, x1, z0, z1, storeys, glass_color):
                         tower_top + SLAB + STOREY * 0.6 + SLAB),
             (72, 76, 82), CONCRETE)
         # Antenna mast on the highest.
-        if storeys >= 9:
+        if storeys >= RISE_MAST_STOREYS:
             box("Mast", (cx - 0.6, cx + 0.6, cz - 0.6, cz + 0.6,
-                          tower_top + SLAB + STOREY * 0.6, tower_top + 18.0),
+                          tower_top + SLAB + STOREY * 0.6,
+                          tower_top + RISE_MAST_H),
                 (80, 84, 90), METAL)
             box("MastLight", (cx - 1.0, cx + 1.0, cz - 1.0, cz + 1.0,
-                              tower_top + 16.0, tower_top + 17.0),
+                              tower_top + RISE_MAST_H - 2.0,
+                              tower_top + RISE_MAST_H - 1.0),
                 (240, 60, 40), NEON, collide=False)
 
         # Lobby interior (ground floor, fronting south).
@@ -4146,22 +4170,56 @@ CIRCUS_SPREAD = 22.0
 # clear of the mast, which is the smallest gap that still says "that one is the
 # middle of the city" from the south end of the connector.
 #
+# **That fixed the middle four towers and left the other eight losing.** The owner
+# asked for the Circle to be higher still, so that *each* of its towers is the
+# tallest thing in the city -- not just the four on the diagonals. The shoulders
+# were 8 storeys, which is 135.5, seventy-eight studs under the mast they were
+# supposed to be beating. From any approach that is not a diagonal the Circle was
+# still the second-tallest thing on the horizon.
+#
+# So both numbers are re-derived from the 18-stud rule this file already
+# established, rather than picked:
+#
+#   top(n)    = FLOOR_1 + CIRCUS_LOBBY_H + (n - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)
+#             = 19.5 + (n - 1) * 16
+#   skyline   = top(n) + CIRCUS_SLAB + 3.0        -- the roof and its parapet, which
+#             = 23.5 + (n - 1) * 16                  are what an eye on the ground sees
+#
+#   shoulders  must clear the mast at 213.5 by 18  ->  >= 231.5  ->  n = 14
+#   middle     must clear its own shoulders by 18  ->  >= 249.5  ->  n = 16 (263.5)
+#
+# The parapet term is the part that is easy to drop, and dropping it is a four-stud
+# lie in the direction that loses the argument -- it was worth writing out.
+#
+# 13 was rejected for the shoulders for exactly the reason 13 was rejected for the
+# middle: 215.5 is a two-stud win and a two-stud win is a tie.
+#
 # The skyline now, from the middle outward:
-#   231  the Circle's centre towers
+#   263  the Circle's centre towers (16 storeys)
+#   231  the Circle's shoulder towers (14 storeys)
 #   213  the financial district's masts
-#   150  the Circle's shoulder towers (8 storeys)
-#   115  fade offices one ring out (7-8 storeys)
+#   134  step and fade offices one ring out (7-8 storeys)
 #    83  fade offices two rings out (5-6 storeys)
 #    67  the office block
 #    34  walk-ups and two-storey houses
 #    17  single-storey houses at the edge
-# Safe range for the middle: 12 .. 18. Below 12 the financial district takes the
-# crown back; above 18 the tower reads as out of scale beside its own shoulders,
-# which is why the shoulders went up to 8 at the same time.
-CIRCUS_STOREYS = (8, 14, 8)
+# (The 150 that stood on the shoulder line here before was wrong: eight storeys
+# measures 135.5, not 150. It is drawn from the formula above now, so it cannot
+# drift from the generator again.)
+#
+# Safe range for the middle: 15 .. 20. The floor is what keeps 18 studs over the
+# shoulders; the ceiling is where the arc stops reading as three buildings of one
+# family. The shoulders carry the middle's range with them -- raising one without
+# the other is what left eight towers short the first time.
+CIRCUS_STOREYS = (14, 16, 14)
 CIRCUS_LOBBY_H = 18.0
 CIRCUS_STOREY = 15.0
 CIRCUS_SLAB = 1.0
+# The parapet standing on the roof slab. Named because it is part of the silhouette
+# and therefore part of every height argument above -- four studs of it (slab plus
+# parapet) is the difference between the shoulders clearing the financial district
+# and tying with it.
+CIRCUS_PARAPET_H = 3.0
 # How far back from the Circle the block's own corner plaza sits. Measured, not
 # chosen: the middle tower's back face is the closest thing to it and clears the
 # far corner of a 51-stud square by eleven studs.
@@ -4216,7 +4274,7 @@ def circus_tower(no, phi_deg, storeys, glass, stucco, neon):
         at_radius("Roof", mid, CIRCUS_DEPTH - 6.0, CIRCUS_WIDTH - 6.0,
                   top, top + CIRCUS_SLAB, (72, 76, 82), CONCRETE)
         at_radius("Parapet", mid, CIRCUS_DEPTH - 4.0, CIRCUS_WIDTH - 4.0,
-                  top + CIRCUS_SLAB, top + CIRCUS_SLAB + 3.0,
+                  top + CIRCUS_SLAB, top + CIRCUS_SLAB + CIRCUS_PARAPET_H,
                   (90, 94, 100), CONCRETE)
         # The crown. A line of light round the parapet, which is the palette's
         # own rule for neon -- a band, never a surface -- and the thing that
@@ -4874,6 +4932,40 @@ for sband in range(5):
 FIN_Z0, FIN_Z1 = CITY_Z0, CS[0] - CS_WALK
 FIN_HEIGHTS = [10, 8, 12, 7, 9]  # storeys per band, varied skyline
 FIN_GLASS = RISE_GLASS
+
+# The Circle is the middle of the city and every one of its twelve towers has to be
+# the tallest thing in it. Asserted here, rather than in the CIRCUS block, for the
+# reason the WORKS_AVE/CIRCLE_AVE pair is asserted where both exist: FIN_HEIGHTS is
+# not defined until this line, and a rule that cannot see both sides is not a rule.
+#
+# CIRCUS_CLEARANCE is the 18 studs the Circle's own comment measured -- the smallest
+# gap that still reads as "that one is taller" from the south end of the connector.
+# It is used twice on purpose: once against the rest of the skyline, and once between
+# the middle tower and its own shoulders, because "each of them is the tallest" and
+# "the middle is still the peak" are two requirements and the second is the one that
+# silently lapses when somebody raises the shoulders.
+CIRCUS_CLEARANCE = 18.0
+def circus_skyline(storeys):
+    """The top of a Circle tower's parapet -- what an eye on the ground sees."""
+    top = FLOOR_1 + CIRCUS_LOBBY_H + (storeys - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)
+    return top + CIRCUS_SLAB + CIRCUS_PARAPET_H
+
+
+CIRCUS_SKYLINE = [circus_skyline(n) for n in CIRCUS_STOREYS]
+_rival = max(high_rise_skyline(n) for n in FIN_HEIGHTS)
+assert min(CIRCUS_SKYLINE) >= _rival + CIRCUS_CLEARANCE, (
+    f"the shortest Circle tower tops out at {min(CIRCUS_SKYLINE):.1f} against the "
+    f"financial district's {_rival:.1f}. Every tower on the Circle is supposed to be "
+    f"the tallest thing in the city, and clearing it by less than "
+    f"{CIRCUS_CLEARANCE:.0f} studs reads as a tie from the ground rather than as a "
+    f"win. Raise the outer pair in CIRCUS_STOREYS.")
+assert max(CIRCUS_SKYLINE) >= max(
+    h for h, n in zip(CIRCUS_SKYLINE, CIRCUS_STOREYS)
+    if n != max(CIRCUS_STOREYS)) + CIRCUS_CLEARANCE, (
+    f"the Circle's tallest tower is {max(CIRCUS_SKYLINE):.1f} and its shoulders are "
+    f"{CIRCUS_SKYLINE}. The middle one stands on the diagonal and is seen down every "
+    f"approach, so it has to clear its own shoulders by {CIRCUS_CLEARANCE:.0f} too or "
+    f"the arc reads as three towers of one height. Raise the middle of CIRCUS_STOREYS.")
 
 
 with group("FinancialDistrict"):
