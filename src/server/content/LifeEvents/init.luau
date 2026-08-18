@@ -32,6 +32,7 @@ local SOURCES: { { LifeEvent } } = {
 	require(script.Debt),
 	require(script.CareerBranch),
 	require(script.Ties),
+	require(script.Crime),
 }
 
 -- One option is not a choice.

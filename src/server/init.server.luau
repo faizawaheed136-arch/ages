@@ -74,6 +74,7 @@ local BillService = require(services.BillService)
 local SavingsService = require(services.SavingsService)
 local MilestoneService = require(services.MilestoneService)
 local GossipService = require(services.GossipService)
+local CrimeService = require(services.CrimeService)
 
 DataService:Init()
 StatService:Init()
@@ -127,12 +128,14 @@ BillService:Init()
 SavingsService:Init()
 MilestoneService:Init()
 GossipService:Init()
+CrimeService:Init()
 HouseService:Start()
 CarDealerService:Start()
 BillService:Start()
 SavingsService:Start()
 MilestoneService:Start()
 GossipService:Start()
+CrimeService:Start()
 -- Before SchoolService, which hands a Science, a Geography or an Art lesson straight to
 -- whichever of these owns the verb. Cosmetic like every other line in this list -- all four
 -- are running before the first player finishes loading -- but reading it in this order is

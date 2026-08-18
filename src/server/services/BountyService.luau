@@ -43,6 +43,16 @@ local Spotting = require(script.Parent.Parent.world.Spotting)
 type LifeData = Types.LifeData
 type BountyState = Types.BountyState
 
+-- ArrestedHandler fires the instant a life is convicted — before custody ages
+-- them forward, so the flag can be read on the very next tick. Registered by
+-- CrimeService; nobody else needs to know it exists.
+type ArrestedHandler = (player: Player) -> ()
+local arrestedHandler: ArrestedHandler? = nil
+
+function BountyService.SetArrestedHandler(handler: ArrestedHandler)
+	arrestedHandler = handler
+end
+
 local BountyService = {}
 
 local CRIME = Config.Crime
@@ -614,6 +624,10 @@ function BountyService.Arrest(player: Player): boolean
 	-- arrest, which would be the largest number in that table going to the worst possible
 	-- event.
 	GangService.OnArrest(player)
+
+	if arrestedHandler ~= nil then
+		arrestedHandler(player)
+	end
 
 	-- The haul, such as it is. Everything on you rather than a fixed fine, because a fine
 	-- is a number and confiscation is the job not having happened -- which is the thing

@@ -156,6 +156,35 @@ local SOURCE: { FlagDef } = {
 		id = "park_gang_untouched",
 		meaning = "Was near the west gang at the park and walked away clean",
 	},
+
+	-- Crime. The mechanical systems (theft, bounty, police, gangs) track their own
+	-- state; these flags are the narrative hooks that let life events react to what
+	-- the player has done rather than only what they are doing right now. A flag set
+	-- here is the difference between "you got caught" as a number and as a memory.
+	{
+		id = "first_crime",
+		meaning = "Stole something for the first time, small and stupid, before knowing it had a name",
+	},
+	{
+		id = "busted",
+		meaning = "Was caught red-handed while trying to steal, and the memory is fresh",
+	},
+	{
+		id = "convicted",
+		meaning = "Was found guilty and spent time in custody; the record does not go away",
+	},
+	{
+		id = "on_parole",
+		meaning = "Recently released from custody and still subject to supervision",
+	},
+	{
+		id = "gang_recruited",
+		meaning = "A gang member approached you after you showed you could cause trouble",
+	},
+	{
+		id = "escalated_to_big_crime",
+		meaning = "Took the offer to move beyond petty theft, and the consequences grew with it",
+	},
 }
 
 local byId: { [string]: FlagDef } = {}
