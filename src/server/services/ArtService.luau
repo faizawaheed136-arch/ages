@@ -62,6 +62,7 @@ local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("M
 local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
+local EventService = require(script.Parent.EventService)
 local StatService = require(script.Parent.StatService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Studio = require(script.Parent.Parent.world.Studio)
@@ -525,6 +526,7 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	-- otherwise a player could start, leave, and start again until the wall showed a study
 	-- they liked the look of.
 	data.lessonsThisYear += 1
+	EventService.AwardAutonomy(player, 1)
 
 	local level = levelOf(data)
 	Report.RecordLesson(data, SUBJECT_ID, band, gained, if level > session.levelAtStart then level else nil)

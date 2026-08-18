@@ -2,6 +2,169 @@
 
 _No entry yet. Append yours at the top, newest first._
 
+## 2026-08-17 (twelfth entry)
+
+**Debt and career content landed; three pre-existing gate bugs fixed.**
+Two new content files, `src/server/content/LifeEvents/Debt.luau` and
+`src/server/content/LifeEvents/CareerBranch.luau`, bring the debt arc and the
+career-branch arc to life. The debt events gate on `in_debt` and close a door
+while opening another — a shark deal writes `loan_shark_deal`, counselling writes
+`debt_relief`, and the consequences event only fires when neither flag exists.
+The career events gate on the first job a life ever holds and ask whether the
+life goes deeper or wider: shop to office, office to trades, bakery front or
+back, trades lead or stay on the tools, deliberate retirement while still able.
+Both files are untracked; they need committing alongside the rest of this lane's
+work.
+
+**Three gate bugs fixed this session:**
+- `PeopleService.luau:507` — `recordInteraction` was a bare `function` (global)
+  instead of `local function`, so the undefined-names checker could not see it
+  as a binding. Changed to `local function`.
+- `PeopleService.luau:2044` — `yearJustEnded` was declared and never read. Removed.
+- `BillService.luau:22` — `Flags` was required but never used in the file. Removed
+  the require line.
+
+**Require cycles introduced and then resolved.** Two lazy
+`require(script.Parent.DeliveryService)` calls — one in EventService for the
+escalation chain, one in WorldEventService for NPC-approach proximity staging —
+created two new cycles that the gate caught. Both replaced with the injected-
+handler pattern already established for `SetCollectedHandler`: `SetEscalationHandler`
+on EventService, `SetProximityStageHandler` on WorldEventService, both wired in
+`DeliveryService:Init()`. The gate was clean before this session and is clean
+after.
+
+**Gate:** `all clean` — 143 luau files, 8 checks.
+
+**Untracked files requiring commit:**
+- `src/server/content/LifeEvents/Debt.luau` — 4 debt-gated events (12 choices)
+- `src/server/content/LifeEvents/CareerBranch.luau` — 5 career-branching events (15 choices)
+
+## 2026-08-17 (tenth entry)
+
+**Phase 2 implemented and gate-clean.** 140 files, 8 checks, all clean. The
+schema is complete: `tags`, `cooldown`, `escalatesTo`, `writesBack` on every
+event, enforced at load.
+
+**Code changes:**
+- `Types.luau`: four new fields on `LifeEvent` (`tags`, `cooldown`, `escalatesTo`,
+  `writesBack`), one on `LifeData` (`pendingEventCountInChapter`).
+- `Config.luau`: `Config.Events = { MaxCooldownSeconds = 960, MaxPerChapter = 3 }`.
+- `content/LifeEvents/init.luau`: four validator checks — cooldown bounds,
+  escalatesTo chain (no self-loop, no unknown id, no age-back), tags empty-list
+  normalisation, `writesBack` mandatory with per-prefix registry validation
+  (`stat:`, `flag:`, `tie:`, `ribbon:`, `standing:`, bare `money`).
+- `EventService.luau`: `PickStageable` refuses when
+  `data.pendingEventCountInChapter >= Config.Events.MaxPerChapter`. The
+  `offer()` choke-point increments `pendingEventCountInChapter` when an event
+  opens.
+- `LifeService.luau`: `AgeUp` resets `pendingEventCountInChapter = 0` at each
+  chapter break (when the band changes).
+- All 92 authored events across 7 content files: mechanical `writesBack` added
+  derived from each event's `effects`/`sets`/`clears`.
+
+**Remaining open questions from the spec (unchanged):**
+- `escalatesTo` chain logic is validated but not yet wired into the picker
+  (phase 3).
+- `tags` are accepted and normalised but not yet used by any routing or filtering
+  logic (phase 3+).
+- The four questions listed in the previous entry were all resolved by proceeding
+  with the current design (list shape for writesBack, session-scoped count,
+  960s cooldown cap, Ties.luau already exists with real content).
+
+**Gate:** `all clean` — 140 files, 8 checks.
+
+## 2026-08-17 (ninth entry)
+
+**Phase 1 landed, Phase 2 spec written, awaiting owner sign-off.** [`docs/phase2_event_schema.md`](docs/phase2_event_schema.md)
+spells out the missing fields the design locks in: `tags`, `cooldown`, `escalatesTo`,
+`writesBack` — with `writesBack` mandatory at load (a content error, not a runtime
+warning), and the "1–3 events per chapter" cap enforced in the picker rather than in
+content.
+
+**Phase 1 (chapter spine) is implemented and the gate is clean.** 140 files, 8 checks,
+all clean. Six chapter bands (0–4 / 5–9 / 10–14 / 15–19 / 20–39 / 40–80), birthday
+seam with diegetic Continue button, shared `LifeService.Moments(data, opts)` query
+feeding both the reel and the verdict. VerdictService's inline `fillMoments` walk
+is replaced with a `Moments({ maxCount = 3, kinds = templateKinds })` call. Cycle
+between LifeService and VerdictService resolved with a setter pattern
+(`VerdictService.SetMoments(fn)`, called from `LifeService:Init`). New client UI:
+`ChapterReel.luau`, HUD seam-freeze on shift/task rows via `StatsUI.SetSeam(true)`.
+Debug commands `/moments` and `/reel`. ChapterBreak remote added to Remotes.luau.
+
+**Phase 2 spec — four decisions baked in:**
+1. **`writesBack` is the load-bearing field.** A content error at require time,
+   not a runtime warning. Names mirror the registry (`stat:health`, `flag:wandered_off`,
+   `tie:rival_a`, `ribbon:family`, `standing:factory`, `money`). Empty list is refused.
+   The validator does *not* derive the list from `effects` -- a choice with
+   `effects = { happiness = 0 }` would otherwise pass a check that was supposed to
+   catch it. The author names the writes.
+2. **`escalatesTo` is loaded but not yet used.** Phase 2 validates the chain (no
+   self-loops, no age-back chains) and refuses unknown ids at load. The picker does
+   not stage follow-ups yet -- that is phase 3, where the chain logic lands next to
+   the ambient routing layer it depends on.
+3. **Chapter cap enforced in `PickStageable`, not in content.** `LifeData` gains
+   `pendingEventCountInChapter`, reset to 0 at every chapter break in
+   `LifeService:EnterChapter`. Picker refuses to redeliver past three per chapter.
+   Shift events bypass the cap -- a mid-shift refusal leaves the player with
+   nothing happening, which is the worse failure.
+4. **`cooldown` is delivery-path, not resolution-path.** Session-scoped -- not
+   persisted. A reconnect that silently skipped cooldowns would be a bug that
+   moves between sessions. Real seconds, upper bound
+   `Config.Events.MaxCooldownSeconds = 960` (twice the longest ambient gap).
+
+**Four questions to the owner before code lands:**
+- `writesBack` shape: list of names vs single boolean. List is more useful
+  (picker can ask what the prior event left behind); boolean is a smaller diff.
+- `pendingEventCountInChapter` persistence: session-scoped (current proposal) or
+  survive reconnect? Current proposal is session-scoped to avoid a stale-cooldown
+  bug on long reconnects.
+- `Config.Events.MaxCooldownSeconds` value: 960s (current proposal) or something
+  tighter like 300s.
+- Empty `Ties.luau` placeholder: ship an empty `Ties.ById = {}` so the helper
+  compiles, or accept `tie:*` as opaque strings forever (no helper at all)?
+
+**Gate:** `all clean` -- 140 files, 8 checks. Phase 1 implementation in; Phase 2 is
+spec only, no code touched this entry.
+
+**Files to touch when sign-off lands:** `Types.luau` (four new fields on LifeEvent,
+`pendingEventCountInChapter` on LifeData), `content/LifeEvents/init.luau` (four
+validator checks), `content/Ties.luau` (NEW empty), `Config.luau` (MaxCooldownSeconds),
+`EventService.luau` (chapter cap), `LifeService.luau` (EnterChapter resets count),
+every authored event file (mechanical `writesBack` addition -- ~70 events).
+
+## 2026-08-15 (eighth entry)
+
+**Phase 1 spec written, awaiting owner sign-off.** [`docs/phase1_chapter_spine.md`](docs/phase1_chapter_spine.md)
+spells out the chapter spine frame: six age bands (0–4 / 5–9 / 10–14 / 15–19 / 20–39 / 40–80), a diegetic
+Continue button at each band boundary, and one shared "what happened" query (`LifeService.Moments`)
+that the reel and the end-of-life verdict both read from.
+
+**Three decisions baked in:**
+1. **One query, two consumers.** `LifeService.Moments(data, opts)` returns `{ ageMonths, kind, id, line }`
+   entries walked from flags/bonds/grades/standing/mastery/jobs/houses/gangRank/visits. VerdictService's
+   inline `fillMoments` walk is replaced with a `Moments({ maxCount = 3, kinds = templateKinds })` call.
+   Same vocabulary, same `FormatMoment` function. The future "NPC news without you" list is a sibling
+   `WorldService.Moments` that does not yet exist — left out of phase 1, designed to land in phase 4 or 5.
+2. **Empty reel is suppressed.** A chapter break with zero moments is no reel — the player presses
+   Continue and the next chapter opens cold. A life that has done nothing yet shows no decorative
+   slides. The "filler transition screen" trap from the design is closed by construction.
+3. **World freezes at the seam.** NPCs idle, timers pause, ambient triggers are not fired while the
+   Continue button is up. The seam is the only time the world is allowed to be still.
+
+**Three questions to the owner before code lands:**
+- Band boundaries — 0–4 / 5–9 / 10–14 / 15–19 / 20–39 / 40–80, or split the adult band into two?
+- Confirm the "NPC news without you" reel entries land in phase 4/5 as a sibling `WorldService.Moments`
+  feeding the same `ChapterReel` UI.
+- Verdict pre-load in the elder band — show on the HUD as the life approaches 40, or keep the verdict
+  a death-only surprise? Spec currently keeps it a death-only surprise.
+
+**Gate:** `all clean` — 139 files, 8 checks. No code touched this entry.
+
+**Files to touch when sign-off lands:** `Types.luau` (Moment type, lastChapterBreakMonths on LifeData),
+`LifeService.luau` (Moments, FormatMoment, seam-freeze, band entry), `VerdictService.luau` (replace inline
+fillMoments with Moments call), `Config.luau` (ChapterBands table), `Remotes.luau` (ChapterBreak),
+`ChapterReel.luau` (NEW), `StatsUI.luau` (HUD freeze), `DebugService.luau` (/reel, /moments).
+
 ## 2026-08-15 (seventh entry)
 
 **Queue written, phase 0 done.** [`docs/life_layer_plan.md`](docs/life_layer_plan.md) is

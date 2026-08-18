@@ -45,6 +45,7 @@ local Work: { LifeEvent } = {
 		subject = "customer",
 		repeatable = true,
 		prompt = "You've handed someone twenty dollars too much change. They're already at the door.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "call_after",
@@ -84,6 +85,7 @@ local Work: { LifeEvent } = {
 		resolution = "Enacted",
 		repeatable = true,
 		prompt = "Nobody has come in for forty minutes. There is nothing left to tidy and an hour still to go.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "find_work",
@@ -119,6 +121,7 @@ local Work: { LifeEvent } = {
 		subject = "manager",
 		repeatable = true,
 		prompt = "The evening person hasn't turned up. The manager asks, without much hope, whether you can stay on.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "stay_late",
@@ -160,6 +163,7 @@ local Work: { LifeEvent } = {
 		subject = "customer",
 		repeatable = true,
 		prompt = "The same man has been in every day this week, and today he would like to tell you about his week.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "listen",
@@ -196,6 +200,7 @@ local Work: { LifeEvent } = {
 		subject = "customer",
 		repeatable = true,
 		prompt = "Someone is being unpleasant to you about a thing that is not your fault and cannot be fixed.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "stay_polite",
@@ -234,6 +239,7 @@ local Work: { LifeEvent } = {
 		resolution = "Enacted",
 		repeatable = true,
 		prompt = "The till is eleven dollars short. Three people have used it today and one of them was you.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "count_again",
@@ -267,6 +273,7 @@ local Work: { LifeEvent } = {
 		subject = "coworker",
 		repeatable = true,
 		prompt = "Somebody started this morning and has been standing near the door for twenty minutes with nothing to do.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "show_them",
@@ -302,6 +309,7 @@ local Work: { LifeEvent } = {
 		resolution = "Enacted",
 		repeatable = true,
 		prompt = "You are twenty-five minutes late and the bus was genuinely not your fault. Nobody has said anything yet.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "make_it_up",
@@ -334,6 +342,7 @@ local Work: { LifeEvent } = {
 		resolution = "Enacted",
 		repeatable = true,
 		prompt = "The stockroom needs counting. It is four hours of the dullest work in the building and nobody has volunteered.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "volunteer",
@@ -368,6 +377,7 @@ local Work: { LifeEvent } = {
 		-- Not repeatable. You are handed the keys for the first time once, and an
 		-- event that came round again would be saying it never meant anything.
 		prompt = "The manager is holding out a set of keys and asking whether you want to be the one who locks up.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "take_them",
@@ -404,6 +414,7 @@ local Work: { LifeEvent } = {
 		subject = "coworker",
 		repeatable = true,
 		prompt = "Someone has just presented your work in a meeting, saying 'we' throughout, and is now taking questions on it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "in_the_room",
@@ -440,6 +451,7 @@ local Work: { LifeEvent } = {
 		subject = "manager",
 		repeatable = true,
 		prompt = "You have been asked whether something can be finished by Friday. It cannot be finished by Friday.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "say_no",
@@ -481,6 +493,7 @@ local Work: { LifeEvent } = {
 		-- Not repeatable, for the same reason as the keys: the first time someone
 		-- else's work becomes partly your responsibility only happens once.
 		prompt = "You have been asked to bring someone up to speed. They are perfectly capable and know none of it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "properly",
@@ -525,6 +538,7 @@ local Work: { LifeEvent } = {
 		jobs = { "office_clerk" },
 		repeatable = true,
 		prompt = "A coworker is trying to work out their week and asks whether you could swap one of your shifts for theirs.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "swap_yes",
@@ -563,6 +577,7 @@ local Work: { LifeEvent } = {
 		jobs = { "office_clerk" },
 		repeatable = true,
 		prompt = "You catch the end of a conversation about you. A rumour about last week has been through the whole floor before you heard it.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "rumour_straight",
@@ -601,6 +616,7 @@ local Work: { LifeEvent } = {
 		minStanding = 6,
 		repeatable = true,
 		prompt = "The manager has your year on a single page and asks what you think your best thing was.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "review_honest",
@@ -639,6 +655,7 @@ local Work: { LifeEvent } = {
 		minStanding = 14,
 		repeatable = true,
 		prompt = "A complaint has come down from above and the manager has handed it to you, because you are the one who has been here longest.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "corporate_answer",
@@ -676,6 +693,7 @@ local Work: { LifeEvent } = {
 		jobs = { "office_clerk" },
 		repeatable = true,
 		prompt = "A coworker has called in sick for the meeting that matters most this week, and their share of it is yours now.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "cover_ready",
@@ -714,6 +732,7 @@ local Work: { LifeEvent } = {
 		minStanding = 14,
 		repeatable = true,
 		prompt = "The manager drops the year's equipment budget on your desk. Enough for the thing the whole floor wants, or the thing that would save everyone an hour a day.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "budget_floor",
@@ -751,6 +770,7 @@ local Work: { LifeEvent } = {
 		jobs = { "shop_assistant" },
 		repeatable = true,
 		prompt = "A customer has two of the same thing in their coat, and you watched the second one go in.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "thief_watch",
@@ -788,6 +808,7 @@ local Work: { LifeEvent } = {
 		jobs = { "shop_assistant" },
 		repeatable = true,
 		prompt = "The sale started this morning and the queue is out past the door. Someone is waving a receipt the till does not recognise.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "sale_honour",
@@ -825,6 +846,7 @@ local Work: { LifeEvent } = {
 		jobs = { "shop_assistant" },
 		repeatable = true,
 		prompt = "It is pouring outside and the shop is full of people who are not shopping. The last of them has been standing by the door for an hour.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "rain_talk",
@@ -862,6 +884,7 @@ local Work: { LifeEvent } = {
 		jobs = { "shop_assistant" },
 		repeatable = true,
 		prompt = "A child has lost their toy somewhere in the shop and is working their way along the aisles asking strangers.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "lost_join",
@@ -898,6 +921,7 @@ local Work: { LifeEvent } = {
 		subject = "coworker",
 		repeatable = true,
 		prompt = "Someone's lunch has gone from the fridge and the whole break room is weighing the evidence, most of it about a person who is not here.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "fridge_owner",
@@ -934,6 +958,7 @@ local Work: { LifeEvent } = {
 		subject = "manager",
 		repeatable = true,
 		prompt = "One manager asked you to close the back room. Another asked you to watch the floor. Both asked in the same minute.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "bosses_ask",
@@ -971,6 +996,7 @@ local Work: { LifeEvent } = {
 		minStanding = 6,
 		repeatable = true,
 		prompt = "The manager has picked you, specifically, because you are the one who can be trusted with it: the awkward job that officially belongs to no one.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "extra_take",

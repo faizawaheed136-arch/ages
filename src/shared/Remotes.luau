@@ -271,6 +271,11 @@ export type RemoteName =
 	| "RequestJoinByCode"
 	-- Why a join code was not accepted, in a sentence meant for the player.
 	| "JoinRefused"
+	-- The chapter seam: a band boundary has been reached. Carries the age the
+	-- next chapter starts at and the moments the shared "what happened" query
+	-- found for the window since the last break. An empty list is the suppressed
+	-- reel — the client opens the next chapter cold with no screen.
+	| "ChapterBreak"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -495,6 +500,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"GossipUpdate",
 	"RequestJoinByCode",
 	"JoinRefused",
+	"ChapterBreak",
 }
 
 local FOLDER_NAME = "RemoteEvents"

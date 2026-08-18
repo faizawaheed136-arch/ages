@@ -10,6 +10,7 @@
 -- rejoining cannot be used to reroll one the player doesn't like.
 
 local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
@@ -23,6 +24,7 @@ local StatService = require(script.Parent.StatService)
 local MoneyService = require(script.Parent.MoneyService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
+local NPCService = require(script.Parent.NPCService)
 
 type LifeEvent = Types.LifeEvent
 type EventChoice = Types.EventChoice
@@ -46,6 +48,16 @@ local ageUpHandler: AgeUpHandler? = nil
 
 function EventService.SetAgeUpHandler(handler: AgeUpHandler)
 	ageUpHandler = handler
+end
+
+-- DeliveryService injects this at Init. It stages the follow-up event named by
+-- escalatesTo without EventService having to require DeliveryService back, which
+-- would be a cycle since DeliveryService requires this service at the top level.
+type EscalationHandler = (player: Player, eventId: string) -> ()
+local escalationHandler: EscalationHandler? = nil
+
+function EventService.SetEscalationHandler(handler: EscalationHandler)
+	escalationHandler = handler
 end
 
 -- EnactService injects this at Init, for the same reason as above: it calls
@@ -223,6 +235,79 @@ local function isEligible(data: LifeData, event: LifeEvent, ageYears: number): b
 	return not data.seenEventIds[event.id] or event.repeatable == true
 end
 
+local function characterPosition(player: Player): Vector3?
+	local character = player.Character
+	if character == nil then
+		return nil
+	end
+	return character:GetPivot().Position
+end
+
+-- What the player's current world situation looks like, as a set of tags the
+-- picker can use to prefer events that belong here. Three sources: nearby
+-- NPCs emit "npc:{cast}", tagged floor parts emit "zone:{id}", and each flag
+-- listed in Config.Ambient.FlagContext emits "flag:{id}" when held.
+--
+-- An event with no tags fires anywhere. An event with tags fires here only
+-- when at least one of its tags appears in this set -- or when no tagged
+-- candidate exists, in which case the event still fires so the world is not
+-- starved for content. The set is rebuilt every tick, so it always reflects
+-- the player's current position and flags.
+function EventService.getContextTags(player: Player): { [string]: boolean }
+	local tags: { [string]: boolean } = {}
+	local function add(tag: string)
+		tags[tag] = true
+	end
+
+	local radius = Config.Ambient.NPCContextRadius
+	local playerPos = characterPosition(player)
+	if playerPos ~= nil then
+		for _, posInfo in NPCService.GetPositions() do
+			local distance = (playerPos - posInfo.position).Magnitude
+			if distance <= radius then
+				add("npc:" .. posInfo.id)
+			end
+		end
+	end
+
+	for _, part in CollectionService:GetTagged(Config.World.ZoneTag) do
+		local zoneId = part:GetAttribute(Config.World.ZoneAttribute)
+		if zoneId ~= nil and typeof(zoneId) == "string" then
+			local partPos = (part :: BasePart).Position
+			if partPos ~= nil
+				and playerPos ~= nil
+				and (playerPos - partPos).Magnitude <= Config.World.ZoneContextRadius
+			then
+				add("zone:" .. zoneId)
+			end
+		end
+	end
+
+	for flagId in Config.Ambient.FlagContext :: { string } do
+		add("flag:" .. flagId)
+	end
+
+	return tags
+end
+
+-- Whether an event's tags match the current context, or the event has no tags
+-- (making it universal). Used by the picker to filter candidates against
+-- context without breaking when context is nil.
+local function tagsMatchContext(
+	event: LifeEvent,
+	contextTags: { [string]: boolean }?
+): boolean
+	if contextTags == nil or event.tags == nil or #event.tags == 0 then
+		return true
+	end
+	for _, tag in event.tags do
+		if contextTags[tag] == true then
+			return true
+		end
+	end
+	return false
+end
+
 -- Weighted pick among the events eligible right now whose delivery takes the
 -- given route. Routing by table rather than by name is what keeps a birthday
 -- from ever handing over a letter: a mode is only reachable from the one system
@@ -232,7 +317,8 @@ local function pickForRoute(
 	data: LifeData,
 	ageYears: number,
 	route: Delivery.Route,
-	filter: ((LifeEvent) -> boolean)?
+	filter: ((LifeEvent) -> boolean)?,
+	contextTags: { [string]: boolean }?
 ): LifeEvent?
 	-- Two pools, and the first non-empty one wins. Something the player has never
 	-- lived always beats something they have, however heavily the repeat is
@@ -241,19 +327,39 @@ local function pickForRoute(
 	--
 	-- Weights are only ever compared within a pool, which is what makes that
 	-- guarantee absolute rather than statistical.
-	local fresh: { LifeEvent } = {}
-	local freshWeights: { number } = {}
-	local freshTotal = 0
-	local repeats: { LifeEvent } = {}
-	local repeatWeights: { number } = {}
-	local repeatTotal = 0
+	--
+	-- contextTags is used to prefer events whose tags match the current world
+	-- situation. An event with no tags is always eligible; an event with tags
+	-- is eligible only when at least one of its tags is in the context set --
+	-- unless no tagged candidate exists, in which case all candidates qualify.
+	local function pickInto(allowUntagged: boolean): (boolean, { LifeEvent }, { number }, number, { LifeEvent }, { number }, number)
+		local fresh: { LifeEvent } = {}
+		local freshWeights: { number } = {}
+		local freshTotal = 0
+		local repeats: { LifeEvent } = {}
+		local repeatWeights: { number } = {}
+		local repeatTotal = 0
+		local hasTagged = false
 
-	for _, event in LifeEvents.All do
-		-- The filter is how a caller says "and I can actually present this one".
-		-- Applied during selection rather than after it so an event the world has
-		-- nowhere to put never wins the roll and silently wastes the slot.
-		local presentable = filter == nil or filter(event)
-		if presentable and Delivery.RouteOf(event.delivery) == route and isEligible(data, event, ageYears) then
+		for _, event in LifeEvents.All do
+			local presentable = filter == nil or filter(event)
+			if not (presentable
+				and Delivery.RouteOf(event.delivery) == route
+				and isEligible(data, event, ageYears))
+			then
+				continue
+			end
+
+			local hasTags = event.tags ~= nil and #event.tags > 0
+			if contextTags ~= nil and hasTags then
+				if not tagsMatchContext(event, contextTags) then
+					continue
+				end
+				hasTagged = true
+			elseif contextTags ~= nil and not hasTags and not allowUntagged then
+				continue
+			end
+
 			local weight = event.weight or 1
 			if data.seenEventIds[event.id] then
 				table.insert(repeats, event)
@@ -265,6 +371,17 @@ local function pickForRoute(
 				freshTotal += weight
 			end
 		end
+
+		return hasTagged, fresh, freshWeights, freshTotal, repeats, repeatWeights, repeatTotal
+	end
+
+	local hasTagged, fresh, freshWeights, freshTotal, repeats, repeatWeights, repeatTotal = pickInto(false)
+
+	-- Second pass: if nothing tagged matched, allow untagged events through so the
+	-- world is not starved for content when no authored route exists for the
+	-- current context.
+	if not hasTagged and contextTags ~= nil then
+		hasTagged, fresh, freshWeights, freshTotal, repeats, repeatWeights, repeatTotal = pickInto(true)
 	end
 
 	local candidates = if freshTotal > 0 then fresh else repeats
@@ -308,6 +425,15 @@ local function offer(player: Player, data: LifeData, event: LifeEvent, resolutio
 	end
 
 	data.pendingEventId = event.id
+	data.pendingEventCountInChapter += 1
+	-- Track world vs modal for the 70/30 ratio. Shift events are excluded —
+	-- they are structurally different and managed by WorkService, not the life.
+	local route = Delivery.RouteOf(event.delivery)
+	if route == "Immediate" then
+		data.modalEventsThisChapter += 1
+	elseif route ~= "Shift" then
+		data.worldEventsThisChapter += 1
+	end
 	-- Whatever the world was holding has now been reached, so the world stops
 	-- holding it. Cleared here, at the moment the prompt opens, rather than by
 	-- the delivery layer afterwards: that makes "a prompt is open while the
@@ -373,7 +499,8 @@ function EventService.OfferForAge(player: Player, ageYears: number)
 
 	-- Immediate only. A birthday hands over the events that have nowhere to be:
 	-- staging a letter here would announce mail the player never went to fetch.
-	local event = pickForRoute(data, ageYears, "Immediate")
+	-- Context tags are not passed: a birthday is age-gated, not location-gated.
+	local event = pickForRoute(data, ageYears, "Immediate", nil, nil)
 	if event ~= nil then
 		offer(player, data, event)
 	end
@@ -385,10 +512,18 @@ end
 -- phone are different objects -- so selection and offering are two steps here in
 -- a way they never are for a birthday. The caller is responsible for the profile
 -- write, and OfferIfEligible re-checks everything when the player arrives.
+--
+-- The Ambient route consumes an autonomy point: the player has to earn each
+-- event by working, studying, or visiting, so the world is a response to what
+-- they do rather than a noise machine. Shift and Immediate routes bypass the
+-- gate -- a shift event is the reward for the shift itself, and a birthday is
+-- the chapter spine; neither should stall because the player has not visited
+-- enough people this chapter.
 function EventService.PickStageable(
 	player: Player,
 	route: Delivery.Route,
-	filter: ((LifeEvent) -> boolean)?
+	filter: ((LifeEvent) -> boolean)?,
+	contextTags: { [string]: boolean }?
 ): LifeEvent?
 	local profile = DataService.GetProfile(player)
 	if profile == nil or not Lives.Active(profile.Data).alive then
@@ -401,7 +536,72 @@ function EventService.PickStageable(
 	end
 
 	local ageYears = data.ageMonths // Config.Time.MonthsPerYear
-	return pickForRoute(data, ageYears, route, filter)
+	if data.pendingEventCountInChapter >= Config.Events.MaxPerChapter then
+		return nil
+	end
+	-- The autonomy gate. Only the Ambient path spends a point; everything
+	-- else is free.
+	if route == "Ambient" and data.autonomyPoints <= 0 then
+		return nil
+	end
+	return pickForRoute(data, ageYears, route, filter, contextTags)
+end
+
+-- Spend one autonomy point. Returns true when the player had a point to spend
+-- and false when they are out. Called after a successful ambient stage so the
+-- cost is only paid when the world actually put something on the mat.
+function EventService.SpendAutonomy(player: Player): boolean
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false
+	end
+	local data = Lives.Active(profile.Data)
+	if data.autonomyPoints <= 0 then
+		return false
+	end
+	data.autonomyPoints -= 1
+	return true
+end
+
+-- Add autonomy points, capped at the chapter ceiling. Called by the services
+-- that generate them -- WorkService on shift finish, the lesson services on
+-- lesson end, PeopleService on first visit -- so the cap is the single place
+-- that keeps the counter from drifting above the event cap.
+function EventService.AwardAutonomy(player: Player, count: number)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+	local next = data.autonomyPoints + count
+	if next > Config.Autonomy.MaxPerChapter then
+		next = Config.Autonomy.MaxPerChapter
+	end
+	data.autonomyPoints = next
+end
+
+-- Picks an Ambient event weighted by the player's current context tags and
+-- placed at the nearest matching NPC. The picker prefers events whose tags
+-- match the live context; if none match, it falls back to untagged events.
+-- This is what the proximity path calls rather than the timer path.
+function EventService.PickNearby(player: Player): LifeEvent?
+	local profile = DataService.GetProfile(player)
+	if profile == nil or not Lives.Active(profile.Data).alive then
+		return nil
+	end
+
+	local data = Lives.Active(profile.Data)
+	if data.pendingEventId ~= nil or data.deliveringEventId ~= nil then
+		return nil
+	end
+
+	if data.pendingEventCountInChapter >= Config.Events.MaxPerChapter then
+		return nil
+	end
+
+	local ageYears = data.ageMonths // Config.Time.MonthsPerYear
+	local contextTags = EventService.getContextTags(player)
+	return pickForRoute(data, ageYears, "Ambient", nil, contextTags)
 end
 
 -- Public so the Studio harness can force a specific event without rolling for
@@ -612,6 +812,15 @@ function EventService.ResolveChoice(player: Player, eventId: string, choiceId: s
 	-- written above were earned at the age the player was when they answered.
 	if ageYears <= Config.Childhood.EndAge and ageUpHandler ~= nil then
 		ageUpHandler(player, "Event")
+	end
+
+	-- Escalation chain: if this event named a follow-up, stage it now. The
+	-- follow-up is a world delivery (Ambient route), not a modal panel -- it
+	-- arrives when the player reaches it, not as a surprise prompt. If the
+	-- follow-up is not stageable (age, flags, cooldown, etc.), the chain
+	-- simply stops; no warning, no error.
+	if event.escalatesTo ~= nil and escalationHandler ~= nil then
+		escalationHandler(player, event.escalatesTo)
 	end
 
 	return true

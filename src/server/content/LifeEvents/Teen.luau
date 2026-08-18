@@ -14,6 +14,7 @@ local Teen: { LifeEvent } = {
 		maxAge = 17,
 		delivery = "Direct",
 		prompt = "Big exam in the morning. It's already late and you've covered about half of what you meant to.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "all_night",
@@ -41,6 +42,7 @@ local Teen: { LifeEvent } = {
 		maxAge = 17,
 		delivery = "Direct",
 		prompt = "There's a weekend job going. It's dull, it's badly paid, and it's yours if you want it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "take_it",
@@ -76,6 +78,7 @@ local Teen: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "There's a thing on Friday and everyone's going. Your friend has just turned up on the doorstep to make sure you're in.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "go_alone",
@@ -104,6 +107,7 @@ local Teen: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "Your friends are walking out of the store with things they haven't paid for. One of them is holding the door for you.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "walk_out",
@@ -144,6 +148,7 @@ local Teen: { LifeEvent } = {
 		forbids = { "sick" },
 		weight = 0.5,
 		prompt = "You've gone and come down with something, and you're meant to be out this weekend. You can feel it in your bones already.",
+		writesBack = { "stat:happiness", "stat:health", "flag:sick" },
 		choices = {
 			{
 				id = "call_it_off",

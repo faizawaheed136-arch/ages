@@ -86,10 +86,21 @@ function BillService.Charge(player: Player): number
 		end
 	end
 
+	-- Debt state changes are flags, not stats. They open content doors — loan sharks,
+	-- counselling, family help — so the number in bills.debt is not the only thing that
+	-- matters when a life is in the red. The flag is set the moment debt appears and
+	-- cleared the moment it vanishes; a life that dips into debt and pays it back in the
+	-- same billing cycle still gets the events that flag carries.
+	local wasInDebt = life.bills.debt > 0
+
 	local totalOwed = bill + life.bills.debt
 	local paid = MoneyService.Spend(player, totalOwed, "monthly bill")
 
 	if paid then
+		life.bills.debt = 0
+		if wasInDebt then
+			life.flags["in_debt"] = nil
+		end
 		BILL_DUE:FireClient(player, {
 			totalThisMonth = bill,
 			debt = 0,
@@ -104,6 +115,11 @@ function BillService.Charge(player: Player): number
 			remaining = 0
 		end
 		life.bills.debt = math.min(remaining, BILLS.MaxDebt)
+		if life.bills.debt > 0 then
+			life.flags["in_debt"] = ageYears
+		elseif wasInDebt then
+			life.flags["in_debt"] = nil
+		end
 		BILL_DUE:FireClient(player, {
 			totalThisMonth = bill,
 			debt = life.bills.debt,
@@ -125,6 +141,7 @@ function BillService.GetState(player: Player): Types.BillState?
 		debt = life.bills.debt,
 		paid = life.bills.lastBillMonth >= (life.ageMonths // Config.Time.MonthsPerYear) * Config.Time.MonthsPerYear,
 		notice = nil,
+		inDebt = life.bills.debt > 0,
 	}
 end
 

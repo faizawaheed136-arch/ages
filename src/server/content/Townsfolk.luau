@@ -1216,6 +1216,26 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- A mentor is a chosen guide, not a parent. Offered by somebody older and
+				-- further along when the bond is deep enough that they will actually invest
+				-- in you. It sits above the friendship ladder because a life can hold both
+				-- a closest friend and a mentor — they are different kinds of significance.
+				id = "learn_from",
+				label = "Ask them to teach you something",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 75,
+				bond = 5,
+				stats = { smarts = 2, happiness = 2 },
+				needsTie = "friend",
+				gives = "mentor",
+				lines = {
+					"I've been where you are. I can show you the shortcuts.",
+					"Alright. But I won't go easy on you — that's not teaching.",
+					"First lesson: nobody owes you anything. Now let's get to work.",
+				},
+			},
+			{
 				id = "put_aside",
 				label = "Collect what they put aside for you",
 				minAge = 12,
@@ -1501,6 +1521,26 @@ local ARCHETYPES: { Archetype } = {
 					"You could get us both sacked saying that. Say more.",
 					"I've thought it for years. I've never said it.",
 					"Whatever happens to this job -- we keep this, right?",
+				},
+			},
+			{
+				-- A mentor is a chosen guide, not a parent. Offered by somebody older and
+				-- further along when the bond is deep enough that they will actually invest
+				-- in you. It sits above the friendship ladder because a life can hold both
+				-- a closest friend and a mentor — they are different kinds of significance.
+				id = "learn_from",
+				label = "Ask them to teach you something",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 75,
+				bond = 5,
+				stats = { smarts = 2, happiness = 2 },
+				needsTie = "friend",
+				gives = "mentor",
+				lines = {
+					"I've been where you are. I can show you the shortcuts.",
+					"Alright. But I won't go easy on you — that's not teaching.",
+					"First lesson: nobody owes you anything. Now let's get to work.",
 				},
 			},
 			{
@@ -2053,6 +2093,47 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp: somebody you pushed past, outdid, or crossed, and who
+				-- respects you enough to chase you for it. Capped at one because a life
+				-- only has room for one person who means this much in this direction.
+				id = "become_rivals",
+				label = "Make them your rival",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 5,
+				stats = { happiness = -2 },
+				gives = "rival",
+				lines = {
+					"Fine. You want it this way? I'm not letting you forget it.",
+					"You think you're better than me? Prove it. Every time.",
+					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A sibling is chosen, not given. Offered at the very top of the ladder
+				-- when the bond is past closest and the player is old enough to mean it.
+				-- The tie is the last rung in this archetype: after this there is nothing
+				-- higher to offer and the relationship stands on what it is rather than
+				-- what it could become.
+				id = "chosen_sibling",
+				label = "Make them your sibling",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 85,
+				bond = 6,
+				stats = { happiness = 5 },
+				needsTie = "closest",
+				gives = "sibling",
+				lines = {
+					"We don't have to be related to be family. I choose you.",
+					"Blood doesn't make this. Showing up does. I'm showing up.",
+					"Then it's settled. You're stuck with me now.",
+				},
+			},
+			{
 				id = "peer_carry",
 				label = "Let them carry you through a bad stretch",
 				minAge = 18,
@@ -2509,6 +2590,53 @@ local ARCHETYPES: { Archetype } = {
 					"This is ours. Whatever happens, this stays between us.",
 				},
 			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp: somebody you pushed past, outdid, or crossed, and who
+				-- respects you enough to chase you for it. Capped at one because a life
+				-- only has room for one person who means this much in this direction.
+				--
+				-- Gated on the negative territory carved by `snub` and `cold_shoulder`
+				-- rather than on any tie — you do not need to be known to become somebody's
+				-- rival, and requiring one would make the row invisible to the player who
+				-- sour their first encounter. The maxBond = -1 ensures it vanishes as soon
+				-- as the bond climbs back past a grudging truce.
+				id = "become_rivals",
+				label = "Make them your rival",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 5,
+				stats = { happiness = -2 },
+				gives = "rival",
+				lines = {
+					"Fine. You want it this way? I'm not letting you forget it.",
+					"You think you're better than me? Prove it. Every time.",
+					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A sibling is chosen, not given. Offered at the very top of the ladder
+				-- when the bond is past closest and the player is old enough to mean it.
+				-- The tie is the last rung in this archetype: after this there is nothing
+				-- higher to offer and the relationship stands on what it is rather than
+				-- what it could become.
+				id = "chosen_sibling",
+				label = "Make them your sibling",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 85,
+				bond = 6,
+				stats = { happiness = 5 },
+				needsTie = "closest",
+				gives = "sibling",
+				lines = {
+					"We don't have to be related to be family. I choose you.",
+					"Blood doesn't make this. Showing up does. I'm showing up.",
+					"Then it's settled. You're stuck with me now.",
+				},
+			},
 		},
 	},
 
@@ -2684,6 +2812,53 @@ local ARCHETYPES: { Archetype } = {
 					"This stays between us. Obviously.",
 				},
 			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp: somebody you pushed past, outdid, or crossed, and who
+				-- respects you enough to chase you for it. Capped at one because a life
+				-- only has room for one person who means this much in this direction.
+				--
+				-- Gated on the negative territory carved by `snub` and `cold_shoulder`
+				-- rather than on any tie — you do not need to be known to become somebody's
+				-- rival, and requiring one would make the row invisible to the player who
+				-- sour their first encounter. The maxBond = -1 ensures it vanishes as soon
+				-- as the bond climbs back past a grudging truce.
+				id = "become_rivals",
+				label = "Make them your rival",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 5,
+				stats = { happiness = -2 },
+				gives = "rival",
+				lines = {
+					"Fine. You want it this way? I'm not letting you forget it.",
+					"You think you're better than me? Prove it. Every time.",
+					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A sibling is chosen, not given. Offered at the very top of the ladder
+				-- when the bond is past closest and the player is old enough to mean it.
+				-- The tie is the last rung in this archetype: after this there is nothing
+				-- higher to offer and the relationship stands on what it is rather than
+				-- what it could become.
+				id = "chosen_sibling",
+				label = "Make them your sibling",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 85,
+				bond = 6,
+				stats = { happiness = 5 },
+				needsTie = "closest",
+				gives = "sibling",
+				lines = {
+					"We don't have to be related to be family. I choose you.",
+					"Blood doesn't make this. Showing up does. I'm showing up.",
+					"Then it's settled. You're stuck with me now.",
+				},
+			},
 		},
 	},
 	{
@@ -2856,6 +3031,69 @@ local ARCHETYPES: { Archetype } = {
 					"Nobody else knows this. That means something, right?",
 					"Thanks for not... you know. Thanks for listening.",
 					"This stays between us. Obviously.",
+				},
+			},
+			{
+				id = "learn_from_worker",
+				label = "Ask them to teach you something",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 75,
+				bond = 5,
+				stats = { smarts = 2, happiness = 2 },
+				needsTie = "friend",
+				gives = "mentor",
+				lines = {
+					"I've been at this counter long enough to know the tricks. Want me to show you?",
+					"Alright. But I won't go easy on you -- that's not teaching.",
+					"First lesson: nobody owes you anything. Now let's get to work.",
+				},
+			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp: somebody you pushed past, outdid, or crossed, and who
+				-- respects you enough to chase you for it. Capped at one because a life
+				-- only has room for one person who means this much in this direction.
+				--
+				-- Gated on the negative territory carved by `snub` and `cold_shoulder`
+				-- rather than on any tie — you do not need to be known to become somebody's
+				-- rival, and requiring one would make the row invisible to the player who
+				-- sour their first encounter. The maxBond = -1 ensures it vanishes as soon
+				-- as the bond climbs back past a grudging truce.
+				id = "become_rivals",
+				label = "Make them your rival",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 5,
+				stats = { happiness = -2 },
+				gives = "rival",
+				lines = {
+					"Fine. You want it this way? I'm not letting you forget it.",
+					"You think you're better than me? Prove it. Every time.",
+					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A sibling is chosen, not given. Offered at the very top of the ladder
+				-- when the bond is past closest and the player is old enough to mean it.
+				-- The tie is the last rung in this archetype: after this there is nothing
+				-- higher to offer and the relationship stands on what it is rather than
+				-- what it could become.
+				id = "chosen_sibling",
+				label = "Make them your sibling",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 85,
+				bond = 6,
+				stats = { happiness = 5 },
+				needsTie = "closest",
+				gives = "sibling",
+				lines = {
+					"We don't have to be related to be family. I choose you.",
+					"Blood doesn't make this. Showing up does. I'm showing up.",
+					"Then it's settled. You're stuck with me now.",
 				},
 			},
 		},
@@ -3155,6 +3393,66 @@ local ARCHETYPES: { Archetype } = {
 					"Nobody else knows this. That means something, right?",
 					"Thanks for not... you know. Thanks for listening.",
 					"This stays between us. Obviously.",
+				},
+			},
+			{
+				id = "learn_from",
+				label = "Ask them to teach you something",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 75,
+				bond = 5,
+				stats = { smarts = 2, happiness = 2 },
+				needsTie = "friend",
+				gives = "mentor",
+				lines = {
+					"I've been at this counter long enough to know the tricks. Want me to show you?",
+					"Alright. But I won't go easy on you -- that's not teaching.",
+					"First lesson: nobody owes you anything. Now let's get to work.",
+				},
+			},
+			{
+				-- A rival is not the absence of a relationship. It is a relationship that
+				-- turned sharp: somebody you pushed past, outdid, or crossed, and who
+				-- respects you enough to chase you for it. Capped at one because a life
+				-- only has room for one person who means this much in this direction.
+				--
+				-- Gated on the negative territory carved by `snub` and `cold_shoulder`
+				-- rather than on any tie -- you do not need to be known to become somebody's
+				-- rival, and requiring one would make the row invisible to the player who
+				-- sour their first encounter. The maxBond = -1 ensures it vanishes as soon
+				-- as the bond climbs back past a grudging truce.
+				id = "become_rivals",
+				label = "Make them your rival",
+				minAge = 12,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -1,
+				bond = 5,
+				stats = { happiness = -2 },
+				gives = "rival",
+				lines = {
+					"Fine. You want it this way? I'm not letting you forget it.",
+					"You think you're better than me? Prove it. Every time.",
+					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- A sibling is chosen, not given. Offered at the very top of the ladder
+				-- when the bond is past closest and the player is old enough to mean it.
+				id = "chosen_sibling",
+				label = "Make them your sibling",
+				minAge = 16,
+				maxAge = 999,
+				minBond = 85,
+				bond = 6,
+				stats = { happiness = 5 },
+				needsTie = "closest",
+				gives = "sibling",
+				lines = {
+					"We don't have to be related to be family. I choose you.",
+					"Blood doesn't make this. Showing up does. I'm showing up.",
+					"Then it's settled. You're stuck with me now.",
 				},
 			},
 		},

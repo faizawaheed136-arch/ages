@@ -84,6 +84,11 @@ local VISITOR_COLLISION_GROUP = "AgesVisitors"
 -- visitors whose delivery no longer exists.
 local active: { [Model]: boolean } = {}
 
+-- Positions of every active visitor, keyed by the rig model so the world event
+-- system can answer "who is near the player" without walking the whole cast.
+-- Each entry carries the cast id (used as the context tag) and the root position.
+local visitorPositions: { [Model]: { id: string, position: Vector3 } } = {}
+
 -- Registered once, on demand, and reported if it fails rather than left to be
 -- discovered as a queue that will not hold its shape.
 local collisionGroupReady = false
@@ -514,6 +519,8 @@ function NPCService.Spawn(player: Player, member: CastMember, at: CFrame, ageYea
 	-- head would be answering a question the player never asked.
 	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
 
+	visitorPositions[visitor] = { id = member.id, position = root.Position }
+
 	-- Set before parenting, so no rig is ever briefly able to shove the one it is
 	-- queueing behind. One frame of that is enough to break a line.
 	if ensureCollisionGroup() then
@@ -724,6 +731,7 @@ function NPCService.Spawn(player: Player, member: CastMember, at: CFrame, ageYea
 			facing = nil
 			runningConnection:Disconnect()
 			active[visitor] = nil
+			visitorPositions[visitor] = nil
 			visitor:Destroy()
 		end,
 	}
@@ -790,6 +798,7 @@ end
 function NPCService.DespawnAll()
 	for visitor in active do
 		active[visitor] = nil
+		visitorPositions[visitor] = nil
 		visitor:Destroy()
 	end
 
@@ -808,6 +817,19 @@ end
 
 function NPCService:Start()
 	NPCService.DespawnAll()
+end
+
+-- Returns the cast id and current position of every active visitor, so
+-- EventService can build context tags from who is standing near the player.
+-- The list is rebuilt on every call from the live table, so it is always current.
+function NPCService.GetPositions(): { { id: string, position: Vector3 } }
+	local result: { { id: string, position: Vector3 } } = {}
+	for model, info in visitorPositions do
+		if info ~= nil then
+			table.insert(result, { id = info.id, position = info.position })
+		end
+	end
+	return result
 end
 
 return NPCService

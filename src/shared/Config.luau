@@ -320,6 +320,25 @@ Config.World = {
 	-- doormat first.
 	InteractOwnerAttribute = "OwnerUserId",
 
+	-- CollectionService tag that marks floor/wall parts as a named zone.
+	-- WorldEventService reads this and emits "zone:{zoneId}" into context
+	-- tags whenever a player stands inside a tagged part, so events can
+	-- prefer to fire when the player is in the right room -- gym events
+	-- when they are on the gym floor, for instance.
+	ZoneTag = "AgesZone",
+
+	-- Attribute on a zone-part holding its string id. The id is free-form
+	-- and becomes the tail of the context tag: a part tagged with ZoneTag
+	-- and an AgesZoneId attribute of "gym" emits "zone:gym". Unknown ids
+	-- are harmless — the picker simply sees a tag it has no event for and
+	-- moves on.
+	ZoneAttribute = "AgesZoneId",
+
+	-- How close the player has to be to a zone part before its id is emitted
+	-- as a context tag. Generous so a player who is in the room -- even standing
+	-- away from the tagged floor -- is "in" the zone. Safe range: 10-40.
+	ZoneContextRadius = 20,
+
 	-- Where staged deliveries appear. A point is an empty part in the house
 	-- tagged with DeliveryPointTag and told which mode it serves, so the mat,
 	-- the phone and the doorstep can be moved in Studio without code moving.
@@ -459,6 +478,22 @@ Config.Ambient = {
 		PhoneCall = 45,
 		NPCApproach = 60,
 	},
+
+	-- How close an NPC has to be to the player for their cast to count as
+	-- "someone is nearby" in context routing. A friend at the end of the
+	-- hallway should weight a friend-tagged event; a stranger across town
+	-- should not. Measured in studs from the player's root part to the NPC's
+	-- root part. Safe range: 5-30.
+	NPCContextRadius = 15,
+
+	-- Which life flags are reported as context tags when the picker is
+	-- looking for a candidate. Each string here is emitted as "flag:{flagId}"
+	-- so an event can say "I prefer to fire when this flag is held" and another
+	-- event can say "I only fire when it is absent" via its `forbids` field.
+	-- Only flags that appear in Config.Flags should be listed; unknown flags
+	-- silently produce no tag rather than error, because the list grows with
+	-- content and the picker must not break when a new flag is authored.
+	FlagContext = { "sick", "gym_joined", "in_debt" },
 }
 
 -- How the player talks to anything at all. Three dots over its head; get near, they
@@ -549,6 +584,50 @@ Config.Enact = {
 	-- Safe range: 2-5 and 24-64.
 	MaxChoices = 4,
 	MaxLabelLength = 48,
+}
+
+-- The schema fields every event carries, regardless of delivery. These are
+-- the bounds on the fields that have bounds; the rest are validated by the
+-- content loader against their own registries (Flags, StatName, the future
+-- Ties registry phase 5 installs). See `docs/phase2_event_schema.md` and
+-- Types.LifeEvent.
+Config.Events = {
+	-- Upper bound on `cooldown`, in real seconds. Twice the longest ambient
+	-- gap, so a cooldown never outlasts the schedule that would have asked
+	-- for the event again. Above this, an authored cooldown is almost
+	-- certainly a number written in a different unit (game months, say)
+	-- rather than a longer real window; the check at load is what catches
+	-- that before a player notices the event they expected never came back.
+	-- Safe range: 300-1200.
+	MaxCooldownSeconds = 960,
+
+	-- Per-chapter cap on delivered events, taken from lifesim_design.md:
+	-- "1–3 events per age chapter. More than that and no single one
+	-- registers." The picker refuses to deliver past this in a chapter;
+	-- see EventService.PickStageable. Shift events bypass it, because a
+	-- mid-shift refusal leaves the player with nothing happening, which
+	-- is the worse failure.
+	-- Safe range: 2-5. Below 2 and a chapter feels empty; above 5 and no
+	-- single one registers, per the design.
+	MaxPerChapter = 3,
+}
+
+-- How many ambient events a player can have this chapter, gated behind the
+-- actions they actually do. The world only brings events to a player who has
+-- earned them -- by working a shift, sitting a lesson, or paying a visit -- so
+-- the life feels responsive rather than pelted. Reset to 0 at every chapter
+-- break alongside pendingEventCountInChapter.
+--
+-- MaxPerChapter here is deliberately the same number as Config.Events.MaxPerChapter:
+-- the autonomy cap and the event cap are the same ceiling, because an event
+-- that fires without a point to spend costs the player nothing and the whole
+-- point of the gate is that it costs something.
+Config.Autonomy = {
+	-- Upper bound on autonomy points the player can hold at any one time.
+	-- Same as Events.MaxPerChapter because each point buys one ambient event,
+	-- and the event cap says there are at most this many ambient events per
+	-- chapter anyway.
+	MaxPerChapter = 3,
 }
 
 -- Answering an event by doing the thing it describes.
@@ -2501,16 +2580,12 @@ Config.People = {
 
 	-- What a year of not turning up costs.
 	--
-	-- The whole reason a bond is worth anything. Without this, every relationship in the
-	-- game only ever climbs, visiting is pure upside, and the correct play is to do it
-	-- once and never think about it again -- which is not a relationship, it is a
-	-- collectible. Charged only for the years somebody was actually in your life, so
-	-- nobody is penalised for failing to visit a friend they had not met yet.
-	--
-	-- Priced under what a single visit gives back, so one visit a year is comfortably
-	-- ahead and the player is never running to stand still.
-	-- Safe range: -6 to 0. At 0 the bond is a collectible again.
-	DecayPerYearAway = -3,
+	-- SET TO 0: Positives ratchet, decay dies. The design document explicitly rejects
+	-- decay-on-neglect as a trap that turns relationships into a collectible grind.
+	-- Bonds only rise when you turn up; they never fall from absence. A relationship
+	-- that survives is one you chose to maintain, not one the game forced you to.
+	-- Safe range: -6 to 0. At 0 the bond is a collectible again -- which is the point.
+	DecayPerYearAway = 0,
 
 	-- Visits per person per year.
 	--
@@ -2654,6 +2729,12 @@ Config.People = {
 	-- only once per life so the player gets the fanfare exactly once per rung.
 	-- Safe range: integers between MinBond (-20) and MaxBond (100), ascending.
 	BondMilestones = { 10, 25, 50, 75, 100 },
+
+	-- NPC memory. The rolling buffer of interactions per person.
+	-- Five is enough to feel like a history without being a novel the player
+	-- will never read. Defining moment is one per person, written at the
+	-- peak bond interaction.
+	InteractionsPerPerson = 5,
 
 }
 
@@ -3758,6 +3839,36 @@ Config.Verdict = {
 	-- category they did not earn.
 	-- Safe range: 14-18. Sixteen matches the age the working life begins.
 	MinAge = 16,
+}
+
+-- The chapter spine. A life is six bands of ages, and a "months passed" reel is
+-- shown at every band boundary the player has lived up to, suppressed when the
+-- shared "what happened" query returns no moments for the window.
+--
+-- The bands are a player-experience decision, not a calendar one. They sit on
+-- the design's own age-of-decision splits: ages 0-5 carry the ambient-event
+-- toy years, age 6 onwards turns the year over to events without aging, age 15
+-- opens the working life, age 20 is where the long adult band begins. The
+-- bands are wide enough to span 5-10 minutes each at walking pace; the last
+-- adult band is the widest because the verbs accumulate there.
+--
+-- `ChapterBands` is read by `LifeService` to decide when to fire a break and
+-- where to age the life to on continue. `ChapterMinAge` and `ChapterMaxAge`
+-- are derived from the first and last entries, kept here so a service does not
+-- have to walk the table every tick to find them.
+Config.Life = {
+	-- Each entry is `{ fromAge, toAge }` inclusive on both ends. Adjacent bands
+	-- share no ages — a 5 year old is in band 2, not band 1 — and the union of
+	-- all bands is the whole of a life. Adding a band is an edit here and nothing
+	-- else.
+	ChapterBands = {
+		{ 0, 4 },
+		{ 5, 9 },
+		{ 10, 14 },
+		{ 15, 19 },
+		{ 20, 39 },
+		{ 40, 80 },
+	},
 }
 
 -- The menu a life is chosen in, before it starts running.

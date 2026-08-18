@@ -18,6 +18,7 @@ local School: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "The training wheels are off. Someone is holding the back of the seat and promising not to let go.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "pedal",
@@ -46,6 +47,7 @@ local School: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "There's someone new in your class. At lunch they're sitting on their own at the end of a long table.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "sit_with",
@@ -74,6 +76,7 @@ local School: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "You didn't study. The person in front has left their paper at a very readable angle.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "copy",
@@ -102,6 +105,7 @@ local School: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "They're casting the school play. There's a lead, a tree, and a job doing the lights.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "lead",
@@ -144,6 +148,7 @@ local School: { LifeEvent } = {
 		delivery = "Direct",
 		requires = { "dog_loved" },
 		prompt = "There's a dog tied up outside the shop, and it has started making a noise at you that you're fairly sure is friendly.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "straight_in",
@@ -172,6 +177,7 @@ local School: { LifeEvent } = {
 		delivery = "Direct",
 		requires = { "dog_feared" },
 		prompt = "There's a dog tied up outside the shop. The doorway is narrow and it is lying across most of it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:dog_feared" },
 		choices = {
 			{
 				id = "long_way",
@@ -207,6 +213,7 @@ local School: { LifeEvent } = {
 		delivery = "Direct",
 		requires = { "wandered_off" },
 		prompt = "You know a way out of the school field that the teachers don't. You found it the same way you found the hedge.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "use_it",
@@ -235,6 +242,7 @@ local School: { LifeEvent } = {
 		delivery = "Direct",
 		requires = { "broke_it_owned_up" },
 		prompt = "A window is broken and the whole class is being kept in until somebody says something. It was not you.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "say_nothing",
@@ -271,6 +279,7 @@ local School: { LifeEvent } = {
 		forbids = { "sick" },
 		weight = 0.5,
 		prompt = "You wake up with a sore throat and a head full of cotton. It's a school morning, and you can feel in your bones that it isn't going to be one.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:sick" },
 		choices = {
 			{
 				id = "stay_in_bed",
@@ -299,6 +308,7 @@ local School: { LifeEvent } = {
 		maxAge = 12,
 		delivery = "Interact",
 		prompt = "There's a note slipped through the grille of your locker. It's folded in the careful way people write things they don't want everyone to read.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "read_alone",
@@ -326,6 +336,7 @@ local School: { LifeEvent } = {
 		maxAge = 12,
 		delivery = "Interact",
 		prompt = "The water fountain is making that noise again -- half cough, half splutter -- but you haven't had a drink since break.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "drink_anyway",
@@ -353,6 +364,7 @@ local School: { LifeEvent } = {
 		maxAge = 12,
 		delivery = "Interact",
 		prompt = "There's a notice pinned to the board that's been there since last term. Somebody has drawn a moustache on the headmaster's photo.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "add_to_it",
@@ -380,6 +392,7 @@ local School: { LifeEvent } = {
 		maxAge = 12,
 		delivery = "Interact",
 		prompt = "There's a book on the library shelf with your name in it -- not written, but printed. It's about something you've never heard of and it's got a torn jacket.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "borrow_it",

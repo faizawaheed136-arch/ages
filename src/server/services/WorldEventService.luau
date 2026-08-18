@@ -20,11 +20,19 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local EventService = require(script.Parent.EventService)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 
+-- DeliveryService is required lazily inside the tick rather than at the top
+-- of this file because DeliveryService requires this one back to install its
+-- collected handler. The deferral is the same trick EventService already uses
+-- for the escalation chain.
+
 local WorldEventService = {}
 
 local anchors: { [Instance]: boolean } = {}
--- One complaint per object. A misconfigured anchor is checked every tick, and a
--- warning per tick would bury the log it is trying to draw attention to.
+-- Floor / wall parts tagged as a zone. Read every tick rather than cached at
+-- tag time, so a part renamed in Studio mid-session takes effect without a
+-- restart. A separate set, not folded into anchors, because a zone has no
+-- event id to offer -- it only exists to feed context tags to the picker.
+local zoneParts: { [BasePart]: boolean } = {}
 local warned: { [Instance]: boolean } = {}
 
 local function warnOnce(instance: Instance, message: string)
@@ -94,6 +102,16 @@ function WorldEventService.SetCollectedHandler(handler: CollectedHandler)
 	collectedHandler = handler
 end
 
+-- DeliveryService injects this at Init. It stages a proximity-triggered event
+-- without WorldEventService having to require DeliveryService back, which would
+-- be a cycle since DeliveryService requires this service at the top level.
+type ProximityStageHandler = (player: Player, eventId: string) -> boolean
+local proximityStageHandler: ProximityStageHandler? = nil
+
+function WorldEventService.SetProximityStageHandler(handler: ProximityStageHandler)
+	proximityStageHandler = handler
+end
+
 local function characterPosition(player: Player): Vector3?
 	local character = player.Character
 	if character == nil then
@@ -105,7 +123,7 @@ local function characterPosition(player: Player): Vector3?
 end
 
 local function tick()
-	if next(anchors) == nil then
+	if next(anchors) == nil and next(zoneParts) == nil then
 		return
 	end
 
@@ -145,6 +163,36 @@ local function tick()
 			end
 		end
 	end
+
+	-- Proximity trigger: an NPC-approach event whose closest matching NPC is
+	-- near the player. Run only when a zone is present in the world -- when
+	-- the player is "somewhere" that may belong to a persona, not when the
+	-- map is just floor.
+	if next(zoneParts) ~= nil then
+		for _, player in players do
+			local here = characterPosition(player)
+			if here == nil then
+				continue
+			end
+			-- Only run when the player is standing inside at least one zone.
+			-- Outside, the picker has no context and a proximity stage would
+			-- just be a duplicate of the timer path.
+			local inZone = false
+			for part in zoneParts do
+				if part:IsA("BasePart") and (here - part.Position).Magnitude <= Config.World.ZoneContextRadius then
+					inZone = true
+					break
+				end
+			end
+			if not inZone then
+				continue
+			end
+			local event = EventService.PickNearby(player)
+			if event ~= nil and proximityStageHandler ~= nil then
+				proximityStageHandler(player, event.id)
+			end
+		end
+	end
 end
 
 local function addAnchor(instance: Instance)
@@ -164,6 +212,22 @@ function WorldEventService:Start()
 	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeAnchor)
 	for _, instance in CollectionService:GetTagged(tag) do
 		addAnchor(instance)
+	end
+
+	local zoneTag = Config.World.ZoneTag
+	local function addZone(instance: Instance)
+		if instance:IsA("BasePart") then
+			zoneParts[instance :: BasePart] = true
+		end
+	end
+	CollectionService:GetInstanceAddedSignal(zoneTag):Connect(addZone)
+	CollectionService:GetInstanceRemovedSignal(zoneTag):Connect(function(instance: Instance)
+		if instance:IsA("BasePart") then
+			zoneParts[instance :: BasePart] = nil
+		end
+	end)
+	for _, instance in CollectionService:GetTagged(zoneTag) do
+		addZone(instance)
 	end
 
 	task.spawn(function()

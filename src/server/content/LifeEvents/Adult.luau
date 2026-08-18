@@ -16,6 +16,7 @@ local Adult: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "neighbor",
 		prompt = "It's January and you've signed up for something that involves getting up early and hurting on purpose. The neighbor has seen you carrying the bag and has come to say what everyone is saying.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "stick",
@@ -43,6 +44,7 @@ local Adult: { LifeEvent } = {
 		maxAge = 60,
 		delivery = "Direct",
 		prompt = "There's a course you keep reading about. It runs on Tuesday evenings and you are, technically, free on Tuesday evenings.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "enroll",
@@ -71,6 +73,7 @@ local Adult: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "Someone you haven't seen in years is standing on the doorstep. You almost don't recognise them, and then you do.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "answer",
@@ -98,6 +101,7 @@ local Adult: { LifeEvent } = {
 		maxAge = 75,
 		delivery = "Direct",
 		prompt = "There's a letter about a routine appointment you've been putting off. It's been on the side for three weeks.",
+		writesBack = { "stat:happiness", "stat:health" },
 		choices = {
 			{
 				id = "go",
@@ -125,6 +129,7 @@ local Adult: { LifeEvent } = {
 		maxAge = 999,
 		delivery = "Direct",
 		prompt = "You're awake before everyone else again. The light outside is doing something worth looking at.",
+		writesBack = { "stat:happiness", "stat:health" },
 		choices = {
 			{
 				id = "walk",
@@ -158,6 +163,7 @@ local Adult: { LifeEvent } = {
 		forbids = { "sick" },
 		weight = 0.5,
 		prompt = "You're coming down with something, and you can't decide whether it's worth being sensible about. There's stuff that needs doing.",
+		writesBack = { "stat:happiness", "stat:health", "flag:sick" },
 		choices = {
 			{
 				id = "take_the_day",

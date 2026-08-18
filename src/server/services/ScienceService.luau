@@ -56,6 +56,7 @@ local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("M
 local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
+local EventService = require(script.Parent.EventService)
 local StatService = require(script.Parent.StatService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
@@ -509,6 +510,7 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	-- otherwise a player could start, leave, and start again until they drew a procedure
 	-- they liked.
 	data.lessonsThisYear += 1
+	EventService.AwardAutonomy(player, 1)
 
 	-- Onto the year's record, so an afternoon in the lab appears on the report card as the
 	-- lesson it was. Written after the count moves and after mastery has settled, so the

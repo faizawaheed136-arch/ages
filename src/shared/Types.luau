@@ -361,6 +361,20 @@ export type RibbonMoment = {
 	line: string,
 }
 
+-- One fact a life has accumulated, addressed to a reader.
+--
+-- The shared "what happened" shape. The end-of-life verdict picks three of these
+-- as its causal moments; the chapter reel picks every one since the last band
+-- break. Both read the same `LifeService.Moments` query, and both render through
+-- the same `FormatMoment` — the duplication that would otherwise grow between a
+-- reel and a verdict is closed by construction because there is only one walk.
+export type Moment = {
+	ageMonths: number,
+	kind: string,
+	id: string,
+	line: string,
+}
+
 export type Ribbon = {
 	id: string,
 	title: string,
@@ -1973,6 +1987,36 @@ export type LifeEvent = {
 	-- gate that cannot be met just means the event never fires.
 	minStanding: number?,
 	jobs: { string }?,
+
+	-- Loose category tags, for picking pools ("a rival is reading me" — vs.
+	-- "the room I'm in has gotten too small"). Strings, not enums, because the
+	-- tag set grows as content grows and a closed enum turns every new tag into
+	-- a release. Unknown tags are allowed at load: they cannot fail, because
+	-- nobody reads them except the picker, which is the only place that asks
+	-- what tags exist.
+	tags: { string }?,
+
+	-- Real seconds between *deliveries*, not between *fires*. A cooldown is on
+	-- the delivery path: a wandering event with cooldown 60 will not put a lure
+	-- down twice within a minute of itself, so the room is never littered with
+	-- copies of the same lure. Nil means 0. Per-life, not global: a second
+	-- player is on their own clock.
+	cooldown: number?,
+
+	-- The id of the follow-up that comes from this one, if anything. The chain
+	-- is read by the picker, not by content: a chained event fires *because*
+	-- the prior one was answered, so the player can trace the thread. Nil means
+	-- "nothing follows". An escalatesTo that does not exist as an event id is a
+	-- load error -- a chain to nothing is the worst kind of dead writing.
+	escalatesTo: string?,
+
+	-- What the event writes to, in plain words. The mandatory-stat-or-it-does-
+	-- not-ship rule from the design. Authored as the list of things the event
+	-- actually changes (stat names, flag ids, ribbon conditions, tie names) so
+	-- a missing one is caught at load, not at runtime. The list is also the
+	-- picker hint for "this event leaves a mark": chained events read it to
+	-- know what the prior event left behind.
+	writesBack: { string }?,
 }
 
 -- One choice as the client is allowed to see it: the words, the price, and the
@@ -2533,6 +2577,47 @@ export type LifeData = {
 	-- VerdictService at death and never rewritten; the lobby reads the id to
 	-- display the life's archetype on the slot card.
 	verdict: Ribbon?,
+	-- The age, in months, at which the current chapter band began. Set to the
+	-- band boundary when a life crosses one, and never touched between. The reel
+	-- reads it as `sinceMonths` to ask "what has happened since the last break?",
+	-- and it is what lets the same query answer the reel and the verdict — the
+	-- verdict passes no window and the reel passes this number.
+	--
+	-- Zero for a newborn and for a save written before chapters existed, which is
+	-- the same thing as "the current chapter started at birth". Reconcile fills
+	-- it in as zero so an old save's first break lists the whole life — honest,
+	-- because that life genuinely has no smaller window to report.
+	lastChapterBreakMonths: number,
+
+	-- Per-chapter delivery counter, reset to 0 at every chapter break in
+	-- LifeService:EnterChapter. The picker refuses to deliver past
+	-- Config.Events.MaxPerChapter in a chapter, so a chapter never has more
+	-- than that many events staged. Shift events bypass the cap.
+	pendingEventCountInChapter: number,
+
+	-- Per-chapter counter for how many of those events came from the world
+	-- (Ambient, Wandered, Anchored) versus from a birthday or shift panel
+	-- (Immediate, Shift). Enforced by the picker: at least 70% of the
+	-- chapter's events must be world-spawned, so with a cap of 3 that
+	-- means at most 1 modal event per chapter. Reset at each chapter break.
+	worldEventsThisChapter: number,
+	modalEventsThisChapter: number,
+
+	-- Last time (os.clock()) each event id was delivered, keyed by id. Used
+	-- to enforce per-event cooldowns: an event with cooldown N will not be
+	-- staged again within N seconds of its previous delivery. Written by
+	-- DeliveryService at stage time, not at resolution.
+	cooldownTimers: { [string]: number },
+
+	-- Autonomy points the player has earned this chapter and has not yet spent
+	-- on an ambient event. Each point is bought by a real action -- a shift,
+	-- a lesson, a visit -- and spent the moment the picker stages something.
+	-- Resets to 0 at every chapter break; capped at Config.Autonomy.MaxPerChapter.
+	autonomyPoints: number,
+	-- NPC memory: 5 rolling interactions per person, plus 1 defining moment.
+	-- Reset on death so each life has its own social history.
+	interactions: { [string]: { { personId: string, age: number, line: string } } },
+	definingMoment: { [string]: { personId: string, age: number, line: string } },
 }
 
 -- The account: one player, several lives, and the few things that outlive all of them.
@@ -2639,6 +2724,7 @@ export type BillState = {
 	debt: number,
 	paid: boolean,
 	notice: string?,
+	inDebt: boolean,
 }
 
 -- A milestone achievement, pushed once when a life crosses a threshold.

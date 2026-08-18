@@ -95,6 +95,47 @@ local SOURCE: { FlagDef } = {
 		id = "gym_joined",
 		meaning = "Started going to the gym, whether the habit lasted",
 	},
+
+	-- Debt. The one number in the game that compounds against the player. Flags
+	-- here let content react to a life being in the red rather than letting the
+	-- number sit invisible and only punishing.
+	{
+		id = "in_debt",
+		meaning = "Owes money on monthly bills, and the interest is still running",
+	},
+	{
+		id = "loan_shark_deal",
+		meaning = "Took a loan shark up on an offer when bills became too much",
+	},
+	{
+		id = "debt_relief",
+		meaning = "Had debt cleared or reduced by something other than working it off",
+	},
+
+	-- Careers. Set the first time a life steps into a job category, so later
+	-- events can branch off what the life has already done rather than only
+	-- what the life is doing right now. Cleared on death with the rest of the
+	-- flag set, because a new life has not earned any of these.
+	{
+		id = "career_shop",
+		meaning = "Worked the shop floor at some point, which is where most careers start",
+	},
+	{
+		id = "career_office",
+		meaning = "Worked upstairs in the office, past the stairs that separate the two worlds",
+	},
+	{
+		id = "career_bakery",
+		meaning = "Worked the bakery, early mornings and flour in the hair",
+	},
+	{
+		id = "career_trades",
+		meaning = "Worked with your hands outside a shop or office — garage, site, warehouse",
+	},
+	{
+		id = "career_retired",
+		meaning = "Left the workforce deliberately, not because something pushed you out",
+	},
 }
 
 local byId: { [string]: FlagDef } = {}

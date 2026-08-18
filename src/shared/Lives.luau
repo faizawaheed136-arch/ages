@@ -160,6 +160,23 @@ function Lives.New(): LifeData
 		-- No milestones achieved, no bond milestones fired.
 		milestones = {},
 		bondMilestones = {},
+		-- The current chapter began at birth for a newborn, which is what zero says.
+		-- Also right for a save written before chapters existed: that life has no
+		-- smaller window to report, so its first break lists the whole of it.
+		lastChapterBreakMonths = 0,
+		worldEventsThisChapter = 0,
+		modalEventsThisChapter = 0,
+		cooldownTimers = {},
+		-- Zero autonomy points at the start of every life. The player has to
+		-- earn the first one the same way they earn every one after: by doing
+		-- something the chapter recognises as work.
+		autonomyPoints = 0,
+		-- NPC memory: 5 rolling interactions per person, plus 1 defining moment.
+		-- Empty for a newborn; a save written before memory existed has no
+		-- remembered conversations, which is exactly true -- the game was not
+		-- watching them happen.
+		interactions = {},
+		definingMoment = {},
 	}
 end
 

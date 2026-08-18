@@ -29,12 +29,12 @@ local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
-local VerdictService = require(script.Parent.VerdictService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
 type ManualAgeUpState = Types.ManualAgeUpState
 type LifeData = Types.LifeData
+type Moment = Types.Moment
 
 local AgeUpdatedRemote = Remotes.Get("AgeUpdated")
 local AgeUpProgressRemote = Remotes.Get("AgeUpProgress")
@@ -42,6 +42,7 @@ local RequestAgeUpRemote = Remotes.Get("RequestAgeUp")
 local PlayerDiedRemote = Remotes.Get("PlayerDied")
 local LifeStageChangedRemote = Remotes.Get("LifeStageChanged")
 local NoticeRemote = Remotes.Get("Notice")
+local ChapterBreakRemote = Remotes.Get("ChapterBreak")
 
 local LifeService = {}
 
@@ -104,6 +105,183 @@ end
 
 local function ageYearsOf(data: LifeData): number
 	return data.ageMonths // Config.Time.MonthsPerYear
+end
+
+-- Whether the given age falls inside one of the configured chapter bands.
+local function bandIndexOf(ageYears: number): number
+	for i, band in Config.Life.ChapterBands do
+		if ageYears >= band[1] and ageYears <= band[2] then
+			return i
+		end
+	end
+	return #Config.Life.ChapterBands
+end
+
+-- Turn a moment into readable prose, anchored to the life's data.
+--
+-- Called by both the verdict (which wants up to three) and the chapter reel
+-- (which wants all of them). Same function, same output — the spec calls it
+-- the "single source" precisely because the two consumers must never diverge.
+function LifeService.FormatMoment(moment: Moment, data: LifeData): string
+	local ageYears = moment.ageMonths // Config.Time.MonthsPerYear
+	if moment.kind == "flag" then
+		return `At age {ageYears}, you {moment.id}`
+	elseif moment.kind == "bond" then
+		return `At age {ageYears}, you and {moment.id} grew close`
+	elseif moment.kind == "grade" then
+		return `At age {ageYears}, you did well in school`
+	elseif moment.kind == "standing" then
+		return `At age {ageYears}, you earned respect at {moment.id}`
+	elseif moment.kind == "mastery" then
+		return `At age {ageYears}, you mastered {moment.id}`
+	elseif moment.kind == "job" then
+		return `At age {ageYears}, you worked as a {moment.id}`
+	elseif moment.kind == "house" then
+		return `At age {ageYears}, you bought a home`
+	elseif moment.kind == "gangRank" then
+		return `At age {ageYears}, you rose in a gang`
+	elseif moment.kind == "visit" then
+		return `At age {ageYears}, you visited {moment.id}`
+	elseif moment.kind == "confrontation" then
+		return `At age {ageYears}, {moment.id}`
+	elseif moment.kind == "age" then
+		return `At age {ageYears}, you reached age {ageYears}`
+	else
+		return `At age {ageYears}, {moment.id}`
+	end
+end
+
+-- The shared "what happened" query. One function feeds the chapter reel and the
+-- end-of-life verdict; the two consumers pass different opts but the walk is the
+-- same.
+--
+-- `sinceMonths` defaults to 0 (whole life) rather than nil, because a stored life
+-- that predates the field gets reconciled to 0 and 0 means "start from birth" here.
+-- `maxCount` and `kinds` gate the output; nil means "unlimited" / "all kinds".
+function LifeService.Moments(data: LifeData, opts: {
+	sinceMonths: number?,
+	untilMonths: number?,
+	maxCount: number?,
+	kinds: { string }?,
+}): { Moment }
+	local sinceMonths = opts.sinceMonths or 0
+	local untilMonths = opts.untilMonths or data.ageMonths
+	local maxCount = opts.maxCount
+	local allowedKinds = opts.kinds
+
+	local results: { Moment } = {}
+
+	local function emit(ageMonths: number, kind: string, id: string)
+		if allowedKinds ~= nil and not table.find(allowedKinds, kind) then
+			return
+		end
+		if ageMonths < sinceMonths then
+			return
+		end
+		if ageMonths > untilMonths then
+			return
+		end
+		local moment: Moment = {
+			ageMonths = ageMonths,
+			kind = kind,
+			id = id,
+			line = "",
+		}
+		moment.line = LifeService.FormatMoment(moment, data)
+		table.insert(results, moment)
+		if maxCount ~= nil and #results >= maxCount then
+			return
+		end
+	end
+
+	-- Flags: age is the value stored in the flag set.
+	if not table.find(allowedKinds or {}, "flag") or allowedKinds == nil then
+		for flagId, flagAgeMonths in data.flags do
+			emit(flagAgeMonths, "flag", flagId)
+		end
+	end
+
+	-- Bonds: age is the last-visited year for bonds >= 50.
+	if allowedKinds == nil or table.find(allowedKinds, "bond") then
+		for personId, bond in data.bonds do
+			if bond >= 50 then
+				local visit = data.visits[personId]
+				local bondAgeMonths = visit ~= nil and ((visit.lastYear or 0) * Config.Time.MonthsPerYear) or data.ageMonths
+				emit(bondAgeMonths, "bond", personId)
+			end
+		end
+	end
+
+	-- School grades: best and worst per year.
+	if allowedKinds == nil or table.find(allowedKinds, "grade") then
+		for _, year in data.schoolGrades do
+			local ageMonths = (year.ageYears or 0) * Config.Time.MonthsPerYear
+			if year.grade == "A" or year.grade == "B" then
+				emit(ageMonths, "grade", "school")
+			end
+		end
+	end
+
+	-- Job standing: any standing at or above the band threshold.
+	if allowedKinds == nil or table.find(allowedKinds, "standing") then
+		for jobId, standing in data.jobStanding do
+			emit(data.ageMonths, "standing", jobId)
+		end
+	end
+
+	-- Subject mastery: level 5 mastery.
+	if allowedKinds == nil or table.find(allowedKinds, "mastery") then
+		for subject, level in data.subjectMastery do
+			if level >= 5 then
+				emit(data.ageMonths, "mastery", subject)
+			end
+		end
+	end
+
+	-- Current job.
+	if allowedKinds == nil or table.find(allowedKinds, "job") then
+		if data.jobId ~= nil then
+			emit(data.ageMonths, "job", data.jobId)
+		end
+	end
+
+	-- Houses owned.
+	if allowedKinds == nil or table.find(allowedKinds, "house") then
+		for houseId in data.houses.owned do
+			emit(data.ageMonths, "house", houseId)
+		end
+	end
+
+	-- Gang rank.
+	if allowedKinds == nil or table.find(allowedKinds, "gangRank") then
+		if data.gangRankId ~= nil then
+			emit(data.ageMonths, "gangRank", data.gangRankId)
+		end
+	end
+
+	-- Visits: proximity-driven NPC news, one per person.
+	if allowedKinds == nil or table.find(allowedKinds, "visit") then
+		for personId, visit in data.visits do
+			local visitAgeMonths = (visit.lastYear or 0) * Config.Time.MonthsPerYear
+			emit(visitAgeMonths, "visit", personId)
+		end
+	end
+
+	-- Age milestones: every integer age.
+	if allowedKinds == nil or table.find(allowedKinds, "age") then
+		local startAge = sinceMonths // Config.Time.MonthsPerYear
+		local endAge = untilMonths // Config.Time.MonthsPerYear
+		for age = startAge, endAge do
+			emit(age * Config.Time.MonthsPerYear, "age", tostring(age))
+		end
+	end
+
+	-- Sort by age ascending.
+	table.sort(results, function(a, b)
+		return a.ageMonths < b.ageMonths
+	end)
+
+	return results
 end
 
 -- Whether there is a life here to run at all.
@@ -308,6 +486,32 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	data.ageMonths += Config.Time.MonthsPerYear
 
 	local ageYears = ageYearsOf(data)
+
+	-- Chapter break: the band changed. Compute moments since the last break and
+	-- push them to the client so the reel can roll. A zero-moment break is still
+	-- fired — the client suppresses the screen when the list is empty.
+	local newBand = bandIndexOf(ageYears)
+	local lastBreakYears = data.lastChapterBreakMonths // Config.Time.MonthsPerYear
+	local lastBreakBand = bandIndexOf(lastBreakYears)
+	if newBand ~= lastBreakBand then
+		local moments = LifeService.Moments(data, {
+			sinceMonths = data.lastChapterBreakMonths,
+			maxCount = nil,
+		})
+		ChapterBreakRemote:FireClient(player, {
+			ageMonths = data.ageMonths,
+			moments = moments,
+		})
+		data.lastChapterBreakMonths = data.ageMonths
+		data.pendingEventCountInChapter = 0
+		-- Reset the world/modal ratio trackers for the new chapter, so the
+		-- 70/30 budget is enforced per chapter rather than over the whole life.
+		data.worldEventsThisChapter = 0
+		data.modalEventsThisChapter = 0
+		-- Reset autonomy points so the new chapter starts fresh: the player has
+		-- to earn every ambient event again, which is the whole point of the gate.
+		data.autonomyPoints = 0
+	end
 
 	StatService.ApplyYearlyDecay(player, ageYears)
 
@@ -574,6 +778,9 @@ function LifeService:Init()
 	-- Same device, same reason. SetupService writes the setup and this runs the moment
 	-- after, which is the moment a life starts.
 	SetupService.SetBeginHandler(beginLife)
+	-- VerdictService needs the shared moments query but requiring it here would
+	-- close a cycle. The setter below threads it in after both modules are loaded.
+	VerdictService.SetMoments(LifeService.Moments)
 end
 
 function LifeService:Start()

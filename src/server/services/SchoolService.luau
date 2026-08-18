@@ -58,6 +58,7 @@ local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("M
 local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
+local EventService = require(script.Parent.EventService)
 local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
 local ScienceService = require(script.Parent.ScienceService)
@@ -1118,6 +1119,10 @@ local function finish(player: Player, data: LifeData, lesson: Lesson, reason: st
 	-- cap is counting, and a player who could start a lesson, leave, and start another
 	-- would be able to re-roll the questions until they got an easy five.
 	data.lessonsThisYear += 1
+	-- Showing up for school earns the right to be interrupted by the world. The
+	-- counter is per-year, but the autonomy gate is per-chapter, so the points
+	-- bank across the whole band and do not reset at the year line.
+	EventService.AwardAutonomy(player, 1)
 
 	-- Banks toward this subject's mastery on the same ladder Science climbs. Quiz
 	-- subjects had no ladder at all until now, which meant five of the six could never be
@@ -1335,6 +1340,7 @@ end
 -- worst sentence this system could say.
 local function takeSkip(player: Player, data: LifeData, subjectId: string)
 	data.lessonsThisYear += 1
+	EventService.AwardAutonomy(player, 1)
 
 	local gained = Report.SmartsFor(Report.Skipped)
 	if gained ~= 0 then

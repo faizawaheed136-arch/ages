@@ -53,6 +53,7 @@ local Mastery = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("M
 local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Report"))
 
 local DataService = require(script.Parent.DataService)
+local EventService = require(script.Parent.EventService)
 local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
 local Ground = require(script.Parent.Parent.world.Ground)
@@ -479,6 +480,7 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	-- otherwise a player could start, leave, and start again until they drew a set of
 	-- destinations they liked the look of.
 	data.lessonsThisYear += 1
+	EventService.AwardAutonomy(player, 1)
 
 	-- The promotion is reported only when this lesson moved it -- a card line reading
 	-- "Geography, level 3" against an afternoon that began on that rung would read as

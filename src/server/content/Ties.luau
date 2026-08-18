@@ -25,6 +25,10 @@
 -- avoid. If a fourth is ever wanted, the question to answer first is what sentence a
 -- player would say about it that they could not already say about one of these -- and,
 -- for AGES specifically, whether a 13+ life can hold it, which is why there is no partner.
+--
+-- Phase 5 adds three structural slots that replace romance: mentor, rival, sibling.
+-- Each is capped at one and sits above the friendship ladder. They are parallel tracks --
+-- you can have one of each -- because a life holds multiple kinds of significance.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -69,11 +73,34 @@ local SOURCE: { TieDef } = {
 		rank = 3,
 		limit = 1,
 	},
-	-- There was a fourth rung here -- "partner" -- and it is gone on purpose, not lost. A
-	-- romantic partner is the one relationship this game cannot write and stay 13+, so the
-	-- ladder stops at friendship: known, friend, closest friend, and no further. If the top
-	-- of the ladder ever wants to climb again, the rung above `closest` has to be something
-	-- a 13+ life can hold -- a mentor, a rival, a sibling you chose -- not a partner.
+	-- A mentor. Capped at one. Offered by an older person when the bond is deep and the
+	-- player has something to learn. The mentor tie unlocks guidance offers and marks the
+	-- person as a teacher in your life. Not a parent -- a chosen guide.
+	{
+		id = "mentor",
+		label = "mentor",
+		rank = 4,
+		limit = 1,
+	},
+	-- A rival. Capped at one. Offered by someone whose bond with you has gone negative --
+	-- a person you wronged, outshone, or crossed. The rival tie unlocks competitive offers
+	-- and marks the person as an adversary who respects you enough to chase you. Negative
+	-- ties are content: a rival is a relationship, not the absence of one.
+	{
+		id = "rival",
+		label = "rival",
+		rank = 5,
+		limit = 1,
+	},
+	-- A chosen sibling. Capped at one. Offered by a peer when the bond is at its peak and
+	-- the offer is to make it permanent -- not by blood, but by choice. The sibling tie
+	-- unlocks lifelong loyalty offers and marks the person as family you chose.
+	{
+		id = "sibling",
+		label = "sibling",
+		rank = 6,
+		limit = 1,
+	},
 }
 
 local byId: { [string]: TieDef } = {}

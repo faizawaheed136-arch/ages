@@ -501,6 +501,21 @@ local function milestoneLabel(milestone: number): string
 	return BOND_MILESTONE_LABELS[milestone] or "Friend"
 end
 
+-- Record an interaction with a person. Rolling buffer of 5 per person: oldest
+-- is dropped. The defining moment for that person is set when the bonding is
+-- strongest yet, so the player remembers the line said at the peak of the bond.
+local function recordInteraction(data: LifeData, personId: string, age: number, line: string)
+	local list = data.interactions[personId]
+	if list == nil then
+		list = {}
+		data.interactions[personId] = list
+	end
+	table.insert(list, { personId = personId, age = age, line = line })
+	while #list > PEOPLE.InteractionsPerPerson do
+		table.remove(list, 1)
+	end
+end
+
 -- The odds this ask is turned down, from 0 to 1. Zero for everything that is not an
 -- ask, which is most of what anybody has to say.
 --
@@ -1454,6 +1469,31 @@ local function take(player: Player, data: LifeData, chat: Chat, stand: Standing?
 	chat.offers = {}
 	chat.done = true
 	data.visits[person.id] = { age = age, count = visitsAt(data, person.id, age) + 1 }
+	-- Visiting someone is an act of social agency. Each visit earns the right
+	-- to one ambient event this chapter, capped so the player cannot bank
+	-- hundreds of visits and then sit still while the world dumps content.
+	EventService.AwardAutonomy(player, 1)
+
+	-- Record this interaction in NPC memory. The line they said back is what
+	-- the player will remember -- a refused ask keeps the refused line, a yes
+	-- keeps the offer's promise. Rolling buffer of 5 per person, oldest dropped.
+	local interactionLine = if refused
+		then (offer.refusedLine or person.busyLine)
+		else (offer.yesLine or offer.line or person.busyLine)
+	recordInteraction(data, person.id, age, interactionLine)
+	-- A defining moment is the strongest interaction yet -- the line said at the
+	-- highest bond this person has ever reached with the player. Replaces the
+	-- previous defining moment for this person only.
+	if not refused then
+		local existing = data.definingMoment[person.id]
+		if existing == nil or bondGain > 0 then
+			data.definingMoment[person.id] = {
+				personId = person.id,
+				age = age,
+				line = interactionLine,
+			}
+		end
+	end
 
 	-- A refused ask keeps a share of what saying yes would have been worth: you turned up
 	-- and you asked, and the turning up happened either way. Rounded away from zero on
@@ -1988,8 +2028,9 @@ local function forget(player: Player)
 	rebuildAgain[player] = nil
 end
 
--- A birthday. Everybody you did not see this last year thinks a little less of you, and
--- the roster is rebuilt because a year is when people arrive in a life and leave it.
+-- A birthday. Positives ratchet; decay is removed. Bonds only rise when you turn up;
+-- they never fall from absence. The roster is rebuilt because a year is when people
+-- arrive in a life and leave it.
 --
 -- LifeService calls this after the age has moved, so the year being judged is the one
 -- just left: the age reached, less one. Getting that off by one would charge for a year
@@ -2000,29 +2041,8 @@ function PeopleService.OnAgeUp(player: Player)
 		return
 	end
 	local data = Lives.Active(profile.Data)
-	local yearJustEnded = ageYearsOf(data) - 1
 
-	for _, person in People.All do
-		-- Only against people who were actually in your life that year. Nobody is charged
-		-- for failing to visit a friend they had not met yet, or a neighbor they had
-		-- already outlived the acquaintance of.
-		if not People.IsAround(person, yearJustEnded, data.flags) then
-			continue
-		end
-		-- And only once something has moved. An untouched bond is somebody the player has
-		-- never walked up to, and opening a relationship by docking it would have the game
-		-- punish you for a year you did not know was being counted.
-		if data.bonds[person.id] == nil then
-			continue
-		end
-		-- Once is enough to have not neglected somebody. The cap can be raised without that
-		-- turning into a quota you have to fill or lose ground.
-		if visitsAt(data, person.id, yearJustEnded) > 0 then
-			continue
-		end
-		data.bonds[person.id] =
-			math.clamp(data.bonds[person.id] + PEOPLE.DecayPerYearAway, PEOPLE.MinBond, PEOPLE.MaxBond)
-	end
+	-- No decay loop. Bonds are ratcheted gains only -- see Config.People.DecayPerYearAway = 0.
 
 	requestRebuild(player)
 	-- Ahead of the rebuild as well as inside it. The rebuild yields on avatar builds, and

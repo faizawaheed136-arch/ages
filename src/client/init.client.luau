@@ -21,6 +21,7 @@ local GangUI = require(script.ui.GangUI)
 local FightUI = require(script.ui.FightUI)
 local HouseUI = require(script.ui.HouseUI)
 local CarDealerUI = require(script.ui.CarDealerUI)
+local ChapterReel = require(script.ui.ChapterReel)
 local MoneyPop = require(script.world.MoneyPop)
 local BonusPop = require(script.world.BonusPop)
 local MilestoneFlash = require(script.world.MilestoneFlash)
@@ -98,6 +99,7 @@ local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
 local dealerMark = DealerMark.new()
+local chapterReel = ChapterReel.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
 -- moment the server names a life stage, which it only does for a life that has begun --
@@ -886,6 +888,22 @@ Remotes.Get("AgeUpProgress").OnClientEvent:Connect(function(seconds: number, thr
 	ui:SetAgeUpProgress(seconds, thresholdSeconds, state)
 end)
 
+-- The chapter seam: a band boundary has been reached and the shared "what happened"
+-- query has produced a list of moments. The client opens the reel; an empty list
+-- is suppressed and the player presses through immediately.
+Remotes.Get("ChapterBreak").OnClientEvent:Connect(function(payload: {
+	ageMonths: number,
+	moments: { Types.Moment },
+})
+	ui:SetSeam(true)
+	chapterReel:Set(payload.ageMonths, payload.moments)
+end)
+
+chapterReel:OnContinueActivated(function()
+	chapterReel:Hide()
+	ui:SetSeam(false)
+end)
+
 -- Also the signal that there is a life at all. The server only names a stage for a profile
 -- that has been set up, so this arriving means the menu's work is done -- on a fresh join
 -- into a life already under way, where no menu was ever raised, and on the first push of a
@@ -949,6 +967,7 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- who no longer has a head, and the corner is better empty.
 	house:Set(nil)
 	carDealer:Set(nil)
+	chapterReel:Hide()
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

@@ -19,6 +19,7 @@ local Gym: { LifeEvent } = {
 		maxAge = 50,
 		delivery = "Direct",
 		prompt = "There's a free trial card on the counter at the gym. You've walked past it enough times to know where it is.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "flag:gym_joined" },
 		choices = {
 			{
 				id = "treadmill",
@@ -51,6 +52,7 @@ local Gym: { LifeEvent } = {
 		maxAge = 55,
 		delivery = "Direct",
 		prompt = "There's a charity run in October. Six weeks away. You keep thinking about it and then not doing anything.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:gym_joined" },
 		choices = {
 			{
 				id = "train",
@@ -83,6 +85,7 @@ local Gym: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "neighbor",
 		prompt = "The neighbor from three doors down is stretching by the door in running gear. They've noticed you at the same time every week and have come over to ask.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:gym_joined" },
 		choices = {
 			{
 				id = "join",
@@ -114,6 +117,7 @@ local Gym: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "Your friend has just joined the gym and is standing in the middle of the floor looking lost. They have seen you and are heading over.",
+		writesBack = { "stat:happiness", "stat:health" },
 		choices = {
 			{
 				id = "show_around",
@@ -145,6 +149,7 @@ local Gym: { LifeEvent } = {
 		delivery = "Direct",
 		forbids = { "sick" },
 		prompt = "You went hard yesterday and this morning something in your knee is clicking. It's not terrible but it's definitely there.",
+		writesBack = { "stat:happiness", "stat:health", "flag:sick" },
 		choices = {
 			{
 				id = "rest",
@@ -180,6 +185,7 @@ local Gym: { LifeEvent } = {
 		delivery = "Direct",
 		requires = { "gym_joined" },
 		prompt = "It has been four months. The direct debit keeps going out and you keep meaning to cancel it or go back, and you have done neither.",
+		writesBack = { "stat:happiness", "stat:health" },
 		choices = {
 			{
 				id = "go_back",
@@ -209,6 +215,7 @@ local Gym: { LifeEvent } = {
 		maxAge = 60,
 		delivery = "Direct",
 		prompt = "A local five-kilometre fun run is being advertised everywhere. It is not serious and that is the whole appeal.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "flag:gym_joined" },
 		choices = {
 			{
 				id = "enter_serious",

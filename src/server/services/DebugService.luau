@@ -158,6 +158,43 @@ Commands.verdict = function(player: Player, args: { string }): string
 	return `ribbon: {ribbon.title} — {ribbon.description}`
 end
 
+Commands.moments = function(player: Player, _args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local data = Lives.Active(profile.Data)
+	local moments = LifeService.Moments(data, { maxCount = nil })
+	if #moments == 0 then
+		return "no moments in this life"
+	end
+	local lines: { string } = {}
+	for _, m in moments do
+		table.insert(lines, `  age {m.ageMonths // Config.Time.MonthsPerYear}: {m.line}`)
+	end
+	return table.concat(lines, "\n")
+end
+
+Commands.reel = function(player: Player, _args: { string }): string
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return "no profile loaded yet"
+	end
+	local data = Lives.Active(profile.Data)
+	local moments = LifeService.Moments(data, {
+		sinceMonths = data.lastChapterBreakMonths,
+		maxCount = nil,
+	})
+	if #moments == 0 then
+		return "nothing happened since the last chapter break"
+	end
+	local lines: { string } = {}
+	for _, m in moments do
+		table.insert(lines, `  age {m.ageMonths // Config.Time.MonthsPerYear}: {m.line}`)
+	end
+	return table.concat(lines, "\n")
+end
+
 Commands.stat = function(player: Player, args: { string }): string
 	local name = string.lower(args[1] or "")
 	local value = tonumber(args[2])
@@ -2641,7 +2678,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/toddler [next|on|off], /flags [all|set <id>|clear <id>], /setup [show|skip|restart], /lobby, "
 	.. "/bill [charge], /milestone [reset], /gossip [note <action> <effect>|tick], "
 	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve], "
-	.. "/verdict [name] — show or force a ribbon"
+	.. "/verdict [name] — show or force a ribbon, /moments — print every moment, "
+	.. "/reel — print moments since last chapter break"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

@@ -1128,6 +1128,10 @@ local function endShift(player: Player, reason: string, standingDelta: number)
 	local totalShifts = data.bills.shiftsCompleted + 1
 	data.bills.shiftsCompleted = totalShifts
 	MilestoneService.OnShiftComplete(player, totalShifts)
+	-- A finished shift is the clearest possible proof of agency: the player
+	-- chose to work and the world rewards them with the freedom to receive an
+	-- ambient event. Earned, not given.
+	EventService.AwardAutonomy(player, 1)
 
 	-- Carry the shift's XP into the life's total. StandingXP is per-job, so it
 	-- only accumulates while the player holds this job; a change of job resets
@@ -1159,6 +1163,44 @@ end
 -- a life gains a job, though, so it says so out loud: a career starting is worth a
 -- line in the log next to births and deaths, and until Part B gives it a sound and a
 -- handshake this print is the only record that the game noticed.
+-- Which career category a job belongs to. A job can only be in one, and the
+-- categories are the flags set when a life first steps into each one.
+local function careerCategory(job: Job): string?
+	if job.id == "shop_assistant" or job.id == "clothing_retail" or job.id == "electronics_retail"
+		or job.id == "supermarket_manager" or job.id == "mall_cashier"
+		or job.id == "bookseller" or job.id == "toy_seller" or job.id == "music_seller"
+		or job.id == "gas_attendant" or job.id == "car_wash_worker"
+		or job.id == "cinema_usher" or job.id == "bowling_attendant"
+		or job.id == "arcade_worker" then
+		return "shop"
+	end
+	if job.id == "office_clerk" or job.id == "manager" or job.id == "town_clerk"
+		or job.id == "bank_teller" or job.id == "hotel_receptionist"
+		or job.id == "home_accountant" or job.id == "online_teacher"
+		or job.id == "remote_coder" then
+		return "office"
+	end
+	if job.id == "bakery" or job.id == "barista" or job.id == "pizzeria_cook"
+		or job.id == "restaurant_server" or job.id == "chef"
+		or job.id == "florist" or job.id == "laundry_worker" then
+		return "bakery"
+	end
+	if job.id == "mechanic" or job.id == "gym_instructor"
+		or job.id == "construction_worker" or job.id == "warehouse_worker"
+		or job.id == "firefighter" or job.id == "police_officer"
+		or job.id == "pharmacy_tech" or job.id == "dental_assistant"
+		or job.id == "vet_tech" or job.id == "barber" or job.id == "hairdresser"
+		or job.id == "tattoo_artist" or job.id == "car_salesperson"
+		or job.id == "referee" or job.id == "farm_hand"
+		or job.id == "house_sitter" then
+		return "trades"
+	end
+	if job.id == "clinic_assistant" or job.id == "home_healthcare" then
+		return "office"
+	end
+	return nil
+end
+
 local function takeJob(player: Player, data: LifeData, job: Job)
 	local previous = data.jobId
 	data.jobId = job.id
@@ -1172,6 +1214,18 @@ local function takeJob(player: Player, data: LifeData, job: Job)
 	if previous == nil then
 		data.workXp = 0
 		MilestoneService.OnFirstJob(player, job.id)
+	end
+
+	-- Set the career category flag the first time a life enters each category.
+	-- Not overwritten if already held: the flag records the first time, just like
+	-- the age-stamped flags in EventService.
+	local category = careerCategory(job)
+	if category ~= nil then
+		local flagKey = "career_" .. category
+		if data.flags[flagKey] == nil then
+			local ageYears = data.ageMonths // Config.Time.MonthsPerYear
+			data.flags[flagKey] = ageYears
+		end
 	end
 
 	push(player)

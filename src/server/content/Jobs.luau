@@ -42,6 +42,7 @@ local SOURCE: { Job } = {
 			{ id = "shop_assistant.helpful", weight = 4, line = "An elderly customer needs help reaching a shelf. You fetch it for them.", standing = 1, happiness = 3 },
 			{ id = "shop_assistant.busy_lunch", weight = 2, line = "The lunch rush hits all at once. You keep your head.", standing = 1, money = 10 },
 			{ id = "shop_assistant.found_money", weight = 1, line = "You find a forgotten five-dollar bill under the counter.", money = 5 },
+			{ id = "shop_assistant.takeaway", weight = 3, line = "A customer places a takeaway order. You fetch the items and bag them.", standing = 1, money = 5 },
 		},
 	},
 	{

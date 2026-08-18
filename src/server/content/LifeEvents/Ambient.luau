@@ -23,6 +23,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 12,
 		delivery = "Letter",
 		prompt = "Your school report came in the post. It is face down on the mat and nobody has opened it yet.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "open_it",
@@ -50,6 +51,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 21,
 		delivery = "Letter",
 		prompt = "The envelope you've been waiting on is here. It's thin. You've heard what a thin one usually means.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "read_now",
@@ -71,6 +73,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 75,
 		delivery = "Letter",
 		prompt = "Handwriting you recognize, from someone you stopped speaking to a long time ago. You don't know yet whether it's an apology.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "reply",
@@ -100,6 +103,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 22,
 		delivery = "PhoneCall",
 		prompt = "It's late and the phone is ringing. It's your friend, and from the first word you can tell something has gone wrong.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "go_to_them",
@@ -127,6 +131,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 55,
 		delivery = "PhoneCall",
 		prompt = "They're offering you the job. More money, and a city you don't know anybody in. They want an answer on the phone.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "take_it",
@@ -154,6 +159,7 @@ local Ambient: { LifeEvent } = {
 		maxAge = 80,
 		delivery = "PhoneCall",
 		prompt = "It's the hospital. Someone you love is in, it isn't an emergency yet, and they're asking whether you want to come now or wait for news.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "go_now",
@@ -179,6 +185,7 @@ local Ambient: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "friend",
 		prompt = "Rae is at the door, out of breath, asking if you can come out. You're supposed to be doing something else.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "go",
@@ -207,6 +214,7 @@ local Ambient: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "neighbor",
 		prompt = "Mr. Alderman is on the step. His gutter's come away at one end and he's asking, in a roundabout way that takes a while, whether you'd hold the ladder.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "help",
@@ -235,6 +243,7 @@ local Ambient: { LifeEvent } = {
 		delivery = "NPCApproach",
 		cast = "mom",
 		prompt = "Your mother has come round unannounced, which she doesn't do. She sits down before she says anything, which she really doesn't do.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "listen",
@@ -270,6 +279,7 @@ local Ambient: { LifeEvent } = {
 		forbids = { "sick" },
 		weight = 0.5,
 		prompt = "Rae is at the door, coat still on, voice half gone. 'I've got it,' they say. 'You've probably got it. I thought you'd want to know.'",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:sick" },
 		choices = {
 			{
 				id = "let_them_in",
@@ -303,6 +313,7 @@ local Ambient: { LifeEvent } = {
 		cast = "neighbor",
 		repeatable = true,
 		prompt = "There's a knock and then the neighbor's voice through the letterbox, asking whether you're in. It is, it turns out, their birthday.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "bring_something",
@@ -331,6 +342,7 @@ local Ambient: { LifeEvent } = {
 		delivery = "Letter",
 		repeatable = true,
 		prompt = "A leaflet came through the door -- the shop you actually use is having a clearance. There's a thing in the window you've looked at twice.",
+		writesBack = { "stat:happiness", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "splurge",
@@ -361,6 +373,7 @@ local Ambient: { LifeEvent } = {
 		cast = "neighbor",
 		repeatable = true,
 		prompt = "The first frost of the year is on the ground, and the neighbor is by the fence with a torch in one hand and a jacket in the other, asking if you've seen it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks" },
 		choices = {
 			{
 				id = "join_them",

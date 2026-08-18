@@ -247,13 +247,13 @@ end
 -- before the build because the build yields: a second attempt arriving inside
 -- that window fails PickStageable's deliveringEventId check rather than putting
 -- two letters on one mat.
-local function stage(player: Player, data: LifeData)
+local function stage(player: Player, data: LifeData, contextTags: { [string]: boolean }?)
 	if building[player] then
 		return
 	end
 	building[player] = true
 
-	local event = EventService.PickStageable(player, "Ambient", canPresent)
+	local event = EventService.PickStageable(player, "Ambient", canPresent, contextTags)
 	if event == nil then
 		-- Nothing eligible left, or nothing the house can hold. A content gap,
 		-- not an error: the world is simply quiet for a while longer.
@@ -268,6 +268,18 @@ local function stage(player: Player, data: LifeData)
 		-- Counted on success only. A staging that failed cost the player nothing
 		-- and must not cost them one of the year's two.
 		data.deliveriesThisYear += 1
+		-- Cooldown starts the moment the event reaches the world, not the moment
+		-- it is collected. A collected event is a memory; a memory is not something
+		-- the world can present again. The timer runs even if the player never picks
+		-- it up, which is correct: a call that was missed is still a call that was
+		-- answered, and the world should not phone again the same week.
+		if event.cooldown ~= nil and event.cooldown > 0 then
+			data.cooldownTimers[event.id] = os.clock() + event.cooldown
+		end
+		-- Each ambient event costs an autonomy point: the player has to earn the
+		-- world's attention through shifts, school, or visits, so events feel like
+		-- a response to what they did rather than a random intrusion.
+		EventService.SpendAutonomy(player)
 	elseif data.deliveringEventId == event.id then
 		data.deliveringEventId = nil
 	end
@@ -323,7 +335,7 @@ local function tick()
 		-- Reset before the attempt, not after, so a failed staging waits out a
 		-- full gap instead of retrying every tick.
 		data.deliveryCountdown = nextGap()
-		task.spawn(stage, player, data)
+		task.spawn(stage, player, data, EventService.getContextTags(player))
 	end
 end
 
@@ -390,6 +402,42 @@ function DeliveryService.OnAgeUp(player: Player)
 	if profile ~= nil then
 		Lives.Active(profile.Data).deliveriesThisYear = 0
 	end
+end
+
+-- Stages an event at the player's current position instead of at a delivery point.
+-- Used for NPC-approach events, which have nowhere fixed in the house to sit and
+-- must appear where the player is standing so they can be reached immediately.
+function DeliveryService.ProximityStage(player: Player, eventId: string): boolean
+	local event = LifeEvents.ById[eventId]
+	if event == nil then
+		return false
+	end
+	if DeliveryPresenters.For(event.delivery) == nil then
+		return false
+	end
+
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false
+	end
+
+	local data = Lives.Active(profile.Data)
+	finish(player, false, true)
+	data.deliveringEventId = event.id
+
+	local placed = present(player, event)
+	if placed then
+		data.deliveriesThisYear += 1
+		if event.cooldown ~= nil and event.cooldown > 0 then
+			data.cooldownTimers[event.id] = os.clock() + event.cooldown
+		end
+		-- Proximity-stage gets the same autonomy cost as timer-stage: the
+		-- player's nearby presence earned the event just as much as a clock did.
+		EventService.SpendAutonomy(player)
+	elseif data.deliveringEventId == event.id then
+		data.deliveringEventId = nil
+	end
+	return placed
 end
 
 -- A new life. The countdown restarts rather than carrying over, so the first
@@ -460,8 +508,30 @@ function DeliveryService.Describe(player: Player): string
 	)
 end
 
+-- Whether the event is still on cooldown. Returns true when the player may see
+-- it again, false when they must wait. Nil means the event has no cooldown field
+-- and is never blocked.
+function DeliveryService.IsOnCooldown(player: Player, eventId: string): boolean?
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return nil
+	end
+	local data = Lives.Active(profile.Data)
+	local started = data.cooldownTimers[eventId]
+	if started == nil then
+		return nil
+	end
+	return os.clock() < started
+end
+
 function DeliveryService:Init()
 	WorldEventService.SetCollectedHandler(onCollected)
+	WorldEventService.SetProximityStageHandler(function(player: Player, eventId: string): boolean
+		return DeliveryService.ProximityStage(player, eventId)
+	end)
+	EventService.SetEscalationHandler(function(player: Player, eventId: string)
+		DeliveryService.ForceStage(player, eventId)
+	end)
 end
 
 function DeliveryService:Start()

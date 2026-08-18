@@ -13,7 +13,9 @@ local Cast = require(script.Parent.Cast)
 local Flags = require(script.Parent.Flags)
 local Jobs = require(script.Parent.Jobs)
 local Props = require(script.Parent.Props)
+local Ribbons = require(script.Parent.Ribbons)
 local Subjects = require(script.Parent.Subjects)
+local Ties = require(script.Parent.Ties)
 
 type LifeEvent = Types.LifeEvent
 type PropPlacement = Types.PropPlacement
@@ -26,6 +28,8 @@ local SOURCES: { { LifeEvent } } = {
 	require(script.Gym),
 	require(script.Ambient),
 	require(script.Work),
+	require(script.Debt),
+	require(script.CareerBranch),
 }
 
 -- One option is not a choice.
@@ -41,6 +45,21 @@ local function validate(event: LifeEvent)
 	if event.minAge > event.maxAge then
 		error(`[AGES content] event "{event.id}" has minAge above maxAge`)
 	end
+
+	-- Cooldowns are real seconds; a negative or fractional value is the same
+	-- kind of unit mistake a float below zero would be, and the upper bound
+	-- catches a number authored in game minutes before it ever reaches the
+	-- picker. Nil means 0 — the default is the same as today.
+	local cooldown = event.cooldown
+	if cooldown ~= nil then
+		if cooldown < 1 or cooldown ~= math.floor(cooldown) or cooldown > Config.Events.MaxCooldownSeconds then
+			error(
+				`[AGES content] event "{event.id}" has cooldown {cooldown}; `
+					.. `it must be a whole number between 1 and {Config.Events.MaxCooldownSeconds}`
+			)
+		end
+	end
+
 	if #event.choices < MIN_CHOICES then
 		error(`[AGES content] event "{event.id}" needs at least {MIN_CHOICES} choices`)
 	end
@@ -65,6 +84,31 @@ local function validate(event: LifeEvent)
 		error(`[AGES content] event "{event.id}" is about "{event.subject}", which is not a subject`)
 	end
 
+	-- Escalations chain events: a follow-up fires when the prior one resolves,
+	-- so the player can trace the thread. A chain to nothing is dead writing.
+	-- A chain to the same id loops forever. A chain to an earlier age is a
+	-- self-contradiction that the picker cannot resolve in order.
+	local escalatesTo = event.escalatesTo
+	if escalatesTo ~= nil then
+		if escalatesTo == event.id then
+			error(
+				`[AGES content] event "{event.id}" escalates to itself; `
+					.. `a chain must point at a different event`
+			)
+		elseif byId[escalatesTo] == nil then
+			error(
+				`[AGES content] event "{event.id}" escalates to "{escalatesTo}", `
+					.. `which is not a declared event`
+			)
+		elseif byId[escalatesTo].minAge < event.minAge then
+			error(
+				`[AGES content] event "{event.id}" escalates to "{escalatesTo}", `
+					.. `which starts at age {byId[escalatesTo].minAge}, below this event's {event.minAge}; `
+					.. `a follow-up cannot precede its cause`
+			)
+		end
+	end
+
 	-- A lure is the words on the thing the player walks to, so it means something on
 	-- exactly one route and nothing anywhere else. Both directions are refused: a
 	-- wandered event without one is a blank pad in a room the player is meant to cross
@@ -79,6 +123,26 @@ local function validate(event: LifeEvent)
 			`[AGES content] event "{event.id}" has a lure but is delivered "{event.delivery}", `
 				.. `which puts nothing on the floor for it to be written on`
 		)
+	end
+
+	-- Tags are opaque to the validator: they are picked up by the picker and
+	-- the routing layer, not checked against a fixed registry. Unknown tags
+	-- are ignored rather than refused, because a new tag that has no reader
+	-- yet is content, not a fault. Empty lists are normalised to nil so the
+	-- picker never has to think about the empty-list case.
+	if event.tags ~= nil then
+		if #event.tags == 0 then
+			event.tags = nil
+		else
+			for _, tag in event.tags do
+				if tag == "" then
+					error(
+						`[AGES content] event "{event.id}" has an empty tag; `
+							.. `non-empty strings only`
+					)
+				end
+			end
+		end
 	end
 
 	-- An ambient event below this age could never fire, because the scheduler
@@ -443,6 +507,85 @@ local function validate(event: LifeEvent)
 			if Jobs.ById[jobId] == nil then
 				error(`[AGES content] event "{event.id}" is gated to "{jobId}", which is not a job`)
 			end
+		end
+	end
+
+	-- writesBack is mandatory. An event that does not alter durable state is
+	-- a cutscene, and the design's named trap for this is "Events that change
+	-- nothing". The list names what the event actually writes: stats, flags,
+	-- ties, ribbons, standing, or money. Each name is checked against its
+	-- registry; a misspelling is a content error caught at load, not a
+	-- runtime no-op. Empty list is refused outright -- the event must write
+	-- something.
+	local writesBack = event.writesBack
+	if writesBack == nil or #writesBack == 0 then
+		error(
+			`[AGES content] event "{event.id}" has no writesBack; `
+				.. `every event must write at least one thing (stat, flag, tie, ribbon, standing, or money)`
+		)
+	end
+	for _, entry in writesBack do
+		-- Split "prefix:id" or bare "money".
+		local colon = string.find(entry, ":", 1, true)
+		if colon == nil then
+			-- Bare name: only "money" is legal.
+			if entry ~= "money" then
+				error(
+					`[AGES content] event "{event.id}" writesBack entry "{entry}" `
+						.. `must be prefixed with "stat:", "flag:", "tie:", "ribbon:", or "standing:"`
+				)
+			end
+			continue
+		end
+		local prefix = string.sub(entry, 1, colon - 1)
+		local id = string.sub(entry, colon + 1)
+		if id == "" then
+			error(
+				`[AGES content] event "{event.id}" writesBack entry "{entry}" `
+					.. `has an empty id after the colon`
+			)
+		end
+		if prefix == "stat" then
+			-- StatName: "health", "happiness", "smarts", "looks".
+			if entry ~= "stat:health" and entry ~= "stat:happiness"
+				and entry ~= "stat:smarts" and entry ~= "stat:looks" then
+				error(
+					`[AGES content] event "{event.id}" writesBack stat "{id}", `
+						.. `which is not one of health, happiness, smarts, looks`
+				)
+			end
+		elseif prefix == "flag" then
+			Flags.AssertKnown(id, `event "{event.id}" writesBack flag`)
+		elseif prefix == "tie" then
+			Ties.AssertKnown(id, `event "{event.id}" writesBack tie`)
+		elseif prefix == "ribbon" then
+			-- Ribbons is a flat array, not keyed. Linear scan is fine -- there
+			-- are roughly 40 entries, and this check runs once at server start.
+			local found = false
+			for _, ribbon in Ribbons do
+				if ribbon.id == id then
+					found = true
+					break
+				end
+			end
+			if not found then
+				error(
+					`[AGES content] event "{event.id}" writesBack ribbon "{id}", `
+						.. `which is not a declared ribbon`
+				)
+			end
+		elseif prefix == "standing" then
+			if Jobs.ById[id] == nil then
+				error(
+					`[AGES content] event "{event.id}" writesBack standing "{id}", `
+						.. `which is not a job`
+				)
+			end
+		else
+			error(
+				`[AGES content] event "{event.id}" writesBack entry "{entry}" `
+					.. `has an unknown prefix "{prefix}"; use stat:, flag:, tie:, ribbon:, standing:, or money`
+			)
 		end
 	end
 

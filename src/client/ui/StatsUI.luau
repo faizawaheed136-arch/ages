@@ -1754,4 +1754,26 @@ function StatsUI.ShowMilestone(self: StatsUIHandle, label: string, bonus: number
 	self:ShowNotice(`Milestone: {label}! +${Money.Format(bonus)} credits`)
 end
 
+-- Freezes the shift and task rows while the chapter reel is on screen. The
+-- seam is the only time the world is allowed to be still, so the HUD should
+-- not lie and show activity that is not happening. When active, rows are
+-- grayed out with a "Paused while you read" caption; when false, the method
+-- is a no-op because the next SetShift / SetTasks push restores the real
+-- state anyway.
+function StatsUI.SetSeam(self: StatsUIHandle, active: boolean)
+	if not active then
+		return
+	end
+	if self.shiftRow.Visible then
+		self.shiftCaption.Text = "Paused while you read"
+		self.shiftFill.BackgroundColor3 = TASK_PAUSED_COLOR
+	end
+	for _, parts in self.taskRows do
+		if parts.row.Visible then
+			parts.caption.Text = "Paused while you read"
+			parts.fill.BackgroundColor3 = TASK_PAUSED_COLOR
+		end
+	end
+end
+
 return StatsUI

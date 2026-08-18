@@ -166,6 +166,32 @@ local SOURCE: { [string]: { JobTask } } = {
 			seconds = 20,
 			customer = "Do you have this in stock?",
 		},
+		{
+			id = "fetch_bag",
+			label = "Fetch and bag the order",
+			mark = "Get it",
+			handMark = "Bag it",
+			-- The corner shop's signature rhythm: the customer has already chosen, the
+			-- till is idle, and the only thing between them and their purchase is you
+			-- walking the shelf and the bag. Two marks that each say something different
+			-- about what your hands are doing — get, then bag — is what makes a corner
+			-- shop feel like a place rather than a line of numbers.
+			spots = 2,
+			seconds = 18,
+			customer = "I'll need a bag for those, please.",
+		},
+		{
+			id = "bag",
+			label = "Bag the purchases",
+			mark = "Bag them",
+			spots = 1,
+			seconds = 12,
+			-- A single-mark bagging task for when the player is already at the counter.
+			-- It exists so the shift is not always asking the player to leave the till,
+			-- and so a customer who has been ringing items up can hand them over without
+			-- a second walk: the bag is the last step, not the first.
+			customer = "All done?",
+		},
 	},
 
 	office_clerk = {

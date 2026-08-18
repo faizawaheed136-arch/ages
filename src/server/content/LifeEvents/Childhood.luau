@@ -66,6 +66,7 @@ local Childhood: { LifeEvent } = {
 		-- was is the part the outcome can tell you; who you crossed the room to say it
 		-- at is the part only the player can decide, and it is the same decision.
 		prompt = "Sound is a game. Every noise you make, the big faces lean in and wait to find out what it was for.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "their_word",
@@ -106,6 +107,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "The room keeps going",
 		prompt = "The bright thing is all the way over there. You have never been all the way over there.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "crawl",
@@ -144,6 +146,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "Someone is crouched with their arms out",
 		prompt = "You are upright, holding the edge of the couch. Someone is crouched a few feet away with their arms out.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "let_go",
@@ -175,6 +178,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "Point at it and they say a word",
 		prompt = "You have discovered that everything has a name, and that adults will supply one for anything you point at.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "point_everything",
@@ -209,6 +213,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "Another child, and a red shovel",
 		prompt = "There is another child in the sandbox. They have a red shovel. You have no shovel.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "ask",
@@ -243,6 +248,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "A gap in the hedge",
 		prompt = "The yard has a gap in the hedge at the far end. You have never been through it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:wandered_off" },
 		choices = {
 			{
 				id = "go_through",
@@ -278,6 +284,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "The window is loud and white",
 		prompt = "The sky cracks open in the middle of the night. The window is loud and white.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "go_to_them",
@@ -319,6 +326,7 @@ local Childhood: { LifeEvent } = {
 		-- cookie itself can only say "Pick it up" -- its three meanings are the three
 		-- places it can go.
 		prompt = "There is one cookie left and two of you looking at it.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "split",
@@ -366,6 +374,7 @@ local Childhood: { LifeEvent } = {
 		-- that was ever a translation. The two books sit far enough apart that
 		-- reaching one is never ambiguously reaching the other.
 		prompt = "It is bedtime and you are allowed to pick the story.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "same_again",
@@ -402,6 +411,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "There is another baby in there",
 		prompt = "There is another baby in the shiny thing on the wall. They do everything you do, exactly when you do it.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		-- The hard one, and the reason it went last. All three answers are aimed at a
 		-- single object, and one object can only ever be one answer -- so the third had
 		-- to become a second place in the house rather than a second face of the glass.
@@ -440,6 +450,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "The spoon is on the floor again",
 		prompt = "Things go away when you push them, and come back when somebody else decides they should. You have a spoon.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "again",
@@ -473,6 +484,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "A face you do not know",
 		prompt = "A face you don't know is leaning in with their arms out, and the person holding you is already letting go.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks", "stat:smarts" },
 		choices = {
 			{
 				id = "go",
@@ -507,6 +519,7 @@ local Childhood: { LifeEvent } = {
 		-- the one thing you actually object to, and going out the door with them are the
 		-- three things a two-year-old means by it, and none of them needed saying.
 		prompt = "You have learned a word that stops adults where they stand. It has two letters. Today there is a bowl in front of you and a door somebody is holding open.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "everything",
@@ -538,6 +551,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "The stairs go up",
 		prompt = "The stairs go up. You have watched everyone else use them and it looks straightforward enough.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:climbed_stairs", "flag:stayed_put" },
 		choices = {
 			{
 				id = "climb",
@@ -573,6 +587,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "It is where you left it",
 		prompt = "There is one thing you will not be separated from. It is not the newest or the nicest and it is starting to smell.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		-- Three Carries on one object, the same shape as the cookie and for the same
 		-- reason: what you did with it was never the picking up, it was where it ended
 		-- up. Here it earns more than it does there, because "you will not be separated
@@ -621,6 +636,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "Somebody has started counting",
 		prompt = "Somebody is counting. You need somewhere they will never find you.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "eyes",
@@ -659,6 +675,7 @@ local Childhood: { LifeEvent } = {
 		-- it turns and looks at you. The choices had nothing to point at before this.
 		subject = "dog",
 		prompt = "There is a dog. It is at least as tall as you are, and it has noticed you.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts", "flag:dog_feared", "flag:dog_loved" },
 		-- Reacted, so the dog does the thing the outcome line says it did. Every line
 		-- below already described something the animal was up to; until reactions
 		-- existed it stood there identically under all three of them, which is a game
@@ -708,6 +725,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "The whole path is underwater",
 		prompt = "A puddle covers the whole path, and you are wearing shoes that were clean this morning.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "jump",
@@ -743,6 +761,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "It is in two pieces",
 		prompt = "It is in two pieces on the floor and nobody saw it happen.",
+		writesBack = { "stat:happiness", "stat:smarts", "flag:broke_it_hid_it", "flag:broke_it_owned_up" },
 		-- The one event where picking the thing up and not yet knowing where you are
 		-- taking it is the whole feeling. A four-year-old holding the evidence, halfway
 		-- between the grown-up and the shelf, is the event.
@@ -791,6 +810,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "Tools, and nobody is using them",
 		prompt = "An adult is doing something with tools, and you have decided that you are helping.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "hold",
@@ -829,6 +849,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "They are talking about something",
 		prompt = "You have found a question that works on absolutely anything, and it is one word long. Somebody is across the room, and so is the thing you were going to ask about.",
+		writesBack = { "stat:happiness", "stat:smarts" },
 		choices = {
 			{
 				id = "keep_going",
@@ -862,6 +883,7 @@ local Childhood: { LifeEvent } = {
 		delivery = "Wander",
 		lure = "A room full of children you have never met",
 		prompt = "First morning somewhere new, with a room full of children you have never met. Somebody lets go of your hand.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
 		choices = {
 			{
 				id = "join_in",
