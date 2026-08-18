@@ -31,7 +31,7 @@ from rbxmx import at, box, group, part, point_light, sign
 import world_plan as W
 from world_plan import (
     BACK_GATE_Z0, BACK_GATE_Z1,
-    CEIL_1, CEIL_2, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
+    CEIL_1, CEIL_2, clear_of_alleys, CROSSING_Z0, CROSSING_Z1, DOOR_LINE, DOORWAY,
     FAR_WALK_X0, FAR_WALK_X1, FENCE_HALF, FENCE_HEIGHT, FENCE_X, FENCE_Z0,
     FENCE_Z1, FLOOR_1, FLOOR_2, FORECOURT_X0, FRONT_X, GATE_HALF, GROUND,
     INNER_DOORWAY, NEAR_WALK_X0, NEAR_WALK_X1, PARTITION, PATH_HALF, PATH_TOP,
@@ -446,8 +446,20 @@ with group("StreetFurniture"):
 
     # Trees only where there is grass to stand them in: the two gaps between the
     # buildings' forecourts, and the lawn of the player's own garden.
+    #
+    # Those gaps are also the only way through the west frontage, and gen_town.py
+    # now cuts an alley down every one of them wide enough to take one -- so the
+    # grass a tree wants and the paving a path wants are the same strip, claimed
+    # from two files that cannot see each other's assets. Where both want it the
+    # path wins, and the tree that loses is dropped by measurement rather than by
+    # deleting a line here: this file has already had one tree land inside a tree
+    # gen_town.py planted, and the fix for that was the same fix -- ask the shared
+    # plan instead of keeping a second copy of the answer.
+    TREE_SPREAD = 10.0
     for x, z in ((-104.0, -16.0), (-104.0, 6.0), (-104.0, 88.0), (-104.0, -86.0)):
-        tree(x, z, GROUND)
+        if not clear_of_alleys(z, TREE_SPREAD):
+            continue
+        tree(x, z, GROUND, spread=TREE_SPREAD)
     for x, z in ((-20.0, -22.0), (-34.0, 14.0), (-13.0, 20.0), (-40.0, -34.0)):
         tree(x, z, 1.04, height=13.0, spread=9.0)
 

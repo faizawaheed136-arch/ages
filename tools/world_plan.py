@@ -262,6 +262,52 @@ SOUTHGATE_WALK = 4.0
 SOUTHGATE_CLEAR = (SOUTHGATE_Z0 - SOUTHGATE_WALK, SOUTHGATE_Z1 + SOUTHGATE_WALK)
 
 # ---------------------------------------------------------------------------
+# The northern link
+# ---------------------------------------------------------------------------
+
+# The top of the town used to be a stop. The main road ran north past the gym
+# and the library and ended in a field, and the route graph agreed: wp_north_3
+# was a leaf with one neighbour, so every journey between the town and the city
+# went out through the gate road, the southern link or the green, and the whole
+# north end was a cul-de-sac a player walks up once and never again.
+#
+# This is the band that opens it. The town road turns east at the top and runs
+# to the connector, the way the gate road does at z 64..78, so the north end
+# becomes a junction and the town's west side becomes a loop with two mouths
+# instead of one.
+#
+# Unlike the other two links this band is not read off the city. The gate road
+# takes its 14 studs from the window between the player's garden and number 14,
+# and the southern link takes its 22 from works cross street 1; there is nothing
+# on the city's west flank at this z to inherit from, so the road inherits from
+# the town road it leaves -- ROAD_X1 - ROAD_X0, the width of the carriageway it
+# tees off. A link that is the width of the road feeding it is the one width
+# that cannot be wrong.
+#
+# Z0 is a choice and the only one here. It is far enough north of the library
+# to leave two more frontages on the west side -- gen_town.py puts a cafe and a
+# community hall in them and asserts both clear NORTHGATE_CLEAR -- and it is not
+# aligned with city cross street 1 at z 200..222, which would have made a
+# crossroads out of it. That alignment was tried on paper and dropped: the
+# library already stands at z 168..208 and cannot clear a road at 200, and
+# moving the library to suit a junction is the tail wagging the dog. The gate
+# road is the precedent -- it is an unaligned west-side tee into the connector
+# and has been since the town had a road at all.
+#
+# It lives here rather than in gen_town.py for the reason GATE_Z0 and
+# SOUTHGATE_Z0 do: gen_town.py has to keep its north frontage clear of a road
+# that gen_city.py draws, and cannot import gen_city.py to find out where it is.
+NORTHGATE_Z0 = 312.0
+NORTHGATE_Z1 = NORTHGATE_Z0 + (ROAD_X1 - ROAD_X0)
+NORTHGATE_WALK = 4.0
+NORTHGATE_CLEAR = (NORTHGATE_Z0 - NORTHGATE_WALK, NORTHGATE_Z1 + NORTHGATE_WALK)
+# The centre line, which both generators need: gen_town paints it and hangs its
+# junction waypoint on it, gen_city paints its half and chains four more along
+# it. The gate road's and the southern link's midpoints are each recomputed
+# locally in two or three places, which is fine until one of them is edited.
+NORTHGATE_MID = (NORTHGATE_Z0 + NORTHGATE_Z1) / 2
+
+# ---------------------------------------------------------------------------
 # The south edge of the world
 # ---------------------------------------------------------------------------
 
@@ -290,12 +336,24 @@ MAP_SOUTH_EDGE = -500.0
 CROSSING_Z0, CROSSING_Z1 = DOOR_LINE - 6.0, DOOR_LINE + 6.0
 
 # ---------------------------------------------------------------------------
-# The two buildings
+# The west frontage
 # ---------------------------------------------------------------------------
 
-# Both front the same line, with a forecourt between them and the far sidewalk.
-# Same line on purpose: a street is a street because its buildings agree about
-# where the front of a building is.
+# Every building on the west side of the main street, in one file, because the
+# frontage is built by two of them: the school and the workplace come out of
+# build_street.py and the other seven out of gen_town.py. They used to be
+# declared in whichever file drew them, and the cost of that showed up twice.
+# Once when both files planted a street tree in the same square at (-104, 88),
+# one trunk inside another, in two assets neither of which could see the other.
+# Once when this frontage's gaps were counted from gen_town.py alone, which
+# knows about seven of the nine buildings, and the comment that came out of the
+# count said the gym-library gap was the only one wide enough to walk down. It
+# is the narrowest of three. A frontage described in two places is a frontage
+# nobody has measured.
+#
+# All nine front the same line, with a forecourt between them and the far
+# sidewalk. Same line on purpose: a street is a street because its buildings
+# agree about where the front of a building is.
 FRONT_X = -112.0
 FORECOURT_X0 = -112.0
 
@@ -306,6 +364,141 @@ SCHOOL_DOOR = 43.0
 WORK_X0, WORK_X1 = -142.0, FRONT_X
 WORK_Z0, WORK_Z1 = -74.0, -22.0
 WORK_DOOR = -48.0
+
+# Five single-storey buildings down the west side, north and south of the
+# originals. Footprints leave a clear gap between neighbours so a building can
+# be swapped without nudging the one next to it.
+GYM_X0, GYM_X1 = -152.0, FRONT_X
+GYM_Z0, GYM_Z1 = 96.0, 152.0
+GYM_DOOR = 124.0
+
+LIB_X0, LIB_X1 = -152.0, FRONT_X
+LIB_Z0, LIB_Z1 = 168.0, 208.0
+LIB_DOOR = 188.0
+
+CLINIC_X0, CLINIC_X1 = -152.0, FRONT_X
+CLINIC_Z0, CLINIC_Z1 = -116.0, -80.0
+CLINIC_DOOR = -98.0
+
+# The two service stores sit clear of each other and of the clinic -- an
+# eight-stud gap between neighbours, so a building can be swapped without
+# nudging the one next to it, and so the bakery's awning and the garage's
+# roll-up door each get a face of their own instead of sharing a wall.
+BAKERY_X0, BAKERY_X1 = -152.0, FRONT_X
+BAKERY_Z0, BAKERY_Z1 = -160.0, -124.0
+BAKERY_DOOR = -142.0
+
+GARAGE_X0, GARAGE_X1 = -152.0, FRONT_X
+GARAGE_Z0, GARAGE_Z1 = -204.0, -168.0
+GARAGE_DOOR = -186.0
+
+# The two north of the library, and the reason they exist: past the library the
+# west frontage stopped and the sidewalk ran another twenty-four studs into a
+# field. A player who walked the length of the town found the last thing in it
+# was a building they had already been in, and then nothing -- the north end
+# read as the map running out rather than as the top of a street.
+#
+# Nothing about their footprints is chosen. The gap between two buildings on
+# this side, the depth of a store and the depth of the library are all already
+# facts about the row; the cafe is a store's depth and the hall is the library's,
+# each one gap north of what it follows. Doors are on the centre line, which is
+# where all five of the existing doors are.
+WEST_GAP = CLINIC_Z0 - BAKERY_Z1
+assert WEST_GAP == BAKERY_Z0 - GARAGE_Z1, (
+    f"the west side leaves {WEST_GAP} studs between the bakery and the clinic "
+    f"and {BAKERY_Z0 - GARAGE_Z1} between the garage and the bakery. The cafe "
+    f"and the hall are spaced by that number, and it has stopped being one "
+    f"number.")
+STORE_DEPTH = BAKERY_Z1 - BAKERY_Z0
+LIB_DEPTH = LIB_Z1 - LIB_Z0
+
+CAFE_X0, CAFE_X1 = -152.0, FRONT_X
+CAFE_Z0 = LIB_Z1 + WEST_GAP
+CAFE_Z1 = CAFE_Z0 + STORE_DEPTH
+CAFE_DOOR = (CAFE_Z0 + CAFE_Z1) / 2
+
+HALL_X0, HALL_X1 = -152.0, FRONT_X
+HALL_Z0 = CAFE_Z1 + WEST_GAP
+HALL_Z1 = HALL_Z0 + LIB_DEPTH
+HALL_DOOR = (HALL_Z0 + HALL_Z1) / 2
+
+# The frontage in z order, which is the only order any question about it wants
+# an answer in. Sorted rather than typed in order, so adding a tenth building
+# anywhere in the list puts it in the right place in every gap measurement.
+WEST_FRONTAGE = tuple(sorted((
+    ("the garage", GARAGE_Z0, GARAGE_Z1),
+    ("the bakery", BAKERY_Z0, BAKERY_Z1),
+    ("the clinic", CLINIC_Z0, CLINIC_Z1),
+    ("the workplace", WORK_Z0, WORK_Z1),
+    ("the school", SCHOOL_Z0, SCHOOL_Z1),
+    ("the gym", GYM_Z0, GYM_Z1),
+    ("the library", LIB_Z0, LIB_Z1),
+    ("the cafe", CAFE_Z0, CAFE_Z1),
+    ("the community hall", HALL_Z0, HALL_Z1),
+), key=lambda b: b[1]))
+
+for _a, _b in zip(WEST_FRONTAGE, WEST_FRONTAGE[1:]):
+    assert _b[1] >= _a[2], (
+        f"{_a[0]} runs to z {_a[2]} and {_b[0]} starts at z {_b[1]}, so they "
+        f"overlap by {_a[2] - _b[1]} studs. Two buildings on the west frontage "
+        f"are standing in each other.")
+
+# The alleys through the frontage.
+#
+# The west side is a solid wall of building from the garage to the community
+# hall, and the back street runs the whole length of it on the other side. Two
+# parallel roads joined only at their ends is what check_city's detour ratio
+# punishes: a player outside a back-street house who wants the library walks to
+# a corner first. The gaps between buildings are the only way through, and an
+# alley goes in every gap wide enough to hold one.
+#
+# Wide enough means a doorway's width to walk down -- the same opening the
+# player has already walked through everywhere else -- plus a margin of grass
+# against each building, so the paving stops short of the walls instead of
+# running into them. Which gaps those are is measured here rather than decided:
+# the first version of this picked one by hand and got it wrong, because the
+# file it was picked in could only see seven of the nine buildings.
+ALLEY_WIDTH = DOORWAY
+ALLEY_MARGIN = 4.0
+ALLEY_MIN = ALLEY_WIDTH + 2 * ALLEY_MARGIN
+
+ALLEYS = tuple(
+    (f"{_a[0]} and {_b[0]}",
+     (_a[2] + _b[1]) / 2 - ALLEY_WIDTH / 2,
+     (_a[2] + _b[1]) / 2 + ALLEY_WIDTH / 2)
+    for _a, _b in zip(WEST_FRONTAGE, WEST_FRONTAGE[1:])
+    if _b[1] - _a[2] >= ALLEY_MIN)
+
+# Safe range 2-5. One alley down a 500-stud frontage is a frontage the player
+# walks around rather than through, which is the state this started in and the
+# detour check failed on. More than five and the west side has stopped being a
+# row of buildings and become a row of gaps. Reports rather than clamps: the
+# number is a symptom of the footprints, not a thing to correct here.
+assert 2 <= len(ALLEYS) <= 5, (
+    f"the west frontage came out with {len(ALLEYS)} gaps of at least "
+    f"{ALLEY_MIN} studs, out of "
+    f"{[(f'{a[0]}/{b[0]}', b[1] - a[2]) for a, b in zip(WEST_FRONTAGE, WEST_FRONTAGE[1:])]}. "
+    f"Check the west frontage footprints and ALLEY_MIN.")
+
+
+def alley_slug(blurb: str) -> str:
+    """`the gym and the library` -> `GymLibrary`, for part names."""
+    return "".join(w.title() for w in blurb.split() if w not in ("the", "and"))
+
+
+def clear_of_alleys(z: float, spread: float) -> bool:
+    """Is there room for something `spread` wide, centred on z, beside an alley?
+
+    Street trees want the frontage gaps for the same reason the alleys do --
+    they are the only grass left on that side -- and where both want the same
+    gap the path wins. A tree standing in a footpath is an obstacle, not a
+    hedge, which is the same conclusion already reached about the one that used
+    to stand on the cafe's forecourt. Asked as a question rather than answered
+    with a list of trees to delete, because a list goes stale the moment a
+    building moves and the tree it silently readmits stands in the road.
+    """
+    return all(z + spread / 2 <= z0 or z - spread / 2 >= z1
+               for _blurb, z0, z1 in ALLEYS)
 
 # Floor heights. Ground floors sit level with the paving outside them.
 FLOOR_1 = PAVING

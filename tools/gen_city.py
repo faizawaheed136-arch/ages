@@ -65,6 +65,11 @@ from world_plan import (
     # path's width, borrowed so the back one matches it.
     BACK_GATE_MID, HOUSE_EAST_X, PATH_HALF,
     SOUTHGATE_CLEAR, SOUTHGATE_WALK, SOUTHGATE_Z0, SOUTHGATE_Z1,
+    # The third link, at the top of the town. Unlike the other two its band is
+    # not read off anything in this file -- there is no cross street on the
+    # connector's west flank at that z -- so the connector's verge is carved for
+    # it here rather than the road being fitted to a verge that already yields.
+    NORTHGATE_CLEAR, NORTHGATE_MID, NORTHGATE_WALK, NORTHGATE_Z0, NORTHGATE_Z1,
     # The south edge of the world. Transcribed over there, asserted here.
     MAP_SOUTH_EDGE,
 )
@@ -137,6 +142,9 @@ CONN_MID = (CONN_X0 + CONN_X1) / 2
 # GATE_Z0/Z1/WALK come from world_plan because gen_town.py has to keep the east
 # frontage clear of them and cannot import this file to find out where they are.
 GATE_FULL = [GATE_CLEAR]
+# The northern link, the same way: the connector's west verge has to yield to it
+# exactly as it yields to the gate road, or the road arrives at a kerb.
+NORTHGATE_FULL = [NORTHGATE_CLEAR]
 
 # Six avenues, north-south, 24 studs wide, sidewalks 6 wide.
 #
@@ -1492,7 +1500,7 @@ with group("Streets"):
     # The west verge is carved at the gate road for the same reason the east one
     # is carved at the cross streets: a pavement drawn straight across the mouth
     # of a side road is a kerb the road runs under, not a junction.
-    for za, zb in carve((CONN_Z0, CONN_Z1), GATE_FULL):
+    for za, zb in carve((CONN_Z0, CONN_Z1), GATE_FULL + NORTHGATE_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "Conn", sides="west")
     for za, zb in carve((CONN_Z0, CONN_Z1), CS_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "ConnE", sides="east")
@@ -1552,6 +1560,30 @@ with group("Streets"):
              "Southgate")
     dashes_ew((SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2, ROAD_X1, AVE[0], [], "Southgate",
               lift=GRASS_LIFT)
+
+    # The northern link. The town's main street used to run north past the
+    # library and stop in a field: wp_north_3 was a leaf on the route graph, so
+    # the whole north end of town was a spur, and every journey between the two
+    # halves of the world went out through the gate road, the southern link or
+    # the green. This is the third mouth, and it is the one that turns the town's
+    # west side into a loop -- gen_town.py brings its return road all the way up
+    # the back and tees it into the same junction.
+    #
+    # Same construction as the other two and for the same reasons: it tees off
+    # the town road at ROAD_X1 rather than ROAD_X0, so the town's own carriageway
+    # is not laid a second time in a second asset; it is lifted by GRASS_LIFT
+    # because its west half crosses ground the town generator laid at exactly
+    # GROUND; and its pavements start at PROPERTY_X so the junction mouth stays
+    # open instead of being closed by a kerb the road runs under.
+    #
+    # Unlike the other two it lands on nothing the city already has -- there is
+    # no cross street on this flank at z 312 -- so the connector's west verge has
+    # to be carved for it, which is what NORTHGATE_FULL is.
+    road_ew(NORTHGATE_Z0, NORTHGATE_Z1, ROAD_X1, CONN_X0, "Northgate",
+            lift=GRASS_LIFT)
+    walks_ew(NORTHGATE_Z0, NORTHGATE_Z1, PROPERTY_X, CONN_X0, NORTHGATE_WALK,
+             "Northgate")
+    dashes_ew(NORTHGATE_MID, ROAD_X1, CONN_X0, [], "Northgate", lift=GRASS_LIFT)
 
     # Avenues: road carved at cross streets, sidewalks carved at the cross
     # streets' own sidewalks so they yield the corners. Avenue 3 is carved a
@@ -5684,6 +5716,18 @@ _southgate_mid = (SOUTHGATE_Z0 + SOUTHGATE_Z1) / 2
 for _i, _x in enumerate(range(int(ROAD_X1), int(AVE[0]), ROUTE_STEP)):
     waypoint(f"wp_southgate_{_i}", float(_x), _southgate_mid,
              "the southern link, between the town and the works", GROUND)
+
+# The northern link, chained the same way and for the same reason: without this
+# the road is tarmac nothing routes down. Its west end lands 12 studs from
+# gen_town's wp_top_junction, which stands in the middle of the junction it tees
+# into, and its east end 28 from wp_conn_4 -- so the two networks join at both
+# ends of it, which is the only property that makes a link a link.
+#
+# GROUND explicitly, like the southern link: the west half of this road stands on
+# ground the *town* generator laid, which surface_floor cannot see from in here.
+for _i, _x in enumerate(range(int(ROAD_X1), int(CONN_X0), ROUTE_STEP)):
+    waypoint(f"wp_northgate_{_i}", float(_x), NORTHGATE_MID,
+             "the northern link, between the town and the connector", GROUND)
 
 # The green's paths. The spur's east end lands 21 studs from wp_ave0_6 and its
 # west end 33 from the spawn, so the back gate is still the short way into the

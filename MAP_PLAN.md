@@ -1,14 +1,21 @@
 # The map pass — what is done, what is owed
 
-Working notes for `tools/gen_city.py`. Everything here is Agent A's; see HANDOVER.md.
+Working notes for the world generators — `tools/gen_city.py`, `tools/gen_town.py` and
+`tools/build_street.py`. Everything here is Agent A's; see HANDOVER.md.
 
-Verify every change with **both**:
+Verify every change by regenerating **every** asset and running **both** checkers, because
+the town and the street share a frontage and the city and the town share two gates:
 
-    python3 tools/gen_city.py && python3 tools/check_city.py
+    python3 tools/gen_town.py && python3 tools/build_street.py && python3 tools/gen_city.py
+    python3 tools/check_town.py && python3 tools/check_city.py
 
-`check_city` has ten checks and they are the only thing standing between a geometry change
-and a town that looks fine in Studio but has NPCs standing in traffic. It has already
-caught two hardcoded radii that a visual inspection would never have found.
+`check_city` has twelve checks and `check_town` six, and they are the only thing standing
+between a geometry change and a town that looks fine in Studio but has NPCs standing in
+traffic. They have already caught two hardcoded radii, a road drawn through a building, and
+a pair of parallel streets that were reachable and still twice as long to walk as they
+looked — none of which a visual inspection would have found. What they do *not* measure is
+worth knowing too: a street tree stood in the middle of a finished alley with all eighteen
+checks green.
 
 ## Done
 
@@ -900,3 +907,99 @@ a single way in, and a run of houses whose condition already grades toward it.
 Verified: `Town.rbxmx` 1079 parts in 25 pieces, md5 `50563a826cdf4bd298f883db4eb6ae96`,
 reproducible across consecutive runs. `check_town` all six green, `check_city` all twelve
 green, `check.py` clean in every check in this lane.
+
+### G. The back of the town, the north gate, and the alleys — *built 2026-08-19*
+
+From the owner: *"there should be more houses and depth and stuff behind the school and
+bakery and stuff so the town doesnt end at the spawn point along with more stuff along the
+town library instead of a dead end, focus on that too"*. Spec'd back and approved with
+*"open it and yes cafe and community hall"* — the north end **opens onto the city**, and
+the library end gets two buildings rather than a turning circle.
+
+**Three measurements turned the request into defects rather than taste.**
+
+- The town was **one street deep**: six civic buildings on one back wall, one house row
+  opposite, and nothing behind either.
+- `GrassWestMargin` was **104 × 364 studs of a single bare slab** — roughly two fifths of
+  the town's footprint — and `RoadReturn` was lying in it: **181 studs of finished
+  carriageway**, pavement and kerbs and lamps and centre dashes, stopping halfway and
+  connecting to nothing.
+- `wp_north_3` was a **leaf on the route graph**. The whole north end was a spur, so every
+  town↔city journey went via the gate road, the southern link or the green.
+
+**What was built.** Ten east-facing houses on odd numbers 1–19 down the back street (odd
+numbering is the one thing not copied from the east row — a different series is how the
+player is told it is a different road, and it costs nothing). The north gate, at
+`NORTHGATE_Z0 = 312`, drawn on both sides of the asset seam. A café and a community hall
+north of the library, both with footprints derived from the row rather than chosen: the
+café is a store's depth, the hall is the library's, each one `WEST_GAP` north of what it
+follows. Three alleys through the west frontage.
+
+**Rejected, and why.** Aligning the north gate with city cross street 1 at z 200..222 to
+make a proper crossroads — the library stands at 168..208 and moving a building to suit a
+junction is the tail wagging the dog. The gate road is the existing precedent for an
+unaligned tee on the west flank. Also rejected: a separate wear rule for the back row, for
+being a second table describing what `wear_at(door_z)` already knows.
+
+**The frontage was described in two files, and so nobody had measured it.** This is the
+section worth reading. The first cut at the detour problem put one alley between the gym
+and the library and justified it in a comment: the only gap on the frontage wide enough to
+walk down. False. The west frontage is built by `gen_town.py` (garage, bakery, clinic, gym,
+library, café, hall) **and** `build_street.py` (school, workplace), and the gap count came
+from the file that can see seven of the nine. Measured across all nine:
+
+| gap | studs | alley |
+|---|---|---|
+| garage → bakery | 8 | — |
+| bakery → clinic | 8 | — |
+| clinic → workplace | 6 | — |
+| **workplace → school** | **32** | yes |
+| **school → gym** | **20** | yes |
+| **gym → library** | **16** | yes |
+| library → café | 8 | — |
+| café → hall | 8 | — |
+
+The gap that was picked by hand is the narrowest of the three, and the two that were missed
+are the two nearest the worst-detour point. `WEST_FRONTAGE` now lives in `world_plan.py` as
+one sorted table of all nine, and `ALLEYS` is derived from it — every gap of at least
+`ALLEY_WIDTH + 2 * ALLEY_MARGIN` gets a cut-through, none of them chosen.
+
+**The detour ratio is what made all of this necessary and what proved it worked.**
+`check_city` check 12 measures walked distance against straight-line from the spawn:
+
+| state | worst detour | where |
+|---|---|---|
+| back street built, ends joined only at the corners | **2.02 — fails** | middle of the back street |
+| one alley, gym → library | 1.82 | `wp_back_walk5` |
+| three alleys, derived | **1.51** | `wp_bridge_2`, in the city |
+
+Two parallel roads joined only at their ends are *reachable* and still wrong; that is a
+distinction the route graph can make and a player only experiences as the town being
+annoying. At 1.51 the worst walk in the world is no longer in the town at all.
+
+**A tree stood in the middle of the first alley and every gate passed.** The trunk at
+(-104, 160) was dead centre of an eight-stud path. The asset built, `check_town` went six
+green, `check_city` went twelve green — nothing either of them measures is *"is there a
+tree in this footpath"*. Street trees want the frontage gaps for the same reason the alleys
+do: they are the only grass left on that side, and two files were planting into that strip
+with neither able to see the other's asset. (The same collision had already put one trunk
+inside another at (-104, 88).) `clear_of_alleys(z, spread)` now lives in the shared plan
+and both generators ask it, so the tree that loses is dropped by measurement — a deleted
+line is a fact about today's alleys, and a list goes stale the moment a building moves and
+silently readmits a tree that then stands in the road.
+
+**An assertion that failed its own negative test.** `_check_joins` first asked whether an
+alley end had *anything* within the link radius that was not more of the same alley.
+Pulling the west end ninety studs off the back street did not fire it: what it found was
+`school`, an interior place point on the far side of the frontage. Destinations and roads
+are the same kind of thing to the route graph, so that check would have passed an alley
+opening onto a wall. It now takes a named set of back-street points. The **east** end is
+deliberately not checked locally — the main street's waypoints at those z values are
+generated by `build_street.py` into another asset and do not exist at that point in the
+program — and the comment says so. `check_city` sees both ends and does check it.
+
+Verified: `Town.rbxmx` 1592 parts in 37 pieces, md5 `a225bfd1225cee2098329cb7987b4a05`;
+`Street.rbxmx` 486 in 14; `City.rbxmx` 11874 in 499 — all byte-identical across consecutive
+runs. `check_town` all six green (101 place points and 30 buildings, from 59 and 18),
+`check_city` all twelve green (688 place points reachable, worst detour 1.51), `check.py`
+all clean. Every new assertion negative-tested.

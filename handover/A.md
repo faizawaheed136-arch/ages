@@ -1,6 +1,100 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-18 (latest)
+## 2026-08-19 (latest)
+
+**The town stopped being one street deep.** Asked for "more houses and depth and stuff
+behind the school and bakery and stuff so the town doesnt end at the spawn point, along
+with more stuff along the town library instead of a dead end". Spec'd back and approved:
+*"open it and yes cafe and community hall"* — so the north end **opens onto the city**
+through a gate matching the southgate rather than being closed off, and the library end
+gets two more buildings.
+
+**What the measurements said before anything was built.** The town was six civic
+buildings on one back wall with a single house row opposite. Behind them sat
+`GrassWestMargin`, 104 × 364 studs of one bare slab — about two fifths of the footprint.
+Lying in it was `RoadReturn`: 181 studs of *finished* carriageway, with pavement, kerbs,
+lamps and dashes, that stopped halfway and connected to nothing. And `wp_north_3` was a
+leaf on the route graph, so the entire north end was a spur — every town↔city journey
+went via the gate road, the southern link or the green. The request was not for
+decoration; it was for the half of the town that was already drawn to be finished.
+
+**Built:** a back street of ten east-facing houses on odd numbers 1–19; the north gate,
+drawn on both sides of the asset seam (`gen_town` and `gen_city`); a café and a community
+hall north of the library; and three alleys through the west frontage. `NORTHGATE_*` lives
+in `world_plan.py` because gen_town must keep its frontage clear of a road gen_city draws
+and cannot import gen_city — the same reason `GATE_CLEAR` and `SOUTHGATE_CLEAR` are there.
+
+**`house()` was generalised rather than mirrored.** The back row faces east; the original
+faces west. A mirrored duplicate would have been quicker to write and would have put two
+implementations of one wear ramp, one boarded-window rule and one cracked path in the
+tree — the defect class at the top of this file, four times over. Instead `house()` takes
+`x0/x1/walk_x/facing` and does its own arithmetic through `inward()`/`outward()`, and
+every x-span is `sorted()`, because a box whose x0 exceeds its x1 is a negative-size part
+and not a mirror. The wear law is untouched: `wear_at(door_z)` is still one southward
+z-ramp, and the back row reads it. A second rule for "the back of the block" was
+considered and rejected for being a second table describing something the layout knows.
+
+**The alleys, and the check that made them necessary.** With the row built and both ends
+joined, `check_city` check 12 put the worst detour in the world at **2.02** — 533 studs
+walked for 264 straight, standing in the middle of the new back street. That is what two
+parallel roads joined only at their ends measure as: reachable, and still wrong. The route
+graph can tell those apart; a player only experiences it as the town being annoying.
+
+**Then the same defect class that this file keeps getting caught by, caught it again.**
+The first fix cut one alley between the gym and the library, and the comment justifying it
+said that was the only gap on the frontage wide enough to walk down. That was false. The
+west frontage is built by **two files** — seven buildings from `gen_town.py`, the school
+and the workplace from `build_street.py` — and the gap count had been taken from
+`gen_town.py`, which can only see seven of the nine. The real gaps are workplace→school
+**32**, school→gym **20**, gym→library **16**. The one that was picked is the narrowest of
+the three, and the two that were missed are the two nearest the worst-detour point.
+
+So `WEST_FRONTAGE` now lives in `world_plan.py`, all nine buildings in one sorted table,
+and `ALLEYS` is *measured* off it — every gap of at least `ALLEY_WIDTH + 2 * ALLEY_MARGIN`
+gets a cut-through. Three alleys, none of them chosen. Worst detour **1.82 → 1.51**, and
+the worst point in the world moved off the town entirely (it is `wp_bridge_2` in the city
+now). Margin against the 1.9 limit went from 0.08 to 0.39.
+
+**A tree was standing in the middle of the first alley, and everything passed.** The alley
+between the gym and the library was cut straight through the trunk at (-104, 160) — dead
+centre of an eight-stud path — and the asset built, `check_town` went six green and
+`check_city` went twelve green. Nothing either of them measures is *"is there a tree in
+this footpath"*. Street trees want the frontage gaps for exactly the reason the alleys do:
+they are the only grass left on that side. Both files planted into that strip and neither
+could see the other's asset — the same collision that once put one trunk inside another at
+(-104, 88). Fixed with `clear_of_alleys(z, spread)` in the shared plan, called from both
+generators, so the tree that loses is dropped **by measurement**: a deleted line is a fact
+about today's alleys, and a list goes stale the moment a building moves, silently
+readmitting a tree that then stands in the road. Two trees dropped, every other one kept.
+
+**One assertion failed its negative test and was rewritten.** `_check_joins` first asked
+the weak question — "is there anything within the link radius that is not more of this
+same alley". Walking the alley's west end ninety studs off the back street did **not** fire
+it, because what it found instead was `school`, an interior place point on the far side of
+the frontage. Destinations and roads are the same kind of thing to the route graph, so a
+check that accepts either passes when an alley opens onto a wall. It now takes the named
+set of back-street points. The east end is deliberately **not** checked locally: the main
+street's waypoints at those z values are generated by `build_street.py` into another
+asset and do not exist at that point in the program. `check_city` is the only thing that
+can see both ends, and it does. An honest gap beats a check that pretends.
+
+Every new assertion was negative-tested by patching the source and confirming it fires
+with a message naming the offending value: frontage overlap, `WEST_GAP` stops being one
+number, too few alleys, too many alleys, alley waypoints past the link radius, alley west
+end off the back street, and the back-row count.
+
+Verified: `Town.rbxmx` 1592 parts in 37 pieces (md5 `a225bfd1225cee2098329cb7987b4a05`),
+`Street.rbxmx` 486 in 14, `City.rbxmx` 11874 in 499 — all three byte-identical across
+consecutive runs. `check_town` all six green (101 place points, 30 buildings, up from 59
+and 18), `check_city` all twelve green (688 place points reachable, worst detour 1.51),
+`check.py` all clean.
+
+**Still open in this lane:** the road-group naming split — `build_street.py` puts
+carriageways in a `Road` group and `gen_town.py` puts them inside `Ground` — which is why
+`check_city`'s carriageway count has to know about both. Gangs still deferred; the tip is
+still laid out to become territory. Map stages 2–4 unstarted.
+
+## 2026-08-18
 
 **The street the player spawns on now goes somewhere, and gets worse on the way.** Asked
 for the area around the spawn house to feel poorer, for almost-broken houses past that
