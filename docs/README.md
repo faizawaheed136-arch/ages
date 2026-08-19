@@ -37,6 +37,7 @@ written down here rather than in anybody's head.
 |---|---|
 | [`look_and_feel.md`](look_and_feel.md) | The 2025 lighting reset, PBR/atmosphere/post baselines, the game-feel timing table, easing curves. |
 | [`roblox_engineering.md`](roblox_engineering.md) | Server Authority, sports as a third place, remote/buffer costs, network-ownership traps, engine caps, CI tooling. |
+| [`top_games_architecture.md`](top_games_architecture.md) | How top Roblox games structure services, remotes and persistence at scale — confirms AGES's own patterns, and what's missing: per-remote rate limiting, and the multi-server primitives to reach for the day gang territory needs to agree across servers. |
 
 ## Two rules that override everything here
 
