@@ -24,6 +24,7 @@ local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
 local FightService = require(script.Parent.FightService)
 local PeopleService = require(script.Parent.PeopleService)
+local VehicleService = require(script.Parent.VehicleService)
 local BillService = require(script.Parent.BillService)
 local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
@@ -231,6 +232,11 @@ function LifeService.Die(player: Player)
 	-- standing in the doorway through her child's death would be the single worst frame
 	-- this game could draw.
 	PeopleService.ResetForNewLife(player)
+	-- And whatever was parked outside waiting for them. A dead life driving itself
+	-- around is the same frame as the room emptying above, one system further out:
+	-- the car goes back to the lot rather than sitting in the street with nobody
+	-- ever coming back to it.
+	VehicleService.ResetForNewLife(player)
 	-- And whatever was lying across the room waiting to be crawled to. Same reasoning
 	-- as the room emptying: a lit pad still inviting a dead child somewhere is a worse
 	-- frame than an empty floor.

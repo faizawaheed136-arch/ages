@@ -149,6 +149,13 @@ function Lives.New(): LifeData
 			owned = {},
 			homeJob = {},
 		},
+		-- No cars owned, none spawned. True of a newborn, and the right thing to
+		-- hand a save written before vehicles existed: that life's garage starts
+		-- empty rather than the game inventing a car it never bought.
+		vehicles = {
+			owned = {},
+			active = nil,
+		},
 		-- Bills start at zero debt, first bill charged at month 0, zero shifts completed.
 		bills = {
 			debt = 0,

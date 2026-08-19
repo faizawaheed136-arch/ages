@@ -21,6 +21,7 @@ local GangUI = require(script.ui.GangUI)
 local FightUI = require(script.ui.FightUI)
 local HouseUI = require(script.ui.HouseUI)
 local CarDealerUI = require(script.ui.CarDealerUI)
+local VehicleUI = require(script.ui.VehicleUI)
 local MoneyPop = require(script.world.MoneyPop)
 local BonusPop = require(script.world.BonusPop)
 local MilestoneFlash = require(script.world.MilestoneFlash)
@@ -97,6 +98,7 @@ local gang = GangUI.new()
 local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
+local vehicles = VehicleUI.new()
 local dealerMark = DealerMark.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
@@ -131,6 +133,10 @@ local RequestFightActionRemote = Remotes.Get("RequestFightAction")
 local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
 local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
 local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
+local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
+local RequestSellVehicleRemote = Remotes.Get("RequestSellVehicle")
+local RequestSpawnVehicleRemote = Remotes.Get("RequestSpawnVehicle")
+local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -288,6 +294,22 @@ end)
 
 carDealer:OnServe(function()
 	RequestCarDealerServeRemote:FireServer()
+end)
+
+vehicles:OnBuy(function(vehicleId: string)
+	RequestBuyVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnSell(function(vehicleId: string)
+	RequestSellVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnSpawn(function(vehicleId: string)
+	RequestSpawnVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnStore(function()
+	RequestStoreVehicleRemote:FireServer()
 end)
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
@@ -832,6 +854,10 @@ Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarD
 	end
 end)
 
+Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
+	vehicles:Set(state)
+end)
+
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
 	ui:SetBill(state)
 end)
@@ -949,6 +975,11 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number)
 	-- who no longer has a head, and the corner is better empty.
 	house:Set(nil)
 	carDealer:Set(nil)
+	-- And the showroom, for the same reason: a BUY button under a death notice
+	-- is still a control, and the speedometer is worse than either -- a number
+	-- still climbing under a death screen would be claiming the car is still
+	-- being driven by someone who no longer can.
+	vehicles:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil
