@@ -4838,6 +4838,151 @@ Config.Milestones = {
 	Age80 = { label = "Long Life", bonus = 5000 },
 }
 
+-- Skills. What the player has got good at, one line per discipline, earned by doing
+-- the thing and graded on how well it went.
+--
+-- The rule that shapes every number below: **XP is only ever awarded for a graded
+-- outcome, never for elapsed time and never for arriving somewhere.** A skill that
+-- ticks up while a player stands in a gym is not a skill, it is a clock with a label
+-- on it, and this game already has one of those it is trying to get rid of. Every
+-- Award call in the tree is downstream of something the server judged: a sweep hit
+-- landing in the sweet band, a lesson answer being right, a bout being won, a canvas
+-- being signed. If a hook cannot name the thing that was judged, it is not a hook.
+--
+-- Per life, like money and the job. A skill that survived death would make dying a
+-- setback rather than an ending, which is the one thing this game will not do.
+Config.Skills = {
+	-- The ladder, shared by every skill so that "level 4" means the same amount of
+	-- work everywhere. Thresholds are cumulative XP, and the last band is the cap --
+	-- a skill that ran off the end of this table would have no name to show.
+	--
+	-- Superlinear, but only gently: each band costs roughly a third more than the one
+	-- before rather than double. Doubling is the usual choice and it is wrong here,
+	-- because the top of a doubling ladder is unreachable inside one life and a rung
+	-- nobody can stand on is decoration. These add up to 4,700 XP, which a player who
+	-- actually plays one discipline can finish.
+	Levels = {
+		{ level = 1, atXp = 0, name = "Beginner" },
+		{ level = 2, atXp = 120, name = "Novice" },
+		{ level = 3, atXp = 320, name = "Capable" },
+		{ level = 4, atXp = 640, name = "Skilled" },
+		{ level = 5, atXp = 1100, name = "Practiced" },
+		{ level = 6, atXp = 1750, name = "Sharp" },
+		{ level = 7, atXp = 2600, name = "Expert" },
+		{ level = 8, atXp = 4700, name = "Master" },
+	},
+
+	-- The disciplines, in the order the menu lists them. `id` is what services award
+	-- against and what the save is keyed by, so renaming one silently zeroes every
+	-- player's progress in it -- add a new id rather than editing an old one.
+	--
+	-- Deliberately short. Six lines a player can name beats fifteen they cannot, and
+	-- every entry here has at least one service already grading something that feeds
+	-- it. A skill with no source is a row that never moves, and a row that never moves
+	-- teaches the player to stop reading the panel.
+	Definitions = {
+		{
+			id = "fighting",
+			label = "Fighting",
+			-- What it is earned by, shown under the bar. Written as the player's own
+			-- action rather than as a system name: "Won squares in a fight" is
+			-- something they remember doing, "FightService outcomes" is not.
+			earnedBy = "Winning squares and taking bouts",
+			color = Color3.fromRGB(232, 92, 76),
+		},
+		{
+			id = "athletics",
+			label = "Athletics",
+			earnedBy = "Timing sweeps on the gym machines",
+			color = Color3.fromRGB(96, 200, 255),
+		},
+		{
+			id = "academics",
+			label = "Academics",
+			earnedBy = "Answering lessons correctly",
+			color = Color3.fromRGB(150, 140, 255),
+		},
+		{
+			id = "science",
+			label = "Science",
+			earnedBy = "Committing a lab run that holds up",
+			color = Color3.fromRGB(94, 226, 178),
+		},
+		{
+			id = "art",
+			label = "Art",
+			earnedBy = "Signing a canvas you finished",
+			color = Color3.fromRGB(255, 176, 74),
+		},
+		{
+			id = "nerve",
+			label = "Nerve",
+			earnedBy = "Getting away with it",
+			color = Color3.fromRGB(236, 120, 200),
+		},
+	},
+
+	-- The most XP one call may award, whatever it asks for. A guard on the callers
+	-- rather than a tuning knob: every hook in the tree passes a small constant today,
+	-- and this exists so that a future one multiplying by a streak, a combo count or a
+	-- payout cannot quietly turn a single action into a level.
+	-- Safe range: 20-100.
+	MaxPerAward = 60,
+
+	-- What each judged outcome is worth. Every name here corresponds to exactly one
+	-- call site, and the call site is named in the comment, so a number that looks
+	-- wrong can be traced to the thing it pays for without a search.
+	--
+	-- Sized against the ladder above: a Master at 4,700 XP is roughly 800 perfect gym
+	-- reps, 940 right answers, or 235 bouts taken. Those are large and they are meant
+	-- to be -- Master is one life's worth of one discipline, not an afternoon's.
+	Awards = {
+		-- GymService.answer, per rep, on the grade the sweep was judged at. A miss pays
+		-- nothing at all rather than a consolation trickle: the sweep is the only thing
+		-- the gym asks the player to get right, and paying for a miss would make the
+		-- timing decorative.
+		-- Safe range: 2-12.
+		GymPerfect = 6,
+		-- Safe range: 1-6.
+		GymGood = 3,
+
+		-- SchoolService.answer, per right answer. Time running out is a wrong answer
+		-- here, exactly as it is for the lesson's own grade.
+		-- Safe range: 2-10.
+		LessonCorrect = 5,
+
+		-- FightService.decide, on a bout the player took. Nothing for a loss, and that
+		-- is not a judgement about whether losing teaches you something -- it is that a
+		-- loss is the one fight outcome a player can produce on demand by standing
+		-- still and being hit, which is the exact shape this whole table exists to
+		-- refuse.
+		-- Safe range: 10-40.
+		FightWon = 25,
+
+		-- ScienceService, per procedure step matched in order on a committed bench.
+		-- Multiplied by the match count at the call site, which is the one place in the
+		-- tree where MaxPerAward is doing real work rather than sitting as a guard.
+		-- Safe range: 2-8.
+		LabStepMatched = 4,
+
+		-- ArtService.finish, multiplied by the share of the study actually reproduced,
+		-- so a canvas walked away from at a tenth done pays a tenth. Awarded however
+		-- the session ended, for the reason the lesson count is: leaving early is a way
+		-- of doing it badly, not a way of avoiding being graded.
+		-- Safe range: 15-50.
+		ArtCanvas = 30,
+
+		-- GangService.checkEscape, when a bounty that got above
+		-- Config.Gangs.Earn.GotAwayNeedsBounty falls to nothing without an arrest.
+		--
+		-- Deliberately paid to everybody, gang or not, unlike the standing award beside
+		-- it. Nerve is about what you got away with; needing a gang to be credited for
+		-- it would make the only unbanked discipline in the game a members-only one.
+		-- Safe range: 15-45.
+		GotAway = 30,
+	},
+}
+
 -- NPC gossip. When two townsfolk are near each other and the player has done
 -- something notable, one may share a line about the player with the other.
 -- The gossip fades over time and nudges bonds among nearby people.

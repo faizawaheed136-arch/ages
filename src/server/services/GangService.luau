@@ -49,6 +49,7 @@ local Interact = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("I
 local DataService = require(script.Parent.DataService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
+local SkillService = require(script.Parent.SkillService)
 
 local Cast = require(script.Parent.Parent.content.Cast)
 local Colors = require(script.Parent.Parent.world.Colors)
@@ -422,7 +423,18 @@ local function checkEscape(player: Player, data: LifeData, watch: Watch)
 	end
 	local peak = watch.peakBounty
 	watch.peakBounty = 0
-	if data.gangId == nil or peak < GANGS.Earn.GotAwayNeedsBounty then
+	if peak < GANGS.Earn.GotAwayNeedsBounty then
+		return
+	end
+
+	-- Nerve, before the gang check and deliberately outside it. The standing below is a
+	-- gang paying attention to one of its own; this is the player having got away with
+	-- something, which is true whether anyone was watching. Gating the only discipline
+	-- earned outside a room behind membership would make Nerve a members-only skill and
+	-- leave a player who never joined with a row that can never move.
+	SkillService.Award(player, "nerve", Config.Skills.Awards.GotAway, "got away clean")
+
+	if data.gangId == nil then
 		return
 	end
 	creditStanding(player, GANGS.Earn.GotAway, "got away clean")

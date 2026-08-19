@@ -58,6 +58,7 @@ local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Re
 local DataService = require(script.Parent.DataService)
 local EventService = require(script.Parent.EventService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local Procedures = require(script.Parent.Parent.content.Procedures)
@@ -77,6 +78,7 @@ local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 
 local SCHOOL = Config.School
 local SCIENCE = SCHOOL.Science
+local SKILL_AWARDS = Config.Skills.Awards
 
 -- The subject id this service answers to. A constant rather than a parameter because
 -- there is exactly one procedure subject; the day there is a second, this becomes an
@@ -437,9 +439,13 @@ end
 -- session. The session still carries `level` and `passes`, but only as a mirror for the
 -- panel to draw -- they are re-read off the profile immediately below, so the profile is
 -- the single writer and the two can never drift.
-local function commitBench(data: LifeData, session: Session, bench: Bench, spoiled: boolean)
+-- Returns how many steps of the procedure were performed in the right order, which is
+-- the only measure of the run that is not adjusted for how fast the player walked. Zero
+-- for a bench that was already committed, which is the same answer the caller wants: a
+-- second commit of the same bench earned nothing, because the first one earned it all.
+local function commitBench(data: LifeData, session: Session, bench: Bench, spoiled: boolean): number
 	if bench.committed then
-		return
+		return 0
 	end
 
 	-- Decided before anything is written, which is the idempotency rule this codebase
@@ -471,6 +477,8 @@ local function commitBench(data: LifeData, session: Session, bench: Bench, spoil
 	if session.active == bench.index then
 		session.active = nil
 	end
+
+	return matched
 end
 
 -- Ends the session and pays for it. `reason` changes the sentence but never the
@@ -755,7 +763,17 @@ local function onCommitRequested(player: Player, benchIndex: unknown)
 		return
 	end
 
-	commitBench(Lives.Active(profile.Data), session, bench, false)
+	local matched = commitBench(Lives.Active(profile.Data), session, bench, false)
+	-- Science, per step of the procedure done in the right order. Only on the deliberate
+	-- commit: the two spoiled paths above bank mastery for a bench the clock closed, and a
+	-- bench the player never walked back to is not a run they finished.
+	--
+	-- The one multiplied award in the tree, which is why Config.Skills.MaxPerAward stops
+	-- being a formality here -- a procedure long enough to out-earn a whole canvas would
+	-- be capped rather than paid.
+	if matched > 0 then
+		SkillService.Award(player, "science", SKILL_AWARDS.LabStepMatched * matched, "committed a bench")
+	end
 	push(player)
 end
 

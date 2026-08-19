@@ -60,6 +60,7 @@ local TheftService = require(services.TheftService)
 local BankService = require(services.BankService)
 local GangService = require(services.GangService)
 local TerritoryService = require(services.TerritoryService)
+local SkillService = require(services.SkillService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
@@ -102,6 +103,9 @@ TheftService:Init()
 BankService:Init()
 GangService:Init()
 TerritoryService:Init()
+-- No ordering to honour: it reads DataService and nothing else, and every service that
+-- awards into it does so from a handler that runs long after boot.
+SkillService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -182,6 +186,7 @@ GangService:Start()
 -- until all four resolve, precisely so a boss that has not streamed in yet cannot pin
 -- an empty map for the life of the server.
 TerritoryService:Start()
+SkillService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()

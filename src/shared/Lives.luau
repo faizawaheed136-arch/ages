@@ -87,6 +87,11 @@ function Lives.New(): LifeData
 		-- existed: that life has sat no lessons this year, which is exactly true -- there was
 		-- nothing to sit.
 		lessonsThisYear = 0,
+		-- Empty, which reads as level one in every discipline -- true of the newborn, and the
+		-- only honest thing to hand a save written before skills existed. That life did throw
+		-- punches and sit lessons, but nothing was grading them at the time, so back-filling
+		-- XP here would be the game awarding credit for work it never watched.
+		skillXp = {},
 		-- Empty, which reads as level one in every subject with no passes banked -- true of
 		-- the newborn, and true of a save written before subjects had verbs. An old life
 		-- arrives at the lab as a beginner, which is what it is: it has never run a

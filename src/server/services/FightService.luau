@@ -62,6 +62,7 @@ local Interact = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("I
 local DataService = require(script.Parent.DataService)
 local NPCService = require(script.Parent.NPCService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 
 local Fighters = require(script.Parent.Parent.content.Fighters)
 local Ground = require(script.Parent.Parent.world.Ground)
@@ -78,6 +79,7 @@ local RequestFightSquareRemote = Remotes.Get("RequestFightSquare")
 local NoticeRemote = Remotes.Get("Notice")
 
 local FIGHT = Config.Fight
+local SKILL_AWARDS = Config.Skills.Awards
 
 -- The one relationship between two Config numbers that the whole triangle rests on, checked
 -- loudly at require time because it fails silently in play.
@@ -542,6 +544,10 @@ local function decide(player: Player, bout: Bout, playerWon: boolean)
 		bout.result = `{bout.def.body.name} went down.`
 		setFloored(humanoidOf(bout.visitor.model), true)
 		StatService.AddStat(player, "happiness", FIGHT.WinHappiness)
+		-- Fighting, on the bout and not on the punches. Paying per strike landed would
+		-- make the skill a measure of how long a fight ran, and the longest fights are
+		-- the ones against somebody who cannot hurt you.
+		SkillService.Award(player, "fighting", SKILL_AWARDS.FightWon, "took a bout")
 	else
 		bout.result = "You went down."
 		setFloored(humanoidOf(player.Character), true)

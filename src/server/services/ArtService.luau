@@ -64,6 +64,7 @@ local Report = require(ReplicatedStorage:WaitForChild("school"):WaitForChild("Re
 local DataService = require(script.Parent.DataService)
 local EventService = require(script.Parent.EventService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Studio = require(script.Parent.Parent.world.Studio)
 local Studies = require(script.Parent.Parent.content.Studies)
@@ -82,6 +83,7 @@ local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 
 local SCHOOL = Config.School
 local ART = SCHOOL.Art
+local SKILL_AWARDS = Config.Skills.Awards
 
 -- The subject id this service answers to. A constant rather than a parameter because
 -- there is exactly one copying subject; the day there is a second, this becomes an
@@ -521,6 +523,14 @@ local function finish(player: Player, data: LifeData, session: Session, reason: 
 	Mastery.Record(data, SUBJECT_ID, share)
 	session.level = levelOf(data)
 	session.passes = passesOf(data)
+
+	-- Art, scaled by how much of the study actually came back. Once per canvas for the
+	-- reason mastery is banked once per canvas, and on the share rather than on the cell
+	-- count, so sixteen cells filled with the wrong colour pays what it is worth.
+	local earned = math.floor(SKILL_AWARDS.ArtCanvas * share)
+	if earned > 0 then
+		SkillService.Award(player, "art", earned, "finished a canvas")
+	end
 
 	-- Counted however it ended, including walked away from, for the reason a lesson is:
 	-- otherwise a player could start, leave, and start again until the wall showed a study

@@ -40,6 +40,7 @@ local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
 local BankService = require(script.Parent.BankService)
 local GangService = require(script.Parent.GangService)
+local SkillService = require(script.Parent.SkillService)
 local FightService = require(script.Parent.FightService)
 local WitnessService = require(script.Parent.WitnessService)
 local DisguiseService = require(script.Parent.DisguiseService)
@@ -1534,6 +1535,58 @@ Commands.bank = function(player: Player, args: { string }): string
 	return `usage: /bank [go [<place>]|reset|on|off] — {BankService.Describe(player)}`
 end
 
+-- Skills, which have no room to walk into and no panel of their own to force open, so
+-- this is the only way to see one move without playing the discipline that feeds it.
+--
+--   /skill                    every discipline: rung, name, XP, and the next threshold.
+--   /skill <id> <n>           n XP into that discipline, through SkillService.Award --
+--                             the same seam every hook in the tree uses, so this is
+--                             testing the real path rather than a debug-only one. Still
+--                             clamped by Config.Skills.MaxPerAward, on purpose: a command
+--                             that could jump the cap would be testing a path nothing else
+--                             can reach.
+--   /skill <id> max           straight to the top rung, for looking at what a Master row
+--                             draws like without earning one. Loops Award rather than
+--                             writing the number, so the clamp still holds and the pushes
+--                             the client would really see still happen.
+Commands.skill = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local skillId = string.lower(args[1] or "")
+	if skillId == "" then
+		return SkillService.Describe(player)
+	end
+
+	local amount = string.lower(args[2] or "")
+	if amount == "" then
+		return "usage: /skill <id> <n|max>"
+	end
+
+	local ladder = Config.Skills.Levels
+	local top = ladder[#ladder].atXp
+	local points = if amount == "max" then top else tonumber(amount)
+	if points == nil then
+		return "usage: /skill <id> <n|max>"
+	end
+
+	-- Looped rather than handed over in one call, because Award clamps and a single
+	-- request for the whole ladder would silently become one capped grant. The bound is
+	-- the ladder over the clamp plus slack, which is finite and small.
+	local calls = math.ceil(points / Config.Skills.MaxPerAward)
+	local ok, err = pcall(function()
+		for _ = 1, calls do
+			SkillService.Award(player, skillId, Config.Skills.MaxPerAward, "debug")
+		end
+	end)
+	if not ok then
+		return tostring(err)
+	end
+
+	return SkillService.Describe(player)
+end
+
 -- The gang, which is the one crime system whose state outlives the run that made it.
 --
 --   /gang                     all four: standing with each, whether their boss is actually
@@ -2688,6 +2741,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/theft [go <place>|fill|on|off], "
 	.. "/bank [go [<place>]|reset|on|off], "
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
+	.. "/skill [<id> <n|max>], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /approach, /dots, /slots [list|use <n>|delete <n>], "

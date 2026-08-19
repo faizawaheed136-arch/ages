@@ -1603,6 +1603,31 @@ export type TerritoryState = {
 	deepestStuds: number,
 }
 
+-- One discipline, as the menu draws it. Everything here is resolved server-side --
+-- the level, its name, and where the next rung sits -- because the client having its
+-- own copy of the ladder is how a bar ends up disagreeing with the number beside it.
+export type SkillState = {
+	id: string,
+	label: string,
+	earnedBy: string,
+	color: Color3,
+	level: number,
+	levelName: string,
+	xp: number,
+	-- Where this level started and where the next one begins, so the bar can be drawn
+	-- as a fraction without the client knowing the curve. Nil at the cap, which is
+	-- what tells the panel to draw a full bar and no "next" caption rather than
+	-- dividing by a threshold that does not exist.
+	bandFloorXp: number,
+	nextLevelXp: number?,
+}
+
+-- Every discipline, in Config order, pushed whole. Small enough that a delta would
+-- cost more to reason about than it saves: six rows of six numbers.
+export type SkillsState = {
+	skills: { SkillState },
+}
+
 -- What the client draws about the gang you are in, or nil when you are in none.
 export type GangState = {
 	gangId: string,
@@ -2448,6 +2473,14 @@ export type LifeData = {
 	-- Per life, like lessonsThisYear and for the same reason: a new body has not
 	-- worked out anywhere yet.
 	workoutsThisYear: { [string]: number },
+	-- Cumulative XP per skill id, keyed by `Config.Skills.Definitions[n].id`. Absent
+	-- keys read as zero, so a discipline never practised and one that exists but has
+	-- not been touched are the same thing -- which they are.
+	--
+	-- Per life, deliberately. Skill is the most tempting thing in the game to carry
+	-- across deaths and the worst one to: a game where the ninth life starts as a
+	-- master is a game where the first eight were the tutorial.
+	skillXp: { [string]: number },
 	-- Lessons sat in the current year, against School.LessonsPerYear. The same cap as
 	-- workGameHoursThisYear and for the same reason: a player who lingers in one year
 	-- should not be able to grind a childhood's worth of smarts out of it.

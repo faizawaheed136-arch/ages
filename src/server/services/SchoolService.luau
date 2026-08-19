@@ -61,6 +61,7 @@ local DataService = require(script.Parent.DataService)
 local EventService = require(script.Parent.EventService)
 local PlaceService = require(script.Parent.PlaceService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
@@ -1181,6 +1182,10 @@ local function answer(player: Player, lesson: Lesson, row: number?)
 	local correct = chose == question.correct
 	if correct then
 		lesson.right += 1
+		-- Academics, per right answer. Time running out arrives here as `row == nil` and
+		-- is a wrong answer to this branch exactly as it is to the lesson's own grade,
+		-- which is the whole reason both paths were routed through this one function.
+		SkillService.Award(player, "academics", Config.Skills.Awards.LessonCorrect, "right answer")
 	end
 
 	-- The teacher reads the verdict in the room while it is read on the panel. The

@@ -31,6 +31,7 @@ local Sweep = require(ReplicatedStorage:WaitForChild("Sweep"))
 
 local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 local Ground = require(script.Parent.Parent.world.Ground)
 
 type LifeData = Types.LifeData
@@ -44,6 +45,7 @@ local RequestRepRemote = Remotes.Get("RequestRep")
 local NoticeRemote = Remotes.Get("Notice")
 
 local GYM = Config.Gym
+local SKILL_AWARDS = Config.Skills.Awards
 local KINDS = GYM.Kinds
 
 -- The sweet zone for a machine, widened by how fit the character is.
@@ -389,6 +391,15 @@ local function answer(player: Player, session: Session, pushedRep: boolean)
 	end
 	if looks > 0 then
 		StatService.AddStat(player, "looks", looks)
+	end
+
+	-- Athletics, on the grade and nothing else. Not on the rep, not on the session, and
+	-- not on the time spent on the machine: the sweep is the only thing the gym asks the
+	-- player to get right, and a rep that missed it was a rep spent rather than earned.
+	if grade == "Perfect" then
+		SkillService.Award(player, "athletics", SKILL_AWARDS.GymPerfect, "perfect sweep")
+	elseif grade == "Good" then
+		SkillService.Award(player, "athletics", SKILL_AWARDS.GymGood, "good sweep")
 	end
 
 	session.verdictLeft = GYM.VerdictSeconds

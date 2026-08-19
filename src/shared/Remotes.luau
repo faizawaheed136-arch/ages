@@ -222,6 +222,7 @@ export type RemoteName =
 	-- MapData for exactly that reason -- one is a fact about the world and one is a fact
 	-- about you, and sending them together would resend the whole map twice a second.
 	| "TerritoryUpdated"
+	| "SkillsUpdated"
 	-- "I clicked the boss." Opens the panel and nothing else -- joining is a row on it, not
 	-- this. Walking up to all four bosses to read what they want is free, deliberately, for
 	-- the same reason clicking a vault door trips nothing: a decision this permanent should
@@ -506,6 +507,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"GangPanelUpdated",
 	"MapData",
 	"TerritoryUpdated",
+	"SkillsUpdated",
 	"RequestGangOpen",
 	"RequestGangChoice",
 	"RequestGangColors",
