@@ -37,7 +37,36 @@ local MANIFEST = AGES_MANIFEST
 --------------------------------------------------------------------------------
 
 local Stub = {}
+
+-- Instance properties that are Vector3 in Roblox, and that game code therefore does
+-- arithmetic on rather than passing around.
+--
+-- Forward-declared and filled in once `vec` exists, because `Stub` has to be defined
+-- before the real value types and `vec` has to be defined before it can be called. Same
+-- class of trap as `Vec.__index` below: a closure captures the local in scope where it is
+-- written, so naming `vec` up here without this would read as a nil global.
+--
+-- Without these, `place.part.Position` is a stub, `point.X` is a stub, and
+-- `math.min(minX, point.X)` throws "number expected, got table" pointing at
+-- `WorldMap.BoundsOf` -- correct code, blamed for a hole in the harness. That is the
+-- fourth time this exact shape of false alarm has been paid for here; see the note on the
+-- real value types.
+local VECTOR_PROPERTIES: { [string]: boolean } = {
+	Position = true,
+	Size = true,
+	Orientation = true,
+	Velocity = true,
+	AssemblyLinearVelocity = true,
+	LookVector = true,
+	RightVector = true,
+	UpVector = true,
+}
+local zeroVector: any = nil
+
 Stub.__index = function(self, key)
+	if VECTOR_PROPERTIES[key] and zeroVector ~= nil then
+		return zeroVector
+	end
 	-- Instances are containers, so an index has to keep working forever -- `a.b.c.d` is
 	-- ordinary Roblox code. Cached so identity is stable: `x.Foo == x.Foo` holds, which
 	-- some module bodies rely on when they stash a reference and compare it later.
@@ -155,6 +184,9 @@ end
 function vec(x, y, z)
 	return setmetatable({ X = x or 0, Y = y or 0, Z = z or 0 }, Vec)
 end
+
+-- Now that `vec` exists, every stubbed Instance can answer `.Position` with a real one.
+zeroVector = vec(0, 0, 0)
 Vec.__add = function(a, b) return vec(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end
 Vec.__sub = function(a, b) return vec(a.X - b.X, a.Y - b.Y, a.Z - b.Z) end
 Vec.__mul = function(a, b)

@@ -3958,6 +3958,16 @@ Config.Map = {
 	-- Safe range: 0.6-0.95.
 	SheetScreenFraction = 0.82,
 
+	-- How wide to assume the map sheet is, in pixels, before Roblox has laid it out.
+	--
+	-- Only the terrain cull reads it: it decides which world rectangles are too small to
+	-- be worth an instance, and it needs a pixel size at the moment the server pushes map
+	-- data -- which is before the sheet has ever been shown, so `AbsoluteSize` is zero.
+	-- Being wrong here costs a few hundred extra or missing hairline rectangles, not a
+	-- broken map, so a sensible middle is better than a lazy first-open rebuild.
+	-- Safe range: 400-1200.
+	SheetAssumedPixels = 700,
+
 	-- How far in the sheet can be zoomed, and by how much per wheel click or button
 	-- press.
 	--
@@ -4055,6 +4065,42 @@ Config.Map = {
 	-- would swallow the region it was outlining.
 	-- Safe range: 1-4.
 	RegionBorderPixels = 2,
+
+	-- How the drawn world is toned before it goes on the sheet.
+	--
+	-- `src/shared/world/MapShapes.luau` carries every shape in the colour the world
+	-- actually paints it, and dropping those on the sheet raw was the first version: it
+	-- looks like somebody pasted a screenshot into the menu. Bright green lawns and white
+	-- roofs against a near-black panel out-shout the icons, the territory lines and the
+	-- you-marker -- which are the things the map is *for*. The picture is the background
+	-- and has to behave like one.
+	--
+	-- Two knobs, applied in this order:
+	--
+	-- `Saturation` is how much of the colour's own hue survives. At 0 the world is
+	-- greyscale, which reads as a printed street map; at 1 it is the world's own palette.
+	-- In between you keep "grass is greener than asphalt" while losing "grass is loud".
+	--
+	-- `Tint` is how far the result then sits from the panel behind it. At 0 a shape is
+	-- invisible; at 1 it is at full strength. This is the contrast dial.
+	--
+	-- Buildings sit above ground on both, so that the blocks read as raised out of the
+	-- streets between them without needing an outline on nine hundred Frames.
+	-- Safe range: 0.2-0.7 for saturation, 0.35-0.8 for tint. Push tint past about 0.8 and
+	-- the icons stop winning.
+	Shapes = {
+		SurfaceSaturation = 0.4,
+		SurfaceTint = 0.5,
+		BuildingSaturation = 0.45,
+		BuildingTint = 0.62,
+
+		-- Shapes below this many pixels on their short side are skipped at build time
+		-- rather than drawn. Not a look setting -- a Frame under a pixel wide costs
+		-- exactly as much as one that can be seen. This is measured at the resting zoom,
+		-- so anything dropped was never visible without zooming in.
+		-- Safe range: 0-1.5. At 0 nothing is skipped.
+		MinPixels = 0.6,
+	},
 
 	-- What each kind of place draws as, and how a place id is sorted into a kind.
 	--

@@ -37,6 +37,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local WorldMap = require(ReplicatedStorage:WaitForChild("WorldMap"))
 local MapIcons = require(script.Parent.MapIcons)
+local MapTerrain = require(script.Parent.MapTerrain)
 
 type MapData = Types.MapData
 type TerritoryState = Types.TerritoryState
@@ -66,9 +67,13 @@ local SCALE_TARGET_PIXELS = 110
 -- Layers inside the sheet, so that "which of these draws on top" is one list rather than
 -- a number invented at each site.
 local Z_LAND = 1
-local Z_REGION_FILL = 2
-local Z_REGION_EDGE = 3
-local Z_GRID = 4
+-- The drawn world sits between the ground rectangle and the territory overlay, in two
+-- layers of its own so a roof always covers the road it fronts onto.
+local Z_SHAPE_GROUND = 2
+local Z_SHAPE_BUILDING = 3
+local Z_REGION_FILL = 4
+local Z_REGION_EDGE = 5
+local Z_GRID = 6
 local Z_ICON = 10
 local Z_YOU = 40
 -- The invisible sheet-sized button that catches the wheel and the drag. Above everything
@@ -97,6 +102,7 @@ export type MapUIHandle = typeof(setmetatable(
 		gridFolder: Frame,
 		regionFolder: Frame,
 		plateFolder: Frame,
+		shapeFolder: Frame,
 		iconFolder: Frame,
 		youDot: Frame,
 		titleLabel: TextLabel,
@@ -130,6 +136,12 @@ export type MapUIHandle = typeof(setmetatable(
 -- are one piece of furniture as far as a player is concerned.
 -- -------------------------------------------------------------------
 
+-- A colour off the world, dressed for this panel.
+--
+-- Pulled toward its own grey first and toward the panel second -- see
+-- `Config.Map.Shapes` for what each of the two is doing and why the picture is not
+-- allowed to shout. Done here rather than baked into `MapShapes` so that both knobs stay
+-- live: a value baked into a generated file is a value nobody will ever try changing.
 local function corner(instance: GuiObject, radius: number)
 	local rounded = Instance.new("UICorner")
 	rounded.CornerRadius = UDim.new(0, radius)
@@ -370,6 +382,28 @@ end
 -- -------------------------------------------------------------------
 -- The layers inside the world Frame.
 -- -------------------------------------------------------------------
+
+-- The world itself, as rectangles, under everything else on the sheet.
+--
+-- The drawing is `MapTerrain`, shared with the corner dial so that the two surfaces cannot
+-- disagree about what the town looks like. All this decides is how big the sheet is, which
+-- is the one thing the painter cannot know: it needs a pixel width to cull sub-pixel
+-- rectangles by, and `AbsoluteSize` is zero until Roblox has laid the sheet out -- which it
+-- has not, the first time the server pushes map data.
+local function buildShapes(self: MapUIHandle, data: MapData)
+	local sheetPixels = self.sheet.AbsoluteSize.X
+	if sheetPixels <= 0 then
+		sheetPixels = MAP.SheetAssumedPixels
+	end
+
+	MapTerrain.Paint(
+		self.shapeFolder,
+		{ minX = data.minX, maxX = data.maxX, minZ = data.minZ, maxZ = data.maxZ },
+		sheetPixels,
+		Z_SHAPE_GROUND,
+		Z_SHAPE_BUILDING
+	)
+end
 
 -- A line every `Config.Map.GridStuds`, in both axes.
 --
@@ -917,6 +951,16 @@ function MapUI.new(): MapUIHandle
 
 	stroke(land, PALETTE.Edge, 1, 0.55)
 
+	-- The drawn world. Its own folder rather than parts parented to `land`, so that the
+	-- nine hundred-odd Frames in it can be thrown away and rebuilt in one line when the
+	-- bounds change, without taking the ground rectangle with them.
+	local shapeFolder = Instance.new("Frame")
+	shapeFolder.Name = "Shapes"
+	shapeFolder.Size = UDim2.fromScale(1, 1)
+	shapeFolder.BackgroundTransparency = 1
+	shapeFolder.ZIndex = Z_SHAPE_GROUND
+	shapeFolder.Parent = world
+
 	local gridFolder = Instance.new("Frame")
 	gridFolder.Name = "Grid"
 	gridFolder.Size = UDim2.fromScale(1, 1)
@@ -1183,6 +1227,7 @@ function MapUI.new(): MapUIHandle
 		gridFolder = gridFolder,
 		regionFolder = regionFolder,
 		plateFolder = plateFolder,
+		shapeFolder = shapeFolder,
 		iconFolder = iconFolder,
 		youDot = youDot,
 		titleLabel = titleLabel,
@@ -1336,6 +1381,7 @@ end
 
 function MapUI.SetMapData(self: MapUIHandle, data: MapData)
 	self.data = data
+	buildShapes(self, data)
 	buildGrid(self, data)
 	buildRegions(self, data)
 	buildIcons(self, data)

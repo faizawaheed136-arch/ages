@@ -30,6 +30,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local WorldMap = require(ReplicatedStorage:WaitForChild("WorldMap"))
+local MapShapes = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("MapShapes"))
 
 local Gangs = require(script.Parent.Parent.content.Gangs)
 local GangService = require(script.Parent.GangService)
@@ -120,6 +121,16 @@ local function mapBounds(): WorldMap.Bounds?
 		end
 		table.insert(points, place.part.Position)
 	end
+
+	-- The drawn world's own corners, thrown in with the doorways.
+	--
+	-- Place points sit at things you can walk into, and a coastline is not one -- so a
+	-- box measured from doorways alone stops short of the sea, the beach and the outer
+	-- ring road, and the map crops the edge of the world off. Two corners is enough:
+	-- `BoundsOf` only ever takes a minimum and a maximum.
+	local extent = MapShapes.Extent
+	table.insert(points, Vector3.new(extent.minX, 0, extent.minZ))
+	table.insert(points, Vector3.new(extent.maxX, 0, extent.maxZ))
 
 	local bounds = WorldMap.BoundsOf(points, Config.Map.EdgePadStuds)
 	if bounds ~= nil and #points >= Config.Map.MinPlacesForBounds then

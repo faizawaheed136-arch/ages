@@ -13,11 +13,21 @@
 -- that way. A map that spins cannot be read against a sentence that does not, so the
 -- map holds still and the player turns.
 --
--- **The wash under the icons is whose turf it is, not what the ground is.** There is no
--- terrain art here and deliberately none planned: a painted map is a second copy of the
--- world that goes stale the first time gen_city.py runs, and this tree's most expensive
--- recurring defect is exactly that -- one measurement written down twice. Everything
--- drawn is computed from the place points that exist. See Shared/WorldMap.
+-- **There is ground under the icons now, and the objection that kept it out is answered.**
+-- This header used to say terrain art was deliberately never coming, because a painted map
+-- is a second copy of the world that goes stale the first time gen_city.py runs, and this
+-- tree's most expensive recurring defect is one measurement written down twice. That was
+-- the right worry and it is the reason the copy is *generated*: `tools/gen_mapshapes.py`
+-- reads the same `.rbxmx` files the place mounts, and `check.py` fails the build if the
+-- drawing and the world ever disagree. A copy that cannot rot quietly is not that defect.
+--
+-- The wash over it is still whose turf it is, not what the ground is.
+--
+-- **The town is one frame, not nine hundred.** The dial shows a 260-stud radius, and in
+-- the middle of the city that is over two hundred rectangles -- far too many to reposition
+-- every heartbeat. So the whole world is painted once into an oversized plate and the dial
+-- is a window onto it: Redraw sets one Position and the entire town slides. The icons are
+-- still moved one at a time, because each has its own rim test and there are a dozen.
 --
 -- Nothing here decides anything. It reads two pushes and a position, and clicking it
 -- opens the full sheet.
@@ -30,6 +40,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local WorldMap = require(ReplicatedStorage:WaitForChild("WorldMap"))
 local MapIcons = require(script.Parent.Parent.ui.MapIcons)
+local MapTerrain = require(script.Parent.MapTerrain)
 
 type MapData = Types.MapData
 type TerritoryState = Types.TerritoryState
@@ -62,6 +73,8 @@ export type MinimapHandle = typeof(setmetatable(
 		screenGui: ScreenGui,
 		dial: Frame,
 		field: Frame,
+		plate: Frame,
+		platePixels: number,
 		wash: Frame,
 		youDot: Frame,
 		regionLabel: TextLabel,
@@ -78,6 +91,17 @@ export type MinimapHandle = typeof(setmetatable(
 	},
 	Minimap
 ))
+
+-- Studs to pixels on the dial. The dial's radius shows MinimapRadiusStuds of world, so a
+-- place exactly that far away lands exactly on the rim and is clipped the instant it is
+-- further -- which is the behaviour the radius is named for.
+--
+-- A function rather than a constant because both the icons and the terrain plate are
+-- placed by it, and two copies of a scale is how a map ends up with its labels beside its
+-- buildings instead of on them.
+local function studsToPixels(): number
+	return (SIZE_PIXELS / 2) / MAP.MinimapRadiusStuds
+end
 
 local function makeDot(parent: Instance, size: number, color: Color3, order: number): Frame
 	local dot = Instance.new("Frame")
@@ -143,6 +167,19 @@ function Minimap.new(): MinimapHandle
 	local fieldCorner = Instance.new("UICorner")
 	fieldCorner.CornerRadius = UDim.new(1, 0)
 	fieldCorner.Parent = field
+
+	-- The town itself, painted once and then only ever moved. Sized and filled by
+	-- SetMapData, which is the first moment the world's extent is known.
+	--
+	-- ZIndex 0 puts it under the wash, so the gang tint lies over the streets rather than
+	-- being buried by them.
+	local plate = Instance.new("Frame")
+	plate.Name = "Plate"
+	plate.AnchorPoint = Vector2.new(0, 0)
+	plate.BackgroundTransparency = 1
+	plate.Size = UDim2.fromOffset(0, 0)
+	plate.ZIndex = 0
+	plate.Parent = field
 
 	-- A flat tint of whichever side the player is standing on. The full sheet samples
 	-- the boundaries properly; at this size a boundary would be two pixels of noise, so
@@ -224,6 +261,8 @@ function Minimap.new(): MinimapHandle
 		screenGui = screenGui,
 		dial = dial,
 		field = field,
+		plate = plate,
+		platePixels = 0,
 		wash = wash,
 		youDot = youDot,
 		regionLabel = regionLabel,
@@ -266,6 +305,21 @@ function Minimap.SetMapData(self: MinimapHandle, data: MapData)
 		local dot = makeDot(self.field, math.max(math.floor(style.size * MAP.Icons.MinimapIconScale), 3), style.color, 10 + style.priority)
 		self.markers[#self.markers + 1] = dot
 	end
+
+	-- The plate is the whole world drawn at the dial's own studs-to-pixels, and that
+	-- equality is the point: it is not a tunable. Draw the ground at any other scale and
+	-- the icons -- which are placed by that number in Redraw -- sit next to the buildings
+	-- they are labels for rather than on them, and the error grows with distance, so it
+	-- looks correct in the middle of the dial and wrong at the rim.
+	local bounds: WorldMap.Bounds = {
+		minX = data.minX,
+		maxX = data.maxX,
+		minZ = data.minZ,
+		maxZ = data.maxZ,
+	}
+	self.platePixels = (data.maxX - data.minX) * studsToPixels()
+	self.plate.Size = UDim2.fromOffset(self.platePixels, self.platePixels)
+	MapTerrain.Paint(self.plate, bounds, self.platePixels, 1, 2)
 
 	self.dial.Visible = not self.hidden
 end
@@ -319,10 +373,17 @@ function Minimap.Redraw(self: MinimapHandle)
 		maxZ = data.maxZ,
 	}
 
-	-- Studs to pixels. The dial's radius shows MinimapRadiusStuds of world, so a place
-	-- exactly that far away lands exactly on the rim and is clipped the instant it is
-	-- further -- which is the behaviour the radius is named for.
-	local scale = (SIZE_PIXELS / 2) / MAP.MinimapRadiusStuds
+	local scale = studsToPixels()
+
+	-- The whole town, moved with one property write, so that the world point under the
+	-- player lands under the middle of the dial. This is what the plate buys: the same
+	-- picture drawn as two hundred separate frames would have to be repositioned two
+	-- hundred times a heartbeat, in the corner of the screen, forever.
+	local pixels = self.platePixels
+	if pixels > 0 then
+		local u, v = WorldMap.Normalize(bounds, here.X, here.Z)
+		self.plate.Position = UDim2.new(0.5, -math.floor(u * pixels), 0.5, -math.floor(v * pixels))
+	end
 
 	for index, icon in data.icons do
 		local marker = self.markers[index]

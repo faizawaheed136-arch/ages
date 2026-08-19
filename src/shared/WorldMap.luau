@@ -11,7 +11,9 @@
 --    place points that exist, so a regenerated or expanded city redraws its own map
 --    with nothing edited. tools/world_plan.py holds the world's real numbers and this
 --    file deliberately does not transcribe them -- a second copy of 1024 is the defect
---    this tree keeps producing.
+--    this tree keeps producing. The box is squared on the way out, so that normalized
+--    space is a uniform scaling of the world rather than a stretched one -- see
+--    `BoundsOf` for why that is not a cosmetic choice.
 --
 -- 2. **A region is "nearer this boss than any other boss".** Four bosses, four sides,
 --    no authored rectangles. It partitions the whole plane with no gaps and no overlaps
@@ -74,11 +76,32 @@ function WorldMap.BoundsOf(points: { Vector3 }, padStuds: number): Bounds?
 		maxZ = math.max(maxZ, point.Z)
 	end
 
+	minX, maxX = minX - padStuds, maxX + padStuds
+	minZ, maxZ = minZ - padStuds, maxZ + padStuds
+
+	-- **The box is squared before it is returned, and every caller depends on that
+	-- without knowing it.** `Normalize` divides X by the box's width and Z by its depth,
+	-- so on an oblong box the two axes come out at different scales -- and everything
+	-- drawn from those numbers is then quietly stretched. A roundabout becomes an
+	-- ellipse. A road at forty-five degrees through the town arrives at some other angle
+	-- on the paper. Worse, the territory borders are straight lines whose angle has to be
+	-- computed somewhere, and on a stretched sheet the honest answer differs depending on
+	-- which space you compute it in -- which is exactly the kind of bug that looks like a
+	-- rendering glitch and is actually arithmetic.
+	--
+	-- Squaring here fixes all of it in one place: normalized space becomes a plain
+	-- uniform scaling of the world, so angles, circles and ratios survive the trip. The
+	-- price is empty paper along the shorter axis, which is the truth -- the world is not
+	-- square and a map that filled the sheet would be lying about its shape.
+	local width, depth = maxX - minX, maxZ - minZ
+	local side = math.max(width, depth)
+	local centerX, centerZ = (minX + maxX) / 2, (minZ + maxZ) / 2
+
 	return {
-		minX = minX - padStuds,
-		maxX = maxX + padStuds,
-		minZ = minZ - padStuds,
-		maxZ = maxZ + padStuds,
+		minX = centerX - side / 2,
+		maxX = centerX + side / 2,
+		minZ = centerZ - side / 2,
+		maxZ = centerZ + side / 2,
 	}
 end
 

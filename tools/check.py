@@ -244,6 +244,59 @@ def check_mounts(files, code):
     return bad
 
 
+def check_mapshapes(files, code):
+    """`MapShapes.luau` is generated. Catch it going stale against the world.
+
+    The map draws the town out of a baked table rather than measuring the world at
+    runtime, because `StreamingEnabled` means no client ever holds more than the
+    geometry around itself. That trade buys a map that can draw the far side of the
+    city, and it costs exactly one thing: the table is a copy, and a copy can rot.
+    Widen a road in `Town.rbxmx`, forget to run the generator, and every check in
+    this file still passes -- the Luau is valid, both places build, the asset is
+    mounted. The only symptom is a player walking down a street that the map draws
+    somewhere else, which is the kind of bug that gets blamed on the world for weeks.
+
+    So the generator writes the fingerprint of its inputs into its own output, and
+    this recomputes it. The hash comes from `gen_mapshapes` rather than being
+    reimplemented here, because two definitions of "the same bytes" drift and the
+    drift would show up as a check that fails on a tree nobody touched.
+    """
+    generated = SRC / "shared" / "world" / "MapShapes.luau"
+    if generated not in code:
+        print(f"  {generated.relative_to(ROOT)} is missing. Run: python3 tools/gen_mapshapes.py")
+        return 1
+
+    sys.path.insert(0, str(ROOT / "tools"))
+    try:
+        import gen_mapshapes
+    except Exception as exc:  # pragma: no cover - only fires if the tool is broken
+        print(f"  tools/gen_mapshapes.py will not import: {exc}")
+        return 1
+
+    assets = gen_mapshapes.mounted_assets()
+    missing = [a for a in assets if not (ROOT / a).exists()]
+    if missing:
+        # check_mounts owns the mounted-but-absent case; say nothing about it twice.
+        return 0
+
+    # Read off disk, not out of `code`. Everything in that dict has been through
+    # `strip_code`, which blanks the inside of every string literal -- so the hash the
+    # generator wrote is exactly the part that is not there any more, and this check
+    # reported "no SourceHash" against a file that had one.
+    m = re.search(r'MapShapes\.SourceHash\s*=\s*"(\w+)"', generated.read_text())
+    if not m:
+        print(f"  {generated.relative_to(ROOT)} has no SourceHash. Run: python3 tools/gen_mapshapes.py")
+        return 1
+
+    expected = gen_mapshapes.source_hash(assets)
+    if m.group(1) != expected:
+        print(f"  the map is stale: MapShapes.luau was built from {m.group(1)}, "
+              f"the mounted assets now hash to {expected}")
+        print(f"  the world moved and the map did not. Run: python3 tools/gen_mapshapes.py")
+        return 1
+    return 0
+
+
 def check_config(files, code):
     """Dangling `Config.X.Y` -- a nil index at runtime, invisible to the build."""
     cfg = code[SRC / "shared" / "Config.luau"]
@@ -276,6 +329,28 @@ def check_config(files, code):
                 continue
             print(f"  {f.relative_to(ROOT)}:{line_of(code[f], m.start())}  Config.{'.'.join(parts)}")
             bad += 1
+
+        # The same question asked through an alias. Almost every file in this tree opens
+        # with `local MAP = Config.Map`, and the scan above cannot see a single one of
+        # those uses -- it is looking for the literal word `Config`. `MAP.SheetAssumedPixels`
+        # was written, read on the map's boot path, and never added to Config; every check
+        # in this file passed and the sheet would have culled every rectangle in the town,
+        # because a nil size compares false against everything.
+        #
+        # Only module-scope `local X = Config.A.B` is followed, and only the field directly
+        # off the alias is judged. Deeper paths and rebound aliases are left alone: this is
+        # a check that has to be trusted more than it has to be thorough.
+        for alias in re.finditer(r"^local (\w+) = Config((?:\.\w+)+)\s*$", code[f], re.M):
+            name, path = alias.group(1), alias.group(2).strip(".")
+            if path not in known:
+                continue
+            for use in re.finditer(rf"\b{name}\.(\w+)", code[f]):
+                field = use.group(1)
+                if f"{path}.{field}" in known or field in inner:
+                    continue
+                print(f"  {f.relative_to(ROOT)}:{line_of(code[f], use.start())}  "
+                      f"{name}.{field}  (= Config.{path}.{field})")
+                bad += 1
     return bad
 
 
@@ -686,6 +761,8 @@ INDEXED_GLOBALS = {
     "Axes", "PhysicalProperties", "NumberSequenceKeypoint", "ColorSequenceKeypoint",
     "RaycastParams", "OverlapParams", "Font", "DateTime", "PathWaypoint", "SharedTable",
     "Content", "Path2D", "Secret", "CatalogSearchParams", "FloatCurveKey",
+    # Implicit method parameter in `function Class:Method()` syntax
+    "self",
 }
 
 
@@ -1141,6 +1218,7 @@ CHECKS = [
     ("syntax (luau-compile)", check_compile),
     ("both places build (rojo)", check_builds),
     ("every asset is mounted", check_mounts),
+    ("the map matches the world", check_mapshapes),
     ("dangling Config refs", check_config),
     ("Enum members that do not exist", check_enums),
     ("LifeData fields missing from Lives.New", check_life_fields),
