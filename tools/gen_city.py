@@ -4177,25 +4177,42 @@ CIRCUS_SPREAD = 22.0
 # supposed to be beating. From any approach that is not a diagonal the Circle was
 # still the second-tallest thing on the horizon.
 #
-# So both numbers are re-derived from the 18-stud rule this file already
-# established, rather than picked:
+# **The first fix for that was (14, 16, 14), and it ruined the Circle.** Both
+# assertions below passed. Both stated requirements were met. The group still came
+# out worse than it went in, because the height was bought out of the *shape*: the
+# shoulders came up six storeys and the middle only two, which left 231.5 / 263.5 /
+# 231.5 -- a two-storey step across a 68-stud arc. From the ground that is not three
+# towers, it is one slab with a bump on it. The step between shoulder and middle was
+# the thing that made the Circle read as a landmark, and raising the floor without
+# raising the roof spent it.
+#
+# So the height is bought by *translating* the group, not compressing it. CIRCUS_SHAPE
+# below is the original silhouette, and every tower is lifted by the same whole number
+# of storeys -- the smallest that carries the shortest one over the mast. The step
+# survives at exactly what it was, 96 studs, because a translation cannot change it.
 #
 #   top(n)    = FLOOR_1 + CIRCUS_LOBBY_H + (n - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)
 #             = 19.5 + (n - 1) * 16
-#   skyline   = top(n) + CIRCUS_SLAB + 3.0        -- the roof and its parapet, which
-#             = 23.5 + (n - 1) * 16                  are what an eye on the ground sees
+#   skyline   = top(n) + CIRCUS_SLAB + CIRCUS_PARAPET_H   -- the roof and its parapet,
+#             = 23.5 + (n - 1) * 16                          which is what an eye sees
 #
-#   shoulders  must clear the mast at 213.5 by 18  ->  >= 231.5  ->  n = 14
-#   middle     must clear its own shoulders by 18  ->  >= 249.5  ->  n = 16 (263.5)
+#   shoulders  must clear the mast at 213.5 by 18  ->  >= 231.5  ->  8 + 6 = 14
+#   middle     carries the same lift, not its own  ->  14 + 6 = 20  ->  327.5
 #
 # The parapet term is the part that is easy to drop, and dropping it is a four-stud
 # lie in the direction that loses the argument -- it was worth writing out.
 #
-# 13 was rejected for the shoulders for exactly the reason 13 was rejected for the
-# middle: 215.5 is a two-stud win and a two-stud win is a tie.
+# 13 was rejected for the shoulders for the reason 13 was rejected for the middle
+# before it: 215.5 is a two-stud win over the mast, and a two-stud win is a tie.
+#
+# The middle tower is 24 x 18 at the top and now stands 327.5, which is 18:1 -- more
+# slender than anything else in the city and deliberately so. That is real-tower
+# territory (432 Park is 15:1, Steinway 24:1) and slenderness is most of what makes a
+# building read as a landmark rather than as a block. If it ever looks like a mast
+# instead of a tower, the lever is CIRCUS_WIDTH, not the storey count.
 #
 # The skyline now, from the middle outward:
-#   263  the Circle's centre towers (16 storeys)
+#   327  the Circle's centre towers (20 storeys)
 #   231  the Circle's shoulder towers (14 storeys)
 #   213  the financial district's masts
 #   134  step and fade offices one ring out (7-8 storeys)
@@ -4207,11 +4224,13 @@ CIRCUS_SPREAD = 22.0
 # measures 135.5, not 150. It is drawn from the formula above now, so it cannot
 # drift from the generator again.)
 #
-# Safe range for the middle: 15 .. 20. The floor is what keeps 18 studs over the
-# shoulders; the ceiling is where the arc stops reading as three buildings of one
-# family. The shoulders carry the middle's range with them -- raising one without
-# the other is what left eight towers short the first time.
-CIRCUS_STOREYS = (14, 16, 14)
+# Safe range for CIRCUS_LIFT: 6 .. 9. The floor is the assertion below -- at 5 the
+# shoulders lose to the mast. The ceiling is slenderness: at 10 the middle passes
+# 21:1 and starts to read as an aerial. Raise the lift, never the shape, or the step
+# goes again.
+CIRCUS_SHAPE = (8, 14, 8)
+CIRCUS_LIFT = 6
+CIRCUS_STOREYS = tuple(n + CIRCUS_LIFT for n in CIRCUS_SHAPE)
 CIRCUS_LOBBY_H = 18.0
 CIRCUS_STOREY = 15.0
 CIRCUS_SLAB = 1.0
@@ -4940,10 +4959,16 @@ FIN_GLASS = RISE_GLASS
 #
 # CIRCUS_CLEARANCE is the 18 studs the Circle's own comment measured -- the smallest
 # gap that still reads as "that one is taller" from the south end of the connector.
-# It is used twice on purpose: once against the rest of the skyline, and once between
-# the middle tower and its own shoulders, because "each of them is the tallest" and
-# "the middle is still the peak" are two requirements and the second is the one that
-# silently lapses when somebody raises the shoulders.
+#
+# There used to be a second assertion here holding the middle 18 studs over its own
+# shoulders, and it is worth saying why it is gone rather than tightened. It passed
+# on (14, 16, 14) -- a two-storey step that flattened the group into a slab. It was
+# measuring the wrong quantity: 18 studs is the threshold for "is that one taller",
+# which is a question about *ranking*, and nobody was ever going to misrank the middle
+# tower. The question that actually decides whether the Circle looks like anything is
+# how far apart the three are, and a floor of 18 answers it with a number six times too
+# small. A gate that is green while the thing it guards gets worse is not a weak gate,
+# it is the wrong gate, so it is replaced rather than raised.
 CIRCUS_CLEARANCE = 18.0
 def circus_skyline(storeys):
     """The top of a Circle tower's parapet -- what an eye on the ground sees."""
@@ -4953,19 +4978,48 @@ def circus_skyline(storeys):
 
 CIRCUS_SKYLINE = [circus_skyline(n) for n in CIRCUS_STOREYS]
 _rival = max(high_rise_skyline(n) for n in FIN_HEIGHTS)
-assert min(CIRCUS_SKYLINE) >= _rival + CIRCUS_CLEARANCE, (
+_floor = _rival + CIRCUS_CLEARANCE
+
+assert min(CIRCUS_SKYLINE) >= _floor, (
     f"the shortest Circle tower tops out at {min(CIRCUS_SKYLINE):.1f} against the "
     f"financial district's {_rival:.1f}. Every tower on the Circle is supposed to be "
     f"the tallest thing in the city, and clearing it by less than "
     f"{CIRCUS_CLEARANCE:.0f} studs reads as a tie from the ground rather than as a "
-    f"win. Raise the outer pair in CIRCUS_STOREYS.")
-assert max(CIRCUS_SKYLINE) >= max(
-    h for h, n in zip(CIRCUS_SKYLINE, CIRCUS_STOREYS)
-    if n != max(CIRCUS_STOREYS)) + CIRCUS_CLEARANCE, (
-    f"the Circle's tallest tower is {max(CIRCUS_SKYLINE):.1f} and its shoulders are "
-    f"{CIRCUS_SKYLINE}. The middle one stands on the diagonal and is seen down every "
-    f"approach, so it has to clear its own shoulders by {CIRCUS_CLEARANCE:.0f} too or "
-    f"the arc reads as three towers of one height. Raise the middle of CIRCUS_STOREYS.")
+    f"win. Raise CIRCUS_LIFT.")
+
+# The lift is meant to be the smallest that clears the mast, so that the Circle is the
+# tallest thing in the city by design and not by however much headroom somebody felt
+# like adding. Asserting minimality is the negative test that would otherwise have to be
+# run by hand and re-run every time FIN_HEIGHTS moves.
+assert CIRCUS_LIFT == 0 or circus_skyline(min(CIRCUS_SHAPE) + CIRCUS_LIFT - 1) < _floor, (
+    f"CIRCUS_LIFT is {CIRCUS_LIFT} but {CIRCUS_LIFT - 1} already clears "
+    f"{_floor:.1f}. The lift is supposed to be the smallest that wins, so drop it by "
+    f"one -- the Circle should be the tallest thing in the city on purpose, not by "
+    f"accident.")
+
+# The step, not the ranking. This is the requirement the old clearance assertion could
+# not see: the shape is what makes an arc of three towers read as a landmark, and it
+# is preserved by construction because CIRCUS_STOREYS is CIRCUS_SHAPE plus a constant.
+# The assertion is here for the day somebody replaces that derivation with a literal,
+# which is exactly how the step was lost the first time.
+#
+# Compared in storeys, not in studs. The stud version of this assertion failed on the
+# very configuration it was written to bless: `circus_skyline(20) - circus_skyline(14)`
+# and `circus_skyline(14) - circus_skyline(8)` are both 96, but they accumulate the
+# `(n - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)` term over different n and land one bit
+# apart, so `>=` was comparing 95.99999999999997 against 96.0. Storeys are integers and
+# the skyline is linear in them with a positive slope, so this is the same requirement
+# with none of the float in it -- the studs are only in the message.
+_want_step = max(CIRCUS_SHAPE) - min(CIRCUS_SHAPE)
+assert max(CIRCUS_STOREYS) - min(CIRCUS_STOREYS) >= _want_step, (
+    f"the Circle's towers are {CIRCUS_SKYLINE}, a step of "
+    f"{max(CIRCUS_SKYLINE) - min(CIRCUS_SKYLINE):.1f} studs between the middle and its "
+    f"shoulders, against the "
+    f"{circus_skyline(max(CIRCUS_SHAPE)) - circus_skyline(min(CIRCUS_SHAPE)):.1f} the "
+    f"shape {CIRCUS_SHAPE} calls for. "
+    f"Height must be bought by raising CIRCUS_LIFT, which moves all three together -- "
+    f"raising the shoulders alone flattens the arc into one slab with a bump on it, "
+    f"which is what (14, 16, 14) did.")
 
 
 with group("FinancialDistrict"):
