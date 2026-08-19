@@ -96,6 +96,66 @@ the second half of it simply has not landed yet; guessing at it would fight the 
 `PeopleService.luau:1503` (`bondGain` unbound) is in the same live edit and left alone for
 the same reason.
 
+> **Superseded within the hour** — the owner answered with *"fix everything so i can
+> actually load in and play"*, which is the permission this paragraph was waiting for. See
+> the section immediately below; the tree boots, and nothing here is still outstanding.
+
+## 2026-08-18 — finishing someone else's tie, on the owner's instruction
+
+Owner: *"fix everything so i can actually load in and play."* That overrides the lane rule
+in `HANDOVER.md` for this one round, and it is the only reason the four files below carry my
+commit. **`Ties.luau`, `Townsfolk.luau`, `People.luau` and `PeopleService.luau` were being
+edited live while I was in them** — one save landed under me mid-edit — so read this before
+assuming a conflict is a mistake. `Cast.luau`, `assets/Town.rbxmx` and `tools/gen_town.py`
+were dirty throughout and I did not touch or stage any of them.
+
+**The bug was one idea repeated in five places: rank 0 means two different things.** It is
+what `enemy` scores and it is what *no tie at all* scores, and every gate in the feature was
+a rank comparison, so each of them quietly asked the wrong question:
+
+- `gives = "enemy"` with no `needsTie` read as `0 <= 0` and was refused at load as a rung
+  that fails to climb. **This is the error that killed the server** — it throws in a module
+  body, so `init.server.luau` dies and nothing starts.
+- The reachability check called any row needing an enemy reachable the moment that person
+  offered anything, because every rank is `>= 0`. The one check whose job is finding dead
+  content would have certified it.
+- `Ties.Meets(friend, "enemy")` was true, so a repair row written for an enemy would have
+  appeared on a friend's panel.
+- The `ask` guard refused every tie-giving ask. Right for a rung — a coin flip should not
+  gate the scarcest thing in the game — and wrong off the ladder, where *being refused an
+  enemy* is the content rather than a hole in it.
+
+**The fix is a concept, not an exception.** The first repair attempt in the tree was
+`gives == "enemy"` at each site, which only moved the throw to the next guard. `Ties.IsRung`
+now splits the ordered ladder from what is not on it, and `Ties.Meets` is ordering on the
+ladder and **equality** off it. Everything else asks one of those two rather than testing an
+id or a number. The behaviour that falls out is the design: burning the ladder is available
+from `closest`, `mentor`, `rival` or `sibling` — a fall is not a height — held off by bond
+alone, and the only thing it retires is itself. Probed on thirteen tie pairs (ladder
+semantics bit-identical) and six offer contexts:
+
+    bond -20, no tie / friend / closest  ->  become_enemies = YES
+    bond -20, already enemy              ->  no
+    bond -19, friend                     ->  no  (maxBond = -20)
+
+**`bondGain` was read eighteen lines above its own declaration.** A Lua local is not in scope
+above itself, so the read was a nil global and `nil > 0` threw on **every offer the player
+was not refused on** — after the visit had already been spent. Same class as the bank buttons
+in the section above, second one this week. `check.py`'s declaration-order check does not see
+it because the name *is* bound in the file, just later; that gap is worth closing.
+
+**One thing tidied that was not on the boot path.** `buildTieContextTags` skipped
+`rank < 4 and tieId ~= "enemy"`. 4 is not a fact about anything — it is `closest` plus one,
+and it stops being true the day a rung is inserted; the `"enemy"` literal beside it is the
+exception-list pattern this whole change exists to delete. Now a boundary comparison against
+a named constant, `AssertKnown`-checked at load (negative-tested: a mistyped id fails the
+boot gate by name). Verified to make the identical decision on all seven ties.
+
+**Still open, deliberately.** `LifeEvents/Park.luau` has `romantic_picnic` — "Have a picnic
+with your person", "You brought a bottle and two glasses". That is the permanent 13+
+no-partners rule plus an alcohol read, in a file I do not own, and the rewrite is a tone call
+for the owner rather than a mechanical fix.
+
 ## 2026-08-18 — a gate that never ran the code, and a ruler that measured wrong
 
 Owner came back a second time: *"still doesnt work i cant acctually play the game."* The
