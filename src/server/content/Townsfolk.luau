@@ -527,7 +527,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 17,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 3 },
 				ask = true,
 				walksTo = "park",
 				lines = {
@@ -923,7 +922,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 17,
 				minBond = 30,
 				bond = 4,
-				stats = { smarts = 2, happiness = 1 },
 				ask = true,
 				walksTo = "library",
 				lines = {
@@ -1282,7 +1280,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 35,
 				bond = 4,
-				stats = { happiness = 2, health = -1 },
 				ask = true,
 				walksTo = "bakery",
 				lines = {
@@ -1591,7 +1588,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 40,
 				bond = 4,
-				stats = { health = 1 },
 				ask = true,
 				walksTo = "gym",
 				lines = {
@@ -1737,7 +1733,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 30,
 				bond = 4,
-				stats = { happiness = 1 },
 				ask = true,
 				walksTo = "garage",
 				lines = {
@@ -2205,7 +2200,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 35,
 				bond = 4,
-				stats = { happiness = 2, health = 1 },
 				ask = true,
 				walksTo = "clinic",
 				lines = {
@@ -2322,7 +2316,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "restaurant",
 				lines = {
@@ -2347,7 +2340,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 20,
 				bond = 3,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "cafe",
 				lines = {
@@ -2525,7 +2517,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 20,
 				bond = 4,
-				stats = { happiness = 2, health = 1 },
 				ask = true,
 				walksTo = "basketball_court",
 				lines = {
@@ -2550,7 +2541,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 15,
 				bond = 3,
-				stats = { happiness = 3 },
 				ask = true,
 				walksTo = "playground",
 				lines = {
@@ -2772,7 +2762,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 20,
 				bond = 3,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "cafe",
 				lines = {
@@ -2797,7 +2786,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "restaurant",
 				lines = {
@@ -3018,7 +3006,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 20,
 				bond = 3,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "park",
 				lines = {
@@ -3043,7 +3030,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 2, health = 1 },
 				ask = true,
 				walksTo = "soccer_field",
 				lines = {
@@ -3281,7 +3267,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "suburb_1",
 				lines = {
@@ -3430,7 +3415,6 @@ local ARCHETYPES: { Archetype } = {
 				maxAge = 999,
 				minBond = 25,
 				bond = 4,
-				stats = { happiness = 2 },
 				ask = true,
 				walksTo = "suburb_1",
 				lines = {

@@ -38,6 +38,7 @@ SRC = ROOT / "src"
 EXE = ".exe" if sys.platform == "win32" else ""
 LUAU_COMPILE = Path.home() / f".aftman/tool-storage/luau/luau-compile{EXE}"
 LUAU_ANALYZE = Path.home() / f".aftman/tool-storage/luau/luau-analyze{EXE}"
+LUAU = Path.home() / f".aftman/tool-storage/luau/luau{EXE}"
 ROJO = Path.home() / f".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo{EXE}"
 BUILD_TMP = Path(tempfile.gettempdir())
 
@@ -693,6 +694,107 @@ def check_unknown_globals(files, code):
     return bad
 
 
+def _lua_string(s: str) -> str:
+    """A Luau double-quoted literal for arbitrary source text."""
+    out = s.replace("\\", "\\\\").replace('"', '\\"')
+    out = out.replace("\n", "\\n").replace("\r", "\\r").replace("\0", "\\0")
+    return '"' + out + '"'
+
+
+def check_boot(files, code):
+    """Does the server actually start? The only check here that runs the code.
+
+    Everything else in this file reads the source. That is exactly how the game came to be
+    unplayable for four days behind `Config.SubjectPerks = { [undefined] = nil }` -- legal
+    syntax, a name nothing binds, and a `table index is nil` raised only when the module
+    body *executes*. Config is required by every service in both places, so nothing loaded,
+    and Roblox spawns a character regardless, so it presented as "I spawn normal size and
+    cannot play" rather than as anything naming Config. Three static checks read that line
+    and passed it. A fourth would have too.
+
+    `tools/bootcheck.luau` rebuilds enough of a DataModel for `require` to resolve the way
+    Rojo maps this repo, stubs the Roblox API, then requires `init.server.luau` -- which
+    pulls in every service and drives the whole Init()/Start() lifecycle. Anything that
+    throws while a module body runs is reported with the require chain that reached it.
+
+    Scope, honestly: module bodies and the lifecycle calls, nothing else. No player, no
+    character, no remote, no heartbeat. A bug that needs one of those is out of reach here
+    and always will be. What this covers is "the server never started", which is the
+    failure that looks like every other failure.
+    """
+    if not LUAU.exists():
+        print(f"  FAILED: {LUAU} missing -- this check did not run.")
+        print("    Install luau from the luau-lang/luau releases page to that path.")
+        return 1
+    harness = ROOT / "tools" / "bootcheck.luau"
+    if not harness.exists():
+        print(f"  FAILED: {harness} missing -- this check did not run.")
+        return 1
+
+    # Only the two trees the game place mounts. The lobby is a separate DataModel with its
+    # own bootstrap and would need its own wiring; it is not silently folded in here,
+    # because a harness that half-loads a place reports absences as failures.
+    roots = [ROOT / "src" / "server", ROOT / "src" / "shared", ROOT / "vendor"]
+    paths = sorted(
+        p.relative_to(ROOT).as_posix()
+        for r in roots
+        if r.exists()
+        for p in r.rglob("*.luau")
+    )
+
+    lines = ["local AGES_SOURCES = {}", "local AGES_MANIFEST = {}"]
+    for rel in paths:
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        lines.append(f"AGES_SOURCES[{_lua_string(rel)}] = {_lua_string(src)}")
+        lines.append(f"table.insert(AGES_MANIFEST, {_lua_string(rel)})")
+    prelude = "\n".join(lines) + "\n"
+
+    bundle = BUILD_TMP / "ages-bootcheck.luau"
+    bundle.write_text(prelude + harness.read_text(encoding="utf-8"), encoding="utf-8")
+
+    # A wall-clock cap, because a module body that loops forever hangs the whole gate and
+    # a gate that hangs gets removed from the hook rather than fixed. The harness has its
+    # own `task.wait` budget for the common case; this is the backstop for the rest.
+    try:
+        r = subprocess.run(
+            [str(LUAU), str(bundle)], capture_output=True, text=True, timeout=120
+        )
+        out = r.stdout + r.stderr
+    except subprocess.TimeoutExpired as e:
+        out = (e.stdout or "") + (e.stderr or "")
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", "replace")
+        entered = [l for l in out.splitlines() if l.startswith("BOOTCHECK-ENTER")]
+        where = entered[-1].split("\t")[1] if entered else "(before the first module)"
+        print(f"  FAILED: the boot hung. Last module entered: {where}")
+        return 1
+
+    if "BOOTCHECK-END" not in out:
+        entered = [l for l in out.splitlines() if l.startswith("BOOTCHECK-ENTER")]
+        where = entered[-1].split("\t")[1] if entered else "(before the first module)"
+        print(f"  FAILED: the harness died while loading {where} -- this check did not run.")
+        for line in out.strip().splitlines()[-12:]:
+            if not line.startswith("BOOTCHECK-ENTER"):
+                print(f"    {line}")
+        return 1
+
+    bad = 0
+    for line in out.splitlines():
+        if not line.startswith("BOOTCHECK-FAIL\t"):
+            continue
+        _, rel, err, chain = line.split("\t", 3)
+        print(f"  {rel}  {err}")
+        print(f"    reached by: {chain}")
+        bad += 1
+    if bad == 0:
+        loaded = next(
+            (l.split("\t")[1] for l in out.splitlines() if l.startswith("BOOTCHECK-LOADED")),
+            "?",
+        )
+        print(f"  clean -- {loaded} modules loaded and the lifecycle ran")
+    return bad
+
+
 CHECKS = [
     ("syntax (luau-compile)", check_compile),
     ("both places build (rojo)", check_builds),
@@ -705,6 +807,7 @@ CHECKS = [
     ("calls to undefined names", check_undefined_calls),
     ("modules used but never required", check_undefined_modules),
     ("names read but never bound (scoped)", check_unknown_globals),
+    ("the server actually boots", check_boot),
 ]
 
 

@@ -32,11 +32,77 @@ local ID_PATTERN = "^[a-z][a-z0-9_]*$"
 
 -- How far apart two gang colors have to be before they count as different colors.
 --
--- Compared as plain RGB distance, which is not how eyes work -- but the failure this
--- guards against is somebody adding a fifth gang in a shade of an existing one, and for
--- that a crude measure is enough. Tuned so the four below pass with room and so any pair
--- a player would have to squint at does not.
-local MIN_COLOR_DISTANCE = 180
+-- This was plain RGB distance with a floor of 180, and the comment above it said it had
+-- been "tuned so the four below pass with room". They did not pass. Two pairs were under
+-- the floor, this file threw at require time, and because `init.server.luau` requires it
+-- on the boot path with no pcall around it, the symptom was not a color warning -- it was
+-- a game that loaded with no services in it at all.
+--
+-- The reflex fix is to move a color until the number goes green. That would have been
+-- wrong, because the number was measuring the wrong thing. Raw RGB distance does not
+-- order these four the way an eye does, and the proof is in the pairs it was ranking:
+--
+--   east/south   RGB 155.9 -- REJECTED -- but 96.2 apart perceptually
+--   north/west   RGB 208.0 -- accepted -- and only 95.0 apart perceptually
+--
+-- It rejected a pair that is *further* apart to look at than a pair it let through. A
+-- threshold laid over a metric that misorders its own inputs cannot mean what it claims,
+-- so no value of it would have been correct and moving a color to satisfy it would have
+-- been moving a color to satisfy a broken ruler.
+--
+-- So the ruler is replaced, not the colors. CIE76 in L*a*b* below, which is a real
+-- perceptual space, and the floor is measured off both ends rather than picked:
+--
+--   * The failure being guarded against is a fifth gang added in a shade of an existing
+--     one. Shading each of the four (15% darker, 12% lighter, 11 degrees of hue, 12% less
+--     saturated) tops out at 23.1. A floor has to sit above that or it catches nothing.
+--   * The four real colors' closest pair is 87.8. A floor has to sit below that or it
+--     rejects a palette that is already fine.
+--
+-- 50 is between them with room on both sides: 2.2x the worst near-shade, and 1.8x below
+-- the tightest real pair. For scale, 2.3 in this space is "just noticeable".
+--
+-- Note that shared/world/Pigments deliberately keeps raw RGB for its own color guard, and
+-- that is not an inconsistency to tidy up. There the distance feeds a *score* the player
+-- is paid on, so it has to be near in the plainest sense of near. Here nobody is scored;
+-- the only question is whether two bandanas read as two gangs across a street.
+local MIN_COLOR_DIFFERENCE = 50
+
+-- sRGB -> CIE L*a*b*, D65. Color3 channels are already 0-1, so there is no /255 here.
+local function toLab(color: Color3): (number, number, number)
+	local function linear(channel: number): number
+		if channel <= 0.04045 then
+			return channel / 12.92
+		end
+		return ((channel + 0.055) / 1.055) ^ 2.4
+	end
+
+	local r, g, b = linear(color.R), linear(color.G), linear(color.B)
+
+	-- Divided through by the D65 white point, which is what makes the result relative to
+	-- "white under daylight" rather than to an absolute the numbers below would not match.
+	local x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047
+	local y = (0.2126 * r + 0.7152 * g + 0.0722 * b)
+	local z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883
+
+	-- The cube root is what bends the linear numbers into even perceptual steps. The
+	-- straight-line piece below the knee keeps it from going vertical near black.
+	local function bend(t: number): number
+		if t > 0.008856 then
+			return t ^ (1 / 3)
+		end
+		return 7.787 * t + 16 / 116
+	end
+
+	x, y, z = bend(x), bend(y), bend(z)
+	return 116 * y - 16, 500 * (x - y), 200 * (y - z)
+end
+
+local function colorDifference(a: Color3, b: Color3): number
+	local aL, aA, aB = toLab(a)
+	local bL, bA, bB = toLab(b)
+	return math.sqrt((aL - bL) ^ 2 + (aA - bA) ^ 2 + (aB - bB) ^ 2)
+end
 
 local SOURCE: { GangDef } = {
 	{
@@ -54,9 +120,12 @@ local SOURCE: { GangDef } = {
 	{
 		id = "east",
 		name = "Kestrel",
-		-- Orange. The warmest of the four and the one furthest from the game's gold accent
-		-- while still being warm, so a Kestrel band is never mistaken at range for a choice
-		-- marker hanging over somebody's head.
+		-- Orange. The warmest of the four, and about as far from the game's gold accent as a
+		-- warm color can get: measured against Config.Guide.Color, this sits 42.5 away and
+		-- the best any warm color manages is 46.6. Warmth is boxed in on both sides -- the
+		-- gold marker sits at hue 41 and the heat meter's red at hue 2 -- so this is close
+		-- to the ceiling rather than a free choice, and it is why a Kestrel band is told
+		-- from a choice marker by being fabric on a body rather than by hue alone.
 		color = Color3.fromRGB(255, 138, 40),
 		side = "east",
 		bossPlaceId = "gas_station",
@@ -140,21 +209,21 @@ for _, def in SOURCE do
 	byId[def.id] = def
 end
 
--- Every pair, checked against every other pair. Sixteen comparisons for four gangs, once,
--- at require time -- and the alternative is discovering in a playtest that two gangs are
+-- Every pair, checked against every other pair. Six comparisons for four gangs, once, at
+-- require time -- and the alternative is discovering in a playtest that two gangs are
 -- indistinguishable from across a street, which is the one thing the colors exist to
 -- prevent.
 for i = 1, #SOURCE do
 	for j = i + 1, #SOURCE do
-		local a, b = SOURCE[i].color, SOURCE[j].color
-		local distance = math.sqrt(
-			((a.R - b.R) * 255) ^ 2 + ((a.G - b.G) * 255) ^ 2 + ((a.B - b.B) * 255) ^ 2
-		)
-		if distance < MIN_COLOR_DISTANCE then
+		local difference = colorDifference(SOURCE[i].color, SOURCE[j].color)
+		if difference < MIN_COLOR_DIFFERENCE then
 			error(
 				`[AGES content] gangs "{SOURCE[i].id}" and "{SOURCE[j].id}" wear colors only `
-					.. `{math.floor(distance)} apart; at least {MIN_COLOR_DISTANCE} is needed to tell two bands `
-					.. `apart across a street`
+					.. `{string.format("%.1f", difference)} apart perceptually; at least {MIN_COLOR_DIFFERENCE} `
+					.. `is needed to tell two bands apart across a street. Move one of the two colors in `
+					.. `server/content/Gangs rather than lowering the floor -- the floor is set from measurement `
+					.. `(a near-shade of an existing gang scores about 23, the four real colors' closest pair `
+					.. `scores 88) and lowering it is how a fifth gang ends up wearing a fourth gang's color.`
 			)
 		end
 	end

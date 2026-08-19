@@ -1,6 +1,132 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-18 (actually last) — the gate was still not looking, and one of mine was fatal
+## 2026-08-18 (latest) — a gate that never ran the code, and a ruler that measured wrong
+
+Owner came back a second time: *"still doesnt work i cant acctually play the game."* The
+entry below fixed four real nil-index bugs and was still not enough, because every check in
+`tools/check.py` was a **static** one and the remaining defects were all thrown by module
+bodies at require time. A regex cannot see an `error()` that only fires once the numbers in
+a content file are actually compared.
+
+**So `tools/bootcheck.luau` now exists, and `check.py` gained check 13 to drive it.** It
+executes the real boot path — `init.server.luau`, every `require` under it, every module
+body, then `Init()` and `Start()` — against a stubbed Roblox. It found four fatal errors on
+the first run that nothing static could have. Scope boundary, so nobody trusts it too far:
+**module bodies and lifecycle only.** No player, no character, no remote traffic, no
+heartbeat. A bug that needs a player in the world is still invisible to it.
+
+Three harness bugs worth knowing, because each one looked like a game bug:
+
+- **It hung with no output on 39 of 112 modules.** `Stub.__call` returned a fresh stub, so
+  `for _, x in someStub do` never saw nil and looped forever. Fixed with `Stub.__iter`
+  returning an empty iterator. Also added a `task.wait` budget and a per-module timeout that
+  names the last module entered, because luau buffers `print` when redirected and the
+  failure presented as total silence.
+- **It cried wolf four times** — `Pigments:108`, `Gangs:150`, `Props:517`, `Studies:262` —
+  all on *correct* code, because `Color3`/`Vector3` were stubs and the arithmetic on them
+  was meaningless. Fixed with real `Vec`/`Col` value types. All four false alarms vanished
+  and one genuine error surfaced underneath.
+
+### The interesting one: `Gangs.luau` — do not move the colour, fix the ruler
+
+The harness threw at `Gangs.luau:154`: east/south 155.9 and east/west 134.1, both under
+`MIN_COLOR_DISTANCE = 180`. The reflex fix is to move east's orange until the number goes
+green, and **that would have been wrong.** The metric was raw RGB distance, and it does not
+order these colours the way an eye does:
+
+    east/south   RGB 155.9 -- REJECTED -- but 96.2 apart perceptually
+    north/west   RGB 208.0 -- accepted -- and only 95.0 apart perceptually
+
+It was rejecting a pair that is *further apart to look at* than a pair it let through. A
+threshold laid over a metric that misorders its own inputs cannot mean what its comment
+claims, so no value of it was correct and moving a colour would have been appeasing a broken
+ruler. **The four colours were fine all along.**
+
+Replaced it with CIE76 in L\*a\*b\*, floor measured off both ends rather than picked:
+near-shades of the existing four (15% darker, 12% lighter, 11° hue, 12% desaturated) top out
+at **23.1**; the four real colours' closest pair is **87.8**. The floor is **50** — 2.2×
+above the worst near-shade, 1.8× below the tightest real pair. Negative-tested: setting west
+to a shade of north's cyan makes it throw at **13.1**, which is exactly what the same
+calculation gives in Python, so the Luau conversion is confirmed numerically and not just
+"it errored".
+
+`shared/world/Pigments` keeps raw RGB for its own colour guard and **that is not an
+inconsistency to tidy up** — there the distance feeds a score the player is paid on, so it
+has to be near in the plainest sense of near. Here nobody is scored.
+
+Also corrected east's comment, which claimed it was "furthest from the game's gold accent".
+It is the *closest* of the four (Lab 42.5). It is defensible only read as "furthest among
+warm colours", which measurement supports — the ceiling for any warm colour is 46.6, because
+gold sits at hue 41 and the heat meter's red at hue 2 and they box warmth in from both
+sides. The comment now carries the numbers instead of the claim.
+
+### The other two I could fix
+
+- **`LifeEvents/init.luau:561` passed a bare string to `Flags.AssertKnown`,** which takes a
+  list — the line below it calls `Ties.AssertKnown`, which takes a single id, and the two
+  were written the same way. It got past `--!strict` and past the empty-list guard inside,
+  because `#` on a string is its length, not zero. Died on the `for ... in`. Now `{ id }`.
+- Fixing that let LifeEvents run further and **immediately reveal a second bug it had been
+  masking**: `park_picnic` put a price on all three of its answers, which the liveness guard
+  refuses because a player who cannot afford the cheapest could never clear the prompt.
+  `solo_picnic` is now free — it is the one where you bring your own sandwich, so charging
+  for it was never coherent. **Errors on the boot path mask each other; fixing one is not
+  finishing.**
+
+### B's files — I crossed the lane, on the owner's instruction. B please read
+
+I stopped at the ownership line first and wrote these up as hand-back items. The owner then
+came back a third time — *"im still unable to acctually play the game"* — so **these were
+fixed rather than reported.** B, these are yours and I edited them; none had uncommitted
+work in the tree at the time, so nothing of yours was clobbered, but you should review:
+
+1. **`Config.Town.Count` 34 → 46.** `#PATTERN` in `Townsfolk.luau` grew 17→23 and Count was
+   never moved with it; Config's comment still said "(17, so 34 is two of them)" and is now
+   corrected. Simulated before changing: 34 gives `coworker` 1 man / 3 women, which matches
+   the thrown error exactly, so the model is validated. **46 is the only value in the
+   documented safe range 8–60 that works** — 23 is a whole pass and still fails, because an
+   archetype appearing twice inside one pattern lands on the same parity both times.
+2. **`JobTasks.luau`: `freelance_writer/submit` and `remote_coder/deploy`** both had a
+   `handMark` with `spots = 1` — a far mark and nowhere to put it. Both raised to 2 rather
+   than dropping the handMark, because the second wording is authored content and the two
+   ends say different things. Swept the file: those were the only two.
+3. **`Townsfolk.luau`: 16 walk offers paid out and should not have.** `Types.luau` states
+   the contract on `walksTo` — *"The walk is the content, so a companion offer carries no
+   stats or money"* — and 16 `walk_*` offers carried a `stats` line anyway. All 16 removed;
+   `bond` left alone, since the guard concerns payouts and bond is the relationship. Swept
+   by script rather than by eye, and the one apparent 17th hit was `stats = template.stats`
+   in the validation code, not content — worth knowing if anyone re-runs that sweep.
+
+### The pattern that mattered more than any single fix
+
+**Every one of these was masking the next.** Fixing the `Flags` iterate revealed
+`park_picnic`. Fixing `Count` revealed the walk offers. Fixing `submit` revealed `deploy`.
+Six rounds of "fix one, re-run, find the next" — because `init.server.luau` requires
+everything at the top with no pcall, so the *first* throw is the only one you ever see. If
+you fix one of these and the game still does not boot, that is expected, not a failed fix.
+Re-run the gate.
+
+### And one more harness false alarm, caught the same way as the others
+
+After the content was clean the harness reported `Townsfolk:3867`, *"invalid argument #1 to
+'round' (number expected, got table)"*. **That was mine, not B's.** `Random` was still a
+stub, so `rng:NextNumber()` returned a table into `math.round`. Now a real seeded
+Park-Miller generator in `bootcheck.luau`. This is the third time a stub has produced a
+convincing-looking content error: **if the harness accuses a content file of a type error on
+a value that came out of a Roblox constructor, suspect the harness first.**
+
+The boot check now reports `clean -- 111 modules loaded and the lifecycle ran`, and both
+places build.
+
+### One content-rule violation, flagged not fixed
+
+`LifeEvents/Park.luau` choice `romantic_picnic` — *"Have a picnic with your person"*, outcome
+*"You brought a bottle and two glasses"*. That is a romantic partner, which the project bans
+permanently rather than defers, plus an alcohol implication at 13+. It is isolated (the only
+hit in all of LifeEvents; the `Work.luau` "date" matches are deadlines). Left alone because
+replacing it is a tone decision, not a mechanical fix.
+
+## 2026-08-18 — the gate was still not looking, and one of mine was fatal
 
 The entry below fixed three missing requires and called the place loadable. **It was not.**
 Owner came straight back: *"i still spawn regular size and cant play the game."* Four more

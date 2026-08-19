@@ -2916,14 +2916,21 @@ Config.Town = {
 	-- so this is only "how big is the town". Enough that you cannot know everybody in one
 	-- life, which is the point.
 	--
-	-- **Prefer a whole multiple of #PATTERN in Townsfolk.luau** (17, so 34 is two of them).
+	-- **Prefer a whole multiple of #PATTERN in Townsfolk.luau** (23, so 46 is two of them).
+	-- This used to read "(17, so 34 is two of them)" and both numbers had gone stale:
+	-- PATTERN grew to 23 entries and Count was never moved with it, so 34 was one full
+	-- pass plus a partial one, `coworker` came out 1 man to 3 women, and Townsfolk threw
+	-- at require time on the boot path -- which took the whole server down rather than
+	-- producing a lopsided town. 46 is the only value in the safe range below that works:
+	-- 23 is a whole pass but still fails, because an archetype that appears more than once
+	-- inside one pattern lands on the same parity each time.
 	-- Genders alternate by index and archetypes repeat every #PATTERN, so a whole number of
 	-- passes gives every archetype an exact half-and-half split; a partial pass leaves the
 	-- last few slots one-sided. Townsfolk checks this at load and errors if any archetype
 	-- ends up more than one out, so a number that breaks it will say so rather than quietly
 	-- producing a town where every peer is a man.
 	-- Safe range: 8-60. Above ~60 the rings around the four places start refusing spots.
-	Count = 34,
+	Count = 46,
 
 	-- Where townsfolk stand, relative to the place point they live at.
 	--

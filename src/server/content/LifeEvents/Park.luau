@@ -336,8 +336,14 @@ local Park: { LifeEvent } = {
 			{
 				id = "solo_picnic",
 				label = "Bring a sandwich and sit alone",
-				outcome = "You ate your sandwich on the bench and watched the world. It was the most peaceful hour you had all month.",
-				cost = 10,
+				-- No cost, deliberately. Every answer here used to carry a price, which
+				-- made the whole event unanswerable to a player who could not afford the
+				-- cheapest one -- the prompt would sit open with no way to clear it, and
+				-- the require-time guard in LifeEvents/init refuses that as a liveness
+				-- bug rather than a balance one. This is the right choice to make free:
+				-- it is the one where you bring your own sandwich, so charging for it was
+				-- never coherent, and "sit alone with what you already had" is exactly the
+				-- walk-away answer the guard is insisting every event keeps open.
 				effects = { happiness = 3, smarts = 1 },
 			},
 		},

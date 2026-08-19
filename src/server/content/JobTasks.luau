@@ -2353,7 +2353,14 @@ local SOURCE: { [string]: { JobTask } } = {
 			label = "Submit the finished piece",
 			mark = "Send it",
 			handMark = "File it",
-			spots = 1,
+			-- Two, not one. A `handMark` is the wording for the *far* mark, so a task
+			-- carrying one is by definition a task with two places to stand -- and with
+			-- `spots = 1` there was nowhere to put "File it". That is a require-time error
+			-- on the boot path, so it did not degrade this one job, it stopped the server.
+			-- Raised the spots rather than dropping the handMark because the second wording
+			-- is authored content and the two ends say different things; `rush` below pairs
+			-- a handMark with 2 the same way.
+			spots = 2,
 			seconds = 10,
 		},
 		{
@@ -2477,7 +2484,10 @@ local SOURCE: { [string]: { JobTask } } = {
 			label = "Deploy to staging",
 			mark = "Ship it",
 			handMark = "Mark it down",
-			spots = 1,
+			-- Same defect as "freelance_writer/submit" above, and the only other one in the
+			-- file: a far mark with nowhere to put it. "Ship it" and "Mark it down" are two
+			-- ends of one task, so the second spot is the point of writing them.
+			spots = 2,
 			seconds = 12,
 		},
 		{

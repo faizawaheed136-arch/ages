@@ -558,7 +558,14 @@ local function validate(event: LifeEvent)
 				)
 			end
 		elseif prefix == "flag" then
-			Flags.AssertKnown(id, `event "{event.id}" writesBack flag`)
+			-- Wrapped in a table because these two lines take different shapes and always
+			-- have: `Ties.AssertKnown` below checks one id, `Flags.AssertKnown` checks a
+			-- list. Passing the bare string got past `--!strict` (the parameter is an
+			-- optional table and `id` came out of `string.sub` as an `any`-shaped local)
+			-- and past the empty-list guard inside it, because `#` on a string is its
+			-- length, not zero. It died on the `for ... in`, at require time, on the boot
+			-- path -- so one mistyped argument here took the whole server down with it.
+			Flags.AssertKnown({ id }, `event "{event.id}" writesBack flag`)
 		elseif prefix == "tie" then
 			Ties.AssertKnown(id, `event "{event.id}" writesBack tie`)
 		elseif prefix == "ribbon" then
