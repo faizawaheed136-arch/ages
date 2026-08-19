@@ -298,6 +298,23 @@ end)
 local RequestDepositRemote = Remotes.Get("RequestDeposit")
 local RequestWithdrawRemote = Remotes.Get("RequestWithdraw")
 
+-- Declared here rather than beside the pushes that fill them, six hundred lines down, and
+-- that is the whole fix: these three buttons read them, and a Lua closure captures the
+-- *local in scope at the point the closure is written*. There was no local in scope here,
+-- so all three read a global that nothing ever assigns, every one of them saw nil, and every
+-- deposit and withdraw in the game was a button that lit up, clicked, and did nothing.
+--
+-- Nothing said so. `--!strict` is happy -- an unbound name is a legal read of a nil global --
+-- the remotes exist, the server handlers exist and work, and the UI gives no feedback for a
+-- press that fires nothing. `tools/check.py`'s "names read but never bound" pass is the only
+-- thing in the tree that could see it.
+--
+-- Both are the *last pushed* value, not a request: money and savings are pushed whole on
+-- every change, so whatever arrived last is the balance and there is nothing to reconcile.
+-- The server re-checks the amount anyway, so a stale number is refused rather than acted on.
+local moneyPrevious: number? = nil
+local savingsBalance: number? = nil
+
 savings:OnDepositAll(function()
 	if moneyPrevious ~= nil and moneyPrevious > 0 then
 		RequestDepositRemote:FireServer(moneyPrevious)
@@ -311,10 +328,8 @@ savings:OnDepositHalf(function()
 end)
 
 savings:OnWithdrawAll(function()
-	-- Read the current savings balance from the last known state.
-	local currentSavings = savingsBalance
-	if currentSavings ~= nil and currentSavings > 0 then
-		RequestWithdrawRemote:FireServer(currentSavings)
+	if savingsBalance ~= nil and savingsBalance > 0 then
+		RequestWithdrawRemote:FireServer(savingsBalance)
 	end
 end)
 
@@ -625,8 +640,9 @@ end)
 
 -- One number, pushed on join and on every movement. There is no request for it and
 -- nothing to reconcile: whatever arrived last is the balance. The client also
--- tracks the previous balance so it can show a directional pop for every change.
-local moneyPrevious: number? = nil
+-- tracks the previous balance so it can show a directional pop for every change --
+-- and the savings panel's deposit buttons spend it, which is why `moneyPrevious` is
+-- declared up beside them rather than here.
 Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number, reason: string?)
 	local previous = moneyPrevious
 	moneyPrevious = balance
@@ -868,9 +884,13 @@ Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
 	ui:SetBill(state)
 end)
 
-local savingsBalance: number? = nil
+-- `savingsBalance` is declared beside the withdraw button that spends it. Read off the
+-- pushed snapshot rather than accumulated, so a dropped push is corrected by the next one.
 Remotes.Get("SavingsUpdated").OnClientEvent:Connect(function(state: Types.SavingsState?)
-	savingsBalance = state.balance
+	-- The parameter is optional and was indexed unconditionally. Nothing sends nil today,
+	-- so this never fired -- but a nil push is the one that clears the panel, and it would
+	-- have thrown here and left the *old* balance on screen and in the withdraw button.
+	savingsBalance = if state ~= nil then state.balance else nil
 	ui:SetSavings(state)
 	savings:Set(state)
 end)
