@@ -48,6 +48,13 @@ end
 
 -- Credit one month of compound interest on the savings balance.
 -- Called from LifeService.OnAgeUp so it runs once per birthday.
+--
+-- Interest lands in the balance and nowhere else. It used to also be handed to
+-- MoneyService.Add in the same breath, which paid it twice -- savings and pocket are
+-- two different fields, so crediting both created the interest a second time and made
+-- the effective rate double the one Config names, with half of it liquid. Compounding
+-- means the interest stays where it can earn interest; a copy in the wallet is not
+-- compounding, it is minting.
 function SavingsService.CreditInterest(player: Player)
 	local life = lifeDataFor(player)
 	if life == nil then
@@ -59,13 +66,21 @@ function SavingsService.CreditInterest(player: Player)
 		return
 	end
 
+	-- Nothing left to earn. Without this the cap was the one bound in the economy that
+	-- only applied to the door it was written on: Deposit enforced MaxBalance and this
+	-- did not, so a balance that arrived under the cap compounded straight past it and
+	-- kept going. Debt is capped at Bills.MaxDebt in the same situation, so leaving this
+	-- open ran the only uncapped compounding number in the game in the player's favour.
+	if balance >= SAVINGS.MaxBalance then
+		return
+	end
+
 	local interest = math.floor(balance * SAVINGS.InterestRate)
 	if interest <= 0 then
 		return
 	end
 
-	life.savings.balance += interest
-	MoneyService.Add(player, interest, "savings interest")
+	life.savings.balance = math.min(balance + interest, SAVINGS.MaxBalance)
 	pushSavingsState(player, life)
 end
 
