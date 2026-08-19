@@ -1159,18 +1159,26 @@ local function validateOffer(person: Person, offer: PersonOffer, seen: { [string
 	-- on a rank comparison in another file -- so it is far better refused here than
 	-- found by wondering why a panel row never appears.
 	local gives = offer.gives
-	if gives ~= nil and Ties.RankOf(gives) <= Ties.RankOf(offer.needsTie) then
+	-- "Does the tie this row already requires get you what the row hands out?" -- and if so
+	-- the row can never appear. Asked through `Ties.Meets` rather than as a rank comparison,
+	-- because rank 0 is shared by "off the ladder" and "no tie at all", so an offer giving
+	-- "enemy" from no tie read as 0 <= 0 and was rejected as a rung that fails to climb. See
+	-- `Ties.IsRung` for why naming the id "enemy" here instead was the wrong repair.
+	if gives ~= nil and Ties.Meets(offer.needsTie, gives) then
 		error(
 			`[AGES content] offer "{offer.id}" gives "{gives}" but already needs `
-				.. `"{offer.needsTie}", which is as close or closer -- a rung has to climb`
+				.. `"{offer.needsTie}", which already satisfies it -- the row could never appear`
 		)
 	end
 
-	-- An ask that confers a tie would let a refusal be the thing standing between a
+	-- An ask that confers a *rung* would let a refusal be the thing standing between a
 	-- player and the one relationship rung the game caps. Refused rather than resolved,
 	-- because both resolutions are bad: paying it out on a no makes the refusal cosmetic,
 	-- and withholding it makes a coin flip the gate on the scarcest thing here.
-	if gives ~= nil and offer.ask then
+	--
+	-- None of that is true off the ladder. "Make them your enemy" is done *to* somebody, and
+	-- them refusing it is the content rather than a hole in it.
+	if gives ~= nil and offer.ask and Ties.IsRung(gives) then
 		error(
 			`[AGES content] offer "{offer.id}" gives "{gives}" and is an ask; a rung that can be `
 				.. `refused would make becoming somebody's friend a coin toss`
@@ -1253,7 +1261,11 @@ local function validate(person: Person)
 		end
 		local reachable = false
 		for tieId in ladder do
-			if Ties.RankOf(tieId) >= Ties.RankOf(needed) then
+			-- The same question the runtime gate asks, asked with the same function. As a
+			-- rank comparison it called a row needing an off-ladder tie "reachable" the
+			-- moment this person offered *anything*, because every rank is >= 0 -- so the
+			-- one check that exists to find dead content would have certified it.
+			if Ties.Meets(tieId, needed) then
 				reachable = true
 				break
 			end
@@ -1498,10 +1510,19 @@ function People.OffersFor(person: Person, context: OfferContext): { PersonOffer 
 		end
 		local gives = offer.gives
 		if gives ~= nil then
-			-- A rung already climbed, with this person or with anybody. Hidden rather
-			-- than shown-and-refused, because a row offering to make somebody your friend
-			-- when they already are reads as a bug in the game rather than as a rule.
-			if Ties.RankOf(context.tie) >= Ties.RankOf(gives) or context.tieFull[gives] then
+			-- Something already held, with this person or with anybody. Hidden rather than
+			-- shown-and-refused, because a row offering to make somebody your friend when
+			-- they already are reads as a bug in the game rather than as a rule.
+			--
+			-- `Ties.Meets` is what "already held" means, and it means two different things
+			-- on purpose. On the ladder it is "at this rung or above", so climbing past
+			-- friend retires the friend row. Off the ladder it is "is exactly this", because
+			-- a fall is not a height: burning the ladder stays available from *any* rung --
+			-- closest, mentor, rival, sibling -- and is held off by bond instead
+			-- (minBond = ALWAYS, maxBond = -20), so it only surfaces once the relationship
+			-- has already been destroyed. The one thing it does retire is itself: there is
+			-- no offer to make an enemy of somebody who is already your enemy.
+			if Ties.Meets(context.tie, gives) or context.tieFull[gives] then
 				continue
 			end
 		end

@@ -29,6 +29,12 @@
 -- Phase 5 adds three structural slots that replace romance: mentor, rival, sibling.
 -- Each is capped at one and sits above the friendship ladder. They are parallel tracks --
 -- you can have one of each -- because a life holds multiple kinds of significance.
+--
+-- Phase 6 adds the enemy tie. It sits below the ladder entirely (rank 0) because it is
+-- not a rung you climb to -- it is the relationship that exists when the ladder has been
+-- burned. Capped at one because a life only has room for one person who means this much
+-- in this direction. Nothing anywhere names it: `Ties.IsRung` splits the ladder from what
+-- is not on it, and every gate in the game asks that question rather than the id.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -101,6 +107,22 @@ local SOURCE: { TieDef } = {
 		rank = 6,
 		limit = 1,
 	},
+	-- An enemy. Rank 0 sits below the ladder entirely. It is not a rung you climb to --
+	-- it is the relationship that exists when the ladder has been burned. Capped at one
+	-- because a life only has room for one person who means this much in this direction.
+	--
+	-- Rank 0 is what "no tie at all" already scores, which is the point: for every ladder
+	-- comparison in the game an enemy and a stranger are the same thing, so this tie can
+	-- neither satisfy a `needsTie` nor block a climb. What it is *not* is a rank that can
+	-- be compared -- see `Ties.IsRung`, and note that `Ties.Meets` switches to equality
+	-- rather than ordering here, which is what lets an enemy replace a closest friend
+	-- while a closest friend still cannot be re-offered friendship.
+	{
+		id = "enemy",
+		label = "enemy",
+		rank = 0,
+		limit = 1,
+	},
 }
 
 local byId: { [string]: TieDef } = {}
@@ -116,8 +138,19 @@ for _, def in SOURCE do
 	if def.label == "" then
 		error(`[AGES content] tie "{def.id}" has no label, so it would show as a blank line on a nameplate`)
 	end
-	if def.rank ~= math.floor(def.rank) or def.rank < 1 then
-		error(`[AGES content] tie "{def.id}" has rank {def.rank}; ranks are whole numbers from 1 up`)
+	-- Rank 0 is the off-ladder rank -- see `Ties.IsRung`. Everything else is a rung and
+	-- carries a whole number from 1 up. Written as a range rather than as an exception for
+	-- the id "enemy", because the id was already in this file three times and a second
+	-- off-ladder tie would have had to find and edit every one of them.
+	--
+	-- Nothing here stops a rung being typo'd to 0 and quietly becoming off-ladder, but the
+	-- rank-uniqueness check immediately below does: rank 0 is spoken for, so the second one
+	-- errors by name.
+	if def.rank ~= math.floor(def.rank) or def.rank < 0 then
+		error(
+			`[AGES content] tie "{def.id}" has rank {def.rank}; ranks are whole numbers from 1 up, `
+				.. `or 0 for a tie that sits off the ladder entirely`
+		)
 	end
 	-- Two ties at one rank would make "closer than" ambiguous, and every comparison in
 	-- this file and in People.OffersFor is a rank comparison. It would not error at
@@ -152,11 +185,41 @@ function Ties.RankOf(tieId: string?): number
 	return if def ~= nil then def.rank else 0
 end
 
+-- Whether a tie is a rung on the ladder at all, which is the one question that decides
+-- whether "closer than" is a meaningful thing to ask about it.
+--
+-- **Rungs** are ordered and climbed: known -> friend -> closest, plus the three structural
+-- slots above them. Every comparison the game makes about a rung is "is this one at least
+-- that one".
+--
+-- **Off-ladder ties** are a different axis. "enemy" is the only one today. It is not a
+-- worse friend and it is not a closer one, and asking whether it sits above or below
+-- "friend" is a question with no answer. It carries rank 0 so that it never satisfies and
+-- never blocks a rung comparison -- the same number "no tie at all" carries, because for
+-- ladder purposes those two mean the same thing.
+--
+-- Anything reasoning about climbing must ask this rather than testing the id. That is not
+-- style: the content gates in Townsfolk.luau are written as rank comparisons, and every one
+-- of them silently means the wrong thing when handed a tie that is not on the ladder.
+function Ties.IsRung(tieId: string?): boolean
+	if tieId == nil then
+		return false
+	end
+	local def = byId[tieId]
+	return def ~= nil and def.rank >= 1
+end
+
 -- Whether `held` is that tie or a closer one. What needsTie means, and what stops an
 -- offer written for a friend from disappearing the moment somebody becomes more than one.
 function Ties.Meets(held: string?, needed: string?): boolean
 	if needed == nil then
 		return true
+	end
+	-- Off the ladder, you meet a tie only by being it -- there is nothing closer to enemy
+	-- than enemy. Without this, a repair row gated on needsTie = "enemy" would appear for a
+	-- friend, because RankOf(friend) >= RankOf(enemy) is trivially true at rank 0.
+	if not Ties.IsRung(needed) then
+		return held == needed
 	end
 	return Ties.RankOf(held) >= Ties.RankOf(needed)
 end

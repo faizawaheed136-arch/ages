@@ -2108,6 +2108,37 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- An enemy is not the absence of a relationship. It is the relationship
+				-- that remains when the ladder has been burned: somebody you betrayed,
+				-- destroyed, or crossed so deeply that respect is gone and only the
+				-- memory of what was lost remains. Capped at one because a life only has
+				-- room for one person who means this much in this direction. Gated on
+				-- the deepest negative bond (MinBond = -20) so it only appears when the
+				-- relationship has been actively destroyed, not merely cooled. It gives
+				-- no bond gain -- making an enemy is a choice that costs you the
+				-- relationship entirely, and the bond stays at the floor.
+				id = "become_enemies",
+				label = "Make them your enemy",
+				minAge = 14,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -20,
+				bond = 0,
+				stats = { happiness = -10 },
+				gives = "enemy",
+				ask = true,
+				lines = {
+					"You think this is over? It isn't. I will remember this forever.",
+					"We are done. Not rivals -- enemies. There is no coming back.",
+					"Go. But know that every time our paths cross, I will be there.",
+				},
+				refusedLines = {
+					"You're not worth it. Get out of my sight.",
+					"Fine. Stay. It changes nothing.",
+					"I don't need your permission to hate you.",
+				},
+			},
+			{
 				-- A rival is not the absence of a relationship. It is a relationship that
 				-- turned sharp, and the only way back is through it. This row is gated on
 				-- the rival tie specifically so it does not appear for somebody you have
@@ -2632,6 +2663,37 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- An enemy is not the absence of a relationship. It is the relationship
+				-- that remains when the ladder has been burned: somebody you betrayed,
+				-- destroyed, or crossed so deeply that respect is gone and only the
+				-- memory of what was lost remains. Capped at one because a life only has
+				-- room for one person who means this much in this direction. Gated on
+				-- the deepest negative bond (MinBond = -20) so it only appears when the
+				-- relationship has been actively destroyed, not merely cooled. It gives
+				-- no bond gain -- making an enemy is a choice that costs you the
+				-- relationship entirely, and the bond stays at the floor.
+				id = "become_enemies",
+				label = "Make them your enemy",
+				minAge = 14,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -20,
+				bond = 0,
+				stats = { happiness = -10 },
+				gives = "enemy",
+				ask = true,
+				lines = {
+					"You think this is over? It isn't. I will remember this forever.",
+					"We are done. Not rivals -- enemies. There is no coming back.",
+					"Go. But know that every time our paths cross, I will be there.",
+				},
+				refusedLines = {
+					"You're not worth it. Get out of my sight.",
+					"Fine. Stay. It changes nothing.",
+					"I don't need your permission to hate you.",
+				},
+			},
+			{
 				-- A rival is not the absence of a relationship. It is a relationship that
 				-- turned sharp, and the only way back is through it. This row is gated on
 				-- the rival tie specifically so it does not appear for somebody you have
@@ -2874,6 +2936,37 @@ local ARCHETYPES: { Archetype } = {
 					"Fine. You want it this way? I'm not letting you forget it.",
 					"You think you're better than me? Prove it. Every time.",
 					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- An enemy is not the absence of a relationship. It is the relationship
+				-- that remains when the ladder has been burned: somebody you betrayed,
+				-- destroyed, or crossed so deeply that respect is gone and only the
+				-- memory of what was lost remains. Capped at one because a life only has
+				-- room for one person who means this much in this direction. Gated on
+				-- the deepest negative bond (MinBond = -20) so it only appears when the
+				-- relationship has been actively destroyed, not merely cooled. It gives
+				-- no bond gain -- making an enemy is a choice that costs you the
+				-- relationship entirely, and the bond stays at the floor.
+				id = "become_enemies",
+				label = "Make them your enemy",
+				minAge = 14,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -20,
+				bond = 0,
+				stats = { happiness = -10 },
+				gives = "enemy",
+				ask = true,
+				lines = {
+					"You think this is over? It isn't. I will remember this forever.",
+					"We are done. Not rivals -- enemies. There is no coming back.",
+					"Go. But know that every time our paths cross, I will be there.",
+				},
+				refusedLines = {
+					"You're not worth it. Get out of my sight.",
+					"Fine. Stay. It changes nothing.",
+					"I don't need your permission to hate you.",
 				},
 			},
 			{
@@ -3134,6 +3227,37 @@ local ARCHETYPES: { Archetype } = {
 					"Fine. You want it this way? I'm not letting you forget it.",
 					"You think you're better than me? Prove it. Every time.",
 					"Done. Next time we meet, I'm not going easy on you.",
+				},
+			},
+			{
+				-- An enemy is not the absence of a relationship. It is the relationship
+				-- that remains when the ladder has been burned: somebody you betrayed,
+				-- destroyed, or crossed so deeply that respect is gone and only the
+				-- memory of what was lost remains. Capped at one because a life only has
+				-- room for one person who means this much in this direction. Gated on
+				-- the deepest negative bond (MinBond = -20) so it only appears when the
+				-- relationship has been actively destroyed, not merely cooled. It gives
+				-- no bond gain -- making an enemy is a choice that costs you the
+				-- relationship entirely, and the bond stays at the floor.
+				id = "become_enemies",
+				label = "Make them your enemy",
+				minAge = 14,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -20,
+				bond = 0,
+				stats = { happiness = -10 },
+				gives = "enemy",
+				ask = true,
+				lines = {
+					"You think this is over? It isn't. I will remember this forever.",
+					"We are done. Not rivals -- enemies. There is no coming back.",
+					"Go. But know that every time our paths cross, I will be there.",
+				},
+				refusedLines = {
+					"You're not worth it. Get out of my sight.",
+					"Fine. Stay. It changes nothing.",
+					"I don't need your permission to hate you.",
 				},
 			},
 			{
@@ -3547,6 +3671,37 @@ local ARCHETYPES: { Archetype } = {
 				},
 			},
 			{
+				-- An enemy is not the absence of a relationship. It is the relationship
+				-- that remains when the ladder has been burned: somebody you betrayed,
+				-- destroyed, or crossed so deeply that respect is gone and only the
+				-- memory of what was lost remains. Capped at one because a life only has
+				-- room for one person who means this much in this direction. Gated on
+				-- the deepest negative bond (MinBond = -20) so it only appears when the
+				-- relationship has been actively destroyed, not merely cooled. It gives
+				-- no bond gain -- making an enemy is a choice that costs you the
+				-- relationship entirely, and the bond stays at the floor.
+				id = "become_enemies",
+				label = "Make them your enemy",
+				minAge = 14,
+				maxAge = 999,
+				minBond = ALWAYS,
+				maxBond = -20,
+				bond = 0,
+				stats = { happiness = -10 },
+				gives = "enemy",
+				ask = true,
+				lines = {
+					"You think this is over? It isn't. I will remember this forever.",
+					"We are done. Not rivals -- enemies. There is no coming back.",
+					"Go. But know that every time our paths cross, I will be there.",
+				},
+				refusedLines = {
+					"You're not worth it. Get out of my sight.",
+					"Fine. Stay. It changes nothing.",
+					"I don't need your permission to hate you.",
+				},
+			},
+			{
 				-- A sibling is chosen, not given. Offered at the very top of the ladder
 				-- when the bond is past closest and the player is old enough to mean it.
 				id = "chosen_sibling",
@@ -3776,13 +3931,28 @@ local function validateArchetype(archetype: Archetype)
 		Ties.AssertKnown(template.needsTie, where)
 		local gives = template.gives
 		if gives ~= nil then
-			if Ties.RankOf(gives) <= Ties.RankOf(template.needsTie) then
+			-- "Does the tie this row already requires get you what the row hands out?" -- and
+			-- if so the row can never appear, because `gives` hides it once you have it.
+			--
+			-- Asked through `Ties.Meets` rather than as `RankOf(gives) <= RankOf(needsTie)`.
+			-- The rank comparison is only meaningful on the ladder, and rank 0 is shared by
+			-- "off the ladder" and "no tie at all" -- so an offer giving "enemy" from no tie
+			-- read as 0 <= 0 and was rejected as a rung that fails to climb. Excluding the id
+			-- "enemy" by name fixes that one row and leaves the next off-ladder tie to
+			-- rediscover the same failure; asking the question the check actually means does
+			-- not.
+			if Ties.Meets(template.needsTie, gives) then
 				error(
-					`[AGES content] {where} gives "{gives}" but already needs "{template.needsTie}", `
-						.. `which is as close or closer -- a rung has to climb`
+					`[AGES content] {where} gives "{gives}" but already needs `
+						.. `"{template.needsTie}", which already satisfies it -- the row could `
+						.. `never appear`
 				)
 			end
-			if template.ask then
+			-- Rungs only. A rung that could be refused would make becoming somebody's friend
+			-- a coin toss, which is the whole reason climbing is not an ask. Off the ladder
+			-- it is the opposite: "make them your enemy" is done *to* somebody, and them
+			-- refusing -- "you're not worth it" -- is the content, not a hole in it.
+			if template.ask and Ties.IsRung(gives) then
 				error(
 					`[AGES content] {where} gives "{gives}" and is an ask; a rung that can be refused `
 						.. `would make becoming somebody's friend a coin toss`
@@ -3814,7 +3984,12 @@ local function validateArchetype(archetype: Archetype)
 		end
 		local reachable = false
 		for tieId, _ in ladder do
-			if Ties.RankOf(tieId) >= Ties.RankOf(needed) then
+			-- Same question as the gate that hides the row at runtime, asked with the same
+			-- function. Written as a rank comparison it said "reachable" for a row needing
+			-- an off-ladder tie the moment the archetype handed out *anything*, because
+			-- every rank is >= 0 -- so the one check that exists to find dead content would
+			-- have certified it.
+			if Ties.Meets(tieId, needed) then
 				reachable = true
 				break
 			end

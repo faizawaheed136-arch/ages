@@ -1495,6 +1495,26 @@ local function take(player: Player, data: LifeData, chat: Chat, stand: Standing?
 		then (offer.refusedLine or person.busyLine)
 		else (offer.yesLine or offer.line or person.busyLine)
 	recordInteraction(data, person.id, age, interactionLine)
+
+	-- A refused ask keeps a share of what saying yes would have been worth: you turned up
+	-- and you asked, and the turning up happened either way. Rounded away from zero on
+	-- purpose, so a share that would round down to nothing still moves something -- the
+	-- difference between a softened blow and no softening at all.
+	--
+	-- Only for an ask that pays bond, though. The two loans cost bond to accept, because
+	-- taking money off your mother is not free with her -- and a refusal must not hand
+	-- that back as a *gain*. Zero is the honest answer there: she said no, and nothing
+	-- about the two of you moved.
+	--
+	-- Computed here rather than after the defining moment below, which is the fix: that
+	-- block reads it, and it was declared eighteen lines further down. A local is not in
+	-- scope above its own declaration, so the read was a *global* -- nil -- and `nil > 0`
+	-- threw on every conversation the player did not get refused on. Every accepted offer
+	-- in the game died on that line, after the visit had already been spent.
+	local bondGain = if refused
+		then (if offer.bond > 0 then math.max(math.round(offer.bond * PEOPLE.RefusedBondShare), 1) else 0)
+		else offer.bond
+
 	-- A defining moment is the strongest interaction yet -- the line said at the
 	-- highest bond this person has ever reached with the player. Replaces the
 	-- previous defining moment for this person only.
@@ -1509,18 +1529,6 @@ local function take(player: Player, data: LifeData, chat: Chat, stand: Standing?
 		end
 	end
 
-	-- A refused ask keeps a share of what saying yes would have been worth: you turned up
-	-- and you asked, and the turning up happened either way. Rounded away from zero on
-	-- purpose, so a share that would round down to nothing still moves something -- the
-	-- difference between a softened blow and no softening at all.
-	--
-	-- Only for an ask that pays bond, though. The two loans cost bond to accept, because
-	-- taking money off your mother is not free with her -- and a refusal must not hand
-	-- that back as a *gain*. Zero is the honest answer there: she said no, and nothing
-	-- about the two of you moved.
-	local bondGain = if refused
-		then (if offer.bond > 0 then math.max(math.round(offer.bond * PEOPLE.RefusedBondShare), 1) else 0)
-		else offer.bond
 	data.bonds[person.id] = math.clamp(bondOf(data, person) + bondGain, PEOPLE.MinBond, PEOPLE.MaxBond)
 
 	-- Check whether a bond milestone was just crossed, and seed gossip about it.
@@ -1588,7 +1596,13 @@ local function take(player: Player, data: LifeData, chat: Chat, stand: Standing?
 	if gives ~= nil then
 		local held = data.ties[person.id]
 		local room = People.TieRoom(data.ties, age, data.flags)
-		if Ties.RankOf(gives) > Ties.RankOf(held) and not room[gives] then
+		-- The same test `People.OffersFor` used to decide the row was worth showing, so what
+		-- is conferred here can never disagree with what was offered there. On the ladder
+		-- `Ties.Meets` is "at this rung or above", so a tie already climbed past is not
+		-- walked back down. Off the ladder it is "is exactly this", which is what lets an
+		-- enemy replace a friend, a sibling, even a rival -- the ladder being burned is the
+		-- point, and the only way to have an enemy is to have had a relationship first.
+		if not Ties.Meets(held, gives) and not room[gives] then
 			data.ties[person.id] = gives
 		end
 	end
@@ -2632,6 +2646,14 @@ local function onAnswered(player: Player, _event: Types.LifeEvent, choice: Types
 	requestRebuild(player)
 end
 
+-- The top of the friendship ladder, which is the boundary a tie has to be *past* before
+-- standing next to that person is worth telling the event system about. Named rather than
+-- written as the number 4, because 4 is not a fact about anything -- it is `closest` plus
+-- one, and it stops being true the day a rung is inserted. A mistyped id here would tag
+-- nobody and fire no events, with no symptom, so it is checked at load.
+local TIE_TAG_ABOVE = "closest"
+Ties.AssertKnown(TIE_TAG_ABOVE, "PeopleService tie-context tags")
+
 -- Returns the tie-context tags for a player as a list of strings. Called by
 -- EventService every tick to decide whether a tie-gated event should fire.
 local function buildTieContextTags(player: Player): { string }
@@ -2652,7 +2674,18 @@ local function buildTieContextTags(player: Player): { string }
 		if tieId == nil then
 			continue
 		end
-		if Ties.RankOf(tieId) < 4 then
+		-- Two kinds of tie earn a tag: the structural slots above the friendship ladder
+		-- (mentor, rival, sibling) and the ties that sit off it entirely (enemy). What
+		-- they have in common is that each names one particular person in a life rather
+		-- than a degree of closeness, which is what makes "your mentor is standing here"
+		-- something an event can be about. Being somebody's friend is not -- most of a
+		-- town ends up there, and a tag every one of them carries gates nothing.
+		--
+		-- Asked as "on the ladder and no higher than the top of it", so a second off-ladder
+		-- tie is included the day it is declared and needs no edit here. Written as a rank
+		-- comparison guarded by `IsRung` because rank alone cannot answer it: enemy scores
+		-- 0, so the plain comparison excluded the one tie this gate most needs to see.
+		if Ties.IsRung(tieId) and Ties.RankOf(tieId) <= Ties.RankOf(TIE_TAG_ABOVE) then
 			continue
 		end
 		if (playerPos - position).Magnitude <= radius then
