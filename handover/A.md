@@ -1,6 +1,102 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-18 (latest) — a gate that never ran the code, and a ruler that measured wrong
+## 2026-08-18 (latest) — the answer to "I can't play": the server was never starting
+
+Owner, a fourth time: *"before the bank, FIX THE ISSUE where i cannot physically play the
+game, i just wander around, im normal size, i can't live the actual life."*
+
+**The cause is not the body band and never was. `init.server.luau` requires forty services
+at the top with no pcall, so a single `error()` in any module body takes the whole script
+down and not one service starts.** From inside the game that is a world that loads
+correctly, a character at adult scale, and nothing that responds — the report, word for
+word. Checked against a clean worktree of the last commit: it does not boot either
+(`tie_mentor_guidance` casts "mentor", who is not in the cast). The tree has been shipping
+a dead server.
+
+The boot gate now says exactly this under any require failure, because "modules failed to
+load" did not connect to the symptom in anyone's head:
+
+    ^ this throws on require, so init.server.luau dies and NO service starts
+      -- the game loads, you are adult-sized, and nothing happens
+
+**The join phase (new).** Boot proves the services started; it does not prove a player can
+join. `Players.PlayerAdded:Connect(fn)` against a stub stored the listener nowhere and fired
+never, so the entire join path — profile load, life begin, body band — was categorically
+untested. The harness now has real Signals, a real Instance class, real Players/RunService
+(`IsStudio()` → true, the branch a person testing this actually takes), a ProfileStore mock
+and a fake R15 character, and it drives PlayerAdded → CharacterAdded and reports
+`begun / alive / ageMonths / heightScale / walkSpeed`.
+
+**A fourth harness artifact wearing a game bug's clothes, and the worst one yet.** The first
+join run reported `heightScale=1` on a newborn — the reported symptom, apparently
+reproduced. It was the harness. **Luau consults `__eq` even when both operands are the same
+table reference**, which is not Lua 5.1's rule and not what anyone writing a metatable
+expects:
+
+    local mt = { __eq = function() return false end }
+    local a = setmetatable({}, mt)
+    print(a == a, rawequal(a, a))  --> false  true
+
+`Stub.__eq` returned a flat `false`, so **every `x == Enum.Foo.Bar` in the tree was false**
+and every such branch was silently skipped. Concretely: `ensureR15` decided a correctly
+built R15 rig was R6, rebuilt the character into a stub, threw the real one away, and the
+band then had nothing to size. Fixed to `rawequal`. After that the join is clean:
+`begun=true alive=true ageMonths=0 heightScale=0.3 walkSpeed=4`, matching `Config.Growth`.
+
+The running lesson now has four entries — Color3, Random, `__iter`, `__eq` — and the rule
+is worth stating flatly: **if the harness reproduces the bug you are hunting, suspect the
+harness first, and do not stop until you can say which line of it was wrong.** Three of the
+four would have sent someone to rewrite working game code.
+
+Three more things the gate was not looking at, all now fixed:
+
+- **`task.spawn`/`defer`/`delay` swallowed their functions.** Deliberate during boot (a tick
+  loop needs a scheduler that does not exist here) but wrong on the join, because
+  `LifeService:Start` hooks PlayerAdded with `task.spawn(pushInitialState, player)` — the
+  call that gives the client its age, its money and its first event. They now run their
+  bodies during the join phase, each under its own pcall and its own `task.wait` budget, so
+  a `while true` is *recorded against the join* rather than hanging the gate.
+- **`warn` was `function() end`.** This game diagnoses itself in warnings — "spawned before
+  their profile loaded", "rig has no R15 scale values", "arrived on slot N with no life to
+  play" — and the harness was deleting every one. They are now printed. Warnings the harness
+  itself causes (it mounts the script tree and no `assets/*.rbxmx`, so every
+  `AgesPlacePoint` lookup is empty by construction) are suppressed by exact substring with
+  the reason written down; anything wider would start hiding the game's own diagnosis.
+- **A healthy join line was printed under a dead boot.** The harness carries on past a failed
+  require on purpose, to find the rest in one pass; a real server does not. Reporting
+  `begun=true` underneath a failure was this gate going green because it was not looking at
+  the thing — the exact defect it was built to stop. It now refuses to offer the join line as
+  evidence until the boot is fixed.
+
+**The body scale is now asserted, not just printed.** `check.py` reimplements
+`Config.Growth.At` in Python, reading the keys and `MonthsPerYear` out of `Config.luau`
+rather than restating them, and fails when the character's height does not match the age.
+`ageMonths=0 heightScale=1` — the reported symptom — now fails with "1.00 is the untouched
+default — no band was applied to this character at all". Negative-tested against seven
+synthetic reports before it was trusted.
+
+**Bank buttons: all three fired nothing.** `savings:OnDepositAll/Half/WithdrawAll` read
+`moneyPrevious` and `savingsBalance`, both declared six hundred lines further down beside
+the pushes that fill them. A Lua closure captures the local in scope *where the closure is
+written*; there was none, so all three read a global nothing assigns, saw nil on every press
+and returned. Nothing could report it: `--!strict` accepts an unbound name as a legal read
+of a nil global, the remotes and the server handlers exist and work, and a press that fires
+nothing is indistinguishable from a press the server refused. Declarations moved above the
+handlers. Also guarded `SavingsUpdated`, whose optional parameter was indexed
+unconditionally — nothing sends nil today, but a nil push is the one that *clears* the panel
+and it would have thrown and left the old balance in the withdraw button.
+
+**Handed back, not fixed — another agent is mid-edit in these files.** The tree currently
+does not boot on `Townsfolk.luau:3935`: `archetype "peer" offer "become_enemies" gives
+"enemy" but already needs "nil", which is as close or closer -- a rung has to climb`. The
+uncommitted `Ties.luau` adds a Phase 6 "enemy" tie at **rank 0**, deliberately off the
+ladder, and updates `Ties.Meets` to special-case it — but `Townsfolk`'s climb check is still
+`RankOf(gives) <= RankOf(needsTie)`, and `RankOf(nil)` is also 0. The design is coherent and
+the second half of it simply has not landed yet; guessing at it would fight the next save.
+`PeopleService.luau:1503` (`bondGain` unbound) is in the same live edit and left alone for
+the same reason.
+
+## 2026-08-18 — a gate that never ran the code, and a ruler that measured wrong
 
 Owner came back a second time: *"still doesnt work i cant acctually play the game."* The
 entry below fixed four real nil-index bugs and was still not enough, because every check in
