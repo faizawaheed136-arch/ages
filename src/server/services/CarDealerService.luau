@@ -40,6 +40,10 @@ local DataService = require(script.Parent.DataService)
 local MoneyService = require(script.Parent.MoneyService)
 local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
+-- For the counter's own job: what it pays an hour, and how old it hires. Both are
+-- authored in content and read back out here rather than restated, which is the same
+-- contract Config.Work describes for every other rate in the game.
+local Jobs = require(script.Parent.Parent.content.Jobs)
 
 type LifeData = Types.LifeData
 type Customer = Customers.Customer
@@ -50,6 +54,47 @@ local CarDealer = {}
 local CAR_DEALER = Config.CarDealer
 local carDealerUpdated = Remotes.Get("CarDealerUpdated")
 local requestCarDealerServe = Remotes.Get("RequestCarDealerServe")
+
+-- The place point this whole service is about. Was written out at each of the three
+-- PlaceService.Find calls; named once so the job lookup below cannot drift from them.
+local DEALER_PLACE_ID = "auto_dealer"
+
+-- The counter's own job, found by where it is rather than by its id, so renaming
+-- car_salesperson in content does not silently unhook the walk-in queue from the wage
+-- and age it is supposed to follow.
+local function jobAtCounter(): Types.Job
+	local found: Types.Job? = nil
+	for _, job in Jobs.All do
+		if job.placeId == DEALER_PLACE_ID then
+			-- Lowest age wins if the counter ever has a ladder on it: the question this
+			-- answers is "could anybody be employed here at this age", not "could they
+			-- be employed at the top of it".
+			if found == nil or job.minAge < found.minAge then
+				found = job
+			end
+		end
+	end
+	if found == nil then
+		-- Not a warning. Every number below is divided out of this job, so without it
+		-- the service would have to invent an age and a price -- which is the thing it
+		-- exists to stop doing.
+		error(`[AGES content] no job at "{DEALER_PLACE_ID}", so the walk-in counter has no wage or age to follow`)
+	end
+	return found
+end
+
+local COUNTER_JOB = jobAtCounter()
+
+-- How old you must be to serve at the counter: exactly old enough to be employed at
+-- it. A walk-in is the no-commitment version of the job, not a way around its terms.
+local MIN_AGE = COUNTER_JOB.minAge
+
+-- What one walk-in customer tips, divided out of the counter's authored salary. A game
+-- hour is RealSecondsPerGameHour long and a customer arrives every CustomerGapSeconds,
+-- so this many of them fit in the hour the job is paid by -- and the tip is that hour's
+-- wage split between them, then taken down to a tip's share of it.
+local CUSTOMERS_PER_GAME_HOUR = Config.Time.RealSecondsPerGameHour / CAR_DEALER.CustomerGapSeconds
+local SERVE_TIP = math.floor((Jobs.HourlyRate(COUNTER_JOB) / CUSTOMERS_PER_GAME_HOUR) * CAR_DEALER.WalkInTipShare)
 
 -- Which customer is at the front of the line right now. Kept so the service can
 -- answer questions about the queue without rebuilding it from scratch.
@@ -115,7 +160,54 @@ local function isWorkingAtDealer(player: Player): boolean
 	if not data.alive then
 		return false
 	end
-	return WorkService.IsWorkingAt(player, "auto_dealer")
+	return WorkService.IsWorkingAt(player, DEALER_PLACE_ID)
+end
+
+-- Whether this player may work the walk-in counter at all: alive, and old enough to
+-- be employed here.
+--
+-- This did not exist, and its absence is why a one-year-old had a job at the
+-- dealership. The queue was built for every player from PlayerAdded and refreshed on
+-- a two-second tick with nothing asked about the life inside them, so a toddler stood
+-- at the counter, customers lined up for them, and each one paid out.
+local function mayServe(player: Player): boolean
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return false
+	end
+	local data = Lives.Active(profile.Data)
+	if not data.alive then
+		return false
+	end
+	return data.ageMonths // Config.Time.MonthsPerYear >= MIN_AGE
+end
+
+-- Where the player actually is, per the server. The client asks to serve and the
+-- server has to answer from something it owns; this is that something.
+local function characterPosition(player: Player): Vector3?
+	local character = player.Character
+	if character == nil then
+		return nil
+	end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root == nil then
+		return nil
+	end
+	return (root :: BasePart).Position
+end
+
+-- Tear down whatever queue this player has, if any. Four call sites did this inline
+-- and a fifth was about to; the tick runs it for every player twice a second, so the
+-- one that forgets a line is the one that leaks a customer.
+local function clearQueue(player: Player, mine: DealerState, tellClient: boolean)
+	if mine.queue == nil then
+		return
+	end
+	mine.queue.customer.destroy()
+	mine.queue = nil
+	if tellClient then
+		carDealerUpdated:FireClient(player, { waiting = 0, counter = nil, greeting = nil, served = false })
+	end
 end
 
 -- Find or refresh the queue for this player. Called on every tick and when the
@@ -123,21 +215,21 @@ end
 -- a rebuilt city does not leave stale queue positions.
 local function ensureQueue(player: Player)
 	local mine = stateFor(player)
-	-- Shift queue owns the counter; clear any walk-in queue while working.
-	if isWorkingAtDealer(player) then
-		if mine.queue ~= nil then
-			mine.queue.customer.destroy()
-			mine.queue = nil
-			carDealerUpdated:FireClient(player, { waiting = 0, counter = nil, greeting = nil, served = false })
-		end
+	-- Too young to work this counter, or not alive to work it. No queue, and the panel
+	-- is told so rather than left holding the last one -- a child who walks past the
+	-- showroom should see a showroom, not a shift.
+	if not mayServe(player) then
+		clearQueue(player, mine, true)
 		return
 	end
-	local place = PlaceService.Find("auto_dealer")
+	-- Shift queue owns the counter; clear any walk-in queue while working.
+	if isWorkingAtDealer(player) then
+		clearQueue(player, mine, true)
+		return
+	end
+	local place = PlaceService.Find(DEALER_PLACE_ID)
 	if place == nil then
-		if mine.queue ~= nil then
-			mine.queue.customer.destroy()
-			mine.queue = nil
-		end
+		clearQueue(player, mine, false)
 		return
 	end
 
@@ -163,10 +255,7 @@ local function ensureQueue(player: Player)
 	end
 
 	if counter == nil then
-		if mine.queue ~= nil then
-			mine.queue.customer.destroy()
-			mine.queue = nil
-		end
+		clearQueue(player, mine, false)
 		return
 	end
 
@@ -179,10 +268,7 @@ local function ensureQueue(player: Player)
 	-- Front slot: across the counter from the station.
 	local frontFloor = Ground.SpotAt(counter + outward * Config.Work.Customers.StandOffStuds, radius, height, ignore, counter)
 	if frontFloor == nil then
-		if mine.queue ~= nil then
-			mine.queue.customer.destroy()
-			mine.queue = nil
-		end
+		clearQueue(player, mine, false)
 		return
 	end
 	table.insert(slots, frontFloor)
@@ -198,10 +284,7 @@ local function ensureQueue(player: Player)
 	end
 
 	if #slots == 0 then
-		if mine.queue ~= nil then
-			mine.queue.customer.destroy()
-			mine.queue = nil
-		end
+		clearQueue(player, mine, false)
 		return
 	end
 
@@ -261,6 +344,26 @@ local function serveFront(player: Player)
 		return
 	end
 
+	-- Everything below this line is money, so everything above it has to be the
+	-- server's own answer. This handler used to be reached straight off the remote
+	-- with no check of any kind: not age, not distance, not whether the life was
+	-- alive. The client asked and it paid.
+	if not mayServe(player) then
+		return
+	end
+
+	-- Standing at the counter is the whole of the work, so it is the one thing worth
+	-- verifying. Measured server-side against the counter the server placed, at the
+	-- radius clocking on uses -- serving a customer is working the counter, so it
+	-- answers to the same distance as working the counter.
+	local position = characterPosition(player)
+	if position == nil then
+		return
+	end
+	if Ground.FlatDistance(position, mine.queue.counter) > Config.Work.ClockInRadiusStuds then
+		return
+	end
+
 	local customer = mine.queue.customer
 	local waiting = customer.waiting()
 	if waiting == 0 then
@@ -269,8 +372,9 @@ local function serveFront(player: Player)
 
 	customer.serve()
 
-	-- Pay a tip for the walk-in service.
-	MoneyService.Add(player, CAR_DEALER.ServeTip, "car dealership tip")
+	-- Pay a tip for the walk-in service. SERVE_TIP is divided out of this counter's own
+	-- salary rather than named here -- see Config.CarDealer.WalkInTipShare.
+	MoneyService.Add(player, SERVE_TIP, "car dealership tip")
 
 	-- Say thanks.
 	local thanks = randomFrom(THANKS)
@@ -288,12 +392,18 @@ end
 -- Schedule the next customer arrival if the queue has room.
 local function maybeArrive(player: Player)
 	local mine = stateFor(player)
+	-- Asked here as well as in ensureQueue, and not as belt-and-braces: this runs on
+	-- the same tick and builds a queue of its own, so a gate on only the other one
+	-- would have let the customers arrive anyway a beat later.
+	if not mayServe(player) then
+		return
+	end
 	local now = os.clock()
 	if now - mine.lastArrival < CAR_DEALER.CustomerGapSeconds then
 		return
 	end
 
-	local place = PlaceService.Find("auto_dealer")
+	local place = PlaceService.Find(DEALER_PLACE_ID)
 	if place == nil then
 		return
 	end

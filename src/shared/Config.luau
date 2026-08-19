@@ -1336,10 +1336,25 @@ Config.CarDealer = {
 	-- How often the service ticks to check for new arrivals and advance the queue.
 	-- Safe range: 1-3.
 	TickSeconds = 2,
-	-- The tip the player earns for serving a walk-in customer. Separate from the
-	-- work-shift tip because walk-ins are voluntary and should feel rewarding.
-	-- Safe range: 50-200.
-	ServeTip = 100,
+	-- What a walk-in tip is worth, as a share of what the counter's own job pays for
+	-- the same stretch of time. A share rather than a price, because a price here was
+	-- how the dealership came to out-earn employment at it.
+	--
+	-- The flat 100 this replaces was worth more per minute than the job: car_salesperson
+	-- is 8,000 a year, which Work.YearGameHours divides to 200 a game hour, and a game
+	-- hour is 30 real seconds -- 2.5 customers at CustomerGapSeconds. So the counter paid
+	-- 100 x 2.5 = 250 a game hour to a passer-by and 200 to the person employed there,
+	-- and unlike the job it had no yearly ceiling. Work.ShiftsPerYear exists precisely so
+	-- that "how much can I earn?" is not answered with "how long can you stand there?",
+	-- and this was answering it that way.
+	--
+	-- A quarter, because a walk-in is a tip and not a commission: real money for a real
+	-- favour, never a reason to skip the shift. The arithmetic is done in CarDealerService
+	-- off Jobs.HourlyRate, so a content author who retunes the salary retunes this with it
+	-- and no second number is left disagreeing.
+	-- Safe range: 0.1-0.5. Above ~0.5 standing at the counter starts to compete with
+	-- holding the job; at 0 the queue is scenery and serving it is a chore with no point.
+	WalkInTipShare = 0.25,
 }
 
 -- Look a life stage up by id and answer the age it starts at. Used to derive an
