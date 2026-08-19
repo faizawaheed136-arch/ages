@@ -533,6 +533,62 @@ def check_undefined_calls(files, code):
     return bad
 
 
+# Globals that are legitimately indexed and called without ever being bound in a file.
+# Deliberately short: every name here is a hole in the check below, so a name earns its
+# place by being a real Roblox global, not by being awkward.
+INDEXED_GLOBALS = {
+    "game", "workspace", "script", "shared", "math", "table", "string", "os", "task",
+    "coroutine", "debug", "utf8", "bit32", "buffer",
+    "Enum", "Instance", "Vector2", "Vector3", "Vector2int16", "Vector3int16",
+    "CFrame", "Color3", "UDim", "UDim2", "Ray", "Rect", "Region3", "BrickColor",
+    "TweenInfo", "NumberRange", "NumberSequence", "ColorSequence", "Random", "Faces",
+    "Axes", "PhysicalProperties", "NumberSequenceKeypoint", "ColorSequenceKeypoint",
+    "RaycastParams", "OverlapParams", "Font", "DateTime", "PathWaypoint", "SharedTable",
+    "Content", "Path2D", "Secret", "CatalogSearchParams", "FloatCurveKey",
+}
+
+
+def check_undefined_modules(files, code):
+    """`Thing.method(...)` where the file never binds `Thing`. A missing `require`.
+
+    This is the third face of the nil-call bug and the most expensive one yet. The other
+    two checks look for a bare `name(`; a missing require never looks like that, because
+    the call is always written through the module -- `VerdictService.SetMoments(...)`.
+    In Lua that reads a global, gets nil, and throws on the index.
+
+    It shipped, twice, in one pass of the boot path:
+
+      * `LifeService` called `VerdictService.SetMoments(...)` inside `Init` without ever
+        requiring VerdictService. `init.server.luau` calls the Inits unguarded, so the
+        throw took out every service declared after it and nothing was ever Started. The
+        symptom is not an error naming LifeService -- it is a place that loads with no
+        services in it at all, which is indistinguishable from a broken build.
+      * `ReturnService` called `BodyService.Apply(player)` on the Studio arrival path,
+        also unrequired, so every join in Studio threw after the life had been rolled.
+
+    Both files listed the module by name in their comments, both read correctly to a
+    human, and every other check in this file passed them. Restricted to names starting
+    with a capital, which is this codebase's convention for a required module: it costs a
+    lowercase module and buys freedom from every `self.field(...)` in the tree.
+    """
+    bad = 0
+    for f in files:
+        t = code[f]
+        names = _defined_names(t)
+        seen: set[str] = set()
+        for m in re.finditer(r"(?<![.:\w])([A-Z]\w*)\s*[.:]\s*[A-Za-z_]\w*\s*\(", t):
+            name = m.group(1)
+            if name in seen or name in names or name in INDEXED_GLOBALS:
+                continue
+            seen.add(name)
+            print(
+                f"  {f.relative_to(ROOT)}:{line_of(t, m.start())}  {name} is indexed and "
+                f"called but never required -- this is a nil index at runtime"
+            )
+            bad += 1
+    return bad
+
+
 CHECKS = [
     ("syntax (luau-compile)", check_compile),
     ("both places build (rojo)", check_builds),
@@ -543,6 +599,7 @@ CHECKS = [
     ("unused locals", check_unused_locals),
     ("declaration order", check_decl_order),
     ("calls to undefined names", check_undefined_calls),
+    ("modules used but never required", check_undefined_modules),
 ]
 
 

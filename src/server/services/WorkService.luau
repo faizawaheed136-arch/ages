@@ -40,6 +40,10 @@ local People = require(script.Parent.Parent.content.People)
 local JobTasks = require(script.Parent.Parent.content.JobTasks)
 local Ground = require(script.Parent.Parent.world.Ground)
 local WorkSpots = require(script.Parent.Parent.world.WorkSpots)
+-- Missing, which made `Customers.Queue` a nil index on every rush shift and the type
+-- alias on line 56 point at nothing. Same defect as the two on the boot path; this one
+-- only fires once a customer-facing job actually starts, which is why it outlived them.
+local Customers = require(script.Parent.Parent.world.Customers)
 local MoneyPop = require(script.Parent.Parent.world.MoneyPop)
 local MilestoneService = require(script.Parent.MilestoneService)
 local StatService = require(script.Parent.StatService)

@@ -29,6 +29,12 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local DataService = require(script.Parent.DataService)
 local SetupService = require(script.Parent.SetupService)
+-- The Studio arrival path below calls BodyService.Apply to force the child body on, and
+-- this require was missing -- so that call was a nil index that threw on every join in
+-- Studio, out of a PlayerAdded handler, after the life had already been rolled. The
+-- player landed in a begun life with an adult body and the rest of the handler skipped.
+-- BodyService reaches only DataService, so this closes no cycle.
+local BodyService = require(script.Parent.BodyService)
 
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local ReturnRefusedRemote = Remotes.Get("ReturnRefused")

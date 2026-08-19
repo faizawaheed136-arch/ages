@@ -30,6 +30,16 @@ local MilestoneService = require(script.Parent.MilestoneService)
 local ChildhoodService = require(script.Parent.ChildhoodService)
 local SetupService = require(script.Parent.SetupService)
 local ReturnService = require(script.Parent.ReturnService)
+-- Used by Init (SetMoments) and by the verdict at the end of a life. This require was
+-- missing, so `VerdictService` was a global read -- nil -- and `LifeService:Init()` threw
+-- on the nil index. init.server.luau calls the Inits unguarded, so nothing after line 92
+-- ever initialised and no service was ever Started: the place came up with nothing in it.
+--
+-- The comment at the SetMoments call says requiring it here would close a cycle. It does
+-- not: VerdictService reaches only DataService and Ribbons, and neither reaches back here.
+-- SetMoments is still needed -- it threads the moments *query* in -- but that is a
+-- different problem from the require, and conflating the two is what lost the require.
+local VerdictService = require(script.Parent.VerdictService)
 
 type LifeStageId = Types.LifeStageId
 type AgeUpCause = Types.AgeUpCause
