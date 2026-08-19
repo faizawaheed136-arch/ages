@@ -23,6 +23,7 @@ local FightUI = require(script.ui.FightUI)
 local HouseUI = require(script.ui.HouseUI)
 local CarDealerUI = require(script.ui.CarDealerUI)
 local SavingsUI = require(script.ui.SavingsUI)
+local MenuUI = require(script.ui.MenuUI)
 local Minimap = require(script.ui.Minimap)
 local MapUI = require(script.ui.MapUI)
 local ChapterReel = require(script.ui.ChapterReel)
@@ -103,6 +104,7 @@ local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
 local savings = SavingsUI.new()
+local menu = MenuUI.new()
 local minimap = Minimap.new()
 local mapSheet = MapUI.new()
 local dealerMark = DealerMark.new()
@@ -113,6 +115,9 @@ local chapterReel = ChapterReel.new()
 -- see LifeService.pushInitialState. Starting it up and taking it down again a beat later
 -- would make every new player's first sight of AGES a flicker.
 ui:SetHudVisible(false)
+-- The menu rail is down for the same reason and comes back on the same push. A rail of
+-- tiles is a smaller claim than a HUD but it is the same claim.
+menu:SetVisible(false)
 
 local RequestAgeUpRemote = Remotes.Get("RequestAgeUp")
 local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
@@ -147,6 +152,14 @@ local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor
 -- carries an id and nothing else -- everything it needs to draw was pushed here
 -- already, when the row on the HUD was drawn.
 local currentPerson: PersonState? = nil
+
+-- The three figures on the menu's player card, held because they arrive on three
+-- separate pushes and the card draws all of them at once. Nothing derives anything from
+-- these -- StatsUI is still told each figure directly by the same handler -- so a stale
+-- one costs the card a wrong line and nothing else.
+local cardAge = 0
+local cardStage = ""
+local cardMoney = 0
 
 ui:OnAgeUpActivated(function()
 	RequestAgeUpRemote:FireServer()
@@ -659,6 +672,8 @@ Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number, reas
 	local previous = moneyPrevious
 	moneyPrevious = balance
 	ui:SetMoney(balance)
+	cardMoney = balance
+	menu:SetIdentity(cardAge, cardStage, cardMoney)
 	if previous ~= nil then
 		local delta = balance - previous
 		if delta ~= 0 then
@@ -695,6 +710,7 @@ end)
 -- in the room. The list arriving without a job on it is what takes that job's sign
 -- down, and it is why taking a job makes the mark under your feet disappear.
 Remotes.Get("JobPostsUpdated").OnClientEvent:Connect(function(states: { JobPostState })
+	menu:SetJobs(states)
 	jobPosts.Set(states)
 end)
 
@@ -837,6 +853,7 @@ end)
 -- is already wearing.
 Remotes.Get("GangUpdated").OnClientEvent:Connect(function(state: GangState?)
 	gang:Set(state)
+	menu:SetGang(state)
 end)
 
 Remotes.Get("GangPanelUpdated").OnClientEvent:Connect(function(state: GangPanel?)
@@ -876,6 +893,19 @@ minimap:SetOnOpen(function()
 	mapSheet:Toggle()
 end)
 
+-- What the player has got good at. Six rows, pushed whole on every award, which is
+-- cheap because an award is a thing somebody just did rather than a thing on a clock.
+Remotes.Get("SkillsUpdated").OnClientEvent:Connect(function(state: Types.SkillsState)
+	menu:SetSkills(state)
+end)
+
+-- The band, asked for from the menu instead of the corner panel. Same remote and the
+-- same rule: the menu never flips its own switch, because the server decides whether a
+-- player is wearing anything.
+menu:OnColorsToggled(function(want: boolean)
+	RequestGangColorsRemote:FireServer(want)
+end)
+
 -- M, and Escape to close. Safe to claim: nothing else in this client binds a key at all --
 -- every other interaction in the game is a tap on a three-dot marker or a button -- so there
 -- is no rebinding to do and nothing to collide with. GameProcessedEvent is honoured so that
@@ -886,8 +916,16 @@ UserInputService.InputBegan:Connect(function(input: InputObject, processed: bool
 	end
 	if input.KeyCode == Enum.KeyCode.M then
 		mapSheet:Toggle()
-	elseif input.KeyCode == Enum.KeyCode.Escape and mapSheet:IsOpen() then
-		mapSheet:Close()
+	elseif input.KeyCode == Enum.KeyCode.Tab then
+		menu:Toggle()
+	elseif input.KeyCode == Enum.KeyCode.Escape then
+		-- One at a time, map first, because the map draws over the menu and closing the
+		-- thing underneath the thing you are looking at is not what Escape means.
+		if mapSheet:IsOpen() then
+			mapSheet:Close()
+		else
+			menu:Close()
+		end
 	end
 end)
 
@@ -966,6 +1004,7 @@ end)
 -- by side, and a per-person push could land out of order and leave one dot wrong.
 Remotes.Get("PeopleRosterUpdated").OnClientEvent:Connect(function(entries: { PersonRosterEntry })
 	ui:SetRoster(entries)
+	menu:SetRoster(entries)
 end)
 
 -- A name tapped on the roster. If it is the person already standing in front of the
@@ -989,6 +1028,8 @@ end)
 
 Remotes.Get("AgeUpdated").OnClientEvent:Connect(function(years: number, cause: AgeUpCause)
 	ui:SetAge(years)
+	cardAge = years
+	menu:SetIdentity(cardAge, cardStage, cardMoney)
 	if cause == "Auto" then
 		ui:ShowNotice("A year has passed while you were living your life...")
 	end
@@ -1021,6 +1062,11 @@ end)
 Remotes.Get("LifeStageChanged").OnClientEvent:Connect(function(stage: string)
 	ui:SetStage(stage)
 	ui:SetHudVisible(true)
+	cardStage = stage
+	menu:SetIdentity(cardAge, cardStage, cardMoney)
+	-- The rail comes up with the HUD and for the same reason: four lists about a life
+	-- are a claim that there is one, and until this fires there is not.
+	menu:SetVisible(true)
 end)
 
 -- The last thing this place ever says about this life.
@@ -1082,6 +1128,11 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- open it would hide the death notice entirely, and the player would be reading a map of
 	-- a town they are no longer in. The dial in the corner stays -- it is not a control.
 	mapSheet:Close()
+	-- And the menu, rail and all. Every pane on it is about a life that is still being
+	-- lived -- what is hiring, who is worth calling, what there is left to get good at --
+	-- and offering those under a death notice would be the game asking somebody who is
+	-- gone what they plan to do next.
+	menu:SetVisible(false)
 	chapterReel:Hide()
 	currentPerson = nil
 	lessonPanelKey = nil

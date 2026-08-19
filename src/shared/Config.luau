@@ -4184,6 +4184,47 @@ Config.UI = {
 	-- a dead panel on screen. Safe range: 2-10 — long enough that a slow server
 	-- doesn't re-enable a choice that is about to resolve.
 	EventResponseTimeoutSeconds = 5,
+
+	-- The menu: a rail of tiles down the left edge, and a panel that opens beside it.
+	--
+	-- The rail is always on screen and the panel is not, which is the whole shape of
+	-- the thing. A menu you have to remember a key for is a menu most players never
+	-- open, and every pane behind this one answers a question a player has while they
+	-- are standing in the street -- what work is going, who is worth calling, what am
+	-- I actually good at. Those want a thing to click, not a shortcut to learn.
+	Menu = {
+		-- The rail's tiles. Square, so this is both dimensions.
+		-- Safe range: 34-56.
+		RailTilePixels = 44,
+		-- The gap between tiles, and the rail's inset from the left edge.
+		-- Safe range: 4-12.
+		RailGapPixels = 6,
+		-- Safe range: 8-24.
+		RailInsetPixels = 12,
+
+		-- The panel's share of the screen's shorter dimension. Deliberately not the
+		-- whole screen: the map sheet is the full-screen surface and having two of them
+		-- would make the map stop feeling like the one thing that takes over.
+		-- Safe range: 0.6-0.9.
+		PanelHeightFraction = 0.76,
+		-- The panel's width as a share of screen width, before the rail is subtracted.
+		-- Safe range: 0.4-0.75.
+		PanelWidthFraction = 0.56,
+
+		-- The order the rail draws in, top to bottom, and the pane each tile opens.
+		-- `glyph` is one character because the rail has no image assets behind it yet
+		-- and a letter that is always legible beats an icon that is sometimes missing.
+		--
+		-- The ids are matched in MenuUI's pane switch, so an entry added here without a
+		-- pane draws a tile that opens an empty panel -- which is why the switch errors
+		-- by name rather than falling through to a blank.
+		Tabs = {
+			{ id = "jobs", label = "Jobs Available", glyph = "J", color = Color3.fromRGB(122, 196, 255) },
+			{ id = "relationships", label = "Relationships", glyph = "R", color = Color3.fromRGB(255, 150, 190) },
+			{ id = "gangs", label = "Gangs", glyph = "G", color = Color3.fromRGB(236, 110, 96) },
+			{ id = "skills", label = "Skills", glyph = "S", color = Color3.fromRGB(140, 226, 160) },
+		},
+	},
 }
 
 Config.Death = {
