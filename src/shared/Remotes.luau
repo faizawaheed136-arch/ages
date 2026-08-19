@@ -223,6 +223,27 @@ export type RemoteName =
 	-- about you, and sending them together would resend the whole map twice a second.
 	| "TerritoryUpdated"
 	| "SkillsUpdated"
+	-- Preferences, pushed whole on join and again after every change -- including after a
+	-- change the client itself asked for. The client never draws what it clicked, only what
+	-- came back, which is what stops a switch that failed to save from looking like it saved.
+	| "SettingsUpdated"
+	-- "Flip that one." Carries the setting id and the value wanted. Both are checked: an id
+	-- that is not in `Config.Settings.Options` is refused rather than written, because the
+	-- settings table is a dictionary in a save file and a client that could name its own key
+	-- could grow that save without limit.
+	| "RequestSetSetting"
+	-- Which codes this account has already used, and what each one paid. Pushed on join and
+	-- after every successful redeem.
+	| "CodesUpdated"
+	-- "I typed this." The one free-text remote in the game place, which is why it is rate
+	-- limited, length capped and matched only against a fixed list. Nothing about the reward
+	-- travels on this wire in either direction -- what a code pays is decided entirely from
+	-- the content table, so a client that sent a longer string or a faster one gains nothing
+	-- but a refusal.
+	| "RequestRedeemCode"
+	-- What happened to one attempt, in a sentence for the player. Sent for successes too:
+	-- a box that only answers when you are wrong is a box you cannot tell you have used.
+	| "CodeResult"
 	-- "I clicked the boss." Opens the panel and nothing else -- joining is a row on it, not
 	-- this. Walking up to all four bosses to read what they want is free, deliberately, for
 	-- the same reason clicking a vault door trips nothing: a decision this permanent should
@@ -508,6 +529,11 @@ local REMOTE_NAMES: { RemoteName } = {
 	"MapData",
 	"TerritoryUpdated",
 	"SkillsUpdated",
+	"SettingsUpdated",
+	"RequestSetSetting",
+	"CodesUpdated",
+	"RequestRedeemCode",
+	"CodeResult",
 	"RequestGangOpen",
 	"RequestGangChoice",
 	"RequestGangColors",

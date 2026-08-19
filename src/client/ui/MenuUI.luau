@@ -38,6 +38,8 @@ type SkillState = Types.SkillState
 type BillState = Types.BillState
 type SavingsState = Types.SavingsState
 type HouseState = Types.HouseState
+type SettingsState = Types.SettingsState
+type CodesState = Types.CodesState
 
 local MENU = Config.UI.Menu
 
@@ -85,6 +87,20 @@ export type MenuUIHandle = typeof(setmetatable(
 		bill: BillState?,
 		savings: SavingsState?,
 		house: HouseState?,
+		settings: SettingsState?,
+		codes: CodesState?,
+		-- The last thing the server said about a redeem attempt, and whether it worked.
+		-- Held rather than shown-and-forgotten because the pane is rebuilt from scratch on
+		-- every push, and a result that lived only in a label would be wiped by the very
+		-- `CodesUpdated` that a successful redeem triggers -- so the one message worth
+		-- keeping would be the only one nobody ever read.
+		codeResult: string,
+		codeResultOk: boolean,
+		-- What is in the box. Held for the same reason: a redraw destroys the TextBox, and
+		-- a player whose typing is erased by an unrelated push has a broken field.
+		codeDraft: string,
+		onCodeSubmitted: ((code: string) -> ())?,
+		onSettingToggled: ((id: string, on: boolean) -> ())?,
 		ageYears: number,
 		stage: string,
 		money: number,
@@ -389,6 +405,13 @@ function MenuUI.new(): MenuUIHandle
 		bill = nil,
 		savings = nil,
 		house = nil,
+		settings = nil,
+		codes = nil,
+		codeResult = "",
+		codeResultOk = false,
+		codeDraft = "",
+		onCodeSubmitted = nil,
+		onSettingToggled = nil,
 		ageYears = 0,
 		stage = "",
 		money = 0,
@@ -701,6 +724,190 @@ local function drawSkills(self: MenuUIHandle): string?
 	return nil
 end
 
+-- The redeem box, whatever the server last said about an attempt, and a receipt for every
+-- code this account has already used.
+--
+-- The box is drawn first and always, including for an account that has redeemed nothing.
+-- It is the only thing on this pane the player came here to do, and a pane that led with an
+-- empty history would have buried its own verb under a sentence saying there is nothing to
+-- see.
+--
+-- Nothing here decides anything. The box does not know what a code is, does not check one,
+-- and does not know what any of them pay -- it sends a string and draws the sentence that
+-- comes back. That is not tidiness: a client that could recognise a valid code is a client
+-- somebody can read the list of valid codes out of.
+local function drawCodes(self: MenuUIHandle): string?
+	local order = 0
+	local function nextOrder(): number
+		order += 1
+		return order
+	end
+
+	local box = Instance.new("Frame")
+	box.Size = UDim2.new(1, 0, 0, 78)
+	box.BackgroundColor3 = ROW_COLOR
+	box.BorderSizePixel = 0
+	box.LayoutOrder = nextOrder()
+	box.Parent = self.content
+
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.CornerRadius = UDim.new(0, 6)
+	boxCorner.Parent = box
+
+	local boxPadding = Instance.new("UIPadding")
+	boxPadding.PaddingLeft = UDim.new(0, 10)
+	boxPadding.PaddingRight = UDim.new(0, 10)
+	boxPadding.PaddingTop = UDim.new(0, 9)
+	boxPadding.Parent = box
+
+	local prompt = Instance.new("TextLabel")
+	prompt.Size = UDim2.new(1, 0, 0, 15)
+	prompt.BackgroundTransparency = 1
+	prompt.Font = Enum.Font.GothamMedium
+	prompt.TextSize = 13
+	prompt.TextXAlignment = Enum.TextXAlignment.Left
+	prompt.TextColor3 = TEXT_COLOR
+	prompt.Text = "Have a code?"
+	prompt.Parent = box
+
+	local field = Instance.new("TextBox")
+	field.Position = UDim2.new(0, 0, 0, 22)
+	field.Size = UDim2.new(1, -96, 0, 32)
+	field.BackgroundColor3 = Color3.fromRGB(14, 16, 21)
+	field.BorderSizePixel = 0
+	field.Font = Enum.Font.GothamMedium
+	field.TextSize = 14
+	field.TextXAlignment = Enum.TextXAlignment.Left
+	field.TextColor3 = TEXT_COLOR
+	field.PlaceholderText = "Type it here"
+	field.PlaceholderColor3 = MUTED_COLOR
+	field.ClearTextOnFocus = false
+	field.Text = self.codeDraft
+	field.Parent = box
+
+	local fieldCorner = Instance.new("UICorner")
+	fieldCorner.CornerRadius = UDim.new(0, 5)
+	fieldCorner.Parent = field
+
+	local fieldPadding = Instance.new("UIPadding")
+	fieldPadding.PaddingLeft = UDim.new(0, 9)
+	fieldPadding.PaddingRight = UDim.new(0, 9)
+	fieldPadding.Parent = field
+
+	local submit = Instance.new("TextButton")
+	submit.Position = UDim2.new(1, -88, 0, 22)
+	submit.Size = UDim2.new(0, 88, 0, 32)
+	submit.BackgroundColor3 = Color3.fromRGB(196, 160, 255)
+	submit.BorderSizePixel = 0
+	submit.AutoButtonColor = true
+	submit.Font = Enum.Font.GothamBold
+	submit.TextSize = 13
+	submit.TextColor3 = Color3.fromRGB(20, 16, 30)
+	submit.Text = "Redeem"
+	submit.Parent = box
+
+	local submitCorner = Instance.new("UICorner")
+	submitCorner.CornerRadius = UDim.new(0, 5)
+	submitCorner.Parent = submit
+
+	-- Mirrored into the handle on every keystroke, not read off the box at submit time.
+	-- A push from any of the other services rebuilds this pane and destroys the TextBox
+	-- with whatever was half-typed in it, and a field that loses your typing because a bill
+	-- came due somewhere else is a field nobody trusts twice.
+	field:GetPropertyChangedSignal("Text"):Connect(function()
+		self.codeDraft = field.Text
+	end)
+
+	local function send()
+		local typed = self.codeDraft
+		if typed == "" then
+			return
+		end
+		local callback = self.onCodeSubmitted
+		if callback ~= nil then
+			callback(typed)
+		end
+	end
+
+	-- Enter submits as well as the button. The box is a place people type into and press
+	-- return; making them reach for a button afterwards is the sort of thing that reads as
+	-- the code having failed.
+	field.FocusLost:Connect(function(enterPressed: boolean)
+		if enterPressed then
+			send()
+		end
+	end)
+	submit.Activated:Connect(send)
+
+	if self.codeResult ~= "" then
+		local _, resultTitle, resultFigure, resultCaption = makeRow(self.content, nextOrder())
+		resultTitle.Text = if self.codeResultOk then "Redeemed" else "Not redeemed"
+		resultTitle.TextColor3 = if self.codeResultOk then Color3.fromRGB(140, 226, 160) else Color3.fromRGB(230, 120, 80)
+		resultFigure.Text = ""
+		resultCaption.Text = self.codeResult
+		-- The one caption in the menu allowed to wrap. Everything else here is a fact that
+		-- fits on a line; this is a sentence written for the moment it is read, and
+		-- truncating a refusal at the point where it says why is worse than a taller row.
+		resultCaption.TextTruncate = Enum.TextTruncate.None
+		resultCaption.TextWrapped = true
+		resultCaption.Size = UDim2.new(1, 0, 0, 24)
+	end
+
+	local codes = self.codes
+	if codes ~= nil then
+		for _, redeemed in codes.redeemed do
+			local _, title, figure, caption = makeRow(self.content, nextOrder())
+			title.Text = redeemed.label
+			figure.Text = redeemed.reward
+			figure.TextColor3 = Color3.fromRGB(140, 226, 160)
+			caption.Text = `{redeemed.code} — already redeemed on this account.`
+		end
+	end
+
+	return nil
+end
+
+-- The switches. Every row is the whole row, clickable end to end, the same shape the gang
+-- colors toggle already uses -- one gesture for "flip a thing", learned once.
+--
+-- Draws what the server pushed and nothing else. Clicking sends and then waits: the row
+-- does not flip itself, so a preference that failed to save never spends a moment looking
+-- like it did. The cost is one round trip of latency on a toggle, which is the cheapest
+-- honesty in the whole menu.
+local function drawSettings(self: MenuUIHandle): string?
+	local settings = self.settings
+	if settings == nil or #settings.settings == 0 then
+		return "Your settings have not loaded yet."
+	end
+
+	for order, option in settings.settings do
+		local row, title, figure, caption = makeRow(self.content, order)
+		title.Text = option.label
+		figure.Text = if option.on then "On" else "Off"
+		figure.TextColor3 = if option.on then Color3.fromRGB(140, 226, 160) else MUTED_COLOR
+		caption.Text = option.caption
+		if not option.on then
+			row.BackgroundTransparency = 0.35
+		end
+
+		local id = option.id
+		local on = option.on
+		local toggle = Instance.new("TextButton")
+		toggle.Size = UDim2.new(1, 0, 1, 0)
+		toggle.BackgroundTransparency = 1
+		toggle.AutoButtonColor = false
+		toggle.Text = ""
+		toggle.Parent = row
+		toggle.Activated:Connect(function()
+			local callback = self.onSettingToggled
+			if callback ~= nil then
+				callback(id, not on)
+			end
+		end)
+	end
+	return nil
+end
+
 -- Rebuild whichever pane is showing. Called on every push as well as on every switch,
 -- because a panel left open while the world changes underneath it is worse than one
 -- that costs a few instances to keep honest -- and the lists here are tens of rows,
@@ -735,6 +942,10 @@ local function redraw(self: MenuUIHandle)
 		empty = drawGangs(self)
 	elseif self.selected == "skills" then
 		empty = drawSkills(self)
+	elseif self.selected == "codes" then
+		empty = drawCodes(self)
+	elseif self.selected == "settings" then
+		empty = drawSettings(self)
 	else
 		-- A tab in Config with no pane behind it. Said out loud rather than drawn as a
 		-- blank, because a blank panel reads as a bug in the data and this is a bug in
@@ -756,6 +967,25 @@ local function redraw(self: MenuUIHandle)
 	end
 end
 
+-- Rebuild, but only if the pane that owns this data is the one on screen.
+--
+-- The unscoped version was fine while every pane was a list of labels: a rebuild the player
+-- cannot see costs a few instances and nothing else. The codes pane is what makes it wrong.
+-- It contains a TextBox, a redraw destroys and recreates it, and `MoneyUpdated` fires every
+-- few seconds during a shift -- so a player typing a code into an open menu would have had
+-- the field yanked out from under the cursor mid-word by a wage landing somewhere else.
+-- The text itself is mirrored into the handle and survives; the focus does not, and a field
+-- that drops focus while you type is a field that looks broken.
+--
+-- Scoping it fixes that and pays for itself twice over: the relationships pane no longer
+-- rebuilds forty rows every time a bill is charged either.
+local function redrawPane(self: MenuUIHandle, paneId: string)
+	if self.selected ~= paneId then
+		return
+	end
+	redraw(self)
+end
+
 local function redrawCard(self: MenuUIHandle)
 	local parts: { string } = {}
 	if self.stage ~= "" then
@@ -767,43 +997,44 @@ local function redrawCard(self: MenuUIHandle)
 end
 
 -- -------------------------------------------------------------------
--- The pushes. Each stores and redraws, and redraw is a no-op while closed, so a
--- player who never opens the menu pays for four table assignments a life.
+-- The pushes. Each stores its state and asks the one pane that owns it to redraw, and a
+-- redraw is a no-op while the menu is closed -- so a player who never opens the menu pays
+-- one table assignment per push and nothing else.
 -- -------------------------------------------------------------------
 
 function MenuUI.SetJobs(self: MenuUIHandle, posts: { JobPostState })
 	self.jobs = posts
-	redraw(self)
+	redrawPane(self, "jobs")
 end
 
 function MenuUI.SetRoster(self: MenuUIHandle, entries: { PersonRosterEntry })
 	self.roster = entries
-	redraw(self)
+	redrawPane(self, "relationships")
 end
 
 function MenuUI.SetGang(self: MenuUIHandle, state: GangState?)
 	self.gang = state
-	redraw(self)
+	redrawPane(self, "gangs")
 end
 
 function MenuUI.SetSkills(self: MenuUIHandle, state: SkillsState?)
 	self.skills = state
-	redraw(self)
+	redrawPane(self, "skills")
 end
 
 function MenuUI.SetBill(self: MenuUIHandle, state: BillState?)
 	self.bill = state
-	redraw(self)
+	redrawPane(self, "money")
 end
 
 function MenuUI.SetSavings(self: MenuUIHandle, state: SavingsState?)
 	self.savings = state
-	redraw(self)
+	redrawPane(self, "money")
 end
 
 function MenuUI.SetHouse(self: MenuUIHandle, state: HouseState?)
 	self.house = state
-	redraw(self)
+	redrawPane(self, "money")
 end
 
 function MenuUI.SetIdentity(self: MenuUIHandle, ageYears: number, stage: string, money: number)
@@ -811,10 +1042,47 @@ function MenuUI.SetIdentity(self: MenuUIHandle, ageYears: number, stage: string,
 	self.stage = stage
 	self.money = money
 	redrawCard(self)
+	-- The card is not the only thing holding this number: the money pane's Cash row is the
+	-- same balance, and a pane that kept showing the old one while the header above it
+	-- showed the new one would be the menu disagreeing with itself on one screen.
+	redrawPane(self, "money")
 end
 
 function MenuUI.OnColorsToggled(self: MenuUIHandle, callback: (boolean) -> ())
 	self.onColorsToggled = callback
+end
+
+function MenuUI.SetSettings(self: MenuUIHandle, state: SettingsState)
+	self.settings = state
+	redrawPane(self, "settings")
+end
+
+function MenuUI.SetCodes(self: MenuUIHandle, state: CodesState)
+	self.codes = state
+	redrawPane(self, "codes")
+end
+
+-- The answer to one redeem attempt.
+--
+-- Clears the box on success and leaves it alone on failure, which is the only pairing that
+-- is right in both directions: a code that worked is done with and a box still holding it
+-- invites a second press that can only be refused, whereas a code that was mistyped is one
+-- character away from correct and erasing it makes the player type the whole thing again.
+function MenuUI.SetCodeResult(self: MenuUIHandle, ok: boolean, message: string)
+	self.codeResult = message
+	self.codeResultOk = ok
+	if ok then
+		self.codeDraft = ""
+	end
+	redrawPane(self, "codes")
+end
+
+function MenuUI.OnCodeSubmitted(self: MenuUIHandle, callback: (code: string) -> ())
+	self.onCodeSubmitted = callback
+end
+
+function MenuUI.OnSettingToggled(self: MenuUIHandle, callback: (id: string, on: boolean) -> ())
+	self.onSettingToggled = callback
 end
 
 -- A name pressed on the relationships pane. What happens next is not this module's
@@ -849,6 +1117,10 @@ function MenuUI.Close(self: MenuUIHandle)
 	self.open = false
 	self.panel.Visible = false
 	self.backdrop.Visible = false
+	-- The last thing the box said dies with the visit. It is a reply to a keystroke, and a
+	-- refusal still sitting there when the player comes back an hour later is answering a
+	-- question they no longer remember asking. The draft survives -- that is theirs.
+	self.codeResult = ""
 	for _, button in self.railButtons do
 		button.BackgroundTransparency = 0.15
 		local stroke = button:FindFirstChildOfClass("UIStroke")

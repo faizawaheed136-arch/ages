@@ -1197,6 +1197,71 @@ if ok and PLACE ~= "client" then
 	end
 	print("BOOTCHECK-PLAY\t" .. table.concat(report, "  "))
 
+	-- Redeeming a code, twice.
+	--
+	-- The only path in the game place that hands out money on the strength of a string a
+	-- client sent, which makes "does the second attempt refuse" the highest-consequence
+	-- yes/no question in the tree -- and one nothing else here can ask, because it needs a
+	-- loaded profile, a begun life and a real MoneyService behind it. All three exist by
+	-- this point in the join, and only at this point.
+	--
+	-- Asserted on the *balance*, not on the returned sentence. A refusal that prints
+	-- correctly and pays anyway is the exact bug worth catching, and the sentence cannot see
+	-- it. The second call must move the balance by nothing at all.
+	if PLACE == "game" then
+		local codeReport = { "did not run" }
+		local codeOk, codeErr = pcall(function()
+			local codeService = nil
+			local dataService = nil
+			local lives = nil
+			local codes = nil
+			for _, entry in ipairs(order) do
+				if entry.rel == "src/server/services/CodeService.luau" then
+					codeService = entry.value
+				elseif entry.rel == "src/server/services/DataService.luau" then
+					dataService = entry.value
+				elseif entry.rel == "src/shared/Lives.luau" then
+					lives = entry.value
+				elseif entry.rel == "src/server/content/Codes.luau" then
+					codes = entry.value
+				end
+			end
+			if codeService == nil or dataService == nil or lives == nil or codes == nil then
+				codeReport = { "could not find CodeService, DataService, Lives or Codes in the loaded set" }
+				return
+			end
+
+			-- The first entry in the content list, whatever it is, rather than a string
+			-- written here. A harness holding its own copy of a code is a harness that goes
+			-- green on a list nobody edits and red the first time somebody edits it.
+			local first = codes.Entries[1]
+			if first == nil then
+				codeReport = { "no codes defined" }
+				return
+			end
+
+			local profile = dataService.GetProfile(player)
+			local before = lives.Active(profile.Data).money
+			codeService.Force(player, first.code)
+			local afterFirst = lives.Active(profile.Data).money
+			codeService.Force(player, first.code)
+			local afterSecond = lives.Active(profile.Data).money
+
+			local paid = afterFirst - before
+			local paidAgain = afterSecond - afterFirst
+			codeReport = {
+				`code={first.code}`,
+				`paid={tostring(paid)}`,
+				`paidAgain={tostring(paidAgain)}`,
+				`recorded={tostring(profile.Data.redeemedCodes[first.id] == true)}`,
+			}
+		end)
+		if not codeOk then
+			codeReport = { "threw: " .. tostring(codeErr) }
+		end
+		print("BOOTCHECK-CODE\t" .. table.concat(codeReport, "  "))
+	end
+
 	for _, f in ipairs(joinFailures) do
 		print("BOOTCHECK-JOINFAIL\t" .. f.signal .. "\t" .. f.err:gsub("\n", " "))
 	end

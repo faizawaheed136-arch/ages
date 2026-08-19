@@ -41,6 +41,8 @@ local TheftService = require(script.Parent.TheftService)
 local BankService = require(script.Parent.BankService)
 local GangService = require(script.Parent.GangService)
 local SkillService = require(script.Parent.SkillService)
+local SettingsService = require(script.Parent.SettingsService)
+local CodeService = require(script.Parent.CodeService)
 local FightService = require(script.Parent.FightService)
 local WitnessService = require(script.Parent.WitnessService)
 local DisguiseService = require(script.Parent.DisguiseService)
@@ -1607,6 +1609,65 @@ Commands.skill = function(player: Player, args: { string }): string
 	return SkillService.Describe(player)
 end
 
+-- Codes. The redeem box is a text field in a menu, so it is perfectly reachable by hand --
+-- what is not reachable by hand is the *second* attempt at a code you have already used,
+-- which is the case worth testing and the one you can only reach by throwing a redemption
+-- away first.
+--
+--   /code                     what this account has redeemed, and out of how many.
+--   /code <string>            redeem through the same path the box uses, refusals and all.
+--                             Deliberately not a shortcut past the checks: a command that
+--                             granted a code directly would test nothing that matters.
+--   /code clear               un-redeem everything, so the same code can be tested twice
+--                             without a second account. The only way back -- nothing in the
+--                             game removes a redemption, because a code that can be given
+--                             back is a code that can be redeemed twice.
+Commands.code = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = args[1] or ""
+	if arg == "" then
+		return CodeService.Describe(player)
+	end
+
+	if string.lower(arg) == "clear" then
+		local cleared = CodeService.Clear(player)
+		return `cleared {cleared} redemption(s) — {CodeService.Describe(player)}`
+	end
+
+	return CodeService.Force(player, arg)
+end
+
+-- Settings, which are four booleans that each change something somewhere else. The value
+-- of this command is not flipping them -- the pane does that in one click -- it is being
+-- able to read all of them back on one line while looking at whatever they were supposed
+-- to have changed.
+--
+--   /setting                  every option and its state.
+--   /setting <id> on|off      flip one, through the same write the pane's click uses.
+Commands.setting = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local id = args[1] or ""
+	if id == "" then
+		return SettingsService.Describe(player)
+	end
+
+	local value = string.lower(args[2] or "")
+	if value ~= "on" and value ~= "off" then
+		return "usage: /setting <id> on|off"
+	end
+
+	if not SettingsService.Force(player, id, value == "on") then
+		return `no setting "{id}" — {SettingsService.Describe(player)}`
+	end
+	return SettingsService.Describe(player)
+end
+
 -- The gang, which is the one crime system whose state outlives the run that made it.
 --
 --   /gang                     all four: standing with each, whether their boss is actually
@@ -2762,6 +2823,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/bank [go [<place>]|reset|on|off], "
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
 	.. "/skill [<id> <n|max>], "
+	.. "/code [<string>|clear], "
+	.. "/setting [<id> on|off], "
 	.. "/crowd [go <n>|describe|witness on|off|disguise on|off], "
 	.. "/people [bond <id> <n>|clear|on|off], /town [list|near|walk <on|off>], "
 	.. "/ties [set <id> <tie>|clear <id>], /approach, /dots, /slots [list|use <n>|delete <n>], "

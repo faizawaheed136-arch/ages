@@ -121,6 +121,8 @@ ui:SetHudVisible(false)
 menu:SetVisible(false)
 
 local RequestAgeUpRemote = Remotes.Get("RequestAgeUp")
+local RequestSetSettingRemote = Remotes.Get("RequestSetSetting")
+local RequestRedeemCodeRemote = Remotes.Get("RequestRedeemCode")
 local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
 local RequestPersonOfferRemote = Remotes.Get("RequestPersonOffer")
 local RequestPersonContactRemote = Remotes.Get("RequestPersonContact")
@@ -162,8 +164,58 @@ local cardAge = 0
 local cardStage = ""
 local cardMoney = 0
 
+-- What the player has turned on, as this client last heard it.
+--
+-- Every one of these starts at the value that reproduces the game as it played before
+-- Settings existed, and is overwritten by the first `SettingsUpdated` -- which arrives on
+-- join, before the world has finished streaming in. The window in which a preference is
+-- wrong is therefore the same window in which there is nothing on screen to be wrong
+-- about, and starting from the old behaviour rather than from the Config default keeps
+-- the two ends from having to agree about what a default is.
+local settingAgeUpConfirm = false
+local settingMoneyPops = true
+local settingCelebrations = true
+
+-- Applied by name. An explicit arm per id rather than a table of handlers, so that a
+-- setting added to Config and forgotten here is a crash on the first push with the id in
+-- the message -- rather than a switch that ships, draws, saves, and does nothing.
+local function applySetting(id: string, on: boolean)
+	if id == "ageUpConfirm" then
+		settingAgeUpConfirm = on
+	elseif id == "minimap" then
+		minimap:SetHidden(not on)
+	elseif id == "moneyPops" then
+		settingMoneyPops = on
+	elseif id == "celebrations" then
+		settingCelebrations = on
+	else
+		error(`client: no effect wired for setting "{id}". Add an arm to applySetting or remove it from Config.Settings.Options.`)
+	end
+end
+
 ui:OnAgeUpActivated(function()
-	RequestAgeUpRemote:FireServer()
+	if not settingAgeUpConfirm then
+		RequestAgeUpRemote:FireServer()
+		return
+	end
+	-- The same panel every other decision in this game is made on, rather than a bespoke
+	-- dialog. A year is spent by picking a row off a list here exactly like a job or a gang
+	-- rung is taken, and the confirm is worth nothing if it does not look like the rest of
+	-- the game's yes.
+	panel:ShowOptions({
+		key = "ageUpConfirm",
+		prompt = `Age up to {cardAge + 1}?`,
+		options = {
+			{ id = "yes", label = "Age up", note = "+1 year", locked = false },
+			{ id = "no", label = "Not yet", locked = false },
+		},
+		hint = "A year passes as soon as you say so. Nothing you had planned for this one is waiting for you afterwards.",
+		choose = function(choiceId: string)
+			if choiceId == "yes" then
+				RequestAgeUpRemote:FireServer()
+			end
+		end,
+	})
 end)
 
 ui:OnPushActivated(function()
@@ -677,7 +729,7 @@ Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number, reas
 	menu:SetIdentity(cardAge, cardStage, cardMoney)
 	if previous ~= nil then
 		local delta = balance - previous
-		if delta ~= 0 then
+		if delta ~= 0 and settingMoneyPops then
 			MoneyPop.Show(nil, delta)
 			if reason ~= nil then
 				BonusPop.Show(nil, math.abs(delta), reason)
@@ -988,12 +1040,20 @@ Remotes.Get("SavingsUpdated").OnClientEvent:Connect(function(state: Types.Saving
 end)
 
 Remotes.Get("MilestoneAchieved").OnClientEvent:Connect(function(event: Types.MilestoneEvent)
-	MilestoneFlash.Show(event.label, event.bonus)
+	if settingCelebrations then
+		MilestoneFlash.Show(event.label, event.bonus)
+	end
+	-- Outside the branch on purpose. Turning celebrations off is a request for less screen,
+	-- not for less information, and the notice line is what is left when the fanfare goes.
 	ui:ShowNotice(`Milestone: {event.label}! +{Money.Format(event.bonus)}`)
 end)
 
 Remotes.Get("BondMilestone").OnClientEvent:Connect(function(event: Types.BondMilestoneEvent)
-	BondCelebration.Show(event.person, event.label)
+	if settingCelebrations then
+		BondCelebration.Show(event.person, event.label)
+		return
+	end
+	ui:ShowNotice(`{event.person} is now your {string.lower(event.label)}.`)
 end)
 
 Remotes.Get("GossipUpdate").OnClientEvent:Connect(function(event: Types.GossipEvent)
@@ -1027,6 +1087,39 @@ menu:OnPersonTapped(function(personId: string)
 		return
 	end
 	RequestPersonContactRemote:FireServer(personId)
+end)
+
+-- Preferences. Applied *and* drawn from the same push, which is what keeps the switch on
+-- screen and the behaviour behind it from ever disagreeing: there is one arrival, and both
+-- halves happen inside it.
+--
+-- The client never applies what it clicked. Clicking sends a request and nothing else, and
+-- the row does not move until this handler runs -- so a preference that failed to save is a
+-- switch that visibly did not flip, rather than one that flipped and lied.
+Remotes.Get("SettingsUpdated").OnClientEvent:Connect(function(state: Types.SettingsState)
+	for _, option in state.settings do
+		applySetting(option.id, option.on)
+	end
+	menu:SetSettings(state)
+end)
+
+menu:OnSettingToggled(function(id: string, on: boolean)
+	RequestSetSettingRemote:FireServer(id, on)
+end)
+
+Remotes.Get("CodesUpdated").OnClientEvent:Connect(function(state: Types.CodesState)
+	menu:SetCodes(state)
+end)
+
+-- The answer to one attempt, shown on the pane the player typed into rather than on the
+-- HUD banner. A refusal belongs next to the box that caused it: the banner is for news the
+-- world sent, and this is a reply to something the player just did with their hands.
+Remotes.Get("CodeResult").OnClientEvent:Connect(function(result: Types.CodeResult)
+	menu:SetCodeResult(result.ok, result.message)
+end)
+
+menu:OnCodeSubmitted(function(code: string)
+	RequestRedeemCodeRemote:FireServer(code)
 end)
 
 Remotes.Get("AgeUpdated").OnClientEvent:Connect(function(years: number, cause: AgeUpCause)

@@ -71,6 +71,10 @@ export type MinimapHandle = typeof(setmetatable(
 		territory: TerritoryState?,
 		markers: { Frame },
 		onOpen: (() -> ())?,
+		-- Turned off in Settings. A separate flag from `dial.Visible`, which Redraw owns and
+		-- rewrites every heartbeat from whether the character exists -- a preference written
+		-- straight onto that property would be erased sixty times a second.
+		hidden: boolean,
 	},
 	Minimap
 ))
@@ -229,6 +233,7 @@ function Minimap.new(): MinimapHandle
 		territory = nil,
 		markers = {},
 		onOpen = nil,
+		hidden = false,
 	}, Minimap)
 
 	button.Activated:Connect(function()
@@ -262,7 +267,18 @@ function Minimap.SetMapData(self: MinimapHandle, data: MapData)
 		self.markers[#self.markers + 1] = dot
 	end
 
-	self.dial.Visible = true
+	self.dial.Visible = not self.hidden
+end
+
+-- Hide the dial without tearing it down. The markers, the wash and the heartbeat all stay
+-- exactly as they were, because a setting somebody flips twice in a life is not worth a
+-- rebuild -- and a minimap that had to be reconstructed on the way back would spend its
+-- first frames wrong.
+function Minimap.SetHidden(self: MinimapHandle, hidden: boolean)
+	self.hidden = hidden
+	if hidden then
+		self.dial.Visible = false
+	end
 end
 
 function Minimap.SetTerritory(self: MinimapHandle, state: TerritoryState?)
@@ -276,6 +292,14 @@ end
 function Minimap.Redraw(self: MinimapHandle)
 	local data = self.data
 	if data == nil then
+		return
+	end
+
+	-- Checked before the character lookup, not after: this runs every heartbeat, and a
+	-- player who has turned the dial off should not be paying for a character walk to
+	-- decide something that is already decided.
+	if self.hidden then
+		self.dial.Visible = false
 		return
 	end
 

@@ -1014,6 +1014,33 @@ def _boot_place(place):
         if line.startswith("BOOTCHECK-JOINWARN\t"):
             print(f"  a player joining warned: {line.split(chr(9), 1)[1]}")
 
+    # Redeeming the same code twice. The probe does it for real, against a loaded profile
+    # and the real MoneyService, and reports what each attempt actually paid -- because the
+    # failure being chased here is silent in every other way: a refusal that prints
+    # perfectly and grants the money anyway.
+    code = next(
+        (l.split("\t", 1)[1] for l in out.splitlines() if l.startswith("BOOTCHECK-CODE")),
+        None,
+    )
+    if code is not None and not boot_failed:
+        if code.startswith("threw:") or "could not find" in code or "no codes" in code:
+            print(f"  redeeming a code: {code}")
+            bad += 1
+        else:
+            fields = dict(f.split("=", 1) for f in code.split("  ") if "=" in f)
+            paid = fields.get("paid", "?")
+            again = fields.get("paidAgain", "?")
+            print(f"  redeeming a code twice: paid {paid}, then {again}")
+            if paid == "0":
+                print("    ^ the first redemption paid nothing -- the code path is dead")
+                bad += 1
+            if again != "0":
+                print(f"    ^ the second redemption paid {again} again -- a code can be farmed")
+                bad += 1
+            if fields.get("recorded") != "true":
+                print("    ^ nothing was written to redeemedCodes -- it would redeem again on rejoin")
+                bad += 1
+
     play = next(
         (l.split("\t", 1)[1] for l in out.splitlines() if l.startswith("BOOTCHECK-PLAY")),
         None,

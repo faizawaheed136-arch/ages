@@ -4251,6 +4251,12 @@ Config.UI = {
 			{ id = "relationships", label = "Relationships", glyph = "R", color = Color3.fromRGB(255, 150, 190) },
 			{ id = "gangs", label = "Gangs", glyph = "G", color = Color3.fromRGB(236, 110, 96) },
 			{ id = "skills", label = "Skills", glyph = "S", color = Color3.fromRGB(140, 226, 160) },
+			-- The last two are the housekeeping pair, and they sit at the bottom because
+			-- nothing about the life being played is behind them. A player opens the five
+			-- above during a life and these two either once, or when something has gone
+			-- wrong -- which is exactly the ordering the rail should teach.
+			{ id = "codes", label = "Codes", glyph = "#", color = Color3.fromRGB(196, 160, 255) },
+			{ id = "settings", label = "Settings", glyph = "*", color = Color3.fromRGB(148, 155, 170) },
 		},
 	},
 }
@@ -5062,6 +5068,81 @@ Config.Gossip = {
 	-- How often the gossip system checks for new opportunities.
 	-- Safe range: 30-120 seconds.
 	TickSeconds = 60,
+}
+
+-- Preferences. Every one of these is a switch that changes something the player can point
+-- at, and that is the entry bar rather than a style note: a settings screen collects
+-- switches by gravity, and the first one that toggles nothing teaches the player that none
+-- of them do.
+--
+-- The list is content and the *effects* are not. Each id below is matched by an explicit
+-- arm in the client, which errors by name on an id it does not know -- so adding a row
+-- here without wiring it is a crash on the first push rather than a dead switch shipping.
+--
+-- All of them default to the game as it plays today. Nobody is opted into a change by an
+-- update, and a player who never opens this pane never notices it exists.
+Config.Settings = {
+	Options = {
+		{
+			id = "ageUpConfirm",
+			label = "Confirm before ageing up",
+			-- Two captions, one per state, in the player's words. See `SettingState` for why
+			-- a caption beats an "On"/"Off" figure.
+			captionOn = "Pressing Age Up asks first. A year is never spent by a misclick.",
+			captionOff = "Pressing Age Up spends the year immediately.",
+			-- Off, and it is the one row here where that is a close call. Ageing up is
+			-- irreversible and the button sits under the cursor for the whole life -- but a
+			-- confirm on the single most-pressed control in the game is a second click every
+			-- year for a player who never misclicks, and the ones who want it will find it
+			-- here the first time it costs them.
+			default = false,
+		},
+		{
+			id = "minimap",
+			label = "Minimap",
+			captionOn = "The dial in the corner is showing.",
+			captionOff = "Hidden. The full map still opens on M.",
+			default = true,
+		},
+		{
+			id = "moneyPops",
+			label = "Money popups",
+			captionOn = "Every payment and charge floats up where it happened.",
+			captionOff = "Money changes silently. The balance is still on the HUD.",
+			default = true,
+		},
+		{
+			id = "celebrations",
+			label = "Celebrations",
+			captionOn = "Milestones and new friendships take the screen for a moment.",
+			captionOff = "They pass as a line of text instead.",
+			default = true,
+		},
+	},
+}
+
+-- Codes. The redeem box, not the codes themselves -- those are content and live in
+-- `src/server/content/Codes.luau`, because a code is a thing somebody writes, dates and
+-- retires, and Config is for numbers that tune behaviour.
+Config.Codes = {
+	-- The longest string the box will look at. A guard rather than a limit on what a code
+	-- may be called: the field is free text arriving from a client, and every free-text
+	-- field in this tree has a length it stops reading at.
+	-- Safe range: 16-64.
+	MaxLength = 32,
+	-- How long a player must wait between attempts.
+	--
+	-- The only reason this exists is that a code box is a guessing surface -- it is the one
+	-- input in the game where a client that fires it a thousand times a second is trying to
+	-- win rather than misbehaving. A second is invisible to somebody typing and ruinous to
+	-- somebody enumerating.
+	-- Safe range: 0.5-5.
+	AttemptCooldownSeconds = 1,
+	-- The most codes one account may hold. Not a balance lever -- the reward per code is
+	-- the balance lever -- but a bound on the size of a field that is written to the save
+	-- and never pruned.
+	-- Safe range: 50-500.
+	MaxRedeemed = 200,
 }
 
 return Config

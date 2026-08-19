@@ -72,6 +72,12 @@ local PROFILE_TEMPLATE: ProfileData = {
 	spinsAvailable = 0,
 	perks = {},
 	processedReceipts = {},
+	-- Both empty, and both correct empty. An absent setting means "the Config default", and
+	-- an absent code means "never redeemed" -- so a save written before either field existed
+	-- reconciles to exactly the state a brand new account is in, which is the state it was
+	-- already in.
+	settings = {},
+	redeemedCodes = {},
 }
 
 local playerStore = ProfileStoreModule.New("PlayerData", PROFILE_TEMPLATE)

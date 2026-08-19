@@ -61,6 +61,8 @@ local BankService = require(services.BankService)
 local GangService = require(services.GangService)
 local TerritoryService = require(services.TerritoryService)
 local SkillService = require(services.SkillService)
+local SettingsService = require(services.SettingsService)
+local CodeService = require(services.CodeService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
@@ -106,6 +108,10 @@ TerritoryService:Init()
 -- No ordering to honour: it reads DataService and nothing else, and every service that
 -- awards into it does so from a handler that runs long after boot.
 SkillService:Init()
+-- Both connect a PlayerAdded that pushes a pane, so both have to be wired before the
+-- first player can arrive -- which is what Init is for, and why neither is left to Start.
+SettingsService:Init()
+CodeService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -187,6 +193,8 @@ GangService:Start()
 -- an empty map for the life of the server.
 TerritoryService:Start()
 SkillService:Start()
+SettingsService:Start()
+CodeService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()

@@ -1628,6 +1628,59 @@ export type SkillsState = {
 	skills: { SkillState },
 }
 
+-- One preference, as the settings pane draws it. The label and both captions come down
+-- from the server rather than being written into the pane, for the same reason the skill
+-- ladder does: the server is the end that decides what a setting *is*, and a client with
+-- its own copy of the wording is a client that can disagree with the save about what the
+-- player just turned on.
+export type SettingState = {
+	id: string,
+	label: string,
+	-- What is true right now, in the player's words. One caption per state rather than one
+	-- caption plus an "On"/"Off" figure, because "Money popups: Off" tells a player what the
+	-- switch is called and nothing about what turning it back on would do for them.
+	caption: string,
+	on: boolean,
+}
+
+-- Every preference, in Config order, pushed whole and pushed by the server even for the
+-- ones only the client acts on.
+--
+-- Server-authoritative on purpose, and it is worth saying why for a screen full of things
+-- that are visibly client-side. A setting has to survive a rejoin, and the only thing in
+-- this game that survives a rejoin is the profile. Once the profile owns it, the client
+-- holding an optimistic copy buys nothing and costs a class of bug -- a toggle that looks
+-- flipped, does not save, and comes back the other way an hour later with no event in
+-- between to blame. So the client draws what it was pushed and never what it clicked.
+export type SettingsState = {
+	settings: { SettingState },
+}
+
+-- One code this account has already used. Kept and shown rather than merely counted: the
+-- pane is the only record a player has of what a code gave them, and a redeemed-codes list
+-- that says "3 redeemed" is a receipt with the amount torn off.
+export type RedeemedCode = {
+	id: string,
+	code: string,
+	label: string,
+	-- What it paid, already written out -- "$500", "2 spins". Composed server-side because
+	-- the reward shapes live in content, and a client that formatted them would have to be
+	-- taught every new shape before a code using one could ship.
+	reward: string,
+}
+
+export type CodesState = {
+	redeemed: { RedeemedCode },
+}
+
+-- The answer to one attempt at the box. Always sent, including for a code that worked,
+-- because a text box that says nothing back on success is a text box the player types
+-- into twice.
+export type CodeResult = {
+	ok: boolean,
+	message: string,
+}
+
 -- What the client draws about the gang you are in, or nil when you are in none.
 export type GangState = {
 	gangId: string,
@@ -2785,6 +2838,29 @@ export type ProfileData = {
 	-- by name rather than by spins -- checked and recorded before anything is added to
 	-- `spinsAvailable`, never after.
 	processedReceipts: { [string]: boolean },
+	-- Preferences, keyed by the ids in `Config.Settings.Options`. Sparse on purpose: only
+	-- the ones the player has actually moved are written, and anything absent means "still
+	-- whatever Config says the default is".
+	--
+	-- Sparse rather than filled in on load, because a filled table freezes today's defaults
+	-- into every save that has ever loaded. Change `default` on a setting later and the
+	-- players who never touched it would keep the old value forever, having never made a
+	-- decision about it -- which is the opposite of what a default is for.
+	--
+	-- Account-level, next to `livesLived` and for the same reason: whether this person wants
+	-- money popups is a fact about the person holding the mouse, not about the character.
+	-- Starting a new life should not hand somebody back a screen they already turned off.
+	settings: { [string]: boolean },
+	-- Codes this account has redeemed, keyed by the *id* in `Codes.luau` rather than by the
+	-- typed string. The id is the thing that must never be reused; the string beside it is
+	-- editable content, and a code re-spelled to fix a typo must not become free money for
+	-- everybody who already had it.
+	--
+	-- Account-level, and this is the part that makes a code a code. Per-life would mean a
+	-- player could bank a code, delete the slot, and cash it again -- three times over, with
+	-- three slots -- which turns every code the game ever ships into an exploit with a
+	-- multiplier on it.
+	redeemedCodes: { [string]: boolean },
 }
 
 -- One slot as the lobby menu draws it: enough to fill a card, and nothing else.
