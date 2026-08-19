@@ -169,6 +169,16 @@ function Lives.New(): LifeData
 		-- Also right for a save written before chapters existed: that life has no
 		-- smaller window to report, so its first break lists the whole of it.
 		lastChapterBreakMonths = 0,
+		-- These three are the per-chapter counters, and they are written together in
+		-- LifeService's chapter break for the same reason they belong together here.
+		--
+		-- `pendingEventCountInChapter` was missing from this table, which is the exact
+		-- failure the Reconcile note below describes -- and it bit a *newborn*, not an old
+		-- save, because this table is what a fresh life is built from too. EventService
+		-- compares it against Config.Events.MaxPerChapter on every childhood tick, so the
+		-- tick threw "attempt to compare number <= nil" every time and the toddler years
+		-- did nothing at all. The game booted, the panel drew, and no event ever came.
+		pendingEventCountInChapter = 0,
 		worldEventsThisChapter = 0,
 		modalEventsThisChapter = 0,
 		cooldownTimers = {},

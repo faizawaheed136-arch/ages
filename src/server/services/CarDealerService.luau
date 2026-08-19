@@ -15,11 +15,28 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
-local Customers = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("Customers"))
-local Ground = require(ReplicatedStorage:WaitForChild("world"):WaitForChild("Ground"))
+-- There are two `world` folders and they are not interchangeable. `ReplicatedStorage.world`
+-- is `src/shared/world` -- five modules the client also needs. Customers and Ground are in
+-- `src/server/world`, which is server-only and reached the way WorkService reaches them,
+-- through script.Parent.
+--
+-- Asking ReplicatedStorage for them did not error, which is what made this so expensive:
+-- `WaitForChild` with no timeout yields *forever* for a child that is never coming. This
+-- runs at module scope, so the bootstrap thread parked here permanently and every service
+-- after CarDealerService in init.server.luau never started. No error, no stack, nothing in
+-- the output but one "Infinite yield possible" warning -- the game simply loaded and sat
+-- there. A missing require that throws is a much cheaper bug than one that waits.
+local Customers = require(script.Parent.Parent.world.Customers)
+local Ground = require(script.Parent.Parent.world.Ground)
+-- Hoisted from inside isWorkingAtDealer, which is called on every tick. It read
+-- `ReplicatedStorage:WaitForChild("DataService")` -- DataService is a sibling service, not a
+-- shared module, so that call would have yielded forever the first time a customer was
+-- served. Every other service in this folder requires it here, at the top, by sibling path.
+local DataService = require(script.Parent.DataService)
 local MoneyService = require(script.Parent.MoneyService)
 local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
@@ -90,11 +107,11 @@ end
 -- Whether the player is currently working a shift at the auto_dealer. If so, the
 -- shift queue owns the counter and the walk-in queue should not interfere.
 local function isWorkingAtDealer(player: Player): boolean
-	local profile = require(ReplicatedStorage:WaitForChild("DataService")).GetProfile(player)
+	local profile = DataService.GetProfile(player)
 	if profile == nil then
 		return false
 	end
-	local data = require(ReplicatedStorage:WaitForChild("Lives")).Active(profile.Data)
+	local data = Lives.Active(profile.Data)
 	if not data.alive then
 		return false
 	end

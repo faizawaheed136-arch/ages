@@ -1,0 +1,2932 @@
+{
+"_studio_version": "version-d0e8cfcd943d4ae2",
+"enums": {
+"AccessModifierType": [
+"Allow",
+"Deny"
+],
+"AccessoryType": [
+"Back",
+"DressSkirt",
+"Eyebrow",
+"Eyelash",
+"Face",
+"Front",
+"Hair",
+"Hat",
+"Jacket",
+"LeftShoe",
+"Neck",
+"Pants",
+"RightShoe",
+"Shirt",
+"Shorts",
+"Shoulder",
+"Sweater",
+"TShirt",
+"Unknown",
+"Waist"
+],
+"ActionType": [
+"Draw",
+"Lose",
+"Nothing",
+"Pause",
+"Win"
+],
+"ActuatorRelativeTo": [
+"Attachment0",
+"Attachment1",
+"World"
+],
+"ActuatorType": [
+"Motor",
+"None",
+"Servo"
+],
+"AdShape": [
+"HorizontalRectangle"
+],
+"AdTeleportMethod": [
+"InGameMenuBackButton",
+"PortalForward",
+"UIBackButton",
+"Undefined"
+],
+"AdUnitStatus": [
+"Active",
+"Inactive"
+],
+"AdornCullingMode": [
+"Automatic",
+"Never"
+],
+"AlignType": [
+"Parallel",
+"Perpendicular"
+],
+"AlphaMode": [
+"Overlay",
+"Transparency"
+],
+"AnalyticsEconomyAction": [
+"Acquire",
+"Default",
+"Spend"
+],
+"AnalyticsLogLevel": [
+"Debug",
+"Error",
+"Fatal",
+"Information",
+"Trace",
+"Warning"
+],
+"AnalyticsProgressionStatus": [
+"Abandon",
+"Begin",
+"Complete",
+"Default",
+"Fail"
+],
+"AnimationPriority": [
+"Action",
+"Action2",
+"Action3",
+"Action4",
+"Core",
+"Idle",
+"Movement"
+],
+"AnimatorRetargetingMode": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"AppShellActionType": [
+"AvatarEditorPageLoaded",
+"GamePageLoaded",
+"HomePageLoaded",
+"None",
+"OpenApp",
+"ReadConversation",
+"TapAvatarTab",
+"TapChatTab",
+"TapConversationEntry",
+"TapGamePageTab",
+"TapHomePageTab"
+],
+"AppShellFeature": [
+"AvatarEditor",
+"Chat",
+"GamePage",
+"HomePage",
+"Landing",
+"More",
+"None"
+],
+"AppUpdateStatus": [
+"Available",
+"Failed",
+"NotAvailable",
+"NotSupported",
+"Unknown"
+],
+"ApplyStrokeMode": [
+"Border",
+"Contextual"
+],
+"AspectType": [
+"FitWithinMaxSize",
+"ScaleWithParentSize"
+],
+"AssetFetchStatus": [
+"Failure",
+"Loading",
+"None",
+"Success",
+"TimedOut"
+],
+"AssetType": [
+"Animation",
+"Audio",
+"BackAccessory",
+"Badge",
+"ClimbAnimation",
+"DeathAnimation",
+"Decal",
+"DressSkirtAccessory",
+"DynamicHead",
+"EarAccessory",
+"EmoteAnimation",
+"EyeAccessory",
+"EyebrowAccessory",
+"EyelashAccessory",
+"Face",
+"FaceAccessory",
+"FallAnimation",
+"FontFamily",
+"FrontAccessory",
+"GamePass",
+"Gear",
+"HairAccessory",
+"Hat",
+"Head",
+"IdleAnimation",
+"Image",
+"JacketAccessory",
+"JumpAnimation",
+"LeftArm",
+"LeftLeg",
+"LeftShoeAccessory",
+"Lua",
+"Mesh",
+"MeshPart",
+"Model",
+"MoodAnimation",
+"NeckAccessory",
+"Package",
+"Pants",
+"PantsAccessory",
+"Place",
+"Plugin",
+"PoseAnimation",
+"RightArm",
+"RightLeg",
+"RightShoeAccessory",
+"RunAnimation",
+"Shirt",
+"ShirtAccessory",
+"ShortsAccessory",
+"ShoulderAccessory",
+"SweaterAccessory",
+"SwimAnimation",
+"TShirt",
+"TShirtAccessory",
+"Torso",
+"Video",
+"WaistAccessory",
+"WalkAnimation"
+],
+"AssetTypeVerification": [
+"Always",
+"ClientOnly",
+"Default"
+],
+"AudioSubType": [
+"Music",
+"SoundEffect"
+],
+"AudioWindowSize": [
+"Large",
+"Medium",
+"Small"
+],
+"AutoIndentRule": [
+"Absolute",
+"Off",
+"Relative"
+],
+"AutomaticSize": [
+"None",
+"X",
+"XY",
+"Y"
+],
+"AvatarAssetType": [
+"BackAccessory",
+"ClimbAnimation",
+"DressSkirtAccessory",
+"DynamicHead",
+"EmoteAnimation",
+"EyebrowAccessory",
+"EyelashAccessory",
+"Face",
+"FaceAccessory",
+"FallAnimation",
+"FrontAccessory",
+"Gear",
+"HairAccessory",
+"Hat",
+"Head",
+"IdleAnimation",
+"JacketAccessory",
+"JumpAnimation",
+"LeftArm",
+"LeftLeg",
+"LeftShoeAccessory",
+"MoodAnimation",
+"NeckAccessory",
+"Pants",
+"PantsAccessory",
+"RightArm",
+"RightLeg",
+"RightShoeAccessory",
+"RunAnimation",
+"Shirt",
+"ShirtAccessory",
+"ShortsAccessory",
+"ShoulderAccessory",
+"SweaterAccessory",
+"SwimAnimation",
+"TShirt",
+"TShirtAccessory",
+"Torso",
+"WaistAccessory",
+"WalkAnimation"
+],
+"AvatarChatServiceFeature": [
+"None",
+"PlaceAudio",
+"PlaceVideo",
+"UniverseAudio",
+"UniverseVideo",
+"UserAudio",
+"UserAudioEligible",
+"UserBanned",
+"UserVideo",
+"UserVideoEligible"
+],
+"AvatarContextMenuOption": [
+"Chat",
+"Emote",
+"Friend",
+"InspectMenu"
+],
+"AvatarItemType": [
+"Asset",
+"Bundle"
+],
+"AvatarJointUpgrade": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"AvatarPromptResult": [
+"Failed",
+"PermissionDenied",
+"Success"
+],
+"AvatarThumbnailCustomizationType": [
+"Closeup",
+"FullBody"
+],
+"AvatarUnificationMode": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"Axis": [
+"X",
+"Y",
+"Z"
+],
+"BinType": [
+"Clone",
+"GameTool",
+"Grab",
+"Hammer",
+"Script"
+],
+"BodyPart": [
+"Head",
+"LeftArm",
+"LeftLeg",
+"RightArm",
+"RightLeg",
+"Torso"
+],
+"BodyPartR15": [
+"Head",
+"LeftFoot",
+"LeftHand",
+"LeftLowerArm",
+"LeftLowerLeg",
+"LeftUpperArm",
+"LeftUpperLeg",
+"LowerTorso",
+"RightFoot",
+"RightHand",
+"RightLowerArm",
+"RightLowerLeg",
+"RightUpperArm",
+"RightUpperLeg",
+"RootPart",
+"Unknown",
+"UpperTorso"
+],
+"BorderMode": [
+"Inset",
+"Middle",
+"Outline"
+],
+"BreakReason": [
+"Error",
+"Other",
+"SpecialBreakpoint",
+"UserBreakpoint"
+],
+"BreakpointRemoveReason": [
+"Requested",
+"ScriptChanged",
+"ScriptRemoved"
+],
+"BulkMoveMode": [
+"FireAllEvents",
+"FireCFrameChanged"
+],
+"BundleType": [
+"Animations",
+"BodyParts",
+"DynamicHead",
+"DynamicHeadAvatar",
+"Shoes"
+],
+"Button": [
+"Dismount",
+"Jump"
+],
+"ButtonStyle": [
+"Custom",
+"RobloxButton",
+"RobloxButtonDefault",
+"RobloxRoundButton",
+"RobloxRoundDefaultButton",
+"RobloxRoundDropdownButton"
+],
+"CageType": [
+"Inner",
+"Outer"
+],
+"CameraMode": [
+"Classic",
+"LockFirstPerson"
+],
+"CameraPanMode": [
+"Classic",
+"EdgeBump"
+],
+"CameraType": [
+"Attach",
+"Custom",
+"Fixed",
+"Follow",
+"Orbital",
+"Scriptable",
+"Track",
+"Watch"
+],
+"CatalogCategoryFilter": [
+"Collectibles",
+"CommunityCreations",
+"Featured",
+"None",
+"Premium",
+"Recommended"
+],
+"CatalogSortAggregation": [
+"AllTime",
+"Past12Hours",
+"Past3Days",
+"PastDay",
+"PastMonth",
+"PastWeek"
+],
+"CatalogSortType": [
+"Bestselling",
+"MostFavorited",
+"PriceHighToLow",
+"PriceLowToHigh",
+"RecentlyCreated",
+"Relevance"
+],
+"CellBlock": [
+"CornerWedge",
+"HorizontalWedge",
+"InverseCornerWedge",
+"Solid",
+"VerticalWedge"
+],
+"CellMaterial": [
+"Aluminum",
+"Asphalt",
+"BluePlastic",
+"Brick",
+"Cement",
+"CinderBlock",
+"Empty",
+"Gold",
+"Granite",
+"Grass",
+"Gravel",
+"Iron",
+"MossyStone",
+"RedPlastic",
+"Sand",
+"Water",
+"WoodLog",
+"WoodPlank"
+],
+"CellOrientation": [
+"NegX",
+"NegZ",
+"X",
+"Z"
+],
+"CenterDialogType": [
+"ModalDialog",
+"PlayerInitiatedDialog",
+"QuitDialog",
+"UnsolicitedDialog"
+],
+"ChatCallbackType": [
+"OnClientFormattingMessage",
+"OnClientSendingMessage",
+"OnCreatingChatWindow",
+"OnServerReceivingMessage"
+],
+"ChatColor": [
+"Blue",
+"Green",
+"Red",
+"White"
+],
+"ChatMode": [
+"Menu",
+"TextAndMenu"
+],
+"ChatPrivacyMode": [
+"AllUsers",
+"Friends",
+"NoOne"
+],
+"ChatStyle": [
+"Bubble",
+"Classic",
+"ClassicAndBubble"
+],
+"ChatVersion": [
+"LegacyChatService",
+"TextChatService"
+],
+"ClientAnimatorThrottlingMode": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"CollisionFidelity": [
+"Box",
+"Default",
+"DynamicPreciseConvexDecomposition",
+"Hull",
+"PreciseConvexDecomposition"
+],
+"CommandPermission": [
+"LocalUser",
+"Plugin"
+],
+"CompileTarget": [
+"Client",
+"CoreScript",
+"CoreScriptRaw",
+"Studio"
+],
+"CompletionItemKind": [
+"Class",
+"Color",
+"Constant",
+"Constructor",
+"Enum",
+"EnumMember",
+"Event",
+"Field",
+"File",
+"Folder",
+"Function",
+"Interface",
+"Keyword",
+"Method",
+"Module",
+"Operator",
+"Property",
+"Reference",
+"Snippet",
+"Struct",
+"Text",
+"TypeParameter",
+"Unit",
+"Value",
+"Variable"
+],
+"CompletionItemTag": [
+"AddParens",
+"ClientServerBoundaryViolation",
+"CommandLinePermissions",
+"Deprecated",
+"IncorrectIndexType",
+"PluginPermissions",
+"PutCursorInParens",
+"RobloxPermissions",
+"TypeCorrect"
+],
+"CompletionTriggerKind": [
+"Invoked",
+"TriggerCharacter",
+"TriggerForIncompleteCompletions"
+],
+"ComputerCameraMovementMode": [
+"CameraToggle",
+"Classic",
+"Default",
+"Follow",
+"Orbital"
+],
+"ComputerMovementMode": [
+"ClickToMove",
+"Default",
+"KeyboardMouse"
+],
+"ConnectionError": [
+"DisconnectBadhash",
+"DisconnectBlockedIP",
+"DisconnectBySecurityPolicy",
+"DisconnectClientFailure",
+"DisconnectClientRequest",
+"DisconnectCloudEditKick",
+"DisconnectCollaboratorPermissionRevoked",
+"DisconnectCollaboratorUnderage",
+"DisconnectConnectionLost",
+"DisconnectDevMaintenance",
+"DisconnectDuplicatePlayer",
+"DisconnectDuplicateTicket",
+"DisconnectErrors",
+"DisconnectEvicted",
+"DisconnectHashTimeout",
+"DisconnectIdle",
+"DisconnectIllegalTeleport",
+"DisconnectLuaKick",
+"DisconnectModeratedGame",
+"DisconnectNewSecurityKeyMismatch",
+"DisconnectOnRemoteSysStats",
+"DisconnectOutOfMemoryKeepPlayingLeave",
+"DisconnectPlayerless",
+"DisconnectPrivateServerKickout",
+"DisconnectProtocolMismatch",
+"DisconnectRaknetErrors",
+"DisconnectReceivePacketError",
+"DisconnectReceivePacketStreamError",
+"DisconnectRejoin",
+"DisconnectRobloxMaintenance",
+"DisconnectRomarkEndOfTest",
+"DisconnectSecurityKeyMismatch",
+"DisconnectSendPacketError",
+"DisconnectTimeout",
+"DisconnectWrongVersion",
+"OK",
+"PlacelaunchCustomMessage",
+"PlacelaunchDisabled",
+"PlacelaunchError",
+"PlacelaunchErrors",
+"PlacelaunchFlooded",
+"PlacelaunchGameEnded",
+"PlacelaunchGameFull",
+"PlacelaunchHashException",
+"PlacelaunchHashExpired",
+"PlacelaunchHttpError",
+"PlacelaunchOtherError",
+"PlacelaunchPartyCannotFit",
+"PlacelaunchRestricted",
+"PlacelaunchUnauthorized",
+"PlacelaunchUserLeft",
+"PlacelaunchUserPrivacyUnauthorized",
+"PlayerRemoved",
+"ReplicatorTimeout",
+"TeleportErrors",
+"TeleportFailure",
+"TeleportFlooded",
+"TeleportGameEnded",
+"TeleportGameFull",
+"TeleportGameNotFound",
+"TeleportIsTeleporting",
+"TeleportUnauthorized",
+"Unknown"
+],
+"ConnectionState": [
+"Connected",
+"Disconnected"
+],
+"ContextActionPriority": [
+"High",
+"Low",
+"Medium"
+],
+"ContextActionResult": [
+"Pass",
+"Sink"
+],
+"ControlMode": [
+"Classic",
+"MouseLockSwitch"
+],
+"CoreGuiType": [
+"All",
+"Backpack",
+"Chat",
+"EmotesMenu",
+"Health",
+"PlayerList",
+"SelfView"
+],
+"CreateOutfitFailure": [
+"InvalidName",
+"Other",
+"OutfitLimitReached"
+],
+"CreatorType": [
+"Group",
+"User"
+],
+"CreatorTypeFilter": [
+"All",
+"Group",
+"User"
+],
+"CurrencyType": [
+"Default",
+"Robux",
+"Tix"
+],
+"CustomCameraMode": [
+"Classic",
+"Default",
+"Follow"
+],
+"DataStoreRequestType": [
+"GetAsync",
+"GetSortedAsync",
+"OnUpdate",
+"SetIncrementAsync",
+"SetIncrementSortedAsync",
+"UpdateAsync"
+],
+"DeathStyle": [
+"ClassicBreakApart",
+"Default",
+"NonGraphic",
+"Scriptable"
+],
+"DebuggerEndReason": [
+"ClientRequest",
+"ConfigurationFailed",
+"Disconnected",
+"InvalidHost",
+"RpcError",
+"ServerProtocolMismatch",
+"ServerShutdown",
+"Timeout"
+],
+"DebuggerExceptionBreakMode": [
+"Always",
+"Never",
+"Unhandled"
+],
+"DebuggerFrameType": [
+"C",
+"Lua"
+],
+"DebuggerPauseReason": [
+"Breakpoint",
+"Entrypoint",
+"Exception",
+"Requested",
+"SingleStep",
+"Unknown"
+],
+"DebuggerStatus": [
+"ConnectionClosed",
+"ConnectionLost",
+"InternalError",
+"InvalidArgument",
+"InvalidResponse",
+"InvalidState",
+"RpcError",
+"Success",
+"Timeout"
+],
+"DevCameraOcclusionMode": [
+"Invisicam",
+"Zoom"
+],
+"DevComputerCameraMovementMode": [
+"CameraToggle",
+"Classic",
+"Follow",
+"Orbital",
+"UserChoice"
+],
+"DevComputerMovementMode": [
+"ClickToMove",
+"KeyboardMouse",
+"Scriptable",
+"UserChoice"
+],
+"DevTouchCameraMovementMode": [
+"Classic",
+"Follow",
+"Orbital",
+"UserChoice"
+],
+"DevTouchMovementMode": [
+"ClickToMove",
+"DPad",
+"DynamicThumbstick",
+"Scriptable",
+"Thumbpad",
+"Thumbstick",
+"UserChoice"
+],
+"DeveloperMemoryTag": [
+"Animation",
+"GeometryCSG",
+"GraphicsMeshParts",
+"GraphicsParticles",
+"GraphicsParts",
+"GraphicsSolidModels",
+"GraphicsSpatialHash",
+"GraphicsTerrain",
+"GraphicsTexture",
+"GraphicsTextureCharacter",
+"Gui",
+"HttpCache",
+"Instances",
+"Internal",
+"LuaHeap",
+"Navigation",
+"PhysicsCollision",
+"PhysicsParts",
+"Script",
+"Signals",
+"Sounds",
+"StreamingSounds",
+"TerrainVoxels"
+],
+"DeviceType": [
+"Desktop",
+"Phone",
+"Tablet",
+"Unknown"
+],
+"DialogBehaviorType": [
+"MultiplePlayers",
+"SinglePlayer"
+],
+"DialogPurpose": [
+"Help",
+"Quest",
+"Shop"
+],
+"DialogTone": [
+"Enemy",
+"Friendly",
+"Neutral"
+],
+"DominantAxis": [
+"Height",
+"Width"
+],
+"DraftStatusCode": [
+"DraftCommitted",
+"DraftOutdated",
+"OK",
+"ScriptRemoved"
+],
+"DragDetectorDragStyle": [
+"BestForDevice",
+"RotateAxis",
+"RotateTrackball",
+"Scriptable",
+"TranslateLine",
+"TranslateLineOrPlane",
+"TranslatePlane",
+"TranslatePlaneOrLine",
+"TranslateViewPlane"
+],
+"DragDetectorResponseStyle": [
+"Custom",
+"Geometric",
+"Physical"
+],
+"DraggerCoordinateSpace": [
+"Object",
+"World"
+],
+"DraggerMovementMode": [
+"Geometric",
+"Physical"
+],
+"EasingDirection": [
+"In",
+"InOut",
+"Out"
+],
+"EasingStyle": [
+"Back",
+"Bounce",
+"Circular",
+"Cubic",
+"Elastic",
+"Exponential",
+"Linear",
+"Quad",
+"Quart",
+"Quint",
+"Sine"
+],
+"ElasticBehavior": [
+"Always",
+"Never",
+"WhenScrollable"
+],
+"EnviromentalPhysicsThrottle": [
+"Always",
+"DefaultAuto",
+"Disabled",
+"Skip16",
+"Skip2",
+"Skip4",
+"Skip8"
+],
+"ExperienceAuthScope": [
+"CreatorAssetsCreate",
+"DefaultScope"
+],
+"ExplosionType": [
+"Craters",
+"NoCraters"
+],
+"FacialAnimationStreamingState": [
+"Audio",
+"None",
+"Place",
+"Server",
+"Video"
+],
+"FieldOfViewMode": [
+"Diagonal",
+"MaxAxis",
+"Vertical"
+],
+"FillDirection": [
+"Horizontal",
+"Vertical"
+],
+"FilterResult": [
+"Accepted",
+"Rejected"
+],
+"FinishRecordingOperation": [
+"Append",
+"Cancel",
+"Commit"
+],
+"FluidForces": [
+"Default",
+"Experimental"
+],
+"Font": [
+"AmaticSC",
+"Antique",
+"Arcade",
+"Arial",
+"ArialBold",
+"Bangers",
+"Bodoni",
+"Cartoon",
+"Code",
+"Creepster",
+"DenkOne",
+"Fantasy",
+"Fondamento",
+"FredokaOne",
+"Garamond",
+"Gotham",
+"GothamBlack",
+"GothamBold",
+"GothamMedium",
+"GrenzeGotisch",
+"Highway",
+"IndieFlower",
+"JosefinSans",
+"Jura",
+"Kalam",
+"Legacy",
+"LuckiestGuy",
+"Merriweather",
+"Michroma",
+"Nunito",
+"Oswald",
+"PatrickHand",
+"PermanentMarker",
+"Roboto",
+"RobotoCondensed",
+"RobotoMono",
+"Sarpanch",
+"SciFi",
+"SourceSans",
+"SourceSansBold",
+"SourceSansItalic",
+"SourceSansLight",
+"SourceSansSemibold",
+"SpecialElite",
+"TitilliumWeb",
+"Ubuntu",
+"Unknown"
+],
+"FontSize": [
+"Size10",
+"Size11",
+"Size12",
+"Size14",
+"Size18",
+"Size24",
+"Size28",
+"Size32",
+"Size36",
+"Size42",
+"Size48",
+"Size60",
+"Size8",
+"Size9",
+"Size96"
+],
+"FontStyle": [
+"Italic",
+"Normal"
+],
+"FontWeight": [
+"Bold",
+"ExtraBold",
+"ExtraLight",
+"Heavy",
+"Light",
+"Medium",
+"Regular",
+"SemiBold",
+"Thin"
+],
+"ForceLimitMode": [
+"Magnitude",
+"PerAxis"
+],
+"FormFactor": [
+"Brick",
+"Custom",
+"Plate",
+"Symmetric"
+],
+"FrameStyle": [
+"ChatBlue",
+"ChatGreen",
+"ChatRed",
+"Custom",
+"DropShadow",
+"RobloxRound",
+"RobloxSquare"
+],
+"FramerateManagerMode": [
+"Automatic",
+"Off",
+"On"
+],
+"FriendRequestEvent": [
+"Accept",
+"Deny",
+"Issue",
+"Revoke"
+],
+"FriendStatus": [
+"Friend",
+"FriendRequestReceived",
+"FriendRequestSent",
+"NotFriend",
+"Unknown"
+],
+"FunctionalTestResult": [
+"Error",
+"Passed",
+"Warning"
+],
+"GameAvatarType": [
+"PlayerChoice",
+"R15",
+"R6"
+],
+"GearGenreSetting": [
+"AllGenres",
+"MatchingGenreOnly"
+],
+"GearType": [
+"BuildingTools",
+"Explosives",
+"MeleeWeapons",
+"MusicalInstruments",
+"NavigationEnhancers",
+"PowerUps",
+"RangedWeapons",
+"SocialItems",
+"Transport"
+],
+"Genre": [
+"Adventure",
+"All",
+"Fantasy",
+"Funny",
+"Ninja",
+"Pirate",
+"Scary",
+"SciFi",
+"SkatePark",
+"Sports",
+"TownAndCity",
+"Tutorial",
+"War",
+"WildWest"
+],
+"GraphicsMode": [
+"Automatic",
+"Direct3D11",
+"Metal",
+"NoGraphics",
+"OpenGL",
+"Vulkan"
+],
+"GuiState": [
+"Hover",
+"Idle",
+"Press"
+],
+"GuiType": [
+"Core",
+"Custom",
+"CustomBillboards",
+"PlayerNameplates"
+],
+"HandlesStyle": [
+"Movement",
+"Resize"
+],
+"HighlightDepthMode": [
+"AlwaysOnTop",
+"Occluded"
+],
+"HorizontalAlignment": [
+"Center",
+"Left",
+"Right"
+],
+"HoverAnimateSpeed": [
+"Fast",
+"Medium",
+"Slow",
+"VeryFast",
+"VerySlow"
+],
+"HttpCachePolicy": [
+"DataOnly",
+"Default",
+"Full",
+"InternalRedirectRefresh",
+"None"
+],
+"HttpContentType": [
+"ApplicationJson",
+"ApplicationUrlEncoded",
+"ApplicationXml",
+"TextPlain",
+"TextXml"
+],
+"HttpError": [
+"Aborted",
+"ConnectFail",
+"DnsResolve",
+"InvalidRedirect",
+"InvalidUrl",
+"NetFail",
+"OK",
+"OutOfMemory",
+"SslConnectFail",
+"SslVerificationFail",
+"TimedOut",
+"TooManyRedirects",
+"Unknown"
+],
+"HttpRequestType": [
+"Analytics",
+"Avatar",
+"Chat",
+"Default",
+"Localization",
+"MarketplaceService",
+"Players"
+],
+"HumanoidCollisionType": [
+"InnerBox",
+"OuterBox"
+],
+"HumanoidDisplayDistanceType": [
+"None",
+"Subject",
+"Viewer"
+],
+"HumanoidHealthDisplayType": [
+"AlwaysOff",
+"AlwaysOn",
+"DisplayWhenDamaged"
+],
+"HumanoidOnlySetCollisionsOnStateChange": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"HumanoidRigType": [
+"R15",
+"R6"
+],
+"HumanoidStateMachineMode": [
+"Default",
+"Legacy",
+"LuaStateMachine",
+"NoStateMachine"
+],
+"HumanoidStateType": [
+"Climbing",
+"Dead",
+"FallingDown",
+"Flying",
+"Freefall",
+"GettingUp",
+"Jumping",
+"Landed",
+"None",
+"Physics",
+"PlatformStanding",
+"Ragdoll",
+"Running",
+"RunningNoPhysics",
+"Seated",
+"StrafingNoPhysics",
+"Swimming"
+],
+"IKCollisionsMode": [
+"IncludeContactedMechanisms",
+"NoCollisions",
+"OtherMechanismsAnchored"
+],
+"IKControlConstraintSupport": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"IKControlType": [
+"LookAt",
+"Position",
+"Rotation",
+"Transform"
+],
+"IXPLoadingStatus": [
+"ErrorConnection",
+"ErrorInvalidUser",
+"ErrorJsonParse",
+"ErrorTimedOut",
+"Initialized",
+"None",
+"Pending"
+],
+"InOut": [
+"Center",
+"Edge",
+"Inset"
+],
+"InfoType": [
+"Asset",
+"Bundle",
+"GamePass",
+"Product",
+"Subscription"
+],
+"InitialDockState": [
+"Bottom",
+"Float",
+"Left",
+"Right",
+"Top"
+],
+"InputType": [
+"Constant",
+"NoInput",
+"Sin"
+],
+"InterpolationThrottlingMode": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"JointCreationMode": [
+"All",
+"None",
+"Surface"
+],
+"KeyCode": [
+"A",
+"Ampersand",
+"Asterisk",
+"At",
+"B",
+"BackSlash",
+"Backquote",
+"Backspace",
+"Break",
+"ButtonA",
+"ButtonB",
+"ButtonL1",
+"ButtonL2",
+"ButtonL3",
+"ButtonR1",
+"ButtonR2",
+"ButtonR3",
+"ButtonSelect",
+"ButtonStart",
+"ButtonX",
+"ButtonY",
+"C",
+"CapsLock",
+"Caret",
+"Clear",
+"Colon",
+"Comma",
+"Compose",
+"D",
+"DPadDown",
+"DPadLeft",
+"DPadRight",
+"DPadUp",
+"Delete",
+"Dollar",
+"Down",
+"E",
+"Eight",
+"End",
+"Equals",
+"Escape",
+"Euro",
+"F",
+"F1",
+"F10",
+"F11",
+"F12",
+"F13",
+"F14",
+"F15",
+"F2",
+"F3",
+"F4",
+"F5",
+"F6",
+"F7",
+"F8",
+"F9",
+"Five",
+"Four",
+"G",
+"GreaterThan",
+"H",
+"Hash",
+"Help",
+"Home",
+"I",
+"Insert",
+"J",
+"K",
+"KeypadDivide",
+"KeypadEight",
+"KeypadEnter",
+"KeypadEquals",
+"KeypadFive",
+"KeypadFour",
+"KeypadMinus",
+"KeypadMultiply",
+"KeypadNine",
+"KeypadOne",
+"KeypadPeriod",
+"KeypadPlus",
+"KeypadSeven",
+"KeypadSix",
+"KeypadThree",
+"KeypadTwo",
+"KeypadZero",
+"L",
+"Left",
+"LeftAlt",
+"LeftBracket",
+"LeftControl",
+"LeftCurly",
+"LeftMeta",
+"LeftParenthesis",
+"LeftShift",
+"LeftSuper",
+"LessThan",
+"M",
+"Menu",
+"Minus",
+"Mode",
+"N",
+"Nine",
+"NumLock",
+"O",
+"One",
+"P",
+"PageDown",
+"PageUp",
+"Pause",
+"Percent",
+"Period",
+"Pipe",
+"Plus",
+"Power",
+"Print",
+"Q",
+"Question",
+"Quote",
+"QuotedDouble",
+"R",
+"Return",
+"Right",
+"RightAlt",
+"RightBracket",
+"RightControl",
+"RightCurly",
+"RightMeta",
+"RightParenthesis",
+"RightShift",
+"RightSuper",
+"S",
+"ScrollLock",
+"Semicolon",
+"Seven",
+"Six",
+"Slash",
+"Space",
+"SysReq",
+"T",
+"Tab",
+"Three",
+"Thumbstick1",
+"Thumbstick2",
+"Tilde",
+"Two",
+"U",
+"Underscore",
+"Undo",
+"Unknown",
+"Up",
+"V",
+"W",
+"World0",
+"World1",
+"World10",
+"World11",
+"World12",
+"World13",
+"World14",
+"World15",
+"World16",
+"World17",
+"World18",
+"World19",
+"World2",
+"World20",
+"World21",
+"World22",
+"World23",
+"World24",
+"World25",
+"World26",
+"World27",
+"World28",
+"World29",
+"World3",
+"World30",
+"World31",
+"World32",
+"World33",
+"World34",
+"World35",
+"World36",
+"World37",
+"World38",
+"World39",
+"World4",
+"World40",
+"World41",
+"World42",
+"World43",
+"World44",
+"World45",
+"World46",
+"World47",
+"World48",
+"World49",
+"World5",
+"World50",
+"World51",
+"World52",
+"World53",
+"World54",
+"World55",
+"World56",
+"World57",
+"World58",
+"World59",
+"World6",
+"World60",
+"World61",
+"World62",
+"World63",
+"World64",
+"World65",
+"World66",
+"World67",
+"World68",
+"World69",
+"World7",
+"World70",
+"World71",
+"World72",
+"World73",
+"World74",
+"World75",
+"World76",
+"World77",
+"World78",
+"World79",
+"World8",
+"World80",
+"World81",
+"World82",
+"World83",
+"World84",
+"World85",
+"World86",
+"World87",
+"World88",
+"World89",
+"World9",
+"World90",
+"World91",
+"World92",
+"World93",
+"World94",
+"World95",
+"X",
+"Y",
+"Z",
+"Zero"
+],
+"KeyInterpolationMode": [
+"Constant",
+"Cubic",
+"Linear"
+],
+"KeywordFilterType": [
+"Exclude",
+"Include"
+],
+"Language": [
+"Default"
+],
+"LeftRight": [
+"Center",
+"Left",
+"Right"
+],
+"Limb": [
+"Head",
+"LeftArm",
+"LeftLeg",
+"RightArm",
+"RightLeg",
+"Torso",
+"Unknown"
+],
+"LineJoinMode": [
+"Bevel",
+"Miter",
+"Round"
+],
+"ListDisplayMode": [
+"Horizontal",
+"Vertical"
+],
+"ListenerType": [
+"CFrame",
+"Camera",
+"ObjectCFrame",
+"ObjectPosition"
+],
+"LoadCharacterLayeredClothing": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"LoadDynamicHeads": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"MarkupKind": [
+"Markdown",
+"PlainText"
+],
+"Material": [
+"Air",
+"Asphalt",
+"Basalt",
+"Brick",
+"Cardboard",
+"Carpet",
+"CeramicTiles",
+"ClayRoofTiles",
+"Cobblestone",
+"Concrete",
+"CorrodedMetal",
+"CrackedLava",
+"DiamondPlate",
+"Fabric",
+"Foil",
+"ForceField",
+"Glacier",
+"Glass",
+"Granite",
+"Grass",
+"Ground",
+"Ice",
+"LeafyGrass",
+"Leather",
+"Limestone",
+"Marble",
+"Metal",
+"Mud",
+"Neon",
+"Pavement",
+"Pebble",
+"Plaster",
+"Plastic",
+"Rock",
+"RoofShingles",
+"Rubber",
+"Salt",
+"Sand",
+"Sandstone",
+"Slate",
+"SmoothPlastic",
+"Snow",
+"Water",
+"Wood",
+"WoodPlanks"
+],
+"MaterialPattern": [
+"Organic",
+"Regular"
+],
+"MembershipType": [
+"BuildersClub",
+"None",
+"OutrageousBuildersClub",
+"Premium",
+"TurboBuildersClub"
+],
+"MeshPartDetailLevel": [
+"DistanceBased",
+"Level00",
+"Level01",
+"Level02",
+"Level03",
+"Level04"
+],
+"MeshPartHeadsAndAccessories": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"MeshScaleUnit": [
+"CM",
+"Foot",
+"Inch",
+"MM",
+"Meter",
+"Stud"
+],
+"MeshType": [
+"Brick",
+"CornerWedge",
+"Cylinder",
+"FileMesh",
+"Head",
+"ParallelRamp",
+"Prism",
+"Pyramid",
+"RightAngleRamp",
+"Sphere",
+"Torso",
+"Wedge"
+],
+"MessageType": [
+"MessageError",
+"MessageInfo",
+"MessageOutput",
+"MessageWarning"
+],
+"ModelLevelOfDetail": [
+"Automatic",
+"Disabled",
+"StreamingMesh"
+],
+"ModelStreamingBehavior": [
+"Default",
+"Improved",
+"Legacy"
+],
+"ModelStreamingMode": [
+"Atomic",
+"Default",
+"Nonatomic",
+"Persistent",
+"PersistentPerPlayer"
+],
+"ModifierKey": [
+"Alt",
+"Ctrl",
+"Meta",
+"Shift"
+],
+"MouseBehavior": [
+"Default",
+"LockCenter",
+"LockCurrentPosition"
+],
+"MoveState": [
+"AirFree",
+"Coasting",
+"Pushing",
+"Stopped",
+"Stopping"
+],
+"MuteState": [
+"Muted",
+"Unmuted"
+],
+"NameOcclusion": [
+"EnemyOcclusion",
+"NoOcclusion",
+"OccludeAll"
+],
+"NetworkOwnership": [
+"Automatic",
+"Manual",
+"OnContact"
+],
+"NormalId": [
+"Back",
+"Bottom",
+"Front",
+"Left",
+"Right",
+"Top"
+],
+"OrientationAlignmentMode": [
+"OneAttachment",
+"TwoAttachment"
+],
+"OutfitSource": [
+"All",
+"Created",
+"Purchased"
+],
+"OutfitType": [
+"All",
+"Avatar",
+"DynamicHead"
+],
+"OutputLayoutMode": [
+"Horizontal",
+"Vertical"
+],
+"OverrideMouseIconBehavior": [
+"ForceHide",
+"ForceShow",
+"None"
+],
+"PackagePermission": [
+"Edit",
+"NoAccess",
+"None",
+"Own",
+"Revoked",
+"UseView"
+],
+"PartType": [
+"Ball",
+"Block",
+"CornerWedge",
+"Cylinder",
+"Wedge"
+],
+"ParticleEmitterShape": [
+"Box",
+"Cylinder",
+"Disc",
+"Sphere"
+],
+"ParticleEmitterShapeInOut": [
+"InAndOut",
+"Inward",
+"Outward"
+],
+"ParticleEmitterShapeStyle": [
+"Surface",
+"Volume"
+],
+"ParticleFlipbookLayout": [
+"Grid2x2",
+"Grid4x4",
+"Grid8x8",
+"None"
+],
+"ParticleFlipbookMode": [
+"Loop",
+"OneShot",
+"PingPong",
+"Random"
+],
+"ParticleFlipbookTextureCompatible": [
+"Compatible",
+"NotCompatible",
+"Unknown"
+],
+"ParticleOrientation": [
+"FacingCamera",
+"FacingCameraWorldUp",
+"VelocityParallel",
+"VelocityPerpendicular"
+],
+"PathStatus": [
+"ClosestNoPath",
+"ClosestOutOfRange",
+"FailFinishNotEmpty",
+"FailStartNotEmpty",
+"NoPath",
+"Success"
+],
+"PathWaypointAction": [
+"Custom",
+"Jump",
+"Walk"
+],
+"PermissionLevelShown": [
+"Game",
+"Roblox",
+"RobloxGame",
+"RobloxScript",
+"Studio"
+],
+"PhysicsSimulationRate": [
+"Fixed120Hz",
+"Fixed240Hz",
+"Fixed60Hz"
+],
+"PhysicsSteppingMethod": [
+"Adaptive",
+"Default",
+"Fixed"
+],
+"Platform": [
+"Android",
+"AndroidTV",
+"BeOS",
+"Chromecast",
+"DOS",
+"IOS",
+"Linux",
+"NX",
+"None",
+"OSX",
+"Ouya",
+"PS3",
+"PS4",
+"SteamOS",
+"UWP",
+"WebOS",
+"WiiU",
+"Windows",
+"XBox360",
+"XBoxOne"
+],
+"PlaybackState": [
+"Begin",
+"Cancelled",
+"Completed",
+"Delayed",
+"Paused",
+"Playing"
+],
+"PlayerActions": [
+"CharacterBackward",
+"CharacterForward",
+"CharacterJump",
+"CharacterLeft",
+"CharacterRight"
+],
+"PlayerChatType": [
+"All",
+"Team",
+"Whisper"
+],
+"PoseEasingDirection": [
+"In",
+"InOut",
+"Out"
+],
+"PoseEasingStyle": [
+"Bounce",
+"Constant",
+"Cubic",
+"Elastic",
+"Linear"
+],
+"PositionAlignmentMode": [
+"OneAttachment",
+"TwoAttachment"
+],
+"PrivilegeType": [
+"Admin",
+"Banned",
+"Member",
+"Owner",
+"Visitor"
+],
+"ProductLocationRestriction": [
+"AllGames",
+"AllowedGames",
+"AvatarShop"
+],
+"ProductPurchaseDecision": [
+"NotProcessedYet",
+"PurchaseGranted"
+],
+"PromptCreateAssetResult": [
+"NoUserInput",
+"PermissionDenied",
+"Success",
+"Timeout",
+"UnknownFailure",
+"UploadFailed"
+],
+"PromptPublishAssetResult": [
+"NoUserInput",
+"PermissionDenied",
+"Success",
+"Timeout",
+"UnknownFailure",
+"UploadFailed"
+],
+"PropertyStatus": [
+"Error",
+"Ok",
+"Warning"
+],
+"ProximityPromptExclusivity": [
+"AlwaysShow",
+"OneGlobally",
+"OnePerButton"
+],
+"ProximityPromptInputType": [
+"Gamepad",
+"Keyboard",
+"Touch"
+],
+"ProximityPromptStyle": [
+"Custom",
+"Default"
+],
+"QualityLevel": [
+"Automatic",
+"Level01",
+"Level02",
+"Level03",
+"Level04",
+"Level05",
+"Level06",
+"Level07",
+"Level08",
+"Level09",
+"Level10",
+"Level11",
+"Level12",
+"Level13",
+"Level14",
+"Level15",
+"Level16",
+"Level17",
+"Level18",
+"Level19",
+"Level20",
+"Level21"
+],
+"R15CollisionType": [
+"InnerBox",
+"OuterBox"
+],
+"RaycastFilterType": [
+"Exclude",
+"Include"
+],
+"RejectCharacterDeletions": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"RenderFidelity": [
+"Automatic",
+"Performance",
+"Precise"
+],
+"RenderPriority": [
+"Camera",
+"Character",
+"First",
+"Input",
+"Last"
+],
+"RenderingTestComparisonMethod": [
+"diff",
+"psnr"
+],
+"ReplicateInstanceDestroySetting": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"ResamplerMode": [
+"Default",
+"Pixelated"
+],
+"ReservedHighlightId": [
+"Active",
+"Hover",
+"Selection",
+"Standard"
+],
+"RestPose": [
+"Custom",
+"Default",
+"RotationsReset"
+],
+"ReturnKeyType": [
+"Default",
+"Done",
+"Go",
+"Next",
+"Search",
+"Send"
+],
+"ReverbType": [
+"Alley",
+"Arena",
+"Auditorium",
+"Bathroom",
+"CarpettedHallway",
+"Cave",
+"City",
+"ConcertHall",
+"Forest",
+"GenericReverb",
+"Hallway",
+"Hangar",
+"LivingRoom",
+"Mountains",
+"NoReverb",
+"PaddedCell",
+"ParkingLot",
+"Plain",
+"Quarry",
+"Room",
+"SewerPipe",
+"StoneCorridor",
+"StoneRoom",
+"UnderWater"
+],
+"RibbonTool": [
+"ColorPicker",
+"Group",
+"MaterialPicker",
+"Move",
+"None",
+"Rotate",
+"Scale",
+"Select",
+"Transform",
+"Ungroup"
+],
+"RigScale": [
+"Default",
+"Rthro",
+"RthroNarrow"
+],
+"RigType": [
+"Custom",
+"None",
+"R15"
+],
+"RollOffMode": [
+"Inverse",
+"InverseTapered",
+"Linear",
+"LinearSquare"
+],
+"RotationOrder": [
+"XYZ",
+"XZY",
+"YXZ",
+"YZX",
+"ZXY",
+"ZYX"
+],
+"RotationType": [
+"CameraRelative",
+"MovementRelative"
+],
+"RtlTextSupport": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"RunContext": [
+"Client",
+"Legacy",
+"Plugin",
+"Server"
+],
+"RuntimeUndoBehavior": [
+"Aggregate",
+"Hybrid",
+"Snapshot"
+],
+"SafeAreaCompatibility": [
+"FullscreenExtension",
+"None"
+],
+"SalesTypeFilter": [
+"All",
+"Collectibles",
+"Premium"
+],
+"SaveAvatarThumbnailCustomizationFailure": [
+"BadDistanceScale",
+"BadFieldOfViewDeg",
+"BadThumbnailType",
+"BadYRotDeg",
+"Other"
+],
+"SaveFilter": [
+"SaveAll",
+"SaveGame",
+"SaveWorld"
+],
+"SavedQualitySetting": [
+"Automatic",
+"QualityLevel1",
+"QualityLevel10",
+"QualityLevel2",
+"QualityLevel3",
+"QualityLevel4",
+"QualityLevel5",
+"QualityLevel6",
+"QualityLevel7",
+"QualityLevel8",
+"QualityLevel9"
+],
+"ScaleType": [
+"Crop",
+"Fit",
+"Slice",
+"Stretch",
+"Tile"
+],
+"ScopeCheckResult": [
+"BackendError",
+"ConsentAccepted",
+"ConsentDenied",
+"InvalidArgument",
+"InvalidScopes",
+"NoUserInput",
+"Timeout",
+"UnexpectedError"
+],
+"ScreenInsets": [
+"CoreUISafeInsets",
+"DeviceSafeInsets",
+"None"
+],
+"ScreenOrientation": [
+"LandscapeLeft",
+"LandscapeRight",
+"LandscapeSensor",
+"Portrait",
+"Sensor"
+],
+"ScrollBarInset": [
+"Always",
+"None",
+"ScrollBar"
+],
+"ScrollingDirection": [
+"X",
+"XY",
+"Y"
+],
+"SelectionBehavior": [
+"Escape",
+"Stop"
+],
+"SelectionRenderMode": [
+"Both",
+"BoundingBoxes",
+"Outlines"
+],
+"SelfViewPosition": [
+"BottomLeft",
+"BottomRight",
+"LastPosition",
+"TopLeft",
+"TopRight"
+],
+"SensorMode": [
+"Floor",
+"Ladder"
+],
+"SensorUpdateType": [
+"Manual",
+"OnRead"
+],
+"ServerAudioBehavior": [
+"Enabled",
+"Muted",
+"OnlineGame"
+],
+"ServiceVisibility": [
+"Always",
+"Off",
+"WithChildren"
+],
+"Severity": [
+"Error",
+"Hint",
+"Information",
+"Warning"
+],
+"SignalBehavior": [
+"AncestryDeferred",
+"Default",
+"Deferred",
+"Immediate"
+],
+"SizeConstraint": [
+"RelativeXX",
+"RelativeXY",
+"RelativeYY"
+],
+"SolverConvergenceVisualizationMode": [
+"Disabled",
+"PerEdge",
+"PerIsland"
+],
+"SortDirection": [
+"Ascending",
+"Descending"
+],
+"SortOrder": [
+"Custom",
+"LayoutOrder",
+"Name"
+],
+"SpecialKey": [
+"ChatHotkey",
+"End",
+"Home",
+"Insert",
+"PageDown",
+"PageUp"
+],
+"StartCorner": [
+"BottomLeft",
+"BottomRight",
+"TopLeft",
+"TopRight"
+],
+"Status": [
+"Confusion",
+"Poison"
+],
+"StreamOutBehavior": [
+"Default",
+"LowMemory",
+"Opportunistic"
+],
+"StreamingIntegrityMode": [
+"Default",
+"Disabled",
+"MinimumRadiusPause",
+"PauseOutsideLoadedArea"
+],
+"StreamingPauseMode": [
+"ClientPhysicsPause",
+"Default",
+"Disabled"
+],
+"StudioCloseMode": [
+"CloseDoc",
+"CloseStudio",
+"None"
+],
+"StudioDataModelType": [
+"Edit",
+"None",
+"PlayClient",
+"PlayServer",
+"Standalone"
+],
+"StudioScriptEditorColorCategories": [
+"AICOOverlayButtonBackground",
+"AICOOverlayButtonBackgroundHover",
+"AICOOverlayButtonBackgroundPressed",
+"AICOOverlayText",
+"ActiveLine",
+"Background",
+"Bool",
+"Bracket",
+"Builtin",
+"Comment",
+"DebuggerCurrentLine",
+"DebuggerErrorLine",
+"Default",
+"DocViewCodeBackground",
+"Error",
+"FindSelectionBackground",
+"Function",
+"FunctionName",
+"Hint",
+"IndentationRuler",
+"Info",
+"Keyword",
+"Local",
+"LuauKeyword",
+"MatchingWordBackground",
+"MenuBackground",
+"MenuBorder",
+"MenuPrimaryText",
+"MenuScrollbarBackground",
+"MenuScrollbarHandle",
+"MenuSecondaryText",
+"MenuSelectedBackground",
+"MenuSelectedText",
+"Method",
+"Nil",
+"Number",
+"Operator",
+"Property",
+"Ruler",
+"SelectionBackground",
+"SelectionText",
+"Self",
+"String",
+"TODO",
+"Warning",
+"Whitespace"
+],
+"StudioScriptEditorColorPresets": [
+"Custom",
+"Extra1",
+"Extra2",
+"RobloxDefault"
+],
+"StudioStyleGuideColor": [
+"AICOOverlayButtonBackground",
+"AICOOverlayButtonBackgroundHover",
+"AICOOverlayButtonBackgroundPressed",
+"AICOOverlayText",
+"AttributeCog",
+"Border",
+"BrightText",
+"Button",
+"ButtonBorder",
+"ButtonText",
+"CategoryItem",
+"ChatIncomingBgColor",
+"ChatIncomingTextColor",
+"ChatModeratedMessageColor",
+"ChatOutgoingBgColor",
+"ChatOutgoingTextColor",
+"CheckedFieldBackground",
+"CheckedFieldBorder",
+"CheckedFieldIndicator",
+"ColorPickerFrame",
+"CurrentMarker",
+"Dark",
+"DebuggerCurrentLine",
+"DebuggerErrorLine",
+"DialogButton",
+"DialogButtonBorder",
+"DialogButtonText",
+"DialogMainButton",
+"DialogMainButtonText",
+"DiffFilePathBackground",
+"DiffFilePathBorder",
+"DiffFilePathText",
+"DiffLineNum",
+"DiffLineNumAdditionBackground",
+"DiffLineNumDeletionBackground",
+"DiffLineNumNoChangeBackground",
+"DiffLineNumSeparatorBackground",
+"DiffTextAddition",
+"DiffTextAdditionBackground",
+"DiffTextDeletion",
+"DiffTextDeletionBackground",
+"DiffTextHunkInfo",
+"DiffTextNoChange",
+"DiffTextNoChangeBackground",
+"DiffTextSeparatorBackground",
+"DimmedText",
+"DocViewCodeBackground",
+"DropShadow",
+"Dropdown",
+"EmulatorBar",
+"EmulatorDropDown",
+"ErrorText",
+"FilterButtonAccent",
+"FilterButtonBorder",
+"FilterButtonBorderAlt",
+"FilterButtonChecked",
+"FilterButtonDefault",
+"FilterButtonHover",
+"GameSettingsTableItem",
+"GameSettingsTooltip",
+"HeaderSection",
+"InfoBarWarningBackground",
+"InfoBarWarningText",
+"InfoText",
+"InputFieldBackground",
+"InputFieldBorder",
+"Item",
+"Light",
+"LinkText",
+"MainBackground",
+"MainButton",
+"MainText",
+"Mid",
+"Midlight",
+"Notification",
+"RibbonButton",
+"RibbonTab",
+"RibbonTabTopBar",
+"ScriptBackground",
+"ScriptBool",
+"ScriptBracket",
+"ScriptBuiltInFunction",
+"ScriptComment",
+"ScriptEditorCurrentLine",
+"ScriptError",
+"ScriptFindSelectionBackground",
+"ScriptFunction",
+"ScriptFunctionName",
+"ScriptHint",
+"ScriptInformation",
+"ScriptKeyword",
+"ScriptLocal",
+"ScriptLuauKeyword",
+"ScriptMatchingWordSelectionBackground",
+"ScriptMethod",
+"ScriptNil",
+"ScriptNumber",
+"ScriptOperator",
+"ScriptProperty",
+"ScriptRuler",
+"ScriptSelectionBackground",
+"ScriptSelectionText",
+"ScriptSelf",
+"ScriptSideWidget",
+"ScriptString",
+"ScriptText",
+"ScriptTodo",
+"ScriptWarning",
+"ScriptWhitespace",
+"ScrollBar",
+"ScrollBarBackground",
+"SensitiveText",
+"Separator",
+"Shadow",
+"StatusBar",
+"SubText",
+"Tab",
+"TabBar",
+"TableItem",
+"Titlebar",
+"TitlebarText",
+"Tooltip",
+"ViewPortBackground",
+"WarningText"
+],
+"StudioStyleGuideModifier": [
+"Default",
+"Disabled",
+"Hover",
+"Pressed",
+"Selected"
+],
+"Style": [
+"AlternatingSupports",
+"BridgeStyleSupports",
+"NoSupports"
+],
+"SurfaceConstraint": [
+"Hinge",
+"Motor",
+"None",
+"SteppingMotor"
+],
+"SurfaceGuiShape": [
+"CurvedHorizontally",
+"Flat"
+],
+"SurfaceGuiSizingMode": [
+"FixedSize",
+"PixelsPerStud"
+],
+"SurfaceType": [
+"Glue",
+"Hinge",
+"Inlet",
+"Motor",
+"Smooth",
+"SmoothNoOutlines",
+"SteppingMotor",
+"Studs",
+"Universal",
+"Weld"
+],
+"SwipeDirection": [
+"Down",
+"Left",
+"None",
+"Right",
+"Up"
+],
+"TableMajorAxis": [
+"ColumnMajor",
+"RowMajor"
+],
+"Technology": [
+"Compatibility",
+"Future",
+"Legacy",
+"ShadowMap",
+"Voxel"
+],
+"TeleportMethod": [
+"TeleportPartyAsync",
+"TeleportToPlaceInstance",
+"TeleportToPrivateServer",
+"TeleportToSpawnByName",
+"TeleportUnknown"
+],
+"TeleportResult": [
+"Failure",
+"Flooded",
+"GameEnded",
+"GameFull",
+"GameNotFound",
+"IsTeleporting",
+"Success",
+"Unauthorized"
+],
+"TeleportState": [
+"Failed",
+"InProgress",
+"RequestedFromServer",
+"Started",
+"WaitingForServer"
+],
+"TeleportType": [
+"ToInstance",
+"ToPlace",
+"ToReservedServer"
+],
+"TerrainAcquisitionMethod": [
+"Convert",
+"EditAddTool",
+"EditReplaceTool",
+"EditSeaLevelTool",
+"Generate",
+"Import",
+"Legacy",
+"None",
+"Other",
+"RegionFillTool",
+"RegionPasteTool",
+"Template"
+],
+"TerrainFace": [
+"Bottom",
+"Side",
+"Top"
+],
+"TextChatMessageStatus": [
+"Floodchecked",
+"InvalidPrivacySettings",
+"InvalidTextChannelPermissions",
+"MessageTooLong",
+"Sending",
+"Success",
+"TextFilterFailed",
+"Unknown"
+],
+"TextDirection": [
+"Auto",
+"LeftToRight",
+"RightToLeft"
+],
+"TextFilterContext": [
+"PrivateChat",
+"PublicChat"
+],
+"TextInputType": [
+"Default",
+"Email",
+"NoSuggestions",
+"Number",
+"OneTimePassword",
+"Password",
+"PasswordShown",
+"Phone",
+"Username"
+],
+"TextTruncate": [
+"AtEnd",
+"None"
+],
+"TextXAlignment": [
+"Center",
+"Left",
+"Right"
+],
+"TextYAlignment": [
+"Bottom",
+"Center",
+"Top"
+],
+"TextureMode": [
+"Static",
+"Stretch",
+"Wrap"
+],
+"TextureQueryType": [
+"Humanoid",
+"HumanoidOrphaned",
+"NonHumanoid",
+"NonHumanoidOrphaned"
+],
+"ThreadPoolConfig": [
+"Auto",
+"PerCore1",
+"PerCore2",
+"PerCore3",
+"PerCore4",
+"Threads1",
+"Threads16",
+"Threads2",
+"Threads3",
+"Threads4",
+"Threads8"
+],
+"ThrottlingPriority": [
+"Default",
+"ElevatedOnServer",
+"Extreme"
+],
+"ThumbnailSize": [
+"Size100x100",
+"Size150x150",
+"Size180x180",
+"Size352x352",
+"Size420x420",
+"Size48x48",
+"Size60x60"
+],
+"ThumbnailType": [
+"AvatarBust",
+"AvatarThumbnail",
+"HeadShot"
+],
+"TickCountSampleMethod": [
+"Benchmark",
+"Fast",
+"Precise"
+],
+"TopBottom": [
+"Bottom",
+"Center",
+"Top"
+],
+"TouchCameraMovementMode": [
+"Classic",
+"Default",
+"Follow",
+"Orbital"
+],
+"TouchMovementMode": [
+"ClickToMove",
+"DPad",
+"Default",
+"DynamicThumbstick",
+"Thumbpad",
+"Thumbstick"
+],
+"TrackerError": [
+"AudioError",
+"AudioNoPermission",
+"InitFailed",
+"NoAudio",
+"NoService",
+"NoVideo",
+"Ok",
+"UnsupportedDevice",
+"VideoError",
+"VideoNoPermission",
+"VideoUnsupported"
+],
+"TrackerExtrapolationFlagMode": [
+"Auto",
+"ExtrapolateFacsAndPose",
+"ExtrapolateFacsOnly",
+"ForceDisabled"
+],
+"TrackerLodFlagMode": [
+"Auto",
+"ForceFalse",
+"ForceTrue"
+],
+"TrackerLodValueMode": [
+"Auto",
+"Force0",
+"Force1"
+],
+"TrackerMode": [
+"Audio",
+"AudioVideo",
+"None",
+"Video"
+],
+"TrackerPromptEvent": [
+"LODCameraRecommendDisable"
+],
+"TriStateBoolean": [
+"False",
+"True",
+"Unknown"
+],
+"TweenStatus": [
+"Canceled",
+"Completed"
+],
+"UITheme": [
+"Dark",
+"Light"
+],
+"UiMessageType": [
+"UiMessageError",
+"UiMessageInfo"
+],
+"UsageContext": [
+"Default",
+"Preview"
+],
+"UserCFrame": [
+"Floor",
+"Head",
+"LeftHand",
+"RightHand"
+],
+"UserInputState": [
+"Begin",
+"Cancel",
+"Change",
+"End",
+"None"
+],
+"UserInputType": [
+"Accelerometer",
+"Focus",
+"Gamepad1",
+"Gamepad2",
+"Gamepad3",
+"Gamepad4",
+"Gamepad5",
+"Gamepad6",
+"Gamepad7",
+"Gamepad8",
+"Gyro",
+"InputMethod",
+"Keyboard",
+"MouseButton1",
+"MouseButton2",
+"MouseButton3",
+"MouseMovement",
+"MouseWheel",
+"None",
+"TextInput",
+"Touch"
+],
+"VRSafetyBubbleMode": [
+"Anyone",
+"NoOne",
+"OnlyFriends"
+],
+"VRScaling": [
+"Off",
+"World"
+],
+"VRSessionState": [
+"Focused",
+"Idle",
+"Stopping",
+"Undefined",
+"Visible"
+],
+"VRTouchpad": [
+"Left",
+"Right"
+],
+"VRTouchpadMode": [
+"ABXY",
+"Touch",
+"VirtualThumbstick"
+],
+"VelocityConstraintMode": [
+"Line",
+"Plane",
+"Vector"
+],
+"VerticalAlignment": [
+"Bottom",
+"Center",
+"Top"
+],
+"VerticalScrollBarPosition": [
+"Left",
+"Right"
+],
+"VibrationMotor": [
+"Large",
+"LeftHand",
+"LeftTrigger",
+"RightHand",
+"RightTrigger",
+"Small"
+],
+"ViewMode": [
+"Decal",
+"GeometryComplexity",
+"None",
+"Transparent"
+],
+"VirtualCursorMode": [
+"Default",
+"Disabled",
+"Enabled"
+],
+"VirtualInputMode": [
+"None",
+"Playing",
+"Recording"
+],
+"VoiceChatState": [
+"Ended",
+"Failed",
+"Idle",
+"Joined",
+"Joining",
+"JoiningRetry",
+"Leaving"
+],
+"VolumetricAudio": [
+"Automatic",
+"Disabled",
+"Enabled"
+],
+"WaterDirection": [
+"NegX",
+"NegY",
+"NegZ",
+"X",
+"Y",
+"Z"
+],
+"WaterForce": [
+"Max",
+"Medium",
+"None",
+"Small",
+"Strong"
+],
+"WeldConstraintPreserve": [
+"All",
+"None",
+"Touching"
+],
+"WrapLayerAutoSkin": [
+"Disabled",
+"EnabledOverride",
+"EnabledPreserve"
+],
+"WrapLayerDebugMode": [
+"BoundCage",
+"BoundCageAndLinks",
+"HSRInner",
+"HSRInnerReverse",
+"HSROuter",
+"HSROuterDetail",
+"LayerCage",
+"LayerCageFittedToBase",
+"LayerCageFittedToPrev",
+"None",
+"OuterCage",
+"Rbf",
+"Reference",
+"ReferenceMeshAfterMorph"
+],
+"WrapTargetDebugMode": [
+"None",
+"OuterCageDetail",
+"Rbf",
+"TargetCageCompressed",
+"TargetCageInterface",
+"TargetCageOriginal",
+"TargetLayerCageCompressed",
+"TargetLayerCageOriginal",
+"TargetLayerInterface"
+],
+"ZIndexBehavior": [
+"Global",
+"Sibling"
+]
+}
+}

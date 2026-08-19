@@ -137,7 +137,9 @@ function CarDealerUI.new(): CarDealerUIHandle
 	greetingLabel.Size = UDim2.new(1, 0, 0, 0)
 	greetingLabel.AutomaticSize = Enum.AutomaticSize.Y
 	greetingLabel.BackgroundTransparency = 1
-	greetingLabel.Font = Enum.Font.GothamItalic
+	-- Enum.Font has no italic Gotham -- same note as StatsUI's near-miss label. The
+	-- quieter reading this wanted is already carried by the size and the dimmed colour.
+	greetingLabel.Font = Enum.Font.Gotham
 	greetingLabel.TextSize = 12
 	greetingLabel.TextWrapped = true
 	greetingLabel.TextXAlignment = Enum.TextXAlignment.Left

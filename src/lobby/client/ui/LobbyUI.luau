@@ -498,12 +498,16 @@ function LobbyUI.new(): LobbyUIHandle
 	joinCodeHeader.Parent = joinCodePanel
 
 	-- The code string for the active slot, or a hint when none is generated yet.
+	-- Monospace on purpose: a join code gets read aloud and typed back, so the
+	-- digits have to line up and 0/O and 1/I have to be tellable apart.
+	-- Enum.Font.GothamMonoBold does not exist -- naming it threw and took the whole
+	-- lobby client down with it. RobotoMono is the enum's monospace face.
 	local joinCodeCodeLabel = Instance.new("TextLabel")
 	joinCodeCodeLabel.Name = "Code"
 	joinCodeCodeLabel.BackgroundTransparency = 1
 	joinCodeCodeLabel.Size = UDim2.new(1, -180, 0, 28)
 	joinCodeCodeLabel.Position = UDim2.new(0, 12, 0, 28)
-	joinCodeCodeLabel.Font = Enum.Font.GothamMonoBold
+	joinCodeCodeLabel.Font = Enum.Font.RobotoMono
 	joinCodeCodeLabel.Text = ""
 	joinCodeCodeLabel.TextSize = 20
 	joinCodeCodeLabel.TextColor3 = ACCENT
@@ -597,7 +601,8 @@ function LobbyUI.new(): LobbyUIHandle
 	joinCodeInput.BorderSizePixel = 0
 	joinCodeInput.Size = UDim2.new(0.5, -18, 0, 28)
 	joinCodeInput.Position = UDim2.new(0, 12, 0, 92)
-	joinCodeInput.Font = Enum.Font.GothamMonoBold
+	-- Same monospace reason as the code label above: this is where a code is typed in.
+	joinCodeInput.Font = Enum.Font.RobotoMono
 	joinCodeInput.Text = ""
 	joinCodeInput.TextSize = 16
 	joinCodeInput.TextColor3 = TEXT

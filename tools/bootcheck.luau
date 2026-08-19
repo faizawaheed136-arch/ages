@@ -183,6 +183,41 @@ Col.__tostring = function(a) return `{a.R}, {a.G}, {a.B}` end
 --------------------------------------------------------------------------------
 
 local Node = {}
+
+-- The path a node sits at, for error messages that read like Roblox's own.
+local function nodePath(node)
+	local parts = {}
+	local current = node
+	while type(current) == "table" and rawget(current, "name") ~= nil do
+		table.insert(parts, 1, rawget(current, "name"))
+		current = rawget(current, "parent")
+	end
+	return table.concat(parts, ".")
+end
+
+-- A stub that remembers it came from asking a *mapped* node for a child it does not have.
+--
+-- The distinction matters and missing it is what let `require(script.Parent.Ribbons)` sit in
+-- `VerdictService` while this gate reported the game place "clean -- 110 modules loaded".
+-- Ribbons lives in `content/`, not `services/`, so in Studio that line raised "Ribbons is not
+-- a valid member of Folder ServerScriptService.Server.services" and took the entire server
+-- bootstrap down with it. The player saw a world with no services in it.
+--
+-- The old fallback handed back a plain stub for every unknown key, with a comment arguing
+-- that "the harness's own coverage gaps are not the game's bugs". That is a real principle
+-- and it is why fabricated service nodes still get the permissive path. But it does not
+-- apply to the source tree: those nodes are built from the manifest, which is the actual
+-- file list on disk, so a child missing *there* is not a gap in the harness -- it is a module
+-- that does not exist, which is the exact thing Roblox refuses. Provenance is what tells the
+-- two cases apart, so the stub carries it and `require` reads it back.
+local function newMissing(parent, key)
+	local stub = newStub(tostring(key))
+	rawset(stub, "__missingFrom", nodePath(parent))
+	rawset(stub, "__missingClass", rawget(parent, "class"))
+	rawset(stub, "__missingKey", tostring(key))
+	return stub
+end
+
 Node.__index = function(self, key)
 	local children = rawget(self, "children")
 	if children and children[key] then
@@ -205,13 +240,37 @@ Node.__index = function(self, key)
 	if key == "ClassName" then
 		return rawget(self, "class")
 	end
+	-- Tagged rather than rejected here on purpose. An unknown key on a mapped node is only
+	-- *certainly* wrong when it is required as a module; read as a property or called as an
+	-- Instance method this harness has not implemented (`:GetFullName()`, `:Destroy()`), it
+	-- is still the harness's gap and failing on it would be the false-positive class this
+	-- file has already removed checks for. So record where it came from and let `require`,
+	-- which cannot be anything but a module lookup, be the one to judge it.
+	if rawget(self, "mapped") then
+		return newMissing(self, key)
+	end
 	return newStub(tostring(key))
 end
 
+-- `WaitForChild` with no timeout does not fail for a child that never arrives -- it yields
+-- forever. At module scope that parks the bootstrap thread permanently, so every service
+-- after it never starts and the output holds no error at all, only a warning. This is the
+-- worst shape a bug in this tree can take, and one shipped: CarDealerService asked
+-- `ReplicatedStorage.world` for Customers and Ground, which live in `src/server/world`,
+-- and the game place loaded with a world in it and nothing running.
+--
+-- This gate returned a stub instantly, so the wait it could not survive was the one thing
+-- it never modelled. On a mapped node the answer is knowable -- the manifest is the file
+-- list -- so a name that is not there is tagged the same way a dot-index is, and `require`
+-- reports it. Unmapped nodes keep the permissive answer; their children genuinely are the
+-- harness's blind spot rather than the game's mistake.
 function Node.WaitForChild(self, name)
 	local children = rawget(self, "children")
 	if children and children[name] then
 		return children[name]
+	end
+	if rawget(self, "mapped") then
+		return newMissing(self, name)
 	end
 	return newStub(name)
 end
@@ -295,6 +354,9 @@ local function ensureDir(parts, count)
 	end
 	local parent = count > 1 and ensureDir(parts, count - 1) or nil
 	local node = newNode(parts[count], "Folder", parent)
+	-- Built from the manifest, which is the file list on disk: this folder's children are
+	-- known completely, so an unknown one is a missing module rather than a harness gap.
+	rawset(node, "mapped", true)
 	roots[key] = node
 	if parent then
 		rawget(parent, "children")[parts[count]] = node
@@ -323,6 +385,7 @@ for _, rel in ipairs(entries) do
 		sources[dir] = rel
 	else
 		local node = newNode(moduleName, "ModuleScript", dir)
+		rawset(node, "mapped", true)
 		rawget(dir, "children")[moduleName] = node
 		sources[node] = rel
 	end
@@ -361,24 +424,39 @@ local LOBBY_SHARED = {
 	LifeSetup = "src/server/content/LifeSetup.luau",
 }
 
-local srcServer
+local ReplicatedStorage = srcShared
+local ServerScriptService = newNode("ServerScriptService", "ServerScriptService", nil)
+local StarterPlayer = newNode("StarterPlayer", "StarterPlayer", nil)
+
+-- The one script this run exists to execute. Three places, three entry points, and the
+-- client is one of them: `src/client/init.client.luau` requires thirty-six modules at the
+-- top with no pcall, exactly like the two servers do, so one throw in any of them leaves a
+-- player standing in a fully working world with **no UI at all** -- no stats, no choice
+-- panel, no prompts, nothing to press. That is indistinguishable from "the server is dead"
+-- from inside the game, and until now no gate in this repo had ever run a line of it.
+local bootNode
 if PLACE == "lobby" then
-	srcServer = roots["src/lobby/server"]
-	local shared = newNode("shared", "Folder", srcServer)
-	rawget(srcServer, "children")["shared"] = shared
+	bootNode = roots["src/lobby/server"]
+	local shared = newNode("shared", "Folder", bootNode)
+	rawget(bootNode, "children")["shared"] = shared
 	for name, rel in LOBBY_SHARED do
 		local node = newNode(name, "ModuleScript", shared)
 		rawget(shared, "children")[name] = node
 		sources[node] = rel
 	end
+	rawget(ServerScriptService, "children")["Server"] = bootNode
+	rawset(bootNode, "parent", ServerScriptService)
+elseif PLACE == "client" then
+	bootNode = roots["src/client"]
+	local starterScripts = newNode("StarterPlayerScripts", "StarterPlayerScripts", StarterPlayer)
+	rawget(StarterPlayer, "children")["StarterPlayerScripts"] = starterScripts
+	rawget(starterScripts, "children")["Client"] = bootNode
+	rawset(bootNode, "parent", starterScripts)
 else
-	srcServer = roots["src/server"]
+	bootNode = roots["src/server"]
+	rawget(ServerScriptService, "children")["Server"] = bootNode
+	rawset(bootNode, "parent", ServerScriptService)
 end
-
-local ReplicatedStorage = srcShared
-local ServerScriptService = newNode("ServerScriptService", "ServerScriptService", nil)
-rawget(ServerScriptService, "children")["Server"] = srcServer
-rawset(srcServer, "parent", ServerScriptService)
 
 local ServerStorage = newNode("ServerStorage", "ServerStorage", nil)
 if profileStore then
@@ -550,15 +628,33 @@ PlayersService.GetHumanoidDescriptionFromUserId = function()
 	return newStub("HumanoidDescription")
 end
 
+-- A client script reads `Players.LocalPlayer` at the top of its body, and on a stub that is
+-- a stub -- indexing forever and comparing false, so `LocalPlayer.Character` is a stub too
+-- and `:WaitForChild("PlayerGui")` never resolves to anything a UI module can parent to. It
+-- has to be a real player object, present *before* the client boots, because the require
+-- chain reads it during the module bodies rather than later.
+if PLACE == "client" then
+	local localPlayer = newInst("LocalPlayer", "Player")
+	localPlayer.UserId = 1
+	localPlayer.Parent = PlayersService
+	localPlayer.CharacterAdded = newSignal("Player.CharacterAdded")
+	localPlayer.CharacterRemoving = newSignal("Player.CharacterRemoving")
+	newInst("PlayerGui", "PlayerGui", localPlayer)
+	table.insert(playerList, localPlayer)
+	PlayersService.LocalPlayer = localPlayer
+end
+
 local RunServiceObject = newInst("RunService", "RunService")
 RunServiceObject.IsStudio = function()
 	return true
 end
+-- The client tree branches on these, so answering "server" during a client run would test
+-- the wrong half of every one of those branches.
 RunServiceObject.IsServer = function()
-	return true
+	return PLACE ~= "client"
 end
 RunServiceObject.IsClient = function()
-	return false
+	return PLACE == "client"
 end
 RunServiceObject.IsRunning = function()
 	return true
@@ -573,6 +669,7 @@ local services = {
 	ServerStorage = ServerStorage,
 	Players = PlayersService,
 	RunService = RunServiceObject,
+	StarterPlayer = StarterPlayer,
 	Workspace = newStub("Workspace"),
 	Lighting = newStub("Lighting"),
 	TeleportService = newStub("TeleportService"),
@@ -634,6 +731,19 @@ end
 local baseEnv
 local function makeRequire(chain)
 	return function(target)
+		if type(target) == "table" and rawget(target, "__missingFrom") ~= nil then
+			-- The path walked off the end of a folder built from the file list on disk.
+			-- Roblox raises on the *index*, before require ever sees it, so this is a hard
+			-- failure and the message is worded the way Studio words it.
+			table.insert(failures, {
+				rel = chain:match("[^ ]+$") or chain,
+				err = `{rawget(target, "__missingKey")} is not a valid member of `
+					.. `{rawget(target, "__missingClass")} "{rawget(target, "__missingFrom")}" `
+					.. `-- required a module that is not there. Check which folder it lives in.`,
+				chain = chain,
+			})
+			return newStub("missing")
+		end
 		if type(target) ~= "table" or sources[target] == nil then
 			-- A require of something this harness did not map (a stubbed instance, a
 			-- vendored path it does not know). Hand back a stub rather than failing:
@@ -842,7 +952,7 @@ rawget(game, "__cache").FindService = rawget(game, "__cache").GetService
 -- Run it
 --------------------------------------------------------------------------------
 
-local serverInit = srcServer
+local serverInit = bootNode
 local rootRequire = makeRequire("(boot)")
 
 print("BOOTCHECK-BEGIN")
@@ -944,7 +1054,12 @@ local function newCharacter(name)
 	return model
 end
 
-if ok then
+-- The join phase is a *server* question: a player arrives, a profile loads, a life begins,
+-- a body is sized. On the client there is no such moment -- the script runs as the player,
+-- so getting through its own require chain and building its UI is the whole test, and it
+-- has already happened above. Driving PlayerAdded here would be asking the client to answer
+-- for the server and reporting its silence as a failure.
+if ok and PLACE ~= "client" then
 	-- From here on, deferred work actually runs, and warnings are actually heard.
 	--
 	-- Both are off during boot for good reasons (a service's tick loop belongs to a

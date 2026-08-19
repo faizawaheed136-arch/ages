@@ -975,7 +975,13 @@ function StatsUI.new(): StatsUIHandle
 	verdictNearMiss.AnchorPoint = Vector2.new(0.5, 0)
 	verdictNearMiss.Position = UDim2.new(0.5, 0, 0.5, 300)
 	verdictNearMiss.BackgroundTransparency = 1
-	verdictNearMiss.Font = Enum.Font.GothamItalic
+	-- Enum.Font has no italic Gotham -- SourceSansItalic is the only italic face in
+	-- it, and switching family for one footnote would read as a mistake next to the
+	-- all-Gotham block above. Enum.Font.GothamItalic does not exist, and naming it
+	-- threw on the client bootstrap, which is why no UI rendered at all. The
+	-- footnote reading is already carried without italics: this is the smallest text
+	-- in the death frame and the dimmest colour in it.
+	verdictNearMiss.Font = Enum.Font.Gotham
 	verdictNearMiss.TextSize = 12
 	verdictNearMiss.TextColor3 = Color3.fromRGB(160, 155, 145)
 	verdictNearMiss.TextWrapped = true

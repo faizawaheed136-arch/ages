@@ -15,7 +15,12 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local DataService = require(script.Parent.DataService)
 
-local Ribbons = require(script.Parent.Ribbons)
+-- content/, not services/. Ribbons is data and lives with the rest of the content
+-- the way Jobs and Flags do. Written as script.Parent.Ribbons this raised "Ribbons
+-- is not a valid member of Folder ServerScriptService.Server.services", and because
+-- a require propagates the throw to its caller, it took LifeService down and then
+-- the bootstrap: the game place loaded with no services in it at all.
+local Ribbons = require(script.Parent.Parent.content.Ribbons)
 
 type Ribbon = Types.Ribbon
 type RibbonMoment = Types.RibbonMoment

@@ -315,6 +315,145 @@ def check_cycles(files, code):
     return found
 
 
+def check_enums(files, code):
+    """`Enum.X.Y` where Y is not a real member of X.
+
+    This one shipped twice and both times it killed a whole bootstrap. `Enum.Font` has
+    no italic face, so `Enum.Font.GothamItalic` in StatsUI threw on the client and the
+    game place rendered no AGES UI at all -- not a broken panel, *nothing*, because the
+    throw propagated out of the client bootstrap and every UI after it never ran. The
+    same file's lobby twin carried `Enum.Font.GothamMonoBold`, which is equally absent
+    and would have done the same to the lobby the first time a join code was shown.
+
+    Nothing else could see it. `luau-compile` parses `Enum.Font.GothamItalic` happily;
+    `rojo build` never parses at all; `luau-analyze` has no Roblox definitions here; and
+    the boot harness stubbed `Enum` as an object that answers *any* key with a fresh
+    stub, so it invented the member on demand and called the file clean. That stub is
+    the seventh time a permissive harness answer in this file has hidden a real bug.
+
+    Static rather than in the harness on purpose: a font on a panel that boot does not
+    build is still wrong, and the lobby's join-code label is exactly that case.
+
+    `tools/roblox_enums.json` is the member list, generated from Roblox's own API dump so
+    the names are measured rather than typed. To refresh it:
+
+        V=$(curl -s https://setup.rbxcdn.com/versionQTStudio)
+        curl -s "https://setup.rbxcdn.com/$V-API-Dump.json" -o /tmp/api-dump.json
+        python3 -c "import json,pathlib;d=json.load(open('/tmp/api-dump.json'));\
+pathlib.Path('tools/roblox_enums.json').write_text(json.dumps({'_studio_version':V,\
+'enums':{e['Name']:sorted(i['Name'] for i in e['Items']) for e in d['Enums']}},\
+indent=0,sort_keys=True)+'\\n')"
+    """
+    ref = json.loads((ROOT / "tools" / "roblox_enums.json").read_text())["enums"]
+
+    bad = 0
+    for f in files:
+        for m in re.finditer(r"\bEnum\.(\w+)\.(\w+)", code[f]):
+            enum, member = m.group(1), m.group(2)
+            # An enum this dump does not carry is a stale dump, not a bad name. Say so
+            # rather than reporting every member of it -- a gate nobody trusts is a gate
+            # nobody runs.
+            if enum not in ref:
+                print(
+                    f"  {f.relative_to(ROOT)}:{line_of(code[f], m.start())}  "
+                    f"Enum.{enum} is not in tools/roblox_enums.json -- regenerate it"
+                )
+                bad += 1
+                continue
+            if member in ref[enum]:
+                continue
+            near = [n for n in ref[enum] if n.lower().startswith(member.lower()[:6])]
+            hint = f"  did you mean: {', '.join(near)}" if near else ""
+            print(
+                f"  {f.relative_to(ROOT)}:{line_of(code[f], m.start())}  "
+                f"Enum.{enum}.{member} does not exist{hint}"
+            )
+            bad += 1
+    return bad
+
+
+def _brace_body(text: str, start: int) -> str:
+    """The text between the `{` at or after `start` and its matching `}`."""
+    i = text.index("{", start)
+    depth, j, n = 0, i, len(text)
+    while j < n:
+        if text[j] == "{":
+            depth += 1
+        elif text[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[i + 1 : j]
+        j += 1
+    return text[i + 1 :]
+
+
+def _top_level_lines(body: str) -> list[str]:
+    """Lines of `body` that sit at bracket depth 0, i.e. the outermost fields.
+
+    Depth is counted from the text *before* each line's own content, so the line that
+    opens a nested table (`houses = {`) counts as top level while its contents do not.
+    """
+    out, depth = [], 0
+    for line in body.split("\n"):
+        if depth == 0:
+            out.append(line)
+        depth += line.count("{") + line.count("[") + line.count("(")
+        depth -= line.count("}") + line.count("]") + line.count(")")
+    return out
+
+
+def check_life_fields(files, code):
+    """Every required `LifeData` field must be in the `Lives.New` template.
+
+    `Lives.New` is not just the newborn's shape -- `Lives.Reconcile` walks it to fill
+    absent keys on every stored life, because ProfileStore's own Reconcile cannot reach
+    inside the `slots` array. So a field missing from that one table is missing from
+    every life in the game, new and saved alike, and the file's own comment predicts the
+    consequence exactly: "no error, no warning, just `nil` where a number should be,
+    surfacing weeks later as arithmetic on a nil value in whichever service happened to
+    read it first."
+
+    That is not hypothetical. `pendingEventCountInChapter` was declared required in
+    Types, written in LifeService's chapter break, and read by EventService on every
+    childhood tick -- and never added here. The tick threw "attempt to compare number <=
+    nil" on every pass, so a newborn's whole chapter did nothing: the place loaded, the
+    stats panel drew, and not one event ever arrived. Nothing else in this file could
+    see it, because every individual line involved was correct.
+
+    Optional fields (`name: T?`) are exempt: absence is their meaning, and Lives.New
+    documents at length which ones are left out on purpose and why.
+    """
+    types_src = code[SRC / "shared" / "Types.luau"]
+    lives_src = code[SRC / "shared" / "Lives.luau"]
+
+    required = set()
+    for line in _top_level_lines(
+        _brace_body(types_src, types_src.index("export type LifeData"))
+    ):
+        m = re.match(r"\s*(\w+)\s*:\s*(.+?),?\s*$", line)
+        # A trailing `?` on the type is the whole point: absence is that field's meaning,
+        # and Lives.New documents at length which ones it leaves out and why.
+        if m and not m.group(2).endswith("?"):
+            required.add(m.group(1))
+
+    template = set()
+    for line in _top_level_lines(
+        _brace_body(lives_src, lives_src.index("function Lives.New"))
+    ):
+        m = re.match(r"\s*(\w+)\s*=", line)
+        if m:
+            template.add(m.group(1))
+
+    bad = 0
+    for name in sorted(required - template):
+        print(
+            f"  src/shared/Lives.luau  LifeData.{name} is required in Types but is not in "
+            f"the Lives.New template -- every life, new and stored, will read it as nil"
+        )
+        bad += 1
+    return bad
+
+
 def check_remotes(files, code):
     """Remote names must appear in BOTH the RemoteName union and REMOTE_NAMES.
 
@@ -702,14 +841,20 @@ def _lua_string(s: str) -> str:
 
 
 def check_boot(files, code):
-    """Do both places actually start?
+    """Does every bootstrap actually start?
 
-    Two places, run separately and reported separately. The lobby goes first because it is
-    the start place: it is where a player joins, so a lobby that does not boot means there
-    is no way into the game place at all, however healthy the game place is. Reporting them
-    in join order means the first failure you read is the first one you would hit.
+    Three of them, run separately and reported separately, in the order a player meets them:
+    the lobby (the start place -- a dead lobby means the game place is unreachable however
+    healthy the game place is), then the game place's server, then the game place's *client*.
+
+    The client is on this list because it is built exactly like the two servers -- thirty-six
+    requires at the top of `init.client.luau` with no pcall -- and no gate in this repo had
+    ever executed a line of it. When it throws, the server is fine, the world loads, the
+    character is the right size, and the player has no stats, no choice panel, no prompts and
+    nothing to press. From inside the game that is indistinguishable from a dead server,
+    which is how it survived three rounds of looking straight at the server.
     """
-    return _boot_place("lobby") + _boot_place("game")
+    return _boot_place("lobby") + _boot_place("game") + _boot_place("client")
 
 
 def _boot_place(place):
@@ -733,7 +878,11 @@ def _boot_place(place):
     and always will be. What this covers is "the server never started", which is the
     failure that looks like every other failure.
     """
-    where = "the lobby (start place -- you join here)" if place == "lobby" else "the game place"
+    where = {
+        "lobby": "the lobby (start place -- you join here)",
+        "game": "the game place, server",
+        "client": "the game place, client (no gate had ever run this)",
+    }[place]
     print(f"  {where}:")
     if not LUAU.exists():
         print(f"  FAILED: {LUAU} missing -- this check did not run.")
@@ -751,7 +900,13 @@ def _boot_place(place):
     # anybody lands in first was never executed. `LobbyService.luau` sat at zero bytes for
     # four days behind that gap -- an empty module returns nil, the bootstrap calls `:Init()`
     # on it, and the lobby dies before its first service starts.
-    if place == "lobby":
+    if place == "client":
+        # StarterPlayerScripts plus ReplicatedStorage, which is all a LocalScript can see.
+        # No `src/server`: a client that could require a service would resolve requires the
+        # real client cannot, and the gate would pass code that breaks the moment it ships.
+        roots = [ROOT / "src" / "client", ROOT / "src" / "shared"]
+        extra = []
+    elif place == "lobby":
         roots = [ROOT / "src" / "lobby", ROOT / "src" / "shared", ROOT / "vendor"]
         # The three modules `lobby.project.json` mounts by path into `Server.shared`. They
         # are listed rather than globbed from `src/server`, because pulling that whole tree
@@ -960,6 +1115,8 @@ CHECKS = [
     ("both places build (rojo)", check_builds),
     ("every asset is mounted", check_mounts),
     ("dangling Config refs", check_config),
+    ("Enum members that do not exist", check_enums),
+    ("LifeData fields missing from Lives.New", check_life_fields),
     ("require cycles", check_cycles),
     ("remote name consistency", check_remotes),
     ("unused locals", check_unused_locals),
