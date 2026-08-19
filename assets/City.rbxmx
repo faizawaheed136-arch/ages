@@ -75932,8 +75932,8 @@
 </Item><Item class="Part" referent="RBXCITY5417">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>123.52000000000001</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>131.52</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>224.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -75947,7 +75947,7 @@
 </Item><Item class="Part" referent="RBXCITY5418">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>228.02</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>244.02</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -75962,7 +75962,7 @@
 </Item><Item class="Part" referent="RBXCITY5419">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>230.02</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>246.02</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -75977,7 +75977,7 @@
 </Item><Item class="Part" referent="RBXCITY5421">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>230.52</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>246.52</Y><Z>271.9960940610233</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -76876,8 +76876,8 @@
 </Item><Item class="Part" referent="RBXCITY5485">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>123.52000000000001</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>139.51999999999998</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>239.99999999999997</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -76891,7 +76891,7 @@
 </Item><Item class="Part" referent="RBXCITY5486">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>228.02</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>260.02</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -76906,7 +76906,7 @@
 </Item><Item class="Part" referent="RBXCITY5487">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>230.02</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>262.02</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -76921,8 +76921,8 @@
 </Item><Item class="Part" referent="RBXCITY5489">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>230.52</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
-<Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>262.52</Y><Z>271.9960940610233</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">288</token>
@@ -77051,8 +77051,8 @@
 </Item><Item class="Part" referent="RBXCITY5498">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>171.51999999999998</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>304.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>187.51999999999998</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>336.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -77066,7 +77066,7 @@
 </Item><Item class="Part" referent="RBXCITY5499">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>324.02</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>356.02</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -77081,7 +77081,7 @@
 </Item><Item class="Part" referent="RBXCITY5500">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>326.02</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>358.02</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -77096,7 +77096,7 @@
 </Item><Item class="Part" referent="RBXCITY5502">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>326.52</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>358.52</Y><Z>292.62962128282606</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -77226,8 +77226,8 @@
 </Item><Item class="Part" referent="RBXCITY5511">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>123.52000000000001</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>147.51999999999998</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>255.99999999999997</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -77241,7 +77241,7 @@
 </Item><Item class="Part" referent="RBXCITY5512">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>228.02</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>276.02</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -77256,7 +77256,7 @@
 </Item><Item class="Part" referent="RBXCITY5513">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>230.02</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>278.02</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -77271,8 +77271,8 @@
 </Item><Item class="Part" referent="RBXCITY5515">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>230.52</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>278.52</Y><Z>323.2200833846159</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">288</token>
@@ -82748,8 +82748,8 @@
 </Item><Item class="Part" referent="RBXCITY5909">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>123.52000000000001</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>131.52</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>224.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -82763,7 +82763,7 @@
 </Item><Item class="Part" referent="RBXCITY5910">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>228.02</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>244.02</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -82778,7 +82778,7 @@
 </Item><Item class="Part" referent="RBXCITY5911">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>230.02</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>246.02</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -82793,7 +82793,7 @@
 </Item><Item class="Part" referent="RBXCITY5913">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>230.52</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>329.2200833846159</X><Y>246.52</Y><Z>450.0039059389767</Z><R00>-0.39073112848927377</R00><R01>0</R01><R02>-0.9205048534524403</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524403</R20><R21>0</R21><R22>-0.39073112848927377</R22></CoordinateFrame>
 <Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -82923,8 +82923,8 @@
 </Item><Item class="Part" referent="RBXCITY5922">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>171.51999999999998</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>304.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>179.51999999999998</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>320.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -82938,7 +82938,7 @@
 </Item><Item class="Part" referent="RBXCITY5923">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>324.02</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>340.02</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -82953,7 +82953,7 @@
 </Item><Item class="Part" referent="RBXCITY5924">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>326.02</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>342.02</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -82968,7 +82968,7 @@
 </Item><Item class="Part" referent="RBXCITY5926">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>326.52</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>298.62962128282606</X><Y>342.52</Y><Z>429.37037871717394</Z><R00>-0.7071067811865475</R00><R01>0</R01><R02>-0.7071067811865476</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865476</R20><R21>0</R21><R22>-0.7071067811865475</R22></CoordinateFrame>
 <Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -83098,8 +83098,8 @@
 </Item><Item class="Part" referent="RBXCITY5935">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>123.52000000000001</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>139.51999999999998</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>239.99999999999997</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -83113,7 +83113,7 @@
 </Item><Item class="Part" referent="RBXCITY5936">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>228.02</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>260.02</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -83128,7 +83128,7 @@
 </Item><Item class="Part" referent="RBXCITY5937">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>230.02</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>262.02</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -83143,8 +83143,8 @@
 </Item><Item class="Part" referent="RBXCITY5939">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>230.52</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>277.9960940610233</X><Y>262.52</Y><Z>398.7799166153841</Z><R00>-0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>-0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">288</token>
@@ -84042,8 +84042,8 @@
 </Item><Item class="Part" referent="RBXCITY6003">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>123.52000000000001</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>147.51999999999998</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>255.99999999999997</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -84057,7 +84057,7 @@
 </Item><Item class="Part" referent="RBXCITY6004">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>228.02</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>276.02</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84072,7 +84072,7 @@
 </Item><Item class="Part" referent="RBXCITY6005">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>230.02</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>278.02</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84087,8 +84087,8 @@
 </Item><Item class="Part" referent="RBXCITY6007">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>230.52</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
-<Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>456.0039059389767</X><Y>278.52</Y><Z>398.7799166153841</Z><R00>0.9205048534524404</R00><R01>0</R01><R02>-0.39073112848927377</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.39073112848927377</R20><R21>0</R21><R22>0.9205048534524404</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">288</token>
@@ -84217,8 +84217,8 @@
 </Item><Item class="Part" referent="RBXCITY6016">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>171.51999999999998</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>304.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>195.51999999999998</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>352.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -84232,7 +84232,7 @@
 </Item><Item class="Part" referent="RBXCITY6017">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>324.02</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>372.02</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84247,7 +84247,7 @@
 </Item><Item class="Part" referent="RBXCITY6018">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>326.02</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>374.02</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84262,7 +84262,7 @@
 </Item><Item class="Part" referent="RBXCITY6020">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>326.52</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>435.37037871717394</X><Y>374.52</Y><Z>429.37037871717394</Z><R00>0.7071067811865476</R00><R01>0</R01><R02>-0.7071067811865475</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.7071067811865475</R20><R21>0</R21><R22>0.7071067811865476</R22></CoordinateFrame>
 <Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -84392,8 +84392,8 @@
 </Item><Item class="Part" referent="RBXCITY6029">
 <Properties>
 <string name="Name">Tower</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>123.52000000000001</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
-<Vector3 name="size"><X>24.0</X><Y>208.0</Y><Z>18.0</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>155.51999999999998</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<Vector3 name="size"><X>24.0</X><Y>272.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">1568</token>
@@ -84407,7 +84407,7 @@
 </Item><Item class="Part" referent="RBXCITY6030">
 <Properties>
 <string name="Name">Roof</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>228.02</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>292.02</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
 <Vector3 name="size"><X>24.0</X><Y>1.0</Y><Z>18.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84422,7 +84422,7 @@
 </Item><Item class="Part" referent="RBXCITY6031">
 <Properties>
 <string name="Name">Parapet</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>230.02</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>294.02</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
 <Vector3 name="size"><X>26.0</X><Y>3.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -84437,8 +84437,8 @@
 </Item><Item class="Part" referent="RBXCITY6033">
 <Properties>
 <string name="Name">Crown</string>
-<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>230.52</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
-<Vector3 name="size"><X>27.2</X><Y>1.1999999999999886</Y><Z>21.2</Z></Vector3>
+<CoordinateFrame name="CFrame"><X>404.7799166153841</X><Y>294.52</Y><Z>450.0039059389767</Z><R00>0.3907311284892737</R00><R01>0</R01><R02>-0.9205048534524404</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0.9205048534524404</R20><R21>0</R21><R22>0.3907311284892737</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.2</X><Y>1.2000000000000455</Y><Z>21.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">288</token>

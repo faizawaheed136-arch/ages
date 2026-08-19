@@ -4224,13 +4224,72 @@ CIRCUS_SPREAD = 22.0
 # measures 135.5, not 150. It is drawn from the formula above now, so it cannot
 # drift from the generator again.)
 #
-# Safe range for CIRCUS_LIFT: 6 .. 9. The floor is the assertion below -- at 5 the
-# shoulders lose to the mast. The ceiling is slenderness: at 10 the middle passes
-# 21:1 and starts to read as an aerial. Raise the lift, never the shape, or the step
-# goes again.
-CIRCUS_SHAPE = (8, 14, 8)
+# **And that still came out wrong, because one arc repeated four times is not a
+# skyline.** `(14, 20, 14)` is three numbers, but the Circle is twelve towers: the
+# same quadrant is stamped at all four corners, so what the city actually showed was
+# four towers of one height and eight of another. Two rooflines across the whole
+# centre. The step was back and the monotony was worse, because the towers were now
+# tall enough to be the only thing on the horizon.
+#
+# Worth naming the mistake, because it is the same one twice: both times I fixed the
+# quantity that was written down -- first "each tower is tallest", then "the arc has a
+# step" -- and both times the thing that was actually wrong was the *variety*, which
+# nobody had written down anywhere. FIN_HEIGHTS one screen up says `varied skyline` in
+# its comment and has done since it was written. The Circle never had that line.
+#
+# So a quadrant is no longer a constant, it is `circus_arc(q)`:
+#
+#   CIRCUS_ARC        the base arc -- shoulder, peak, shoulder
+#   CIRCUS_LIFT       what carries the lowest tower over the mast, applied to all
+#   CIRCUS_QUAD_LIFT  a different extra per corner, so no two quadrants match
+#   CIRCUS_TILT       the right shoulder above the left, so a quadrant is not even a
+#                     mirror of itself and the arc reads as a pinwheel from above
+#
+# which gives twelve towers on nine distinct rooflines, every one still over the mast:
+#
+#   NE  14, 20, 15   ->  231.5  327.5  247.5
+#   NW  16, 22, 17   ->  263.5  359.5  279.5
+#   SE  15, 21, 16   ->  247.5  343.5  263.5
+#   SW  17, 23, 18   ->  279.5  375.5  295.5
+#
+# The peak of every quadrant still clears both its own shoulders by five storeys, so
+# each corner reads as an arc rather than a terrace, and the four peaks are all
+# different so the centre reads as a cluster rather than as a stamp.
+#
+# The skyline now, from the middle outward:
+#   327-375  the Circle's four peak towers (20-23 storeys)
+#   231-295  the Circle's eight shoulder towers (14-18 storeys)
+#   213      the financial district's masts
+#   134      step and fade offices one ring out (7-8 storeys)
+#    83      fade offices two rings out (5-6 storeys)
+#    67      the office block
+#    34      walk-ups and two-storey houses
+#    17      single-storey houses at the edge
+#
+# Safe range for CIRCUS_LIFT: 6 .. 8. The floor is the assertion below -- at 5 the
+# shortest shoulder loses to the mast. The ceiling is slenderness: the tallest tower
+# carries CIRCUS_LIFT plus the largest CIRCUS_QUAD_LIFT, and at 9 it passes 21:1 and
+# starts to read as an aerial rather than a building. Raise the lift, never the arc.
+CIRCUS_ARC = (8, 14, 8)
 CIRCUS_LIFT = 6
-CIRCUS_STOREYS = tuple(n + CIRCUS_LIFT for n in CIRCUS_SHAPE)
+# Kept small and all-positive: a negative entry here would drop a quadrant under the
+# mast, and a large one buys slenderness at the tallest corner rather than variety.
+CIRCUS_QUAD_LIFT = (0, 2, 1, 3)
+CIRCUS_TILT = 1
+
+
+def circus_arc(quadrant):
+    """One quadrant's three towers, outer to inner to outer, in storeys."""
+    lift = CIRCUS_LIFT + CIRCUS_QUAD_LIFT[quadrant % len(CIRCUS_QUAD_LIFT)]
+    return tuple(
+        n + lift + (CIRCUS_TILT if i == len(CIRCUS_ARC) - 1 else 0)
+        for i, n in enumerate(CIRCUS_ARC)
+    )
+
+
+CIRCUS_STOREYS = tuple(
+    n for q in range(len(CIRCUS_QUAD_LIFT)) for n in circus_arc(q)
+)
 CIRCUS_LOBBY_H = 18.0
 CIRCUS_STOREY = 15.0
 CIRCUS_SLAB = 1.0
@@ -4324,7 +4383,11 @@ def circus_block(band, sband, x0, x1, z0, z1, counter):
     sx = -1 if x1 <= CIRCLE_X else 1
     sz = -1 if z1 <= CIRCLE_Z else 1
     base = math.degrees(math.atan2(sz, sx))
-    for i, storeys in enumerate(CIRCUS_STOREYS):
+    # Which arc this corner gets. Derived from the running tower count rather than from
+    # sx/sz, because the count is what already numbers the towers and the colour cycles
+    # below key off it too -- a second way of saying "which quadrant" is a second thing
+    # that can disagree with the first.
+    for i, storeys in enumerate(circus_arc(counter // len(CIRCUS_ARC))):
         circus_tower(counter + i, base + (i - 1) * CIRCUS_SPREAD, storeys,
                      RISE_GLASS[(counter + i) % len(RISE_GLASS)],
                      CIRCUS_STUCCO[(counter + i) % len(CIRCUS_STUCCO)],
@@ -4345,7 +4408,7 @@ def circus_block(band, sband, x0, x1, z0, z1, counter):
              along="z", label=f"CircusPalms_{band}_{sband}")
     bench((px0 + px1) / 2, pz0 + 6.0, 1, label=f"CircusBench_{band}_{sband}")
     bench((px0 + px1) / 2, pz1 - 6.0, -1, label=f"CircusBench_{band}_{sband}")
-    return counter + len(CIRCUS_STOREYS)
+    return counter + len(CIRCUS_ARC)
 
 
 # ---------------------------------------------------------------------------
@@ -4991,35 +5054,55 @@ assert min(CIRCUS_SKYLINE) >= _floor, (
 # tallest thing in the city by design and not by however much headroom somebody felt
 # like adding. Asserting minimality is the negative test that would otherwise have to be
 # run by hand and re-run every time FIN_HEIGHTS moves.
-assert CIRCUS_LIFT == 0 or circus_skyline(min(CIRCUS_SHAPE) + CIRCUS_LIFT - 1) < _floor, (
+assert CIRCUS_LIFT == 0 or circus_skyline(min(CIRCUS_ARC) + CIRCUS_LIFT - 1) < _floor, (
     f"CIRCUS_LIFT is {CIRCUS_LIFT} but {CIRCUS_LIFT - 1} already clears "
     f"{_floor:.1f}. The lift is supposed to be the smallest that wins, so drop it by "
     f"one -- the Circle should be the tallest thing in the city on purpose, not by "
     f"accident.")
 
-# The step, not the ranking. This is the requirement the old clearance assertion could
-# not see: the shape is what makes an arc of three towers read as a landmark, and it
-# is preserved by construction because CIRCUS_STOREYS is CIRCUS_SHAPE plus a constant.
-# The assertion is here for the day somebody replaces that derivation with a literal,
-# which is exactly how the step was lost the first time.
+# The step, per quadrant, not the ranking. This is the requirement the old clearance
+# assertion could not see: an arc whose peak barely clears its own shoulders is a
+# terrace, and a terrace is what (14, 16, 14) built.
 #
-# Compared in storeys, not in studs. The stud version of this assertion failed on the
-# very configuration it was written to bless: `circus_skyline(20) - circus_skyline(14)`
-# and `circus_skyline(14) - circus_skyline(8)` are both 96, but they accumulate the
-# `(n - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)` term over different n and land one bit
-# apart, so `>=` was comparing 95.99999999999997 against 96.0. Storeys are integers and
-# the skyline is linear in them with a positive slope, so this is the same requirement
-# with none of the float in it -- the studs are only in the message.
-_want_step = max(CIRCUS_SHAPE) - min(CIRCUS_SHAPE)
-assert max(CIRCUS_STOREYS) - min(CIRCUS_STOREYS) >= _want_step, (
-    f"the Circle's towers are {CIRCUS_SKYLINE}, a step of "
-    f"{max(CIRCUS_SKYLINE) - min(CIRCUS_SKYLINE):.1f} studs between the middle and its "
-    f"shoulders, against the "
-    f"{circus_skyline(max(CIRCUS_SHAPE)) - circus_skyline(min(CIRCUS_SHAPE)):.1f} the "
-    f"shape {CIRCUS_SHAPE} calls for. "
-    f"Height must be bought by raising CIRCUS_LIFT, which moves all three together -- "
-    f"raising the shoulders alone flattens the arc into one slab with a bump on it, "
-    f"which is what (14, 16, 14) did.")
+# Measured within a quadrant rather than across the Circle, because across the Circle it
+# is not a step at all -- the tallest tower and the shortest one stand at opposite
+# corners with the monument between them, and comparing those two would have passed
+# happily on four identical arcs, which is the *other* defect.
+#
+# Compared in storeys, not in studs. The stud version of this failed on the very
+# configuration it was written to bless: two differences that are both 96 accumulate the
+# `(n - 1) * (CIRCUS_STOREY + CIRCUS_SLAB)` term over different n and land one bit apart,
+# so `>=` was comparing 95.99999999999997 against 96.0. Storeys are integers and the
+# skyline is linear in them with a positive slope, so this is the same requirement with
+# none of the float in it -- studs appear in the message only.
+CIRCUS_MIN_STEP = 5
+for _q in range(len(CIRCUS_QUAD_LIFT)):
+    _arc = circus_arc(_q)
+    _peak, _shoulders = max(_arc), [n for n in _arc if n != max(_arc)]
+    assert _peak - max(_shoulders) >= CIRCUS_MIN_STEP, (
+        f"quadrant {_q} of the Circle is {_arc} storeys -- a step of "
+        f"{_peak - max(_shoulders)} between its peak and its tallest shoulder, against "
+        f"the {CIRCUS_MIN_STEP} an arc needs to read as an arc. Below that the three "
+        f"towers line up into a terrace, which is what (14, 16, 14) did. Buy height "
+        f"with CIRCUS_LIFT or CIRCUS_QUAD_LIFT, which move a whole arc at once.")
+
+# Variety, which is the thing that was wrong twice and written down neither time.
+#
+# Twelve towers built from one three-tower constant gave four rooflines of one height
+# and eight of another -- correct by every rule above and monotonous on sight, because
+# every rule above is about one arc and the city shows all four at once. This is the
+# only assertion here that looks at the Circle as a whole.
+#
+# The floor is 8 rather than 12: shoulders are allowed to repeat between quadrants,
+# since two towers on opposite corners of the Circle are never in the same glance. What
+# it forbids is the stamp -- one arc copied, which scores 3.
+CIRCUS_MIN_ROOFLINES = 8
+_rooflines = sorted(set(CIRCUS_STOREYS))
+assert len(_rooflines) >= CIRCUS_MIN_ROOFLINES, (
+    f"the Circle's twelve towers stand on only {len(_rooflines)} distinct rooflines "
+    f"({_rooflines} storeys). Below {CIRCUS_MIN_ROOFLINES} the centre of the city reads "
+    f"as one building stamped four times rather than as a cluster. Vary "
+    f"CIRCUS_QUAD_LIFT -- it is what makes the four corners differ.")
 
 
 with group("FinancialDistrict"):
