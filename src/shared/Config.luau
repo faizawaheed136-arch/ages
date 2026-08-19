@@ -3958,17 +3958,103 @@ Config.Map = {
 	-- Safe range: 0.6-0.95.
 	SheetScreenFraction = 0.82,
 
-	-- How coarse the gang-region wash is on the full map, in cells across the sheet.
-	-- The regions are nearest-boss, which has no polygon to trace, so the overlay is
-	-- sampled: every cell is colored by whichever boss owns its centre. Higher is
-	-- smoother and costs one Frame per cell.
-	-- Safe range: 24-72. Above ~72 the frame count starts to show on a first draw.
+	-- How far in the sheet can be zoomed, and by how much per wheel click or button
+	-- press.
+	--
+	-- **Zoom is what makes the "main spots only" rule affordable.** This world has
+	-- several hundred place points and drawing all of them at once is a sheet nobody can
+	-- read -- but dropping the rest permanently would mean the map could not answer
+	-- "where is the nearest cafe", which is most of what a map is for. So the sheet shows
+	-- the landmarks at rest and hands the rest back as you zoom in. Nothing is hidden;
+	-- it is filed.
+	-- Safe range: 3-8 for the ceiling, 1.15-1.6 for the step. A step under about 1.15
+	-- takes too many clicks to cross the range and starts feeling broken.
+	MaxZoom = 5,
+	ZoomStep = 1.3,
+	-- How long a zoom takes to land. Short: this is a direct manipulation, and anything
+	-- a player is holding a wheel down to do must not queue up behind its own animation.
+	-- Safe range: 0.06-0.2.
+	ZoomSeconds = 0.12,
+
+	-- The zoom a place has to be at before it is drawn, and before its name is printed
+	-- beside it, by tier. Every rule in `Icons.Rules` names one of these three.
+	--
+	-- A name costs far more room than a dot does, so every label threshold sits above its
+	-- own dot threshold: a place appears first, and tells you what it is when there is
+	-- space to say so.
+	-- Safe range: 1 for landmark (it must be the resting picture), then increasing.
+	DetailZoom = {
+		-- The dozen or so places that are the reason to open a map at all: the bank, the
+		-- school, the hospital, the park, your own front door.
+		landmark = 1,
+		-- The rest of the named world -- offices, cafes, the gym, a marina.
+		district = 1.8,
+		-- Every generated address. Hundreds of them, and only worth drawing once the
+		-- player has zoomed far enough in that a street is what they are looking at.
+		street = 2.8,
+	},
+	LabelZoom = {
+		landmark = 1,
+		district = 2.4,
+		street = 3.6,
+	},
+
+	-- The graticule: one line every this many studs, in both axes.
+	--
+	-- Without it the sheet is dots on a void and the zoom has nothing to move against --
+	-- a player zooming into an empty patch cannot tell that anything happened. A grid
+	-- that scales with the zoom is the cheapest possible answer to both.
+	-- Safe range: 100-400. Under 100 it is a texture rather than a grid.
+	GridStuds = 200,
+
+	-- How many points across a strip are probed to find where the side changes.
+	--
+	-- This is a *search* width, not a drawing resolution, and it does not put a step in
+	-- the picture: a probe only says "the boundary is somewhere between these two", and
+	-- the exact crossing is then bisected to well under a pixel. So this only has to be
+	-- fine enough that no side is ever entirely skipped over between two probes -- a side
+	-- narrower than one probe spacing at some latitude would be missed.
+	-- Safe range: 24-72. Four sides on a world this size need nowhere near the top of it.
 	RegionSampleCells = 44,
+
+	-- How many horizontal strips the fill is cut into.
+	--
+	-- **This is the only place a staircase can still show, so it is much finer than the
+	-- column count above.** A side is a Voronoi cell and a Frame is a rectangle, so the
+	-- fill has to be built out of strips; the *ends* of each strip are solved for exactly
+	-- (see `buildRegions`), which leaves the strip height as the one remaining step. At
+	-- 44 that step is a visible ledge the moment anybody zooms in -- which was the whole
+	-- complaint about the old mosaic, reproduced at a quarter of the frame count.
+	--
+	-- Cost is roughly this many Frames times the number of sides a row crosses, so
+	-- doubling it doubles the build, and the build happens once when the overlay is first
+	-- switched on.
+	-- Safe range: 120-320. Below about 100 the ledges come back.
+	RegionRows = 220,
 
 	-- How opaque the region wash is. It sits under the icons and must never compete
 	-- with them -- it is an answer to "whose side is that", not a layer to read.
 	-- Safe range: 0.55-0.9.
 	RegionTransparency = 0.72,
+
+	-- The full sheet draws the same sampling as two layers rather than one, and this is
+	-- the pair of numbers that separates them.
+	--
+	-- **A flat mosaic is not a territory map.** Colouring every sampled cell at one
+	-- transparency -- which is what this did first -- gives four large blurry stains with
+	-- a visible grid in them, and the thing a player actually wants off a territory map
+	-- is the *line*: where does one side stop. So the fill is taken almost all the way
+	-- out, and the cells that have a different owner next to them are drawn again, bright
+	-- and opaque, as a border. Same sampling, same correctness, a picture with edges in
+	-- it.
+	-- Safe range: 0.8-0.94 fill, 0-0.3 border. The gap between them is the whole effect.
+	RegionFillTransparency = 0.88,
+	RegionBorderTransparency = 0.1,
+	-- How thick that border is drawn, in pixels at rest. It is drawn in offset so it
+	-- stays one line thick at every zoom -- a border that thickened as you zoomed in
+	-- would swallow the region it was outlining.
+	-- Safe range: 1-4.
+	RegionBorderPixels = 2,
 
 	-- What each kind of place draws as, and how a place id is sorted into a kind.
 	--
@@ -3986,43 +4072,50 @@ Config.Map = {
 		Default = { color = Color3.fromRGB(176, 182, 196), size = 5, priority = 0 },
 
 		-- Ordered longest-prefix-first where two could both match.
+		--
+		-- `tier` is *when* it is drawn, not what it is -- see `DetailZoom`. A landmark is a
+		-- place a player would name if you asked them where they were headed; a street is a
+		-- generated address that only matters once you are already looking at that street.
+		-- Getting this wrong in the generous direction is what turns the sheet back into
+		-- the wall of dots it was, so there is no default: `StyleFor` errors on a rule with
+		-- no tier rather than guessing one.
 		Rules = {
 			-- Where you live. The one icon a player looks for to orient themselves, so it
 			-- is the largest and warmest thing on the sheet that is not a boss.
-			{ prefix = "home", kind = "home" },
-			{ prefix = "suburb_", kind = "home" },
-			{ prefix = "apt_", kind = "home" },
+			{ prefix = "home", kind = "home", tier = "landmark" },
+			{ prefix = "suburb_", kind = "home", tier = "street" },
+			{ prefix = "apt_", kind = "home", tier = "street" },
 
 			-- Money and civic business.
-			{ prefix = "bank", kind = "civic" },
-			{ prefix = "town_hall", kind = "civic" },
-			{ prefix = "school", kind = "civic" },
-			{ prefix = "library", kind = "civic" },
-			{ prefix = "hospital", kind = "civic" },
-			{ prefix = "police", kind = "civic" },
+			{ prefix = "bank", kind = "civic", tier = "landmark" },
+			{ prefix = "town_hall", kind = "civic", tier = "landmark" },
+			{ prefix = "school", kind = "civic", tier = "landmark" },
+			{ prefix = "library", kind = "civic", tier = "landmark" },
+			{ prefix = "hospital", kind = "civic", tier = "landmark" },
+			{ prefix = "police", kind = "civic", tier = "landmark" },
 
 			-- Places that pay. The works district and every generated industrial estate
 			-- unit, which between them are most of the east of the map.
-			{ prefix = "works_", kind = "work" },
-			{ prefix = "est_", kind = "work" },
-			{ prefix = "office_", kind = "work" },
-			{ prefix = "factory", kind = "work" },
-			{ prefix = "freight_depot", kind = "work" },
-			{ prefix = "timber_mill", kind = "work" },
-			{ prefix = "power_plant", kind = "work" },
-			{ prefix = "scrapyard", kind = "work" },
-			{ prefix = "auto_dealer", kind = "work" },
+			{ prefix = "works_", kind = "work", tier = "district" },
+			{ prefix = "est_", kind = "work", tier = "street" },
+			{ prefix = "office_", kind = "work", tier = "street" },
+			{ prefix = "factory", kind = "work", tier = "district" },
+			{ prefix = "freight_depot", kind = "work", tier = "district" },
+			{ prefix = "timber_mill", kind = "work", tier = "district" },
+			{ prefix = "power_plant", kind = "work", tier = "district" },
+			{ prefix = "scrapyard", kind = "work", tier = "district" },
+			{ prefix = "auto_dealer", kind = "work", tier = "district" },
 
 			-- Somewhere to be that is not work or home.
-			{ prefix = "cinema", kind = "leisure" },
-			{ prefix = "city_park", kind = "leisure" },
-			{ prefix = "park", kind = "leisure" },
-			{ prefix = "gym", kind = "leisure" },
-			{ prefix = "cafe", kind = "leisure" },
-			{ prefix = "mall_entrance", kind = "leisure" },
-			{ prefix = "marina", kind = "leisure" },
-			{ prefix = "baywalk", kind = "leisure" },
-			{ prefix = "circus_", kind = "leisure" },
+			{ prefix = "cinema", kind = "leisure", tier = "landmark" },
+			{ prefix = "city_park", kind = "leisure", tier = "landmark" },
+			{ prefix = "park", kind = "leisure", tier = "district" },
+			{ prefix = "gym", kind = "leisure", tier = "district" },
+			{ prefix = "cafe", kind = "leisure", tier = "district" },
+			{ prefix = "mall_entrance", kind = "leisure", tier = "landmark" },
+			{ prefix = "marina", kind = "leisure", tier = "district" },
+			{ prefix = "baywalk", kind = "leisure", tier = "district" },
+			{ prefix = "circus_", kind = "leisure", tier = "district" },
 		},
 
 		-- Size is a radius in pixels on the full sheet; the minimap scales these down by

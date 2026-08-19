@@ -13,12 +13,18 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 type MapData = Types.MapData
 
 local ICONS = Config.Map.Icons
+local DETAIL_ZOOM = Config.Map.DetailZoom
 
 export type Style = {
 	color: Color3,
 	size: number,
 	priority: number,
 	kind: string,
+	-- When this place is drawn, not what it is. The full sheet shows landmarks at rest
+	-- and hands the rest back as the player zooms in -- see `Config.Map.DetailZoom`.
+	-- The minimap ignores it: at a 260-stud radius there is no crowd to thin out, and a
+	-- corner dial that hid the cafe you are standing next to would be worse than useless.
+	tier: string,
 }
 
 local MapIcons = {}
@@ -38,18 +44,38 @@ function MapIcons.StyleFor(placeId: string): Style
 		return known
 	end
 
+	-- An id no rule claims is a generated address -- `apt_31`, `est_4`, whatever the next
+	-- run of gen_city.py invents -- so it is filed as a street rather than as a landmark.
+	-- Guessing generously here is how the sheet went back to being a wall of dots.
 	local style: Style = {
 		color = ICONS.Default.color,
 		size = ICONS.Default.size,
 		priority = ICONS.Default.priority,
 		kind = "place",
+		tier = "street",
 	}
 
 	for _, rule in ICONS.Rules do
 		if string.sub(placeId, 1, #rule.prefix) == rule.prefix then
 			local kind = ICONS.Kinds[rule.kind]
 			if kind ~= nil then
-				style = { color = kind.color, size = kind.size, priority = kind.priority, kind = rule.kind }
+				-- Said out loud rather than defaulted. A rule with no tier would draw at
+				-- whatever tier the fallback happened to be, which is either a landmark that
+				-- is not one or a landmark that never appears -- and both look like the map
+				-- is broken rather than like Config is missing a word.
+				if DETAIL_ZOOM[rule.tier] == nil then
+					error(
+						`MapIcons: rule "{rule.prefix}" has tier "{rule.tier}", which is not one of `
+							.. `Config.Map.DetailZoom. Add the tier there or fix the rule.`
+					)
+				end
+				style = {
+					color = kind.color,
+					size = kind.size,
+					priority = kind.priority,
+					kind = rule.kind,
+					tier = rule.tier,
+				}
 			end
 			break
 		end
