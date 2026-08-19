@@ -5,6 +5,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -22,6 +23,8 @@ local FightUI = require(script.ui.FightUI)
 local HouseUI = require(script.ui.HouseUI)
 local CarDealerUI = require(script.ui.CarDealerUI)
 local SavingsUI = require(script.ui.SavingsUI)
+local Minimap = require(script.ui.Minimap)
+local MapUI = require(script.ui.MapUI)
 local ChapterReel = require(script.ui.ChapterReel)
 local MoneyPop = require(script.world.MoneyPop)
 local BonusPop = require(script.world.BonusPop)
@@ -100,6 +103,8 @@ local fight = FightUI.new()
 local house = HouseUI.new()
 local carDealer = CarDealerUI.new()
 local savings = SavingsUI.new()
+local minimap = Minimap.new()
+local mapSheet = MapUI.new()
 local dealerMark = DealerMark.new()
 local chapterReel = ChapterReel.new()
 
@@ -135,6 +140,7 @@ local RequestFightActionRemote = Remotes.Get("RequestFightAction")
 local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
 local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
 local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
+local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -247,6 +253,12 @@ end)
 -- client chose does not let the client choose who it is fighting, or conjure a second one.
 prompts:On("Fight", function(fighterId: string)
 	RequestFightSquareRemote:FireServer(fighterId)
+end)
+
+-- Clicking the dots on an apartment entrance door. Opens or closes it -- the server
+-- animates the swing and validates distance. The click is the whole answer, no panel.
+prompts:On("Apartment", function(blockName: string)
+	RequestToggleApartmentDoorRemote:FireServer(blockName)
 end)
 
 -- Clicking the dots at the car dealership counter. Its own kind so the client
@@ -838,6 +850,47 @@ gang:OnColorsToggled(function(want: boolean)
 	RequestGangColorsRemote:FireServer(want)
 end)
 
+-- The world, once. Sent when the server has resolved every place and measured the bounds,
+-- which happens after the town is built and therefore later than this script runs -- so both
+-- surfaces sit blank rather than drawing an empty world, and come up together when it lands.
+-- The full sheet builds its region wash off this push and the minimap builds its markers,
+-- both of which are expensive and both of which are done exactly once.
+Remotes.Get("MapData").OnClientEvent:Connect(function(data: Types.MapData)
+	minimap:SetMapData(data)
+	mapSheet:SetMapData(data)
+end)
+
+-- Where the player is standing, in whose ground, and how far in. Pushed on a beat by
+-- TerritoryService rather than computed here: the client has no list of gang bosses and no
+-- business deciding whose side it is on, because that answer is what the standing mechanic
+-- charges for.
+Remotes.Get("TerritoryUpdated").OnClientEvent:Connect(function(state: Types.TerritoryState?)
+	minimap:SetTerritory(state)
+	mapSheet:SetTerritory(state)
+end)
+
+-- Clicking the dial opens the sheet. The minimap does not know the sheet exists -- it is a
+-- dial with a button on it and one callback out -- which is what lets the sheet be opened
+-- from a key as well without either of them growing a reference to the other.
+minimap:SetOnOpen(function()
+	mapSheet:Toggle()
+end)
+
+-- M, and Escape to close. Safe to claim: nothing else in this client binds a key at all --
+-- every other interaction in the game is a tap on a three-dot marker or a button -- so there
+-- is no rebinding to do and nothing to collide with. GameProcessedEvent is honoured so that
+-- typing an M into the chat bar does not throw the map over the conversation.
+UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
+	if processed then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.M then
+		mapSheet:Toggle()
+	elseif input.KeyCode == Enum.KeyCode.Escape and mapSheet:IsOpen() then
+		mapSheet:Close()
+	end
+end)
+
 Remotes.Get("BountyUpdated").OnClientEvent:Connect(function(state: BountyState?)
 	heat:Set(state)
 	if state == nil then
@@ -1025,6 +1078,10 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	house:Set(nil)
 	carDealer:Set(nil)
 	savings:Set(nil)
+	-- And the map sheet, which is the only one of these that covers the whole screen: left
+	-- open it would hide the death notice entirely, and the player would be reading a map of
+	-- a town they are no longer in. The dial in the corner stays -- it is not a control.
+	mapSheet:Close()
 	chapterReel:Hide()
 	currentPerson = nil
 	lessonPanelKey = nil

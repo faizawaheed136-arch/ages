@@ -3946,6 +3946,85 @@ Config.Map = {
 	-- with them -- it is an answer to "whose side is that", not a layer to read.
 	-- Safe range: 0.55-0.9.
 	RegionTransparency = 0.72,
+
+	-- What each kind of place draws as, and how a place id is sorted into a kind.
+	--
+	-- Matched by prefix, in order, first hit wins -- so the longer, more specific rules
+	-- must come before the shorter ones. Prefix rather than an exact list because most
+	-- place ids in this world are generated: gen_city.py emits apt_3, office_7, rise_2,
+	-- fade_5, est_haulage and a dozen suburb_n, so an exhaustive table would be stale the
+	-- next time the city is regenerated with one more block in it.
+	--
+	-- Anything matching nothing draws as `Default`, which is the honest outcome for a
+	-- place this table has not been taught about: a plain dot that is still findable and
+	-- still labelled, rather than an invisible one or a crash. A map is the wrong place
+	-- to be strict -- a missing category should cost the player a colour, not a marker.
+	Icons = {
+		Default = { color = Color3.fromRGB(176, 182, 196), size = 5, priority = 0 },
+
+		-- Ordered longest-prefix-first where two could both match.
+		Rules = {
+			-- Where you live. The one icon a player looks for to orient themselves, so it
+			-- is the largest and warmest thing on the sheet that is not a boss.
+			{ prefix = "home", kind = "home" },
+			{ prefix = "suburb_", kind = "home" },
+			{ prefix = "apt_", kind = "home" },
+
+			-- Money and civic business.
+			{ prefix = "bank", kind = "civic" },
+			{ prefix = "town_hall", kind = "civic" },
+			{ prefix = "school", kind = "civic" },
+			{ prefix = "library", kind = "civic" },
+			{ prefix = "hospital", kind = "civic" },
+			{ prefix = "police", kind = "civic" },
+
+			-- Places that pay. The works district and every generated industrial estate
+			-- unit, which between them are most of the east of the map.
+			{ prefix = "works_", kind = "work" },
+			{ prefix = "est_", kind = "work" },
+			{ prefix = "office_", kind = "work" },
+			{ prefix = "factory", kind = "work" },
+			{ prefix = "freight_depot", kind = "work" },
+			{ prefix = "timber_mill", kind = "work" },
+			{ prefix = "power_plant", kind = "work" },
+			{ prefix = "scrapyard", kind = "work" },
+			{ prefix = "auto_dealer", kind = "work" },
+
+			-- Somewhere to be that is not work or home.
+			{ prefix = "cinema", kind = "leisure" },
+			{ prefix = "city_park", kind = "leisure" },
+			{ prefix = "park", kind = "leisure" },
+			{ prefix = "gym", kind = "leisure" },
+			{ prefix = "cafe", kind = "leisure" },
+			{ prefix = "mall_entrance", kind = "leisure" },
+			{ prefix = "marina", kind = "leisure" },
+			{ prefix = "baywalk", kind = "leisure" },
+			{ prefix = "circus_", kind = "leisure" },
+		},
+
+		-- Size is a radius in pixels on the full sheet; the minimap scales these down by
+		-- MinimapIconScale. Priority decides who draws on top when two icons land in the
+		-- same few pixels, which on a city this dense is most of them.
+		Kinds = {
+			home = { color = Color3.fromRGB(245, 205, 120), size = 7, priority = 40 },
+			civic = { color = Color3.fromRGB(126, 196, 244), size = 6, priority = 30 },
+			work = { color = Color3.fromRGB(150, 210, 158), size = 5, priority = 20 },
+			leisure = { color = Color3.fromRGB(226, 158, 226), size = 5, priority = 10 },
+		},
+
+		-- How much smaller an icon is on the minimap than on the sheet. The minimap is
+		-- about a quarter the width and the icons cannot shrink by the same factor or
+		-- they stop being clickable targets, so this is deliberately gentler than the
+		-- size ratio between the two surfaces.
+		-- Safe range: 0.5-0.9.
+		MinimapIconScale = 0.7,
+	},
+
+	-- The player's own marker, on both surfaces. Bright, and the one thing on the map
+	-- drawn in a colour nothing else is allowed to use -- Config.Guide.Color is gold and
+	-- the gang bands own cyan, orange, magenta and lime, so this is none of those.
+	YouColor = Color3.fromRGB(96, 250, 140),
+	YouSizePixels = 9,
 }
 
 -- Whose side of the map you are standing on.
