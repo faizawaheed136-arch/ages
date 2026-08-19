@@ -1262,13 +1262,43 @@ Config.Work.Hiring = {
 	-- Safe range: 3-8.
 	SignLiftStuds = 5,
 
-	-- How far away the sign is still drawn. Much larger than a choice label's range,
+	-- How far away the sign is still drawn. Larger than a choice label's range,
 	-- because this one has a different job: a choice label is read once you have
-	-- arrived, and this is read to decide whether to walk over at all. It should be
-	-- legible from the far end of the street.
-	-- Safe range: 40-250. Below ~40 you have to already be inside to learn the shop
-	-- is hiring, which is the problem this exists to fix.
-	SignMaxDistanceStuds = 160,
+	-- arrived, and this is read to decide whether to walk over at all.
+	--
+	-- This was 160, chosen to be "legible from the far end of the street", and the
+	-- street turned out to be the wrong unit. Measured against the town: the median
+	-- place point has **31 other place points within 160 studs, and the worst has
+	-- 49** -- every job in the game. Signs are AlwaysOnTop, so all of them draw
+	-- through the buildings between, and standing anywhere in town meant reading
+	-- thirty overlapping NOW HIRING cards stacked through the walls. A sign that is
+	-- always on screen is wallpaper, and wallpaper is not signposting.
+	--
+	-- 45 is 2.5x the 18-stud median gap between neighbouring place points, so it
+	-- reaches the shop you are outside and its immediate neighbours -- a median of 3
+	-- at once, worst case 6 -- and stops there. Re-measure with the block in
+	-- tools/check_town.py if the generator's frontage spacing changes; this number is
+	-- a multiple of that spacing, not a distance somebody liked the look of.
+	-- Safe range: 40-70. Below ~40 you have to already be inside to learn the shop
+	-- is hiring, which is the problem this exists to fix; above ~70 the stacking
+	-- starts again.
+	SignMaxDistanceStuds = 45,
+
+	-- How many years before a job's minAge its sign starts appearing.
+	--
+	-- The signs used to be pushed to every living player at every age, which is how
+	-- a one-year-old ended up surrounded by job adverts. But hiding them until the
+	-- birthday you qualify is the opposite mistake, and the reason is already written
+	-- into postsFor: "a job that is invisible until the year you qualify is a job
+	-- nobody plans for."
+	--
+	-- 4 is that comment's own example made into a number -- a twelve-year-old walking
+	-- past the shop and learning it hires at sixteen. So the signposting survives
+	-- intact and only stops reaching the ages that could not act on it under any
+	-- circumstances.
+	-- Safe range: 2-6. At 0 the sign is news you can do nothing with; above ~6 a
+	-- child is being advertised at again.
+	SignLeadYears = 4,
 }
 
 -- House ownership. Suburb homes a player can buy and use as a workplace.
@@ -1312,10 +1342,39 @@ Config.CarDealer = {
 	ServeTip = 100,
 }
 
+-- Look a life stage up by id and answer the age it starts at. Used to derive an
+-- age gate from the stage that actually motivates it, rather than typing the same
+-- number twice and letting the two drift. Errors rather than defaulting: a missing
+-- stage means the table above was edited, and a gate that quietly falls back to
+-- zero is the failure this is here to prevent.
+local function stageMinAge(id: string): number
+	for _, stage in Config.LifeStages do
+		if stage.id == id then
+			return stage.minAge
+		end
+	end
+	error(`[AGES] Config: no life stage "{id}" to derive an age from`)
+end
+
 -- Monthly living expenses. Money leaves every game month whether the player
 -- wants it to or not, which is the one force that keeps a life from running
 -- forward on autopilot and turning the pocket-money trickle into a flood.
 Config.Bills = {
+	-- The age a life starts paying its own way. Below it there are no bills at all
+	-- -- not a bill of zero, no bill.
+	--
+	-- This was missing, and its absence was not a rounding error: a newborn was
+	-- charged BaseMonthly on its first birthday, could not pay it, and was carrying
+	-- the "in_debt" flag at age one. Every consequence hung off that -- the happiness
+	-- drain, the loan-shark content door -- so the toddler years opened with a debt
+	-- spiral nobody could have avoided and no mechanic could answer.
+	--
+	-- Derived from Adulthood rather than typed because "you pay your own way once
+	-- you are an adult" is the actual rule; the number is a consequence of it. It is
+	-- deliberately not the first job at sixteen: a sixteen-year-old with a shop job
+	-- still lives at home, and the two years where you are earning and not yet
+	-- paying rent are the years the game gives you to build a cushion.
+	MinAge = stageMinAge("Adulthood"),
 	-- The base cost of existing in the world each month, before anything else
 	-- is factored in. Small enough that a first job can cover it, large enough
 	-- that skipping work for a month leaves you behind.

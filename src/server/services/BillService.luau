@@ -31,6 +31,18 @@ local BillService = {}
 local BILLS = Config.Bills
 local BILL_DUE = Remotes.Get("BillDue")
 
+-- Whether this life is old enough to be billed at all. A child is somebody else's
+-- dependent, and the game says so by not sending them a bill rather than by sending
+-- them one for nothing -- see Config.Bills.MinAge for why the boundary is Adulthood.
+--
+-- Asked in all three places a bill can reach the player: the charge, the state the
+-- HUD reads, and the push on join. Gating only the charge would have left a child
+-- looking at a bill they were never actually charged, which is the same bug wearing
+-- a different face.
+local function oldEnoughToBill(life: LifeData): boolean
+	return life.ageMonths // Config.Time.MonthsPerYear >= BILLS.MinAge
+end
+
 -- Get the life data for a player, nil if no profile or no active life.
 local function lifeDataFor(player: Player): LifeData?
 	local profile = DataService.GetProfile(player)
@@ -66,6 +78,22 @@ end
 function BillService.Charge(player: Player): number
 	local life = lifeDataFor(player)
 	if life == nil then
+		return 0
+	end
+
+	-- Before adulthood there is nothing to charge and nothing to record. Deliberately
+	-- leaves lastBillMonth alone rather than advancing it through childhood: the first
+	-- adult birthday then charges exactly one bill, which is the right answer. Advancing
+	-- it would work too, but it would mean eighteen writes to say nothing happened.
+	--
+	-- Still pushes, with nil, rather than returning in silence. The HUD's bill row is
+	-- only ever changed by this remote, so a path that swaps the active life without
+	-- rebuilding the client -- /slots switch does exactly that -- would otherwise leave
+	-- an adult's debt sitting over a child's head until their eighteenth birthday. One
+	-- cleared row per birthday is a cheaper contract than reasoning about which paths
+	-- can reach a stale one.
+	if not oldEnoughToBill(life) then
+		BILL_DUE:FireClient(player, nil)
 		return 0
 	end
 
@@ -137,6 +165,12 @@ end
 function BillService.GetState(player: Player): Types.BillState?
 	local life = lifeDataFor(player)
 	if life == nil then
+		return nil
+	end
+	-- Same nil a player with no life gets. The HUD already knows how to show nothing
+	-- for that, so a child gets no bill panel rather than an empty one -- the absence
+	-- is the message.
+	if not oldEnoughToBill(life) then
 		return nil
 	end
 	return {

@@ -853,8 +853,25 @@ local function postsFor(data: LifeData): { JobPostState }
 		return states
 	end
 
+	local ageYears = ageYearsOf(data)
+
 	for _, job in Jobs.All do
 		if data.jobId == job.id then
+			continue
+		end
+
+		-- Too young for this to be news yet. The paragraph above is still the rule --
+		-- a job you cannot take should be visible so you can plan for it -- but it had
+		-- no floor under it, and a one-year-old was being sent all forty-nine of them.
+		-- SignLeadYears is set to exactly the twelve-year-old and the hires-at-sixteen
+		-- shop that paragraph describes, so the case it was written to protect is the
+		-- case that still passes.
+		--
+		-- Only age is read here. Every other refusal -- smarts, a prerequisite job,
+		-- having been let go -- is something the player could go and change, and hiding
+		-- those signs would hide the reason to change them. Age is the one refusal you
+		-- can do nothing about but wait, so it is the only one worth waiting to show.
+		if ageYears < job.minAge - Config.Work.Hiring.SignLeadYears then
 			continue
 		end
 
