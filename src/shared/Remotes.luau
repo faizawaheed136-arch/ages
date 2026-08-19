@@ -213,6 +213,15 @@ export type RemoteName =
 	-- all the time, whereas this is true only while you are standing in front of one
 	-- specific person, and nil the moment you walk away.
 	| "GangPanelUpdated"
+	-- The map itself: its bounds, everything drawn on it, and the four sides. Sent once
+	-- on join and never again, because none of it changes while the server is up -- the
+	-- world is built before the first player arrives and no place point moves afterwards.
+	| "MapData"
+	-- Which side you are standing on and how deep into it. This one *is* on a clock: it
+	-- is a question about where a body is, and a body moves continuously. Split from
+	-- MapData for exactly that reason -- one is a fact about the world and one is a fact
+	-- about you, and sending them together would resend the whole map twice a second.
+	| "TerritoryUpdated"
 	-- "I clicked the boss." Opens the panel and nothing else -- joining is a row on it, not
 	-- this. Walking up to all four bosses to read what they want is free, deliberately, for
 	-- the same reason clicking a vault door trips nothing: a decision this permanent should
@@ -240,6 +249,9 @@ export type RemoteName =
 	-- "I want to link this job to my house." Carries the house id and the job id.
 	-- The server checks ownership and that the job's placeId matches the house.
 	| "RequestSetHomeJob"
+	-- "I want to toggle this apartment door." Carries the door part; the
+	-- server checks distance and animates the door.
+	| "RequestToggleApartmentDoor"
 	-- The dealership queue in progress, pushed as a whole snapshot: how many
 	-- are waiting, who is at the front, and where the counter is. Its own remote
 	-- rather than a field on ShiftUpdated because the queue is independent of
@@ -492,6 +504,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestBankHold",
 	"GangUpdated",
 	"GangPanelUpdated",
+	"MapData",
+	"TerritoryUpdated",
 	"RequestGangOpen",
 	"RequestGangChoice",
 	"RequestGangColors",
@@ -499,6 +513,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestBuyHouse",
 	"RequestSellHouse",
 	"RequestSetHomeJob",
+	"RequestToggleApartmentDoor",
 	"CarDealerUpdated",
 	"RequestCarDealerServe",
 	"FightUpdated",

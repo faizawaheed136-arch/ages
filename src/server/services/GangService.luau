@@ -626,6 +626,32 @@ function GangService.Charge(player: Player, points: number, reason: string): num
 	return after
 end
 
+-- Standing lost with a gang that is not yours.
+--
+-- Charge above can only ever reach the gang you run with, which was the right and only
+-- shape while every loss in the game was something your own side held against you. It
+-- cannot express the one TerritoryService needs: walking somebody else's side wearing
+-- another band costs you with *them*, and you may well not be in a gang they would ever
+-- speak to.
+--
+-- That standing is not idle. It is what a gang would ever offer you, so spending it is
+-- spending a door -- run the west line often enough in eastern colors and the west is a
+-- gang that will not take you. Deliberately has no rung logic and sends no notice about
+-- rungs: this can only lower a number, and a rung once conferred is never taken back.
+function GangService.ChargeIn(player: Player, gangId: string, points: number, reason: string): number
+	if not enabled or points <= 0 then
+		return 0
+	end
+	local data = dataFor(player)
+	if data == nil then
+		return 0
+	end
+	local after = math.max(standingIn(data, gangId) - points, GANGS.Lose.Floor)
+	data.gangStanding[gangId] = after
+	push(player)
+	return after
+end
+
 -- Called by BountyService on the way through an arrest.
 --
 -- Does two things that must happen together: charges the standing, and clears the escape

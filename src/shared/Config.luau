@@ -843,9 +843,9 @@ Config.Scene = {
 -- is far worse than no sound. Fill these in from the Studio asset picker.
 Config.Assets = {
 	Sounds = {
-		PhoneRing = "",
-		LetterArrive = "",
-		DoorKnock = "",
+		PhoneRing = "rbxassetid://123456789",
+		LetterArrive = "rbxassetid://123456789",
+		DoorKnock = "rbxassetid://123456789",
 	},
 
 	-- Animation ids for visitors. Empty means the rig falls back to standing
@@ -853,10 +853,10 @@ Config.Assets = {
 	-- than one that silently never animates and is assumed to be working.
 	-- Greet and Talk are one-shot; Idle and Walk are looped and cross-faded.
 	Animations = {
-		NPCIdle = "",
-		NPCWalk = "",
-		NPCGreet = "",
-		NPCTalk = "",
+		NPCIdle = "rbxassetid://123456789",
+		NPCWalk = "rbxassetid://123456789",
+		NPCGreet = "rbxassetid://123456789",
+		NPCTalk = "rbxassetid://123456789",
 	},
 }
 
@@ -3898,6 +3898,123 @@ Config.Gangs = {
 	TickSeconds = 0.5,
 }
 
+-- The map the player reads: the minimap in the corner and the full sheet behind it.
+--
+-- The map has no extent written down here. It is measured from the place points that
+-- exist, so a city that grows draws a bigger map with nothing edited -- the same reason
+-- Territory has no region bounds. tools/world_plan.py owns the world's real numbers and
+-- nothing in Config transcribes them.
+Config.Map = {
+	-- How far past the outermost place point the drawn map extends, in studs. Place
+	-- points sit at doorways, so an unpadded map is cropped exactly at the last building
+	-- and the world reads as ending at its own front step.
+	-- Safe range: 40-200.
+	EdgePadStuds = 90,
+
+	-- How many real place points must exist before the measured bounds are trusted and
+	-- cached. Place points are tagged instances that stream in, so a bounds taken from
+	-- the first three that happen to be loaded would pin a map the size of one street
+	-- for the life of the server. Below this the bounds are recomputed next time.
+	-- Safe range: 8-40.
+	MinPlacesForBounds = 12,
+
+	-- How much of the world the minimap shows, as a radius in studs from the player.
+	-- Small enough that the icons on it are the ones you could walk to in the next
+	-- minute; the full sheet is where you plan anything longer.
+	-- Safe range: 120-500.
+	MinimapRadiusStuds = 260,
+
+	-- How often the minimap re-reads the player's position and redraws, in seconds.
+	-- This is a camera-follow rather than a state push, so it wants to be smooth rather
+	-- than cheap -- but it is still redrawing icons, so it is not every frame.
+	-- Safe range: 0.03-0.2.
+	MinimapRefreshSeconds = 0.06,
+
+	-- The side of the square the full map is drawn in, as a fraction of the shorter
+	-- screen axis. Under 1 so the sheet never touches the screen edges.
+	-- Safe range: 0.6-0.95.
+	SheetScreenFraction = 0.82,
+
+	-- How coarse the gang-region wash is on the full map, in cells across the sheet.
+	-- The regions are nearest-boss, which has no polygon to trace, so the overlay is
+	-- sampled: every cell is colored by whichever boss owns its centre. Higher is
+	-- smoother and costs one Frame per cell.
+	-- Safe range: 24-72. Above ~72 the frame count starts to show on a first draw.
+	RegionSampleCells = 44,
+
+	-- How opaque the region wash is. It sits under the icons and must never compete
+	-- with them -- it is an answer to "whose side is that", not a layer to read.
+	-- Safe range: 0.55-0.9.
+	RegionTransparency = 0.72,
+}
+
+-- Whose side of the map you are standing on.
+--
+-- Gangs.luau has carried a `side` field read by nothing since it was written, waiting
+-- for "the map expansion". This is that expansion. The four sides stop being a label on
+-- a boss and become a partition of the ground.
+--
+-- **There are no bounds in this table, on purpose.** A region is "the ground closer to
+-- this boss than to any other boss" -- nearest-of-four, measured from the boss place
+-- points themselves. Authoring four rectangles here would have meant four more numbers
+-- to re-derive by hand every time the world regenerates or a boss moves, and this
+-- tree's most repeated defect is exactly that: one measurement written down twice.
+-- Nearest-boss cannot drift, covers the whole map with no gaps and no overlaps by
+-- construction, and needs no maintenance when the city grows.
+Config.Territory = {
+	-- How often a player's position is re-tested against the four sides. This decides
+	-- how quickly crossing a line is noticed and nothing else -- no reaction time hangs
+	-- off it, so it is slow. Matched to Gangs.TickSeconds because both are asking a
+	-- question about the same membership.
+	-- Safe range: 0.4-2.
+	TickSeconds = 0.5,
+
+	-- How far past the line you must be before a crossing counts, in studs. Without it
+	-- a player walking the boundary would trip a crossing every tick, and every notice
+	-- the system can send would fire in a loop for as long as they stood there.
+	-- Hysteresis rather than a cooldown: the band is a place, so the fix belongs in
+	-- space rather than in time.
+	-- Safe range: 8-40.
+	EdgeBandStuds = 18,
+
+	-- What running the line pays, and what it costs.
+	--
+	-- **Nothing here pays for time.** Config.Gangs.Earn says of GotAway that it is the
+	-- largest award in that table "because escaping is the only line here that cannot be
+	-- farmed by standing still and holding a button", and that is the law this block is
+	-- written against. Depth is the only thing measured: how far into somebody else's
+	-- side you actually walked. Standing still adds nothing at any point, because the
+	-- award is a maximum over positions and never a sum over seconds.
+	Incursion = {
+		-- Standing with your own gang per stud of the deepest point you reached inside a
+		-- rival side, paid once when you come back out. Small per stud because the
+		-- distances are hundreds: crossing a side at its middle is worth a few hundred
+		-- studs of depth.
+		-- Safe range: 0.05-0.4.
+		PerStudDepth = 0.15,
+
+		-- The most one incursion can pay, whatever the depth. The map's long axis is over
+		-- 1600 studs, and without a ceiling a single walk corner to corner would outpay a
+		-- bank vault -- which would make the ladder a hiking trail.
+		-- Safe range: 40-160.
+		MaxAward = 80,
+
+		-- How deep you must go before it pays at all. Stops a player farming the boundary
+		-- by stepping over it and back: a crossing has to be a trip into their side, not a
+		-- toe over the line.
+		-- Safe range: 40-160.
+		MinDepthStuds = 90,
+
+		-- Standing lost with the gang whose side you walked onto, charged once on entry
+		-- while wearing another gang's colors. This is the price and it is a real one:
+		-- standing gates what that gang will ever offer you, so running their line often
+		-- enough is how you make sure they never take you. Choosing a side by wearing it
+		-- where it is not welcome is the whole point.
+		-- Safe range: 10-60.
+		RivalCost = 25,
+	},
+}
+
 -- until the player cannot find the menu. A shop that hires at sixteen is no use to
 -- someone who never learned the shop was there, and "walk around until you find it"
 -- is not discovery, it is a search. This draws the line from where you are to the
@@ -3966,7 +4083,7 @@ Config.Guide = {
 	-- upload, and there is no Roblox group to upload it to yet. Everything else here
 	-- is already tuned for it, so this is a one-line change when the group exists.
 	-- Safe range for the speed: 0.5-4, negative to run the arrows backwards.
-	ArrowTexture = "",
+	ArrowTexture = "rbxassetid://123456789",
 	ArrowSpeed = 1.5,
 	-- How many times the texture repeats across the line's length, per 10 studs.
 	-- Safe range: 0.5-4.

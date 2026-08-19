@@ -59,6 +59,7 @@ local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
 local BankService = require(services.BankService)
 local GangService = require(services.GangService)
+local TerritoryService = require(services.TerritoryService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
@@ -75,6 +76,7 @@ local SavingsService = require(services.SavingsService)
 local MilestoneService = require(services.MilestoneService)
 local GossipService = require(services.GossipService)
 local CrimeService = require(services.CrimeService)
+local ApartmentDoorService = require(services.ApartmentDoorService)
 
 DataService:Init()
 StatService:Init()
@@ -99,6 +101,7 @@ WorkService:Init()
 TheftService:Init()
 BankService:Init()
 GangService:Init()
+TerritoryService:Init()
 ReturnService:Init()
 DebugService:Init()
 
@@ -122,6 +125,8 @@ NPCService:Start()
 CompanionService:Start()
 DeliveryService:Start()
 WorkService:Start()
+ApartmentDoorService:Init()
+ApartmentDoorService:Start()
 HouseService:Init()
 CarDealerService:Init()
 BillService:Init()
@@ -167,6 +172,16 @@ BankService:Start()
 -- whether an escape happened, and a tick that ran before the manhunt existed would read a
 -- zero and quietly award nothing for the best thing the player did all life.
 GangService:Start()
+-- After GangService, and the order is load-bearing in one direction only: a crossing
+-- reads who you run with and whether the band is on, both of which are GangService's
+-- answers, and it charges standing through it. Nothing in GangService ever asks where
+-- anybody is standing, so the dependency does not come back the other way.
+--
+-- Also after PlaceService is up, because the four sides are grown from the four bosses'
+-- place points -- though that one is not an ordering problem: the sites are re-read
+-- until all four resolve, precisely so a boss that has not streamed in yet cannot pin
+-- an empty map for the life of the server.
+TerritoryService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()

@@ -1558,6 +1558,51 @@ export type GangDef = {
 	pitch: string,
 }
 
+-- One thing worth drawing on the map. `u` and `v` are already normalized to 0..1
+-- across the map's bounds by the server, so the client never has to hold the world's
+-- coordinates or know how big the world is -- it draws into a unit square.
+export type MapIcon = {
+	id: string,
+	label: string,
+	u: number,
+	v: number,
+}
+
+-- A gang's side, as the map needs it: the color to wash it in and where its boss
+-- stands. The region has no outline because it has no polygon -- a side is the ground
+-- nearest this point, so the client samples rather than traces. See Shared/WorldMap.
+export type MapRegion = {
+	id: string,
+	name: string,
+	color: Color3,
+	u: number,
+	v: number,
+}
+
+-- Everything static about the map, sent once on join. None of it changes while the
+-- server is up, so it is deliberately not on the tick that sends TerritoryState.
+export type MapData = {
+	minX: number,
+	maxX: number,
+	minZ: number,
+	maxZ: number,
+	icons: { MapIcon },
+	regions: { MapRegion },
+}
+
+-- Where the player is standing, in gang terms. `depthStuds` is distance in from the
+-- nearest border, not distance from the boss: it is what says whether you are deep in
+-- somebody's side or loitering on the line between two.
+export type TerritoryState = {
+	regionId: string?,
+	depthStuds: number,
+	-- Whether a trip into a rival side is currently open, and the deepest it has got.
+	-- The award is computed from the deepest point and never from elapsed time, so this
+	-- is the number the HUD should show rising -- it is the only one that pays.
+	onIncursion: boolean,
+	deepestStuds: number,
+}
+
 -- What the client draws about the gang you are in, or nil when you are in none.
 export type GangState = {
 	gangId: string,
