@@ -1,5 +1,64 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18 (last) — three missing requires, and why the gate said clean
+
+**The game place would not load.** Not slowly, not partly: it came up with no services in
+it at all. Owner reported it as "it's not letting me load into the game."
+
+**Root cause.** `LifeService:Init()` calls `VerdictService.SetMoments(...)` at line 785 and
+`VerdictService` was never required. In Lua that is a *global* read — nil — so the call is
+a nil index that throws. `init.server.luau` calls every service's `Init()` **unguarded by
+pcall**, and `LifeService:Init()` is line 92 of it, so the throw took out every service
+declared after line 92 and nothing in the game ever reached `Start()`. This is the exact
+symptom CLAUDE.md already warns about for a syntax error on the boot path — "a place that
+loads with no services in it at all" — arriving by a different route.
+
+**The comment is what caused it.** Above the `SetMoments` call, a comment claimed requiring
+`VerdictService` here would close a require cycle. It would not: `VerdictService` reaches
+only `DataService` and `Ribbons`, and neither reaches back. Somebody believed the comment,
+skipped the require, and the code kept compiling because a nil global is legal Luau.
+`SetMoments` still has a real job (it threads the moments *query* in) — that is a separate
+problem from the require, and conflating the two is how the require got lost.
+
+**Two more of the same defect were queued behind it**, found by scanning for the class
+rather than by looking for the bug:
+
+- `ReturnService` calls `BodyService.Apply(player)` on the Studio arrival path, unrequired.
+  It threw on **every Studio join**, out of a `PlayerAdded` handler, *after* the life had
+  already been rolled — so the player landed in a begun life wearing an adult body and the
+  rest of the handler (including the frame yield that stops `BodyService` re-sizing them)
+  never ran. This is why joining as a kid was not working even in the runs that got that far.
+- `WorkService` calls `Customers.Queue(...)`, unrequired, and its type alias on line 56
+  pointed at nothing. Only fires once a customer-facing job actually starts, which is why it
+  outlived the two on the boot path.
+
+**Why `check.py` was green through all three.** Its "calls to undefined names" check matches
+a bare `name(`. Every one of these is `Module.method(` — a *field* call on an undefined
+name — and the regex never looked at that shape. **This is the fourth time in this tree that
+a gate was green because it was not looking at the thing**, and it belongs on the same list
+as `check_city` measuring an asset that shipped in neither project file.
+
+**Fixed:** tenth check, `check_undefined_modules`. Built on the existing `strip_code` rather
+than a fresh comment stripper — my first throwaway scan flagged `Ambient` and `Work` inside
+backtick strings, and `strip_code` already blanks strings while keeping `{...}` interpolation
+holes, so it reports zero false positives tree-wide. Negative-tested by deleting each of the
+three requires in turn: all three FIRED, the unmodified control tree clean.
+
+**Ownership.** `LifeService`, `ReturnService` and `WorkService` are **B's files** and I edited
+all three. That was under direct owner instruction to make the place load, and none of the
+edits change behaviour — each is one `require` line plus the comment explaining why the
+cycle argument is false. B: read them and keep or restate the comments in your own voice, but
+do not remove the requires without running `check.py`. Commit `3c1b092`. `Cast.luau` was left
+unstaged and untouched.
+
+**To load in as a kid there is nothing to type.** `ReturnService.onPlayerAdded` already calls
+`SetupService.Skip(player, true)` on every Studio join, so joining the game place rolls a
+fresh child life at age zero. `/setup skip` still works mid-session to restart at will. That
+path was correct all along — it was just throwing on the line after it.
+
+**Not Studio-tested.** The gate is green and the boot path no longer has a nil index in it.
+Whether the child body actually lands is the first thing to look at in Studio.
+
 ## 2026-08-18 (later still) — a boundary that lied, and an audit of the ones that stay hidden
 
 **The disguise disc was painted wider than the disguise reached.** `DisguiseService` accepts
