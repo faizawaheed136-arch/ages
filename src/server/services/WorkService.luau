@@ -125,6 +125,16 @@ type Shift = {
 	-- that has to be right after every possible way a task can end.
 	tasksIssued: number,
 	tasksDone: number,
+	-- How many times running the shop has asked for something, with the floor clear,
+	-- and had nothing it could put anywhere. Reset by any task that lands.
+	--
+	-- The one field that can tell "this shift has not started yet" apart from "this
+	-- shift cannot start". Both look identical from tasksIssued -- zero either way --
+	-- and the wage used to read that zero as innocence and pay in full for it, which
+	-- made a station too cramped to work the best-paying place in town. Counted only
+	-- with the floor clear so a second-slot ask that lost to the first task's own
+	-- marks is not evidence of anything.
+	asksUnanswered: number,
 	-- Which tasks this shift has already asked for, so it works through the job's list
 	-- before repeating any. Being asked to sweep the same aisle twice running is the
 	-- shift equivalent of the same customer being rude to you two shifts in a row.
@@ -1231,13 +1241,22 @@ local function endShift(player: Player, reason: string, standingDelta: number)
 
 	-- Track shift completions for milestone checking. The bill field is the source
 	-- of truth for total shifts this year, so update it here on every finished shift.
-	local totalShifts = data.bills.shiftsCompleted + 1
-	data.bills.shiftsCompleted = totalShifts
-	MilestoneService.OnShiftComplete(player, totalShifts)
-	-- A finished shift is the clearest possible proof of agency: the player
-	-- chose to work and the world rewards them with the freedom to receive an
-	-- ambient event. Earned, not given.
-	EventService.AwardAutonomy(player, 1)
+	--
+	-- Skipped entirely for a shift that was called off because its station could not
+	-- ask for anything. Everything in these four lines is a reward -- a milestone
+	-- counter, and the autonomy that buys the right to receive an ambient event -- and
+	-- handing them out for nine seconds of standing in a broken room is the same bug as
+	-- paying wages for it, just spent on a different currency. The player walks away
+	-- from it exactly as they arrived, which is the only outcome that owes nothing.
+	if shift.asksUnanswered < Config.Work.Tasks.UnansweredAsksBeforeBroken then
+		local totalShifts = data.bills.shiftsCompleted + 1
+		data.bills.shiftsCompleted = totalShifts
+		MilestoneService.OnShiftComplete(player, totalShifts)
+		-- A finished shift is the clearest possible proof of agency: the player
+		-- chose to work and the world rewards them with the freedom to receive an
+		-- ambient event. Earned, not given.
+		EventService.AwardAutonomy(player, 1)
+	end
 
 	-- Carry the shift's XP into the life's total. StandingXP is per-job, so it
 	-- only accumulates while the player holds this job; a change of job resets
@@ -1381,6 +1400,7 @@ local function startShift(player: Player, job: Job, station: Vector3): boolean
 		nextTaskIn = Config.Work.Tasks.GapSeconds,
 		tasksIssued = 0,
 		tasksDone = 0,
+		asksUnanswered = 0,
 		tasksUsed = {},
 		standingXp = 0,
 	}
@@ -1420,8 +1440,17 @@ local function wageShareFor(shift: Shift): number
 	local tasks = Config.Work.Tasks
 	local share = taskShareOf(shift)
 
-	-- Nothing asked yet, so nothing missed. Pays in full.
 	if share == nil then
+		-- Nothing asked yet, so nothing missed -- but only while "yet" is still true.
+		-- Once the shop has tried to ask and found nowhere to put anything, the empty
+		-- report card has stopped describing a shift that has not started and started
+		-- describing a station that cannot be worked, and paying a full wage for that
+		-- is exactly the standing-still salary this whole block exists to stop. The
+		-- shift is about to be called off anyway; this makes sure the hour that lands
+		-- in the gap before that happens is worth nothing either.
+		if shift.asksUnanswered > 0 then
+			return tasks.WageShareNone
+		end
 		return tasks.WageShareGood
 	end
 	if share >= tasks.GoodShare then
@@ -1560,14 +1589,14 @@ local function gapFor(shift: Shift): number
 	return tasks.GapSeconds
 end
 
-local function issueTask(player: Player, shift: Shift, only: string?)
+local function issueTask(player: Player, shift: Shift, only: string?): boolean
 	local pool = JobTasks.For(shift.jobId)
 	if #pool == 0 then
 		if not warnedNoRoom[shift.jobId] then
 			warnedNoRoom[shift.jobId] = true
-			warn(`[AGES] job "{shift.jobId}" has no tasks authored -- every shift at it pays a full wage for nothing. Add tasks to JobTasks.luau or remove the job.`)
+			warn(`[AGES] job "{shift.jobId}" has no tasks authored, so every shift at it is called off unpaid a few seconds in and the job is unplayable. Add tasks to JobTasks.luau or remove the job.`)
 		end
-		return
+		return false
 	end
 
 	-- Fresh ones first, and only then round again. Same rule as shift moments and for
@@ -1597,7 +1626,7 @@ local function issueTask(player: Player, shift: Shift, only: string?)
 		-- reports the miss, and a silent substitution would have the tester watching
 		-- the wrong task and drawing conclusions about it.
 		if #candidates == 0 then
-			return
+			return false
 		end
 	elseif #candidates == 0 then
 		-- Round again. Rebuilt from the pool rather than assigned it, because the rush
@@ -1616,13 +1645,13 @@ local function issueTask(player: Player, shift: Shift, only: string?)
 		-- an error and not worth a warning: the slot stays empty and the next gap asks
 		-- again, by which time the rush has almost certainly finished.
 		if #candidates == 0 then
-			return
+			return false
 		end
 	end
 
 	local character = player.Character
 	if character == nil then
-		return
+		return false
 	end
 
 	-- Shuffled and then worked through, rather than one pick and give up. In a room
@@ -1801,7 +1830,7 @@ local function issueTask(player: Player, shift: Shift, only: string?)
 					patienceTotal = patienceTotal,
 				},
 			})
-			return
+			return true
 		end
 
 		shift.tasksUsed[chosen.id] = true
@@ -1824,19 +1853,20 @@ local function issueTask(player: Player, shift: Shift, only: string?)
 			expiredFor = 0,
 			customer = customer,
 		})
-		return
+		return true
 	end
 
 	-- Every candidate was rejected, which in practice means the room is too tight to
-	-- fan marks out in. Said out loud because the symptom is invisible from inside the
-	-- game and pleasant to the player: a shift with no tasks issues no tasks, misses
-	-- none, and therefore reads as a shift where nothing was asked -- which pays in
-	-- full and climbs the ladder at base rate. A station nobody can work is a station
-	-- that pays for standing, and that is the exact bug this whole file is fighting.
+	-- fan marks out in. Said out loud because there is nothing in the game that would
+	-- tell you which of the forty-nine stations it is: the player is sent home after a
+	-- few seconds with a line saying the station has nothing to ask for, and that line
+	-- deliberately does not name a cause, because from where they are standing there
+	-- isn't one to name. This warning is the half of it a build can act on.
 	if not warnedNoRoom[shift.jobId] then
 		warnedNoRoom[shift.jobId] = true
-		warn(`[AGES] job "{shift.jobId}" could not place a single task mark at its station -- the room is too cramped to fan out in, so shifts there pay in full for no work. Widen the room or move the place point.`)
+		warn(`[AGES] job "{shift.jobId}" could not place a single task mark at its station -- the room is too cramped to fan out in, so every shift there is called off unpaid. Widen the room or move the place point.`)
 	end
+	return false
 end
 
 -- Finishing one. The tip is paid on the spot and in cash, which is the entire point:
@@ -2082,7 +2112,18 @@ local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job,
 	shift.nextTaskIn -= elapsed
 	if shift.nextTaskIn <= 0 then
 		if liveTasks(shift) < slotsFor(shift) and not rushRunning(shift) then
-			issueTask(player, shift)
+			-- Read before the ask, not after: issuing a task is exactly what stops the
+			-- floor being clear, so asking afterwards would answer "no" every time and the
+			-- counter would never reset.
+			local clearFloor = liveTasks(shift) == 0
+			if issueTask(player, shift) then
+				shift.asksUnanswered = 0
+			elseif clearFloor then
+				-- An empty floor, a request made, nothing to show for it. Counted here and
+				-- acted on in tickPlayer, which owns every other way a shift can end and is
+				-- the only place that can end this one before another hour is paid.
+				shift.asksUnanswered += 1
+			end
 		end
 		-- Reset unconditionally and after the attempt: unconditionally so a room with
 		-- nowhere to put a mark waits out another gap rather than retrying four times a
@@ -2103,15 +2144,21 @@ end
 -- for nothing -- which is the difference between reaching the office in three shifts
 -- and reaching it in six.
 --
--- A shift that was never given a task -- a job with none authored, or a room with
--- nowhere to stand -- scores as ordinary rather than as poor. The player did
--- everything that was asked of them; nothing was.
+-- A shift that was never given a task scores as ordinary rather than as poor. The
+-- player did everything that was asked of them; nothing was. That reading only holds
+-- while the shop has not actually tried, though -- a station that asked and had
+-- nowhere to put anything is a station nobody worked, and letting it climb a career
+-- ladder at base rate is the same salary-for-standing-still bug the wage had, spent
+-- on promotions instead of money.
 local function shiftTaskStanding(shift: Shift): number
 	local tasks = Config.Work.Tasks
 	local base = Config.Work.Standing.PerShiftWorked
 
 	local share = taskShareOf(shift)
 	if share == nil then
+		if shift.asksUnanswered > 0 then
+			return tasks.PoorShiftStanding
+		end
 		return base
 	end
 
@@ -2405,6 +2452,34 @@ local function tickPlayer(player: Player, elapsed: number)
 		return
 	end
 
+	-- The station has asked for something several times over with an empty floor and
+	-- had nothing it could put anywhere. That is not a quiet shift, it is a shift that
+	-- cannot happen, and the reason it has to end rather than simply stop paying is
+	-- that a player left standing in a room being paid nothing is idle time inside an
+	-- activity -- which this whole block was written to delete, not to relocate.
+	--
+	-- Ahead of the walk-out check on purpose. A player who works this out for
+	-- themselves and leaves would otherwise be docked two standing for abandoning a
+	-- post that never gave them anything to abandon.
+	--
+	-- Nothing to their record and nothing in their pocket: wageShareFor has already
+	-- paid zero for any hour that landed in the seconds this took to establish, and a
+	-- station nobody can work is our fault, not theirs.
+	if shift.asksUnanswered >= Config.Work.Tasks.UnansweredAsksBeforeBroken then
+		mustStepAway[player] = shift.station
+		-- Named, and vague about why, because the player cannot see the cause and a
+		-- message that guessed at one would be a message that is sometimes wrong. What
+		-- they can act on is the two facts in it: they are not being paid, and standing
+		-- there will not change that. The console warning next to it is the half a build
+		-- can act on.
+		NoticeRemote:FireClient(
+			player,
+			`There's nothing to do at the {string.lower(job.title)} station right now, so you're not being paid to stand in it. Sent home.`
+		)
+		endShift(player, "station had nothing to ask for", 0)
+		return
+	end
+
 	-- A prompt this shift raised is answered by walking, sometimes to a marker a
 	-- few studs off. Clocking someone out for answering a question their job asked
 	-- them would be the one interaction in this system that punishes playing it.
@@ -2654,9 +2729,35 @@ function WorkService.ForceTask(player: Player, taskId: string?): boolean
 		table.remove(shift.tasks, index)
 	end
 
-	issueTask(player, shift, taskId)
+	-- Clears the unanswered count on success, so a tester who forces a task into a shift
+	-- that had been failing to fill itself does not have the shift called off underneath
+	-- them on the next tick for a search that has since started working.
+	if issueTask(player, shift, taskId) then
+		shift.asksUnanswered = 0
+	end
 	pushTasks(player, shift, false)
 	return #shift.tasks > 0
+end
+
+-- Studio harness: put the shift one tick away from being called off for a station
+-- that cannot ask for anything.
+--
+-- The only way to reach that ending on purpose. Its real trigger is a room too tight
+-- to fan a mark out in, which by definition does not exist at any station that was
+-- built correctly -- so the one path in this file that exists to stop a player being
+-- paid for standing still is also the one path no tester can reach by playing. This
+-- is that path's front door: call it, wait a tick, and watch the shift end, the wage
+-- come out at zero and the record stay exactly where it was.
+--
+-- Sets the count rather than ending the shift itself, so what is being tested is the
+-- real check in tickPlayer and not a second copy of it that could quietly disagree.
+function WorkService.ForceStall(player: Player): boolean
+	local shift = shifts[player]
+	if shift == nil then
+		return false
+	end
+	shift.asksUnanswered = Config.Work.Tasks.UnansweredAsksBeforeBroken
+	return true
 end
 
 -- Studio harness: run the clock out on the task in hand, without waiting for it.
@@ -2881,8 +2982,21 @@ function WorkService.Describe(player: Player): string
 			gap
 		)
 
+		-- Unanswered asks are printed only when there are any, because zero is the answer
+		-- every healthy shift gives and a field that says "0" on every line is a field
+		-- nobody reads. When it is not zero it is the most important thing on the line:
+		-- it is the shift counting down to being called off, and it is the only way to
+		-- tell a station that is between tasks from a station that has none to give.
+		local stalled = if shift.asksUnanswered > 0
+			then string.format(
+				", %d/%d unanswered asks",
+				shift.asksUnanswered,
+				Config.Work.Tasks.UnansweredAsksBeforeBroken
+			)
+			else ""
+
 		doing = string.format(
-			"on shift %.1f/%d game hrs, %s earned, moment %s | %s (%d/%d done, shift worth %+d)",
+			"on shift %.1f/%d game hrs, %s earned, moment %s | %s (%d/%d done%s, shift worth %+d)",
 			shift.realSeconds / Config.Time.RealSecondsPerGameHour,
 			Config.Work.ShiftGameHours,
 			Money.Format(shift.earned),
@@ -2890,6 +3004,7 @@ function WorkService.Describe(player: Player): string
 			onTask,
 			shift.tasksDone,
 			shift.tasksIssued,
+			stalled,
 			shiftTaskStanding(shift)
 		)
 	end

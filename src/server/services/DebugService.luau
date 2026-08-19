@@ -681,6 +681,15 @@ end
 --                             in /job should be one worse. Twice in a row is how both
 --                             slots are failed; once with two live is how the "lost one
 --                             while winning the other" case is looked at.
+--   /job stall                marks the station as having asked for things and found
+--                             nowhere to put them, which is the one shift ending that
+--                             a correctly built station can never produce. Within a
+--                             tick the shift should end by itself, the notice should
+--                             say the station has nothing to do and you are not being
+--                             paid to stand in it, and /job afterwards should show the
+--                             money and the standing both unmoved. That last part is
+--                             the whole point: this is the ending that used to pay a
+--                             full year's salary for standing still.
 --   /job task then /job       "shift worth +2" while you are finishing them and "+0"
 --                             once you have missed most of them, which is the whole
 --                             of what the tasks are for: the shift's tasks decide
@@ -734,6 +743,17 @@ Commands.job = function(player: Player, args: { string }): string
 			return `no task in hand to run out — {WorkService.Describe(player)}`
 		end
 		return `task expired — {WorkService.Describe(player)}`
+	end
+
+	if arg == "stall" then
+		-- The station-has-nothing-to-ask-for ending, which cannot otherwise be reached
+		-- at a station that was built properly. Takes effect on the next tick rather
+		-- than here, so what gets tested is the check in the shift loop itself.
+		if not WorkService.ForceStall(player) then
+			return `not on shift — {WorkService.Describe(player)}`
+		end
+		return `station marked as having nothing to ask for; the shift should be called off `
+			.. `unpaid within a tick — {WorkService.Describe(player)}`
 	end
 
 	if arg == "standing" then

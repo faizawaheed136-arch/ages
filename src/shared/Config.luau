@@ -1609,12 +1609,35 @@ Config.Work.Tasks = {
 	-- An hour that lands before the shift has issued its first task pays in full:
 	-- nothing was asked, so nothing can have been missed. That grace is also what
 	-- keeps the first hour of every shift honest, since the first task deliberately
-	-- waits out a gap before it appears.
+	-- waits out a gap before it appears. It lapses the moment the shop tries to ask
+	-- for something and comes up with nothing -- see UnansweredAsksBeforeBroken.
 	-- Safe range: Good 1, Ok 0.6-0.9, Poor 0.2-0.5, None 0-0.2, and descending.
 	WageShareGood = 1,
 	WageShareOk = 0.8,
 	WageSharePoor = 0.3,
 	WageShareNone = 0,
+
+	-- How many times the shop may ask for something, find nowhere to put it, and be
+	-- given the benefit of the doubt before the shift is called off.
+	--
+	-- The grace above is written for a shift that has not started yet, and for a long
+	-- time nothing distinguished that from a shift that can never start. A station
+	-- whose room is too cramped to fan a mark out in issues no tasks, so it misses
+	-- none, so it reads as a shift where nothing was asked -- which paid a full wage
+	-- and climbed the ladder at base rate for standing perfectly still. At 40 game
+	-- hours a year that is an entire salary for a player who never moved, and it is
+	-- the single largest hole this block was written to close.
+	--
+	-- Only counted when the floor is completely clear, which is what makes the count
+	-- trustworthy: a second-slot ask can fail honestly because the first task's marks
+	-- are standing in the space the second one wanted, and a station that works
+	-- perfectly well would otherwise condemn itself on its own busyness.
+	--
+	-- Three against a 3s gap calls it after about nine seconds, well inside the first
+	-- game hour, so a broken station is caught before it can pay for one.
+	-- Safe range: 2-6. At 1 a single unlucky search ends the shift; above ~6 the
+	-- player stands there long enough to wonder whether they are doing it wrong.
+	UnansweredAsksBeforeBroken = 3,
 
 	-- What the shift's tasks do to your record.
 	--
