@@ -34,10 +34,30 @@ local DISGUISE = Config.Crime.Disguise
 -- Cosmetic dimensions, kept out of Config for the reason ChoiceMarkers gives: nobody
 -- balances this game by changing how wide a floor mark is.
 --
--- The disc is drawn a little wider than ReachStuds rather than exactly it, because the mark
--- is what the player aims at and the reach is what actually counts -- a disc drawn to the
--- edge of its own tolerance would have players stepping off the paint and still working,
--- which teaches them the paint is a lie.
+-- The disc is drawn *inside* ReachStuds rather than out to it. The mark is what the player
+-- aims at and the reach is what actually counts, so the paint has to be a promise the server
+-- always keeps: stand on it and you are certainly changing. The forgiving band lives outside
+-- the paint, where it costs nothing to be wrong about.
+--
+-- It used to be `ReachStuds * 2.2`, which is a *radius* of 1.1 reaches -- the paint was 10%
+-- wider than the area that worked. The comment above it argued for exactly this rule and
+-- then got the direction backwards, which is the worst version of the defect: a player
+-- standing on the outer 0.6 studs of the disc could see themselves on the mark, be off it as
+-- far as DisguiseService was concerned, and lose five seconds of change with the paint under
+-- their feet the whole time. An error in the other direction is invisible -- a player just
+-- off the paint who keeps working never learns anything was wrong.
+--
+-- Kept as a share rather than a width so it cannot drift from ReachStuds, and guarded below,
+-- because "the paint means what it says" is the whole point of drawing it.
+local DISC_REACH_SHARE = 0.9
+if DISC_REACH_SHARE >= 1 then
+	error(
+		`[AGES] Wardrobe DISC_REACH_SHARE is {DISC_REACH_SHARE}, so the change disc is drawn `
+			.. `at or beyond Crime.Disguise.ReachStuds ({DISGUISE.ReachStuds}). The paint would `
+			.. `then cover ground where DisguiseService refuses the change, and standing on the `
+			.. `mark would silently do nothing. Set it below 1.`
+	)
+end
 local DISC_THICKNESS = 0.2
 local DISC_LIFT = 0.08
 local RAIL_SIZE = Vector3.new(0.5, 0.5, 5.0)
@@ -129,7 +149,9 @@ function Wardrobe.Build(place: string, at: CFrame, label: string): Mark?
 	group.Parent = markFolder()
 
 	local base = at.Position
-	local width = DISGUISE.ReachStuds * 2.2
+	-- Diameter, so the reach -- which is a radius -- is doubled before the share is taken.
+	-- Getting that factor of two wrong is what put the paint outside the reach before.
+	local width = DISGUISE.ReachStuds * 2 * DISC_REACH_SHARE
 	-- A cylinder's flat faces are on its X axis, so a disc lying on the floor is one turned
 	-- on its side -- which is why the thickness is the X of the size and the roll is 90
 	-- degrees. This is the one thing in the file that looks like a mistake and is not.
