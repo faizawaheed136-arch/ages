@@ -178,6 +178,15 @@ end
 Col.__eq = function(a, b) return a.R == b.R and a.G == b.G and a.B == b.B end
 Col.__tostring = function(a) return `{a.R}, {a.G}, {a.B}` end
 
+-- Real, per channel, for the same reason `Magnitude` is real: the UI mixes a palette colour
+-- toward an accent to get a hover state, a desaturated icon and a recessed row, and a stub
+-- that answered with either end of the mix would certify a menu drawn in the wrong colours.
+-- It is also two lines, which is the whole argument -- a value type this cheap to implement
+-- honestly has no business being a stub.
+Col.Lerp = function(a, b, t)
+	return col(a.R + (b.R - a.R) * t, a.G + (b.G - a.G) * t, a.B + (b.B - a.B) * t)
+end
+
 --------------------------------------------------------------------------------
 -- The instance tree, mirroring how Rojo maps this repo
 --------------------------------------------------------------------------------

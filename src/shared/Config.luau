@@ -4208,6 +4208,61 @@ Config.UI = {
 	-- doesn't re-enable a choice that is about to resolve.
 	EventResponseTimeoutSeconds = 5,
 
+	-- The game's one palette.
+	--
+	-- **These are the lobby's colours, and that is the point.** A player meets this game in
+	-- the lobby -- a warm near-black with a single gold standing on it -- and thirty seconds
+	-- later they are in a town opening a menu. If that menu is cold blue-grey with a
+	-- different white in it, the two places read as two products, and the seam between them
+	-- is exactly where somebody decides whether the thing they are in was made by one hand.
+	--
+	-- Warm and low-saturation on purpose. This is a life sim and the register it wants is
+	-- lived-in, not clinical. The saturation budget is spent on the things that carry
+	-- meaning -- a gang's colour, a bar that is filling, a refusal -- and nowhere else: a
+	-- surface bright enough to compete with a warning has taken the warning's job.
+	--
+	-- `Config.Lobby.Menu.Palette` is this same identity written a second time for the
+	-- lobby's own two files. The two must agree; when the lobby is next opened it should be
+	-- folded into this one.
+	Palette = {
+		-- The ground, and the three steps up from it. `Panel` is the sheet, `PanelDeep` is
+		-- the bottom of its gradient, `Row` is a card at rest and `RowHover` is one under
+		-- the cursor. Four values rather than two because a panel with a single flat fill in
+		-- it has no depth to hang a hierarchy on, and every list on it then reads as one
+		-- undifferentiated block.
+		Panel = Color3.fromRGB(18, 18, 22),
+		PanelDeep = Color3.fromRGB(13, 13, 16),
+		Row = Color3.fromRGB(30, 30, 36),
+		RowHover = Color3.fromRGB(44, 44, 52),
+		-- A row that is present and cannot be acted on. Darker than `Row`, so it recedes
+		-- rather than looking like a card that failed to load.
+		RowLocked = Color3.fromRGB(24, 24, 28),
+		-- Hairlines, strokes and scroll bars. Never a fill.
+		Edge = Color3.fromRGB(62, 60, 72),
+
+		Text = Color3.fromRGB(240, 236, 228),
+		Muted = Color3.fromRGB(148, 144, 156),
+
+		-- The one warm colour and the game's signature, carried over from the lobby title.
+		Accent = Color3.fromRGB(225, 200, 150),
+		AccentDeep = Color3.fromRGB(198, 158, 92),
+		-- Dark text on an accent fill.
+		Ink = Color3.fromRGB(24, 20, 14),
+
+		-- A refusal, a debt, a thing that is going wrong. The only red on the screen.
+		Warn = Color3.fromRGB(214, 126, 116),
+		-- Open, paid, owned, earned. The only green.
+		Good = Color3.fromRGB(126, 198, 148),
+
+		-- The wash behind an open panel, and how far through it the world still shows.
+		-- Not opaque: the point of a menu that does not take the whole screen is that the
+		-- town is still there behind it, and a backdrop dark enough to hide the town would
+		-- have made the panel full-screen by another route.
+		-- Safe range: 0.15-0.6.
+		Backdrop = Color3.fromRGB(6, 6, 9),
+		BackdropTransparency = 0.35,
+	},
+
 	-- The menu: a rail of tiles down the left edge, and a panel that opens beside it.
 	--
 	-- The rail is always on screen and the panel is not, which is the whole shape of
@@ -4218,45 +4273,149 @@ Config.UI = {
 	Menu = {
 		-- The rail's tiles. Square, so this is both dimensions.
 		-- Safe range: 34-56.
-		RailTilePixels = 44,
+		RailTilePixels = 46,
 		-- The gap between tiles, and the rail's inset from the left edge.
 		-- Safe range: 4-12.
-		RailGapPixels = 6,
+		RailGapPixels = 7,
 		-- Safe range: 8-24.
-		RailInsetPixels = 12,
+		RailInsetPixels = 14,
+		-- The padding inside the rail's own backing plate, which is what turns seven
+		-- separate tiles into one object sitting on the screen.
+		-- Safe range: 0-10.
+		RailPadPixels = 6,
+		-- The icon drawn inside a tile. Smaller than the tile by enough that the tile
+		-- still reads as a target rather than as a frame around a picture.
+		-- Safe range: 16-30, and never above `RailTilePixels - 8`.
+		RailIconPixels = 24,
 
-		-- The panel's share of the screen's shorter dimension. Deliberately not the
-		-- whole screen: the map sheet is the full-screen surface and having two of them
-		-- would make the map stop feeling like the one thing that takes over.
+		-- The panel's *ceiling*, not its height. The panel is as tall as the pane it is
+		-- showing and no taller; this is the point past which it stops growing and the
+		-- list starts scrolling instead.
+		--
+		-- It was a flat fraction first, and that was the single worst thing about the
+		-- panel: five rows of money inside a sheet claiming three quarters of the screen
+		-- reads as a page that failed to finish loading, and the eye goes to the empty two
+		-- thirds rather than to the five rows. Deliberately not the whole screen either --
+		-- the map sheet is the full-screen surface, and a second one would take away the
+		-- one thing that makes the map feel like it takes over.
 		-- Safe range: 0.6-0.9.
 		PanelHeightFraction = 0.76,
-		-- The panel's width as a share of screen width, before the rail is subtracted.
+		-- And the floor, so a one-row pane is still a panel rather than a strip. Below
+		-- about this a surface stops reading as a surface and starts reading as a tooltip
+		-- that got out of hand.
+		-- Safe range: 200-320, and never above `PanelHeightFraction` of a phone screen.
+		PanelMinHeightPixels = 260,
 		-- Safe range: 0.4-0.75.
 		PanelWidthFraction = 0.56,
-
-		-- The order the rail draws in, top to bottom, and the pane each tile opens.
-		-- `glyph` is one character because the rail has no image assets behind it yet
-		-- and a letter that is always legible beats an icon that is sometimes missing.
+		-- And the pixels that fraction is clamped between.
 		--
-		-- The ids are matched in MenuUI's pane switch, so an entry added here without a
-		-- pane draws a tile that opens an empty panel -- which is why the switch errors
-		-- by name rather than falling through to a blank.
+		-- A fraction on its own is wrong at both ends of the range of screens this game
+		-- runs on: 56% of a phone held sideways is too narrow for a row with a figure
+		-- column, and 56% of an ultrawide is a panel you have to move your head to read.
+		-- Safe range: 380-460 min, 640-820 max, and min must stay below max.
+		PanelMinWidthPixels = 420,
+		PanelMaxWidthPixels = 720,
+
+		-- The header strip: the player card, and the title bar under it.
+		-- Safe range: 68-100 and 26-44.
+		HeaderPixels = 86,
+		TitleBarPixels = 34,
+		-- One list row, and the gap between two.
+		-- Safe range: 44-64 and 4-10.
+		RowPixels = 54,
+		RowGapPixels = 6,
+
+		-- How the menu moves.
+		--
+		-- **Three curves, and everything here is one of them.** In on `Back.Out`, out on
+		-- `Quad.In`, and the out is faster than the in -- a player closing a menu has
+		-- already decided and is waiting on the animation, whereas a player opening one is
+		-- being shown something. Most UI that feels unjuicy is the right curves played too
+		-- slowly; nothing in this table is above a third of a second.
+		Motion = {
+			-- The panel arriving: how far it travels from the rail, and how long it takes.
+			-- Nothing is gated on it finishing -- the panel is clickable from frame one.
+			-- Safe range: 0-48 pixels, 0.1-0.35 seconds. Zero on either is an instant menu.
+			EnterPixels = 26,
+			EnterSeconds = 0.22,
+			-- Leaving. Kept under the entrance on purpose; see above.
+			-- Safe range: 0.06-0.2.
+			ExitSeconds = 0.14,
+
+			-- How long between one row landing and the next, and how far each rises.
+			--
+			-- The stagger is the difference between a list being dealt and a block
+			-- appearing. It is small because the longest pane here can be forty rows:
+			-- multiply this by the row count and keep the total under about a third of a
+			-- second, or a big relationships list becomes a wait.
+			-- Safe range: 0-0.05 stagger, 0-24 pixels. Zero on the stagger lands them together.
+			RowStaggerSeconds = 0.022,
+			RowRiseSeconds = 0.26,
+			RowRisePixels = 14,
+			-- The most rows that are allowed to stagger at all. Past this they all land on
+			-- the last offset, so a forty-row pane costs the same wait as a ten-row one.
+			-- Safe range: 6-20.
+			RowStaggerLimit = 12,
+
+			-- A row under the cursor: how much its coloured spine grows at each end, and how
+			-- long the colour takes to get there. Tiny and fast -- this is feedback that the
+			-- thing is live, not an animation worth watching, and above about 0.2 seconds it
+			-- lags behind a player running down a list.
+			--
+			-- **The spine grows; the row does not slide.** Sliding the row sideways was the
+			-- first version and it is wrong in a list: the spines make one vertical line down
+			-- the left edge of the pane, and pushing a single row out of that line breaks the
+			-- alignment of the two rows either side of it. The hover then draws the eye to the
+			-- seam rather than to the row.
+			-- Safe range: 0-10 pixels, 0.05-0.2 seconds.
+			HoverSpinePixels = 5,
+			HoverSeconds = 0.12,
+
+			-- The squash a rail tile does when it is pressed: how far past its own size it
+			-- goes, and the two halves of the bounce. This is the whole of the menu's
+			-- click feel and it happens before the panel has drawn anything, which is the
+			-- point -- the press is acknowledged in under a tenth of a second regardless of
+			-- what the pane behind it costs to build.
+			-- Safe range: 1.0-1.25, 0.05-0.12, 0.08-0.18.
+			PressScale = 1.14,
+			PressOutSeconds = 0.07,
+			PressBackSeconds = 0.12,
+
+			-- How far the world behind the panel is blurred, and how long the blur takes to
+			-- arrive. The one place in this game allowed to blur the screen: a backdrop
+			-- behind a menu is a depth cue, whereas a blur during play is a fault.
+			-- Safe range: 0-28. Zero turns it off entirely.
+			BlurSize = 16,
+			BlurSeconds = 0.2,
+		},
+
+		-- The order the rail draws in, and the pane each tile opens.
+		--
+		-- `id` is also the icon: `MenuIcons` draws a shape per id and errors on one it has
+		-- never heard of, so a tab added here without a picture behind it is a boot failure
+		-- naming the tab rather than a blank square in the rail. Same rule as the pane
+		-- switch in `MenuUI`, for the same reason.
+		--
+		-- `color` is what that pane is worth on screen: the tile's icon, the stripe down the
+		-- left of its rows, and its title. Every one of them is desaturated against what it
+		-- would be on a white background, because they sit on a near-black panel and a
+		-- fully-saturated hue on this ground is a hue that glows.
 		Tabs = {
-			{ id = "jobs", label = "Jobs Available", glyph = "J", color = Color3.fromRGB(122, 196, 255) },
+			{ id = "jobs", label = "Jobs Available", color = Color3.fromRGB(132, 186, 232) },
 			-- Second because it is the pane a player opens most often after work, and
 			-- because it is the one that used to be four rows stacked on the HUD: what a
 			-- house cost, what a bill wants and what is in the bank are facts you go and
 			-- look up, not things you need in your eyeline while you are walking.
-			{ id = "money", label = "Money", glyph = "$", color = Color3.fromRGB(225, 205, 130) },
-			{ id = "relationships", label = "Relationships", glyph = "R", color = Color3.fromRGB(255, 150, 190) },
-			{ id = "gangs", label = "Gangs", glyph = "G", color = Color3.fromRGB(236, 110, 96) },
-			{ id = "skills", label = "Skills", glyph = "S", color = Color3.fromRGB(140, 226, 160) },
+			{ id = "money", label = "Money", color = Color3.fromRGB(225, 200, 150) },
+			{ id = "relationships", label = "Relationships", color = Color3.fromRGB(226, 150, 172) },
+			{ id = "gangs", label = "Gangs", color = Color3.fromRGB(224, 124, 96) },
+			{ id = "skills", label = "Skills", color = Color3.fromRGB(126, 198, 148) },
 			-- The last two are the housekeeping pair, and they sit at the bottom because
 			-- nothing about the life being played is behind them. A player opens the five
 			-- above during a life and these two either once, or when something has gone
 			-- wrong -- which is exactly the ordering the rail should teach.
-			{ id = "codes", label = "Codes", glyph = "#", color = Color3.fromRGB(196, 160, 255) },
-			{ id = "settings", label = "Settings", glyph = "*", color = Color3.fromRGB(148, 155, 170) },
+			{ id = "codes", label = "Codes", color = Color3.fromRGB(178, 158, 220) },
+			{ id = "settings", label = "Settings", color = Color3.fromRGB(150, 146, 158) },
 		},
 	},
 }
