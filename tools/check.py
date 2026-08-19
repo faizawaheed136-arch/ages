@@ -786,13 +786,128 @@ def check_boot(files, code):
         print(f"  {rel}  {err}")
         print(f"    reached by: {chain}")
         bad += 1
+    boot_failed = bad > 0
+    if boot_failed:
+        # Said out loud because the symptom does not look like an error. `init.server.luau`
+        # requires every service at the top with no pcall, so a throw anywhere in this list
+        # takes the *whole* script down and not one service starts. From inside the game that
+        # is a world that loads correctly, an adult-sized character, and nothing that
+        # responds -- which is the report this phase was built to explain.
+        print("    ^ this throws on require, so init.server.luau dies and NO service starts")
+        print("      -- the game loads, you are adult-sized, and nothing happens")
     if bad == 0:
         loaded = next(
             (l.split("\t")[1] for l in out.splitlines() if l.startswith("BOOTCHECK-LOADED")),
             "?",
         )
         print(f"  clean -- {loaded} modules loaded and the lifecycle ran")
+
+    # The join phase. Booting and being playable are different things with the same
+    # symptom -- you stand in the world at default size and nothing happens -- so a clean
+    # boot above is not on its own an answer to "can I play it".
+    for line in out.splitlines():
+        if line.startswith("BOOTCHECK-JOINFAIL\t"):
+            _, signal, err = line.split("\t", 2)
+            print(f"  a player joining raised an error in {signal}:")
+            print(f"    {err}")
+            bad += 1
+
+    # The game diagnoses itself in warnings -- "spawned before their profile loaded", "rig
+    # has no R15 scale values", "arrived on slot N with no life to play". They are printed
+    # but not counted: each one is a path that decided to carry on, and a gate that fails on
+    # a warning the author chose to keep is a gate that gets its warnings deleted.
+    for line in out.splitlines():
+        if line.startswith("BOOTCHECK-JOINWARN\t"):
+            print(f"  a player joining warned: {line.split(chr(9), 1)[1]}")
+
+    play = next(
+        (l.split("\t", 1)[1] for l in out.splitlines() if l.startswith("BOOTCHECK-PLAY")),
+        None,
+    )
+    if play is not None:
+        if boot_failed:
+            # The harness carries on past a failed require -- it substitutes a stub so it can
+            # find the *rest* of the errors in one pass, which is the whole reason it exists.
+            # A real server does not. Printing a healthy-looking join line under a dead boot
+            # would be this gate going green because it is not looking at the thing, which is
+            # the exact defect it was written to stop.
+            print("  the join phase ran, but against a server that would not have started:")
+            print(f"    {play}  (not evidence -- fix the boot above first)")
+            return bad
+        print(f"  after one player joins: {play}")
+        # `begun=false` is the failure this phase exists to catch, and it is silent: no
+        # error, no warning that names a cause, just a life that never starts.
+        if "begun=false" in play or "no profile" in play or play.startswith("probe threw"):
+            print("    ^ the life never began -- a player would stand in the world unable to play")
+            bad += 1
+        else:
+            bad += _check_body_scale(play)
     return bad
+
+
+def _growth_curve() -> tuple[list[tuple[float, float]], int]:
+    """The size curve and the year length, read out of Config rather than restated here.
+
+    Two files holding two copies of one measurement is the defect that keeps happening in
+    this tree, and a gate that carries its own copy of the answer is the worst offender --
+    it goes green against itself while the game does something else.
+    """
+    src = (ROOT / "src" / "shared" / "Config.luau").read_text(encoding="utf-8")
+    keys = [
+        (float(m.group(1)), float(m.group(2)))
+        for m in re.finditer(r"\{\s*age\s*=\s*([\d.]+)\s*,\s*body\s*=\s*([\d.]+)", src)
+    ]
+    months = re.search(r"MonthsPerYear\s*=\s*(\d+)", src)
+    return keys, int(months.group(1)) if months else 12
+
+
+def _body_at(keys: list[tuple[float, float]], age: float) -> float:
+    """`Config.Growth.At`, in Python. Same walk, same interpolation, same edge behaviour."""
+    if not keys or age <= keys[0][0]:
+        return keys[0][1] if keys else 1.0
+    for index in range(1, len(keys)):
+        age_key, body_key = keys[index]
+        if age <= age_key:
+            prev_age, prev_body = keys[index - 1]
+            span = age_key - prev_age
+            t = (age - prev_age) / span if span > 0 else 1.0
+            return prev_body + (body_key - prev_body) * t
+    return keys[-1][1]
+
+
+def _check_body_scale(play: str) -> int:
+    """Is the body the player is standing in the size their age says it should be?
+
+    This is the reported bug, in one line: a life that begins, on a character still at adult
+    scale. Nothing above catches it -- `begun=true` is true, no error is raised, no warning
+    is printed -- and from inside the game it looks like a world that loaded correctly and
+    simply does not play.
+
+    Derived from `Config.Growth`, so a re-tuned curve moves this gate with it. The tolerance
+    is a float-formatting allowance, not a design margin: the two sides compute the same
+    arithmetic and should agree to the last place.
+    """
+    fields = dict(
+        part.split("=", 1) for part in play.split("  ") if "=" in part
+    )
+    try:
+        months = float(fields["ageMonths"])
+        scale = float(fields["heightScale"])
+    except (KeyError, ValueError):
+        print("    ^ the probe did not report an age and a height; this check did not run")
+        return 1
+
+    keys, months_per_year = _growth_curve()
+    expected = _body_at(keys, months // months_per_year)
+    if abs(scale - expected) <= 1e-6:
+        return 0
+    print(
+        f"    ^ the body is the wrong size: at {months / months_per_year:.0f} years "
+        f"Config.Growth says {expected:.2f} and the character is at {scale:.2f}"
+    )
+    if abs(scale - 1.0) <= 1e-6:
+        print("      1.00 is the untouched default -- no band was applied to this character at all")
+    return 1
 
 
 CHECKS = [

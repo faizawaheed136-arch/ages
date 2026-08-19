@@ -78,8 +78,22 @@ Stub.__iter = function()
 		return nil
 	end
 end
-Stub.__eq = function()
-	return false
+-- `rawequal`, not `false`. Luau calls `__eq` even when both operands are *the same table*
+-- -- `a == a` is false under a metatable that returns false, which is not Lua 5.1's rule and
+-- is not what anyone writing this expects. Verified directly:
+--
+--     local mt = { __eq = function() return false end }
+--     local a = setmetatable({}, mt)
+--     print(a == a, rawequal(a, a))  --> false  true
+--
+-- Since `Stub.__index` caches, `Enum.HumanoidRigType.R15` is one stable object, so identity
+-- is the correct answer and the only one available. Returning a flat `false` made *every*
+-- enum comparison in the tree false, which meant every `if x == Enum.Foo.Bar` branch was
+-- silently skipped -- it made `ensureR15` decide a correctly-built R15 rig was R6, rebuild
+-- the character into a stub and throw the real one away, so the body band then had nothing
+-- to size. A harness bug that reads exactly like the game bug being hunted.
+Stub.__eq = function(a, b)
+	return rawequal(a, b)
 end
 Stub.__lt = function()
 	return false
@@ -258,12 +272,184 @@ if profileStore then
 	rawget(ServerStorage, "children")["ProfileStore"] = profileStore
 end
 
+--------------------------------------------------------------------------------
+-- A player, a character, and signals that actually fire
+--
+-- Everything above this line proves the server *starts*. It does not prove the game can be
+-- *played*, and those are different failures with the same symptom: you stand in the world
+-- at default adult size and nothing happens. The boot gate was clean and the game was still
+-- unplayable, because `Players.PlayerAdded:Connect(fn)` against a stub stored the listener
+-- nowhere and fired never -- so the entire join path (profile load, life begin, body band)
+-- was categorically untested.
+--
+-- So Players, RunService, the Player and the character are real objects here, with real
+-- signals. `RunService:IsStudio()` returns true because that is the branch a person testing
+-- this game actually takes, and it is the branch that force-rolls a child life.
+--------------------------------------------------------------------------------
+
+local joinFailures = {}
+
+local Signal = {}
+Signal.__index = Signal
+local function newSignal(name)
+	return setmetatable({ signalName = name, listeners = {} }, Signal)
+end
+function Signal:Connect(listener)
+	table.insert(self.listeners, listener)
+	return {
+		Connected = true,
+		Disconnect = function(this)
+			this.Connected = false
+			for i, existing in ipairs(self.listeners) do
+				if existing == listener then
+					table.remove(self.listeners, i)
+					break
+				end
+			end
+		end,
+	}
+end
+Signal.Once = Signal.Connect
+Signal.ConnectParallel = Signal.Connect
+-- Returns immediately rather than blocking. Nothing here drives a scheduler, so a real
+-- `Wait` would deadlock the harness; a caller that waits on an event gets one "tick".
+function Signal:Wait()
+	return nil
+end
+-- Each listener is called under its own pcall so that one throwing does not hide the rest.
+-- A handler that dies is exactly what this whole phase exists to find, so it is recorded
+-- rather than re-raised.
+function Signal:Fire(...)
+	for _, listener in ipairs(table.clone(self.listeners)) do
+		local ok, err = pcall(listener, ...)
+		if not ok then
+			table.insert(joinFailures, { signal = self.signalName, err = tostring(err) })
+		end
+	end
+end
+
+-- A minimal but *real* Instance: properties are stored and read back, children can be found
+-- by name and by class. Unknown reads still fall through to a stub, which keeps the
+-- permissive contract the rest of this harness relies on.
+local Inst = {}
+Inst.__index = function(self, key)
+	local children = rawget(self, "__children")
+	if children[key] ~= nil then
+		return children[key]
+	end
+	local props = rawget(self, "__props")
+	if props[key] ~= nil then
+		return props[key]
+	end
+	local method = rawget(Inst, key)
+	if method ~= nil then
+		return method
+	end
+	return newStub(tostring(key))
+end
+Inst.__newindex = function(self, key, value)
+	rawget(self, "__props")[key] = value
+end
+Inst.__tostring = function(self)
+	return tostring(rawget(self, "__props").Name)
+end
+
+local function newInst(name, class, parent)
+	local inst = setmetatable({
+		__props = { Name = name, ClassName = class, Parent = parent },
+		__children = {},
+	}, Inst)
+	if parent ~= nil then
+		rawget(parent, "__children")[name] = inst
+	end
+	return inst
+end
+
+function Inst.FindFirstChild(self, name)
+	return rawget(self, "__children")[name]
+end
+function Inst.WaitForChild(self, name, _timeout)
+	return rawget(self, "__children")[name]
+end
+function Inst.FindFirstChildOfClass(self, class)
+	for _, child in pairs(rawget(self, "__children")) do
+		if rawget(child, "__props").ClassName == class then
+			return child
+		end
+	end
+	return nil
+end
+Inst.FindFirstChildWhichIsA = Inst.FindFirstChildOfClass
+function Inst.GetChildren(self)
+	local out = {}
+	for _, child in pairs(rawget(self, "__children")) do
+		table.insert(out, child)
+	end
+	return out
+end
+Inst.GetDescendants = Inst.GetChildren
+function Inst.IsA(self, class)
+	return rawget(self, "__props").ClassName == class
+end
+function Inst.Destroy(self)
+	rawget(self, "__props").Parent = nil
+end
+function Inst.SetAttribute(self, key, value)
+	rawget(self, "__props")["attr_" .. tostring(key)] = value
+end
+function Inst.GetAttribute(self, key)
+	return rawget(self, "__props")["attr_" .. tostring(key)]
+end
+function Inst.GetPivot(self)
+	return newStub("CFrame")
+end
+function Inst.PivotTo(self, _cf) end
+function Inst.Clone(self)
+	return self
+end
+
+local PlayersService = newInst("Players", "Players")
+local playerList = {}
+PlayersService.PlayerAdded = newSignal("Players.PlayerAdded")
+PlayersService.PlayerRemoving = newSignal("Players.PlayerRemoving")
+PlayersService.GetPlayers = function()
+	return table.clone(playerList)
+end
+PlayersService.GetPlayerFromCharacter = function(_, character)
+	for _, p in ipairs(playerList) do
+		if rawget(p, "__props").Character == character then
+			return p
+		end
+	end
+	return nil
+end
+PlayersService.GetHumanoidDescriptionFromUserId = function()
+	return newStub("HumanoidDescription")
+end
+
+local RunServiceObject = newInst("RunService", "RunService")
+RunServiceObject.IsStudio = function()
+	return true
+end
+RunServiceObject.IsServer = function()
+	return true
+end
+RunServiceObject.IsClient = function()
+	return false
+end
+RunServiceObject.IsRunning = function()
+	return true
+end
+RunServiceObject.Heartbeat = newSignal("RunService.Heartbeat")
+RunServiceObject.Stepped = newSignal("RunService.Stepped")
+RunServiceObject.PostSimulation = newSignal("RunService.PostSimulation")
+
 local services = {
 	ReplicatedStorage = ReplicatedStorage,
 	ServerScriptService = ServerScriptService,
 	ServerStorage = ServerStorage,
-	Players = newStub("Players"),
-	RunService = newStub("RunService"),
+	Players = PlayersService,
+	RunService = RunServiceObject,
 	Workspace = newStub("Workspace"),
 	Lighting = newStub("Lighting"),
 	TeleportService = newStub("TeleportService"),
@@ -519,12 +705,260 @@ local rootRequire = makeRequire("(boot)")
 
 print("BOOTCHECK-BEGIN")
 
+-- ProfileStore is vendor code and is not what this gate is testing. Run against a stubbed
+-- DataStoreService the real one would either fail or yield forever inside
+-- `StartSessionAsync`, and every service downstream would then be reading fields off a
+-- stub -- which reports as a cascade of fake bugs in our code. So the module is swapped for
+-- a mock that honours the contract DataService actually depends on: a session returns a
+-- deep copy of the template, `Reconcile` fills missing top-level keys from it, and the data
+-- is a real table all the way down so `Lives.Active(profile.Data)` is a real life.
+local function deepCopy(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local out = {}
+	for k, v in pairs(value) do
+		out[k] = deepCopy(v)
+	end
+	return out
+end
+
+if profileStore ~= nil then
+	loaded[profileStore] = {
+		New = function(_name, template)
+			local store = {}
+			function store:StartSessionAsync(_key, _params)
+				local session = {
+					Data = deepCopy(template),
+					UserIds = {},
+					OnSessionEnd = newSignal("Profile.OnSessionEnd"),
+				}
+				function session:AddUserId(id)
+					table.insert(self.UserIds, id)
+				end
+				function session:Reconcile()
+					for k, v in pairs(template) do
+						if self.Data[k] == nil then
+							self.Data[k] = deepCopy(v)
+						end
+					end
+				end
+				function session:IsActive()
+					return true
+				end
+				function session:EndSession() end
+				function session:Save() end
+				return session
+			end
+			return store
+		end,
+	}
+end
+
 -- The bootstrap itself: requires every service and drives Init()/Start().
 local ok, err = pcall(function()
 	return rootRequire(serverInit)
 end)
 if not ok then
 	table.insert(failures, { rel = "src/server/init.server.luau", err = tostring(err), chain = "(boot)" })
+end
+
+--------------------------------------------------------------------------------
+-- Can it actually be played?
+--
+-- Boot proves the services started. This proves a player can join, get a profile, have a
+-- life begun and have a body applied -- the path whose failure looks exactly like a
+-- successful boot from the outside.
+--------------------------------------------------------------------------------
+
+local function newCharacter(name)
+	local model = newInst(name, "Model")
+	local humanoid = newInst("Humanoid", "Humanoid", model)
+	-- Matched to what `ensureR15` tests. The Enum stub caches by key, so this is the *same*
+	-- table the game reads -- and `Stub.__eq` must answer `rawequal` for that to mean
+	-- anything, because Luau consults `__eq` even on identical references (see the note on
+	-- it). Get either half wrong and BodyService decides this rig is R6, rebuilds the
+	-- character into a stub and the band sizes nothing: a harness artifact that reads
+	-- exactly like the real body bug, which is what it did on the first run of this phase.
+	humanoid.RigType = baseEnv.Enum.HumanoidRigType.R15
+	humanoid.WalkSpeed = 16
+	humanoid.JumpPower = 50
+	for _, scale in
+		{
+			"BodyHeightScale",
+			"BodyWidthScale",
+			"BodyDepthScale",
+			"HeadScale",
+			"BodyProportionScale",
+			"BodyTypeScale",
+		}
+	do
+		local value = newInst(scale, "NumberValue", humanoid)
+		value.Value = 1
+	end
+	newInst("Animate", "LocalScript", model)
+	newInst("HumanoidRootPart", "Part", model)
+	newInst("Head", "Part", model)
+	return model
+end
+
+if ok then
+	-- From here on, deferred work actually runs, and warnings are actually heard.
+	--
+	-- Both are off during boot for good reasons (a service's tick loop belongs to a
+	-- scheduler that does not exist here; a module body that warns at load is noise). Neither
+	-- reason survives the join phase. `LifeService:Start` hooks PlayerAdded with
+	-- `task.spawn(pushInitialState, player)` -- the call that gives the client its age, its
+	-- money and its first event -- so a `spawn` that swallows its function leaves the single
+	-- most player-visible path on the join untested, and the harness would call a player who
+	-- sees no HUD at all a clean join.
+	--
+	-- The spin risk is handled rather than avoided: `task.wait` still burns the same budget
+	-- and still throws past it, and each body runs under its own pcall, so a `while true` in
+	-- a spawned function is *recorded against the join* instead of hanging the gate.
+	--
+	-- Warnings matter here because this game diagnoses itself in them. "spawned before their
+	-- profile loaded", "rig has no R15 scale values", "arrived on slot N with no life to
+	-- play" -- every one of those is the answer to the question this phase is asking, written
+	-- by the person who wrote the path, and `warn = function() end` threw them all away.
+	local joinWarnings = {}
+	baseEnv.warn = function(...)
+		local parts = {}
+		for index = 1, select("#", ...) do
+			table.insert(parts, tostring((select(index, ...))))
+		end
+		table.insert(joinWarnings, table.concat(parts, " "))
+	end
+	local function runDeferred(fn, ...)
+		if type(fn) ~= "function" then
+			-- `task.spawn(thread)` is legal Roblox. Nothing in this tree does it, and
+			-- resuming a coroutine here would need a scheduler, so it stays a no-op.
+			return
+		end
+		local args = table.pack(...)
+		-- Per body, not per run: the budget means "this one never returns", so a tenth
+		-- spawned function must not inherit nine functions' worth of legitimate waiting.
+		waits = 0
+		local spawnedOk, spawnErr = pcall(function()
+			fn(table.unpack(args, 1, args.n))
+		end)
+		if not spawnedOk then
+			table.insert(joinFailures, { signal = "task.spawn", err = tostring(spawnErr) })
+		end
+	end
+	baseEnv.task.spawn = runDeferred
+	baseEnv.task.defer = runDeferred
+	baseEnv.task.delay = function(_seconds, fn, ...)
+		runDeferred(fn, ...)
+	end
+	baseEnv.spawn = runDeferred
+
+	local player = newInst("TestPlayer", "Player", nil)
+	player.UserId = 1
+	player.Parent = PlayersService
+	player.CharacterAdded = newSignal("Player.CharacterAdded")
+	player.CharacterRemoving = newSignal("Player.CharacterRemoving")
+	player.Kick = function(_, reason)
+		table.insert(joinFailures, { signal = "Player:Kick", err = tostring(reason) })
+	end
+	table.insert(playerList, player)
+
+	-- Order mirrors Roblox: the player exists, then PlayerAdded fires, then a character
+	-- spawns. Studio's own "player is already here before the server starts" case is what
+	-- ReturnService:Start's GetPlayers loop covers, and that already ran during boot.
+	local firedOk, fireErr = pcall(function()
+		PlayersService.PlayerAdded:Fire(player)
+	end)
+	if not firedOk then
+		table.insert(joinFailures, { signal = "PlayerAdded", err = tostring(fireErr) })
+	end
+
+	local character = newCharacter("TestPlayer")
+	player.Character = character
+	local charOk, charErr = pcall(function()
+		player.CharacterAdded:Fire(character)
+	end)
+	if not charOk then
+		table.insert(joinFailures, { signal = "CharacterAdded", err = tostring(charErr) })
+	end
+
+	-- What the player would actually see. A life that never begins is the exact symptom
+	-- being chased: you stand in the world, adult-sized, and nothing happens.
+	local report = { "unknown" }
+	local probeOk, probeErr = pcall(function()
+		local dataService = nil
+		local lives = nil
+		for _, entry in ipairs(order) do
+			if entry.rel == "src/server/services/DataService.luau" then
+				dataService = entry.value
+			elseif entry.rel == "src/shared/Lives.luau" then
+				lives = entry.value
+			end
+		end
+		if dataService == nil or lives == nil then
+			report = { "could not find DataService or Lives in the loaded set" }
+			return
+		end
+		local profile = dataService.GetProfile(player)
+		if profile == nil then
+			report = { "no profile: DataService never stored one for the joining player" }
+			return
+		end
+		local life = lives.Active(profile.Data)
+		-- Read off the character the player is *currently* wearing, not the one this driver
+		-- built: `ensureR15` legitimately replaces the character, and reporting the scales of
+		-- a body nobody is in would be a green light for a player standing there adult-sized.
+		local worn = player.Character
+		local humanoid = worn ~= nil and worn:FindFirstChildOfClass("Humanoid") or nil
+		if humanoid == nil then
+			report = { "no humanoid: the character the player ended up wearing has none" }
+			return
+		end
+		report = {
+			`begun={tostring(lives.HasBegun(life))}`,
+			`alive={tostring(life.alive)}`,
+			`ageMonths={tostring(life.ageMonths)}`,
+			`heightScale={tostring(humanoid.BodyHeightScale.Value)}`,
+			`walkSpeed={tostring(humanoid.WalkSpeed)}`,
+		}
+	end)
+	if not probeOk then
+		report = { "probe threw: " .. tostring(probeErr) }
+	end
+	print("BOOTCHECK-PLAY\t" .. table.concat(report, "  "))
+
+	for _, f in ipairs(joinFailures) do
+		print("BOOTCHECK-JOINFAIL\t" .. f.signal .. "\t" .. f.err:gsub("\n", " "))
+	end
+	-- Warnings this harness *causes* are not findings, and printing them is how a gate stops
+	-- being read. This one mounts the script tree and nothing else -- no `assets/*.rbxmx` --
+	-- so `CollectionService:GetTagged` is empty by construction and every place lookup warns
+	-- that its point is missing. That is a statement about the harness, not about the town,
+	-- and `tools/check_town.py` is the gate that actually checks the town has its points.
+	--
+	-- Kept to exact substrings of warnings whose cause is a mounting decision made in this
+	-- file. Anything wider would start hiding the game's own diagnosis, which is the entire
+	-- reason `warn` was made to speak at all.
+	local harnessBlindSpots = {
+		'nothing tagged "AgesPlacePoint"',
+	}
+	local seenWarning = {}
+	for _, message in ipairs(joinWarnings) do
+		local flat = message:gsub("\n", " ")
+		local blind = false
+		for _, needle in ipairs(harnessBlindSpots) do
+			if string.find(flat, needle, 1, true) ~= nil then
+				blind = true
+				break
+			end
+		end
+		-- Deduplicated because one warning per retry becomes a wall, and a wall is read as
+		-- noise and then not read at all.
+		if not blind and not seenWarning[flat] then
+			seenWarning[flat] = true
+			print("BOOTCHECK-JOINWARN\t" .. flat)
+		end
+	end
 end
 
 for _, f in ipairs(failures) do
