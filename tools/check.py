@@ -702,7 +702,18 @@ def _lua_string(s: str) -> str:
 
 
 def check_boot(files, code):
-    """Does the server actually start? The only check here that runs the code.
+    """Do both places actually start?
+
+    Two places, run separately and reported separately. The lobby goes first because it is
+    the start place: it is where a player joins, so a lobby that does not boot means there
+    is no way into the game place at all, however healthy the game place is. Reporting them
+    in join order means the first failure you read is the first one you would hit.
+    """
+    return _boot_place("lobby") + _boot_place("game")
+
+
+def _boot_place(place):
+    """Does this place's server actually start? The only check here that runs the code.
 
     Everything else in this file reads the source. That is exactly how the game came to be
     unplayable for four days behind `Config.SubjectPerks = { [undefined] = nil }` -- legal
@@ -722,6 +733,8 @@ def check_boot(files, code):
     and always will be. What this covers is "the server never started", which is the
     failure that looks like every other failure.
     """
+    where = "the lobby (start place -- you join here)" if place == "lobby" else "the game place"
+    print(f"  {where}:")
     if not LUAU.exists():
         print(f"  FAILED: {LUAU} missing -- this check did not run.")
         print("    Install luau from the luau-lang/luau releases page to that path.")
@@ -731,25 +744,48 @@ def check_boot(files, code):
         print(f"  FAILED: {harness} missing -- this check did not run.")
         return 1
 
-    # Only the two trees the game place mounts. The lobby is a separate DataModel with its
-    # own bootstrap and would need its own wiring; it is not silently folded in here,
-    # because a harness that half-loads a place reports absences as failures.
-    roots = [ROOT / "src" / "server", ROOT / "src" / "shared", ROOT / "vendor"]
+    # Exactly the trees the place being tested mounts, and no more. The lobby used to be
+    # left out of this gate entirely, on the reasoning that it is a separate DataModel that
+    # would need its own wiring. That was true and it was still wrong: the lobby is the
+    # *start place*, so it is the one a player joins, and skipping it meant the only place
+    # anybody lands in first was never executed. `LobbyService.luau` sat at zero bytes for
+    # four days behind that gap -- an empty module returns nil, the bootstrap calls `:Init()`
+    # on it, and the lobby dies before its first service starts.
+    if place == "lobby":
+        roots = [ROOT / "src" / "lobby", ROOT / "src" / "shared", ROOT / "vendor"]
+        # The three modules `lobby.project.json` mounts by path into `Server.shared`. They
+        # are listed rather than globbed from `src/server`, because pulling that whole tree
+        # in would load services the lobby does not have and report their absences as bugs.
+        extra = [
+            "src/server/services/DataService.luau",
+            "src/server/content/Countries.luau",
+            "src/server/content/LifeSetup.luau",
+        ]
+    else:
+        roots = [ROOT / "src" / "server", ROOT / "src" / "shared", ROOT / "vendor"]
+        extra = []
     paths = sorted(
-        p.relative_to(ROOT).as_posix()
-        for r in roots
-        if r.exists()
-        for p in r.rglob("*.luau")
+        set(extra)
+        | {
+            p.relative_to(ROOT).as_posix()
+            for r in roots
+            if r.exists()
+            for p in r.rglob("*.luau")
+        }
     )
 
-    lines = ["local AGES_SOURCES = {}", "local AGES_MANIFEST = {}"]
+    lines = [
+        "local AGES_SOURCES = {}",
+        "local AGES_MANIFEST = {}",
+        f"local AGES_PLACE = {_lua_string(place)}",
+    ]
     for rel in paths:
         src = (ROOT / rel).read_text(encoding="utf-8")
         lines.append(f"AGES_SOURCES[{_lua_string(rel)}] = {_lua_string(src)}")
         lines.append(f"table.insert(AGES_MANIFEST, {_lua_string(rel)})")
     prelude = "\n".join(lines) + "\n"
 
-    bundle = BUILD_TMP / "ages-bootcheck.luau"
+    bundle = BUILD_TMP / f"ages-bootcheck-{place}.luau"
     bundle.write_text(prelude + harness.read_text(encoding="utf-8"), encoding="utf-8")
 
     # A wall-clock cap, because a module body that loops forever hangs the whole gate and
@@ -794,7 +830,10 @@ def check_boot(files, code):
         # is a world that loads correctly, an adult-sized character, and nothing that
         # responds -- which is the report this phase was built to explain.
         print("    ^ this throws on require, so init.server.luau dies and NO service starts")
-        print("      -- the game loads, you are adult-sized, and nothing happens")
+        if place == "lobby":
+            print("      -- you land on the lobby stage and no button does anything")
+        else:
+            print("      -- the game loads, you are adult-sized, and nothing happens")
     if bad == 0:
         loaded = next(
             (l.split("\t")[1] for l in out.splitlines() if l.startswith("BOOTCHECK-LOADED")),
@@ -835,13 +874,19 @@ def check_boot(files, code):
             print(f"    {play}  (not evidence -- fix the boot above first)")
             return bad
         print(f"  after one player joins: {play}")
-        # `begun=false` is the failure this phase exists to catch, and it is silent: no
-        # error, no warning that names a cause, just a life that never starts.
-        if "begun=false" in play or "no profile" in play or play.startswith("probe threw"):
-            print("    ^ the life never began -- a player would stand in the world unable to play")
+        if "no profile" in play or play.startswith("probe threw"):
+            print("    ^ the join path failed -- a player would arrive with nothing to play")
             bad += 1
-        else:
-            bad += _check_body_scale(play)
+        elif place == "game":
+            # `begun=false` is the failure this phase exists to catch, and it is silent: no
+            # error, no warning that names a cause, just a life that never starts. Asked of
+            # the game place only: the lobby is *supposed* to have no life begun, and the
+            # teleport is what begins one.
+            if "begun=false" in play:
+                print("    ^ the life never began -- a player would stand in the world unable to play")
+                bad += 1
+            else:
+                bad += _check_body_scale(play)
     return bad
 
 

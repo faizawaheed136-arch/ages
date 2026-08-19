@@ -125,6 +125,44 @@ local Ties: { LifeEvent } = {
 			},
 		},
 	},
+	-- An enemy is the relationship that remains when the ladder is burned. Not
+	-- a rival -- a rival still respects you enough to chase you. An enemy does
+	-- not. They remember what you did, and every future encounter is a reminder
+	-- that some bridges cannot be crossed back. The event exists because a life
+	-- with one person who means this much in this direction needs a moment
+	-- where that weight shows up as something the player has to face.
+	{
+		id = "tie_enemy_confrontation",
+		minAge = 16,
+		maxAge = 999,
+		delivery = "NPCApproach",
+		cast = "enemy",
+		repeatable = true,
+		weight = 0.4,
+		tags = { "tie:enemy:*" },
+		prompt = "Your enemy is at the end of the street and they see you. They do not look away. 'I have been waiting for this,' they say, and the way they say it makes it clear that whatever happens next will not be the last time either of you forgets.",
+		writesBack = { "stat:happiness", "stat:health" },
+		choices = {
+			{
+				id = "stand_your_ground",
+				label = "Stand your ground",
+				outcome = "You did not move. They did not either. The silence between you was heavier than words, and neither of you broke it. It was not a victory. It was not a defeat. It was just the truth of what you had made of each other.",
+				effects = { happiness = -2, health = 1 },
+			},
+			{
+				id = "walk_away",
+				label = "Walk away",
+				outcome = "You turned your back and walked. You did not look over your shoulder. Behind you, they did not call after you. Ahead of you, the street was empty and the weight did not go with them.",
+				effects = { happiness = -5, smarts = 2 },
+			},
+			{
+				id = "speak_first",
+				label = "Say something first",
+				outcome = "You spoke before they could. The words came out wrong -- too sharp, or too soft, or just not the right shape for what you meant. They listened without reacting, and when you finished, they nodded once and moved on. You were left with the echo.",
+				effects = { happiness = -3, smarts = 3 },
+			},
+		},
+	},
 }
 
 return Ties

@@ -117,9 +117,43 @@ end
 --------------------------------------------------------------------------------
 
 local Vec = {}
-Vec.__index = Vec
-local function vec(x, y, z)
-	return setmetatable({ X = x or 0, Y = y or 0, Z = z or 0, Magnitude = 0, Unit = false }, Vec)
+-- Declared before `Vec.__index` because that closure calls it. A Lua closure captures the
+-- local in scope where it is *written*, so a `local function vec` further down would be read
+-- here as a nil global -- the same bug this harness caught in the bank buttons and in
+-- `bondGain`, and it would have fired on the first `.Unit` in the tree.
+local vec
+
+-- `Magnitude` and `Unit` are derived here, not stored. They used to be the literals `0` and
+-- `false`, and both halves of that were wrong:
+--
+--   * `Unit = false` meant `v.Unit.X` was an index into a boolean. That is what it did --
+--     the lobby's stage code raised `attempt to index boolean with 'X'` the first time this
+--     gate was pointed at a place that normalises a direction. Fifth harness artifact.
+--   * `Magnitude = 0` was the quieter and worse one: it never throws, it just answers
+--     "zero studs away" to every distance question in the game. Every proximity gate --
+--     the NPC context radius, spotting, the whole crime stack -- passes here regardless of
+--     what it actually says. A gate that answers 0 to every "how far" is certifying code it
+--     has not exercised, which is this repo's oldest recurring defect wearing a new hat.
+Vec.__index = function(self, key)
+	if key == "Magnitude" then
+		return math.sqrt(self.X * self.X + self.Y * self.Y + self.Z * self.Z)
+	end
+	if key == "Unit" then
+		local magnitude = self.Magnitude
+		-- Roblox answers nan for the zero vector here. The zero vector is returned instead
+		-- on purpose: nan propagates silently through arithmetic and surfaces somewhere
+		-- unrelated to the line that made it, which is the hardest possible thing to trace
+		-- back to this file.
+		if magnitude == 0 then
+			return vec(0, 0, 0)
+		end
+		return vec(self.X / magnitude, self.Y / magnitude, self.Z / magnitude)
+	end
+	return rawget(Vec, key)
+end
+
+function vec(x, y, z)
+	return setmetatable({ X = x or 0, Y = y or 0, Z = z or 0 }, Vec)
 end
 Vec.__add = function(a, b) return vec(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end
 Vec.__sub = function(a, b) return vec(a.X - b.X, a.Y - b.Y, a.Z - b.Z) end
@@ -192,8 +226,49 @@ function Node.GetChildren(self)
 end
 Node.GetDescendants = Node.GetChildren
 
+-- Roblox's `IsA` walks the class tree, so `Part:IsA("BasePart")` is true. This used to be a
+-- bare equality test, which answered false for every such question and made the lobby's
+-- `StageService.Place` refuse a perfectly good character with "has no Humanoid or
+-- HumanoidRootPart" -- the sixth harness artifact reading as a game bug.
+--
+-- Only the ancestors this repo actually asks about are listed. A full class database would
+-- be a second copy of Roblox's API surface to keep current, and the failure mode of a stale
+-- copy is this same false negative again; a missing entry here shows up as one warning
+-- naming the class, which is a cheap thing to read and fix.
+local CLASS_PARENT = {
+	Part = "BasePart",
+	MeshPart = "BasePart",
+	SpawnLocation = "BasePart",
+	BasePart = "PVInstance",
+	Model = "PVInstance",
+	PVInstance = "Instance",
+	Folder = "Instance",
+	ModuleScript = "LuaSourceContainer",
+	Script = "LuaSourceContainer",
+	LocalScript = "LuaSourceContainer",
+	LuaSourceContainer = "Instance",
+	Humanoid = "Instance",
+	NumberValue = "Instance",
+}
+
+-- Shared by both instance flavours in this file -- the script-tree `Node` and the runtime
+-- `Inst`. They are separate types with separate method tables, which is exactly how the
+-- first version of this fix went in on `Node` alone and changed nothing: the character a
+-- player wears is an `Inst`, so the lobby kept refusing it.
+local function classIsA(className, class)
+	local current = className
+	while current ~= nil do
+		if current == class then
+			return true
+		end
+		current = CLASS_PARENT[current]
+	end
+	-- Every Instance is an Instance, including the classes not named above.
+	return class == "Instance"
+end
+
 function Node.IsA(self, class)
-	return rawget(self, "class") == class
+	return classIsA(rawget(self, "class"), class)
 end
 
 local function newNode(name, class, parent)
@@ -254,13 +329,51 @@ for _, rel in ipairs(entries) do
 end
 
 --------------------------------------------------------------------------------
--- Wire the DataModel the way default.project.json does
+-- Wire the DataModel the way the project file does
+--
+-- Two places, and which one this run is about arrives as `AGES_PLACE`. This used to be
+-- hardcoded to the game place, with a comment in `check.py` explaining that the lobby was
+-- left out on purpose because it is a separate DataModel that "would need its own wiring".
+-- That was true and it was still the wrong call: **the lobby is the start place -- it is the
+-- one a player actually joins** -- so the gate was reporting on a place nobody lands in
+-- first while the place they do land in was never executed at all.
+--
+-- What that cost: `src/lobby/server/services/LobbyService.luau` sat at **zero bytes** for
+-- four days. `require` of an empty module returns nil, `init.server.luau` calls `:Init()` on
+-- it, the lobby server dies on the first line of its bootstrap, and the player is left on a
+-- stage where no button does anything. The gate was green throughout, because it was not
+-- looking at the thing -- the exact defect class this file exists to end.
 --------------------------------------------------------------------------------
 
-local srcServer = roots["src/server"]
+local PLACE = AGES_PLACE or "game"
+
 local srcShared = roots["src/shared"]
-local srcClient = roots["src/client"]
 local profileStore = roots["vendor/ProfileStore"]
+
+-- The three modules `lobby.project.json` mounts by path into `Server.shared` rather than
+-- copying. They are given *fresh* nodes under that folder rather than the ones already
+-- built under `src/server/services`, because `LifeSetup` requires `script.Parent.Countries`
+-- and a node has one parent: reusing them would resolve that require against the game
+-- place's tree and quietly prove nothing about the lobby's.
+local LOBBY_SHARED = {
+	DataService = "src/server/services/DataService.luau",
+	Countries = "src/server/content/Countries.luau",
+	LifeSetup = "src/server/content/LifeSetup.luau",
+}
+
+local srcServer
+if PLACE == "lobby" then
+	srcServer = roots["src/lobby/server"]
+	local shared = newNode("shared", "Folder", srcServer)
+	rawget(srcServer, "children")["shared"] = shared
+	for name, rel in LOBBY_SHARED do
+		local node = newNode(name, "ModuleScript", shared)
+		rawget(shared, "children")[name] = node
+		sources[node] = rel
+	end
+else
+	srcServer = roots["src/server"]
+end
 
 local ReplicatedStorage = srcShared
 local ServerScriptService = newNode("ServerScriptService", "ServerScriptService", nil)
@@ -379,7 +492,17 @@ function Inst.FindFirstChildOfClass(self, class)
 	end
 	return nil
 end
-Inst.FindFirstChildWhichIsA = Inst.FindFirstChildOfClass
+-- Not an alias for `FindFirstChildOfClass`, which it used to be. `WhichIsA` accepts a
+-- *base* class -- `FindFirstChildWhichIsA("BasePart")` has to match a Part -- and an exact
+-- comparison silently answers nil for every such call, which reads as a missing child.
+function Inst.FindFirstChildWhichIsA(self, class)
+	for _, child in pairs(rawget(self, "__children")) do
+		if classIsA(rawget(child, "__props").ClassName, class) then
+			return child
+		end
+	end
+	return nil
+end
 function Inst.GetChildren(self)
 	local out = {}
 	for _, child in pairs(rawget(self, "__children")) do
@@ -389,7 +512,7 @@ function Inst.GetChildren(self)
 end
 Inst.GetDescendants = Inst.GetChildren
 function Inst.IsA(self, class)
-	return rawget(self, "__props").ClassName == class
+	return classIsA(rawget(self, "__props").ClassName, class)
 end
 function Inst.Destroy(self)
 	rawget(self, "__props").Parent = nil
@@ -551,6 +674,25 @@ local function makeRequire(chain)
 		if not ok then
 			table.insert(failures, { rel = rel, err = tostring(result), chain = chain })
 			loaded[target] = newStub("failed")
+		elseif result == nil and rawget(target, "class") == "ModuleScript" then
+			-- A ModuleScript that returns nothing is a hard error in Roblox ("Module code did
+			-- not return exactly one value"), and every consumer of it indexes nil. This used
+			-- to hand back a permissive stub, and that one line is why the gate stayed green
+			-- while `src/lobby/server/services/LobbyService.luau` sat at **zero bytes** for
+			-- four days: an empty file returns nil, the stub answered `:Init()` and `:Start()`
+			-- happily, and the lobby "booted" in a harness where the only service that
+			-- teleports a player into the game did not exist.
+			--
+			-- The permissiveness above it is still right and stays: a require of something
+			-- this harness never mapped is a gap in the harness. This is the opposite case --
+			-- the file was found, it was run, and what it did was wrong.
+			table.insert(failures, {
+				rel = rel,
+				err = "returned nil -- a ModuleScript must return a value, and Roblox raises "
+					.. "'Module code did not return exactly one value'. An empty file does this.",
+				chain = chain,
+			})
+			loaded[target] = newStub("noreturn")
 		else
 			loaded[target] = result == nil and newStub("noreturn") or result
 			table.insert(order, { rel = rel, value = loaded[target] })
@@ -902,6 +1044,19 @@ if ok then
 		local profile = dataService.GetProfile(player)
 		if profile == nil then
 			report = { "no profile: DataService never stored one for the joining player" }
+			return
+		end
+		-- The lobby stops here on purpose. A life is not begun and no body band is applied
+		-- there -- that is the game place's job, after the teleport -- so asserting either
+		-- would be inventing a requirement and failing the lobby for meeting its own spec.
+		-- What the lobby has to do on join is load the profile and push the slots, and a
+		-- profile that arrived is the half of that this harness can see honestly.
+		if PLACE == "lobby" then
+			local slots = profile.Data.slots
+			report = {
+				`profile=loaded`,
+				`slots={tostring(if type(slots) == "table" then #slots else "missing")}`,
+			}
 			return
 		end
 		local life = lives.Active(profile.Data)
