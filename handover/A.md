@@ -1,5 +1,42 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18 (later still) — a boundary that lied, and an audit of the ones that stay hidden
+
+**The disguise disc was painted wider than the disguise reached.** `DisguiseService` accepts
+a player at `ReachStuds` — 6 studs, a *radius*. `Wardrobe` drew the disc at
+`ReachStuds * 2.2`, which as a *diameter* is a radius of 6.6. The outer 0.6 studs of paint
+was ground you could stand on, see yourself on the mark, and be off it as far as the server
+was concerned — losing five seconds of change with the disc under your feet the whole time.
+
+The comment above that constant argued for exactly the right rule and then got the direction
+backwards. **The asymmetry is the thing to remember: a mark drawn too small is invisible,
+because a player just outside it who keeps working never learns anything was wrong. A mark
+drawn too big is a boundary that lies at the one moment the player is under pressure.** It
+is drawn inside the reach now, as a share so it cannot drift from `ReachStuds`, and the
+share errors at load if it ever reaches 1.
+
+**Audit of the rest of the crime stack for the FightService defect** — server state the
+player must react to, surfaced only as text or not at all. Findings, none of them acted on:
+
+- **`PoliceService` officer `notice` has no tell, and that is deliberate** — the comment at
+  the fall-through says so: *"the read is the distance and your own behaviour, not the
+  officer's animation."* I agree and did not touch it. Do not "fix" this without re-reading
+  it first.
+- **But the two things that comment tells the player to read are themselves unreadable.**
+  `Spotting.luau` says of conspicuousness: *"Every other system in this game gives the player
+  a dial; this one gave them a wall."* The dial got built — heat, movement speed, gang
+  colors — and `WitnessService.Describe` admits in its own comment that it is *"the one the
+  player cannot see."* Running makes you easier to spot and nothing tells you so.
+- The natural world-space answer is the crowd glancing at you more as you get louder, at a
+  rate set by conspicuousness — a pre-warning below the existing binary stop-and-turn. **It
+  needs a neck aimed on a townsperson, which is `PeopleService`/`NPCService` and not mine.**
+  The technique is settled: `FightService.poseOf` and `NPCService.aimNeck` both drive a
+  `Motor6D` `C0` against a rest pose captured once. Handing this over rather than building it.
+- Smaller: `Config.Interact.RangeStuds` (closes the gang boss panel) and `BankService`'s
+  distance to the silencing panel are both spatial quantities the player is asked to judge
+  and never shown. `BountyService` is the one that gets this right — `client/world/SearchRing`
+  draws the search radius, and it is the model to copy.
+
 ## 2026-08-18 (later) — the Circle, and a fight tell that is not a progress bar
 
 Two pieces, both committed, one of them **untested in Studio**.
