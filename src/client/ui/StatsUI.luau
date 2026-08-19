@@ -1,7 +1,21 @@
 --!strict
--- Minimal always-visible HUD: age, life stage, progress toward the automatic
--- age-up, the Age Up button, and the four primary stats. Step 1 goal is
--- "working numbers", not final art — polish comes later in the build order.
+-- The always-visible HUD: who you are this minute, and what you are doing this
+-- minute. Age, life stage, money, the four primary stats, the age-up button, and a
+-- row for each thing the world is currently asking of you -- a shift, its tasks, a
+-- lesson, a workout sweep, somebody standing in front of you, a queue at the counter.
+--
+-- **The rule this file is now held to: if it is not about the minute the player is
+-- in, it is not on the HUD.** Everything here either changes in the next few seconds
+-- or is the answer to "how am I doing", and nothing else qualifies. The roster of
+-- everyone you know, a savings balance, a bill, a house you own -- all of those are
+-- facts you go and look up, and they were on this panel appearing and disappearing as
+-- their services pushed. They live on the menu's Money and Relationships panes now,
+-- which is a surface the player chooses to open.
+--
+-- That is not tidying. A HUD that shows everything trains the player to read none of
+-- it, and the rows that suffered most were the ones that matter in the second they
+-- appear: a task clock and a sweep needle were competing for attention with a savings
+-- figure that had not changed in ten minutes.
 --
 -- This module renders server state and reports button presses. It never
 -- decides whether aging up is allowed; that verdict arrives from the server.
@@ -24,7 +38,6 @@ type ShiftState = Types.ShiftState
 type TaskState = Types.TaskState
 type LessonState = Types.LessonState
 type PersonState = Types.PersonState
-type PersonRosterEntry = Types.PersonRosterEntry
 type WorkoutState = Types.WorkoutState
 type Ribbon = Types.Ribbon
 type RibbonMoment = Types.RibbonMoment
@@ -98,20 +111,6 @@ local PUSH_INACTIVE_COLOR = Color3.fromRGB(70, 70, 82)
 -- both come down with the state or the bar would draw a lie.
 local PLACEHOLDER_HALF = 0.1
 
--- The roster: who you know, and who is worth calling. The available dot is green
--- when there is something left to say this year, grey when the once-a-year visit is
--- spent. The grey is deliberately close to the background so a spent row reads as
--- part of the list rather than as an error on it.
-local ROSTER_AVAILABLE_COLOR = Color3.fromRGB(90, 200, 120)
-local ROSTER_USED_COLOR = Color3.fromRGB(120, 118, 128)
-local ROSTER_MAX_HEIGHT = 180
-local ROSTER_ROW_HEIGHT = 26
--- Tie badges: a small colored square on the right edge of a roster row signals a
--- structural relationship beyond the bond ladder. Three colors, one per capped tie.
-local TIE_MENTOR_COLOR = Color3.fromRGB(235, 190, 90)
-local TIE_RIVAL_COLOR = Color3.fromRGB(220, 100, 80)
-local TIE_SIBLING_COLOR = Color3.fromRGB(220, 140, 160)
-
 local StatsUI = {}
 StatsUI.__index = StatsUI
 
@@ -167,10 +166,6 @@ export type StatsUIHandle = typeof(setmetatable(
 		verdictMoments: TextLabel,
 		verdictNearMiss: TextLabel,
 		statBars: { [StatName]: { fill: Frame, label: TextLabel } },
-		rosterFrame: Frame,
-		rosterList: ScrollingFrame,
-		rosterRows: { TextButton },
-		onPersonTapped: ((personId: string) -> ())?,
 		workoutRow: Frame,
 		workoutLabel: TextLabel,
 		workoutCaption: TextLabel,
@@ -183,15 +178,8 @@ export type StatsUIHandle = typeof(setmetatable(
 		sweepPhase: string?,
 		sweepBaseProgress: number,
 		sweepElapsed: number,
-		houseRow: Frame,
-		houseLabel: TextLabel,
-		houseCaption: TextLabel,
 		dealerRow: Frame,
 		dealerLabel: TextLabel,
-		billRow: Frame,
-		billLabel: TextLabel,
-		savingsRow: Frame,
-		savingsLabel: TextLabel,
 	},
 	StatsUI
 ))
@@ -531,41 +519,6 @@ function StatsUI.new(): StatsUIHandle
 	shiftXpLabel.Text = ""
 	shiftXpLabel.Parent = shiftRow
 
-	-- Home: which house is linked to the player's life, and whether bills are due.
-	-- Hidden until a house is owned, because a row that always says "No home" is
-	-- visual noise during the years the player has no home. Shown briefly when a
-	-- bill is due so the player notices without having to open the full panel.
-	local houseRow = Instance.new("Frame")
-	houseRow.Name = "HouseRow"
-	houseRow.Size = UDim2.new(1, 0, 0, 28)
-	houseRow.LayoutOrder = 3.5
-	houseRow.BackgroundTransparency = 1
-	houseRow.Visible = false
-	houseRow.Parent = panel
-
-	local houseLabel = Instance.new("TextLabel")
-	houseLabel.Name = "Label"
-	houseLabel.Size = UDim2.new(1, 0, 0, 18)
-	houseLabel.BackgroundTransparency = 1
-	houseLabel.Font = Enum.Font.GothamMedium
-	houseLabel.TextSize = 13
-	houseLabel.TextXAlignment = Enum.TextXAlignment.Left
-	houseLabel.TextColor3 = Color3.fromRGB(180, 200, 230)
-	houseLabel.Text = ""
-	houseLabel.Parent = houseRow
-
-	local houseCaption = Instance.new("TextLabel")
-	houseCaption.Name = "Caption"
-	houseCaption.Size = UDim2.new(1, 0, 0, 10)
-	houseCaption.Position = UDim2.new(0, 0, 0, 17)
-	houseCaption.BackgroundTransparency = 1
-	houseCaption.Font = Enum.Font.Gotham
-	houseCaption.TextSize = 10
-	houseCaption.TextXAlignment = Enum.TextXAlignment.Left
-	houseCaption.TextColor3 = Color3.fromRGB(140, 140, 155)
-	houseCaption.Text = ""
-	houseCaption.Parent = houseRow
-
 	-- AutoPia dealership: how many walk-ins are waiting and whether the front
 	-- customer is currently being served. Hidden when there is nobody in queue
 	-- and the player is not inside interact range, because a row that reads
@@ -712,49 +665,6 @@ function StatsUI.new(): StatsUIHandle
 	progressRow.BackgroundTransparency = 1
 	progressRow.Parent = panel
 
-	-- Bill indicator: a small warning row shown when monthly bills are past due.
-	-- Hidden by default; appears when debt > 0 or a bill was just unpaid.
-	local billRow = Instance.new("Frame")
-	billRow.Name = "BillRow"
-	billRow.Size = UDim2.new(1, 0, 0, 24)
-	billRow.LayoutOrder = 7.5
-	billRow.BackgroundTransparency = 1
-	billRow.Visible = false
-	billRow.Parent = panel
-
-	local billLabel = Instance.new("TextLabel")
-	billLabel.Name = "Label"
-	billLabel.Size = UDim2.new(1, 0, 0, 24)
-	billLabel.BackgroundTransparency = 1
-	billLabel.Font = Enum.Font.GothamMedium
-	billLabel.TextSize = 12
-	billLabel.TextXAlignment = Enum.TextXAlignment.Left
-	billLabel.TextColor3 = Color3.fromRGB(230, 120, 80)
-	billLabel.Text = ""
-	billLabel.Parent = billRow
-
-	-- Savings balance row. Shown when the life has a savings account with a
-	-- non-zero balance, because a row that always reads "Savings: 0" is visual
-	-- noise during the years the player has not yet opened an account.
-	local savingsRow = Instance.new("Frame")
-	savingsRow.Name = "SavingsRow"
-	savingsRow.Size = UDim2.new(1, 0, 0, 24)
-	savingsRow.LayoutOrder = 7.75
-	savingsRow.BackgroundTransparency = 1
-	savingsRow.Visible = false
-	savingsRow.Parent = panel
-
-	local savingsLabel = Instance.new("TextLabel")
-	savingsLabel.Name = "Label"
-	savingsLabel.Size = UDim2.new(1, 0, 0, 24)
-	savingsLabel.BackgroundTransparency = 1
-	savingsLabel.Font = Enum.Font.GothamMedium
-	savingsLabel.TextSize = 12
-	savingsLabel.TextXAlignment = Enum.TextXAlignment.Left
-	savingsLabel.TextColor3 = Color3.fromRGB(180, 210, 160)
-	savingsLabel.Text = ""
-	savingsLabel.Parent = savingsRow
-
 	local progressCaption = Instance.new("TextLabel")
 	progressCaption.Name = "Caption"
 	progressCaption.Size = UDim2.new(1, 0, 0, 14)
@@ -805,32 +715,6 @@ function StatsUI.new(): StatsUIHandle
 	local buttonCorner = Instance.new("UICorner")
 	buttonCorner.CornerRadius = UDim.new(0, 6)
 	buttonCorner.Parent = ageUpButton
-
-	-- The roster: who you know, who you can talk to. Hidden until the server sends
-	-- the first list, which happens on join and whenever someone becomes available.
-	local rosterFrame = Instance.new("Frame")
-	rosterFrame.Name = "Roster"
-	rosterFrame.Size = UDim2.new(1, 0, 0, 0)
-	rosterFrame.BackgroundTransparency = 1
-	rosterFrame.LayoutOrder = 13
-	rosterFrame.Visible = false
-	rosterFrame.Parent = panel
-
-	local rosterList = Instance.new("ScrollingFrame")
-	rosterList.Name = "List"
-	rosterList.Size = UDim2.new(1, 0, 1, 0)
-	rosterList.BackgroundTransparency = 1
-	rosterList.ScrollBarThickness = 3
-	rosterList.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
-	rosterList.CanvasSize = UDim2.new(0, 0, 0, 0)
-	rosterList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	rosterList.BorderSizePixel = 0
-	rosterList.Parent = rosterFrame
-
-	local rosterLayout = Instance.new("UIListLayout")
-	rosterLayout.Padding = UDim.new(0, 2)
-	rosterLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	rosterLayout.Parent = rosterList
 
 	local noticeFrame = Instance.new("Frame")
 	noticeFrame.Name = "Notice"
@@ -1047,10 +931,6 @@ function StatsUI.new(): StatsUIHandle
 		deathButton = deathButton,
 		deathNoteLabel = deathNoteLabel,
 		statBars = statBars,
-		rosterFrame = rosterFrame,
-		rosterList = rosterList,
-		rosterRows = {},
-		onPersonTapped = nil,
 		workoutRow = workoutRow,
 		workoutLabel = workoutLabel,
 		workoutCaption = workoutCaption,
@@ -1063,15 +943,8 @@ function StatsUI.new(): StatsUIHandle
 		sweepPhase = nil,
 		sweepBaseProgress = 0,
 		sweepElapsed = 0,
-		houseRow = houseRow,
-		houseLabel = houseLabel,
-		houseCaption = houseCaption,
 		dealerRow = dealerRow,
 		dealerLabel = dealerLabel,
-		billRow = billRow,
-		billLabel = billLabel,
-		savingsRow = savingsRow,
-		savingsLabel = savingsLabel,
 	}, StatsUI)
 end
 
@@ -1646,124 +1519,6 @@ function StatsUI.SetHudVisible(self: StatsUIHandle, visible: boolean)
 	self.screenGui.Enabled = visible
 end
 
-function StatsUI.SetRoster(self: StatsUIHandle, entries: { PersonRosterEntry })
-	-- Clear old rows.
-	for _, row in self.rosterRows do
-		row:Destroy()
-	end
-	table.clear(self.rosterRows)
-
-	if #entries == 0 then
-		self.rosterFrame.Visible = false
-		return
-	end
-
-	self.rosterFrame.Visible = true
-	local height = math.min(#entries * ROSTER_ROW_HEIGHT, ROSTER_MAX_HEIGHT)
-	self.rosterFrame.Size = UDim2.new(1, 0, 0, height)
-	self.rosterList.Size = UDim2.new(1, 0, 1, 0)
-
-	for i, entry in entries do
-		local row = Instance.new("TextButton")
-		row.Name = entry.id
-		row.Size = UDim2.new(1, 0, 0, ROSTER_ROW_HEIGHT)
-		row.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
-		row.BackgroundTransparency = 0.4
-		row.BorderSizePixel = 0
-		row.Font = Enum.Font.Gotham
-		row.TextSize = 13
-		row.TextColor3 = if entry.available
-			then Color3.fromRGB(225, 225, 235)
-			else Color3.fromRGB(140, 140, 155)
-		row.TextXAlignment = Enum.TextXAlignment.Left
-		row.Text = `  {entry.name} \xc2\xb7 {entry.band}`
-		row.LayoutOrder = i
-		row.Parent = self.rosterList
-
-		local rowCorner = Instance.new("UICorner")
-		rowCorner.CornerRadius = UDim.new(0, 4)
-		rowCorner.Parent = row
-
-		-- Tie badge: a small colored square when the person holds a structural
-		-- relationship (mentor, rival, sibling). Absent for everybody else.
-		if entry.tie ~= nil then
-			local tieColor = if entry.tie == "mentor" then TIE_MENTOR_COLOR
-				elseif entry.tie == "rival" then TIE_RIVAL_COLOR
-				else TIE_SIBLING_COLOR
-			local badge = Instance.new("Frame")
-			badge.Name = "TieBadge"
-			badge.Size = UDim2.new(0, 5, 0, 5)
-			badge.Position = UDim2.new(1, -22, 0.5, 0)
-			badge.AnchorPoint = Vector2.new(0, 0.5)
-			badge.BackgroundColor3 = tieColor
-			badge.BackgroundTransparency = 0.2
-			badge.BorderSizePixel = 0
-			badge.Parent = row
-			local badgeCorner = Instance.new("UICorner")
-			badgeCorner.CornerRadius = UDim.new(1, 0)
-			badgeCorner.Parent = badge
-		end
-
-		-- Availability dot: green when there is something to say, grey when spent.
-		local dot = Instance.new("Frame")
-		dot.Name = "Dot"
-		dot.Size = UDim2.new(0, 6, 0, 6)
-		dot.Position = UDim2.new(1, -12, 0.5, 0)
-		dot.AnchorPoint = Vector2.new(0, 0.5)
-		dot.BackgroundColor3 = if entry.available
-			then ROSTER_AVAILABLE_COLOR
-			else ROSTER_USED_COLOR
-		dot.BackgroundTransparency = if entry.available then 0 else 0.6
-		dot.BorderSizePixel = 0
-		dot.Parent = row
-
-		local dotCorner = Instance.new("UICorner")
-		dotCorner.CornerRadius = UDim.new(1, 0)
-		dotCorner.Parent = dot
-
-		local personId = entry.id
-		row.Activated:Connect(function()
-			local cb = self.onPersonTapped
-			if cb ~= nil then
-				cb(personId)
-			end
-		end)
-
-		table.insert(self.rosterRows, row)
-	end
-end
-
-function StatsUI.OnPersonTapped(self: StatsUIHandle, callback: (personId: string) -> ())
-	self.onPersonTapped = callback
-end
-
--- A house was bought, sold, or its job link changed. Shows the owned house and
--- any linked home job; hides the row when nothing is owned.
-function StatsUI.SetHouse(self: StatsUIHandle, state: Types.HouseState?)
-	if state == nil then
-		self.houseRow.Visible = false
-		return
-	end
-	local ownedCount = 0
-	for _ in state.owned do
-		ownedCount += 1
-	end
-	if ownedCount == 0 then
-		self.houseRow.Visible = false
-		return
-	end
-	self.houseRow.Visible = true
-	-- Pick the first owned house and show its linked job if any.
-	for houseId, _ in state.owned do
-		local job = state.homeJob[houseId]
-		self.houseLabel.Text = "Home: " .. houseId
-		self.houseCaption.Text = if job ~= nil
-			then "Work-from-home: " .. job
-			else "No home job linked"
-		break
-	end
-end
-
 -- The dealership queue state. Shown when the player is near the counter and
 -- there are walk-ins waiting, or when the front customer is currently being
 -- served. Hidden when there is no queue and the player is out of range.
@@ -1788,43 +1543,9 @@ function StatsUI.SetCarDealer(self: StatsUIHandle, state: Types.CarDealerState?)
 	end
 end
 
--- A bill was charged. Shows debt status and whether the current month is paid.
-function StatsUI.SetBill(self: StatsUIHandle, state: Types.BillState?)
-	if state == nil then
-		self.billRow.Visible = false
-		return
-	end
-	if state.debt > 0 then
-		self.billRow.Visible = true
-		self.billLabel.Text = `Debt: ${Money.Format(state.debt)} — ${if state.paid then "Paid" else "Unpaid"} this month`
-	elseif state.notice ~= nil then
-		self.billRow.Visible = true
-		self.billLabel.Text = state.notice
-		task.delay(4, function()
-			if self.billLabel.Text == state.notice then
-				self.billRow.Visible = false
-			end
-		end)
-	else
-		self.billRow.Visible = false
-	end
-end
-
--- A savings balance update. Shows the current balance when non-zero; hides
--- when there is nothing saved. The colour is green — not the money gold — so
--- the player can tell at a glance that this is a different kind of number.
-function StatsUI.SetSavings(self: StatsUIHandle, state: Types.SavingsState?)
-	if state == nil or state.balance <= 0 then
-		self.savingsRow.Visible = false
-		return
-	end
-	self.savingsRow.Visible = true
-	self.savingsLabel.Text = `Savings: ${Money.Format(state.balance)}`
-end
-
 -- A milestone was achieved. Shows a brief flash-style notice.
 function StatsUI.ShowMilestone(self: StatsUIHandle, label: string, bonus: number)
-	self:ShowNotice(`Milestone: {label}! +${Money.Format(bonus)} credits`)
+	self:ShowNotice(`Milestone: {label}! +{Money.Format(bonus)}`)
 end
 
 -- Freezes the shift and task rows while the chapter reel is on screen. The

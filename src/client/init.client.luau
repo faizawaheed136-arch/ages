@@ -9,6 +9,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Money = require(ReplicatedStorage:WaitForChild("Money"))
 
 local StatsUI = require(script.ui.StatsUI)
 local ChoicePanel = require(script.ui.ChoicePanel)
@@ -958,7 +959,7 @@ end)
 
 Remotes.Get("HouseUpdated").OnClientEvent:Connect(function(state: Types.HouseState?)
 	house:Set(state)
-	ui:SetHouse(state)
+	menu:SetHouse(state)
 end)
 
 Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarDealerState?)
@@ -972,7 +973,7 @@ Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarD
 end)
 
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
-	ui:SetBill(state)
+	menu:SetBill(state)
 end)
 
 -- `savingsBalance` is declared beside the withdraw button that spends it. Read off the
@@ -982,13 +983,13 @@ Remotes.Get("SavingsUpdated").OnClientEvent:Connect(function(state: Types.Saving
 	-- so this never fired -- but a nil push is the one that clears the panel, and it would
 	-- have thrown here and left the *old* balance on screen and in the withdraw button.
 	savingsBalance = if state ~= nil then state.balance else nil
-	ui:SetSavings(state)
+	menu:SetSavings(state)
 	savings:Set(state)
 end)
 
 Remotes.Get("MilestoneAchieved").OnClientEvent:Connect(function(event: Types.MilestoneEvent)
 	MilestoneFlash.Show(event.label, event.bonus)
-	ui:ShowNotice(`Milestone: {event.label}! +{event.bonus} credits`)
+	ui:ShowNotice(`Milestone: {event.label}! +{Money.Format(event.bonus)}`)
 end)
 
 Remotes.Get("BondMilestone").OnClientEvent:Connect(function(event: Types.BondMilestoneEvent)
@@ -996,21 +997,23 @@ Remotes.Get("BondMilestone").OnClientEvent:Connect(function(event: Types.BondMil
 end)
 
 Remotes.Get("GossipUpdate").OnClientEvent:Connect(function(event: Types.GossipEvent)
-	ui:ShowNotice(`The townsfolk are talking about: "${event.topics}"`)
+	ui:ShowNotice(`The townsfolk are talking about: "{event.topics}"`)
 end)
 
--- Who you know and what they have left, as a whole list for the HUD. Whole rather
--- than per-row for the same reason the server sends it whole: the rows are read side
--- by side, and a per-person push could land out of order and leave one dot wrong.
+-- Who you know and what they have left, as a whole list for the menu's Relationships
+-- tab. Whole rather than per-row for the same reason the server sends it whole: the rows
+-- are read side by side, and a per-person push could land out of order and leave one dot
+-- wrong. It is pushed even while the menu is shut -- the list has to be right the instant
+-- it opens, and a roster that fills in a frame late reads as a bug.
 Remotes.Get("PeopleRosterUpdated").OnClientEvent:Connect(function(entries: { PersonRosterEntry })
-	ui:SetRoster(entries)
 	menu:SetRoster(entries)
 end)
 
--- A name tapped on the roster. If it is the person already standing in front of the
--- player, the standing panel opens directly; otherwise the request goes up and the
--- phone panel comes back in the reply.
-ui:OnPersonTapped(function(personId: string)
+-- A name tapped in the Relationships tab. If it is the person already standing in front
+-- of the player, the standing panel opens directly; otherwise the request goes up and the
+-- phone panel comes back in the reply -- which is the only way to reach somebody who is
+-- not in front of you, so it survived the move off the HUD unchanged.
+menu:OnPersonTapped(function(personId: string)
 	local person = currentPerson
 	if person ~= nil and person.id == personId and #person.offers > 0 then
 		panel:ShowOptions({

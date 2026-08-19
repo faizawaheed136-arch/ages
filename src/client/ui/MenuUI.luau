@@ -24,6 +24,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+-- The same formatter the HUD balance and every price tag in the game uses. Money that
+-- is written one way on the shop marker and another way in the menu is money the player
+-- has to stop and convert, which is the one thing a balance must never make them do.
+local Money = require(ReplicatedStorage:WaitForChild("Money"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type JobPostState = Types.JobPostState
@@ -31,6 +35,9 @@ type PersonRosterEntry = Types.PersonRosterEntry
 type GangState = Types.GangState
 type SkillsState = Types.SkillsState
 type SkillState = Types.SkillState
+type BillState = Types.BillState
+type SavingsState = Types.SavingsState
+type HouseState = Types.HouseState
 
 local MENU = Config.UI.Menu
 
@@ -71,10 +78,18 @@ export type MenuUIHandle = typeof(setmetatable(
 		roster: { PersonRosterEntry },
 		gang: GangState?,
 		skills: SkillsState?,
+		-- The three halves of the money pane, held separately because they arrive on three
+		-- separate remotes from three separate services. Combined into one pushed shape
+		-- they would need a fourth service to own the combining, and any of the three
+		-- pushing on its own would then have to re-send the other two.
+		bill: BillState?,
+		savings: SavingsState?,
+		house: HouseState?,
 		ageYears: number,
 		stage: string,
 		money: number,
 		onColorsToggled: ((boolean) -> ())?,
+		onPersonTapped: ((personId: string) -> ())?,
 	},
 	MenuUI
 ))
@@ -371,10 +386,14 @@ function MenuUI.new(): MenuUIHandle
 		roster = {},
 		gang = nil,
 		skills = nil,
+		bill = nil,
+		savings = nil,
+		house = nil,
 		ageYears = 0,
 		stage = "",
 		money = 0,
 		onColorsToggled = nil,
+		onPersonTapped = nil,
 	}, MenuUI)
 
 	for order, tab in tabs do
@@ -472,7 +491,118 @@ local function drawRelationships(self: MenuUIHandle): string?
 		if not person.available then
 			row.BackgroundTransparency = 0.35
 		end
+
+		-- Every row, including the spent ones. This is the only way to reach somebody who
+		-- is not standing in front of you, and it came here from the HUD roster along with
+		-- the list -- a relationships pane you can read but not act from would have taken a
+		-- verb out of the game in the name of tidying the screen up.
+		--
+		-- Spent rows stay pressable on purpose. The refusal is a sentence the server sends
+		-- back, and a button that silently does nothing teaches a player less than one that
+		-- tells them they have already had this person's year.
+		local personId = person.id
+		local tap = Instance.new("TextButton")
+		tap.Size = UDim2.new(1, 0, 1, 0)
+		tap.BackgroundTransparency = 1
+		tap.AutoButtonColor = false
+		tap.Text = ""
+		tap.Parent = row
+		tap.Activated:Connect(function()
+			local callback = self.onPersonTapped
+			if callback ~= nil then
+				callback(personId)
+			end
+		end)
 	end
+	return nil
+end
+
+-- `suburb_5` as a player would say it. The house ids in this world are generated, so
+-- there is no authored label to look up and inventing a table of them would go stale the
+-- next time the suburb is regenerated with one more plot in it.
+local function houseName(houseId: string): string
+	local word, number = string.match(houseId, "^(%a+)_(%d+)$")
+	if word == nil or number == nil then
+		return houseId
+	end
+	return `{string.upper(string.sub(word, 1, 1))}{string.sub(word, 2)} {number}`
+end
+
+-- What you have, what you owe, and what you own.
+--
+-- These were four rows stacked on the HUD, appearing and disappearing as their services
+-- pushed, and none of them was about the minute the player was in: a savings balance is
+-- not a thing you glance at while running to a shift mark. They are looked up, so they
+-- live somewhere you look things up.
+--
+-- Draws the rows that have something to say and silently omits the rest, so an early
+-- life shows one row and a settled one shows four. The alternative -- every row always
+-- present with a zero in it -- is a panel that teaches the player it has nothing to
+-- tell them, and they stop opening it.
+local function drawMoney(self: MenuUIHandle): string?
+	local order = 0
+	local function nextRow(): (Frame, TextLabel, TextLabel, TextLabel)
+		order += 1
+		return makeRow(self.content, order)
+	end
+
+	-- Always drawn, and the only row that is. A money pane whose first line depended on
+	-- whether a bill had been charged yet would be a money pane that is sometimes empty
+	-- while the player is holding money.
+	local _, cashTitle, cashFigure, cashCaption = nextRow()
+	cashTitle.Text = "Cash"
+	cashFigure.Text = Money.Format(self.money)
+	cashFigure.TextColor3 = Color3.fromRGB(225, 205, 130)
+	cashCaption.Text = "On you, and spendable anywhere."
+
+	local bill = self.bill
+	if bill ~= nil and (bill.debt > 0 or bill.totalThisMonth > 0) then
+		local _, billTitle, billFigure, billCaption = nextRow()
+		billTitle.Text = "Bills"
+		if bill.debt > 0 then
+			billFigure.Text = Money.Format(bill.debt)
+			billFigure.TextColor3 = Color3.fromRGB(230, 120, 80)
+			billCaption.Text = if bill.paid
+				then `Owed from before. This month is settled.`
+				else `Owed, and this month is not paid either.`
+		else
+			billFigure.Text = Money.Format(bill.totalThisMonth)
+			billFigure.TextColor3 = if bill.paid then Color3.fromRGB(140, 226, 160) else MUTED_COLOR
+			billCaption.Text = if bill.paid
+				then "This month is paid and you owe nothing."
+				else "Due this month. Nothing owed from before."
+		end
+	end
+
+	local savings = self.savings
+	if savings ~= nil and savings.balance > 0 then
+		local row, saveTitle, saveFigure, saveCaption = nextRow()
+		saveTitle.Text = "Savings"
+		saveFigure.Text = Money.Format(savings.balance)
+		saveFigure.TextColor3 = Color3.fromRGB(140, 226, 160)
+		saveCaption.Text = `Earns {math.floor(savings.interestRate * 100 + 0.5)}% a year. Deposit and withdraw at the bank.`
+		-- Filled against the ceiling rather than against nothing, because the ceiling is
+		-- the only fact about a savings balance the player cannot see anywhere else and
+		-- it is the one that decides whether walking to the bank is still worth doing.
+		if savings.maxBalance > 0 then
+			addBar(row, savings.balance / savings.maxBalance, Color3.fromRGB(140, 226, 160))
+		end
+	end
+
+	local house = self.house
+	if house ~= nil then
+		for houseId in house.owned do
+			local _, homeTitle, homeFigure, homeCaption = nextRow()
+			homeTitle.Text = houseName(houseId)
+			homeFigure.Text = "Owned"
+			homeFigure.TextColor3 = Color3.fromRGB(140, 226, 160)
+			local job = house.homeJob[houseId]
+			homeCaption.Text = if job ~= nil
+				then `You work from here as a {string.lower(job)}.`
+				else "Nothing links a job to this address yet."
+		end
+	end
+
 	return nil
 end
 
@@ -597,6 +727,8 @@ local function redraw(self: MenuUIHandle)
 	local empty: string?
 	if self.selected == "jobs" then
 		empty = drawJobs(self)
+	elseif self.selected == "money" then
+		empty = drawMoney(self)
 	elseif self.selected == "relationships" then
 		empty = drawRelationships(self)
 	elseif self.selected == "gangs" then
@@ -630,7 +762,7 @@ local function redrawCard(self: MenuUIHandle)
 		table.insert(parts, self.stage)
 	end
 	table.insert(parts, `Age {self.ageYears}`)
-	table.insert(parts, `${self.money}`)
+	table.insert(parts, Money.Format(self.money))
 	self.cardLine.Text = table.concat(parts, "  ·  ")
 end
 
@@ -659,6 +791,21 @@ function MenuUI.SetSkills(self: MenuUIHandle, state: SkillsState?)
 	redraw(self)
 end
 
+function MenuUI.SetBill(self: MenuUIHandle, state: BillState?)
+	self.bill = state
+	redraw(self)
+end
+
+function MenuUI.SetSavings(self: MenuUIHandle, state: SavingsState?)
+	self.savings = state
+	redraw(self)
+end
+
+function MenuUI.SetHouse(self: MenuUIHandle, state: HouseState?)
+	self.house = state
+	redraw(self)
+end
+
 function MenuUI.SetIdentity(self: MenuUIHandle, ageYears: number, stage: string, money: number)
 	self.ageYears = ageYears
 	self.stage = stage
@@ -668,6 +815,13 @@ end
 
 function MenuUI.OnColorsToggled(self: MenuUIHandle, callback: (boolean) -> ())
 	self.onColorsToggled = callback
+end
+
+-- A name pressed on the relationships pane. What happens next is not this module's
+-- business: the caller decides whether that means opening the panel for somebody
+-- standing in front of the player or asking the server to put a call through.
+function MenuUI.OnPersonTapped(self: MenuUIHandle, callback: (personId: string) -> ())
+	self.onPersonTapped = callback
 end
 
 -- The rail comes down with the HUD and goes back up with it, for the reason the HUD

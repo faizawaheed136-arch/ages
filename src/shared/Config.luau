@@ -4243,6 +4243,11 @@ Config.UI = {
 		-- by name rather than falling through to a blank.
 		Tabs = {
 			{ id = "jobs", label = "Jobs Available", glyph = "J", color = Color3.fromRGB(122, 196, 255) },
+			-- Second because it is the pane a player opens most often after work, and
+			-- because it is the one that used to be four rows stacked on the HUD: what a
+			-- house cost, what a bill wants and what is in the bank are facts you go and
+			-- look up, not things you need in your eyeline while you are walking.
+			{ id = "money", label = "Money", glyph = "$", color = Color3.fromRGB(225, 205, 130) },
 			{ id = "relationships", label = "Relationships", glyph = "R", color = Color3.fromRGB(255, 150, 190) },
 			{ id = "gangs", label = "Gangs", glyph = "G", color = Color3.fromRGB(236, 110, 96) },
 			{ id = "skills", label = "Skills", glyph = "S", color = Color3.fromRGB(140, 226, 160) },
