@@ -21,19 +21,50 @@ the thing that made the Circle a landmark was the step between the towers — a 
 had written down and therefore nothing was protecting.** When a requirement arrives late,
 check what the existing shape was buying before spending it.
 
-So `CIRCUS_SHAPE` holds the original `(8, 14, 8)` and `CIRCUS_STOREYS` is that plus
-`CIRCUS_LIFT` applied to all three. Height is bought by translating the group, and a
-translation cannot change the step, so the 96-stud silhouette survives exactly:
-`(14, 20, 14)` — shoulders 231.5 (18.0 over the mast), middle 327.5. **Raise `CIRCUS_LIFT`,
-never `CIRCUS_SHAPE`.** Safe range 6..9; above that the middle passes 21:1 slenderness and
-reads as an aerial.
+**That fix restored the step and was still rejected, for a different reason: the Circle is
+not three towers, it is twelve.** One three-tower constant stamped at all four corners
+showed four towers of one height and eight of another. Two rooflines across the whole
+centre — and worse than the version before it, because they were now tall enough to be the
+only thing on the horizon.
 
-The old "middle clears its shoulders by 18" assertion is **deleted, not raised** — it was
+**Twice in a row I fixed the quantity that was written down and missed the one that was
+not.** First "each tower is the tallest", then "the arc has a step"; the thing actually
+wrong both times was variety. `FIN_HEIGHTS`, one screen up in the same file, has said
+`varied skyline` in its comment since it was written. The Circle never had that line, so
+nothing was protecting it and every gate stayed green through both rounds. **If you are
+about to satisfy a stated requirement by changing a shape, write down what the shape was
+already buying before you spend it.**
+
+A quadrant is now `circus_arc(q)`, built from four small constants:
+
+| | | |
+|---|---|---|
+| `CIRCUS_ARC` | `(8, 14, 8)` | the base arc — shoulder, peak, shoulder |
+| `CIRCUS_LIFT` | `6` | carries the lowest tower over the mast, applied to all |
+| `CIRCUS_QUAD_LIFT` | `(0, 2, 1, 3)` | a different extra per corner, so no two match |
+| `CIRCUS_TILT` | `1` | right shoulder over left, so an arc is not a mirror |
+
+Twelve towers on **nine** rooflines, 231.5 to 375.5, every one clear of the mast and every
+quadrant's peak five storeys over its own shoulders. **Raise `CIRCUS_LIFT` or
+`CIRCUS_QUAD_LIFT`, never `CIRCUS_ARC`.** Safe range for the lift is 6..8 — the tallest
+tower carries the lift *plus* the largest quad lift, and at 9 it passes 21:1 slenderness.
+
+Three assertions, all negative-tested against an unmodified control:
+
+- **Every tower clears the mast by `CIRCUS_CLEARANCE`**, and the lift is *minimal* — the
+  latter is the by-hand negative test made permanent, so it re-runs when `FIN_HEIGHTS` moves.
+- **Peak over shoulders, `CIRCUS_MIN_STEP`, measured *within* a quadrant.** Across the
+  Circle it is not a step at all: the tallest and shortest towers stand at opposite corners
+  with the monument between them, and comparing those two passes happily on four identical
+  arcs — which is the other defect.
+- **`CIRCUS_MIN_ROOFLINES`** — the first assertion here that looks at the Circle whole.
+  Stamping one arc four times scores 3 and fires it.
+
+The old "middle clears its shoulders by 18" assertion is **deleted, not raised**: it was
 green on the flat version, because 18 studs answers "is that one taller", a ranking question
-nobody was going to get wrong. Replaced by a step assertion and a minimality assertion on
-the lift. All three negative-tested with an unmodified control. Note the step assertion
-compares **storeys, not studs**: in studs it failed on the very config it was written to
-bless, because the two 96s accumulate over different `n` and land one bit apart.
+nobody was going to get wrong. Note the step assertion compares **storeys, not studs** — in
+studs it failed on the very config it was written to bless, because two differences that are
+both 96 accumulate over different `n` and land one bit apart.
 
 **`FightService` now draws the wind-up on the body. This has never run in Studio.**
 The opponent's `intent`, `timer` and `windTotal` were already replicated and were spent
