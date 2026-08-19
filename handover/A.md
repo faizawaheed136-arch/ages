@@ -1,5 +1,90 @@
 # Agent A — the world, and the crime/combat stack
 
+## 2026-08-18 (actually last) — the gate was still not looking, and one of mine was fatal
+
+The entry below fixed three missing requires and called the place loadable. **It was not.**
+Owner came straight back: *"i still spawn regular size and cant play the game."* Four more
+defects, all the same family, none visible to any of the eleven checks.
+
+**`Config.SubjectPerks = { [undefined] = nil }` — the real load blocker, and it had been
+in the tree since `ab27d65` on 08-14, thirty-seven commits.** `undefined` is not bound, so
+the key is nil, and a nil key in a table constructor is a hard `table index is nil` thrown
+while Config's own module body runs. **Every service in both places requires Config.** So
+nothing loaded — and Roblox still spawns a character on its own, which is exactly why the
+symptom was "I spawn normal size and cannot play" and not an error naming Config. Someone
+wrote it to mean "empty for now"; `{}` is how you say that. B's own handover already
+describes this entry as "empty slot, zero entries", so the intent was never in doubt.
+
+**`BountyService.SetArrestedHandler` was defined four lines above `local BountyService = {}`
+— and BountyService is mine.** A nil index thrown at *module load*, in a file
+`init.server.luau` requires at the top before it calls a single Init. That is the worst
+form of this bug in the tree: not a service that fails, a server that never starts. Landed
+in `a6e7a30`, the same commit as the CrimeService defect below. `check_decl_order` could
+never see it: that check looks for a name **called** too early, and this is a name
+**defined** too early.
+
+**`BodyService.onCharacterAdded` read `profile` without binding it.** The line above called
+`DataService.WaitForProfile(player)` and threw the result away with a bare `== nil` test,
+then forty lines down `Lives.Active(profile.Data)` read `profile` as a global. It threw on
+**every spawn**, one line above the `BodyService.Apply` that is the entire purpose of the
+function. Even with Config fixed, this alone would have kept every player adult-sized.
+
+**`BodyService` also read a bare `Workspace`.** Every other file in this tree binds
+`game:GetService("Workspace")`; this one did not. Only the R6-rebuild path touches it, so
+it was invisible on an R15 account.
+
+Plus `CrimeService` never required `Types` while writing `type LifeData = Types.LifeData` —
+harmless at runtime (aliases are erased) but it silently turned every annotation in that
+file into `any`, so `--!strict` was decorative there.
+
+### The lesson, and it is the fourth time
+
+Every regex check in `check.py` is **file-scoped**. `_defined_names` collects `local profile`
+from anywhere in a file and calls it defined everywhere in it. That is the safe direction for
+a regex — it can only hide a bug, never invent one — and it is also a hole you can drive a
+service through. Three checks looked straight at `profile.Data` and saw a name the file binds.
+
+I widened `check_undefined_modules` first (drop the required trailing `(`, allow lowercase).
+That found CrimeService, and **it still did not find the bug I was actually hunting** — I
+proved that by negative test rather than assuming, which is the only reason I did not ship a
+check that certified its own blind spot. Watch the colon when you touch it: `[.:]` without a
+trailing `(` matches every `id: string,` type field in the tree, ~400 of them.
+
+**The real fix was to stop approximating and hand scoping to `luau-analyze`, which does it
+properly.** New twelfth check, `check_unknown_globals`. CLAUDE.md warns its output drowns in
+cascade noise without a Roblox definitions file — true of the *type* errors, but I measured
+the `Unknown global` subset: 3,600 hits across the tree, 27 distinct names, 22 of them
+`Enum` / `game` / `script` / `task` and friends already sitting in `LUA_GLOBALS` and
+`INDEXED_GLOBALS`. Whitelist those and what is left is pure signal — **every single name it
+returned on the first run was a real defect.** It costs ~13s, which is most of the gate's
+runtime and worth it. All four fixes negative-tested individually.
+
+### Left red on purpose — three for B
+
+The gate now **FAILS**, and it should. Three real bugs remain in files that are not mine,
+and suppressing them to get a green tick is the exact failure I spent this session fixing:
+
+- `src/client/init.client.luau:302,315` — `moneyPrevious` and `savingsBalance` are read by
+  the deposit/withdraw closures, but the `local`s that hold them are declared at **629** and
+  **871**, far below. The closures capture nil globals, so **every bank deposit and withdraw
+  button is a silent no-op**. The fix is to move the two declarations above line 301; I did
+  not, because it means moving code in a file I do not own.
+- `src/server/services/PeopleService.luau:1503` — `bondGain` is compared in the
+  defining-moment branch and bound nowhere. Throws on the *second* non-refused interaction
+  with the same person (`nil > 0`). **I deliberately did not guess a fix**: the comment wants
+  "the highest bond this person has ever reached", but `definingMoment` records only
+  `{personId, age, line}` with no bond to compare against, so the honest fix is a schema
+  change in `Types.luau` and that is B's design call, not mine.
+
+**Files touched that are B's:** `BodyService.luau`, `Config.luau`. Under direct owner
+instruction to make the game playable. `Config` is a shared append-only file and I did not
+reorganise it — one broken line replaced in place, comment added above it.
+
+**Still not Studio-tested.** But the boot path now has no nil index in it, Config loads, and
+the child-body path has been traced end to end: `ReturnService` rolls the life on join,
+`beginLife` applies the body, and `onCharacterAdded` applies it again once the rig is real —
+every interleaving of those two is covered, which it was not before.
+
 ## 2026-08-18 (last) — three missing requires, and why the gate said clean
 
 **The game place would not load.** Not slowly, not partly: it came up with no services in

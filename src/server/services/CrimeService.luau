@@ -22,6 +22,11 @@ local DataService = require(script.Parent.DataService)
 local EventService = require(script.Parent.EventService)
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local BountyService = require(script.Parent.BountyService)
+-- The alias below reads `Types.LifeData` and this require was missing. A type alias is
+-- erased before the file runs, so unlike the four sibling cases this one never threw --
+-- it just quietly made `LifeData` resolve to nothing, which turns every annotation in
+-- this file into `any` and switches off the `--!strict` checking it looks like it has.
+local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 
 type LifeData = Types.LifeData

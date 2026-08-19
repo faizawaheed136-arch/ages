@@ -49,11 +49,18 @@ type BountyState = Types.BountyState
 type ArrestedHandler = (player: Player) -> ()
 local arrestedHandler: ArrestedHandler? = nil
 
+local BountyService = {}
+
+-- Below the table, not above it. This function was written four lines *before*
+-- `local BountyService = {}` existed, so it indexed a nil global and threw while the
+-- module body was still running -- and `init.server.luau` requires this file at the top,
+-- before a single Init is called, so the throw took the whole bootstrap with it. That is
+-- the worst version of this bug in the tree: not a service that fails, a server that
+-- never starts. `check_decl_order` did not see it because it looks for *calls* to a name
+-- used too early, and this is a *definition* written too early.
 function BountyService.SetArrestedHandler(handler: ArrestedHandler)
 	arrestedHandler = handler
 end
-
-local BountyService = {}
 
 local CRIME = Config.Crime
 local SPOT = CRIME.Spotting

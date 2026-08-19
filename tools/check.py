@@ -37,6 +37,7 @@ SRC = ROOT / "src"
 # Windows toolchain looks exactly like a missing one.
 EXE = ".exe" if sys.platform == "win32" else ""
 LUAU_COMPILE = Path.home() / f".aftman/tool-storage/luau/luau-compile{EXE}"
+LUAU_ANALYZE = Path.home() / f".aftman/tool-storage/luau/luau-analyze{EXE}"
 ROJO = Path.home() / f".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo{EXE}"
 BUILD_TMP = Path(tempfile.gettempdir())
 
@@ -567,23 +568,126 @@ def check_undefined_modules(files, code):
         also unrequired, so every join in Studio threw after the life had been rolled.
 
     Both files listed the module by name in their comments, both read correctly to a
-    human, and every other check in this file passed them. Restricted to names starting
-    with a capital, which is this codebase's convention for a required module: it costs a
-    lowercase module and buys freedom from every `self.field(...)` in the tree.
+    human, and every other check in this file passed them.
+
+    **The trailing call is not required, and requiring it was this check's own first bug.**
+    Written to catch a missing `require`, it looked for `Name.method(` -- so it saw
+    `VerdictService.SetMoments(...)` and was blind to `Lives.Active(profile.Data)`, where the
+    undefined name is `profile` and it is merely *indexed*. That one cost a whole debugging
+    pass: every player spawned adult-sized because `BodyService.onCharacterAdded` threw on
+    `profile.Data`, a local the function never bound. Same nil index, same silence, one
+    character of syntax different. So the `(` is optional and lowercase names count too --
+    a discarded local reads exactly like a missing require to everything downstream of it.
+
+    A bare *reference* still goes unreported (`x = Workspace`, with nothing after the name).
+    That needs type-position analysis this has none of: `local p: Player = ...` would report
+    `Player` on every file in the tree. Indexing is the line because indexing is what throws.
     """
     bad = 0
     for f in files:
         t = code[f]
         names = _defined_names(t)
         seen: set[str] = set()
-        for m in re.finditer(r"(?<![.:\w])([A-Z]\w*)\s*[.:]\s*[A-Za-z_]\w*\s*\(", t):
+        # Two shapes, and the colon may not be treated like the dot. A dot is always an
+        # index, so `name.field` is enough on its own. A colon is *also* the type-annotation
+        # separator, so a bare `name:field` matches every `id: string,` in every type table
+        # in the tree -- the first cut of this widening reported ~400 of them. Only the
+        # method-call form `name:method(` is an index, so the colon branch demands the call.
+        pattern = r"(?<![.:\w])([A-Za-z_]\w*)\s*(?:\.\s*[A-Za-z_]\w*|:\s*[A-Za-z_]\w*\s*\()"
+        for m in re.finditer(pattern, t):
             name = m.group(1)
             if name in seen or name in names or name in INDEXED_GLOBALS:
                 continue
+            if name in LUA_GLOBALS or name in LUA_KEYWORDS:
+                continue
+            seen.add(name)
+            # A type alias is erased before anything runs, so `type X = Types.X` with Types
+            # unrequired never throws -- it is an analyzer error, which means it is a Studio
+            # error and nothing else in this pipeline will ever say a word about it. Same
+            # missing require, same fix, different symptom, so say which one it is rather
+            # than promising a crash that will not come and being disbelieved.
+            line_start = t.rfind("\n", 0, m.start()) + 1
+            in_type = re.match(r"\s*(?:export\s+)?type\s", t[line_start : m.start()]) is not None
+            consequence = (
+                "the type resolves to nothing and only Studio's analyzer will say so"
+                if in_type
+                else "this is a nil index at runtime"
+            )
+            print(
+                f"  {f.relative_to(ROOT)}:{line_of(t, m.start())}  {name} is indexed but "
+                f"never defined or required -- {consequence}"
+            )
+            bad += 1
+    return bad
+
+
+def check_unknown_globals(files, code):
+    """A name read where nothing binds it, with real scope analysis behind the claim.
+
+    Every regex check above is file-scoped: `_defined_names` collects `local profile` from
+    *anywhere* in a file and calls `profile` defined *everywhere* in it. That is the safe
+    direction for a regex, and it is also a hole you can drive a service through. It hid a
+    live bug for as long as this file has existed:
+
+        function BodyService.Apply(player)
+            local profile = DataService.GetProfile(player)   -- binds it here ...
+
+        local function onCharacterAdded(player, character)
+            if DataService.WaitForProfile(player) == nil then end   -- ... and discards it here
+            local data = Lives.Active(profile.Data)          -- so this is a nil global
+
+    Every player spawned adult-sized, because that threw one line above the `Apply` call
+    that is the whole point of the function. Three regex checks looked straight at it and
+    saw a name the file binds.
+
+    `luau-analyze` does the scoping properly, so this check hands the question to it and
+    only filters the answer. CLAUDE.md warns that its output drowns in cascade noise
+    without a Roblox definitions file, and that is true of the *type* errors -- but the
+    `Unknown global` subset is different, and measurable: 3,600 of them across this tree
+    resolve to exactly 27 distinct names, 22 of which are `Enum`, `game`, `script`, `task`
+    and friends. Whitelisting those leaves pure signal. Every name it found on the first
+    run was a real defect:
+
+      * `BountyService.SetArrestedHandler` defined four lines above `local BountyService
+        = {}` -- a nil index thrown at *module load*, in a file `init.server.luau`
+        requires before it calls a single Init. Not a service that fails: a server that
+        never starts. `check_decl_order` missed it because it looks for a name *called*
+        too early and this is a name *defined* too early.
+      * `bondGain` compared in PeopleService's defining-moment branch, bound nowhere.
+      * `moneyPrevious` / `savingsBalance` behind the bank's deposit and withdraw
+        buttons, so every one of them was a silent no-op.
+
+    The whitelist is the two sets the regex checks already maintain, which is the point --
+    one list of what a Roblox global is, consulted by everything that needs to know.
+    """
+    if not LUAU_ANALYZE.exists():
+        print(f"  FAILED: {LUAU_ANALYZE} missing -- this check did not run.")
+        print("    Install luau-analyze from the luau-lang/luau releases page")
+        print(f"    ({'luau-windows.zip' if EXE else 'luau-macos.zip'}) to that path.")
+        return 1
+    known = LUA_GLOBALS | LUA_KEYWORDS | INDEXED_GLOBALS
+    bad = 0
+    for f in files:
+        # `--solver=old` because the new solver reports these differently and this check
+        # is calibrated against the old one's wording. Return code is ignored on purpose:
+        # it is non-zero for the type-error cascade this check deliberately does not read.
+        r = subprocess.run(
+            [str(LUAU_ANALYZE), "--solver=old", str(f)],
+            capture_output=True,
+            text=True,
+        )
+        seen: set[str] = set()
+        for line in (r.stdout + r.stderr).splitlines():
+            m = re.search(r"\((\d+),\d+\): TypeError: Unknown global '([^']+)'", line)
+            if m is None:
+                continue
+            name = m.group(2)
+            if name in known or name in seen:
+                continue
             seen.add(name)
             print(
-                f"  {f.relative_to(ROOT)}:{line_of(t, m.start())}  {name} is indexed and "
-                f"called but never required -- this is a nil index at runtime"
+                f"  {f.relative_to(ROOT)}:{m.group(1)}  {name} is read but nothing binds "
+                f"it in scope -- nil at runtime"
             )
             bad += 1
     return bad
@@ -600,6 +704,7 @@ CHECKS = [
     ("declaration order", check_decl_order),
     ("calls to undefined names", check_undefined_calls),
     ("modules used but never required", check_undefined_modules),
+    ("names read but never bound (scoped)", check_unknown_globals),
 ]
 
 

@@ -2105,9 +2105,16 @@ Config.School = {
 --
 -- C decides which subjects get perks and at what level; B consumes them.
 -- Map entry keyed by subject id; absent key means no perk for that subject.
-Config.SubjectPerks = {
-	[undefined] = nil,
-}
+-- Empty until C fills it in, and empty means `{}`. This was written as
+-- `{ [undefined] = nil }` to say "nothing here yet", which is not what it says to Lua:
+-- `undefined` is an unbound global, so the key is nil, and a nil key in a table
+-- constructor is a hard "table index is nil" thrown while Config's own module body is
+-- running. Every service in both places requires this file, so nothing in the game --
+-- not one service, in the lobby or the game place -- ever loaded. The player still got a
+-- character, because Roblox spawns that itself, which is why the symptom was "I spawn
+-- normal size and cannot play" rather than an error naming Config.
+-- `WorkService` reads this with a keyed lookup, so zero entries is inert, not special.
+Config.SubjectPerks = {}
 
 Config.School.Science = {
 	-- Benches running at once. Two, because one is a queue and three is a spectacle you

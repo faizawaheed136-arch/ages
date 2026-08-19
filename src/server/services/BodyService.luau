@@ -10,6 +10,12 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- `ensureR15` parents the rebuilt character here. Every other file in this tree binds the
+-- service this way; this one read a bare `Workspace` instead, which is not a Luau global --
+-- so the R6 rebuild path threw on the assignment, and an R6 player was left standing in a
+-- destroyed-then-not-replaced character. Only R6 avatars ever reached that line, which is
+-- why it survived: on an R15 account the function returns two lines earlier.
+local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -339,7 +345,13 @@ local function onCharacterAdded(player: Player, character: Model)
 	-- player spawns adult-sized and stays that way for the whole first life,
 	-- because nothing spawns them again to put it right -- which is exactly the
 	-- silent no-op the old comment here mistook for a safe one.
-	if DataService.WaitForProfile(player) == nil then
+	-- Bound, not discarded. This call used to be written as a bare `... == nil` test and the
+	-- profile it returned was thrown away, while the `Lives.Active(profile.Data)` forty lines
+	-- down read `profile` as a *global* -- nil -- and threw on the index. Every spawn died
+	-- there, one line above the `BodyService.Apply` that is the entire point of this function,
+	-- so every player stood up adult-sized no matter how correct the rest of the path was.
+	local profile = DataService.WaitForProfile(player)
+	if profile == nil then
 		warn(`[AGES] {player.Name} spawned before their profile loaded; body band not applied`)
 		return
 	end
