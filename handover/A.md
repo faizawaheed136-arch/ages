@@ -10,10 +10,30 @@ they were supposed to dominate. The comment above `CIRCUS_STOREYS` said they sto
 Nobody typed that to deceive; it was measured once, typed as a literal, and left while the
 generator moved underneath it. That is the defect this tree produces over and over, so the
 fix is not the new number, it is that **there is no number left to rot**: `high_rise_skyline(n)`
-and `circus_skyline(n)` compute what an eye on the ground sees, and two module-scope
-assertions fail the build if the Circle stops clearing both its rival and its own shoulders
-by `CIRCUS_CLEARANCE`. Negative-tested: `(13,16,13)` fires the first, `(14,15,14)` the
-second. `(14,16,14)` ships — shortest 231.5, exactly 18.0 over the mast; tallest 263.5.
+and `circus_skyline(n)` compute what an eye on the ground sees.
+
+**My first fix for that was `(14, 16, 14)`, and the owner rejected it on sight — correctly.**
+It satisfied every requirement written down and made the Circle worse. Raising the shoulders
+six storeys and the middle only two left a 32-stud step across a 68-stud arc, which from the
+ground is one slab with a bump on it rather than three towers. **The lesson is worth more
+than the fix: I treated "each tower is the tallest thing in the city" as the whole spec, when
+the thing that made the Circle a landmark was the step between the towers — a property nobody
+had written down and therefore nothing was protecting.** When a requirement arrives late,
+check what the existing shape was buying before spending it.
+
+So `CIRCUS_SHAPE` holds the original `(8, 14, 8)` and `CIRCUS_STOREYS` is that plus
+`CIRCUS_LIFT` applied to all three. Height is bought by translating the group, and a
+translation cannot change the step, so the 96-stud silhouette survives exactly:
+`(14, 20, 14)` — shoulders 231.5 (18.0 over the mast), middle 327.5. **Raise `CIRCUS_LIFT`,
+never `CIRCUS_SHAPE`.** Safe range 6..9; above that the middle passes 21:1 slenderness and
+reads as an aerial.
+
+The old "middle clears its shoulders by 18" assertion is **deleted, not raised** — it was
+green on the flat version, because 18 studs answers "is that one taller", a ranking question
+nobody was going to get wrong. Replaced by a step assertion and a minimality assertion on
+the lift. All three negative-tested with an unmodified control. Note the step assertion
+compares **storeys, not studs**: in studs it failed on the very config it was written to
+bless, because the two 96s accumulate over different `n` and land one bit apart.
 
 **`FightService` now draws the wind-up on the body. This has never run in Studio.**
 The opponent's `intent`, `timer` and `windTotal` were already replicated and were spent
