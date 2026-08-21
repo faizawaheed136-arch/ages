@@ -41,6 +41,7 @@ local MoneyService = require(script.Parent.MoneyService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
 
+local Colors = require(script.Parent.Parent.world.Colors)
 local Public = require(script.Parent.Parent.content.Public)
 local Tills = require(script.Parent.Parent.content.Tills)
 local Till = require(script.Parent.Parent.world.Till)
@@ -48,6 +49,7 @@ local Till = require(script.Parent.Parent.world.Till)
 type LifeData = Types.LifeData
 type TheftState = Types.TheftState
 type Visitor = NPCService.Visitor
+type GangCrewMember = Types.GangCrewMember
 
 local TheftService = {}
 
@@ -56,6 +58,7 @@ local THEFT = Config.Crime.Theft
 local TheftUpdatedRemote = Remotes.Get("TheftUpdated")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
+local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
 
 -- The clerk's whole cycle, and the camera's. Named because both are used in three places
 -- and a robbery that used a different period in the aiming code from the one it used in
@@ -95,6 +98,22 @@ type Session = {
 	-- Set while a clerk rig is being built, which yields. Without it a player who walks in,
 	-- out and back in inside two seconds gets two clerks behind one counter.
 	spawningClerk: boolean,
+
+	-- The lookout: somebody's own crew, sent to watch the door instead of taking their
+	-- chances alone. Per session, not per shop -- unlike Bank's alarm seat, there is
+	-- nothing here for two robbers to share, so a lookout is exactly as private as the
+	-- clerk above already is.
+	lookout: Visitor?,
+	spawningLookout: boolean,
+	-- Whose crew this is, so a swap or a departure can find them again.
+	lookoutCrewId: string?,
+	lookoutName: string?,
+	-- Rolled once, from the nerve they had when they were called -- see Config.Gangs.Jobs.
+	lookoutFailChance: number,
+	-- Whether this session has already spent its one roll. Set the instant it is used, at
+	-- the first spotted transition below, and not reset by being spotted again: nerve buys
+	-- one shot at softening getting caught, not a standing discount on every one after it.
+	lookoutRolled: boolean,
 }
 
 local drawers: { [string]: Drawer } = {}
@@ -183,6 +202,16 @@ local function stateFor(player: Player): TheftState?
 	local now = os.clock()
 	local drawer = drawerFor(session.place, now)
 	local _, cameraOn = cameraAt(session.place, now)
+
+	-- A lookout is not a shared seat here, so it costs nothing to keep offering the panel
+	-- even while one is already out -- calling again with a different id swaps who is
+	-- standing there, same as CallCrew's own note.
+	local crewCallable: { GangCrewMember } = {}
+	local crew = GangService.CrewFor(player)
+	if #crew > 0 then
+		crewCallable = crew
+	end
+
 	return {
 		place = session.name,
 		tillLeft = drawer.left,
@@ -192,6 +221,8 @@ local function stateFor(player: Player): TheftState?
 		clerkWatching = clerkOnTill(session.place, now),
 		cameraWatching = cameraOn,
 		spotted = session.spotted,
+		crewCallable = crewCallable,
+		crewOnLookout = if session.lookout ~= nil then session.lookoutName else nil,
 		notice = session.notice,
 	}
 end
@@ -204,10 +235,16 @@ local function push(player: Player)
 	else
 		-- Money to the whole unit, because the drawer drains continuously and a panel
 		-- redrawn on every cent would be a packet every tick of every robbery for a number
-		-- nobody can read at that precision.
+		-- nobody can read at that precision. Crew by id and nerve, not name, same reason as
+		-- the bank digest: two members can share a name and must never share a digest entry.
+		local crewBits = {}
+		for _, member in state.crewCallable do
+			table.insert(crewBits, `{member.id}:{math.floor(member.nerve)}`)
+		end
 		digest = `{state.place}/{math.floor(state.tillLeft)}/{math.floor(state.taken)}/`
 			.. `{tostring(state.holding)}/{tostring(state.clerkWatching)}/{tostring(state.cameraWatching)}/`
-			.. `{tostring(state.spotted)}/{tostring(state.notice)}`
+			.. `{tostring(state.spotted)}/{table.concat(crewBits, ",")}/{tostring(state.crewOnLookout)}/`
+			.. `{tostring(state.notice)}`
 	end
 
 	if pushed[player] == digest then
@@ -290,12 +327,122 @@ local function aimClerk(session: Session, watching: boolean)
 	clerk.face(from + (from - fitting.drawer))
 end
 
+-- Sends a body home. Called both when its owner walks out and when the crew member they
+-- sent is no longer theirs to send -- dismissed off the gang panel while out on the job --
+-- so the door is never watched by somebody who is not actually there anymore.
+local function despawnLookout(session: Session)
+	local lookout = session.lookout
+	if lookout ~= nil then
+		session.lookout = nil
+		if not lookout.gone() then
+			lookout.destroy()
+		end
+	end
+	session.lookoutCrewId = nil
+	session.lookoutName = nil
+	session.lookoutFailChance = 0
+	session.lookoutRolled = false
+end
+
+-- How reliably a nerve rating covers a robbery once, the first time it is spotted. Same
+-- shape and the same reason as the bank's alarmFailChanceFor: linear between the two config
+-- ends, so the number on the crew panel is a promise rather than a suggestion.
+local function tillCoverFailChanceFor(nerve: number): number
+	local jobs = Config.Gangs.Jobs
+	local share = math.clamp(nerve / Config.Gangs.Crew.NerveMax, 0, 1)
+	return jobs.TillCoverFailChanceAtZeroNerve
+		+ (jobs.TillCoverFailChanceAtMaxNerve - jobs.TillCoverFailChanceAtZeroNerve) * share
+end
+
+-- Sends one of the player's own crew to watch the door. Per session rather than per shop,
+-- same as the clerk -- there is no seat here for a second robber to contest.
+local function spawnLookout(player: Player, session: Session, crew: GangCrewMember)
+	if session.lookout ~= nil or session.spawningLookout then
+		return
+	end
+	local fitting = Till.Get(session.place)
+	if fitting == nil then
+		return
+	end
+	local spot = fitting.lookoutSpot
+	if spot == nil then
+		-- No room by the door. The robbery runs without one, same reason the clerk can be
+		-- missing: a shop that refused a lookout for reasons invisible from outside it would
+		-- be worse than the role quietly being unavailable there.
+		return
+	end
+
+	session.spawningLookout = true
+	task.spawn(function()
+		local member = GangService.CastMemberFor(crew)
+		local visitor = NPCService.Spawn(player, member, CFrame.new(spot, fitting.lookoutFacing))
+		session.spawningLookout = false
+		-- Re-checked, because Spawn yields on a web call: the player may have walked out,
+		-- ended the session or called a different crew member while it ran.
+		if visitor == nil then
+			return
+		end
+		if sessions[player] ~= session or session.lookout ~= nil then
+			visitor.destroy()
+			return
+		end
+		session.lookout = visitor
+		session.lookoutCrewId = crew.id
+		session.lookoutName = crew.name
+		session.lookoutFailChance = tillCoverFailChanceFor(crew.nerve)
+		session.lookoutRolled = false
+		local color = GangService.ColorOf(player)
+		if color ~= nil and not Colors.Apply(visitor.model, color) then
+			warn(`[AGES] could not band {crew.name} -- they will look like anybody else`)
+		end
+		push(player)
+	end)
+end
+
+-- Keeps the lookout on their spot and drops them the instant they stop being crew. There is
+-- nothing else to tick: the one thing they do is the roll in tickPlayer, at the moment a
+-- robbery is first spotted, and that is not a per-tick action.
+local function tickLookout(player: Player, session: Session)
+	local lookout = session.lookout
+	if lookout == nil then
+		return
+	end
+	local crewId = session.lookoutCrewId
+	if lookout.gone() or crewId == nil then
+		despawnLookout(session)
+		return
+	end
+
+	-- Dismissed off the gang panel while out on this job. Checked every tick rather than
+	-- only on call, same reason as the bank's crew helper: the gang panel has nothing to do
+	-- with this till and must not have to know it exists.
+	local stillCrew = false
+	for _, member in GangService.CrewFor(player) do
+		if member.id == crewId then
+			stillCrew = true
+			break
+		end
+	end
+	if not stillCrew then
+		local name = session.lookoutName
+		despawnLookout(session)
+		noticeFor(session, `{name} isn't running with you anymore, and heads off.`)
+		return
+	end
+
+	local fitting = Till.Get(session.place)
+	if fitting ~= nil and fitting.lookoutSpot ~= nil then
+		lookout.moveTo(fitting.lookoutSpot)
+	end
+end
+
 local function endSession(player: Player)
 	local session = sessions[player]
 	if session == nil then
 		return
 	end
 	despawnClerk(session)
+	despawnLookout(session)
 	sessions[player] = nil
 	push(player)
 end
@@ -337,6 +484,7 @@ local function tickPlayer(player: Player, elapsed: number)
 
 	local clerkOn = clerkOnTill(session.place, now)
 	aimClerk(session, clerkOn)
+	tickLookout(player, session)
 
 	local drawer = drawerFor(session.place, now)
 
@@ -353,14 +501,32 @@ local function tickPlayer(player: Player, elapsed: number)
 		session.watchedFor += elapsed
 		if session.watchedFor >= THEFT.GraceSeconds and not session.spotted then
 			session.spotted = true
-			-- Heat and a sighting together, because they are one event: a shop that
-			-- raised the number without reporting where would send the whole response
-			-- to wherever the player happened to be seen next, which for a player
-			-- standing still is nowhere. Seen rather than Add is also what makes a
-			-- second conviction cost more than the first, and this file does not have
-			-- to know that.
-			BountyService.Seen(player, THEFT.HeatOnSpotted, `Caught at the {session.name}`, at)
-			noticeFor(session, if clerkOn then "The clerk looked up." else "The camera is on you.")
+			local base = if clerkOn then "The clerk looked up." else "The camera is on you."
+
+			-- The lookout's whole job: one roll, spent here and never again this session
+			-- (see `lookoutRolled`), against the nerve they had when they were called --
+			-- see Config.Gangs.Jobs. It only ever touches this one heat addition. Being
+			-- spotted still happens and the notice still says so; the per-second heat
+			-- below for staying spotted is untouched, because staying is still your own
+			-- risk to run.
+			local covered = false
+			if session.lookout ~= nil and not session.lookoutRolled then
+				session.lookoutRolled = true
+				covered = math.random() >= session.lookoutFailChance
+			end
+
+			if covered then
+				noticeFor(session, `{base} {session.lookoutName} covers you -- no heat, this once.`)
+			else
+				-- Heat and a sighting together, because they are one event: a shop that
+				-- raised the number without reporting where would send the whole response
+				-- to wherever the player happened to be seen next, which for a player
+				-- standing still is nowhere. Seen rather than Add is also what makes a
+				-- second conviction cost more than the first, and this file does not have
+				-- to know that.
+				BountyService.Seen(player, THEFT.HeatOnSpotted, `Caught at the {session.name}`, at)
+				noticeFor(session, base)
+			end
 		end
 	else
 		session.watchedFor = 0
@@ -436,6 +602,12 @@ function TheftService.Open(player: Player, place: string): (boolean, string?)
 		noticeLeft = 0,
 		clerk = nil,
 		spawningClerk = false,
+		lookout = nil,
+		spawningLookout = false,
+		lookoutCrewId = nil,
+		lookoutName = nil,
+		lookoutFailChance = 0,
+		lookoutRolled = false,
 	}
 	sessions[player] = session
 	spawnClerk(player, session)
@@ -468,6 +640,45 @@ function TheftService.SetHolding(player: Player, holding: boolean): boolean
 	end
 	push(player)
 	return true
+end
+
+-- Sends one of the player's own crew to watch the door. The till's answer to Bank's
+-- CallCrew, and the shape is different for the reason GangService's own note gives: there
+-- is no seat here to claim, so what this actually does is set this session's own lookout
+-- rather than a room's. Calling again with a different id swaps who is standing there;
+-- calling with the one already out is a no-op success rather than a second body.
+function TheftService.CallCrew(player: Player, place: string, crewId: string): (boolean, string?)
+	local session = sessions[player]
+	if session == nil or session.place ~= place then
+		return false, "You are not at this till."
+	end
+	if session.lookout ~= nil and session.lookoutCrewId == crewId then
+		return true, nil
+	end
+
+	local chosen: GangCrewMember? = nil
+	for _, member in GangService.CrewFor(player) do
+		if member.id == crewId then
+			chosen = member
+			break
+		end
+	end
+	if chosen == nil then
+		return false, "That's not your crew."
+	end
+
+	if session.lookout ~= nil then
+		despawnLookout(session)
+	end
+	spawnLookout(player, session, chosen)
+	return true, nil
+end
+
+-- Which till a player is currently at, for callers outside this file that need to name
+-- it -- the debug command, mainly, same reason BankService.PlaceOf exists.
+function TheftService.PlaceOf(player: Player): string?
+	local session = sessions[player]
+	return if session ~= nil then session.place else nil
 end
 
 -- Stands up every shop in the content list, once, and says which ones could not be built.
@@ -551,8 +762,17 @@ function TheftService.Describe(player: Player): string
 
 	local drawer = drawerFor(session.place, now)
 	local _, camera = cameraAt(session.place, now)
+	local lookout = "none"
+	if session.lookout ~= nil then
+		lookout = string.format(
+			"%s (fail %.0f%%, %s)",
+			session.lookoutName or "?",
+			session.lookoutFailChance * 100,
+			if session.lookoutRolled then "spent" else "unspent"
+		)
+	end
 	return string.format(
-		"at %s · %.0f left of %.0f · taken %.0f · %s · clerk %s · camera %s · watched %.2fs of %.2f · %s",
+		"at %s · %.0f left of %.0f · taken %.0f · %s · clerk %s · camera %s · watched %.2fs of %.2f · %s · lookout %s",
 		session.place,
 		drawer.left,
 		drawer.full,
@@ -562,7 +782,8 @@ function TheftService.Describe(player: Player): string
 		if camera then "ON" else "away",
 		session.watchedFor,
 		THEFT.GraceSeconds,
-		if session.spotted then "SPOTTED" else "unseen"
+		if session.spotted then "SPOTTED" else "unseen",
+		lookout
 	)
 end
 
@@ -585,6 +806,13 @@ function TheftService:Init()
 			return
 		end
 		TheftService.SetHolding(player, holding)
+	end)
+
+	RequestTillCallCrewRemote.OnServerEvent:Connect(function(player: Player, place: any, crewId: any)
+		if typeof(place) ~= "string" or typeof(crewId) ~= "string" then
+			return
+		end
+		TheftService.CallCrew(player, place, crewId)
 	end)
 
 	Players.PlayerRemoving:Connect(function(player: Player)

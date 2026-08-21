@@ -1486,6 +1486,9 @@ end
 --   /theft fill               every drawer back to full, without waiting out the refill.
 --   /theft off                no robbery at any counter, for telling a theft bug apart
 --                             from a bounty one.
+--   /theft crew <id>          send that crew member (see /gang crew) to watch the door
+--                             instead of taking your chances alone. Only works while
+--                             already at a till -- `/theft go <place>` first.
 Commands.theft = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -1517,7 +1520,23 @@ Commands.theft = function(player: Player, args: { string }): string
 		return `sent to {place} — {TheftService.Describe(player)}`
 	end
 
-	return `usage: /theft [go <place>|fill|on|off] — {TheftService.Describe(player)}`
+	if arg == "crew" then
+		local crewId = args[2]
+		if crewId == nil then
+			return `usage: /theft crew <id> — {TheftService.Describe(player)}`
+		end
+		local place = TheftService.PlaceOf(player)
+		if place == nil then
+			return `not at a till — {TheftService.Describe(player)}`
+		end
+		local ok, why = TheftService.CallCrew(player, place, crewId)
+		if not ok then
+			return `{why or "could not call them"} — {TheftService.Describe(player)}`
+		end
+		return `called — {TheftService.Describe(player)}`
+	end
+
+	return `usage: /theft [go <place>|fill|on|off|crew <id>] — {TheftService.Describe(player)}`
 end
 
 -- The vault, separately again, because the bank fails in ways a till cannot.
@@ -2896,7 +2915,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/fight [<style>|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
-	.. "/theft [go <place>|fill|on|off], "
+	.. "/theft [go <place>|fill|on|off|crew <id>], "
 	.. "/bank [go [<place>]|reset|on|off|crew <id>], "
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|crew [add|drop <id>]|reset|on|off], "
 	.. "/skill [<id> <n|max>], "

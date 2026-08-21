@@ -1139,6 +1139,15 @@ export type TheftState = {
 	-- between them is the undo, and a panel that could not show both would be showing
 	-- the player a punishment with no visible chance to have avoided it.
 	spotted: boolean,
+
+	-- Crew you could send to watch the door instead of taking your chances alone. Same
+	-- shape as BankState's pair below, and the same reason: length is the eligibility
+	-- check, the panel does not need a second flag.
+	crewCallable: { GangCrewMember },
+	-- Whose crew is watching the door right now, if anybody's -- by name, a readout and
+	-- not a control. Nil once nobody is covering, same as BankState.crewOnAlarm.
+	crewOnLookout: string?,
+
 	notice: string?,
 }
 

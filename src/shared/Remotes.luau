@@ -181,6 +181,10 @@ export type RemoteName =
 	-- the click and the verb are separate acts, which is the whole reason a till is not a
 	-- Station: clicking a station *is* the answer, and clicking a till is walking up to it.
 	| "RequestTillOpen"
+	-- "Send this one to watch the door." A crew id, checked against the caller's own
+	-- roster server-side, same as RequestBankCallCrew -- the till has no seat to claim, so
+	-- what this actually toggles is TheftService's own lookout state for that shop.
+	| "RequestTillCallCrew"
 	-- The bank room you are standing in, pushed as a whole snapshot: what is left in the
 	-- vault, what the alarm is doing, where the guard is, and which of the room's two
 	-- controls is within arm's reach right now.
@@ -526,6 +530,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestArtSign",
 	"RequestTillHold",
 	"RequestTillOpen",
+	"RequestTillCallCrew",
 	"BankUpdated",
 	"RequestBankOpen",
 	"RequestBankHold",

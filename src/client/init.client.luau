@@ -140,6 +140,7 @@ local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
+local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
 local RequestBankOpenRemote = Remotes.Get("RequestBankOpen")
 local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
 local RequestBankCallCrewRemote = Remotes.Get("RequestBankCallCrew")
@@ -166,6 +167,11 @@ local currentPerson: PersonState? = nil
 -- double-checks it against that same session, the same belt-and-braces `place` argument
 -- `RequestBankOpenRemote` takes.
 local currentBankPlace: string? = nil
+
+-- The same one thing, held for the till. Same reason: calling a crew member to the door
+-- names which shop, and the click that opens this panel is the only moment this file has
+-- that id at all.
+local currentTillPlace: string? = nil
 
 -- The three figures on the menu's player card, held because they arrive on three
 -- separate pushes and the card draws all of them at once. Nothing derives anything from
@@ -289,6 +295,7 @@ end)
 -- control on it that has to be held. The click is walking up to the till and nothing more,
 -- which is why the payload is the place id and why no money can possibly move on it.
 prompts:On("Till", function(place: string)
+	currentTillPlace = place
 	RequestTillOpenRemote:FireServer(place)
 end)
 
@@ -297,6 +304,15 @@ end)
 -- when the player has already looked away from the drawer to watch the clerk.
 till:OnHold(function(holding: boolean)
 	RequestTillHoldRemote:FireServer(holding)
+end)
+
+-- Sending a crew member to watch the door. Same device as the bank's own wiring below:
+-- `currentTillPlace` is the counter last walked up to, and the server checks it against
+-- the session it already has, same belt-and-braces as every other till remote.
+till:OnCallCrew(function(crewId: string)
+	if currentTillPlace ~= nil then
+		RequestTillCallCrewRemote:FireServer(currentTillPlace, crewId)
+	end
 end)
 
 -- Clicking the dots on a vault door. Its own kind rather than a Till with a different id,

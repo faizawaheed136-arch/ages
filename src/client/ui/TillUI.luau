@@ -71,6 +71,8 @@ export type TillUIHandle = typeof(setmetatable(
 		takenLabel: TextLabel,
 		clerkLamp: TextLabel,
 		cameraLamp: TextLabel,
+		crewLabel: TextLabel,
+		crewContainer: Frame,
 		button: TextButton,
 		noticeLabel: TextLabel,
 		-- What the client last told the server. Held so that a release is only ever sent
@@ -79,6 +81,7 @@ export type TillUIHandle = typeof(setmetatable(
 		-- built to ignore.
 		holding: boolean,
 		onHold: ((holding: boolean) -> ())?,
+		onCallCrew: ((crewId: string) -> ())?,
 	},
 	TillUI
 ))
@@ -196,6 +199,36 @@ function TillUI.new(): TillUIHandle
 	local clerkLamp = makeLamp(lamps, 0, "CLERK")
 	local cameraLamp = makeLamp(lamps, 1, "CAMERA")
 
+	-- Who is watching the door for you, if anybody. Same device as BankUI's crew section
+	-- and the same reason: a gang member's crew is personal, so this is a short list, not a
+	-- roster, and it only appears once there is somebody to send.
+	local crewLabel = Instance.new("TextLabel")
+	crewLabel.Name = "Crew"
+	crewLabel.Size = UDim2.new(1, 0, 0, 16)
+	crewLabel.BackgroundTransparency = 1
+	crewLabel.Font = Enum.Font.Gotham
+	crewLabel.TextSize = 12
+	crewLabel.TextXAlignment = Enum.TextXAlignment.Left
+	crewLabel.TextColor3 = CAPTION_COLOR
+	crewLabel.Text = ""
+	crewLabel.Visible = false
+	crewLabel.LayoutOrder = 4
+	crewLabel.Parent = panel
+
+	local crewContainer = Instance.new("Frame")
+	crewContainer.Name = "CrewButtons"
+	crewContainer.Size = UDim2.new(1, 0, 0, 0)
+	crewContainer.AutomaticSize = Enum.AutomaticSize.Y
+	crewContainer.BackgroundTransparency = 1
+	crewContainer.Visible = false
+	crewContainer.LayoutOrder = 5
+	crewContainer.Parent = panel
+
+	local crewLayout = Instance.new("UIListLayout")
+	crewLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	crewLayout.Padding = UDim.new(0, 4)
+	crewLayout.Parent = crewContainer
+
 	local button = Instance.new("TextButton")
 	button.Name = "Take"
 	button.Size = UDim2.new(1, 0, 0, 40)
@@ -206,7 +239,7 @@ function TillUI.new(): TillUIHandle
 	button.TextSize = 15
 	button.TextColor3 = BUTTON_TEXT
 	button.Text = "HOLD TO TAKE"
-	button.LayoutOrder = 4
+	button.LayoutOrder = 6
 	button.Parent = panel
 
 	local buttonCorner = Instance.new("UICorner")
@@ -225,7 +258,7 @@ function TillUI.new(): TillUIHandle
 	noticeLabel.TextColor3 = SPOTTED_COLOR
 	noticeLabel.Text = ""
 	noticeLabel.Visible = false
-	noticeLabel.LayoutOrder = 5
+	noticeLabel.LayoutOrder = 7
 	noticeLabel.Parent = panel
 
 	local self = setmetatable({
@@ -237,10 +270,13 @@ function TillUI.new(): TillUIHandle
 		takenLabel = takenLabel,
 		clerkLamp = clerkLamp,
 		cameraLamp = cameraLamp,
+		crewLabel = crewLabel,
+		crewContainer = crewContainer,
 		button = button,
 		noticeLabel = noticeLabel,
 		holding = false,
 		onHold = nil,
+		onCallCrew = nil,
 	}, TillUI) :: TillUIHandle
 
 	local function setHolding(holding: boolean)
@@ -291,6 +327,49 @@ function TillUI.OnHold(self: TillUIHandle, handler: (holding: boolean) -> ())
 	self.onHold = handler
 end
 
+function TillUI.OnCallCrew(self: TillUIHandle, handler: (crewId: string) -> ())
+	self.onCallCrew = handler
+end
+
+-- One button per crew member, rebuilt from scratch on every snapshot. Same device as
+-- BankUI's own version and for the same reason: the list is at most three long, so
+-- throwing the row away and remaking it is simpler than diffing it.
+local function rebuildCrewButtons(self: TillUIHandle, state: TheftState)
+	for _, child in self.crewContainer:GetChildren() do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	for _, member in state.crewCallable do
+		-- `crewOnLookout` is a name, not an id -- a readout for the panel, not a control.
+		local isOnLookout = state.crewOnLookout == member.name
+
+		local crewButton = Instance.new("TextButton")
+		crewButton.Name = member.id
+		crewButton.Size = UDim2.new(1, 0, 0, 28)
+		crewButton.BackgroundColor3 = if isOnLookout then BUTTON_HELD else BUTTON_IDLE
+		crewButton.BorderSizePixel = 0
+		crewButton.AutoButtonColor = false
+		crewButton.Font = Enum.Font.GothamMedium
+		crewButton.TextSize = 13
+		crewButton.TextColor3 = BUTTON_TEXT
+		crewButton.Text = `{member.name} -- nerve {math.floor(member.nerve)}{if isOnLookout then " -- WATCHING THE DOOR" else ""}`
+		crewButton.Parent = self.crewContainer
+
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0, 6)
+		buttonCorner.Parent = crewButton
+
+		crewButton.MouseButton1Click:Connect(function()
+			local handler = self.onCallCrew
+			if handler ~= nil then
+				handler(member.id)
+			end
+		end)
+	end
+end
+
 -- The whole panel from one snapshot. Nil takes it down and, importantly, lets go: a panel
 -- that vanished while the server still believed the hands were in the drawer would be a
 -- robbery continuing off screen.
@@ -302,6 +381,8 @@ function TillUI.Set(self: TillUIHandle, state: TheftState?)
 			self.button.BackgroundColor3 = BUTTON_IDLE
 			self.button.Text = "HOLD TO TAKE"
 		end
+		self.crewLabel.Visible = false
+		self.crewContainer.Visible = false
 		return
 	end
 
@@ -318,6 +399,18 @@ function TillUI.Set(self: TillUIHandle, state: TheftState?)
 
 	setLamp(self.clerkLamp, state.clerkWatching)
 	setLamp(self.cameraLamp, state.cameraWatching)
+
+	-- Send-your-crew, the till's version of Part 3: a short list of names, visible only to
+	-- a player who has somebody to send. Nobody with an empty crew ever sees this section.
+	local hasCrew = #state.crewCallable > 0
+	self.crewContainer.Visible = hasCrew
+	self.crewLabel.Visible = hasCrew
+	if hasCrew then
+		self.crewLabel.Text = if state.crewOnLookout ~= nil
+			then "YOUR CREW IS WATCHING THE DOOR"
+			else "SEND YOUR CREW TO WATCH THE DOOR"
+		rebuildCrewButtons(self, state)
+	end
 
 	-- The server's word on whether the hands are actually in it, which can differ from the
 	-- button: walking out of reach, an empty drawer or a death all take them out without

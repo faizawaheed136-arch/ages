@@ -80,6 +80,12 @@ export type Fitting = {
 	-- version of this.
 	clerkSpot: Vector3?,
 	clerkFacing: Vector3,
+	-- Where a gang's lookout stands, watching the door rather than the drawer. Nil for the
+	-- same reason `clerkSpot` can be: some shops have nowhere standable near the entrance
+	-- either, and a robbery that refused itself over that would be worse than one crew role
+	-- quietly unavailable there.
+	lookoutSpot: Vector3?,
+	lookoutFacing: Vector3,
 	drawerPart: BasePart,
 	housing: BasePart,
 	-- Where the housing sits and which way "straight ahead" is for it. Held rather than
@@ -166,11 +172,23 @@ function Till.Build(place: string, at: CFrame, label: string): Fitting?
 	local clerkWanted = base - flat * 3.5 + Vector3.new(flat.Z, 0, -flat.X) * 2.5
 	local clerkSpot = Ground.SpotAt(clerkWanted, 2, 5, ignore, drawerAt)
 
+	-- Near the place point itself -- roughly where a customer walking in first stands --
+	-- and off the opposite side from the clerk, so the two never fight over the same patch
+	-- of floor. Still asked to be reachable from the drawer, same guard as the clerk: a
+	-- lookout who could not actually be walked to from the counter would be a body in a
+	-- room the robbery cannot see.
+	local lookoutWanted = base + Vector3.new(-flat.Z, 0, flat.X) * 3
+	local lookoutSpot = Ground.SpotAt(lookoutWanted, 2, 5, ignore, drawerAt)
+
 	local fitting: Fitting = {
 		place = place,
 		drawer = drawerAt,
 		clerkSpot = clerkSpot,
 		clerkFacing = drawerAt,
+		-- Facing back out the way a customer came in, since watching the door is the whole
+		-- point of standing here.
+		lookoutSpot = lookoutSpot,
+		lookoutFacing = base - flat * 20,
 		drawerPart = drawerPart,
 		housing = housing,
 		housingBase = housing.CFrame,

@@ -3941,6 +3941,20 @@ Config.Gangs = {
 		-- that never misses.
 		-- Safe range: 0.02-0.15.
 		AlarmFailChanceAtMaxNerve = 0.05,
+
+		-- A till has no seat to hand off -- the clerk and the camera are the whole
+		-- activity and stay the player's to read, on purpose (see TheftService's header).
+		-- What a lookout can do instead is soften getting caught, not prevent it: the
+		-- *first* time a robbery is spotted this session, one roll against their nerve
+		-- decides whether that one HeatOnSpotted hit lands or gets waived. Being spotted
+		-- still happens, the notice still says so, and the ongoing per-second heat while
+		-- you keep holding through it is untouched -- staying spotted is still on you.
+		-- Same fail-chance shape as the alarm, same reason: a fresh recruit misses this
+		-- more often than not.
+		-- Safe range: 0.5-0.9.
+		TillCoverFailChanceAtZeroNerve = 0.75,
+		-- Safe range: 0.02-0.15.
+		TillCoverFailChanceAtMaxNerve = 0.05,
 	},
 
 	-- The head covering.

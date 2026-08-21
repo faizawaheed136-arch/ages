@@ -1,6 +1,65 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-21 (latest) — a wrong prediction caught, and a test plan for Gang Parts 1-3
+## 2026-08-21 (latest) — the till gets a lookout, v1
+
+Built on explicit go-ahead, after the previous entry corrected the claim that Theft's
+crew role would be "the same shape" as Bank's alarm helper. It isn't, and the design here
+is the different shape that fell out of that correction.
+
+**The problem the till actually has.** Bank's crew helper covers a second *location* — the
+alarm panel, forty-eight studs from the vault — because the room has a seat a second body
+can physically occupy. A till has no such seat: it has two independent *attentions*, the
+clerk and the camera, and `TheftService.luau`'s own header is explicit that reading them
+*is* the activity. A helper who could read either for the player would be an NPC playing
+the mini-game.
+
+**What a lookout does instead: covers the consequence, not the detection.** The first
+time a robbery is spotted in a session, one roll against the lookout's nerve (see
+`Config.Gangs.Jobs.TillCoverFailChance{At Zero,At Max}Nerve`, same shape and same
+reasoning as the alarm's fail chance) decides whether that one `HeatOnSpotted` addition
+lands or is waived. Rolled once per session, not re-rolled on every subsequent spotting.
+Being spotted still happens and the notice still says so; the ongoing per-second heat for
+continuing to hold while spotted is untouched — staying spotted through it is still the
+player's own risk, same as it always was.
+
+**Architecturally self-contained.** Both of Theft's heat-generating `BountyService.Seen`
+calls already lived inside `TheftService.luau`'s own `tickPlayer`, so the whole feature —
+roll included — lives in that one file plus a small geometry addition to `Till.luau`.
+Nothing in `WitnessService` or `BountyService` had to change.
+
+**Per-session, not per-shop, unlike Bank's crew helper.** Till's clerk is already spawned
+per player session (two thieves at one counter each get their own clerk), so the lookout
+follows the same shape rather than Bank's per-room, single-seat `crewHelper` — there was
+never a seat to contend for here, so no ownership/claim logic was needed the way Bank's
+`crewHelperOwner` check is.
+
+**Files touched**, mirroring the Bank Part 3 v1 pattern file-for-file:
+- `Config.luau` — `TillCoverFailChanceAtZeroNerve`/`AtMaxNerve`.
+- `Types.luau` — `TheftState.crewCallable`/`crewOnLookout`.
+- `Remotes.luau` — `RequestTillCallCrew`.
+- `world/Till.luau` — `Fitting.lookoutSpot`/`lookoutFacing`, found via `Ground.SpotAt`
+  near the place point, lateral-opposite the clerk, required reachable from the drawer.
+- `services/TheftService.luau` — `Session` gains `lookout`/`lookoutCrewId`/`lookoutName`/
+  `lookoutFailChance`/`lookoutRolled`; `spawnLookout`/`tickLookout`/`despawnLookout`/
+  `tillCoverFailChanceFor` mirror Bank's equivalents; `TheftService.CallCrew`/`PlaceOf`
+  added; the roll itself sits inside the existing spotted-transition branch in
+  `tickPlayer`; `stateFor`/`push`/`Describe` extended.
+- `services/DebugService.luau` — `/theft crew <id>`, mirroring `/bank crew <id>`.
+- `client/ui/TillUI.luau` — crew label/button section, mirroring `BankUI.luau`'s.
+- `client/init.client.luau` — `RequestTillCallCrewRemote`, `currentTillPlace`,
+  `till:OnCallCrew(...)`.
+
+`tools/check.py`: all clean (164 files, both places build, server boot check passes for
+lobby, game-server and game-client). `luau-compile` clean on every file.
+
+**Deferred, same as Bank Part 3 v1 was:** no Studio session has opened this. Nothing here
+should be considered proven until a lookout has actually been called, spawned, walked to
+its spot, and watched to soften (or fail to soften) a real spotting. Worth folding into
+the same Gang Parts 1-3 test plan below rather than writing a sixth one — add a step:
+`/theft go <place>`, then `/theft crew <id>` once crew exists, then get spotted twice and
+confirm the notice differs the first time (a roll happens) from the second (it doesn't).
+
+## 2026-08-21 — a wrong prediction caught, and a test plan for Gang Parts 1-3
 
 Two small things, prompted by "next" with nothing else to build queued and three
 untested Gang parts sitting on `main`.
