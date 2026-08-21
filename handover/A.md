@@ -1,6 +1,50 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-20 (latest) — calling a job, v1: sending crew to the alarm
+## 2026-08-21 (latest) — a wrong prediction caught, and a test plan for Gang Parts 1-3
+
+Two small things, prompted by "next" with nothing else to build queued and three
+untested Gang parts sitting on `main`.
+
+**Corrected a claim in `GangService.luau`'s header that didn't hold up.** The Part 3
+comment said Theft was "the fast-follow, same shape" for a crew-helper role. Re-reading
+`TheftService.luau`'s own header to check that before acting on it: it isn't the same
+shape. The till has no second *seat* the way the bank has the alarm — it has two
+independent *attentions*, the clerk and the camera, and the file says outright that
+reading them is the whole activity ("this cannot be played by counting. It has to be
+watched."). A crew helper who could stand in for either one would be an NPC playing the
+mini-game, which is exactly what the bank's helper was careful never to be — it only
+ever covers a second location, never a second attention. Rewrote the comment to say so.
+If Theft gets a crew role it should be a lookout watching the street, not a stand-in at
+the counter, and that's a different mechanic, not a reuse — it gets its own check before
+it gets built, same as Part 3 did.
+
+**Gang Parts 1-3 have never been opened in Studio.** Every handover entry for this
+system says so and none of them has fixed it, so here is a test plan rather than a
+fourth entry restating the gap:
+
+1. `/gang join <id>` for one of the four ids in `content/Gangs.luau` (`/gang go <id>`
+   walks there first if the panel is easier to reach). Confirm the bandana appears
+   immediately and the HUD gains the gang button.
+2. `/gang credit 500` a few times, then walk to the boss and confirm the promotion offer
+   appears on the panel (not automatically) and taking it visibly changes the rank label.
+   Confirm a `name`-rank+ character can recruit crew off the same panel and the roster
+   shows up in `MenuUI`'s gangs pane with a nerve number.
+3. `/bank crew <id>` (or the in-panel button once `caller`/`name` and crew exist):
+   confirm a second body spawns at the bank door, walks to the alarm, and the panel's new
+   crew section shows them and updates to "ON THE ALARM" once they arrive. Let the alarm
+   ring through a full cycle and confirm exactly one outcome per ring — either the crew
+   member silences it (a notice fires, the alarm goes quiet) or they don't (a different
+   notice, the alarm keeps ringing) — never a re-roll mid-ring.
+4. Walk out of the bank while the crew helper is still assigned; confirm the NPC despawns
+   cleanly rather than being left standing at a room nobody is in.
+5. Leave the bank while the alarm is ringing and a partner (real or crew) is still
+   holding something — confirm the bail penalty (`GangService.OnBailed`, -180 standing)
+   actually lands; this predates this session but has also never been Studio-checked.
+
+`python3 tools/check.py`: clean, unchanged by this entry — the only code edit is the one
+comment.
+
+## 2026-08-20 — calling a job, v1: sending crew to the alarm
 
 Gang Part 3 from `docs/gangs_spec.md`, first slice. Checked before building it, per
 the ask — read `TheftService`/`BankService`/`GangService`/`WorkService`/`NPCService`

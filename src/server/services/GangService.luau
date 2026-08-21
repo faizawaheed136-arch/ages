@@ -44,8 +44,18 @@
 -- nerve, because that room already was a shared, per-place thing rather than a per-player
 -- one, which is what let a second body stand in it without a new state machine. A role is
 -- still not a field on `GangCrewMember`: it is a fact about one robbery, held on
--- BankService's own `Room`, not a fact about the person. Theft's till has no room to send
--- a body into yet -- that is the fast-follow, same shape, once this one has been played.
+-- BankService's own `Room`, not a fact about the person.
+--
+-- **Checked, and Theft is not the same shape, on purpose.** The obvious next move is to
+-- give Theft a crew helper too, and on inspection the till has nothing to hand one: it has
+-- no second seat, only two independent attentions -- the clerk and the camera -- and
+-- TheftService's own header is explicit that reading them *is* the activity ("this cannot
+-- be played by counting. It has to be watched."). A helper who could stand in for either
+-- would be a body that plays the mini-game for you, which is the thing Bank's crew helper
+-- was careful never to be -- it only ever covers a second *location*, not a second
+-- *attention*. If Theft gets a crew role, it has to be a different one -- a lookout who
+-- watches the street rather than the counter -- and that is a new mechanic, not a reuse,
+-- so it gets its own check before it gets built.
 --
 -- **Deferred on purpose:** territory, the district map, and the rest of calling a job --
 -- a gang-wide crew roster real players can join, a caller assigning roles to people who
