@@ -578,6 +578,26 @@ Commands.places = function(_player: Player, _args: { string }): string
 	return `{#places} places: {table.concat(lines, ", ")}`
 end
 
+-- Every zone WorldEventService is currently willing to roll an ambient event
+-- near. Exists because the zone set used to be silently empty forever -- nothing
+-- in the built world was ever hand-tagged `AgesZone`, so the whole NPCApproach
+-- pipeline behind it never had a reason to run -- and that failure had no
+-- symptom a player would ever report; the world just stayed quiet. `/zones`
+-- reading zero back is now the one-line proof that the place points fed it
+-- correctly, without playing a whole life to find out by accident.
+Commands.zones = function(_player: Player, _args: { string }): string
+	local tagged = CollectionService:GetTagged(Config.World.ZoneTag)
+	if #tagged == 0 then
+		return `nothing tagged "{Config.World.ZoneTag}" is in the world -- ambient NPC approaches cannot fire`
+	end
+	local lines: { string } = {}
+	for _, instance in tagged do
+		local zoneId = instance:GetAttribute(Config.World.ZoneAttribute)
+		table.insert(lines, `{instance.Name}={if typeof(zoneId) == "string" then zoneId else "?"}`)
+	end
+	return `{#tagged} zones: {table.concat(lines, ", ")}`
+end
+
 -- Stands the player at a named place. Walking there is the game; this is for
 -- getting back to the far end of the street after a /die, and for checking that
 -- a point is somewhere a body actually fits before a job is ever clocked in at it.
@@ -2813,7 +2833,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/event <id>, /anchor <id>, /events, /reevents, /deliver <id>, /deliveries, /ambient <on|off>, "
 	.. "/enact [id|on|off], /props [id|on|off|clear], /scene [on|off], /money [n|+n|-n], "
 	.. "/pocket [send|pay|owe <n>], "
-	.. "/places, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
+	.. "/places, /zones, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "

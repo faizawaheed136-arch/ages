@@ -746,26 +746,66 @@ local function stateFor(player: Player): PersonState?
 	end
 
 	-- Pick a contextual line if one is available for the current situation.
+	-- Tie-based lines come first: what somebody says to you when you are their
+	-- closest friend should not be the same as what they say when you are a stranger,
+	-- and the tie key lets content authors write those differences without adding a
+	-- second contextual system. The "close" key is a shorthand for any positive rung
+	-- tie -- friend, closest, mentor, sibling, rival, sibling -- so a single set of
+	-- friendly lines works for every warm relationship without repeating them.
 	local contextLine: string? = nil
 	if person.contextualLines ~= nil and chat.replyText == nil then
 		local data = Lives.Active(profile.Data)
 		local age = ageYearsOf(data)
-		local keys: { string } = {}
-		if age < 16 then
-			table.insert(keys, "unemployed")
+		local tieId = data.ties[person.id]
+
+		-- Tie keys first so a friend gets their friend line rather than a generic one.
+		local tieKeys: { string } = {}
+		if tieId ~= nil then
+			table.insert(tieKeys, tieId)
 		end
-		if data.jobId ~= nil then
-			table.insert(keys, "onShift")
+		if tieId ~= nil and Ties.IsRung(tieId) and Ties.RankOf(tieId) > 0 then
+			table.insert(tieKeys, "close")
 		end
-		table.insert(keys, "morning")
-		if data.houses ~= nil and next(data.houses) ~= nil then
-			table.insert(keys, "atHome")
-		end
-		for _, key in keys do
+		for _, key in tieKeys do
 			local lines = person.contextualLines[key]
 			if lines ~= nil and #lines > 0 then
 				contextLine = lines[math.random(1, #lines)]
 				break
+			end
+		end
+
+		-- A rare callback to the strongest thing this person has ever said to the
+		-- player -- the defining-moment buffer `take()` already writes and which,
+		-- until now, only `/people describe` could read. Tried after the tie-specific
+		-- lines (a freshly-earned tie always gets its own line first) and before the
+		-- everyday situational ones below, gated by a roll so it reads as something
+		-- they occasionally bring up rather than either burying what just happened or
+		-- never surfacing at all.
+		if contextLine == nil and person.memoryIntro ~= nil then
+			local moment = data.definingMoment[person.id]
+			if moment ~= nil and math.random() < PEOPLE.MemoryCallbackChance then
+				contextLine = `{person.memoryIntro} "{moment.line}"`
+			end
+		end
+
+		if contextLine == nil then
+			local keys: { string } = {}
+			if age < 16 then
+				table.insert(keys, "unemployed")
+			end
+			if data.jobId ~= nil then
+				table.insert(keys, "onShift")
+			end
+			table.insert(keys, "morning")
+			if data.houses ~= nil and next(data.houses) ~= nil then
+				table.insert(keys, "atHome")
+			end
+			for _, key in keys do
+				local lines = person.contextualLines[key]
+				if lines ~= nil and #lines > 0 then
+					contextLine = lines[math.random(1, #lines)]
+					break
+				end
 			end
 		end
 	end
@@ -781,6 +821,11 @@ local function stateFor(player: Player): PersonState?
 		-- walk to, so it must be drawn as a phone call rather than as a standing person.
 		contact = chat.remote,
 		contextualLine = contextLine,
+		-- What they are to you beyond the bond band. Nil for most people, which is the
+		-- point: a town where every row says "friend" is a town where the word means
+		-- nothing. Shown on the HUD so the relationship is visible the moment you stand
+		-- next to somebody, not only when you open the menu.
+		tie = if profile ~= nil then Ties.LabelOf(Lives.Active(profile.Data).ties[person.id]) else nil,
 	}
 end
 
@@ -794,8 +839,9 @@ local function push(player: Player)
 		end
 		-- The offer ids are in the digest because they are the only part of this that can
 		-- change while the name and the band sit still -- taking one leaves a row that reads
-		-- identically and a panel that must not.
-		digest = `{state.id}|{state.band}|{tostring(state.reply)}|{tostring(state.replyGood)}|{tostring(state.contact)}|{tostring(state.contextualLine)}|{table.concat(ids, ",")}`
+		-- identically and a panel that must not. The tie is included for the same reason:
+		-- a conversation that changes a relationship must force the row to refresh.
+		digest = `{state.id}|{state.band}|{tostring(state.tie)}|{tostring(state.reply)}|{tostring(state.replyGood)}|{tostring(state.contact)}|{tostring(state.contextualLine)}|{table.concat(ids, ",")}`
 	end
 	if pushed[player] == digest then
 		return

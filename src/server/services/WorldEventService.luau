@@ -230,6 +230,42 @@ function WorldEventService:Start()
 		addZone(instance)
 	end
 
+	-- Zones piggyback on the world's own place points rather than asking Studio for a
+	-- second layer of tagging. Every `AgesPlacePoint` already marks a named spot -- home,
+	-- school, store, gym, park -- and that is exactly the context an ambient event wants
+	-- to match against.
+	--
+	-- Without this, `zoneParts` stayed permanently empty, because nothing in the built
+	-- world was ever hand-tagged `AgesZone` -- and the proximity branch in `tick()` below
+	-- is guarded on `next(zoneParts) ~= nil`, so it never ran once. The whole NPCApproach
+	-- pipeline behind it -- autonomy points banked from every visit and every shift,
+	-- dozens of authored ambient events, DeliveryService, the ChoicePanel presenter --
+	-- was live and reachable from nowhere: a player could bank a chapter's worth of
+	-- autonomy and the world would never spend a single point of it. This is the fix,
+	-- not a new system: it gives the existing pipeline the ground truth it was always
+	-- written to read, using geometry that is already placed and already correct.
+	--
+	-- An explicit `AgesZoneId` set by hand always wins -- this only fills in the ones
+	-- nobody bothered to author, which today is all of them.
+	local function zoneFromPlacePoint(instance: Instance)
+		if not instance:IsA("BasePart") then
+			return
+		end
+		local placeId = instance:GetAttribute(Config.World.PlacePointAttribute)
+		if typeof(placeId) ~= "string" or placeId == "" then
+			return
+		end
+		if instance:GetAttribute(Config.World.ZoneAttribute) == nil then
+			instance:SetAttribute(Config.World.ZoneAttribute, placeId)
+		end
+		CollectionService:AddTag(instance, zoneTag)
+		addZone(instance)
+	end
+	CollectionService:GetInstanceAddedSignal(Config.World.PlacePointTag):Connect(zoneFromPlacePoint)
+	for _, instance in CollectionService:GetTagged(Config.World.PlacePointTag) do
+		zoneFromPlacePoint(instance)
+	end
+
 	task.spawn(function()
 		while true do
 			task.wait(Config.World.InteractTickSeconds)

@@ -548,6 +548,27 @@ Config.Interact = {
 	NameRangeMultiplier = 1.6,
 }
 
+Config.InteractionPrompt = {
+	-- How far above the bottom of the screen the prompt bar sits.
+	BottomOffset = 20,
+	-- How far from the horizontal centre the bar is offset (0 = centred).
+	HorizontalOffset = 0,
+	-- The bar's width in scale units (0–1 of screen width).
+	BarWidth = 0.35,
+	-- The bar's height in studs.
+	BarHeightStuds = 3.2,
+	-- Fade in / out duration in seconds.
+	FadeSeconds = 0.15,
+	-- Colours.
+	BarColor = Color3.fromRGB(18, 18, 22),
+	BarTransparency = 0.85,
+	KeyBoxColor = Color3.fromRGB(255, 255, 255),
+	KeyBoxTransparency = 0.15,
+	KeyTextColor = Color3.fromRGB(20, 20, 24),
+	ActionTextColor = Color3.fromRGB(245, 242, 235),
+	KeyStrokeColor = Color3.fromRGB(18, 16, 14),
+}
+
 -- Answering an event by going to the thing it is about. An enacted event puts three
 -- dots over whatever it is about -- a dog, later a vehicle or a machine -- and the
 -- player walks across to it and clicks them. The prompt stays on screen as a banner
@@ -2926,6 +2947,15 @@ Config.People = {
 	-- will never read. Defining moment is one per person, written at the
 	-- peak bond interaction.
 	InteractionsPerPerson = 5,
+
+	-- The odds that, when a person has a defining moment on record and no more
+	-- specific contextual line beats it, they call it back instead of saying
+	-- their flat ambient line. Not 1: a parent who recited the same memory
+	-- word for word on every single visit would stop sounding like she
+	-- remembered it and start sounding like the game replaying a save file.
+	-- Safe range: 0.2-0.5. Below that it never surfaces; above it drowns out
+	-- the ordinary contextual lines that give a person their everyday voice.
+	MemoryCallbackChance = 0.35,
 
 }
 

@@ -1787,6 +1787,14 @@ export type Person = {
 	-- Contextual dialogue lines keyed by situation. Picked when the person is near
 	-- the player and none of the offer panel is open. Nil means no extra lines.
 	contextualLines: { [string]: { string } }?,
+	-- How this person leads into a memory, in their own voice -- "You remember,
+	-- love --" for a mother, "I still think about --" for a father. Combined with
+	-- the strongest thing they have ever said to the player (LifeData.definingMoment)
+	-- to make the hidden 5+1 interaction buffer visible on the same line contextualLines
+	-- already uses, rather than adding a second row nobody but a debug command reads.
+	-- Nil means this person never calls a memory back, which is the honest default for
+	-- a stranger the game only just generated.
+	memoryIntro: string?,
 }
 
 -- The person in front of the player, pushed to the HUD. Nil means nobody is, which is
@@ -1805,6 +1813,11 @@ export type PersonState = {
 	-- player should know their father is close to them without being shown a score for
 	-- it, which would turn a relationship into a progress bar.
 	band: string,
+	-- What this person is to you beyond the bond ladder: a tie id label from Ties,
+	-- or nil when they are just somebody you know. Shown on the row alongside the
+	-- name so the player can tell at a glance whether the person standing next to
+	-- them is a friend, a rival, or a stranger.
+	tie: string?,
 	-- Set for the beat after an offer is taken, holding what they said back. Nil the
 	-- rest of the time, when the row is only announcing who you are standing next to.
 	reply: string?,

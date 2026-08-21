@@ -335,6 +335,29 @@ local SOURCE: { Person } = {
 				line = "Oh, love. I know. I've known since Tuesday. Let's just... put it right, shall we?",
 			},
 		},
+		-- Mom is never on the tie ladder -- she doesn't need it, she's family before the
+		-- game ever asks -- so her contextual lines never key off a tie, only off where
+		-- the player's life actually is: still at school, working, or just walking in.
+		contextualLines = {
+			unemployed = {
+				"You're still my baby, whatever they say about you at school.",
+				"No rush finding your feet. I didn't either, at your age.",
+			},
+			onShift = {
+				"Working hard? Don't forget to eat something today.",
+				"I don't ask what they pay you. I just hope they're kind about it.",
+			},
+			morning = {
+				"There you are. Come here a second.",
+				"You look like yourself again today. Good.",
+				"I was just thinking about you, funny that.",
+			},
+			atHome = {
+				"This house is quieter with you in it, you know.",
+				"Kettle's on, if you want it.",
+			},
+		},
+		memoryIntro = "You remember, don't you, love --",
 	},
 	{
 		id = "dad",
@@ -541,6 +564,29 @@ local SOURCE: { Person } = {
 				line = "You know what I'd have done at your age? I'd have run a mile. You didn't. That's the difference between us and there's nothing wrong with that.",
 			},
 		},
+		-- Dad's whole voice is understatement -- everything he means lands sideways, in
+		-- half a sentence about the shed or the car, never straight at the thing itself.
+		-- Also never on the tie ladder, for the same reason mom isn't.
+		contextualLines = {
+			unemployed = {
+				"No hurry. Nobody's handed me a manual either, and I'm forty-odd.",
+				"You'll land on something. You usually do, once you stop overthinking it.",
+			},
+			onShift = {
+				"Good, is it? The work.",
+				"Long day, that. Don't let them work you past sense.",
+			},
+			morning = {
+				"Alright.",
+				"You're up. Good. Wanted a word, actually -- nothing, forget it, later.",
+				"Kettle's just gone. Sit down a minute.",
+			},
+			atHome = {
+				"Roof's not leaking, car's not broken, you're home. Good day, that.",
+				"Don't mind me, I'm just pottering.",
+			},
+		},
+		memoryIntro = "I still think about that, you know --",
 	},
 	{
 		id = "neighbor",
@@ -739,6 +785,34 @@ local SOURCE: { Person } = {
 				line = "You're a good 'un, you are. Right -- tills, floor, float, and I'll see you Wednesday.",
 			},
 		},
+		-- Alderman is the one member of the four with a tie to earn -- he starts at zero
+		-- and the "known" key is what a shopkeeper sounds like once forty years of turning
+		-- up has actually landed on him. Before that he is warm in the generic, professional
+		-- way a good shopkeeper is warm to everyone, which is why the situational lines below
+		-- read a little more distant than mom's or dad's.
+		contextualLines = {
+			known = {
+				"Forty years behind that counter and you still turn up. Says something, that.",
+				"You're one of mine now, you know. Don't tell the others.",
+			},
+			unemployed = {
+				"Plenty of time yet. I didn't know what I was at your age either.",
+				"School's the job for now. Rest of it can wait.",
+			},
+			onShift = {
+				"Keeping busy, are you? Good. Idle hands and all that.",
+				"Whoever's got you working, tell them Alderman says be decent about it.",
+			},
+			morning = {
+				"Morning to you. Mind the step, they've only just mopped it.",
+				"And how's the world treating you, eh?",
+				"Just the one today, or are you stopping to talk my ear off?",
+			},
+			atHome = {
+				"Give my best to the house, won't you.",
+			},
+		},
+		memoryIntro = "Ah, now -- I remember it well --",
 	},
 	{
 		id = "friend",
@@ -991,6 +1065,38 @@ local SOURCE: { Person } = {
 				line = "Yeah, of course. It won't come near you -- I've got it. See? All good.",
 			},
 		},
+		-- The only one of the four who climbs the tie ladder, so the only one whose
+		-- contextual lines change shape as the relationship does -- a stranger-to-friend
+		-- schoolyard voice at "friend", something that sounds like it's said this before
+		-- at "closest". Both keyed directly off the tie id, same as any townsfolk archetype.
+		contextualLines = {
+			friend = {
+				"Okay but did you hear what happened in class--",
+				"You're literally the only person I actually like here.",
+				"Wait, wait, come here, you have to see this.",
+			},
+			closest = {
+				"I don't even have to explain it to you, that's the whole point.",
+				"Whatever happens, this one's not going anywhere. You know that, right?",
+			},
+			unemployed = {
+				"School's so boring without you around at lunch.",
+				"Same time tomorrow? Actually don't answer that, obviously same time tomorrow.",
+			},
+			onShift = {
+				"Ugh, you're working again? Tell me everything after.",
+				"Wish you were here instead of there, ngl.",
+			},
+			morning = {
+				"Oh my god, finally. Where were you.",
+				"Okay so I saved you a seat, don't make it weird.",
+				"Hi! Hi. Okay, hi.",
+			},
+			atHome = {
+				"Wish I was there instead of home, ngl.",
+			},
+		},
+		memoryIntro = "Remember when --",
 	},
 }
 
