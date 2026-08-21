@@ -1718,6 +1718,17 @@ end
 --   /gang off                 nobody is standing at any of the four and no band goes on
 --                             anybody's head, for telling a gang bug apart from a pursuit
 --                             one -- with this off, heat is nobody's fault but yours.
+--   /gang crew                who runs with you and their nerve, or how many slots your
+--                             rung carries if it is none. Reads Describe's own line, so
+--                             this is a convenience rather than a second source of truth.
+--   /gang crew add            recruits through the real `recruit`, without the walk or the
+--                             rung -- so a "name" can be tested straight away rather than
+--                             ground up to 400 standing first. Still refuses past your
+--                             rung's own slot count, because that check is the thing worth
+--                             testing.
+--   /gang crew drop <id>      dismisses through the real `dismiss`. The id is whatever
+--                             `/gang crew` just printed, not the name -- two recruits can
+--                             share a nickname, and an id never can.
 Commands.gang = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -1756,6 +1767,33 @@ Commands.gang = function(player: Player, args: { string }): string
 		return `standing {string.format("%.0f", after)} — {GangService.Describe(player)}`
 	end
 
+	if arg == "crew" then
+		local sub = string.lower(args[2] or "")
+		if sub == "add" then
+			local data = DataService.GetProfile(player)
+			local gangId = if data ~= nil then Lives.Active(data.Data).gangId else nil
+			if gangId == nil then
+				return `not in a gang — {GangService.Describe(player)}`
+			end
+			local id = GangService.ForceRecruit(player, gangId)
+			if id == nil then
+				return `could not recruit — {GangService.Describe(player)}`
+			end
+			return `recruited {id} — {GangService.Describe(player)}`
+		end
+		if sub == "drop" then
+			local crewId = args[3]
+			if crewId == nil then
+				return "usage: /gang crew drop <id>"
+			end
+			if not GangService.ForceDismiss(player, crewId) then
+				return `no crew member "{crewId}" — {GangService.Describe(player)}`
+			end
+			return `dropped {crewId} — {GangService.Describe(player)}`
+		end
+		return GangService.Describe(player)
+	end
+
 	if arg == "join" or arg == "go" then
 		local gangId = string.lower(args[2] or "")
 		local def = Gangs.ById[gangId]
@@ -1781,7 +1819,7 @@ Commands.gang = function(player: Player, args: { string }): string
 		return `joined {def.name} — {GangService.Describe(player)}`
 	end
 
-	return `usage: /gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off] — {GangService.Describe(player)}`
+	return `usage: /gang [go <id>|join <id>|credit <n>|colors [on|off]|crew [add|drop <id>]|reset|on|off] — {GangService.Describe(player)}`
 end
 
 Commands.police = function(player: Player, args: { string }): string
@@ -2841,7 +2879,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
 	.. "/theft [go <place>|fill|on|off], "
 	.. "/bank [go [<place>]|reset|on|off], "
-	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|reset|on|off], "
+	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|crew [add|drop <id>]|reset|on|off], "
 	.. "/skill [<id> <n|max>], "
 	.. "/code [<string>|clear], "
 	.. "/setting [<id> on|off], "

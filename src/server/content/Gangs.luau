@@ -233,10 +233,42 @@ if #SOURCE == 0 then
 	error("[AGES content] there are no gangs, so nothing could ever be joined")
 end
 
+-- Names a crew member is given on recruitment. One flat pool shared by all four gangs
+-- rather than one list per gang -- a recruit's *name* is not doing the identity work
+-- the color already does, so splitting the pool four ways would only mean a smaller
+-- pool per gang for no player-visible benefit.
+--
+-- Deliberately not run through Townsfolk's name generator. That generator builds a
+-- first name and a surname to fit a whole town's census; a crew member is a nickname
+-- somebody picked up, said once, by the boss who is handing them to you -- closer to
+-- how Cast.luau's own hand-authored names read than to a generated resident. Kept
+-- short for the same reason: `GangUI` and the boss panel both set this beside a nerve
+-- number in a fixed-width column, and "Marisol Adeyemi-Whitfield, nerve 40" wraps a
+-- row a plain "Deja, nerve 40" never has to.
+local CREW_NAMES: { string } = {
+	"Roach", "Nudge", "Marsh", "Coop", "Deja", "Boone", "Frankie", "Vale",
+	"Odette", "Trick", "Sable", "Wick", "Posey", "Junior", "Lena", "Crick",
+	"Mabel", "Denny", "Church", "Iggy", "Reeve", "Bijou", "Tarn", "Osei",
+}
+
+do
+	local seenName: { [string]: boolean } = {}
+	for _, name in CREW_NAMES do
+		if name == "" then
+			error("[AGES content] gangs content has a blank crew name")
+		end
+		if seenName[name] then
+			error(`[AGES content] crew name "{name}" is listed twice; a recruit's name would collide with itself`)
+		end
+		seenName[name] = true
+	end
+end
+
 local Gangs = {}
 
 Gangs.All = SOURCE
 Gangs.ById = byId
+Gangs.CrewNames = CREW_NAMES
 
 -- The gang whose boss stands at this place point, or nil for the overwhelming majority of
 -- places, which have no boss at all. The reverse of the content table, so GangService can

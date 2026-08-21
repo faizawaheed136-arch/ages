@@ -1681,6 +1681,24 @@ export type CodeResult = {
 	message: string,
 }
 
+-- One person who runs with you. Nothing here says what they do on a job -- that is
+-- Part 3, "calling a job", and does not exist yet. Adding a `role` field now, for
+-- nothing in the game to read, is exactly the orphaned-field defect the project's own
+-- bar forbids; it goes in beside `nerve` the day something assigns one.
+export type GangCrewMember = {
+	-- Unique for the life of this crew slot, not for the life of the account -- a
+	-- dismissed member's id is never reissued, so a client holding a stale reference
+	-- from the push before a dismissal cannot address somebody who is now a stranger.
+	id: string,
+	name: string,
+	-- 0-100, and it only ever rises. See Config.Gangs.Crew.NerveGainPerPoint: the same
+	-- "positives ratchet, nothing decays" rule Ties.luau and the bond ladder already
+	-- keep, applied to a crew instead of a friendship. A member who has never worked
+	-- with you starts low and gets steadier the more you pull together, and nothing
+	-- about a quiet week ever costs them ground they already made.
+	nerve: number,
+}
+
 -- What the client draws about the gang you are in, or nil when you are in none.
 export type GangState = {
 	gangId: string,
@@ -1703,6 +1721,12 @@ export type GangState = {
 	-- Whether the colors are currently on your head. False after you take them off, which
 	-- is a thing you would do on purpose and which the panel must not quietly hide.
 	wearing: boolean,
+	-- Who runs with you, and how many of them there could be at your current rung. Empty
+	-- and zero for the two lower rungs on purpose: "hanger-on" and "hand" are the rungs
+	-- where somebody else's plan has a slot with *your* name in it, not the other way
+	-- round, so a crew section would be promising a feature those two rungs do not have.
+	crew: { GangCrewMember },
+	crewSlots: number,
 	-- One line of feedback, cleared after it has been shown. Same device as the notices on
 	-- TheftState and BankState.
 	notice: string?,
@@ -2625,6 +2649,11 @@ export type LifeData = {
 	-- work you did for them not have happened, and a gang you left at 900 should not
 	-- welcome you back as a stranger.
 	gangStanding: { [string]: number },
+	-- Who runs with this life right now, in the gang held in `gangId`. Wiped by `leave` and
+	-- by `GangService.ResetPlayer`, unlike `gangStanding`: a crew is people who chose to
+	-- run with *this* membership, and re-joining later, or joining somebody else, starts
+	-- from nobody rather than from whoever last stood beside you.
+	gangCrew: { GangCrewMember },
 	-- When this life last walked away from a gang, as a life-seconds stamp, or absent if it
 	-- never has. Read only to hold the rejoin window open; a life that has never been in
 	-- one has no window to be inside.

@@ -143,6 +143,10 @@ function Lives.New(): LifeData
 		-- and the right thing to hand an old save: that life's standing starts being kept
 		-- from now rather than being back-paid for crimes nobody was counting.
 		gangStanding = {},
+		-- No crew, same reasoning as `gangStanding` above: true of the newborn and the
+		-- right thing to hand an old save, since a save written before crews existed had
+		-- nobody running with it either way.
+		gangCrew = {},
 		-- False rather than absent, because unlike the three above this one is read on
 		-- every tick and an absent boolean would be a nil compared against `true` -- legal,
 		-- silent, and wrong only for the lives that predate the field. False is also

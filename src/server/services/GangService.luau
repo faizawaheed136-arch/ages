@@ -32,10 +32,20 @@
 -- because BountyService needs to call *in* here on arrest and the two cannot both point at
 -- each other.
 --
--- **Deferred on purpose:** territory, the district map, and NPC gang members who take
--- orders. The gangs each hold a side of the city in content/Gangs.luau and nothing reads
--- it yet -- the map is being expanded first, and district seams have to land on real
--- streets rather than on coordinates invented today.
+-- **Part 2, NPC crew, is built.** A rung that carries slots (`Config.Gangs.Crew.SlotsByRank`,
+-- absent below "name" on purpose) can bring somebody in off the boss's own panel, and
+-- that somebody is a persisted `GangCrewMember` with a nerve rating that only ever rises --
+-- see `creditStanding`, which is the one place both standing and nerve move together, on
+-- the same work, for the same reason. What a crew member *does* is still nothing: no field
+-- here says a member holds a role on a job, because Part 3 is the thing that would read it
+-- and Part 3 does not exist. Adding it now would be exactly the orphaned-field defect this
+-- codebase's own bar forbids.
+--
+-- **Deferred on purpose:** territory, the district map, and calling a job -- the
+-- role-assignment table and commit window Part 3 needs. The gangs each hold a side of the
+-- city in content/Gangs.luau and nothing reads it yet -- the map is being expanded first,
+-- and district seams have to land on real streets rather than on coordinates invented
+-- today.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -60,6 +70,7 @@ type GangDef = Types.GangDef
 type GangRankDef = Types.GangRankDef
 type GangState = Types.GangState
 type GangPanel = Types.GangPanel
+type GangCrewMember = Types.GangCrewMember
 type OfferedChoice = Types.OfferedChoice
 type Visitor = NPCService.Visitor
 
@@ -173,6 +184,44 @@ local function standingIn(data: LifeData, gangId: string): number
 	return data.gangStanding[gangId] or 0
 end
 
+-- How many crew slots the rung held in this gang carries, or zero for both a rung with
+-- no entry and for holding no rung at all -- `GANGS.Crew.SlotsByRank` omits the bottom
+-- two rungs for exactly that reason, see its own comment.
+local function crewSlotsFor(data: LifeData, gangId: string): number
+	if data.gangId ~= gangId then
+		return 0
+	end
+	return GANGS.Crew.SlotsByRank[data.gangRankId or ""] or 0
+end
+
+-- A crew id that is not already in use by this life's crew. Collision is vanishingly
+-- unlikely at three slots and six digits, but the loop is nearly free and turns "a
+-- client keys a list on this" from a hope into a guarantee.
+local function newCrewId(data: LifeData): string
+	while true do
+		local id = `crew_{math.random(100000, 999999)}`
+		local taken = false
+		for _, member in data.gangCrew do
+			if member.id == id then
+				taken = true
+				break
+			end
+		end
+		if not taken then
+			return id
+		end
+	end
+end
+
+local function crewIndexOf(data: LifeData, crewId: string): number?
+	for index, member in data.gangCrew do
+		if member.id == crewId then
+			return index
+		end
+	end
+	return nil
+end
+
 -- Whether the boss would hand over the next rung right now.
 --
 -- Three questions, not one, and the third is the reason this is a function rather than a
@@ -258,6 +307,8 @@ local function stateFor(player: Player): GangState?
 		nextStanding = if upcoming ~= nil then upcoming.standing else nil,
 		promotable = promotableTo(data, gangId) ~= nil,
 		wearing = data.wearingColors,
+		crew = data.gangCrew,
+		crewSlots = crewSlotsFor(data, gangId),
 		notice = if watch ~= nil then watch.notice else nil,
 	}
 end
@@ -270,8 +321,12 @@ function push(player: Player)
 	local state = stateFor(player)
 	local digest = "none"
 	if state ~= nil then
+		local crewBits: { string } = {}
+		for _, member in state.crew do
+			table.insert(crewBits, `{member.id}:{math.floor(member.nerve)}`)
+		end
 		digest = `{state.gangId}|{state.rankId}|{math.floor(state.standing)}|{tostring(state.promotable)}`
-			.. `|{tostring(state.wearing)}|{tostring(state.notice)}`
+			.. `|{tostring(state.wearing)}|{table.concat(crewBits, ",")}|{tostring(state.notice)}`
 	end
 	if pushed[player] == digest then
 		return
@@ -324,6 +379,32 @@ local function panelFor(player: Player, gangId: string): GangPanel?
 				replyGood = false
 			end
 		end
+
+		-- Crew rows. Zero slots at the two lower rungs means this whole block draws
+		-- nothing for a hanger-on or a hand, which is the rung ladder saying it rather
+		-- than a comment saying it -- see GangState.crew's own note.
+		local slots = crewSlotsFor(data, gangId)
+		if slots > 0 then
+			for _, member in data.gangCrew do
+				table.insert(offers, {
+					id = `dismiss_{member.id}`,
+					label = `Let {member.name} go`,
+					cost = nil,
+					note = `nerve {math.floor(member.nerve)}`,
+					locked = false,
+				})
+			end
+			if #data.gangCrew < slots then
+				table.insert(offers, {
+					id = "recruit",
+					label = "Bring somebody in",
+					cost = nil,
+					note = `{#data.gangCrew}/{slots}`,
+					locked = false,
+				})
+			end
+		end
+
 		table.insert(offers, { id = "leave", label = "Walk away from them", cost = nil, note = "keeps your standing", locked = false })
 	elseif data.gangId ~= nil then
 		-- Somebody else's. Deliberately has no rows at all: a rival boss you can still do
@@ -594,6 +675,16 @@ function creditStanding(player: Player, points: number, reason: string): number
 	local after = before + points
 	data.gangStanding[gangId] = after
 
+	-- Steadier every time you pull work together, split across the crew rather than
+	-- multiplied by its size -- see Config.Gangs.Crew.NerveGainPerPoint. Never decays:
+	-- the same ratchet-only rule Ties.luau keeps for a bond, kept here for a crew.
+	if #data.gangCrew > 0 then
+		local gain = points * GANGS.Crew.NerveGainPerPoint
+		for _, member in data.gangCrew do
+			member.nerve = math.min(member.nerve + gain, GANGS.Crew.NerveMax)
+		end
+	end
+
 	-- Said only when it crosses a rung, and said as an invitation rather than as a
 	-- promotion. This is the moment the design turns on: the number is sufficient and the
 	-- rung still is not given, so the line has to send the player to a person.
@@ -753,6 +844,11 @@ local function leave(player: Player, data: LifeData, def: GangDef)
 	data.gangId = nil
 	data.gangRankId = nil
 	data.wearingColors = false
+	-- Cleared, unlike gangStanding. A crew is people who chose to run with *this*
+	-- membership -- see GangCrewMember's own comment -- and carrying them across into
+	-- whatever is joined next would mean somebody else's boss inherited a crew they
+	-- never brought in.
+	data.gangCrew = {}
 	-- Stamped so the rejoin window has something to measure from. Standing is left exactly
 	-- where it was, on purpose: leaving does not make the work not have happened, and a
 	-- gang you left at nine hundred should not take you back as a stranger.
@@ -761,6 +857,43 @@ local function leave(player: Player, data: LifeData, def: GangDef)
 	local character = player.Character
 	if character ~= nil then
 		Colors.Clear(character)
+	end
+end
+
+-- Brings somebody in. The boss's act, not a purchase -- see Config.Gangs.Crew's own
+-- header -- so the only checks are the ones that make a slot real: you have to be in
+-- this gang, and you have to have room.
+local function recruit(player: Player, data: LifeData, def: GangDef)
+	if data.gangId ~= def.id then
+		return
+	end
+	local slots = crewSlotsFor(data, def.id)
+	if #data.gangCrew >= slots then
+		noticeFor(player, "Nobody else to bring in. You are full up.")
+		return
+	end
+	local name = Gangs.CrewNames[math.random(1, #Gangs.CrewNames)]
+	local member: GangCrewMember = { id = newCrewId(data), name = name, nerve = GANGS.Crew.NerveStart }
+	table.insert(data.gangCrew, member)
+	noticeFor(player, `{name} is running with you now.`)
+end
+
+-- Lets somebody go. Always available to the player who holds the crew, unlike
+-- recruiting -- bringing somebody in is the boss doing you a favour, but cutting them
+-- loose is your own call, and gating that behind a conversation would mean a slot
+-- could be stuck full of somebody the player no longer wanted between two visits to a
+-- garage.
+local function dismiss(player: Player, data: LifeData, def: GangDef, crewId: string)
+	if data.gangId ~= def.id then
+		return
+	end
+	local index = crewIndexOf(data, crewId)
+	if index == nil then
+		return
+	end
+	local member = table.remove(data.gangCrew, index)
+	if member ~= nil then
+		noticeFor(player, `{member.name} is not running with you anymore.`)
 	end
 end
 
@@ -799,6 +932,44 @@ function GangService.ForceJoin(player: Player, gangId: string): boolean
 	return data.gangId == def.id
 end
 
+-- Recruits without the walk, through the same `recruit` the panel's "Bring somebody
+-- in" row calls -- so what gets tested is the slot check that exists, not a second one
+-- written for the debug path. Returns the new member's id so `/gang crew` can print it
+-- straight back without a second lookup.
+function GangService.ForceRecruit(player: Player, gangId: string): string?
+	local data = dataFor(player)
+	local def = Gangs.ById[gangId]
+	if data == nil or def == nil then
+		return nil
+	end
+	local before = #data.gangCrew
+	recruit(player, data, def)
+	push(player)
+	pushPanel(player)
+	if #data.gangCrew <= before then
+		return nil
+	end
+	return data.gangCrew[#data.gangCrew].id
+end
+
+-- Dismisses without the walk, through the same `dismiss` the panel's "Let X go" row
+-- calls.
+function GangService.ForceDismiss(player: Player, crewId: string): boolean
+	local data = dataFor(player)
+	if data == nil or data.gangId == nil then
+		return false
+	end
+	local def = Gangs.ById[data.gangId]
+	if def == nil then
+		return false
+	end
+	local before = #data.gangCrew
+	dismiss(player, data, def, crewId)
+	push(player)
+	pushPanel(player)
+	return #data.gangCrew < before
+end
+
 local function onChoice(player: Player, gangIdRaw: unknown, choiceRaw: unknown)
 	if not enabled then
 		return
@@ -826,10 +997,16 @@ local function onChoice(player: Player, gangIdRaw: unknown, choiceRaw: unknown)
 		join(player, data, def)
 	elseif choiceRaw == "leave" then
 		leave(player, data, def)
+	elseif choiceRaw == "recruit" then
+		recruit(player, data, def)
 	else
 		local rankId = string.match(choiceRaw, "^take_(.+)$")
 		if rankId ~= nil then
 			takeRank(player, data, def, rankId)
+		end
+		local crewId = string.match(choiceRaw, "^dismiss_(.+)$")
+		if crewId ~= nil then
+			dismiss(player, data, def, crewId)
 		end
 	end
 
@@ -899,6 +1076,7 @@ function GangService.ResetPlayer(player: Player)
 	data.gangId = nil
 	data.gangRankId = nil
 	data.gangStanding = {}
+	data.gangCrew = {}
 	data.leftGangAt = nil
 	data.wearingColors = false
 	watchFor(player).peakBounty = 0
@@ -926,12 +1104,20 @@ function GangService.Describe(player: Player): string
 	end
 	local held = rankById(data.gangRankId)
 	local upcoming = promotableTo(data, data.gangId or "")
+	local crewBits: { string } = {}
+	for _, member in data.gangCrew do
+		table.insert(crewBits, `{member.name}(nerve {math.floor(member.nerve)})`)
+	end
+	local crewDescription = if #crewBits == 0
+		then `crew 0/{crewSlotsFor(data, data.gangId or "")}`
+		else `crew {#crewBits}/{crewSlotsFor(data, data.gangId or "")}: {table.concat(crewBits, ", ")}`
 	return string.format(
-		"%s · rank %s · %s · colors %s · rejoin in %.0fs · %s · %s",
+		"%s · rank %s · %s · colors %s · %s · rejoin in %.0fs · %s · %s",
 		if data.gangId ~= nil then data.gangId else "no gang",
 		if held ~= nil then held.label else "-",
 		if upcoming ~= nil then `can take "{upcoming.label}"` else "nothing to take",
 		if data.wearingColors then "on" else "off",
+		crewDescription,
 		rejoinWaitFor(data),
 		table.concat(standings, ", "),
 		if enabled then "on" else "off"

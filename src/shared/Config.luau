@@ -3892,6 +3892,38 @@ Config.Gangs = {
 		Floor = 0,
 	},
 
+	-- Part 2: who runs with you. Slots, not a cost -- reaching the rung is the cost, the
+	-- same way reaching a rung is the only price a promotion ever has, and recruiting is
+	-- something the boss does for you rather than something bought off a menu.
+	Crew = {
+		-- Total crew slots at each rung, keyed by GangRankDef.id. "hanger-on" and "hand"
+		-- are deliberately absent rather than zero: GangService.crewSlotsFor treats a
+		-- missing rung as zero, and leaving them out says the same thing the spec does --
+		-- those two rungs are where somebody else's plan has a slot with your name in it,
+		-- not the other way round.
+		-- Safe range: 1-2 for "name", 2-4 for "caller".
+		SlotsByRank = {
+			name = 1,
+			caller = 3,
+		},
+
+		-- Where a new recruit's nerve starts. Low: they have not done anything with you
+		-- yet, and a recruit who started confident would make the meter a formality
+		-- rather than something earned.
+		-- Safe range: 10-30.
+		NerveStart = 20,
+
+		-- The ceiling. Never lowered, never spent -- see GangCrewMember.nerve.
+		NerveMax = 100,
+
+		-- Nerve gained per point of standing credited while this crew exists, split
+		-- across every member rather than multiplied by their count. A three-person crew
+		-- does not make the same job worth three times the steadying; it is still one
+		-- job.
+		-- Safe range: 0.05-0.2.
+		NerveGainPerPoint = 0.1,
+	},
+
 	-- The head covering.
 	--
 	-- Sized in studs against an unscaled R15 head, then scaled with the head it sits on,

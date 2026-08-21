@@ -1267,6 +1267,31 @@ local function drawGangs(self: MenuUIHandle): string?
 		promoteCaption.Text = "Go and see whoever runs your side. Rank is handed over, never awarded."
 	end
 
+	-- Who runs with you. Zero slots -- "hanger-on" and "hand" -- draws nothing at all,
+	-- same as the promotion row above: a section for a feature this rung does not have
+	-- would be the menu promising a comparison there is nothing behind, the exact thing
+	-- this pane's own header rules out for the other three gangs.
+	if gang.crewSlots > 0 then
+		if #gang.crew == 0 then
+			local _, crewTitle, crewFigure, crewCaption = makeRow(self)
+			crewTitle.Text = "Crew"
+			crewFigure.Text = `0 / {gang.crewSlots}`
+			crewCaption.Text = "Nobody runs with you yet. Whoever runs your side can bring somebody in."
+		else
+			for _, member in gang.crew do
+				local card, title, figure, caption = makeRow(self)
+				title.Text = member.name
+				figure.Text = `nerve {math.floor(member.nerve)}`
+				figure.TextColor3 = gang.color
+				caption.Text = "Runs with you. Nerve only ever rises, the more work you pull together."
+				local spine = card:FindFirstChild("Spine")
+				if spine ~= nil and spine:IsA("Frame") then
+					spine.BackgroundColor3 = gang.color
+				end
+			end
+		end
+	end
+
 	local colorsCard, colorsTitle, _, colorsCaption = makeRow(self)
 	colorsTitle.Text = "Colors"
 	colorsCaption.Text = if gang.wearing

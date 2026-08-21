@@ -70,6 +70,7 @@ export type GangUIHandle = typeof(setmetatable(
 		panel: Frame,
 		nameLabel: TextLabel,
 		rankLabel: TextLabel,
+		crewLabel: TextLabel,
 		track: Frame,
 		fill: Frame,
 		captionLabel: TextLabel,
@@ -191,12 +192,28 @@ function GangUI.new(): GangUIHandle
 	rankLabel.LayoutOrder = 1
 	rankLabel.Parent = panel
 
+	-- Who runs with you, in the last free line before the bar. Hidden rather than drawn
+	-- empty at the two lower rungs -- see GangState.crewSlots -- because a HUD line that
+	-- always reads "Crew 0/0" is a HUD line nobody ever looks at again.
+	local crewLabel = Instance.new("TextLabel")
+	crewLabel.Name = "Crew"
+	crewLabel.Size = UDim2.new(1, 0, 0, 15)
+	crewLabel.BackgroundTransparency = 1
+	crewLabel.Font = Enum.Font.Gotham
+	crewLabel.TextSize = 13
+	crewLabel.TextXAlignment = Enum.TextXAlignment.Left
+	crewLabel.TextColor3 = CAPTION_COLOR
+	crewLabel.Text = ""
+	crewLabel.Visible = false
+	crewLabel.LayoutOrder = 2
+	crewLabel.Parent = panel
+
 	local track = Instance.new("Frame")
 	track.Name = "Track"
 	track.Size = UDim2.new(1, 0, 0, 6)
 	track.BackgroundColor3 = TRACK_COLOR
 	track.BorderSizePixel = 0
-	track.LayoutOrder = 2
+	track.LayoutOrder = 3
 	track.Parent = panel
 
 	local fill = Instance.new("Frame")
@@ -217,7 +234,7 @@ function GangUI.new(): GangUIHandle
 	captionLabel.TextXAlignment = Enum.TextXAlignment.Left
 	captionLabel.TextColor3 = CAPTION_COLOR
 	captionLabel.Text = ""
-	captionLabel.LayoutOrder = 3
+	captionLabel.LayoutOrder = 4
 	captionLabel.Parent = panel
 
 	local colorsButton = Instance.new("TextButton")
@@ -230,7 +247,7 @@ function GangUI.new(): GangUIHandle
 	colorsButton.TextSize = 12
 	colorsButton.TextColor3 = BUTTON_TEXT_COLOR
 	colorsButton.Text = ""
-	colorsButton.LayoutOrder = 4
+	colorsButton.LayoutOrder = 5
 	colorsButton.Parent = panel
 
 	local buttonCorner = Instance.new("UICorner")
@@ -249,13 +266,14 @@ function GangUI.new(): GangUIHandle
 	noticeLabel.TextColor3 = NOTICE_COLOR
 	noticeLabel.Text = ""
 	noticeLabel.Visible = false
-	noticeLabel.LayoutOrder = 5
+	noticeLabel.LayoutOrder = 6
 	noticeLabel.Parent = panel
 
 	local self = setmetatable({
 		screenGui = screenGui,
 		panel = panel,
 		nameLabel = nameLabel,
+		crewLabel = crewLabel,
 		rankLabel = rankLabel,
 		track = track,
 		fill = fill,
@@ -300,6 +318,21 @@ function GangUI.Set(self: GangUIHandle, state: GangState?)
 	-- No article added here. The labels in Config.Gangs.Ranks carry their own, because
 	-- three of the four take one and the fourth -- "who calls it" -- does not.
 	self.rankLabel.Text = `You are {state.rankLabel}.`
+
+	-- Hidden below "name": a HUD line for zero possible crew is a HUD line promising a
+	-- feature the rung does not have. Names, not just a count, because this is the one
+	-- place a player glances at while walking rather than while reading a menu, and a
+	-- bare "1/3" answers "how many" but not "who".
+	self.crewLabel.Visible = state.crewSlots > 0
+	if state.crewSlots > 0 then
+		local names: { string } = {}
+		for _, member in state.crew do
+			table.insert(names, member.name)
+		end
+		self.crewLabel.Text = if #names > 0
+			then `Crew {#names}/{state.crewSlots}: {table.concat(names, ", ")}`
+			else `Crew 0/{state.crewSlots}`
+	end
 
 	self.fill.Size = UDim2.new(barShare(state, standingOfRank(state.rankId)), 0, 1, 0)
 	-- The bar is the gang's color until there is something to collect, and then it is not.

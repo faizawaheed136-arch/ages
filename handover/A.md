@@ -1,6 +1,45 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-18 (latest) — the start place had no start in it
+## 2026-08-20 (latest) — a crew you recruit, not a crew that spawns
+
+Gang Part 2 from `docs/gangs_spec.md`: crew. A boss's roster now holds named crew
+members with a nerve meter (0-100, only ever rises — same law as `Ties.luau`: bonds
+don't decay, and neither does nerve). Recruit and dismiss are two new rows on the
+existing boss panel — `recruit` / `dismiss_<id>` — via the offer mechanism that
+already exists (`GangPanel.offers`), so `ChoicePanel`/`init.client.luau` needed no
+new code at all, only the two persistent gang widgets that show state outside a
+conversation: `GangUI.luau`'s HUD label and `MenuUI.luau`'s gangs pane, both got a
+read-only crew block.
+
+Touched: `src/shared/Types.luau` (`GangCrewMember`, `GangState.crew`/`crewSlots`,
+`LifeData.gangCrew`), `src/shared/Config.luau` (`Config.Gangs.Crew`: slots by rank,
+nerve start/max/gain), `src/shared/Lives.luau` (`gangCrew = {}` in `Lives.New()`,
+so old saves reconcile it), `src/server/content/Gangs.luau` (24 unique crew-name
+pool, validated at require time same as the bandana color-distance check),
+`src/server/services/GangService.luau` (recruit/dismiss, crew in the state/panel/
+push-digest, nerve growth folded into `creditStanding`, `ForceRecruit`/
+`ForceDismiss` for debug), `src/server/services/DebugService.luau` (`/gang crew`,
+`/gang crew add`, `/gang crew drop <id>`), `src/client/ui/GangUI.luau`,
+`src/client/ui/MenuUI.luau`.
+
+`python3 tools/check.py`: clean. Lobby (15 modules), game-server (118), game-client
+(43) all boot, including a simulated player join.
+
+**Deliberately not built, and why:** crew members don't spawn as physical NPCs that
+follow you around town. There's no follow-AI primitive anywhere in `NPCService` to
+build that on, and the only consumer that would need it — Part 3, calling a job and
+sending crew out to do it — doesn't exist yet. Building the rig now means designing
+pathfinding-follow blind, against a job system that isn't specified. Same reasoning
+killed a `role` field on `GangCrewMember`: nothing reads it until Part 3 exists, and
+a field nothing reads is the exact orphaned-code case `CLAUDE.md` rules out. Crew is
+a roster and a number today, on purpose. Part 3 (calling a job) and Part 4
+(territory/city map) are both still unbuilt.
+
+No bugs found in another agent's files this round. Other agents' uncommitted WIP is
+still in this tree (`Town.rbxmx`, `Townsfolk.luau`, `Cast.luau`, `Versailles.rbxmx`,
+etc.) — none of it touched.
+
+## 2026-08-18 — the start place had no start in it
 
 Owner, still unable to play after the two rounds below: *"i still cant play, properly debug
 this instantly."*
