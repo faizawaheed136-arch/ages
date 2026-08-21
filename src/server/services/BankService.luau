@@ -54,6 +54,7 @@ local MoneyService = require(script.Parent.MoneyService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
 
+local Colors = require(script.Parent.Parent.world.Colors)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Public = require(script.Parent.Parent.content.Public)
 local Vault = require(script.Parent.Parent.world.Vault)
@@ -62,6 +63,7 @@ local Vaults = require(script.Parent.Parent.content.Vaults)
 type LifeData = Types.LifeData
 type BankState = Types.BankState
 type Visitor = NPCService.Visitor
+type GangCrewMember = Types.GangCrewMember
 
 local BankService = {}
 
@@ -70,6 +72,7 @@ local BANK = Config.Crime.Bank
 local BankUpdatedRemote = Remotes.Get("BankUpdated")
 local RequestBankOpenRemote = Remotes.Get("RequestBankOpen")
 local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
+local RequestBankCallCrewRemote = Remotes.Get("RequestBankCallCrew")
 
 -- One bank, as a shared fact rather than a per-player one.
 --
@@ -119,6 +122,26 @@ type Room = {
 	-- Whether his last look found somebody. Only for the panel to draw; the alarm it
 	-- caused has already been rung by the time this is read.
 	onSomebody: boolean,
+
+	-- Part 3: somebody's crew, sent to hold the alarm instead of them. One seat, same as
+	-- the guard is one body -- two robbers cannot each bring their own, because there is
+	-- only one alarm panel to stand at.
+	crewHelper: Visitor?,
+	spawningCrewHelper: boolean,
+	-- Whose crew this is, so a swap or a departure can find them again, and so nobody but
+	-- the player who sent them can send somebody else in their place.
+	crewHelperOwner: Player?,
+	crewHelperCrewId: string?,
+	crewHelperName: string?,
+	-- Rolled once, when they were called, from the nerve they had *then* -- see
+	-- Config.Gangs.Jobs. Not re-rolled per ring: nerve is about who you decided to send,
+	-- not a fresh coin flip the player has no way to have weighed.
+	crewHelperFailChance: number,
+	-- Whether this ring is one they are actually going for. Decided in `ring`, the instant
+	-- the alarm goes, from crewHelperFailChance -- so the read is available the moment the
+	-- bell starts, same as everything else a player has to react to here.
+	crewHelperCommitted: boolean,
+	crewHelperSilencingFor: number,
 }
 
 -- One player, inside one bank.
@@ -195,6 +218,14 @@ local function roomFor(place: string): Room?
 		legUntil = 0,
 		noticeUntil = 0,
 		onSomebody = false,
+		crewHelper = nil,
+		spawningCrewHelper = false,
+		crewHelperOwner = nil,
+		crewHelperCrewId = nil,
+		crewHelperName = nil,
+		crewHelperFailChance = 0,
+		crewHelperCommitted = false,
+		crewHelperSilencingFor = 0,
 	}
 	rooms[place] = made
 	return made
@@ -262,6 +293,15 @@ local function stateFor(player: Player): BankState?
 		end
 	end
 
+	-- Part 3. Empty unless this player both has crew to send and the one alarm seat is
+	-- either open or already theirs -- someone else's helper is someone else's, the same
+	-- way the guard is nobody's to command.
+	local crewCallable: { GangCrewMember } = {}
+	local crew = GangService.CrewFor(player)
+	if #crew > 0 and (room.crewHelper == nil or room.crewHelperOwner == player) then
+		crewCallable = crew
+	end
+
 	return {
 		place = room.name,
 		vaultLeft = room.left,
@@ -274,6 +314,8 @@ local function stateFor(player: Player): BankState?
 		rearmIn = if alarm == "silenced" then math.max(room.rearmAt - now, 0) else 0,
 		ringingFor = if alarm == "ringing" then now - room.ringingSince else 0,
 		guard = guard,
+		crewCallable = crewCallable,
+		crewOnAlarm = if room.crewHelper ~= nil then room.crewHelperName else nil,
 		notice = session.notice,
 	}
 end
@@ -286,11 +328,18 @@ local function push(player: Player)
 	else
 		-- Money to the whole unit and the two clocks to a tenth of a second, because both
 		-- drain continuously and a panel redrawn every tick for a digit nobody can read at
-		-- that precision would be a packet every 200ms of every robbery.
+		-- that precision would be a packet every 200ms of every robbery. Crew by id and
+		-- nerve, not name, for the same reason the crew HUD digest is -- two members can
+		-- share a name and must never share a digest entry.
+		local crewBits = {}
+		for _, member in state.crewCallable do
+			table.insert(crewBits, `{member.id}:{math.floor(member.nerve)}`)
+		end
 		digest = `{state.place}/{math.floor(state.vaultLeft)}/{math.floor(state.taken)}/`
 			.. `{state.at}/{tostring(state.holding)}/{math.floor(state.silencing * 20)}/`
 			.. `{state.alarm}/{math.floor(state.rearmIn * 10)}/{math.floor(state.ringingFor * 10)}/`
-			.. `{tostring(state.guard)}/{tostring(state.notice)}`
+			.. `{tostring(state.guard)}/{table.concat(crewBits, ",")}/{tostring(state.crewOnAlarm)}/`
+			.. `{tostring(state.notice)}`
 	end
 
 	if pushed[player] == digest then
@@ -306,9 +355,29 @@ local function pushRoom(place: string)
 	end
 end
 
+-- A word for whoever sent their crew here, specifically -- not the room. The room already
+-- has `notice` per session for everything else; this exists because "your guy flinched" is
+-- a sentence about one player's choice, not about the alarm, and the two must not collide.
+local function noticeOwner(room: Room, text: string)
+	local owner = room.crewHelperOwner
+	if owner == nil then
+		return
+	end
+	local session = sessions[owner]
+	if session == nil then
+		return
+	end
+	noticeFor(session, text)
+	push(owner)
+end
+
 -- The alarm goes. Idempotent, because three different things ring it -- the first hold on
 -- the vault, the re-arm timer running out, and the guard looking up -- and two of them can
 -- land on the same tick.
+--
+-- This is also the one moment a called crew member's whole visit turns on. Nerve was
+-- already spent choosing who to send; what it buys is decided here, once, for this ring --
+-- see Config.Gangs.Jobs and the note on `crewHelperCommitted`.
 local function ring(room: Room, now: number)
 	if room.ringing then
 		return
@@ -316,6 +385,16 @@ local function ring(room: Room, now: number)
 	room.ringing = true
 	room.ringingSince = now
 	room.rearmAt = 0
+
+	if room.crewHelper ~= nil then
+		room.crewHelperSilencingFor = 0
+		room.crewHelperCommitted = math.random() >= room.crewHelperFailChance
+		if room.crewHelperCommitted then
+			noticeOwner(room, `{room.crewHelperName} is on the alarm.`)
+		else
+			noticeOwner(room, `{room.crewHelperName} isn't going for it. Nerve.`)
+		end
+	end
 end
 
 -- Back to nothing happening in this building. Only ever reached by the room emptying of
@@ -470,6 +549,140 @@ local function tickGuard(room: Room, now: number)
 	guard.moveTo(built.patrol[room.leg])
 end
 
+-- Sends a body home. Called both when the owner leaves and when the crew member they sent
+-- is no longer theirs to send -- dismissed off the gang panel while out on the job, say --
+-- so the seat never sits occupied by somebody who is not actually there anymore.
+local function despawnCrewHelper(room: Room)
+	local helper = room.crewHelper
+	if helper ~= nil then
+		room.crewHelper = nil
+		if not helper.gone() then
+			helper.destroy()
+		end
+	end
+	room.crewHelperOwner = nil
+	room.crewHelperCrewId = nil
+	room.crewHelperName = nil
+	room.crewHelperFailChance = 0
+	room.crewHelperCommitted = false
+	room.crewHelperSilencingFor = 0
+end
+
+-- How reliably a nerve rating covers the alarm. Linear between the two config ends rather
+-- than a curve, because the whole point of the number is that a player can read it off the
+-- crew panel and know roughly what they are sending in -- a hidden curve would make nerve a
+-- suggestion instead of the promise Config.Gangs.Crew's own header makes it.
+local function alarmFailChanceFor(nerve: number): number
+	local jobs = Config.Gangs.Jobs
+	local share = math.clamp(nerve / Config.Gangs.Crew.NerveMax, 0, 1)
+	return jobs.AlarmFailChanceAtZeroNerve + (jobs.AlarmFailChanceAtMaxNerve - jobs.AlarmFailChanceAtZeroNerve) * share
+end
+
+-- Sends one of the player's own crew to hold the alarm. The one seat this room has to
+-- give -- see the Room type's own note -- so this both spawns the body and claims it in
+-- the same breath once the web call is back, rather than leaving a window where two calls
+-- in flight could both believe they will land.
+local function spawnCrewHelper(player: Player, room: Room, crew: GangCrewMember)
+	if room.spawningCrewHelper then
+		return
+	end
+	room.spawningCrewHelper = true
+	task.spawn(function()
+		local built = Vault.Get(room.place)
+		local visitor = if built ~= nil
+			then NPCService.Spawn(player, GangService.CastMemberFor(crew), CFrame.new(built.door, built.alarm), nil)
+			else nil
+		room.spawningCrewHelper = false
+		-- Re-checked, same as the guard: Spawn yields on a web call, and by the time it
+		-- returns the seat may already be somebody's, or the caller may have walked out.
+		if visitor == nil then
+			return
+		end
+		local session = sessions[player]
+		if room.crewHelper ~= nil or session == nil or session.place ~= room.place then
+			visitor.destroy()
+			return
+		end
+		room.crewHelper = visitor
+		room.crewHelperOwner = player
+		room.crewHelperCrewId = crew.id
+		room.crewHelperName = crew.name
+		room.crewHelperFailChance = alarmFailChanceFor(crew.nerve)
+		room.crewHelperCommitted = false
+		room.crewHelperSilencingFor = 0
+		local color = GangService.ColorOf(player)
+		if color ~= nil and not Colors.Apply(visitor.model, color) then
+			warn(`[AGES] could not band {crew.name} -- they will look like anybody else`)
+		end
+		pushRoom(room.place)
+	end)
+end
+
+-- Walks the crew helper to the alarm and, once there, runs exactly the read `ring` already
+-- decided: committed means the same silence-hold a player would do with their own hands,
+-- uncommitted means standing there while the bell keeps going. Nothing here re-rolls
+-- mid-ring -- see `ring`'s own note.
+local function tickCrewHelper(room: Room, now: number, elapsed: number)
+	local helper = room.crewHelper
+	if helper == nil then
+		return
+	end
+	local owner = room.crewHelperOwner
+	local crewId = room.crewHelperCrewId
+	if helper.gone() or owner == nil or crewId == nil then
+		despawnCrewHelper(room)
+		return
+	end
+
+	-- Dismissed off the gang panel while they were out on this job. Checked every tick
+	-- rather than only on call, because that panel has nothing to do with this room and
+	-- must not have to know it exists.
+	local stillCrew = false
+	for _, member in GangService.CrewFor(owner) do
+		if member.id == crewId then
+			stillCrew = true
+			break
+		end
+	end
+	if not stillCrew then
+		local name = room.crewHelperName
+		despawnCrewHelper(room)
+		local session = sessions[owner]
+		if session ~= nil then
+			noticeFor(session, `{name} isn't running with you anymore, and heads off.`)
+			push(owner)
+		end
+		return
+	end
+
+	local built = Vault.Get(room.place)
+	if built == nil then
+		return
+	end
+
+	if not Vault.AtAlarm(room.place, helper.at()) then
+		helper.moveTo(built.alarm)
+		return
+	end
+
+	if not room.ringing then
+		room.crewHelperSilencingFor = 0
+		return
+	end
+	if not room.crewHelperCommitted then
+		return
+	end
+
+	room.crewHelperSilencingFor += elapsed
+	if room.crewHelperSilencingFor >= BANK.SilenceSeconds then
+		room.crewHelperSilencingFor = 0
+		room.ringing = false
+		room.rearmAt = now + BANK.RearmSeconds
+		noticeOwner(room, `{room.crewHelperName} silenced it. Quiet for now.`)
+		pushRoom(room.place)
+	end
+end
+
 -- The room itself, once per tick, whether or not anybody is holding anything. Split from
 -- the per-player tick because everything in it is shared: two robbers must not each be
 -- able to advance one alarm clock.
@@ -489,6 +702,7 @@ local function tickRoom(room: Room, now: number, elapsed: number)
 			settle(room)
 		end
 		despawnGuard(room)
+		despawnCrewHelper(room)
 		Vault.ShowAlarm(room.place, "quiet")
 		return
 	end
@@ -498,6 +712,7 @@ local function tickRoom(room: Room, now: number, elapsed: number)
 	end
 
 	tickGuard(room, now)
+	tickCrewHelper(room, now, elapsed)
 
 	if room.ringing then
 		-- The live fix, and this is the part that actually hurts. Re-reported every tick
@@ -555,6 +770,15 @@ local function endSession(player: Player)
 	-- departure look like the tripper's own.
 	if room ~= nil and room.ringing and player ~= room.trippedBy and #remaining > 0 then
 		GangService.OnBailed(player)
+	end
+
+	-- Your crew came in with you, not with the building -- unlike the guard, who stays
+	-- however many robbers remain. Despawned by ownership rather than folded into the
+	-- `#remaining == 0` branch below, so it leaves the instant its owner does even while
+	-- somebody else is still working the vault.
+	if room ~= nil and room.crewHelperOwner == player then
+		despawnCrewHelper(room)
+		pushRoom(session.place)
 	end
 
 	-- After the session is gone, so a room emptied by the last person leaving settles on
@@ -752,6 +976,54 @@ function BankService.SetHolding(player: Player, holding: boolean): boolean
 	return true
 end
 
+-- Sends one of your own crew to hold the alarm. Part 3's first slice: the rank that could
+-- name its own role finally has one to hand out, and the alarm is the one control in this
+-- room that was already a shared seat rather than a private one -- see the Room type's own
+-- note on `crewHelper`. Calling again with a different id swaps who is standing there;
+-- calling with the one already out is a no-op success rather than a second body.
+function BankService.CallCrew(player: Player, place: string, crewId: string): (boolean, string?)
+	local session = sessions[player]
+	if session == nil or session.place ~= place then
+		return false, "You are not inside the bank."
+	end
+	local room = roomFor(place)
+	if room == nil then
+		return false, "There is no vault here."
+	end
+	if room.crewHelper ~= nil and room.crewHelperOwner ~= player then
+		return false, "The alarm is already covered."
+	end
+	if room.crewHelper ~= nil and room.crewHelperCrewId == crewId then
+		return true, nil
+	end
+
+	local chosen: GangCrewMember? = nil
+	for _, member in GangService.CrewFor(player) do
+		if member.id == crewId then
+			chosen = member
+			break
+		end
+	end
+	if chosen == nil then
+		return false, "That's not your crew."
+	end
+
+	if room.crewHelper ~= nil then
+		despawnCrewHelper(room)
+	end
+	spawnCrewHelper(player, room, chosen)
+	return true, nil
+end
+
+-- Which bank a player is currently standing in, for callers outside this file that need
+-- to name it -- the debug command, mainly, which otherwise has no way to call a bank
+-- action against "wherever the player already is" without duplicating `controlAt`'s reach
+-- check itself.
+function BankService.PlaceOf(player: Player): string?
+	local session = sessions[player]
+	return if session ~= nil then session.place else nil
+end
+
 -- Stands up every bank in the content list, once, and says which ones could not be built.
 --
 -- At startup rather than on arrival, so a missing place point is a line in the log on a
@@ -840,10 +1112,20 @@ function BankService.Describe(player: Player): string
 		if room ~= nil and room.guard ~= nil then
 			guard = if room.onSomebody then "ON SOMEBODY" else `walking to spot {room.leg}`
 		end
+		local crewHelper = "none"
+		if room ~= nil and room.crewHelper ~= nil then
+			crewHelper = string.format(
+				"%s (owner %s, fail %.0f%%, %s)",
+				room.crewHelperName or "?",
+				if room.crewHelperOwner ~= nil then room.crewHelperOwner.Name else "?",
+				room.crewHelperFailChance * 100,
+				if not room.ringing then "idle" elseif room.crewHelperCommitted then "working" else "flinched"
+			)
+		end
 		table.insert(
 			lines,
 			string.format(
-				"%s: built, %d patrol spot(s), %.0f/%.0f left, alarm %s%s, %d inside, guard %s",
+				"%s: built, %d patrol spot(s), %.0f/%.0f left, alarm %s%s, %d inside, guard %s, crew %s",
 				bank.place,
 				#built.patrol,
 				if room ~= nil then room.left else BANK.VaultFloat * bank.richness,
@@ -853,7 +1135,8 @@ function BankService.Describe(player: Player): string
 					then string.format(" (%.1fs)", math.max(room.rearmAt - now, 0))
 					else "",
 				#othersIn(bank.place),
-				guard
+				guard,
+				crewHelper
 			)
 		)
 	end
@@ -897,6 +1180,13 @@ function BankService:Init()
 			return
 		end
 		BankService.SetHolding(player, holding)
+	end)
+
+	RequestBankCallCrewRemote.OnServerEvent:Connect(function(player: Player, place: any, crewId: any)
+		if typeof(place) ~= "string" or typeof(crewId) ~= "string" then
+			return
+		end
+		BankService.CallCrew(player, place, crewId)
 	end)
 
 	Players.PlayerRemoving:Connect(function(player: Player)

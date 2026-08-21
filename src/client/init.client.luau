@@ -39,6 +39,7 @@ local Prompts = require(script.world.Prompts)
 local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
+local InteractionPrompt = require(script.world.InteractionPrompt)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -95,6 +96,7 @@ local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
 local prompts = Prompts.new()
+local promptBar = InteractionPrompt.new()
 local labDots = LabDots.new()
 local heat = HeatUI.new()
 local searchRing = SearchRing.new()
@@ -140,6 +142,7 @@ local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestBankOpenRemote = Remotes.Get("RequestBankOpen")
 local RequestBankHoldRemote = Remotes.Get("RequestBankHold")
+local RequestBankCallCrewRemote = Remotes.Get("RequestBankCallCrew")
 local RequestGangOpenRemote = Remotes.Get("RequestGangOpen")
 local RequestGangChoiceRemote = Remotes.Get("RequestGangChoice")
 local RequestGangColorsRemote = Remotes.Get("RequestGangColors")
@@ -155,6 +158,14 @@ local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor
 -- carries an id and nothing else -- everything it needs to draw was pushed here
 -- already, when the row on the HUD was drawn.
 local currentPerson: PersonState? = nil
+
+-- The content id of the vault door last clicked, held for exactly one reason: calling a
+-- crew member onto the alarm names which bank, and the click that opens this panel is the
+-- only moment that id is ever in this file. Every other bank remote skips it and lets the
+-- server read the session it already has -- this one carries it only because CallCrew
+-- double-checks it against that same session, the same belt-and-braces `place` argument
+-- `RequestBankOpenRemote` takes.
+local currentBankPlace: string? = nil
 
 -- The three figures on the menu's player card, held because they arrive on three
 -- separate pushes and the card draws all of them at once. Nothing derives anything from
@@ -294,6 +305,7 @@ end)
 -- wired up. Like the till, the click only ever puts the player *in* the room: nothing is
 -- taken and nothing is tripped until something is held.
 prompts:On("Vault", function(place: string)
+	currentBankPlace = place
 	RequestBankOpenRemote:FireServer(place)
 end)
 
@@ -334,6 +346,16 @@ prompts:On("Dealer", function()
 	carDealer:Open()
 end)
 
+-- Bottom-centre prompt bar. Shown when a ProximityPrompt enters range, hidden when it
+-- leaves. The text comes directly from the prompt's ActionText / ObjectText so it is
+-- always in sync with the three-dot billboard.
+prompts:OnPromptShown(function(action, object)
+	promptBar.Show(action, object)
+end)
+prompts:OnPromptHidden(function()
+	promptBar.Hide()
+end)
+
 -- The three answers, and all three go up as bare requests: what a strike is worth is
 -- decided entirely by how long the *server* saw the button held, not by anything sent from
 -- here. A client that sent a power value would be a client that could send 1.0 every time.
@@ -358,6 +380,15 @@ end)
 -- "silence" while stood at the vault would delete the walk that is the entire activity.
 bank:OnHold(function(holding: boolean)
 	RequestBankHoldRemote:FireServer(holding)
+end)
+
+-- Sending a crew member to the alarm. `currentBankPlace` is the door last walked through;
+-- the server re-checks it against the session it already holds, so a stale or absent id
+-- here just fails closed rather than addressing the wrong room.
+bank:OnCallCrew(function(crewId: string)
+	if currentBankPlace ~= nil then
+		RequestBankCallCrewRemote:FireServer(currentBankPlace, crewId)
+	end
 end)
 
 house:OnBuyHouse(function(houseId: string)

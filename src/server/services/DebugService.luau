@@ -1542,6 +1542,9 @@ end
 --   /bank off                 no vault opens anywhere, for telling a bank bug apart from a
 --                             pursuit one -- with this off, a chase that starts at the bank
 --                             is somebody else's fault.
+--   /bank crew <id>           send that crew member (see /gang crew) to the alarm instead of
+--                             holding it yourself. Only works while standing in a bank a
+--                             session is already open in -- `/bank go` first.
 Commands.bank = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -1574,7 +1577,23 @@ Commands.bank = function(player: Player, args: { string }): string
 		return `sent to {place} — {BankService.Describe(player)}`
 	end
 
-	return `usage: /bank [go [<place>]|reset|on|off] — {BankService.Describe(player)}`
+	if arg == "crew" then
+		local crewId = args[2]
+		if crewId == nil then
+			return `usage: /bank crew <id> — {BankService.Describe(player)}`
+		end
+		local place = BankService.PlaceOf(player)
+		if place == nil then
+			return `not in a bank — {BankService.Describe(player)}`
+		end
+		local ok, why = BankService.CallCrew(player, place, crewId)
+		if not ok then
+			return `{why or "could not call them"} — {BankService.Describe(player)}`
+		end
+		return `called — {BankService.Describe(player)}`
+	end
+
+	return `usage: /bank [go [<place>]|reset|on|off|crew <id>] — {BankService.Describe(player)}`
 end
 
 -- Skills, which have no room to walk into and no panel of their own to force open, so
@@ -2878,7 +2897,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/fight [<style>|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
 	.. "/theft [go <place>|fill|on|off], "
-	.. "/bank [go [<place>]|reset|on|off], "
+	.. "/bank [go [<place>]|reset|on|off|crew <id>], "
 	.. "/gang [go <id>|join <id>|credit <n>|colors [on|off]|crew [add|drop <id>]|reset|on|off], "
 	.. "/skill [<id> <n|max>], "
 	.. "/code [<string>|clear], "

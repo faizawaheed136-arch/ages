@@ -3924,6 +3924,25 @@ Config.Gangs = {
 		NerveGainPerPoint = 0.1,
 	},
 
+	-- Part 3: sending that crew on a job, rather than doing every job yourself. The bank's
+	-- alarm control is the whole role table for now -- one seat, filled by you or by them --
+	-- because it is the one control in the game that was already a shared, room-level thing
+	-- rather than a per-player one, which is what makes handing it to somebody else legible.
+	Jobs = {
+		-- The chance a called crew member simply fails to make the alarm go quiet, once per
+		-- time it rings, rolled at the low and high end of nerve and lerped between. This is
+		-- the "badly" in the spec's "NPC crew execute them, badly if their nerve is low" --
+		-- a fresh recruit (Crew.NerveStart, 20) is still wrong more often than not, so
+		-- sending one on a bank on day one is a real gamble, not a formality with a body
+		-- attached to it.
+		-- Safe range: 0.5-0.9.
+		AlarmFailChanceAtZeroNerve = 0.75,
+		-- Never zero -- a maxed-out crew member is reliable, not a second silence button
+		-- that never misses.
+		-- Safe range: 0.02-0.15.
+		AlarmFailChanceAtMaxNerve = 0.05,
+	},
+
 	-- The head covering.
 	--
 	-- Sized in studs against an unscaled R15 head, then scaled with the head it sits on,

@@ -36,13 +36,20 @@
 -- absent below "name" on purpose) can bring somebody in off the boss's own panel, and
 -- that somebody is a persisted `GangCrewMember` with a nerve rating that only ever rises --
 -- see `creditStanding`, which is the one place both standing and nerve move together, on
--- the same work, for the same reason. What a crew member *does* is still nothing: no field
--- here says a member holds a role on a job, because Part 3 is the thing that would read it
--- and Part 3 does not exist. Adding it now would be exactly the orphaned-field defect this
--- codebase's own bar forbids.
+-- the same work, for the same reason.
 --
--- **Deferred on purpose:** territory, the district map, and calling a job -- the
--- role-assignment table and commit window Part 3 needs. The gangs each hold a side of the
+-- **Part 3, calling a job, has its first slice: sending your crew to the bank's alarm.**
+-- `GangService.CrewFor`/`CastMemberFor` are the whole of this file's part in it --
+-- BankService owns the actual role table (one seat, the alarm) and the roll against
+-- nerve, because that room already was a shared, per-place thing rather than a per-player
+-- one, which is what let a second body stand in it without a new state machine. A role is
+-- still not a field on `GangCrewMember`: it is a fact about one robbery, held on
+-- BankService's own `Room`, not a fact about the person. Theft's till has no room to send
+-- a body into yet -- that is the fast-follow, same shape, once this one has been played.
+--
+-- **Deferred on purpose:** territory, the district map, and the rest of calling a job --
+-- a gang-wide crew roster real players can join, a caller assigning roles to people who
+-- are not their own recruits, and the vault seat itself. The gangs each hold a side of the
 -- city in content/Gangs.luau and nothing reads it yet -- the map is being expanded first,
 -- and district seams have to land on real streets rather than on coordinates invented
 -- today.
@@ -64,6 +71,7 @@ local SkillService = require(script.Parent.SkillService)
 local Cast = require(script.Parent.Parent.content.Cast)
 local Colors = require(script.Parent.Parent.world.Colors)
 local Gangs = require(script.Parent.Parent.content.Gangs)
+local Public = require(script.Parent.Parent.content.Public)
 
 type LifeData = Types.LifeData
 type GangDef = Types.GangDef
@@ -73,6 +81,7 @@ type GangPanel = Types.GangPanel
 type GangCrewMember = Types.GangCrewMember
 type OfferedChoice = Types.OfferedChoice
 type Visitor = NPCService.Visitor
+type CastMember = Types.CastMember
 
 local GANGS = Config.Gangs
 
@@ -785,6 +794,19 @@ function GangService.GangOf(player: Player): string?
 	return if data ~= nil then data.gangId else nil
 end
 
+-- The color a body sent by this player's crew should wear. Nil for a life not currently in
+-- a gang, which cannot happen for anyone who actually has crew to send -- crew is cleared
+-- the moment you leave, see `leave` -- but a caller checking a body it is about to band
+-- should not have to know that on faith.
+function GangService.ColorOf(player: Player): Color3?
+	local data = dataFor(player)
+	if data == nil or data.gangId == nil then
+		return nil
+	end
+	local def = Gangs.ById[data.gangId]
+	return if def ~= nil then def.color else nil
+end
+
 -- Whether the band is actually on their head right now, which is not the same question as
 -- whether they are in a gang: taking the colors off is a thing a member does on purpose.
 -- Asked through Lives rather than read off the profile here so that every caller gets the
@@ -818,6 +840,40 @@ function GangService.SetColors(player: Player, want: boolean): boolean
 	noticeFor(player, if want then "Colors on." else "Colors off. Nobody knows you.")
 	push(player)
 	return true
+end
+
+-- Who this player could send on a job right now. Empty for a life with no gang, no rank
+-- that carries a slot, or nobody recruited into it -- almost everybody, almost always --
+-- so a caller can check length rather than asking three separate questions first.
+function GangService.CrewFor(player: Player): { GangCrewMember }
+	local data = dataFor(player)
+	if data == nil then
+		return {}
+	end
+	return data.gangCrew
+end
+
+-- Gives a crew member a body to send on a job. A crew member has no persistent look of
+-- their own, only a name and a nerve rating -- Part 2 deliberately stopped at that, see
+-- this file's own header -- so this borrows whichever stranger content/Public would have
+-- handed the bank's guard or the till's clerk and relabels it, the same anonymous-body
+-- pool the rest of the crime tree already draws from.
+function GangService.CastMemberFor(crew: GangCrewMember): CastMember
+	local base = Public.Someone()
+	return {
+		id = crew.id,
+		gender = base.gender,
+		name = crew.name,
+		skinColor = base.skinColor,
+		heightScale = base.heightScale,
+		widthScale = base.widthScale,
+		headScale = base.headScale,
+		proportionScale = base.proportionScale,
+		bodyTypeScale = base.bodyTypeScale,
+		shirtAssetId = base.shirtAssetId,
+		pantsAssetId = base.pantsAssetId,
+		hairAssetId = base.hairAssetId,
+	}
 end
 
 local function join(player: Player, data: LifeData, def: GangDef)

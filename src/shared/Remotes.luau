@@ -203,6 +203,11 @@ export type RemoteName =
 	-- could silence an alarm from the vault, which is the one shortcut that would delete
 	-- the activity outright.
 	| "RequestBankHold"
+	-- "Send this one to the alarm." A crew id, checked against the caller's own roster
+	-- server-side same as every other choice in this tree -- see GangService.CrewFor. Part
+	-- 3's first slice: the seat this claims is BankService's, not a gang panel's, because
+	-- it only means anything while standing in the room it is for.
+	| "RequestBankCallCrew"
 	-- Who you run with and how far up you are. Pushed on change rather than on a clock,
 	-- because standing moves in bursts -- a vault pays forty-five points in one instant and
 	-- then nothing for a minute -- and a fixed-rate push would spend most of its traffic
@@ -524,6 +529,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"BankUpdated",
 	"RequestBankOpen",
 	"RequestBankHold",
+	"RequestBankCallCrew",
 	"GangUpdated",
 	"GangPanelUpdated",
 	"MapData",

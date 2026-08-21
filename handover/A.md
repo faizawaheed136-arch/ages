@@ -1,6 +1,62 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-20 (latest) — a crew you recruit, not a crew that spawns
+## 2026-08-20 (latest) — calling a job, v1: sending crew to the alarm
+
+Gang Part 3 from `docs/gangs_spec.md`, first slice. Checked before building it, per
+the ask — read `TheftService`/`BankService`/`GangService`/`WorkService`/`NPCService`
+looking for an existing role-table/job primitive to reuse rather than invent. There
+isn't one: Theft and Bank are both solo-with-shared-heat, and `WorkService`'s
+`Shift`/`ActiveTask` timer shape is the closest thing to a commit window but is
+single-player. Two facts made a scoped v1 tractable anyway: `GangCrewMember` is
+per-player, not gang-wide (a `caller` has up to 3 slots, a `name` has 1), so "calling
+a job" doesn't need a new recruiting/matchmaking system — it's sending your own
+already-recruited NPC. And `BankService`'s alarm is already a shared, single-occupancy
+room-level control (`controlAt` returns `"vault" | "alarm" | "between"`), which is
+exactly the shape a "role" needs to be.
+
+So: a `caller`/`name`-rank player with recruited crew can send one of them to
+autonomously hold the bank's alarm. Success is a single roll made once per ring cycle
+(`Config.Gangs.Jobs.AlarmFailChance{At Zero,At Max}Nerve`, linear on the member's
+nerve), not re-rolled mid-ring — the player's read is available the moment the bell
+starts, same signposting law as everything else in the bank. The crew member gets a
+body by borrowing a random appearance off `Public.Someone()` and relabelling it
+(`GangService.CastMemberFor`), banded in the gang's colour via `Colors.Apply` the same
+way a player's own colours go on.
+
+Deliberately kept off `GangCrewMember` itself: no `role` field. What a crew member is
+doing on one robbery is a fact about that robbery, not a persisted fact about the
+person, so it lives on `BankService`'s own `Room` (`crewHelperCrewId` etc.) and is
+gone the moment the seat empties.
+
+Touched: `src/shared/Config.luau` (`Config.Gangs.Jobs`), `src/shared/Types.luau`
+(`BankState.crewCallable`/`crewOnAlarm`), `src/shared/Remotes.luau`
+(`RequestBankCallCrew`), `src/server/services/GangService.luau` (`CrewFor`,
+`CastMemberFor`, `ColorOf`), `src/server/services/BankService.luau` (the crew-helper
+NPC: spawn/tick/despawn, the nerve roll, `CallCrew`, `PlaceOf`, push-digest and
+`Describe` coverage), `src/server/services/DebugService.luau` (`/bank crew <id>`),
+`src/client/ui/BankUI.luau` (a crew section: label plus one button per callable
+member, hidden entirely for a player with no crew), `src/client/init.client.luau`
+(`OnCallCrew` wiring, and `currentBankPlace` held from the same click that already
+carries the vault door's id for `RequestBankOpenRemote`).
+
+`python3 tools/check.py`: clean. Lobby (15 modules), game-server (118), game-client
+(43) all boot, including a simulated player join. (First pass caught one real miss —
+`BankService.luau` called `Colors.Apply` without requiring `Colors`; the checker's
+"modules used but never required" pass found it before Studio would have.)
+
+**Deliberately not built, and why:** gang-wide job recruiting of other real players —
+that's a genuine matchmaking system and this slice was scoped specifically to avoid
+needing one. Assigning a role to somebody who isn't already your recruited crew.
+The vault seat itself — taking the money stays a player-only action; handing that to
+an NPC would be handing away the whole activity, not just the risk. Theft/till
+integration — same shape, flagged as the natural fast-follow once this one has been
+played. None of this has been opened in Studio yet.
+
+No bugs found in another agent's files this round. Other agents' uncommitted WIP is
+still in this tree (`Town.rbxmx`, `Townsfolk.luau`, `Cast.luau`, `Versailles.rbxmx`,
+etc.) — none of it touched.
+
+## 2026-08-20 — a crew you recruit, not a crew that spawns
 
 Gang Part 2 from `docs/gangs_spec.md`: crew. A boss's roster now holds named crew
 members with a nerve meter (0-100, only ever rises — same law as `Ties.luau`: bonds

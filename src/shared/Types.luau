@@ -1195,6 +1195,16 @@ export type BankState = {
 	-- than drawing an "away" lamp for a man who does not exist.
 	guard: ("away" | "near" | "onYou")?,
 
+	-- Part 3: crew you could send to the alarm instead of holding it yourself. Empty for
+	-- almost every player, almost every visit -- it only has entries once a rank has both
+	-- crew (Config.Gangs.Crew) and nobody else's crew is already on the panel. The panel
+	-- can just check length rather than carrying a second "am I eligible" flag.
+	crewCallable: { GangCrewMember },
+	-- Whose crew is on the alarm right now, if anybody's -- by name, because this is a
+	-- readout, not a control. Nil when the alarm is uncovered, which includes the case
+	-- where you are standing on it yourself: that is already what `at`/`holding` say.
+	crewOnAlarm: string?,
+
 	notice: string?,
 }
 
@@ -1681,10 +1691,11 @@ export type CodeResult = {
 	message: string,
 }
 
--- One person who runs with you. Nothing here says what they do on a job -- that is
--- Part 3, "calling a job", and does not exist yet. Adding a `role` field now, for
--- nothing in the game to read, is exactly the orphaned-field defect the project's own
--- bar forbids; it goes in beside `nerve` the day something assigns one.
+-- One person who runs with you. Nothing here says what they do on a job: a role is
+-- something a crew member is sent to hold for the length of one robbery (BankService's
+-- `Room.crewHelperCrewId`), not a fact about them, so it is not a field on this type --
+-- the same "goes in beside `nerve` the day something assigns one" reasoning still
+-- applies to anything that *would* be a lasting fact about a member, like a specialty.
 export type GangCrewMember = {
 	-- Unique for the life of this crew slot, not for the life of the account -- a
 	-- dismissed member's id is never reissued, so a client holding a stale reference

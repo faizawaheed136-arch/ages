@@ -72,6 +72,8 @@ export type BankUIHandle = typeof(setmetatable(
 		takenLabel: TextLabel,
 		alarmLamp: TextLabel,
 		guardLamp: TextLabel,
+		crewLabel: TextLabel,
+		crewContainer: Frame,
 		silenceTrack: Frame,
 		silenceFill: Frame,
 		button: TextButton,
@@ -88,6 +90,7 @@ export type BankUIHandle = typeof(setmetatable(
 		-- has walked away still repaints the right words.
 		verb: string,
 		onHold: ((holding: boolean) -> ())?,
+		onCallCrew: ((crewId: string) -> ())?,
 	},
 	BankUI
 ))
@@ -225,6 +228,36 @@ function BankUI.new(): BankUIHandle
 	local alarmLamp = makeLamp(panel, "Alarm", 3)
 	local guardLamp = makeLamp(panel, "Guard", 4)
 
+	-- Who is standing at the alarm for you, if anybody. A gang member's crew is personal --
+	-- one to three people they recruited themselves -- so this is a short list, not a roster,
+	-- and it only appears at all once there is somebody to send.
+	local crewLabel = Instance.new("TextLabel")
+	crewLabel.Name = "Crew"
+	crewLabel.Size = UDim2.new(1, 0, 0, 16)
+	crewLabel.BackgroundTransparency = 1
+	crewLabel.Font = Enum.Font.Gotham
+	crewLabel.TextSize = 12
+	crewLabel.TextXAlignment = Enum.TextXAlignment.Left
+	crewLabel.TextColor3 = CAPTION_COLOR
+	crewLabel.Text = ""
+	crewLabel.Visible = false
+	crewLabel.LayoutOrder = 5
+	crewLabel.Parent = panel
+
+	local crewContainer = Instance.new("Frame")
+	crewContainer.Name = "CrewButtons"
+	crewContainer.Size = UDim2.new(1, 0, 0, 0)
+	crewContainer.AutomaticSize = Enum.AutomaticSize.Y
+	crewContainer.BackgroundTransparency = 1
+	crewContainer.Visible = false
+	crewContainer.LayoutOrder = 6
+	crewContainer.Parent = panel
+
+	local crewLayout = Instance.new("UIListLayout")
+	crewLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	crewLayout.Padding = UDim.new(0, 4)
+	crewLayout.Parent = crewContainer
+
 	-- Only up while a silence is being held. A permanently visible empty bar would read as
 	-- a second thing draining alongside the vault, which is the one misreading that would
 	-- make a player let go at the wrong moment.
@@ -234,7 +267,7 @@ function BankUI.new(): BankUIHandle
 	silenceTrack.BackgroundColor3 = TRACK_COLOR
 	silenceTrack.BorderSizePixel = 0
 	silenceTrack.Visible = false
-	silenceTrack.LayoutOrder = 5
+	silenceTrack.LayoutOrder = 7
 	silenceTrack.Parent = panel
 
 	local silenceFill = Instance.new("Frame")
@@ -254,7 +287,7 @@ function BankUI.new(): BankUIHandle
 	button.TextSize = 15
 	button.TextColor3 = BUTTON_DEAD_TEXT
 	button.Text = "WALK TO THE VAULT"
-	button.LayoutOrder = 6
+	button.LayoutOrder = 8
 	button.Parent = panel
 
 	local buttonCorner = Instance.new("UICorner")
@@ -273,7 +306,7 @@ function BankUI.new(): BankUIHandle
 	noticeLabel.TextColor3 = LIVE_COLOR
 	noticeLabel.Text = ""
 	noticeLabel.Visible = false
-	noticeLabel.LayoutOrder = 7
+	noticeLabel.LayoutOrder = 9
 	noticeLabel.Parent = panel
 
 	local self = setmetatable({
@@ -284,6 +317,8 @@ function BankUI.new(): BankUIHandle
 		takenLabel = takenLabel,
 		alarmLamp = alarmLamp,
 		guardLamp = guardLamp,
+		crewLabel = crewLabel,
+		crewContainer = crewContainer,
 		silenceTrack = silenceTrack,
 		silenceFill = silenceFill,
 		button = button,
@@ -292,6 +327,7 @@ function BankUI.new(): BankUIHandle
 		canHold = false,
 		verb = "WALK TO THE VAULT",
 		onHold = nil,
+		onCallCrew = nil,
 	}, BankUI) :: BankUIHandle
 
 	local function setHolding(holding: boolean)
@@ -348,6 +384,51 @@ function BankUI.OnHold(self: BankUIHandle, handler: (holding: boolean) -> ())
 	self.onHold = handler
 end
 
+function BankUI.OnCallCrew(self: BankUIHandle, handler: (crewId: string) -> ())
+	self.onCallCrew = handler
+end
+
+-- One button per crew member, rebuilt from scratch on every snapshot. The list is at most
+-- three long -- a caller's whole crew -- so throwing away and remaking the row is simpler
+-- than diffing it, and cheap enough that nobody will ever measure it.
+local function rebuildCrewButtons(self: BankUIHandle, state: BankState)
+	for _, child in self.crewContainer:GetChildren() do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	for _, member in state.crewCallable do
+		-- `crewOnAlarm` is a name, not an id -- it is a readout for the panel, not a
+		-- control, and the room only ever has one gang's crew in it at a time so a name
+		-- collision is not a real risk here.
+		local isOnAlarm = state.crewOnAlarm == member.name
+
+		local crewButton = Instance.new("TextButton")
+		crewButton.Name = member.id
+		crewButton.Size = UDim2.new(1, 0, 0, 28)
+		crewButton.BackgroundColor3 = if isOnAlarm then BUTTON_HELD else BUTTON_IDLE
+		crewButton.BorderSizePixel = 0
+		crewButton.AutoButtonColor = false
+		crewButton.Font = Enum.Font.GothamMedium
+		crewButton.TextSize = 13
+		crewButton.TextColor3 = BUTTON_TEXT
+		crewButton.Text = `{member.name} -- nerve {math.floor(member.nerve)}{if isOnAlarm then " -- ON THE ALARM" else ""}`
+		crewButton.Parent = self.crewContainer
+
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0, 6)
+		buttonCorner.Parent = crewButton
+
+		crewButton.MouseButton1Click:Connect(function()
+			local handler = self.onCallCrew
+			if handler ~= nil then
+				handler(member.id)
+			end
+		end)
+	end
+end
+
 -- The whole panel from one snapshot. Nil takes it down and, importantly, lets go: a panel
 -- that vanished while the server still believed the hands were on the vault would be a
 -- robbery continuing off screen.
@@ -357,6 +438,8 @@ function BankUI.Set(self: BankUIHandle, state: BankState?)
 		self.holding = false
 		self.canHold = false
 		self.verb = "WALK TO THE VAULT"
+		self.crewLabel.Visible = false
+		self.crewContainer.Visible = false
 		paintButton(self)
 		return
 	end
@@ -405,6 +488,18 @@ function BankUI.Set(self: BankUIHandle, state: BankState?)
 
 	self.silenceTrack.Visible = state.at == "alarm" and state.silencing > 0
 	self.silenceFill.Size = UDim2.fromScale(math.clamp(state.silencing, 0, 1), 1)
+
+	-- Send-your-crew, the whole width of Part 3 v1: a short list of names, visible only to a
+	-- player who has somebody to send. Nobody with an empty crew ever sees this section --
+	-- an empty list with nothing to click would be the panel asking a question it already
+	-- knows the answer to.
+	local hasCrew = #state.crewCallable > 0
+	self.crewContainer.Visible = hasCrew
+	self.crewLabel.Visible = hasCrew
+	if hasCrew then
+		self.crewLabel.Text = if state.crewOnAlarm ~= nil then "YOUR CREW IS ON THE ALARM" else "SEND YOUR CREW TO THE ALARM"
+		rebuildCrewButtons(self, state)
+	end
 
 	-- The server's word on whether the hands are actually on it, which can differ from the
 	-- button: walking out of reach, an empty vault, a completed silence or a death all take
