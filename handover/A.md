@@ -1,6 +1,32 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-21 (latest) — the till gets a lookout, v1
+## 2026-08-21 (latest) — another stale comment caught: territory already shipped
+
+Prompted by "ok next" with nothing queued. Before picking a new build I had a survey done
+across my own files for anything already flagged as deferred-but-actually-done, the same
+class of bug the previous entry caught in this same file. It found one: `GangService.luau`'s
+header still said "**Deferred on purpose:** territory, the district map... the map is being
+expanded first" — but `TerritoryService.luau` was committed on 2026-08-19 (`31a0c95`,
+`4855bc6`), is wired into `init.server.luau`, has full client UI (`MapUI`, `MapIcons`,
+`Minimap`), and passes `check.py` clean. The gangs' `side` field in `content/Gangs.luau`
+has been read for two days by the time this was noticed.
+
+Fixed the comment to say so, and also updated the adjacent note about Theft's crew role —
+it used to say "if Theft gets a crew role... that is a new mechanic... gets its own check
+before it gets built," which was true when written and stale the moment the lookout shipped
+two entries ago. Rewrote both to describe what actually exists rather than what was once
+proposed. What is genuinely still deferred, restated precisely rather than dropped: a
+gang-wide crew roster real players can join (not just each caller's own three recruits), a
+caller assigning roles to non-recruits, and a crew role for the vault's *drawer* (Bank's
+crew helper only ever covers the alarm).
+
+**`docs/README.md` (line 29) and `docs/gangs_spec.md` (line 30, 139) say the same wrong
+thing** — both call territory and the district map deferred. I do not own `docs/` (see
+`HANDOVER.md`: "propose changes, do not make them"), so this is a flag rather than a fix:
+whoever does own those files should update both to match what `TerritoryService.luau`
+already does. `tools/check.py`: clean.
+
+## 2026-08-21 — the till gets a lookout, v1
 
 Built on explicit go-ahead, after the previous entry corrected the claim that Theft's
 crew role would be "the same shape" as Bank's alarm helper. It isn't, and the design here

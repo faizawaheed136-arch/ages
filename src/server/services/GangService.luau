@@ -46,23 +46,31 @@
 -- still not a field on `GangCrewMember`: it is a fact about one robbery, held on
 -- BankService's own `Room`, not a fact about the person.
 --
--- **Checked, and Theft is not the same shape, on purpose.** The obvious next move is to
--- give Theft a crew helper too, and on inspection the till has nothing to hand one: it has
--- no second seat, only two independent attentions -- the clerk and the camera -- and
+-- **Theft's crew role shipped too, and it is not Bank's shape reused.** The till has no
+-- second seat, only two independent attentions -- the clerk and the camera -- and
 -- TheftService's own header is explicit that reading them *is* the activity ("this cannot
 -- be played by counting. It has to be watched."). A helper who could stand in for either
 -- would be a body that plays the mini-game for you, which is the thing Bank's crew helper
 -- was careful never to be -- it only ever covers a second *location*, not a second
--- *attention*. If Theft gets a crew role, it has to be a different one -- a lookout who
--- watches the street rather than the counter -- and that is a new mechanic, not a reuse,
--- so it gets its own check before it gets built.
+-- *attention*. So Theft's is a lookout instead: it never reads the clerk or the camera
+-- for you, it only softens what one mistake costs, once per robbery -- see
+-- TheftService's own `spawnLookout`/`tickLookout` and Config.Gangs.Jobs's
+-- `TillCoverFailChance` notes.
 --
--- **Deferred on purpose:** territory, the district map, and the rest of calling a job --
--- a gang-wide crew roster real players can join, a caller assigning roles to people who
--- are not their own recruits, and the vault seat itself. The gangs each hold a side of the
--- city in content/Gangs.luau and nothing reads it yet -- the map is being expanded first,
--- and district seams have to land on real streets rather than on coordinates invented
--- today.
+-- **Territory shipped -- see TerritoryService.** The gangs' sides of the city
+-- (content/Gangs.luau) are read now: crossing into a rival's on foot in your colors costs
+-- standing once, getting back out pays it once, scaled by depth. This file still has
+-- nothing to do with that directly -- TerritoryService reads `side` and calls back into
+-- `Credit`/`Debit` the same way the crime services do -- but the comment that used to
+-- live here calling territory unbuilt was wrong the day this line was written and is
+-- corrected rather than left to keep misleading the next read of this file.
+--
+-- **Still deferred, and still on purpose:** the rest of calling a job -- a gang-wide crew
+-- roster real players can join rather than each caller's own three recruits, a caller
+-- assigning roles to people who are not their own recruits, and the vault's *drawer* seat
+-- itself (Bank's crew helper only ever takes the alarm; nobody has asked a crew member to
+-- hold the vault open). Each of those is a real matchmaking or ownership question this
+-- file has deliberately not answered yet, not a gap nobody noticed.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
