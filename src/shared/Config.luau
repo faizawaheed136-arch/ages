@@ -4501,6 +4501,15 @@ Config.Guide = {
 	-- Safe range: 0.1-1.
 	RefreshSeconds = 0.25,
 
+	-- How often the road-following route itself is recomputed against the navmesh --
+	-- a separate, much coarser interval than RefreshSeconds above, because asking
+	-- PathfindingService for a route is real work and the corners it finds do not
+	-- move just because the player took another step. The leg nearest the player is
+	-- re-anchored to their live position every RefreshSeconds regardless of this, so
+	-- the path never visibly lags behind their feet even between recomputes.
+	-- Safe range: 0.75-4.
+	RouteRefreshSeconds = 1.5,
+
 	-- Close enough to count as arrived, at which point the path would be pointing
 	-- at the ground under your own feet. The label stays up -- you still want to
 	-- know what you are standing in front of -- but the arrows go.

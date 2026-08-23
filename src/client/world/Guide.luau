@@ -18,6 +18,17 @@
 -- arrow rather than guessed at with a fixed curve. It follows a slope, a kerb or a
 -- flight of steps the old beam had no way to know was there.
 --
+-- The path itself used to be one straight segment from the player to the target,
+-- which cut through buildings and off the edge of roads the moment either end sat
+-- around a corner. It now asks `PathfindingService` for a route -- the same navmesh
+-- `NPCService` already walks its townsfolk on, with the same agent size, so a guide
+-- never promises a line an NPC's own body could not fit through. Full recomputes are
+-- throttled to `RouteRefreshSeconds`, because asking the navmesh is not free and the
+-- corners it finds do not move just because the player took another step; the leg
+-- from the player to the first of those corners is re-anchored to their live
+-- position on every refresh regardless, so the path never lags a step behind their
+-- feet even between recomputes.
+--
 -- Fixed-size pool, not create-and-destroy. `Config.Guide.MaxArrows` bars are built
 -- once in `Guide.new()` and only ever repositioned or hidden; a guide to the far
 -- side of the map costs exactly the same as one to the next room over, just spaced
@@ -35,6 +46,7 @@
 --
 -- The server decides where to point and when to stop. Nothing here asks why.
 
+local PathfindingService = game:GetService("PathfindingService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -103,10 +115,30 @@ export type GuideHandle = typeof(setmetatable(
 		activeCount: number,
 		rayParams: RaycastParams,
 		target: Vector3?,
+		-- The current road-following polyline, corner to corner, from the last full
+		-- PathfindingService compute -- point 1 is re-anchored to the player's live
+		-- position on every refresh, the rest only changes when the route itself is
+		-- recomputed. At least 2 points whenever `target` is set.
+		routePoints: { Vector3 },
+		-- What `target` was the last time the route was actually recomputed, so a new
+		-- target forces a fresh route immediately rather than waiting out the timer
+		-- below on a corner structure that pointed somewhere else.
+		routeTarget: Vector3?,
+		-- os.clock() of the last full recompute, throttled against by RouteRefreshSeconds.
+		routeComputedAt: number,
 		connection: RBXScriptConnection?,
 	},
 	Guide
 ))
+
+-- The agent a route is asked for. Same body size `NPCService` already computes routes
+-- for, so a guide never draws a line through a gap only a player's own thinner
+-- hitbox could pass -- the arrows point somewhere an NPC could actually be walking.
+local ROUTE_AGENT_PARAMS = {
+	AgentRadius = Config.NPC.BodyRadius,
+	AgentHeight = Config.NPC.BodyHeight,
+	AgentCanJump = true,
+}
 
 local function outline(into: Instance)
 	local stroke = Instance.new("UIStroke")
@@ -266,6 +298,9 @@ function Guide.new(): GuideHandle
 		activeCount = 0,
 		rayParams = rayParams,
 		target = nil,
+		routePoints = {},
+		routeTarget = nil,
+		routeComputedAt = 0,
 		connection = nil,
 	}, Guide)
 end
@@ -297,11 +332,74 @@ local function hideArrowsFrom(self: GuideHandle, from: number)
 	end
 end
 
+-- Asks the navmesh for a route rather than assuming a straight line, and falls back
+-- to one on any failure -- an unreachable spot, a navmesh gap, a target the player
+-- teleported next to that nothing has walked before. A guide that vanished when
+-- pathfinding had a bad day would be worse than one that goes straight for a few
+-- studs; the raycast ground-hugging below still keeps that fallback flush with the
+-- floor even though it no longer bends around anything.
+local function computeRoute(from: Vector3, target: Vector3): { Vector3 }
+	local ok, path = pcall(PathfindingService.CreatePath, PathfindingService, ROUTE_AGENT_PARAMS)
+	if not ok then
+		return { from, target }
+	end
+	local computed = pcall(function()
+		path:ComputeAsync(from, target)
+	end)
+	if not computed or path.Status ~= Enum.PathStatus.Success then
+		path:Destroy()
+		return { from, target }
+	end
+	local waypoints = path:GetWaypoints()
+	path:Destroy()
+	if #waypoints < 2 then
+		return { from, target }
+	end
+	local points = table.create(#waypoints)
+	for _, waypoint in waypoints do
+		table.insert(points, waypoint.Position)
+	end
+	return points
+end
+
+-- The full length of a polyline, corner to corner.
+local function routeLength(points: { Vector3 }): number
+	local total = 0
+	for i = 1, #points - 1 do
+		total += (points[i + 1] - points[i]).Magnitude
+	end
+	return total
+end
+
+-- Where `along` studs into the route lands, and which way that leg of it runs.
+-- Clamps into the final leg past the end rather than erroring, since edge-fade
+-- rounding can ask for a hair past the route's own measured length.
+local function pointAlong(points: { Vector3 }, along: number): (Vector3, Vector3)
+	local remaining = along
+	local lastLegCount = #points - 1
+	for i = 1, lastLegCount do
+		local segStart = points[i]
+		local segEnd = points[i + 1]
+		local segVector = segEnd - segStart
+		local segLength = segVector.Magnitude
+		if remaining <= segLength or i == lastLegCount then
+			local fraction = if segLength > 1e-4 then math.clamp(remaining / segLength, 0, 1) else 0
+			local position = segStart + segVector * fraction
+			local horizontal = Vector3.new(segVector.X, 0, segVector.Z)
+			local direction = if horizontal.Magnitude > 1e-4 then horizontal.Unit else Vector3.new(0, 0, 1)
+			return position, direction
+		end
+		remaining -= segLength
+	end
+	local last = points[#points]
+	return last, Vector3.new(0, 0, 1)
+end
+
 -- Re-walks the path from the player's feet to the target, ground first: one
 -- downward raycast per arrow slot, so the chain follows a slope or a flight of
--- steps instead of assuming the ground is flat between the two ends. Only the
--- shape of the path is decided here -- how bright each arrow is this instant is
--- `animateFlow`'s job, every frame, not this one's.
+-- steps instead of assuming the ground is flat between the two ends. The shape it
+-- walks is the road-following route above, not a straight line -- only how bright
+-- each arrow is this instant is `animateFlow`'s job, every frame, not this one's.
 local function rebuildPath(self: GuideHandle)
 	local guide = Config.Guide
 	local target = self.target
@@ -322,31 +420,42 @@ local function rebuildPath(self: GuideHandle)
 		return
 	end
 
-	local distance = (from - target).Magnitude
-	self.distanceText.Text = formatDistance(distance)
+	local straightDistance = (from - target).Magnitude
+	self.distanceText.Text = formatDistance(straightDistance)
 	self.waypoint.Enabled = true
 
 	-- Arrived. The waypoint stays, because knowing what you are standing in front
 	-- of is still worth something; the path goes, because it would now be pointing
 	-- at the ground under your own feet.
-	if distance <= guide.ArrivedRadiusStuds then
+	if straightDistance <= guide.ArrivedRadiusStuds then
 		hideArrowsFrom(self, 1)
 		self.activeCount = 0
 		return
 	end
 
-	local delta = target - from
-	local horizontal = Vector3.new(delta.X, 0, delta.Z)
-	local totalDistance = horizontal.Magnitude
+	-- The route's corner structure is only worth asking the navmesh for again once
+	-- in a while, or the moment the target itself changed underneath it -- either
+	-- way the near leg still gets re-anchored to `from` below regardless, so this
+	-- never shows a route starting somewhere the player already left.
+	local now = os.clock()
+	local routeTarget = self.routeTarget
+	if #self.routePoints < 2 or routeTarget == nil or (routeTarget - target).Magnitude > 0.5 or now - self.routeComputedAt >= guide.RouteRefreshSeconds then
+		self.routePoints = computeRoute(from, target)
+		self.routeComputedAt = now
+		self.routeTarget = target
+	else
+		self.routePoints[1] = from
+		self.routePoints[#self.routePoints] = target
+	end
+
+	local totalDistance = routeLength(self.routePoints)
 	if totalDistance < 1 then
-		-- Directly above or below the player somehow (a vault, a rooftop). No
-		-- horizontal direction to lay arrows along; the waypoint alone still says
-		-- what is there.
+		-- Directly on top of the target, or a degenerate route. No length to lay
+		-- arrows along; the waypoint alone still says what is there.
 		hideArrowsFrom(self, 1)
 		self.activeCount = 0
 		return
 	end
-	local direction = horizontal.Unit
 
 	-- A path longer than MaxArrows * ArrowSpacingStuds spaces its arrows further
 	-- apart rather than growing the pool, so a cross-map guide never costs more
@@ -362,7 +471,7 @@ local function rebuildPath(self: GuideHandle)
 
 	for i = 1, count do
 		local along = (i - 0.5) * spacing
-		local samplePoint = from + direction * along
+		local samplePoint, direction = pointAlong(self.routePoints, along)
 
 		local origin = samplePoint + Vector3.new(0, RAY_UP_STUDS, 0)
 		local result = workspace:Raycast(origin, Vector3.new(0, -(RAY_UP_STUDS + RAY_DOWN_STUDS), 0), self.rayParams)
@@ -373,11 +482,12 @@ local function rebuildPath(self: GuideHandle)
 			groundPosition = result.Position
 			normal = result.Normal
 		else
-			-- No ground found (a gap, a void, a raycast filter miss) — fall back to
-			-- a straight interpolation between the two known endpoints rather than
-			-- leaving a hole in the path.
-			local alpha = along / totalDistance
-			groundPosition = Vector3.new(samplePoint.X, from.Y + (target.Y - from.Y) * alpha, samplePoint.Z)
+			-- No ground found under this sample (a gap, a void, a raycast filter
+			-- miss) -- the route point itself already carries a real height, since
+			-- it came off the navmesh or off the player's and target's own feet, so
+			-- that is the fallback rather than a straight interpolation between the
+			-- two far ends of the whole path.
+			groundPosition = samplePoint
 			normal = Vector3.new(0, 1, 0)
 		end
 
@@ -461,6 +571,8 @@ function Guide.Set(self: GuideHandle, state: GuideState)
 		self.waypoint.Enabled = false
 		hideArrowsFrom(self, 1)
 		self.activeCount = 0
+		self.routePoints = {}
+		self.routeTarget = nil
 		-- The connection is dropped rather than left spinning on a hidden path. A
 		-- player spends nearly their whole life with nowhere in particular to be,
 		-- so this is the state that has to cost nothing.
