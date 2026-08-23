@@ -935,6 +935,12 @@ end
 --                             far enough apart and the system has no depth in it.
 --   /fight boxer              Ruiz, who guards half the time. Nothing but a strike held
 --                             past the guard-break mark should get through him.
+--   /fight rival               whoever runs the block you are standing on, per
+--                             TerritoryService.RegionOf -- refused on your own side and
+--                             refused off anybody's turf. A win moves gang standing the
+--                             way an incursion does; a plain style id (enforcer_north and
+--                             the like) still stands one up with no territory check, for
+--                             testing the fight itself without walking to their side.
 --   /fight win, /fight lose   skips to the result, which is the only way to check the
 --                             payouts and the getting-back-up without winning a fight
 --                             first. Both settle the bout the way the tick would.
@@ -972,6 +978,14 @@ Commands.fight = function(player: Player, args: { string }): string
 			return `no fight running — {FightService.Describe(player)}`
 		end
 		return `fight ended — {FightService.Describe(player)}`
+	end
+
+	if arg == "rival" then
+		local ok, refusal = FightService.ChallengeRival(player)
+		if not ok then
+			return `could not square up: {refusal or "no reason given"}`
+		end
+		return `rival is waiting — {FightService.Describe(player)}`
 	end
 
 	-- Anything else is read as a style id, and an unknown one is refused by name rather
@@ -2913,7 +2927,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
-	.. "/fight [<style>|win|lose|end|on|off], "
+	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
 	.. "/theft [go <place>|fill|on|off|crew <id>], "
 	.. "/bank [go [<place>]|reset|on|off|crew <id>], "

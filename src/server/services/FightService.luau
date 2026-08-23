@@ -39,13 +39,28 @@
 --
 -- ## What this file owns and what it does not
 --
--- It owns the bout: one per player, at most. It does not own heat, ties, records or
--- what a witness thinks -- a fight in this part is a fight and nothing follows it into
--- the rest of the world. That is deliberate sequencing rather than an oversight: the
--- consequences are the next part, and wiring them in before the contest itself is worth
--- playing would mean tuning the punishment for a mechanic nobody had tried.
+-- It owns the bout: one per player, at most. It still does not own ties or records --
+-- fighting does not touch Ties.luau's ladder, on purpose, because Fighters.luau's own
+-- header explains why the population you fight cannot be the population you befriend.
+-- It does own two small consequences now, both deliberately soft, because combat is
+-- legal in AGES and a fight is a contest with a winner, not a crime:
 --
--- The one exception is the pair of stat outcomes at the bottom, and they are here
+--   **Heat, but only if caught.** A fight is not a crime, but a brawl loud enough for
+--   a stranger to watch the whole way through is still a disturbance -- so `decide`
+--   rolls the crowd once, at the end, rather than wiring in WitnessService's continuous
+--   fill. A bout is over in twenty seconds, too short for a look-then-fill gesture to
+--   read as anything but instant, so it is asked once and it is asked quietly: most
+--   fights cost nothing at all, which is the whole of "unless caught".
+--
+--   **Notoriety, on a win.** LifeData.notoriety, paid win-only and never taken back on
+--   a loss, same ratchet gang standing and crew nerve already use. It is a straight
+--   count of fights won and nothing spends it yet.
+--
+-- A rival gang's enforcer additionally moves gang standing on a win -- see
+-- FightService.ChallengeRival -- because that fight was never a street fight to begin
+-- with, it was TerritoryService's ladder wearing a body.
+--
+-- The other exception is the pair of stat outcomes at the bottom, and they are here
 -- because an activity whose outcomes do not differ is the anti-pattern this project has
 -- already shipped once. Losing costs health, health sets your footing pool, and a
 -- shorter bar is what a losing streak feels like from inside the mechanic.
@@ -63,8 +78,13 @@ local DataService = require(script.Parent.DataService)
 local NPCService = require(script.Parent.NPCService)
 local StatService = require(script.Parent.StatService)
 local SkillService = require(script.Parent.SkillService)
+local GangService = require(script.Parent.GangService)
+local PeopleService = require(script.Parent.PeopleService)
+local TerritoryService = require(script.Parent.TerritoryService)
 
 local Fighters = require(script.Parent.Parent.content.Fighters)
+local Gangs = require(script.Parent.Parent.content.Gangs)
+local Colors = require(script.Parent.Parent.world.Colors)
 local Ground = require(script.Parent.Parent.world.Ground)
 
 type FighterDef = Types.FighterDef
@@ -80,6 +100,16 @@ local NoticeRemote = Remotes.Get("Notice")
 
 local FIGHT = Config.Fight
 local SKILL_AWARDS = Config.Skills.Awards
+
+-- Handed over rather than required, because BountyService requires LifeService, which
+-- requires this module -- requiring BountyService back would close that cycle. The same
+-- device SetupService uses for LifeService's own begin handler.
+type WitnessedHandler = (player: Player, points: number, reason: string, at: Vector3) -> ()
+local witnessedHandler: WitnessedHandler? = nil
+
+function FightService.SetWitnessedHandler(handler: WitnessedHandler)
+	witnessedHandler = handler
+end
 
 -- The one relationship between two Config numbers that the whole triangle rests on, checked
 -- loudly at require time because it fails silently in play.
@@ -521,6 +551,27 @@ local function finish(player: Player, bout: Bout, line: string?)
 	push(player)
 end
 
+-- Whether anybody nearby caught the whole bout. One roll per bystander in range rather
+-- than WitnessService's continuous fill -- see the file header for why a twenty-second
+-- fight is too short for a look-then-fill gesture to read as anything but instant. A
+-- crowd is more likely to have caught it because more people are rolling, not because
+-- any one roll got easier.
+local function rollWitnessed(player: Player): boolean
+	local root = characterRoot(player)
+	if root == nil then
+		return false
+	end
+	for _, bystander in PeopleService.Bystanders(player) do
+		if Ground.FlatDistance(root.Position, bystander.position) > FIGHT.WitnessSeeStuds then
+			continue
+		end
+		if math.random() < FIGHT.WitnessCatchChance then
+			return true
+		end
+	end
+	return false
+end
+
 -- Somebody hit zero. Decides the outcome, pays it out, and hands over to the down beat.
 --
 -- The payout happens here rather than when the down beat expires, because the beat is
@@ -548,11 +599,38 @@ local function decide(player: Player, bout: Bout, playerWon: boolean)
 		-- make the skill a measure of how long a fight ran, and the longest fights are
 		-- the ones against somebody who cannot hurt you.
 		SkillService.Award(player, "fighting", SKILL_AWARDS.FightWon, "took a bout")
+
+		local profile = DataService.GetProfile(player)
+		if profile ~= nil then
+			local life = Lives.Active(profile.Data)
+			life.notoriety += FIGHT.NotorietyPerWin
+		end
+
+		-- A rival gang's enforcer, not a street tough -- see Fighters.luau. Standing
+		-- moves the same way TerritoryService's incursion does: your own gang credits
+		-- the win, theirs charges the loss, and a debug or otherwise-untagged fighter
+		-- has no gangId and moves neither.
+		local gangId = bout.def.gangId
+		if gangId ~= nil then
+			local gang = Gangs.ById[gangId]
+			local gangName = if gang ~= nil then gang.name else gangId
+			GangService.Credit(player, FIGHT.RivalWinStanding, `beat a {gangName} enforcer`)
+			GangService.ChargeIn(player, gangId, FIGHT.RivalWinChargeRival, "lost an enforcer in a fight")
+		end
 	else
 		bout.result = "You went down."
 		setFloored(humanoidOf(player.Character), true)
 		StatService.AddStat(player, "health", -FIGHT.LossHealth)
 	end
+
+	-- Getting caught, win or lose -- see the file header for why this is a fight's one
+	-- consequence beyond the mechanic itself, and why it is soft. No handler wired up
+	-- (fighting switched on before init.server.luau finishes, say) is a roll that never
+	-- costs anything, not an error -- softer than intended beats a hard failure here.
+	if witnessedHandler ~= nil and rollWitnessed(player) then
+		witnessedHandler(player, FIGHT.WitnessHeat, "Seen fighting in the street", bout.visitor.at())
+	end
+
 	push(player)
 end
 
@@ -1008,6 +1086,17 @@ function FightService.Challenge(player: Player, fighterId: string?): (boolean, s
 		return false, "already in a fight"
 	end
 
+	-- A rival enforcer, tinted in the gang's own color the same way GangService colors a
+	-- member -- see Fighters.luau. This is the only place an enforcer differs from a
+	-- plain street tough in the body itself; everything else about the fight is the
+	-- boxer's curve, unchanged.
+	if def.gangId ~= nil then
+		local gang = Gangs.ById[def.gangId]
+		if gang ~= nil then
+			Colors.Apply(visitor.model, gang.color)
+		end
+	end
+
 	local maxFooting = footingFor(healthOf(player))
 	local bout: Bout = {
 		def = def,
@@ -1059,6 +1148,31 @@ function FightService.Challenge(player: Player, fighterId: string?): (boolean, s
 	return true, nil
 end
 
+-- Whoever is running the block, wherever the player is standing. TerritoryService.RegionOf
+-- decides who that is -- the same committed region the gang-standing ladder already reads
+-- -- and the enforcer for that side is always `enforcer_<regionId>`, one per gang, so there
+-- is no separate lookup table to keep in step with Gangs.luau.
+--
+-- Refused on your own side: sparring your own gang's enforcer is not a rival fight, and
+-- this file has no shape for it. Refused off anybody's territory for the same reason
+-- TerritoryService itself has nothing to say there -- there is no "whose block is this"
+-- to answer.
+function FightService.ChallengeRival(player: Player): (boolean, string?)
+	local region = TerritoryService.RegionOf(player)
+	if region == nil then
+		return false, "not on anybody's turf here"
+	end
+	if region == GangService.GangOf(player) then
+		return false, "that's your own side"
+	end
+
+	local fighterId = `enforcer_{region}`
+	if Fighters.ById[fighterId] == nil then
+		return false, `no enforcer defined for "{region}"`
+	end
+	return FightService.Challenge(player, fighterId)
+end
+
 -- A new life. Nobody inherits a fight.
 function FightService.ResetForNewLife(player: Player)
 	forget(player)
@@ -1094,9 +1208,12 @@ function FightService.Describe(player: Player): string
 	end
 
 	if bout == nil then
+		local profile = DataService.GetProfile(player)
+		local notoriety = if profile ~= nil then Lives.Active(profile.Data).notoriety else 0
 		return string.format(
-			"fight: no fight | footing at this health would be %.0f | %s | %s",
+			"fight: no fight | footing at this health would be %.0f | notoriety %d | %s | %s",
 			footingFor(healthOf(player)),
+			notoriety,
 			table.concat(styles, ", "),
 			if enabled then "enabled" else "DISABLED"
 		)

@@ -201,6 +201,9 @@ function Lives.New(): LifeData
 		-- watching them happen.
 		interactions = {},
 		definingMoment = {},
+		-- No fights won yet, true of the newborn and the right thing to hand a save
+		-- written before notoriety existed: that life's name has not gone around yet.
+		notoriety = 0,
 	}
 end
 

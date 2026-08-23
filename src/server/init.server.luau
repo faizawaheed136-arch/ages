@@ -201,9 +201,14 @@ DisguiseService:Start()
 GymService:Start()
 -- The fight, after NPCService because squaring somebody up spawns a rig, and after
 -- StatService because the pool a player has to spend is read off their health the moment a
--- bout opens. Both are up well above this. Nothing else in the game reads a fight, so it
--- goes late and nothing waits on it.
+-- bout opens. Both are up well above this, and so is BountyService: FightService cannot
+-- require it back without closing the LifeService -> FightService -> BountyService cycle
+-- (see the comment on FightService.SetWitnessedHandler), so the wiring happens here
+-- instead, the same way CrimeService wires BountyService.SetArrestedHandler.
 FightService:Start()
+FightService.SetWitnessedHandler(function(player: Player, points: number, reason: string, at: Vector3)
+	BountyService.Seen(player, points, reason, at)
+end)
 PeopleService:Start()
 -- Dead last of the crime services, and after PeopleService rather than before it. The crowd
 -- is the only part of this that reads bodies somebody else put in the street: a witness pass

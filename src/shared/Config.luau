@@ -5290,6 +5290,44 @@ Config.Fight = {
 	-- Safe range: 4 .. 12, 2 .. 8.
 	LossHealth = 8,
 	WinHappiness = 4,
+
+	-- Notoriety: how known this life is for fighting, tracked in LifeData.notoriety.
+	-- Ratchet-only, the same rule gang standing and crew nerve already use -- a loss
+	-- never takes it back. Paid on every win, street tough or rival, so it is a
+	-- straight count of fights won rather than a currency with an exchange rate.
+	-- Safe range: 1 .. 3.
+	NotorietyPerWin = 1,
+
+	-- Getting caught. A fight is legal -- nobody is arrested for winning one -- but a
+	-- brawl loud enough for a stranger to watch the whole way through is still a
+	-- disturbance, and that is worth a small amount of heat, not a bounty tier. This
+	-- is deliberately a single roll at the bout's end rather than WitnessService's
+	-- continuous fill: a fight is over in twenty seconds, too short for a look-then-fill
+	-- gesture to read as anything but instant, so it is asked once rather than every tick.
+	--
+	-- Safe range: 10 .. 20.
+	WitnessSeeStuds = 14,
+	-- Chance any one bystander within range caught the whole thing, rolled once per
+	-- bystander at bout resolution. Several people nearby means several rolls, not
+	-- a bigger single one -- a crowd is more likely to have caught it, not more
+	-- damning when it does.
+	-- Safe range: 0.15 .. 0.4.
+	WitnessCatchChance = 0.25,
+	-- What being caught costs, in heat, same scale as Config.Crime. Well under
+	-- Config.Crime.Theft.HeatOnSpotted (18): the police are interested that a fight
+	-- happened, not that a crime did.
+	-- Safe range: 4 .. 10.
+	WitnessHeat = 6,
+
+	-- Rival gang fights. Standing paid to your own gang on a win is deliberately close
+	-- to Config.Gangs.Earn.VaultOpened (45) -- beating one of their own is worth about
+	-- what a job is -- and the charge against the rival gang mirrors
+	-- Config.Territory.Incursion.RivalCost, because losing an enforcer on their own
+	-- ground is the same kind of loss as being caught running their line. A loss costs
+	-- neither side any standing: only LossHealth, the same as any other fight.
+	-- Safe range: standing 30 .. 60, charge 15 .. 35.
+	RivalWinStanding = 45,
+	RivalWinChargeRival = 25,
 }
 
 -- Milestones. One-time bonuses for hitting life landmarks, fired once per life

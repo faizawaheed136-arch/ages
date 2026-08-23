@@ -1,6 +1,67 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-21 (latest) — another stale comment caught: territory already shipped
+## 2026-08-23 (latest) — Fight consequences v1: notoriety, a soft witness roll, rival enforcers
+
+Built on explicit direction after I flagged that `FightService.luau`'s own deferred-scope
+note ("heat, ties, records, witness — the next part") could not be built literally without
+contradicting two settled decisions: combat is legal in AGES, not criminal
+(`docs/README.md`), and `Fighters.luau`'s opponents are deliberately kept out of the
+`Ties.luau` cast population. The user's answer: **"make fights have less of a real world
+consequence unless caught, but there should be notoriety and the ability to fight rival
+members."** That is what shipped, and nothing more than that.
+
+**Notoriety.** `LifeData.notoriety`, a plain count of fights won, ratchet-only the same way
+gang standing and crew nerve already are — a loss never takes it back. Paid in `decide()`
+via `Config.Fight.NotorietyPerWin`. Spends on nothing yet; it is tracking and display only
+(`/fight` with no argument now reports it), and is the seed for a later "does this gang know
+your name" read rather than a mechanic in itself.
+
+**Getting caught, not getting punished.** A fight is legal, so no heat is owed for winning
+one — but a brawl loud enough for a bystander to watch start to finish is still a
+disturbance. `decide()` rolls the crowd once, at the bout's end (`rollWitnessed`,
+`PeopleService.Bystanders` + `Config.Fight.WitnessSeeStuds`/`WitnessCatchChance`), not
+`WitnessService`'s continuous fill — a bout is over in twenty seconds, too short for a
+look-then-fill gesture to read as anything but instant. A catch costs
+`Config.Fight.WitnessHeat` (6), well under `Config.Crime.Theft.HeatOnSpotted` (18): the
+police are interested that a fight happened, not that a crime did. Applies win or lose.
+
+**The require cycle this ran into.** `FightService` cannot require `BountyService` directly
+— `LifeService` requires `FightService`, and `BountyService` requires `LifeService`, so a
+direct require closes a three-file cycle (`tools/check.py` caught it immediately, by name).
+Fixed with the same handler-injection device `SetupService` already uses for
+`LifeService`'s begin handler: `FightService.SetWitnessedHandler(...)`, wired in
+`init.server.luau` right after `FightService:Start()`, next to `BountyService:Start()`
+which is already up by then.
+
+**Rival gang fights.** Four new `Fighters.luau` entries, `enforcer_north/east/south/west`,
+one per gang, all sharing the boxer's exact stat curve on purpose — the thing that makes an
+enforcer worth fighting is whose colors he's wearing, not a new tell to learn. Tinted with
+`Colors.Apply` against `Gangs.ById[gangId].color` right after `NPCService.Spawn`, the same
+mechanism `GangService`/`TheftService`'s lookout already use to tag a body. `FightService.
+ChallengeRival(player)` gates on `TerritoryService.RegionOf` — refuses off anybody's turf
+and refuses on your own side, since sparring your own gang's enforcer isn't a rival fight.
+A win pays `Config.Fight.RivalWinStanding` (45, pitched near `VaultOpened`) to your own gang
+via `GangService.Credit` and costs the rival `RivalWinChargeRival` (25, pitched near
+`Territory.Incursion.RivalCost`) via `GangService.ChargeIn`. A loss costs neither side any
+standing — only the ordinary `LossHealth` every fight already costs. `/fight rival` reaches
+it from a keyboard; a plain style id (`/fight enforcer_north`) still stands one up with no
+territory check, for testing the fight itself without walking there.
+
+**Reused rather than reopened:** fighting still has zero ambient/world trigger — reachable
+only through `/fight`, exactly as the three plain archetypes already were. That gap predates
+this feature and this feature does not attempt to close it; giving rival fights the same
+debug-only reach the base system already has was the smaller, more honest v1 than inventing
+new world placement for one half of the roster and not the other.
+
+**One shared enforcer curve across all four gangs was a default, not a confirmed choice** —
+I flagged it as the one open question in my spec and built it after the user moved on
+without correcting it. Worth a second look if gang identity in combat ever wants to matter
+beyond color.
+
+`tools/check.py`: all clean, including the require-cycle detector exercising the fix above.
+**Nothing here has been Studio-tested.**
+
+## 2026-08-21 — another stale comment caught: territory already shipped
 
 Prompted by "ok next" with nothing queued. Before picking a new build I had a survey done
 across my own files for anything already flagged as deferred-but-actually-done, the same

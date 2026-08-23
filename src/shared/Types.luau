@@ -1382,6 +1382,10 @@ export type FighterDef = {
 	-- The beat between finishing one action and starting the next. Low is relentless.
 	-- Safe range: 0.15 .. 0.9.
 	restSeconds: number,
+	-- Set only on a rival gang enforcer; nil for the three plain street-tough archetypes.
+	-- Tags which gang's colors to tint the body with and which gang takes the standing
+	-- hit when this fighter loses.
+	gangId: string?,
 }
 
 -- One thing you can do with somebody: one row on the panel their dots open.
@@ -2844,6 +2848,13 @@ export type LifeData = {
 	-- Reset on death so each life has its own social history.
 	interactions: { [string]: { { personId: string, age: number, line: string } } },
 	definingMoment: { [string]: { personId: string, age: number, line: string } },
+
+	-- How known this life is for fighting. Rises only on a win -- never taken away by a
+	-- loss, the same ratchet-only rule gang standing and crew nerve already use -- and it
+	-- is not a criminal record: BountyService.HasRecord answers a different question and
+	-- neither reads the other. v1 spends this on nothing but tracking and display; it is
+	-- the seed for scaling a rival gang's answer to you later, not a mechanic in itself yet.
+	notoriety: number,
 }
 
 -- The account: one player, several lives, and the few things that outlive all of them.
