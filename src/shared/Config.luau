@@ -561,12 +561,48 @@ Config.InteractionPrompt = {
 	FadeSeconds = 0.15,
 	-- Colours.
 	BarColor = Color3.fromRGB(18, 18, 22),
-	BarTransparency = 0.85,
+	-- Was 0.85 -- nearly see-through, which read as the bar barely being there at all.
+	-- Low enough now to sit as a real card against any background. Safe range: 0.2-0.4.
+	BarTransparency = 0.28,
+	-- The rim that gives the card an edge against a wall the same colour as it. Same
+	-- reasoning as every stroke in Interact.luau: this bar is read against every room in
+	-- the game, bright and dark alike.
+	BarStrokeColor = Color3.fromRGB(255, 255, 255),
+	BarStrokeTransparency = 0.82,
 	KeyBoxColor = Color3.fromRGB(255, 255, 255),
 	KeyBoxTransparency = 0.15,
 	KeyTextColor = Color3.fromRGB(20, 20, 24),
 	ActionTextColor = Color3.fromRGB(245, 242, 235),
 	KeyStrokeColor = Color3.fromRGB(18, 16, 14),
+}
+
+Config.SpeechBubble = {
+	-- What a person says while standing in front of the player, read from over their own
+	-- head. See SpeechBubble.luau -- this replaces the reply that used to sit in the HUD's
+	-- standing-next-to caption, on the same "a person's words belong to that person" logic
+	-- the quoted caption already used.
+	Width = 5.6,
+	Height = 1.4,
+	MaxTextSize = 16,
+	-- How high above the top of a person's own bounding box the card floats, on top of the
+	-- three-dot billboard and the nameplate already stacked there -- DOTS_LIFT (1.1) plus
+	-- NAMEPLATE_LIFT (0.95) plus the nameplate's own height in Interact.luau. Not measured
+	-- to the pixel against that stack; generous on purpose so a tall nameplate can never
+	-- clip the bottom of a reply. Safe range: 2.2-3.2.
+	LiftAboveHeadStuds = 2.7,
+	MaxDistanceStuds = 45,
+	-- How long a line holds before it fades, and how long the fade itself takes.
+	HoldSeconds = 3.5,
+	FadeSeconds = 0.25,
+	BackgroundColor = Color3.fromRGB(18, 18, 22),
+	BackgroundTransparency = 0.12,
+	StrokeColor = Color3.fromRGB(255, 255, 255),
+	-- The one color channel this card has, same rule ChoicePanel's outcome color follows:
+	-- warm when the answer was good, the panel's own color otherwise. A refusal is not an
+	-- error, so it is never colored like one.
+	GoodStrokeColor = Color3.fromRGB(120, 220, 150),
+	TextColor = Color3.fromRGB(238, 234, 226),
+	GoodTextColor = Color3.fromRGB(150, 235, 170),
 }
 
 -- Answering an event by going to the thing it is about. An enacted event puts three

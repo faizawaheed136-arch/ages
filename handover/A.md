@@ -1,6 +1,71 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-23 (latest) — Fight consequences v1: notoriety, a soft witness roll, rival enforcers
+## 2026-08-23 (latest) — Interaction UI pass: E bar, stuck panel, speech bubbles
+
+**Out of lane, done on explicit user override.** The user asked in one message to fix the
+bottom "E" interact bar, add/confirm an interactive prompt on people and doors, fix a
+conversation panel that could not be gotten out of once an option was clicked, move NPC
+replies off the HUD and onto the NPC's own head, polish the panel's look, and make
+NPC-follow visible when a conversation calls for it. That request reaches into
+`src/client/ui/ChoicePanel.luau`, `src/client/ui/StatsUI.luau`, `src/client/world/
+InteractionPrompt.luau` and `src/client/init.client.luau` — none of them mine, and B/C may
+have live uncommitted work in some of them. I flagged this before touching anything; the
+user's answer was **"proceed anyway with everything."** Read-before-Edit and the smallest
+diff that does the job throughout, on the assumption there is other WIP in these files to
+reconcile against, not replace.
+
+**The E bar had a real bug, not just a look.** `InteractionPrompt.luau`'s `handle.Show` built
+its label with JS-style `` `${action} ${object}` `` — Luau interpolation only understands
+`{expr}`, so every prompt was rendering literal dollar signs (`$Talk to $Mom`). Fixed both
+occurrences. Also raised `Config.InteractionPrompt.BarTransparency` from 0.85 (nearly
+invisible) to 0.28 and added a `UIStroke` (`BarStrokeColor`/`BarStrokeTransparency`, both in
+`Config.luau` with safe ranges). This one file is shared by every `InteractKind`, so it
+covers people, doors, tills, vaults, bosses, fighters and stations at once — confirmed
+`ApartmentDoorService.luau` already calls `Interact.Attach` on doors the same as
+`PeopleService` does on people, so "add an interactive GUI on people, doors, etc" was
+already structurally true and needed this fix, not new wiring.
+
+**The stuck panel.** Root cause: `PersonUpdated`'s in-person branch in `init.client.luau`
+never closed the options list when a reply came back, unlike the phone-call branch, which
+already calls `panel:ShowOutcome`. Fixed by calling `panel:CloseOptions(state.id)` whenever
+`state.reply ~= nil`. That is almost certainly the literal "I can't get out of the
+conversation window once I click something."
+
+**Replies moved off the HUD.** New `src/client/world/SpeechBubble.luau` — a `BillboardGui`
+anchored above the speaking person's own head, found by walking `Workspace` for the same
+`AgesInteractKind`/`AgesInteractId` attributes `Interact.luau` already stamps (no changes to
+`Interact.luau` or `Prompts.luau`, both live elsewhere). Fades in, holds, fades out; a
+green stroke/text tint on a good outcome. `StatsUI.SetPerson` no longer renders
+`state.reply` in the corner caption at all — that was "the right side panel" the user meant.
+New `Config.SpeechBubble` block holds every tunable.
+
+**NPC follow needed no server work.** Read `PeopleService.luau`'s offer-accept path and
+`Townsfolk.luau`'s content validation: `walksTo` already drives `CompanionService.Start`
+end to end, and content load already refuses any `walksTo` template missing an arrival line
+or pointing at a non-walkable place. The working theory is that the stuck panel (above) was
+the only thing making this look broken — once a reply can actually close the list, a
+companion offer's follow should already be visible. **Unverified — no Studio access this
+session.**
+
+**ChoicePanel polish.** Corner radius 12→14, a `panelStroke` `UIStroke` and a thin `divider`
+between the prompt and the choice list, both re-tinted in `applyStyle` and in the
+`content.accent` override path so a gang boss's colored panel tints the new stroke/divider
+the same way it already tints the prompt text. Layout orders renumbered to fit the divider
+in.
+
+**Deliberately not built:** a global Escape/close control. The literal complaint was the
+stuck-panel bug above, not "let me back out before answering" — and several panels
+(lessons, report cards, gang decisions) are supposed to be non-dismissible. Worth raising
+with the user if this reading turns out wrong.
+
+`tools/check.py` all clean across every touched/new file (`Config.luau`, `SpeechBubble.luau`
+new, `InteractionPrompt.luau`, `init.client.luau`, `StatsUI.luau`, `ChoicePanel.luau`).
+**Nothing here has been Studio-tested** — no screen control this session, per the user's own
+restriction. B/C: please reconcile against whatever WIP you have in these four files: my
+diffs are additive/targeted (new fields, new branches, one bug fix) rather than rewrites, but
+worth a diff read before you next touch them.
+
+## 2026-08-23 — Fight consequences v1: notoriety, a soft witness roll, rival enforcers
 
 Built on explicit direction after I flagged that `FightService.luau`'s own deferred-scope
 note ("heat, ties, records, witness — the next part") could not be built literally without

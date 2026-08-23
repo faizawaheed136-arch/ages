@@ -40,6 +40,7 @@ local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
 local InteractionPrompt = require(script.world.InteractionPrompt)
+local SpeechBubble = require(script.world.SpeechBubble)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -1052,6 +1053,15 @@ Remotes.Get("PersonUpdated").OnClientEvent:Connect(function(state: PersonState?)
 	if phonePanelKey ~= nil then
 		panel:CloseOptions(phonePanelKey)
 		phonePanelKey = nil
+	end
+	-- The one place the standing panel used to get stuck: a chosen offer disables its
+	-- buttons and, unlike the phone panel, nothing ever closed the list back down when
+	-- the answer came back -- see drawPhonePanel's `ShowOutcome` for the pattern this
+	-- was missing. The answer itself is not put back on the panel; it is said from
+	-- where they are standing instead, which is what SpeechBubble.Show is for.
+	if state ~= nil and state.reply ~= nil then
+		panel:CloseOptions(state.id)
+		SpeechBubble.Show(state.id, state.reply, state.replyGood)
 	end
 	ui:SetPerson(state)
 end)

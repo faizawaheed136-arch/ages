@@ -283,7 +283,9 @@ export type ChoicePanelHandle = typeof(setmetatable(
 		screenGui: ScreenGui,
 		backdrop: Frame,
 		panel: Frame,
+		panelStroke: UIStroke,
 		promptLabel: TextLabel,
+		divider: Frame,
 		choicesFrame: Frame,
 		hintLabel: TextLabel,
 		outcomeLabel: TextLabel,
@@ -346,8 +348,18 @@ function ChoicePanel.new(): ChoicePanelHandle
 	panel.Parent = backdrop
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
+	corner.CornerRadius = UDim.new(0, 14)
 	corner.Parent = panel
+
+	-- The one edge every delivery gets, tinted to that delivery's own accent in
+	-- applyStyle below. Most of these styles are barely opaque (0.02-0.06 panel
+	-- transparency) so the room behind them can stay visible -- and a nearly-clear
+	-- panel with no edge at all reads as unfinished rather than as intentionally
+	-- light, the same reason every billboard in Interact.luau wears one.
+	local panelStroke = Instance.new("UIStroke")
+	panelStroke.Thickness = 1
+	panelStroke.Transparency = 0.55
+	panelStroke.Parent = panel
 
 	local padding = Instance.new("UIPadding")
 	padding.PaddingTop = UDim.new(0, 22)
@@ -372,12 +384,27 @@ function ChoicePanel.new(): ChoicePanelHandle
 	promptLabel.Text = ""
 	promptLabel.Parent = panel
 
+	-- A thin rule under whoever is speaking, tinted to the same accent the stroke
+	-- around the whole panel wears. Purely a separator between the sentence and the
+	-- answers to it -- there is nothing here a screen reader or a controller needs,
+	-- which is why it is a bare Frame and not a second label.
+	local divider = Instance.new("Frame")
+	divider.Name = "Divider"
+	divider.Size = UDim2.new(1, 0, 0, 2)
+	divider.BorderSizePixel = 0
+	divider.LayoutOrder = 1
+	divider.Parent = panel
+
+	local dividerCorner = Instance.new("UICorner")
+	dividerCorner.CornerRadius = UDim.new(1, 0)
+	dividerCorner.Parent = divider
+
 	local choicesFrame = Instance.new("Frame")
 	choicesFrame.Name = "Choices"
 	choicesFrame.Size = UDim2.new(1, 0, 0, 0)
 	choicesFrame.AutomaticSize = Enum.AutomaticSize.Y
 	choicesFrame.BackgroundTransparency = 1
-	choicesFrame.LayoutOrder = 1
+	choicesFrame.LayoutOrder = 2
 	choicesFrame.Parent = panel
 
 	local choicesLayout = Instance.new("UIListLayout")
@@ -396,7 +423,7 @@ function ChoicePanel.new(): ChoicePanelHandle
 	hintLabel.TextSize = BANNER_HINT_SIZE
 	-- Between the choices and the outcome, so the banner reads prompt-then-hint
 	-- and the outcome still lands at the bottom when the choice is made.
-	hintLabel.LayoutOrder = 2
+	hintLabel.LayoutOrder = 3
 	hintLabel.Visible = false
 	hintLabel.Text = BANNER_HINT
 	hintLabel.Parent = panel
@@ -411,7 +438,7 @@ function ChoicePanel.new(): ChoicePanelHandle
 	outcomeLabel.Font = Enum.Font.Gotham
 	outcomeLabel.TextSize = 16
 	outcomeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
-	outcomeLabel.LayoutOrder = 3
+	outcomeLabel.LayoutOrder = 4
 	outcomeLabel.Visible = false
 	outcomeLabel.Text = ""
 	outcomeLabel.Parent = panel
@@ -422,7 +449,9 @@ function ChoicePanel.new(): ChoicePanelHandle
 		screenGui = screenGui,
 		backdrop = backdrop,
 		panel = panel,
+		panelStroke = panelStroke,
 		promptLabel = promptLabel,
+		divider = divider,
 		choicesFrame = choicesFrame,
 		hintLabel = hintLabel,
 		outcomeLabel = outcomeLabel,
@@ -594,6 +623,8 @@ local function applyStyle(self: ChoicePanelHandle, style: DeliveryStyle, prompt:
 	self.panel.Position = UDim2.new(0.5, 0, style.anchorY, 0)
 
 	self.outcomeLabel.TextColor3 = style.promptColor:Lerp(style.panelColor, OUTCOME_MUTE)
+	self.panelStroke.Color = style.promptColor
+	self.divider.BackgroundColor3 = style.promptColor
 
 	self.promptLabel.Font = style.promptFont
 	self.promptLabel.TextSize = style.promptSize
@@ -634,6 +665,8 @@ function ChoicePanel.ShowOptions(self: ChoicePanelHandle, content: PanelContent)
 	local accent = content.accent
 	if accent ~= nil then
 		self.promptLabel.TextColor3 = accent
+		self.panelStroke.Color = accent
+		self.divider.BackgroundColor3 = accent
 	end
 	buildOptions(self, style, content.options, content.choose)
 

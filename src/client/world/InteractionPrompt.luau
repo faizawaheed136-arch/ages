@@ -76,6 +76,12 @@ function InteractionPrompt.new(): Handle
 	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = bar
 
+	local barStroke = Instance.new("UIStroke")
+	barStroke.Color = PROMPT.BarStrokeColor
+	barStroke.Thickness = 1
+	barStroke.Transparency = PROMPT.BarStrokeTransparency
+	barStroke.Parent = bar
+
 	-- The key box on the left: a white rounded square with the letter inside.
 	local keyBox = Instance.new("Frame")
 	keyBox.Name = "KeyBox"
@@ -154,12 +160,12 @@ function InteractionPrompt.new(): Handle
 		if visible then
 			-- Already shown: just update the text.
 			keyLabel.Text = currentKey()
-			actionLabel.Text = if object ~= "" then `${action} ${object}` else action
+			actionLabel.Text = if object ~= "" then `{action} {object}` else action
 			return
 		end
 		visible = true
 		keyLabel.Text = currentKey()
-		actionLabel.Text = if object ~= "" then `${action} ${object}` else action
+		actionLabel.Text = if object ~= "" then `{action} {object}` else action
 		setTween(TweenService:Create(
 			bar,
 			TweenInfo.new(PROMPT.FadeSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),

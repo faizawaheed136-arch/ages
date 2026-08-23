@@ -1233,11 +1233,12 @@ end
 
 -- Who the player is standing next to. Nil means nobody is, which is most of a life.
 --
--- Two lines, and the split is the point of the row. The top one is a fact that holds for
--- as long as you stand there -- their name and what you are to each other. The bottom one
--- is a moment: the thing they just said, which clears itself a few seconds later and
--- leaves the name behind. A row that folded them together would have somebody's name
--- flickering every time they spoke.
+-- The top line is a fact that holds for as long as you stand there -- their name and
+-- what you are to each other. The bottom line is the contextual flavour the server
+-- picked for the situation (morning, on shift, unemployed, at home) -- a mood, not a
+-- moment: what they just said now speaks from over their own head instead, see
+-- SpeechBubble.Show in init.client.luau, so this row never has to carry both a fact
+-- that holds and a line that expires on the same beat.
 --
 -- The band is shown as a phrase and never as a number, because a score next to your
 -- mother's name is a progress bar where a relationship should be.
@@ -1247,23 +1248,19 @@ function StatsUI.SetPerson(self: StatsUIHandle, state: PersonState?)
 		return
 	end
 	self.personRow.Visible = true
-	self.personLabel.Text = `{state.name} · {state.band}`
-
-	local reply = state.reply
-	if reply == nil then
-		-- When there is no reply yet, show the contextual line the server picked for
-		-- the current situation (morning, on shift, unemployed, at home). Emptied
-		-- rather than left showing the last thing said, so a line does not hang
-		-- under somebody's name after the moment it belonged to has passed.
-		local ctx = state.contextualLine
-		self.personCaption.Text = ctx ~= nil and `"{ctx}"` or ""
-		self.personCaption.TextColor3 = ctx ~= nil and TASK_CAPTION_COLOR or TASK_CAPTION_COLOR
-		return
+	-- The tie is shown between the name and the bond band when it exists, because a
+	-- relationship label is what the row is for: it tells you who this person is to
+	-- you, not just how close you are. A rival who is also "close" reads differently
+	-- from a friend who is "close", and the tie is the word that makes the difference.
+	local label = `{state.name} · {state.band}`
+	if state.tie ~= nil and state.tie ~= "" then
+		label = `{state.name} · {state.tie} · {state.band}`
 	end
-	-- Quoted, because this is the only writing on the HUD that is a person talking to the
-	-- player rather than the game narrating at them, and nothing else here is in quotes.
-	self.personCaption.Text = `"{reply}"`
-	self.personCaption.TextColor3 = if state.replyGood then GOOD_STAT_COLOR else TASK_CAPTION_COLOR
+	self.personLabel.Text = label
+
+	local ctx = state.contextualLine
+	self.personCaption.Text = ctx ~= nil and `"{ctx}"` or ""
+	self.personCaption.TextColor3 = TASK_CAPTION_COLOR
 end
 
 -- The workout, or the lack of one.
