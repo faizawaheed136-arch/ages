@@ -39,7 +39,6 @@ local Prompts = require(script.world.Prompts)
 local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
-local InteractionPrompt = require(script.world.InteractionPrompt)
 local SpeechBubble = require(script.world.SpeechBubble)
 
 type Stats = Types.Stats
@@ -97,7 +96,6 @@ local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new()
 local prompts = Prompts.new()
-local promptBar = InteractionPrompt.new()
 local labDots = LabDots.new()
 local heat = HeatUI.new()
 local searchRing = SearchRing.new()
@@ -363,16 +361,6 @@ end)
 -- would open a lab panel over a sales floor, and nobody wants that confusion.
 prompts:On("Dealer", function()
 	carDealer:Open()
-end)
-
--- Bottom-centre prompt bar. Shown when a ProximityPrompt enters range, hidden when it
--- leaves. The text comes directly from the prompt's ActionText / ObjectText so it is
--- always in sync with the three-dot billboard.
-prompts:OnPromptShown(function(action, object)
-	promptBar.Show(action, object)
-end)
-prompts:OnPromptHidden(function()
-	promptBar.Hide()
 end)
 
 -- The three answers, and all three go up as bare requests: what a strike is worth is

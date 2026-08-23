@@ -496,94 +496,53 @@ Config.Ambient = {
 	FlagContext = { "sick", "gym_joined", "in_debt" },
 }
 
--- How the player talks to anything at all. Three dots over its head; get near, they
--- wake up, click them and the options come up. One grammar for a person and for an
--- animal, because learning how to talk to this world should happen once.
+-- How the player talks to anything at all. A badge on its chest reading "E"; get
+-- near, it wakes up, click it or press the key and the options come up. One
+-- grammar for a person and for an animal, because learning how to talk to this
+-- world should happen once.
 --
 -- Not for a lesson. A lesson is something you are already inside rather than a thing
 -- in the room, so its questions open themselves; see SchoolService.
 Config.Interact = {
-	-- How close the player has to be before the dots can be clicked. Generous on
+	-- How close the player has to be before the badge can be clicked. Generous on
 	-- purpose: this is a game partly played as a toddler at walkSpeed 4, and a
 	-- reach that demands precision would turn talking to your mother into parking.
 	-- Roughly a room's width. Safe range: 8-20.
 	ReachStuds = 12,
 
-	-- How long the dots take to wake up when you come into range, and to settle
+	-- How long the badge takes to wake up when you come into range, and to settle
 	-- again when you leave. Short enough to read as a response to you rather than
 	-- an animation playing at you. Safe range: 0.1-0.4.
 	WakeSeconds = 0.18,
 
-	-- The key that does the same thing as clicking the dots.
+	-- The key that does the same thing as clicking the badge, and the letter printed
+	-- on it.
 	--
 	-- Set explicitly rather than left at the ProximityPrompt default, because the
-	-- hint drawn beside the dots has to say the key that actually works, and a
-	-- default that Roblox changes one day would leave the game telling the player
-	-- to press a key that does nothing. One source, both ends.
+	-- badge has to print the key that actually works, and a default that Roblox
+	-- changes one day would leave the game telling the player to press a key that
+	-- does nothing. One source, both ends.
 	KeyboardKey = Enum.KeyCode.E,
 
-	-- How far to the right of the dots the key hint sits, in scale units of the
-	-- dots' own billboard. Far enough not to crowd them, near enough to read as
-	-- belonging to them. Safe range: 0.5-1.1.
-	KeyHintOffset = 0.78,
-
-	-- How far the dots and the nameplate carry, as multiples of ReachStuds.
+	-- How far the badge and the nameplate carry, as multiples of ReachStuds.
 	--
 	-- Two numbers rather than one because they answer different questions, and the gap
-	-- between them is the whole design. The dots are *signposting* -- "there is somebody
-	-- over there worth walking to" -- and they should out-range the reach that makes them
+	-- between them is the whole design. The badge is *signposting* -- "there is somebody
+	-- over there worth walking to" -- and it should out-range the reach that makes it
 	-- clickable, or a person only announces themselves once you are standing on them. A
 	-- name is *identification*, and it is only worth reading about somebody you are
 	-- actually approaching.
 	--
-	-- The name used to carry further than the dots (3.5, so 42 studs on a town whose whole
+	-- The name used to carry further than the badge (3.5, so 42 studs on a town whose whole
 	-- route graph spans about 150) and drew through walls, which meant standing anywhere
 	-- outdoors put a drift of names across the screen belonging to people behind buildings
 	-- on the other side of the street. Now it is the shorter of the two: you see that
 	-- somebody is there from a long way off, and you learn who they are as you close.
 	--
-	-- Safe range: dots 2-3.5, name 1.2-2. Name below about 1.2 arrives after the dots are
+	-- Safe range: badge 2-3.5, name 1.2-2. Name below about 1.2 arrives after the badge is
 	-- already clickable, which is too late to help you choose who to walk to.
 	DotsRangeMultiplier = 2.5,
 	NameRangeMultiplier = 1.6,
-}
-
-Config.InteractionPrompt = {
-	-- How far above the bottom of the screen the prompt bar sits.
-	BottomOffset = 20,
-	-- How far from the horizontal centre the bar is offset (0 = centred).
-	HorizontalOffset = 0,
-	-- The bar's width in scale units (0–1 of screen width).
-	BarWidth = 0.35,
-	-- The bar's height in pixels. Was `BarHeightStuds = 3.2` -- a leftover name from a
-	-- world-space part that was never one, fed straight into a UDim2 pixel offset. At 3.2
-	-- the whole card collapsed to a hairline, which is what read as "just a slider": the
-	-- fixed 36px key box then stuck out past the top and bottom of its own bar. Tall enough
-	-- now to hold that key box with real padding above and below it.
-	-- Safe range: 48-72.
-	BarHeightPixels = 60,
-	-- Fade in / out duration in seconds.
-	FadeSeconds = 0.15,
-	-- Colours.
-	BarColor = Color3.fromRGB(18, 18, 22),
-	-- Was 0.85 -- nearly see-through, which read as the bar barely being there at all.
-	-- Low enough now to sit as a real card against any background. Safe range: 0.2-0.4.
-	BarTransparency = 0.28,
-	-- The rim that gives the card an edge against a wall the same colour as it. Same
-	-- reasoning as every stroke in Interact.luau: this bar is read against every room in
-	-- the game, bright and dark alike.
-	BarStrokeColor = Color3.fromRGB(255, 255, 255),
-	BarStrokeTransparency = 0.82,
-	KeyBoxColor = Color3.fromRGB(255, 255, 255),
-	KeyBoxTransparency = 0.15,
-	KeyTextColor = Color3.fromRGB(20, 20, 24),
-	ActionTextColor = Color3.fromRGB(245, 242, 235),
-	KeyStrokeColor = Color3.fromRGB(18, 16, 14),
-	-- Safe range: 0.2-0.5. Was a literal 0.3 inside InteractionPrompt.luau, hardcoded on a
-	-- Frame that never actually faded with the rest of the bar -- now a real fade target
-	-- alongside it, so the key box's rim disappears with everything else instead of
-	-- lingering as its own permanent outline.
-	KeyStrokeTransparency = 0.3,
 }
 
 Config.SpeechBubble = {

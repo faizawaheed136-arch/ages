@@ -1,10 +1,10 @@
 --!strict
 -- What something in the world looks like when it has something to say.
 --
--- Three dots over its head. You get near, they wake up, you click them and the
--- options come up. That is the whole grammar and it is the same grammar for a
--- person, an animal and a lesson, because a player should have to learn how to
--- talk to this world exactly once.
+-- A badge on its chest: "E". You get near, it wakes up, you click it or press the
+-- key and the options come up. That is the whole grammar and it is the same
+-- grammar for a person, an animal and a lesson, because a player should have to
+-- learn how to talk to this world exactly once.
 --
 -- Built on a real ProximityPrompt rather than a bare billboard and a distance
 -- check. The prompt is doing three jobs that are all tedious to get right and all
@@ -15,11 +15,12 @@
 -- phone -- and it is also the one that is easiest to forget until it is too late
 -- to change.
 --
--- The dots are a TextButton and not a decoration, which is why the tap works. On a
+-- The badge is a TextButton and not a decoration, which is why the tap works. On a
 -- phone there is no key to press, so a custom-styled prompt that only listened for
 -- one would be an object that is permanently unusable to most of the people looking
 -- at it. Clicking the thing you can see is also simply the honest interface: the
--- player is told to click the dots, so the dots are what is clickable.
+-- player is told what the letter is and shown a thing shaped like it that can also
+-- just be clicked, so a phone and a keyboard are reading the same object.
 --
 -- **The button is built here and connected in client/world/Prompts.luau, and it has
 -- to be that way round.** Attach runs on the server for every NPC in the game, and a
@@ -48,55 +49,53 @@ local PROMPT_NAME = "AgesInteract"
 local DOTS_NAME = "AgesInteractDots"
 local NAMEPLATE_NAME = "AgesInteractNameplate"
 
--- The clickable thing inside the dots billboard, and the label beside it. Named
--- constants rather than string literals at four call sites, because the client has
--- to find both by name across the server/client boundary and a typo in one of them
--- is a silent no-op rather than an error.
+-- The clickable thing inside the badge billboard, and the badge frame itself. Named
+-- constants rather than string literals at multiple call sites, because the client
+-- has to find both by name across the server/client boundary and a typo in one of
+-- them is a silent no-op rather than an error.
 local DOTS_BUTTON_NAME = "Dots"
-local KEY_HINT_NAME = "KeyHint"
+local BADGE_NAME = "Badge"
 
--- Cosmetic, and kept out of Config for the reason ChoiceMarkers gives: the radius
--- of a dot is not a number anybody balances a life simulator with, and putting it
+-- Cosmetic, and kept out of Config for the reason ChoiceMarkers gives: the size of
+-- a badge is not a number anybody balances a life simulator with, and putting it
 -- next to the numbers that are makes both harder to find.
-local DOT_COUNT = 3
-local DOT_SIZE = 0.28
-local DOT_GAP = 0.16
-local DOT_COLOR = Color3.fromRGB(255, 250, 240)
-local DOT_STROKE = Color3.fromRGB(20, 18, 14)
+local BADGE_SIZE = 0.7
+local BADGE_COLOR = Color3.fromRGB(255, 250, 240)
+local BADGE_STROKE = Color3.fromRGB(20, 18, 14)
+local BADGE_TEXT_COLOR = Color3.fromRGB(20, 18, 14)
 
 -- Asleep until you are near it. Dimmed rather than hidden, because a world where
 -- interactable things are invisible until you are already touching them is a world
 -- the player has to walk into wall-first to read.
-local DOTS_FAR_TRANSPARENCY = 0.45
-local DOTS_NEAR_TRANSPARENCY = 0
+local BADGE_FAR_TRANSPARENCY = 0.45
+local BADGE_NEAR_TRANSPARENCY = 0
+local BADGE_STROKE_FAR_TRANSPARENCY = 1
+local BADGE_STROKE_NEAR_TRANSPARENCY = 0.1
 
--- The bob. Staggered so the three dots read as one thing thinking rather than
--- three things blinking, which is the difference between "there is something here"
--- and "there is an error here".
-local BOB_STUDS = 0.1
-local BOB_SECONDS = 0.75
-local BOB_STAGGER = 0.16
+-- The bob. One badge, one tween -- there is nothing left to stagger against.
+local BADGE_BOB_SCALE = 0.08
+local BADGE_BOB_SECONDS = 0.9
 
--- How much bigger the dots get when the player is close enough to use them. Small
+-- How much bigger the badge gets when the player is close enough to use it. Small
 -- on purpose: this is a confirmation that the thing noticed you, not an animation
 -- to sit and watch.
 local NEAR_SCALE = 1.25
 
--- How far above the top of the thing the dots float. Measured off the model's own
--- box rather than guessed, so a dog and a grown adult both wear theirs clear of
--- their head by the same visible margin.
-local DOTS_LIFT = 1.1
+-- Where the badge sits on the thing's own height, measured up from its feet rather
+-- than down from its head -- a toddler and a grown adult wear theirs at the same
+-- fraction of themselves, which is what keeps it reading as "chest" on both. 0.62
+-- rather than a plain half because a body's midpoint by bounding-box height sits
+-- closer to the waist than the chest once legs are counted.
+local CHEST_HEIGHT_FRACTION = 0.62
 
--- The nameplate sits above the dots, not in place of them, and is its own billboard
--- rather than another frame inside theirs. Two reasons, and the second is the one that
--- decided it: the dots go dark when somebody has already given you their time this year
--- -- SetEnabled -- and their name must not go dark with them, because a person you have
--- already spoken to is still a person standing there with a name. Separate guis is the
--- whole of what it takes for those two to be turned off independently.
+-- The nameplate sits above the badge, not in place of it, and is its own billboard
+-- rather than another frame inside its. Two reasons, and the second is the one that
+-- decided it: the badge goes dark when somebody has already given you their time this
+-- year -- SetEnabled -- and their name must not go dark with it, because a person you
+-- have already spoken to is still a person standing there with a name. Separate guis is
+-- the whole of what it takes for those two to be turned off independently.
 --
--- It also means nothing about the dots' geometry moved to make room, which matters more
--- than it sounds: the dots are laid out in scale against their own billboard, so
--- resizing that box would have quietly reshaped all three of them.
+-- It also means nothing about the badge's own geometry moved to make room for the name.
 local NAMEPLATE_LIFT = 0.95
 
 local NAMEPLATE_NAME_COLOR = Color3.fromRGB(255, 252, 245)
@@ -168,7 +167,7 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- walk away. Keeping it off "Person" also keeps the two populations honest -- the people you
 -- can befriend are not the people who want a fight, and a shopkeeper who could be challenged
 -- from the same panel that sells you bread would make every tie in the game feel negotiable.
-export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss" | "Fight"
+export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss" | "Fight" | "Apartment"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.
@@ -242,71 +241,72 @@ local function adorneeFor(target: Model | BasePart): BasePart?
 	return target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart", true)
 end
 
--- How high the dots have to float to clear this particular thing. A toddler, an
--- adult and a dog are three very different heights and all three have to wear
--- their dots at the same visible distance above them, so this is measured rather
--- than set to a number that happens to look right on one of the three.
+-- How high the nameplate has to float to clear this particular thing, and where the
+-- badge below it anchors from. A toddler, an adult and a dog are three very
+-- different heights and all three have to wear their nameplate at the same visible
+-- distance above them, so this is measured rather than set to a number that
+-- happens to look right on one of the three.
 local function liftFor(target: Model | BasePart, adornee: BasePart): number
 	if target:IsA("BasePart") then
-		return target.Size.Y / 2 + DOTS_LIFT
+		return target.Size.Y / 2 + NAMEPLATE_LIFT
 	end
 	local box, size = target:GetBoundingBox()
-	return (box.Position.Y + size.Y / 2) - adornee.Position.Y + DOTS_LIFT
+	return (box.Position.Y + size.Y / 2) - adornee.Position.Y + NAMEPLATE_LIFT
 end
 
-local function buildDot(index: number, parent: Instance): Frame
-	local dot = Instance.new("Frame")
-	dot.Name = `Dot{index}`
-	dot.AnchorPoint = Vector2.new(0.5, 0.5)
-	dot.Size = UDim2.fromScale(DOT_SIZE, DOT_SIZE)
-	-- Laid out by hand rather than with a UIListLayout, because each one has to be
-	-- tweened independently for the stagger and a layout would fight every tween.
-	local span = DOT_COUNT * DOT_SIZE + (DOT_COUNT - 1) * DOT_GAP
-	local step = DOT_SIZE + DOT_GAP
-	dot.Position = UDim2.fromScale(0.5 - span / 2 + step * (index - 1) + DOT_SIZE / 2, 0.5)
-	dot.BackgroundColor3 = DOT_COLOR
-	dot.BorderSizePixel = 0
-	dot.Parent = parent
+-- Where the badge floats: not above the head but on the chest, at the same
+-- fraction of the thing's own height regardless of how tall it is. Measured off
+-- the model's bounding box for the same reason liftFor is -- a guess that happens
+-- to look right on one body is wrong on every other one in the game.
+local function chestOffsetFor(target: Model | BasePart, adornee: BasePart): number
+	if target:IsA("BasePart") then
+		return target.Size.Y * (CHEST_HEIGHT_FRACTION - 0.5)
+	end
+	local box, size = target:GetBoundingBox()
+	local feet = box.Position.Y - size.Y / 2
+	return (feet + size.Y * CHEST_HEIGHT_FRACTION) - adornee.Position.Y
+end
+
+-- The one badge: a rounded chip with the key printed on it, shown whether the
+-- player is holding a keyboard or not. It used to only appear for keyboard players,
+-- with a screen tap as the unadvertised alternative for everyone else -- but a
+-- badge sitting on a person is the thing itself, not a hint about a bar at the
+-- bottom of the screen, so there is no longer a device to detect before deciding
+-- whether to show it.
+local function buildBadge(parent: Instance): Frame
+	local badge = Instance.new("Frame")
+	badge.Name = BADGE_NAME
+	badge.AnchorPoint = Vector2.new(0.5, 0.5)
+	badge.Position = UDim2.fromScale(0.5, 0.5)
+	badge.Size = UDim2.fromScale(BADGE_SIZE, BADGE_SIZE)
+	badge.BackgroundColor3 = BADGE_COLOR
+	badge.BorderSizePixel = 0
+	badge.Parent = parent
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = dot
+	corner.CornerRadius = UDim.new(0.3, 0)
+	corner.Parent = badge
 
-	-- Readable against a white wall and a night sky alike. Without it the dots
-	-- disappear entirely in a bright room, which is most rooms.
+	-- Readable against a white wall and a night sky alike. Without it the badge
+	-- disappears entirely in a bright room, which is most rooms.
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = DOT_STROKE
-	stroke.Thickness = 1
-	stroke.Transparency = 0.35
-	stroke.Parent = dot
+	stroke.Color = BADGE_STROKE
+	stroke.Thickness = 1.5
+	stroke.Transparency = BADGE_STROKE_FAR_TRANSPARENCY
+	stroke.Parent = badge
 
-	return dot
-end
+	local label = Instance.new("TextLabel")
+	label.Name = "BadgeKey"
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.GothamBold
+	label.Text = INTERACT.KeyboardKey.Name
+	label.TextColor3 = BADGE_TEXT_COLOR
+	label.TextTransparency = 1
+	label.TextScaled = true
+	label.Parent = badge
 
--- The keyboard alternative to clicking, drawn beside the dots. Starts hidden: only the
--- client knows whether this player is on a keyboard at all, and a phone showing a key
--- that does not exist is worse than a phone showing nothing.
-local function buildKeyHint(parent: Instance)
-	local hint = Instance.new("TextLabel")
-	hint.Name = KEY_HINT_NAME
-	hint.AnchorPoint = Vector2.new(0, 0.5)
-	hint.Position = UDim2.fromScale(0.5 + INTERACT.KeyHintOffset, 0.5)
-	hint.Size = UDim2.fromScale(DOT_SIZE * 1.6, DOT_SIZE * 1.6)
-	hint.BackgroundTransparency = 1
-	hint.Font = Enum.Font.GothamMedium
-	hint.TextScaled = true
-	hint.TextColor3 = DOT_COLOR
-	hint.Text = INTERACT.KeyboardKey.Name
-	hint.Visible = false
-	hint.Parent = parent
-
-	-- The same outline the dots wear, for the same reason: unreadable against a bright
-	-- wall otherwise, and most rooms in this game are bright.
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = DOT_STROKE
-	stroke.Thickness = 1
-	stroke.Transparency = 0.35
-	stroke.Parent = hint
+	return badge
 end
 
 -- The two labels and the box they live in, kept together so that turning an age on and
@@ -445,21 +445,21 @@ function Interact.Attach(target: Model | BasePart, look: InteractLook): Interact
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = DOTS_NAME
 	billboard.Adornee = adornee
-	billboard.Size = UDim2.fromScale(2.4, 0.9)
-	billboard.StudsOffsetWorldSpace = Vector3.new(0, liftFor(target, adornee), 0)
+	billboard.Size = UDim2.fromScale(0.9, 0.9)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, chestOffsetFor(target, adornee), 0)
 	-- Seen through whatever it is standing behind. Somebody half-hidden by a sofa is
 	-- exactly the moment knowing they are talkable-to matters most.
 	billboard.AlwaysOnTop = true
 	billboard.MaxDistance = INTERACT.ReachStuds * INTERACT.DotsRangeMultiplier
 	-- Without this a BillboardGui does not hand input to the buttons inside it, so the
-	-- dots would draw, wake, bob and swallow nothing. Belt and braces next to the
+	-- badge would draw, wake, bob and swallow nothing. Belt and braces next to the
 	-- Activated connection on the client: either one missing gives the same symptom.
 	billboard.Active = true
 	billboard.Parent = adornee
 
-	-- The dots are the button. This is what makes the whole thing work on a phone,
+	-- The badge is the button. This is what makes the whole thing work on a phone,
 	-- where there is no key to press, and it is also just what the player has been
-	-- told to do: click the dots.
+	-- told to do: click the badge.
 	local button = Instance.new("TextButton")
 	button.Name = DOTS_BUTTON_NAME
 	button.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -474,50 +474,26 @@ function Interact.Attach(target: Model | BasePart, look: InteractLook): Interact
 	scale.Scale = 1
 	scale.Parent = button
 
-	local dots: { Frame } = {}
-	for index = 1, DOT_COUNT do
-		local dot = buildDot(index, button)
-		dot.BackgroundTransparency = DOTS_FAR_TRANSPARENCY
-		table.insert(dots, dot)
-	end
-
-	-- The key, for the people holding a keyboard. Hidden here and shown by the client,
-	-- because whether there is a keyboard in the room is a fact about one player and
-	-- this instance is replicated to all of them.
-	--
-	-- Worth the label at all because a Custom-styled prompt draws nothing: without it
-	-- the key works and no part of the game has ever said so, which is the same as it
-	-- not working for everybody who does not think to try.
-	buildKeyHint(button)
+	local badge = buildBadge(button)
+	badge.BackgroundTransparency = BADGE_FAR_TRANSPARENCY
 
 	-- Started here and never stopped. A tween with -1 repeats is cheap and the
 	-- alternative -- starting it on approach and stopping it on leaving -- would
-	-- mean three dots that are visibly frozen from across the room, which reads as
+	-- mean a badge that is visibly frozen from across the room, which reads as
 	-- something that has stopped working.
-	local bobs: { Tween } = {}
-	for index, dot in dots do
-		local up = dot.Position + UDim2.fromScale(0, -BOB_STUDS)
-		local tween = TweenService:Create(
-			dot,
-			TweenInfo.new(
-				BOB_SECONDS,
-				Enum.EasingStyle.Sine,
-				Enum.EasingDirection.InOut,
-				-1,
-				true,
-				BOB_STAGGER * (index - 1)
-			),
-			{ Position = up }
-		)
-		tween:Play()
-		table.insert(bobs, tween)
-	end
+	local up = badge.Position + UDim2.fromScale(0, -BADGE_BOB_SCALE)
+	local bob = TweenService:Create(
+		badge,
+		TweenInfo.new(BADGE_BOB_SECONDS, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Position = up }
+	)
+	bob:Play()
 
 	local destroyed = false
 
-	-- Built on first use rather than up front, because most things wearing dots in this
-	-- world are not people -- a rug, a cupboard, a front door -- and a disabled billboard
-	-- over every prop in the room would be two instances each for nothing.
+	-- Built on first use rather than up front, because most things wearing a badge in
+	-- this world are not people -- a rug, a cupboard, a front door -- and a disabled
+	-- billboard over every prop in the room would be two instances each for nothing.
 	--
 	-- `on` is a fresh non-optional local because the refinement that made `adornee` a
 	-- BasePart above does not survive into a closure, and the same trick PlaceService uses
@@ -554,7 +530,7 @@ function Interact.Attach(target: Model | BasePart, look: InteractLook): Interact
 		-- Turned off rather than torn down for the case that happens constantly:
 		-- somebody who has already given you their time this year is still standing
 		-- there and still worth walking up to, they just have nothing on offer. The
-		-- dots going quiet says that better than the person vanishing does.
+		-- badge going quiet says that better than the person vanishing does.
 		SetEnabled = function(enabled: boolean)
 			if destroyed then
 				return
@@ -568,9 +544,7 @@ function Interact.Attach(target: Model | BasePart, look: InteractLook): Interact
 				return
 			end
 			destroyed = true
-			for _, tween in bobs do
-				tween:Cancel()
-			end
+			bob:Cancel()
 			prompt:Destroy()
 			billboard:Destroy()
 			if plate ~= nil then
@@ -582,7 +556,7 @@ end
 
 -- The look the client applies when the player is close enough to use this, and
 -- takes away when they are not. Lives here rather than in the client module so that
--- the two halves of one animation -- how the dots rest and how they wake -- are
+-- the two halves of one animation -- how the badge rests and how it wakes -- are
 -- written next to each other and cannot drift apart.
 function Interact.SetNear(billboard: BillboardGui, near: boolean)
 	local button = billboard:FindFirstChild(DOTS_BUTTON_NAME)
@@ -599,30 +573,24 @@ function Interact.SetNear(billboard: BillboardGui, near: boolean)
 		):Play()
 	end
 
-	local transparency = if near then DOTS_NEAR_TRANSPARENCY else DOTS_FAR_TRANSPARENCY
-	for _, dot in button:GetChildren() do
-		if dot:IsA("Frame") then
-			TweenService:Create(
-				dot,
-				TweenInfo.new(INTERACT.WakeSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{ BackgroundTransparency = transparency }
-			):Play()
-		end
-	end
-end
-
--- Whether to name the key beside the dots. Driven entirely by the client, which is the
--- only end that knows what the player is holding, and called alongside SetNear rather
--- than folded into it: the hint follows the input device, the dots follow the distance,
--- and the day those two stop changing together this stays correct.
-function Interact.SetKeyHint(billboard: BillboardGui, visible: boolean)
-	local button = billboard:FindFirstChild(DOTS_BUTTON_NAME)
-	if button == nil then
+	local badge = button:FindFirstChild(BADGE_NAME)
+	if badge == nil or not badge:IsA("Frame") then
 		return
 	end
-	local hint = button:FindFirstChild(KEY_HINT_NAME)
-	if hint ~= nil and hint:IsA("TextLabel") then
-		hint.Visible = visible
+
+	local info = TweenInfo.new(INTERACT.WakeSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local backgroundTransparency = if near then BADGE_NEAR_TRANSPARENCY else BADGE_FAR_TRANSPARENCY
+	TweenService:Create(badge, info, { BackgroundTransparency = backgroundTransparency }):Play()
+
+	local stroke = badge:FindFirstChildWhichIsA("UIStroke")
+	if stroke ~= nil then
+		local strokeTransparency = if near then BADGE_STROKE_NEAR_TRANSPARENCY else BADGE_STROKE_FAR_TRANSPARENCY
+		TweenService:Create(stroke, info, { Transparency = strokeTransparency }):Play()
+	end
+
+	local label = badge:FindFirstChild("BadgeKey")
+	if label ~= nil and label:IsA("TextLabel") then
+		TweenService:Create(label, info, { TextTransparency = backgroundTransparency }):Play()
 	end
 end
 

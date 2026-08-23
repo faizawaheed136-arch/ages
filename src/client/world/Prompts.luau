@@ -1,16 +1,16 @@
 --!strict
--- The player's end of the three dots. Interact.luau builds them; this notices them.
+-- The player's end of the badge. Interact.luau builds it; this notices it.
 --
--- Three jobs, and the first two are the ones that make the world feel like it is
--- paying attention: wake the dots when the player comes into range, settle them
--- when they leave, and turn a click into "open whatever this thing had to say".
+-- Two jobs, and both are what make the world feel like it is paying attention:
+-- wake the badge when the player comes into range and settle it when they leave,
+-- and turn a click into "open whatever this thing had to say".
 --
 -- Opening the panel is done here rather than asked of the server, and that is
 -- worth stating plainly because it looks like a shortcut and is not. Everything
 -- the panel needs has already been pushed to this client -- the offers a person
 -- has, the choices an event carries, the answers to a question -- because the HUD
 -- was already showing pieces of it. Asking the server to send it a second time
--- would mean the dots visibly waiting on a round trip before anything happened,
+-- would mean the badge visibly waiting on a round trip before anything happened,
 -- which on a bad connection is the difference between a game that responds and a
 -- game that hesitates. Nothing is decided here: the moment the player picks
 -- something it goes to the server, and the server checks it against what it
@@ -35,30 +35,6 @@ Prompts.__index = Prompts
 -- pieces -- or a DescendantAdded that fires twice for the same instance, which happens
 -- -- cannot end up with two connections and one click opening the panel twice.
 local WIRED_ATTRIBUTE = "AgesDotsWired"
-
--- Every dots billboard currently inside its prompt's reach. Needed because the key hint
--- follows the input device rather than the distance: a player who puts down the phone
--- and picks up a keyboard while standing in front of their mother should see the key
--- appear without walking away and back.
---
--- Weak-keyed, because the town spawns and despawns bodies for the whole session and a
--- billboard destroyed while it was showing does not reliably raise PromptHidden on its
--- way out. Strong keys here would be a slow leak of every person the player ever stood
--- next to. The cast is because setmetatable erases the annotation.
-local shownDots: { [BillboardGui]: boolean } = (setmetatable({}, { __mode = "k" }) :: any) :: { [BillboardGui]: boolean }
-
--- Whether the thing in the player's hands has a key on it. Mouse counts: a mouse means
--- a desktop, and a desktop has a keyboard next to it. Touch and gamepad do not, and a
--- phone told to press E is a phone being lied to.
-local function hasKeyboard(): boolean
-	local last = UserInputService:GetLastInputType()
-	return last == Enum.UserInputType.Keyboard
-		or last == Enum.UserInputType.MouseButton1
-		or last == Enum.UserInputType.MouseButton2
-		or last == Enum.UserInputType.MouseButton3
-		or last == Enum.UserInputType.MouseMovement
-		or last == Enum.UserInputType.MouseWheel
-end
 
 export type PromptsHandle = typeof(setmetatable(
 	{} :: {
@@ -330,9 +306,7 @@ function Prompts.new(): PromptsHandle
 			-- DescendantAdded has been serviced, and being wired twice costs nothing
 			-- because wireDots refuses the second time.
 			wireDots(dots)
-			shownDots[dots] = true
 			Interact.SetNear(dots, true)
-			Interact.SetKeyHint(dots, hasKeyboard())
 		end
 	end)
 
@@ -342,22 +316,11 @@ function Prompts.new(): PromptsHandle
 		end
 		local dots = dotsFor(prompt)
 		if dots ~= nil then
-			shownDots[dots] = nil
 			Interact.SetNear(dots, false)
-			Interact.SetKeyHint(dots, false)
 		end
 	end)
 
-	-- A player who switches from touch to a keyboard mid-conversation. Rare, and the
-	-- alternative is a hint that is right about the device they had when they walked up.
-	UserInputService.LastInputTypeChanged:Connect(function()
-		local visible = hasKeyboard()
-		for dots in shownDots do
-			Interact.SetKeyHint(dots, visible)
-		end
-	end)
-
-	-- Fires for a keyboard press, a gamepad button and the dots being clicked
+	-- Fires for a keyboard press, a gamepad button and the badge being clicked
 	-- alike -- the last of those by way of wireDots above, because a Custom-styled
 	-- prompt has no clickable surface of its own. That is the entire reason this is a
 	-- ProximityPrompt and not a billboard with a distance check bolted to it.
