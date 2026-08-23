@@ -392,6 +392,14 @@ export type Ribbon = {
 export type ShiftState = {
 	-- Nil when the player holds no job, which is the ordinary state before 16.
 	jobTitle: string?,
+	-- The id behind jobTitle, so a quit button and a "point me back at my own job"
+	-- click have something to send that is not a display string. Nil exactly when
+	-- jobTitle is nil.
+	jobId: string?,
+	-- What an hour at the held job pays this player right now, standing raise
+	-- included. Nil exactly when jobId is nil -- there is no rate to have without
+	-- a job to have it at.
+	wage: number?,
 	onShift: boolean,
 	-- Game hours into the current shift, and how many make a full one.
 	gameHoursWorked: number,

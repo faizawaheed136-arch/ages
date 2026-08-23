@@ -56,6 +56,7 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local MenuIcons = require(script.Parent.MenuIcons)
 
 type JobPostState = Types.JobPostState
+type ShiftState = Types.ShiftState
 type PersonRosterEntry = Types.PersonRosterEntry
 type GangState = Types.GangState
 type SkillsState = Types.SkillsState
@@ -182,6 +183,12 @@ export type MenuUIHandle = typeof(setmetatable(
 		-- list flickering on a timer. Motion is for a thing the player just did.
 		animate: boolean,
 		jobs: { JobPostState },
+		-- The job the player currently holds, if any -- the same shape the HUD's shift
+		-- clock reads, sent here too so the pane can show the one thing a list of
+		-- openings cannot: what you already have. Nil exactly when jobId is nil on it.
+		currentJob: ShiftState?,
+		onQuitJob: (() -> ())?,
+		onJobTapped: ((jobId: string) -> ())?,
 		roster: { PersonRosterEntry },
 		gang: GangState?,
 		skills: SkillsState?,
@@ -902,6 +909,9 @@ function MenuUI.new(): MenuUIHandle
 		contentHeight = 0,
 		animate = false,
 		jobs = {},
+		currentJob = nil,
+		onQuitJob = nil,
+		onJobTapped = nil,
 		roster = {},
 		gang = nil,
 		skills = nil,
@@ -1072,8 +1082,85 @@ end
 -- them returning the empty-state sentence for when they built nothing.
 -- -------------------------------------------------------------------
 
+-- The height of the current-job card: a title row, a wage figure, a standing line,
+-- a progress bar and a Quit button, all in one card rather than the two-line shape
+-- every other row here uses -- because holding a job is the one fact on this pane
+-- that is more than a title and a figure.
+local CURRENT_JOB_HEIGHT = 108
+
+-- What you already have, drawn once above the list of what you could take instead.
+-- Its own card rather than a row in the same shape as the openings below it: an
+-- opening is a title and a figure, and a job you hold has a wage, a rank and a way
+-- out, none of which fit the two lines everything else on this pane gets.
+local function drawCurrentJob(self: MenuUIHandle)
+	local job = self.currentJob
+	if job == nil or job.jobId == nil then
+		return
+	end
+
+	local _, card = makeSlot(self, CURRENT_JOB_HEIGHT)
+	addSpine(card, PALETTE.Good)
+
+	local title = label(card, FONT_BOLD, 16, PALETTE.Text, Enum.TextXAlignment.Left)
+	title.Position = UDim2.new(0, ROW_TEXT_LEFT, 0, 10)
+	title.Size = UDim2.new(1, -(ROW_TEXT_LEFT + ROW_TEXT_RIGHT + 108), 0, 20)
+	title.Text = job.jobTitle or ""
+
+	local wageFigure = label(card, FONT_BOLD, 15, PALETTE.Accent, Enum.TextXAlignment.Right)
+	wageFigure.Position = UDim2.new(1, -(ROW_TEXT_RIGHT + FIGURE_WIDTH), 0, 11)
+	wageFigure.Size = UDim2.new(0, FIGURE_WIDTH, 0, 18)
+	wageFigure.Text = if job.wage ~= nil then `{Money.Format(job.wage)}/hr` else ""
+
+	local standingCaption = label(card, FONT_BODY, 12, PALETTE.Muted, Enum.TextXAlignment.Left)
+	standingCaption.Position = UDim2.new(0, ROW_TEXT_LEFT, 0, 33)
+	standingCaption.Size = UDim2.new(1, -(ROW_TEXT_LEFT + ROW_TEXT_RIGHT), 0, 15)
+	local standingWord = if job.standing ~= nil then job.standing else "New"
+	standingCaption.Text = if job.onShift then `{standingWord}  ·  On shift now` else standingWord
+
+	-- The same fraction the HUD's own standing bar reads off this state, so a player
+	-- who checks both sees one number, not two that happen to agree.
+	if job.nextBandXp ~= nil and job.nextBandXp > 0 then
+		addBar(card, math.clamp(job.standingXp / job.nextBandXp, 0, 1), PALETTE.Good)
+	end
+
+	local quit = Instance.new("TextButton")
+	quit.AnchorPoint = Vector2.new(1, 0)
+	quit.Position = UDim2.new(1, -ROW_TEXT_RIGHT, 0, 58)
+	quit.Size = UDim2.fromOffset(94, 32)
+	quit.BackgroundColor3 = PALETTE.RowLocked
+	quit.BorderSizePixel = 0
+	quit.AutoButtonColor = false
+	quit.FontFace = FONT_BOLD
+	quit.TextSize = 13
+	quit.TextColor3 = PALETTE.Warn
+	quit.Text = "Quit job"
+	quit.ZIndex = 4
+	quit.Parent = card
+
+	corner(quit, 7)
+	stroke(quit, PALETTE.Warn, 1, 0.55)
+
+	quit.MouseEnter:Connect(function()
+		TweenService:Create(quit, HOVER, { BackgroundColor3 = PALETTE.Warn:Lerp(PALETTE.Panel, 0.2) }):Play()
+	end)
+	quit.MouseLeave:Connect(function()
+		TweenService:Create(quit, HOVER, { BackgroundColor3 = PALETTE.RowLocked }):Play()
+	end)
+	quit.Activated:Connect(function()
+		local callback = self.onQuitJob
+		if callback ~= nil then
+			callback()
+		end
+	end)
+end
+
 local function drawJobs(self: MenuUIHandle): string?
+	drawCurrentJob(self)
+
 	if #self.jobs == 0 then
+		if self.currentJob ~= nil and self.currentJob.jobId ~= nil then
+			return nil
+		end
 		return "Nothing is hiring where you can see it. Job boards stand outside the places that are taking people on -- the map will show you where they are."
 	end
 
@@ -1093,6 +1180,18 @@ local function drawJobs(self: MenuUIHandle): string?
 			card.BackgroundColor3 = PALETTE.RowLocked
 			title.TextColor3 = PALETTE.Muted
 		end
+
+		-- Pressable whether open or locked, on the same reasoning the relationships pane
+		-- already presses on a spent row: knowing where a job is is worth acting on even
+		-- before you qualify for it, and the arrow is the one thing this row can offer
+		-- that reading it cannot.
+		local jobId = post.jobId
+		pressable(self, card, function()
+			local callback = self.onJobTapped
+			if callback ~= nil then
+				callback(jobId)
+			end
+		end)
 	end
 	return nil
 end
@@ -1666,6 +1765,28 @@ end
 function MenuUI.SetJobs(self: MenuUIHandle, posts: { JobPostState })
 	self.jobs = posts
 	redrawPane(self, "jobs")
+end
+
+-- The same push the HUD's shift clock reads, mirrored here so the pane can show what
+-- you already have above the list of what you could take instead. Arrives every time
+-- the shift state changes, including several times a minute while on shift, which is
+-- why the current-job card never animates in -- see `MenuUIHandle.animate`.
+function MenuUI.SetCurrentJob(self: MenuUIHandle, state: ShiftState)
+	self.currentJob = state
+	redrawPane(self, "jobs")
+end
+
+-- "Quit job" pressed on the pane. What that means -- ending a shift in progress,
+-- clearing the record, anything at all -- is entirely the caller's decision; this
+-- module only reports the press.
+function MenuUI.OnQuitJob(self: MenuUIHandle, callback: () -> ())
+	self.onQuitJob = callback
+end
+
+-- A job row pressed on the pane, open or locked. Carries the id off the post the
+-- server already sent, the same as OnPersonTapped carries an id off the roster.
+function MenuUI.OnJobTapped(self: MenuUIHandle, callback: (jobId: string) -> ())
+	self.onJobTapped = callback
 end
 
 function MenuUI.SetRoster(self: MenuUIHandle, entries: { PersonRosterEntry })

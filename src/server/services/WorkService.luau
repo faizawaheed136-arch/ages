@@ -65,6 +65,8 @@ local GuideUpdatedRemote = Remotes.Get("GuideUpdated")
 local JobPostsUpdatedRemote = Remotes.Get("JobPostsUpdated")
 local TaskUpdatedRemote = Remotes.Get("TaskUpdated")
 local NoticeRemote = Remotes.Get("Notice")
+local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
+local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
 
 local WorkService = {}
 
@@ -249,6 +251,12 @@ local postedSignature: { [Player]: string } = {}
 -- changes perhaps twice in a life; without this every player would be sent their own
 -- directions two hundred and forty times a minute.
 local guided: { [Player]: string } = {}
+
+-- A job the player picked off the menu themselves, overriding the automatic
+-- best-job arrow until they take it, pick a different one, or it stops existing.
+-- Without this, `guideTargetFor` recomputes every tick and would stomp a manual
+-- pick back to whatever pays best within the quarter second it takes to land.
+local manualGuide: { [Player]: string } = {}
 
 -- Debug switch for the Studio harness. Never touched in a live server.
 local enabled = true
@@ -769,6 +777,27 @@ local function guideTargetFor(data: LifeData): Job?
 	return best
 end
 
+-- What the tick actually points the player at: a menu pick if there is a live one,
+-- the automatic best job otherwise. The manual pick is cleared here rather than only
+-- at request time, for the one case a request cannot see -- the player took the job
+-- some other way (walked onto a different mark first) while this one was still set.
+local function guideTarget(player: Player, data: LifeData): Job?
+	local manualId = manualGuide[player]
+	if manualId ~= nil then
+		if data.jobId == manualId then
+			manualGuide[player] = nil
+		else
+			local manualJob = Jobs.ById[manualId]
+			if manualJob ~= nil then
+				return manualJob
+			end
+			-- Content changed under a live pick. Nothing left to point at.
+			manualGuide[player] = nil
+		end
+	end
+	return guideTargetFor(data)
+end
+
 -- Points the player at a job, or at nothing. Only ever sends when the answer has
 -- changed -- see `guided`.
 local function setGuide(player: Player, job: Job?)
@@ -996,6 +1025,8 @@ local function stateFor(player: Player): ShiftState
 	if profile == nil then
 		return {
 			jobTitle = nil,
+			jobId = nil,
+			wage = nil,
 			onShift = false,
 			gameHoursWorked = 0,
 			shiftGameHours = Config.Work.ShiftGameHours,
@@ -1018,6 +1049,8 @@ local function stateFor(player: Player): ShiftState
 
 	return {
 		jobTitle = if job ~= nil then job.title else nil,
+		jobId = if job ~= nil then job.id else nil,
+		wage = if job ~= nil then rateFor(data, job) else nil,
 		onShift = shift ~= nil,
 		-- The fractional part is deliberate: it is what makes the HUD bar move
 		-- rather than jump once every thirty seconds.
@@ -2335,7 +2368,7 @@ local function tickPlayer(player: Player, elapsed: number)
 	-- staircase from the shop floor: without this, a shop assistant who has just
 	-- earned the right to work upstairs would spend every remaining shift of their
 	-- life with a line running out of the room they are being paid to stand in.
-	setGuide(player, if shift == nil and enabled then guideTargetFor(data) else nil)
+	setGuide(player, if shift == nil and enabled then guideTarget(player, data) else nil)
 
 	-- The signs, on the other hand, stay up while you work. They are part of how the
 	-- street reads, not an instruction: the office sign should still be legible from
@@ -2630,13 +2663,12 @@ function WorkService.ForceStart(player: Player): (boolean, string?)
 	return startShift(player, job, position), nil
 end
 
--- Studio harness: gives the job up without ending the life.
---
--- There is no way to quit from inside the game, and deliberately not -- walking away
--- from a career is a real decision that deserves a real design, and it is not this
--- one. But taking a job is now a thing you walk onto a mark to do, and a test you can
--- only run once per life is not a test: without this, checking the hiring pad a
--- second time means dying and living another sixteen years first.
+-- Gives the job up without ending the life. Started as a Studio-only harness for
+-- testing the hiring pad more than once per life; now also the real quit button in
+-- the jobs menu, wired below through RequestQuitJobRemote. Nothing about the act
+-- itself needed to change to become a real decision -- it already ended the shift
+-- cleanly and left the record standing, which is exactly what a player choosing to
+-- leave should get too.
 --
 -- The record stays. Standing is per job and survives being unemployed, which is both
 -- right -- the shop remembers you -- and the more useful thing to be able to test.
@@ -3087,8 +3119,39 @@ function WorkService:Start()
 		blocked[player] = nil
 		lastMoment[player] = nil
 		guided[player] = nil
+		manualGuide[player] = nil
 		postedSignature[player] = nil
 		pushedTask[player] = nil
+	end)
+
+	RequestQuitJobRemote.OnServerEvent:Connect(function(player: Player)
+		local ok, err = pcall(WorkService.Quit, player)
+		if not ok then
+			warn(`[AGES] quit job failed for {player.Name}: {err}`)
+		end
+	end)
+
+	RequestGuideToJobRemote.OnServerEvent:Connect(function(player: Player, jobId: unknown)
+		if typeof(jobId) ~= "string" then
+			return
+		end
+		if Jobs.ById[jobId] == nil then
+			-- Not a real job id. Refused rather than pointing a line at nothing --
+			-- see the same reasoning on setGuide's own PlaceService.Find check.
+			return
+		end
+		manualGuide[player] = jobId
+		-- Recomputed on the spot rather than waiting for the next tick, so the
+		-- arrow turns the instant the menu is closed rather than up to a quarter
+		-- second later.
+		local profile = DataService.GetProfile(player)
+		if profile == nil then
+			return
+		end
+		local data = Lives.Active(profile.Data)
+		if shifts[player] == nil and enabled then
+			setGuide(player, guideTarget(player, data))
+		end
 	end)
 
 	task.spawn(function()

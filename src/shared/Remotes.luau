@@ -328,6 +328,16 @@ export type RemoteName =
 	-- found for the window since the last break. An empty list is the suppressed
 	-- reel — the client opens the next chapter cold with no screen.
 	| "ChapterBreak"
+	-- "Give up the job I hold." No payload -- there is only ever one job to quit,
+	-- and the server reads it off the profile rather than trust an id, so the worst
+	-- a forged send does is quit a job the caller does not hold, which is a no-op.
+	| "RequestQuitJob"
+	-- "Point me at this job." Carries a job id off a post the player was already
+	-- shown, which the server checks against Jobs.ById and PlaceService the same
+	-- as every other id on the wire -- an unknown id is refused rather than
+	-- pointing a line at nothing. Overrides the automatic best-job arrow until the
+	-- player takes it, picks another, or it stops existing.
+	| "RequestGuideToJob"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -568,6 +578,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestJoinByCode",
 	"JoinRefused",
 	"ChapterBreak",
+	"RequestQuitJob",
+	"RequestGuideToJob",
 }
 
 local FOLDER_NAME = "RemoteEvents"

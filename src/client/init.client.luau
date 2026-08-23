@@ -154,6 +154,8 @@ local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
 local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
 local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor")
+local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
+local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -790,6 +792,7 @@ end)
 -- by the next one instead of leaving the row permanently a few dollars out.
 Remotes.Get("ShiftUpdated").OnClientEvent:Connect(function(state: ShiftState)
 	ui:SetShift(state)
+	menu:SetCurrentJob(state)
 end)
 
 -- A finished sentence the server wants said now -- the first of them is "you've been
@@ -813,6 +816,20 @@ end)
 Remotes.Get("JobPostsUpdated").OnClientEvent:Connect(function(states: { JobPostState })
 	menu:SetJobs(states)
 	jobPosts.Set(states)
+end)
+
+-- "Give up the job I hold", pressed off the jobs pane. No local state to update: the
+-- shift ending and the job going away both arrive on the next ShiftUpdated push, the
+-- same as if the player had walked off the station.
+menu:OnQuitJob(function()
+	RequestQuitJobRemote:FireServer()
+end)
+
+-- A job row pressed on the jobs pane. Points the chevron guide at it -- the server
+-- resolves the place point, so nothing about where the job actually is has to travel
+-- with the click.
+menu:OnJobTapped(function(jobId: string)
+	RequestGuideToJobRemote:FireServer(jobId)
 end)
 
 -- The things you are doing right now, inside the shift you are already on. Two
