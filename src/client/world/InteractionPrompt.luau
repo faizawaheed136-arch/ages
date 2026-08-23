@@ -59,12 +59,12 @@ function InteractionPrompt.new(): Handle
 	-- The bar itself. Dark, rounded, centred at the bottom.
 	local bar = Instance.new("Frame")
 	bar.Name = "PromptBar"
-	bar.Size = UDim2.new(PROMPT.BarWidth, 0, 0, PROMPT.BarHeightStuds)
+	bar.Size = UDim2.new(PROMPT.BarWidth, 0, 0, PROMPT.BarHeightPixels)
 	bar.Position = UDim2.new(
 		0.5 + PROMPT.HorizontalOffset,
 		0,
 		1,
-		-PROMPT.BottomOffset - PROMPT.BarHeightStuds
+		-PROMPT.BottomOffset - PROMPT.BarHeightPixels
 	)
 	bar.AnchorPoint = Vector2.new(0.5, 1)
 	bar.BackgroundColor3 = PROMPT.BarColor

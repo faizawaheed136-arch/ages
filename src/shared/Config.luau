@@ -555,8 +555,13 @@ Config.InteractionPrompt = {
 	HorizontalOffset = 0,
 	-- The bar's width in scale units (0–1 of screen width).
 	BarWidth = 0.35,
-	-- The bar's height in studs.
-	BarHeightStuds = 3.2,
+	-- The bar's height in pixels. Was `BarHeightStuds = 3.2` -- a leftover name from a
+	-- world-space part that was never one, fed straight into a UDim2 pixel offset. At 3.2
+	-- the whole card collapsed to a hairline, which is what read as "just a slider": the
+	-- fixed 36px key box then stuck out past the top and bottom of its own bar. Tall enough
+	-- now to hold that key box with real padding above and below it.
+	-- Safe range: 48-72.
+	BarHeightPixels = 60,
 	-- Fade in / out duration in seconds.
 	FadeSeconds = 0.15,
 	-- Colours.
