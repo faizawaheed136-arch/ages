@@ -4400,21 +4400,45 @@ Config.Territory = {
 -- Read by the client, which is what draws it. The server only decides where to
 -- point and when to stop.
 Config.Guide = {
-	-- The same warm gold as a choice marker, and deliberately so: by the time a
-	-- player follows one of these they have already learned that this color means
-	-- "this is for you, go to it". A second accent color would be a second thing to
-	-- learn for no gain.
-	Color = Color3.fromRGB(245, 205, 120),
+	-- A punchier, more saturated amber than the old pale gold -- the same family
+	-- as a choice marker so it keeps meaning "this is for you, go to it", but
+	-- bright enough to read against grass, asphalt and every skybox this game
+	-- ships rather than washing out against anything light.
+	Color = Color3.fromRGB(255, 176, 34),
+
+	-- Every wing gets a dark rim: a slightly larger, slightly lower backing part
+	-- in near-black behind the bright one. This is the standard "bright core,
+	-- dark outline" wayfinding trick -- it is what keeps a white or gold arrow
+	-- legible in Immortals Fenyx Rising's path regardless of what ground color it
+	-- crosses -- and it is why the arrow reads as a solid marker instead of a
+	-- neon smear the instant it crosses pale stone or sand.
+	OutlineColor = Color3.fromRGB(18, 14, 8),
+	-- How much larger the outline is than the wing it backs, added on every side.
+	-- Safe range: 0.03-0.12. Below ~0.03 the rim is too thin to read at a glance;
+	-- above 0.12 it starts to swallow the bright core it is supposed to frame.
+	ArrowOutlineMarginStuds = 0.06,
+	-- How far below the wing (along the ground normal) the outline sits, so the
+	-- bright top face is never fully covered by its own rim.
+	-- Safe range: 0.02-0.08.
+	ArrowOutlineDropStuds = 0.035,
+	-- The outline's own rest transparency. Not neon and not animated by the flow
+	-- wave -- it stays close to solid so the rim it draws never itself washes out,
+	-- only fading in step with the wing it backs at the path's edges.
+	-- Safe range: 0.0-0.3.
+	OutlineTransparency = 0.12,
 
 	-- Each arrow is two thin neon bars meeting in a "V", built from vectors rather
 	-- than a texture -- there is still no Roblox group to upload a chevron image
 	-- to, and a shape built from two boxes needs no asset at all. The angle is
 	-- measured from the direction of travel to each bar, so a wide angle reads as
 	-- a shallow, open chevron and a narrow one reads as a sharp arrowhead.
+	-- Bolder and flatter than the first pass: thicker bars read as a solid
+	-- painted mark instead of a wire, and a lower profile keeps them from casting
+	-- odd shadows or clipping the camera on a shallow slope.
 	-- Safe range: length 0.9-2.2, thickness 0.12-0.3, height 0.06-0.2, angle 20-50.
-	ArrowWingLengthStuds = 1.5,
-	ArrowWingThicknessStuds = 0.2,
-	ArrowWingHeightStuds = 0.1,
+	ArrowWingLengthStuds = 1.6,
+	ArrowWingThicknessStuds = 0.28,
+	ArrowWingHeightStuds = 0.07,
 	ArrowWingAngleDegrees = 32,
 
 	-- Centre-to-centre gap between one arrow and the next along the path.
@@ -4447,12 +4471,16 @@ Config.Guide = {
 	-- fast the bright band moves along the path; FlowWaveLengthStuds is the
 	-- distance from one bright band to the next; the two transparency values are
 	-- what an arrow fades between at rest and at the peak of the wave passing
-	-- through it.
+	-- through it. FlowPeakColor is what the wing's own Color lerps toward at the
+	-- peak of the wave -- a near-white flash rather than only a brightness change,
+	-- so the flow reads as energy passing through gold rather than gold merely
+	-- dimming and brightening.
 	-- Safe range: speed 4-16, wavelength 8-25, rest 0.55-0.8, peak 0.05-0.25.
-	FlowSpeedStuds = 9,
-	FlowWaveLengthStuds = 14,
-	FlowRestTransparency = 0.65,
-	FlowPeakTransparency = 0.1,
+	FlowSpeedStuds = 12,
+	FlowWaveLengthStuds = 12,
+	FlowRestTransparency = 0.6,
+	FlowPeakTransparency = 0.05,
+	FlowPeakColor = Color3.fromRGB(255, 244, 214),
 
 	-- How high off the ground the destination anchor sits, before the waypoint's
 	-- own separate lift (WAYPOINT_LIFT_STUDS in Guide.luau) stacks on top of it.

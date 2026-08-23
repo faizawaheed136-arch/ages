@@ -89,10 +89,11 @@ export type GuideHandle = typeof(setmetatable(
 		chipFrame: Frame,
 		labelText: TextLabel,
 		distanceText: TextLabel,
-		-- Fixed-size pool of arrows, each a pair of wing bars forming a "V". Built
-		-- once; rebuildPath only ever repositions or hides them.
+		-- Fixed-size pool of arrows, each a pair of wing bars forming a "V", plus a
+		-- dark outline part behind each wing for contrast against any ground.
+		-- Built once; rebuildPath only ever repositions or hides them.
 		arrowsFolder: Folder,
-		arrows: { { left: Part, right: Part } },
+		arrows: { { left: Part, right: Part, leftOutline: Part, rightOutline: Part } },
 		-- Parallel arrays, valid for the first `activeCount` slots only -- how far
 		-- along the path that arrow sits, and how faded its edge-of-path alpha is.
 		-- Read every frame by the flow animation, written only when the path is
@@ -140,6 +141,29 @@ local function newWing(name: string, guide: typeof(Config.Guide)): Part
 	return part
 end
 
+-- The dark rim behind a wing: same shape, a margin larger on every side, not
+-- neon. Positioned each refresh at the same CFrame as its wing but dropped
+-- slightly along the ground normal, so the bright top face still shows through
+-- and the rim reads as an outline rather than a second, bigger arrow.
+local function newOutline(name: string, guide: typeof(Config.Guide)): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = Vector3.new(
+		guide.ArrowWingThicknessStuds + guide.ArrowOutlineMarginStuds * 2,
+		guide.ArrowWingHeightStuds,
+		guide.ArrowWingLengthStuds + guide.ArrowOutlineMarginStuds * 2
+	)
+	part.Color = guide.OutlineColor
+	part.Material = Enum.Material.SmoothPlastic
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Transparency = 1
+	return part
+end
+
 function Guide.new(): GuideHandle
 	local guide = Config.Guide
 
@@ -166,9 +190,13 @@ function Guide.new(): GuideHandle
 	for i = 1, guide.MaxArrows do
 		local left = newWing(`Wing{i}L`, guide)
 		local right = newWing(`Wing{i}R`, guide)
+		local leftOutline = newOutline(`Wing{i}LOutline`, guide)
+		local rightOutline = newOutline(`Wing{i}ROutline`, guide)
+		leftOutline.Parent = arrowsFolder
+		rightOutline.Parent = arrowsFolder
 		left.Parent = arrowsFolder
 		right.Parent = arrowsFolder
-		arrows[i] = { left = left, right = right }
+		arrows[i] = { left = left, right = right, leftOutline = leftOutline, rightOutline = rightOutline }
 	end
 
 	local rayParams = RaycastParams.new()
@@ -264,6 +292,8 @@ local function hideArrowsFrom(self: GuideHandle, from: number)
 		local pair = arrows[i]
 		pair.left.Transparency = 1
 		pair.right.Transparency = 1
+		pair.leftOutline.Transparency = 1
+		pair.rightOutline.Transparency = 1
 	end
 end
 
@@ -366,10 +396,17 @@ local function rebuildPath(self: GuideHandle)
 		rightAxis = rightAxis.Unit
 
 		local pair = self.arrows[i]
-		for _, wing in { { part = pair.left, side = -1 }, { part = pair.right, side = 1 } } do
+		for _, wing in
+			{
+				{ part = pair.left, outline = pair.leftOutline, side = -1 },
+				{ part = pair.right, outline = pair.rightOutline, side = 1 },
+			}
+		do
 			local wingDirection = (-direction * math.cos(angle) + rightAxis * wing.side * math.sin(angle)).Unit
 			local wingCenter = tip + wingDirection * (guide.ArrowWingLengthStuds * 0.5)
-			wing.part.CFrame = CFrame.lookAt(wingCenter, wingCenter + wingDirection, normal)
+			local wingCFrame = CFrame.lookAt(wingCenter, wingCenter + wingDirection, normal)
+			wing.part.CFrame = wingCFrame
+			wing.outline.CFrame = wingCFrame - normal * guide.ArrowOutlineDropStuds
 		end
 	end
 
@@ -389,6 +426,9 @@ local function animateFlow(self: GuideHandle, now: number)
 	local wavelength = guide.FlowWaveLengthStuds
 	local restT = guide.FlowRestTransparency
 	local peakT = guide.FlowPeakTransparency
+	local restColor = guide.Color
+	local peakColor = guide.FlowPeakColor
+	local outlineRestT = guide.OutlineTransparency
 
 	for i = 1, self.activeCount do
 		local along = self.arrowAlong[i]
@@ -398,10 +438,16 @@ local function animateFlow(self: GuideHandle, now: number)
 
 		local edgeAlpha = self.arrowEdgeAlpha[i]
 		local final = 1 - (1 - transparency) * edgeAlpha
+		local finalOutline = 1 - (1 - outlineRestT) * edgeAlpha
+		local color = restColor:Lerp(peakColor, waveAlpha)
 
 		local pair = self.arrows[i]
 		pair.left.Transparency = final
 		pair.right.Transparency = final
+		pair.left.Color = color
+		pair.right.Color = color
+		pair.leftOutline.Transparency = finalOutline
+		pair.rightOutline.Transparency = finalOutline
 	end
 end
 
