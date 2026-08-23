@@ -1,6 +1,72 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-23 (latest) — Interaction UI pass: E bar, stuck panel, speech bubbles
+## 2026-08-23 (latest) — A real bug in the E bar's fade, and Guide.luau rebuilt as ground chevrons
+
+Same out-of-lane authorization as the entry directly below this one ("proceed anyway with
+everything"), continued in the same session. Two more pieces of the original ask, both
+found via a second look rather than new requests: **not committed yet** — flagging that up
+front since the entry below this one already landed on `main`.
+
+**The bottom bar had a second, worse bug than the `$` one already fixed.** The user reported
+an "E" sitting at the bottom of the screen permanently, not just when standing near
+something. Root cause, in `InteractionPrompt.luau`: `handle.Show`/`Hide` built `Tween`
+objects and never called `:Play()` on them, and separately, the key box, both strokes and
+both text labels each had their own fixed `Transparency` set once at construction and never
+touched again — a child Frame or TextLabel's transparency does not inherit its parent's, so
+even a correctly-faded bar background would have left the key box with the letter "E" sitting
+on screen at all times regardless. Rewrote the fade as one function, `fadeTo(intoVisible)`,
+that builds and plays a `Tween` per instance (bar, both strokes, key box, both labels) and
+initializes every one of them to fully transparent at construction instead of only the bar.
+Added `Config.InteractionPrompt.KeyStrokeTransparency` so the one remaining hardcoded
+transparency (a literal `0.3`) is a fade target like the rest rather than another orphaned
+fixed value. Pressing E on a person already opened the conversation panel before this fix
+(`prompts:On("Person", ...)` in `init.client.luau:266`) — the only thing wrong was that the
+prompt bar itself never actually hid, so this was a visibility bug, not a missing feature.
+
+**Guide.luau rebuilt from two floating Beams into ground-hugging chevron arrows**, on the
+user's reference screenshot of another game's delivery-job path indicator. The old system
+was a Beam pair with an unusable placeholder texture (`Config.Guide.ArrowTexture`, a fake
+asset id — the comment above it said outright there was no Roblox group to upload a real one
+to) and a fixed vertical sag between two attachments that ignored real terrain. The new one
+needs no image asset at all: each arrow is two thin `Neon` boxes meeting in a "V", built with
+`CFrame.lookAt` off a direction vector and a ground normal, so orienting them never depends on
+guessing Roblox's LookVector sign convention — a bar looks identical pointed either way down
+its own length, which is what makes that safe to do blind, without Studio to check it in.
+
+Every arrow's height comes from a real downward raycast per arrow, not the old fixed curve —
+the path now follows a slope, a kerb or a flight of steps instead of floating through them at
+head height. Fixed-size pool (`Config.Guide.MaxArrows`, 36): built once in `Guide.new()`,
+only ever repositioned or hidden, so a guide across the map costs the same as one next door —
+long paths space their arrows further apart instead of growing the pool. Two update rates on
+one Heartbeat connection: the path's shape (every raycast, every arrow's position) re-walks at
+`Config.Guide.RefreshSeconds` same as before, but a travelling brightness wave that makes the
+chain look like it is flowing toward the destination runs every frame, untied to that
+throttle, or it would read as a slideshow rather than motion. Both ends of the path fade out
+over `ArrowEdgeFadeStuds` rather than stopping dead, same reasoning the old beam's transparency
+curve gave for not touching the player's own body or stabbing into the destination floor.
+
+**This is the only guidance-line system in the game** — grepped for any other `Beam`/`Trail`
+built anywhere in `src/`, found none, and `GuideUpdated` has exactly two senders
+(`WorkService`'s job guidance, `ChildhoodService`'s wandered-event lure). Neither call site
+changed at all: `Guide.Set`'s signature and `GuideState` are untouched, so "for everything
+including delivery jobs" is satisfied by construction — there is no second line anywhere else
+to find and convert, and anything that starts sending `GuideUpdated` in the future gets the
+chevrons for free. AGES has no delivery/courier job today; the screenshot's "New Courier" was
+read as a style reference, not a request to build that job.
+
+**Unverified — no Studio access this session**, and this one is riskier to certify blind than
+most: the wing geometry is deterministic vector math I'm confident is correct, but Config
+values (`ArrowWingLengthStuds`, `FlowSpeedStuds`, etc.) are first-guess tuning with nothing
+behind them but the reference image. `tools/check.py` is clean. Test plan for whoever opens
+Studio next: trigger any guide (accept a job you don't have the level for, or wait for a
+childhood lure) and confirm arrows sit flush on the ground rather than floating or clipping
+into it, the brightness wave visibly travels toward the destination, both ends fade rather
+than cutting off sharply, and the path disappears within `ArrivedRadiusStuds` while the
+waypoint label stays. Also confirm the E-bar fade: walk up to a person, door or till and
+confirm nothing is visible before you are in range, and walk away and confirm it fades all
+the way to nothing rather than leaving a faint box behind.
+
+## 2026-08-23 — Interaction UI pass: E bar, stuck panel, speech bubbles
 
 **Out of lane, done on explicit user override.** The user asked in one message to fix the
 bottom "E" interact bar, add/confirm an interactive prompt on people and doors, fix a

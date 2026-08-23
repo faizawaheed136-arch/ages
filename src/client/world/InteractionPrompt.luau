@@ -79,7 +79,7 @@ function InteractionPrompt.new(): Handle
 	local barStroke = Instance.new("UIStroke")
 	barStroke.Color = PROMPT.BarStrokeColor
 	barStroke.Thickness = 1
-	barStroke.Transparency = PROMPT.BarStrokeTransparency
+	barStroke.Transparency = 1
 	barStroke.Parent = bar
 
 	-- The key box on the left: a white rounded square with the letter inside.
@@ -89,7 +89,7 @@ function InteractionPrompt.new(): Handle
 	keyBox.Position = UDim2.fromScale(0.12, 0.5)
 	keyBox.AnchorPoint = Vector2.new(0, 0.5)
 	keyBox.BackgroundColor3 = PROMPT.KeyBoxColor
-	keyBox.BackgroundTransparency = PROMPT.KeyBoxTransparency
+	keyBox.BackgroundTransparency = 1
 	keyBox.BorderSizePixel = 0
 	keyBox.Parent = bar
 
@@ -100,7 +100,7 @@ function InteractionPrompt.new(): Handle
 	local keyStroke = Instance.new("UIStroke")
 	keyStroke.Color = PROMPT.KeyStrokeColor
 	keyStroke.Thickness = 1.5
-	keyStroke.Transparency = 0.3
+	keyStroke.Transparency = 1
 	keyStroke.Parent = keyBox
 
 	local keyLabel = Instance.new("TextLabel")
@@ -110,6 +110,7 @@ function InteractionPrompt.new(): Handle
 	keyLabel.Font = Enum.Font.GothamBold
 	keyLabel.Text = currentKey()
 	keyLabel.TextColor3 = PROMPT.KeyTextColor
+	keyLabel.TextTransparency = 1
 	keyLabel.TextScaled = true
 	keyLabel.TextWrapped = false
 	keyLabel.Parent = keyBox
@@ -129,6 +130,7 @@ function InteractionPrompt.new(): Handle
 	actionLabel.Font = Enum.Font.GothamMedium
 	actionLabel.Text = ""
 	actionLabel.TextColor3 = PROMPT.ActionTextColor
+	actionLabel.TextTransparency = 1
 	actionLabel.TextScaled = true
 	actionLabel.TextXAlignment = Enum.TextXAlignment.Left
 	actionLabel.Parent = bar
@@ -137,16 +139,44 @@ function InteractionPrompt.new(): Handle
 	actionSizeConstraint.MaxTextSize = 20
 	actionSizeConstraint.Parent = actionLabel
 
-	-- Fade state. The bar starts hidden (fully transparent).
+	-- Fade state. Every piece above starts fully transparent (the bar's own background,
+	-- both strokes, the key box and both labels) rather than only the bar -- a child
+	-- Frame or TextLabel's transparency does not inherit its parent's, so a bar that is
+	-- itself invisible does nothing to hide a key box built with a fixed transparency of
+	-- its own. That mismatch is exactly what used to leave a permanent "E" sitting at the
+	-- bottom of the screen: the bar's fade tween was built but never `:Play()`-ed, and
+	-- even if it had been, it would only ever have faded the bar's own background, not
+	-- the five other instances layered on top of it.
 	bar.BackgroundTransparency = 1
 	local visible = false
-	local currentTween: Tween? = nil
+	local activeTweens: { Tween } = {}
 
-	local function setTween(t: Tween?)
-		if currentTween ~= nil then
-			currentTween:Cancel()
+	local function cancelTweens()
+		for _, tween in activeTweens do
+			tween:Cancel()
 		end
-		currentTween = t
+		table.clear(activeTweens)
+	end
+
+	-- Every faded instance moves together, in and out, as one group -- so `intoVisible`
+	-- is the only thing a caller ever has to decide.
+	local function fadeTo(intoVisible: boolean)
+		cancelTweens()
+		local direction = if intoVisible then Enum.EasingDirection.Out else Enum.EasingDirection.In
+		local info = TweenInfo.new(PROMPT.FadeSeconds, Enum.EasingStyle.Quad, direction)
+		local targets: { [Instance]: { [string]: any } } = {
+			[bar] = { BackgroundTransparency = if intoVisible then PROMPT.BarTransparency else 1 },
+			[barStroke] = { Transparency = if intoVisible then PROMPT.BarStrokeTransparency else 1 },
+			[keyBox] = { BackgroundTransparency = if intoVisible then PROMPT.KeyBoxTransparency else 1 },
+			[keyStroke] = { Transparency = if intoVisible then PROMPT.KeyStrokeTransparency else 1 },
+			[keyLabel] = { TextTransparency = if intoVisible then 0 else 1 },
+			[actionLabel] = { TextTransparency = if intoVisible then 0 else 1 },
+		}
+		for instance, goal in targets do
+			local tween = TweenService:Create(instance, info, goal)
+			tween:Play()
+			table.insert(activeTweens, tween)
+		end
 	end
 
 	-- Declared before the three methods below fill it in, so each one can be written as
@@ -166,11 +196,7 @@ function InteractionPrompt.new(): Handle
 		visible = true
 		keyLabel.Text = currentKey()
 		actionLabel.Text = if object ~= "" then `{action} {object}` else action
-		setTween(TweenService:Create(
-			bar,
-			TweenInfo.new(PROMPT.FadeSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{ BackgroundTransparency = PROMPT.BarTransparency }
-		))
+		fadeTo(true)
 	end
 
 	-- Hide the prompt with a fade out.
@@ -179,16 +205,12 @@ function InteractionPrompt.new(): Handle
 			return
 		end
 		visible = false
-		setTween(TweenService:Create(
-			bar,
-			TweenInfo.new(PROMPT.FadeSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ BackgroundTransparency = 1 }
-		))
+		fadeTo(false)
 	end
 
 	-- Clean up on death / respawn.
 	function handle.Destroy()
-		setTween(nil)
+		cancelTweens()
 		screenGui:Destroy()
 	end
 

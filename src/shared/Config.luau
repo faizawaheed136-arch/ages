@@ -574,6 +574,11 @@ Config.InteractionPrompt = {
 	KeyTextColor = Color3.fromRGB(20, 20, 24),
 	ActionTextColor = Color3.fromRGB(245, 242, 235),
 	KeyStrokeColor = Color3.fromRGB(18, 16, 14),
+	-- Safe range: 0.2-0.5. Was a literal 0.3 inside InteractionPrompt.luau, hardcoded on a
+	-- Frame that never actually faded with the rest of the bar -- now a real fade target
+	-- alongside it, so the key box's rim disappears with everything else instead of
+	-- lingering as its own permanent outline.
+	KeyStrokeTransparency = 0.3,
 }
 
 Config.SpeechBubble = {
@@ -4401,65 +4406,74 @@ Config.Guide = {
 	-- learn for no gain.
 	Color = Color3.fromRGB(245, 205, 120),
 
-	-- How wide the core line is at the player's end and at the destination. Slim
-	-- enough to read as a path marker rather than a highway, wide enough at the far
-	-- end to taper the eye toward the destination.
-	-- Safe range: 0.15-0.8, near below far.
-	WidthNearStuds = 0.18,
-	WidthFarStuds = 0.55,
+	-- Each arrow is two thin neon bars meeting in a "V", built from vectors rather
+	-- than a texture -- there is still no Roblox group to upload a chevron image
+	-- to, and a shape built from two boxes needs no asset at all. The angle is
+	-- measured from the direction of travel to each bar, so a wide angle reads as
+	-- a shallow, open chevron and a narrow one reads as a sharp arrowhead.
+	-- Safe range: length 0.9-2.2, thickness 0.12-0.3, height 0.06-0.2, angle 20-50.
+	ArrowWingLengthStuds = 1.5,
+	ArrowWingThicknessStuds = 0.2,
+	ArrowWingHeightStuds = 0.1,
+	ArrowWingAngleDegrees = 32,
 
-	-- A second, wider beam behind the core that gives the line a soft glow halo.
-	-- The halo is what makes the line feel warm rather than wire-like; the core is
-	-- what gives it sharpness. Together they read at every distance.
-	-- Safe range: 0.6-3, near below far.
-	HaloWidthNearStuds = 0.9,
-	HaloWidthFarStuds = 2.0,
-	-- 0 = invisible, 1 = fully opaque. The halo should be felt more than seen.
-	-- Safe range: 0.7-0.95.
-	HaloTransparency = 0.82,
+	-- Centre-to-centre gap between one arrow and the next along the path.
+	-- Safe range: 3-10. Below ~3 the chevrons blur into a solid stripe; above 10
+	-- the path reads as scattered dashes rather than a direction.
+	ArrowSpacingStuds = 5,
 
-	-- A gentle width oscillation on the halo so the glow breathes. Zero disables.
-	-- The core beam stays steady; only the halo pulses.
-	-- Safe range: 0-0.3 studs, 0.5-3 Hz.
-	PulseStrengthStuds = 0.12,
-	PulseSpeed = 1.2,
+	-- Hard cap on how many arrows exist at once. Built once in Guide.new() and
+	-- only ever repositioned or hidden, never recreated -- a path longer than
+	-- MaxArrows * ArrowSpacingStuds spaces its arrows further apart instead of
+	-- growing the pool, so a cross-map guide never costs more than a next-door one.
+	-- Safe range: 20-60.
+	MaxArrows = 36,
 
-	-- How high off the ground the line floats at each end. Lifted at the player so
-	-- it leaves from about waist height instead of clipping through the floor on a
-	-- slope, and dropped at the destination so it visibly lands on the spot.
-	-- Safe range: 0-4.
-	LiftAtPlayerStuds = 2,
+	-- How high above the real ground each arrow floats, along the ground's own
+	-- normal so it stays flush on a slope rather than only a flat floor. Just
+	-- enough to clear a kerb or a paving seam without visibly hovering.
+	-- Safe range: 0.15-0.6.
+	ArrowLiftStuds = 0.35,
+
+	-- The stretch at each end of the path where arrows fade out instead of
+	-- stopping dead: nearest the player, so the path does not look welded to your
+	-- feet, and nearest the destination, so it does not look stabbed into the
+	-- doorway.
+	-- Safe range: 4-15.
+	ArrowEdgeFadeStuds = 8,
+
+	-- The travelling brightness wave that makes the path feel like it is flowing
+	-- toward the destination rather than just sitting there. FlowSpeedStuds is how
+	-- fast the bright band moves along the path; FlowWaveLengthStuds is the
+	-- distance from one bright band to the next; the two transparency values are
+	-- what an arrow fades between at rest and at the peak of the wave passing
+	-- through it.
+	-- Safe range: speed 4-16, wavelength 8-25, rest 0.55-0.8, peak 0.05-0.25.
+	FlowSpeedStuds = 9,
+	FlowWaveLengthStuds = 14,
+	FlowRestTransparency = 0.65,
+	FlowPeakTransparency = 0.1,
+
+	-- How high off the ground the destination anchor sits, before the waypoint's
+	-- own separate lift (WAYPOINT_LIFT_STUDS in Guide.luau) stacks on top of it.
+	-- Only needs to clear the exact floor point now that the path itself hugs the
+	-- real ground instead of running to an artificial height.
+	-- Safe range: 0-3.
 	LiftAtTargetStuds = 1,
 
-	-- How much the line sags between the two ends. A dead-straight line through
-	-- three walls reads as a rendering fault; a curve reads as a path. Kept modest
-	-- so the line reads as a gentle arc rather than a hanging rope.
-	-- Safe range: 0-40. Above ~40 it loops so high it stops indicating direction.
-	CurveStuds = 6,
-
-	-- How often the client redraws. Only the player's end actually moves, and it
-	-- moves with them, so this is about the destination label's distance readout
-	-- rather than the line itself.
+	-- How often the client re-walks the path: re-raycasts every arrow's ground
+	-- height and repositions the pool. The flow animation above updates every
+	-- frame regardless of this -- this interval is about the shape of the path,
+	-- which only changes as fast as the player walks.
 	-- Safe range: 0.1-1.
 	RefreshSeconds = 0.25,
 
-	-- Close enough to count as arrived, at which point the line would be pointing at
-	-- the floor under your feet. The label stays up -- you still want to know what
-	-- you are standing in front of -- but the line goes.
-	-- Safe range: 8-40. Wants to be at or above Work.StationRadiusStuds so the line
-	-- clears once you are inside the workplace rather than at the doorway.
+	-- Close enough to count as arrived, at which point the path would be pointing
+	-- at the ground under your own feet. The label stays up -- you still want to
+	-- know what you are standing in front of -- but the arrows go.
+	-- Safe range: 8-40. Wants to be at or above Work.StationRadiusStuds so the
+	-- path clears once you are inside the workplace rather than at the doorway.
 	ArrivedRadiusStuds = 26,
-
-	-- Scrolling arrows along the line, once there is an image to scroll. Empty means
-	-- a plain glowing line, which is what ships today: an arrow texture is an asset
-	-- upload, and there is no Roblox group to upload it to yet. Everything else here
-	-- is already tuned for it, so this is a one-line change when the group exists.
-	-- Safe range for the speed: 0.5-4, negative to run the arrows backwards.
-	ArrowTexture = "rbxassetid://123456789",
-	ArrowSpeed = 1.5,
-	-- How many times the texture repeats across the line's length, per 10 studs.
-	-- Safe range: 0.5-4.
-	ArrowsPerTenStuds = 1.5,
 }
 
 Config.UI = {
