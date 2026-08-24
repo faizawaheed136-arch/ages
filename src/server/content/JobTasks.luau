@@ -38,6 +38,16 @@
 --   the failure this loop wants is "I got distracted", never "I could not physically
 --   get there".
 --
+--   `minigame` is the one deliberate exception to "almost every task is the same
+--   mechanic" above, and it is spent on purpose rather than by default: reaching the
+--   mark opens a client panel instead of completing the task outright, and the panel
+--   is a real, separate thing to build per id. Used on a job's flagship task only --
+--   pizzeria_cook's `make` is the worked example -- never as the default shape for a
+--   new job, because forty-eight panels would be forty-eight times the cost of this
+--   file for a difference most of those jobs' hands would never notice. A job earns
+--   one when its real-world verb is something walking to a dot cannot say: stretching
+--   dough, timing an oven, not filing a folder.
+--
 -- Nothing here says *where*. The marks are found around wherever the player clocked
 -- on, so a job gets tasks the moment it exists, no part in Studio has to be tagged,
 -- and no author can accidentally send somebody into a wall in a room they never saw.
@@ -781,34 +791,18 @@ local SOURCE: { [string]: { JobTask } } = {
 	},
 
 	pizzeria_cook = {
+		-- The flagship. Stretch, top and bake used to be four separate walk-to-a-mark
+		-- tasks that only ever differed by their label -- see the header note above on
+		-- why that was the right call for forty-eight other jobs and the wrong one for
+		-- the game's own worked example. One mark, one minigame, three timing checks:
+		-- see PizzaUI and Config.Work.Minigames.Pizza for the checks themselves.
 		{
-			id = "dough",
-			label = "Stretch the pizza dough",
-			mark = "Stretch it",
+			id = "make",
+			label = "Make the pizza",
+			mark = "Make it",
 			spots = 1,
-			seconds = 14,
-		},
-		{
-			id = "top",
-			label = "Top theMargherita",
-			mark = "Top it",
-			spots = 1,
-			seconds = 13,
-		},
-		{
-			id = "oven",
-			label = "Slide the pie into the oven",
-			mark = "Slide it in",
-			handMark = "Box it up",
-			spots = 2,
-			seconds = 20,
-		},
-		{
-			id = "sauce",
-			label = "Spread the sauce on the base",
-			mark = "Spread it",
-			spots = 1,
-			seconds = 12,
+			seconds = 25,
+			minigame = "pizza",
 		},
 		{
 			id = "prep",
