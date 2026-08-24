@@ -210,6 +210,23 @@ local function clearQueue(player: Player, mine: DealerState, tellClient: boolean
 	end
 end
 
+-- Whether the player is close enough to the showroom for its queue to be their
+-- business at all. Missing this was the whole bug: every player old enough to work
+-- the counter got a queue built for them from PlayerAdded onward and refreshed on
+-- every tick with no question asked about where they actually were, so a player who
+-- had never been near the dealership still had customers lining up and the HUD row
+-- reading "AutoPia: serving customer" -- indistinguishable from being on shift there
+-- without ever having taken the job. Same radius the shift itself uses to decide the
+-- shop floor is under your feet, so a walk-in and an employee agree on what "at the
+-- dealership" means.
+local function nearCounter(player: Player, station: Vector3): boolean
+	local position = characterPosition(player)
+	if position == nil then
+		return false
+	end
+	return Ground.FlatDistance(position, station) <= Config.Work.StationRadiusStuds
+end
+
 -- Find or refresh the queue for this player. Called on every tick and when the
 -- player enters the area. Rebuilds the spots from the place point each time so
 -- a rebuilt city does not leave stale queue positions.
@@ -234,6 +251,10 @@ local function ensureQueue(player: Player)
 	end
 
 	local station = place.part.Position
+	if not nearCounter(player, station) then
+		clearQueue(player, mine, true)
+		return
+	end
 	-- The counter is the first spot across the mark from the station. We find it
 	-- by fanning out from the station and taking the first reachable spot, then
 	-- placing the queue behind it.
@@ -409,6 +430,13 @@ local function maybeArrive(player: Player)
 	end
 
 	local station = place.part.Position
+	-- Same gate as ensureQueue, and needed independently rather than assumed: this
+	-- function builds its own queue from scratch and runs on the same tick, so a
+	-- player ensureQueue had already turned away would otherwise get a fresh customer
+	-- here a moment later.
+	if not nearCounter(player, station) then
+		return
+	end
 	local ignore = Ground.IgnoreList()
 	local radius = Config.NPC.BodyRadius
 	local height = Config.NPC.BodyHeight

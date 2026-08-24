@@ -1026,9 +1026,14 @@ UserInputService.InputBegan:Connect(function(input: InputObject, processed: bool
 		menu:Toggle()
 	elseif input.KeyCode == Enum.KeyCode.Escape then
 		-- One at a time, map first, because the map draws over the menu and closing the
-		-- thing underneath the thing you are looking at is not what Escape means.
+		-- thing underneath the thing you are looking at is not what Escape means. The
+		-- panel comes next and only if it is holding something escapable -- a parent, a
+		-- phone call, a gang boss -- so a life event or a lesson question is never the
+		-- thing this key quietly skips.
 		if mapSheet:IsOpen() then
 			mapSheet:Close()
+		elseif panel:CloseCurrent() then
+			-- Closed whatever conversation was open; nothing else to do this press.
 		else
 			menu:Close()
 		end

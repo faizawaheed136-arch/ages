@@ -60,7 +60,18 @@ local BADGE_NAME = "Badge"
 -- a badge is not a number anybody balances a life simulator with, and putting it
 -- next to the numbers that are makes both harder to find.
 local BADGE_SIZE = 0.7
-local BADGE_COLOR = Color3.fromRGB(255, 250, 240)
+-- The same gold ChoiceMarkers paints a choice pad and Interact's own panel style
+-- paints its accent -- see PAD_COLOR in ChoiceMarkers.luau and DELIVERY_STYLES.Interact
+-- in ChoicePanel.luau. Three different surfaces agreeing on one color is what makes it
+-- read as "you can act on this" rather than as a badge that happens to be gold; a plain
+-- off-white plate carried none of that meaning.
+local BADGE_COLOR = Color3.fromRGB(245, 205, 120)
+-- The gradient's lighter and darker ends, either side of BADGE_COLOR. Turns a flat
+-- gold square into a struck coin -- light catching the top, the bottom falling into
+-- its own shadow -- which is the cheapest read of "this is a raised, physical thing"
+-- a Frame can give without a real light source.
+local BADGE_COLOR_LIGHT = Color3.fromRGB(255, 234, 186)
+local BADGE_COLOR_SHADOW = Color3.fromRGB(210, 164, 84)
 local BADGE_STROKE = Color3.fromRGB(20, 18, 14)
 local BADGE_TEXT_COLOR = Color3.fromRGB(20, 18, 14)
 
@@ -283,15 +294,33 @@ local function buildBadge(parent: Instance): Frame
 	badge.BorderSizePixel = 0
 	badge.Parent = parent
 
+	-- A full circle rather than a rounded square. A coin reads as a single, deliberate
+	-- shape from across a room; a rounded square reads as "a label that got corners
+	-- filed off" the moment you are close enough to see the difference.
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.3, 0)
+	corner.CornerRadius = UDim.new(0.5, 0)
 	corner.Parent = badge
 
+	-- Light at the top, the base gold in the middle, shadow at the bottom -- see
+	-- BADGE_COLOR_LIGHT/BADGE_COLOR_SHADOW for why. Rotated 90 so the light comes from
+	-- above rather than from the side, which is the direction every other lit surface
+	-- in this game's rooms agrees a light source lives.
+	local gradient = Instance.new("UIGradient")
+	gradient.Rotation = 90
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, BADGE_COLOR_LIGHT),
+		ColorSequenceKeypoint.new(0.55, BADGE_COLOR),
+		ColorSequenceKeypoint.new(1, BADGE_COLOR_SHADOW),
+	})
+	gradient.Parent = badge
+
 	-- Readable against a white wall and a night sky alike. Without it the badge
-	-- disappears entirely in a bright room, which is most rooms.
+	-- disappears entirely in a bright room, which is most rooms. Thicker than the
+	-- square plate wore, because a circle's edge has nothing else -- no corner, no
+	-- flat side -- to catch the eye and say "this is a distinct object" for it.
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = BADGE_STROKE
-	stroke.Thickness = 1.5
+	stroke.Thickness = 2
 	stroke.Transparency = BADGE_STROKE_FAR_TRANSPARENCY
 	stroke.Parent = badge
 

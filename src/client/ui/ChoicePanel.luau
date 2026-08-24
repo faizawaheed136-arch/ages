@@ -295,6 +295,14 @@ export type ChoicePanelHandle = typeof(setmetatable(
 		-- button that is inactive for both reasons cannot say which.
 		choiceButtons: { { button: TextButton, locked: boolean } },
 		activeKey: string?,
+		-- Whether Escape is allowed to walk away from whatever is currently open. True
+		-- for everything opened by ShowOptions -- a person, a phone call, a gang boss, a
+		-- lesson's answer list -- because all of those are the player standing near
+		-- something that has more to say than they have to hear. False for a life event's
+		-- Show()/OpenEnacted(): those are the game telling the player something happened,
+		-- not a person waiting on an answer, and closing one with no reply would leave the
+		-- event stuck open on the server with nothing to move it forward.
+		escapable: boolean,
 		onChoice: ((eventId: string, choiceId: string) -> ())?,
 		hideToken: number,
 		-- Held while an outcome is still on screen. In childhood a resolved event
@@ -457,6 +465,7 @@ function ChoicePanel.new(): ChoicePanelHandle
 		outcomeLabel = outcomeLabel,
 		choiceButtons = {},
 		activeKey = nil,
+		escapable = false,
 		queuedOffer = nil,
 		pendingEnacted = nil,
 		onChoice = nil,
@@ -483,6 +492,7 @@ function ChoicePanel.Hide(self: ChoicePanelHandle)
 	self.hideToken += 1
 	local previousKey = self.activeKey
 	self.activeKey = nil
+	self.escapable = false
 	-- Hide is only called on death or after an outcome has run its course, and
 	-- both of those outrank anything still waiting behind them.
 	self.queuedOffer = nil
@@ -655,6 +665,7 @@ function ChoicePanel.ShowOptions(self: ChoicePanelHandle, content: PanelContent)
 	clearChoices(self)
 
 	self.activeKey = content.key
+	self.escapable = true
 	self.pendingEnacted = nil
 
 	local style = if content.phone then DELIVERY_STYLES.PhoneCall else DELIVERY_STYLES.Interact
@@ -707,6 +718,19 @@ function ChoicePanel.CloseOptions(self: ChoicePanelHandle, key: string): boolean
 	return true
 end
 
+-- Escape, for whatever is on screen right now. Only takes down a panel opened by
+-- ShowOptions -- a person, a phone call, a gang boss, a lesson's answer list -- because
+-- those are all the player standing near something that has more to say than they have
+-- to hear, not a question the game needs answered to move on. A life event opened by
+-- Show() or OpenEnacted() is never escapable, and neither is an outcome still being read.
+function ChoicePanel.CloseCurrent(self: ChoicePanelHandle): boolean
+	if self.activeKey == nil or not self.escapable or self.outcomeLabel.Visible then
+		return false
+	end
+	self:Hide()
+	return true
+end
+
 function ChoicePanel.Show(self: ChoicePanelHandle, offered: OfferedEvent)
 	-- An outcome on screen is still being read. Hold the new prompt rather than
 	-- overwriting it; ShowOutcome hands over once it has finished.
@@ -734,6 +758,7 @@ function ChoicePanel.Show(self: ChoicePanelHandle, offered: OfferedEvent)
 	local enacted = offered.resolution == "Enacted"
 
 	self.activeKey = offered.id
+	self.escapable = false
 	applyStyle(self, style, offered.prompt)
 
 	-- An enacted event overrides the style's framing but keeps its voice. The
@@ -794,6 +819,7 @@ function ChoicePanel.OpenEnacted(self: ChoicePanelHandle, eventId: string): bool
 	-- panel its delivery would always have had.
 	local style = DELIVERY_STYLES[offered.delivery]
 	self.activeKey = offered.id
+	self.escapable = false
 	applyStyle(self, style, offered.prompt)
 	self.hintLabel.Visible = false
 
