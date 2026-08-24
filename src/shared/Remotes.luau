@@ -338,13 +338,13 @@ export type RemoteName =
 	-- pointing a line at nothing. Overrides the automatic best-job arrow until the
 	-- player takes it, picks another, or it stops existing.
 	| "RequestGuideToJob"
-	-- "Here is how the minigame panel went." Carries the task id it answers and a
-	-- score from 0 to 1 that the server clamps before it ever touches a tip -- the
-	-- client is trusted to grade its own panel the way EaselUI is, but not trusted
-	-- with the number that follows from the grade. Answers a task the server has no
-	-- longer than it stays open for; a late or duplicate send for a task that has
-	-- already completed or expired is a no-op.
-	| "RequestJobMinigameResult"
+	-- "I pressed the pickup key at the mark I'm standing on." Carries the task id
+	-- the mark belongs to and nothing else -- the client only ever claims it pressed
+	-- the key, never that it was in range or that the pickup should count, and the
+	-- server re-checks both against the shift it already has before anything
+	-- happens. A press for a task that has finished, expired, or was never issued to
+	-- this player is a no-op.
+	| "RequestTaskPickup"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -587,7 +587,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"ChapterBreak",
 	"RequestQuitJob",
 	"RequestGuideToJob",
-	"RequestJobMinigameResult",
+	"RequestTaskPickup",
 }
 
 local FOLDER_NAME = "RemoteEvents"

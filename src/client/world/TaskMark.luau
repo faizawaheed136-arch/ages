@@ -17,6 +17,12 @@
 -- what it says because it was told; it does not know what happens when you reach it,
 -- and deleting the disc by hand would remove the light and change nothing at all
 -- about whether the task completes.
+--
+-- Every mark now also carries the universal pickup prompt -- see
+-- Config.Interact.PickupKeyboardKey -- because arriving is only ever the first half
+-- of what a task asks for. This file still does not decide anything: it hands the
+-- Triggered event straight to whoever called TaskMark.new, the same way Prompts.luau
+-- hands a dots click to whoever registered for that kind of interaction.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -50,9 +56,14 @@ type Drawn = {
 	marker: ChoiceMarkers.ChoiceMarker,
 	spot: Vector3,
 	label: string,
+	connection: RBXScriptConnection,
 }
 
-function TaskMark.new(): Handle
+-- `onPickup` fires once per press of the pickup key at a live mark, carrying that
+-- mark's task id. Never trusted further than the press itself -- the caller sends it
+-- to the server exactly as EaselUI sends a paint click, and the server is the one
+-- that checks the player is actually still standing there.
+function TaskMark.new(onPickup: (id: string) -> ()): Handle
 	-- Parented to the workspace on the client, so it never reaches the server or
 	-- another player. Same mechanism as the guide and the hiring posts.
 	local folder = Instance.new("Folder")
@@ -71,6 +82,7 @@ function TaskMark.new(): Handle
 	local function destroy(id: string)
 		local existing = drawn[id]
 		if existing ~= nil then
+			existing.connection:Disconnect()
 			existing.marker.destroy()
 			drawn[id] = nil
 		end
@@ -105,13 +117,30 @@ function TaskMark.new(): Handle
 			-- Never locked. A task mark is not an offer with terms attached: the shift you
 			-- are already on is the only qualification it has, and by the time this is
 			-- drawn you have it.
+			local marker = ChoiceMarkers.Build(folder, mark.spot, Config.Work.Tasks.ReachStuds, {
+				label = mark.label,
+				locked = false,
+				pickup = true,
+			})
+
+			local id = mark.id
+			local prompt = marker.prompt
+			if prompt == nil then
+				-- Unreachable while `pickup = true` and `locked = false` above, both fixed
+				-- a few lines up -- said out loud because the alternative failure is a mark
+				-- that draws and never responds to anything, which reads as a stuck game
+				-- rather than as a missing wire.
+				warn(`AGES: task mark "{id}" built with no pickup prompt`)
+				continue
+			end
+
 			drawn[mark.id] = {
-				marker = ChoiceMarkers.Build(folder, mark.spot, Config.Work.Tasks.ReachStuds, {
-					label = mark.label,
-					locked = false,
-				}),
+				marker = marker,
 				spot = mark.spot,
 				label = mark.label,
+				connection = prompt.Triggered:Connect(function()
+					onPickup(id)
+				end),
 			}
 		end
 	end

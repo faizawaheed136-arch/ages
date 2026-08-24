@@ -38,15 +38,12 @@
 --   the failure this loop wants is "I got distracted", never "I could not physically
 --   get there".
 --
---   `minigame` is the one deliberate exception to "almost every task is the same
---   mechanic" above, and it is spent on purpose rather than by default: reaching the
---   mark opens a client panel instead of completing the task outright, and the panel
---   is a real, separate thing to build per id. Used on a job's flagship task only --
---   pizzeria_cook's `make` is the worked example -- never as the default shape for a
---   new job, because forty-eight panels would be forty-eight times the cost of this
---   file for a difference most of those jobs' hands would never notice. A job earns
---   one when its real-world verb is something walking to a dot cannot say: stretching
---   dough, timing an oven, not filing a folder.
+-- Reaching a mark no longer finishes the task by itself -- see Config.Interact's
+-- PickupKeyboardKey. It arms a prompt, and the player presses the universal pickup
+-- key to actually do the thing. That is what buys a job whose real verb is
+-- "stretching dough" or "timing an oven" its own feel without needing a bespoke panel
+-- to say so: the difference between forty-eight jobs and one job with forty-eight
+-- labels was never the marks, it was whether arriving felt like doing something.
 --
 -- Nothing here says *where*. The marks are found around wherever the player clocked
 -- on, so a job gets tasks the moment it exists, no part in Studio has to be tagged,
@@ -791,18 +788,32 @@ local SOURCE: { [string]: { JobTask } } = {
 	},
 
 	pizzeria_cook = {
-		-- The flagship. Stretch, top and bake used to be four separate walk-to-a-mark
-		-- tasks that only ever differed by their label -- see the header note above on
-		-- why that was the right call for forty-eight other jobs and the wrong one for
-		-- the game's own worked example. One mark, one minigame, three timing checks:
-		-- see PizzaUI and Config.Work.Minigames.Pizza for the checks themselves.
+		-- Stretch, top and bake are three separate stops rather than one task that
+		-- says "make it" -- a real kitchen line has three separate moments to get
+		-- right, and pressing the pickup key at each one is what makes them read as
+		-- three things you did rather than one word on a panel.
 		{
-			id = "make",
-			label = "Make the pizza",
-			mark = "Make it",
+			id = "dough",
+			label = "Stretch the dough",
+			mark = "Stretch it",
 			spots = 1,
-			seconds = 25,
-			minigame = "pizza",
+			seconds = 12,
+		},
+		{
+			id = "top",
+			label = "Get the toppings and dress the pizza",
+			mark = "Get them",
+			handMark = "Top it",
+			spots = 2,
+			seconds = 16,
+		},
+		{
+			id = "oven",
+			label = "Bake it and pull it in time",
+			mark = "Load it",
+			handMark = "Take it out",
+			spots = 2,
+			seconds = 18,
 		},
 		{
 			id = "prep",

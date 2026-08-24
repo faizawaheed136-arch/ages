@@ -524,6 +524,16 @@ Config.Interact = {
 	-- does nothing. One source, both ends.
 	KeyboardKey = Enum.KeyCode.E,
 
+	-- The universal pickup key. Everything a shift ever asks you to physically pick
+	-- up or hand off -- a shelf item, a topping, a package -- answers to this one
+	-- key rather than each task inventing its own, for the same reason E is one key
+	-- and not forty-nine: a player who has learned it once has learned it for the
+	-- rest of the game. Distinct from KeyboardKey because the two answer different
+	-- questions -- E opens a conversation, P does something with your hands -- and a
+	-- prompt that used the same key for both would leave a player unable to tell,
+	-- from the letter alone, which one they were about to press.
+	PickupKeyboardKey = Enum.KeyCode.P,
+
 	-- How far the badge and the nameplate carry, as multiples of ReachStuds.
 	--
 	-- Two numbers rather than one because they answer different questions, and the gap
@@ -1617,14 +1627,6 @@ Config.Work.Tasks = {
 	-- Safe range: 0.1-0.6. At 0, tips are off entirely.
 	TipCapShareOfShift = 0.25,
 
-	-- The floor a minigame task's tip scales down to on a score of 0, as a share of
-	-- what it would have paid on a score of 1. Never zero: a fumbled pizza still
-	-- went in the oven and still went out the door, and a tip that vanishes entirely
-	-- on a bad round punishes a player still learning the panel harder than missing
-	-- an ordinary task ever does.
-	-- Safe range: 0.1-0.5.
-	MinigameTipFloorShare = 0.3,
-
 	-- What an hour of the shift actually pays, as a multiple of the job's rate,
 	-- decided by how the shift has gone by the time that hour lands.
 	--
@@ -1708,61 +1710,6 @@ Config.Work.Tasks = {
 	StandingXp = {
 		PerTask = 5,
 		PerEvent = 3,
-	},
-}
-
--- Tuning for jobs whose reach-the-mark task opens a client panel instead of
--- completing on contact -- see JobTask.minigame. One sub-table per minigame id,
--- read only by the matching client panel; the server never looks inside these,
--- it only ever sees the clamped score the panel sends back.
-Config.Work.Minigames = {
-	-- The pizzeria's flagship shift: stretch the dough, top it to the order, pull it
-	-- from the oven at the right moment. Three timing checks rather than three
-	-- separate tasks, because that is what the job actually is -- Papa's Pizzeria
-	-- with the same three checks and no order screen between them.
-	Pizza = {
-		-- Stretch: a fill bar climbs from empty and wraps back to empty rather than
-		-- stopping at full, so holding past the target is a real mistake and not a
-		-- safe default. One full climb, in seconds.
-		-- Safe range: 0.8-2.5.
-		StretchFillSeconds = 1.3,
-		-- The band of the climb, 0 to 1, that counts as a good release. Centred
-		-- rather than at the top, so overshooting and undershooting are both
-		-- visible mistakes instead of the bar rewarding a player for waiting it
-		-- all the way out.
-		-- Safe range: width 0.1-0.35, centred 0.5-0.85.
-		StretchTargetLow = 0.62,
-		StretchTargetHigh = 0.82,
-
-		-- Toppings: how many the order asks for, and how long there is to place
-		-- them in order. Three is enough to be a real sequence and short enough
-		-- that a wrong click still leaves time to recover.
-		-- Safe range: 3-6 toppings, 6-14 seconds.
-		ToppingCount = 3,
-		ToppingSeconds = 9,
-		-- How much one wrong topping costs, off a perfect 1. Three wrong picks
-		-- should hurt but never zero out a pie that still went out mostly right.
-		-- Safe range: 0.15-0.35.
-		ToppingMistakePenalty = 0.25,
-
-		-- Oven: the same climb-and-wrap shape as the stretch, timed separately so
-		-- the two checks cannot be memorised as one rhythm. Pulling it out is a
-		-- single press rather than a release, because a real oven door does not
-		-- hold the pizza for you.
-		-- Safe range: 1.2-3.
-		OvenSweepSeconds = 1.8,
-		-- Safe range: width 0.1-0.3, centred 0.4-0.75. Slightly left of centre,
-		-- because "a little early" makes a better pizza than "a little late" does
-		-- in any kitchen that has ever had an oven timer.
-		OvenTargetLow = 0.52,
-		OvenTargetHigh = 0.7,
-
-		-- How far outside the band a miss is still worth something, on both the
-		-- stretch and the oven check. A release just past the edge is a near
-		-- miss and should read as one; the score reaches zero once the miss is
-		-- this far past the nearer edge, as a fraction of the whole 0-1 bar.
-		-- Safe range: 0.2-0.5.
-		TimingFalloff = 0.35,
 	},
 }
 

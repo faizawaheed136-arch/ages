@@ -486,18 +486,18 @@ export type JobPostState = {
 -- One thing you are asked to do during a shift, as authored. Content, not state --
 -- see TaskState for the one in progress.
 --
--- Deliberately one primitive rather than a family of them, with one narrow, opt-in
--- exception. A task is some marks to walk onto, in order, before a clock runs out,
--- and that is almost all it will ever be: the variety comes from the words and the
--- numbers, not from new verbs. Restocking a shelf and carrying a box to the
--- stockroom are the same mechanic wearing different sentences, and pretending
+-- Deliberately one primitive. A task is some marks to walk onto, in order, before a
+-- clock runs out, and that is almost all it will ever be: the variety comes from the
+-- words and the numbers, not from new verbs. Restocking a shelf and carrying a box to
+-- the stockroom are the same mechanic wearing different sentences, and pretending
 -- otherwise would buy a lot of code for a difference the player cannot feel.
 --
--- `minigame`, below, is the exception, and it is spent rarely on purpose: a job's
--- flagship task may open a real client panel instead of completing on arrival, for
--- the jobs whose actual verb -- stretching dough, timing an oven -- is something a
--- dot on the floor cannot say. See JobTasks.luau's header for the fuller case and
--- pizzeria_cook's `make` task for the worked example.
+-- Reaching a mark no longer finishes it by itself, either -- see Config.Interact's
+-- PickupKeyboardKey. The mark arms a prompt, and the player presses the pickup key to
+-- actually do the thing, the same way arriving next to somebody arms the badge that
+-- opens a conversation rather than opening it for you. That one change is what makes
+-- forty-nine mark-and-reach tasks read as forty-nine different jobs instead of one
+-- job wearing forty-eight different labels.
 --
 -- What the marks are *near* is not authored. They are found at run time around
 -- wherever the player clocked on, which is what lets a job get tasks without anybody
@@ -558,14 +558,6 @@ export type JobTask = {
 	-- When true the task generates its own spots from tagged shop geometry and
 	-- tracks an order of items instead of a single mark. Only used on shop_assistant.
 	fetchBag: boolean?,
-	-- The id of a client-side minigame to open once the mark is reached, instead of
-	-- completing the task on arrival. The one deliberate exception to the "one
-	-- primitive" rule above: a flagship job earns a verb the player's hands can
-	-- actually feel -- stretching dough, not walking to a dot that says "stretch
-	-- dough" -- and every other job keeps the plain mark-and-reach shape rather than
-	-- paying for a minigame nobody asked this trade to have. Nil on every task that
-	-- is not one of these.
-	minigame: string?,
 }
 
 -- One task in progress, pushed to the HUD. They arrive as a list, and an empty list
@@ -652,16 +644,6 @@ export type TaskState = {
 		patienceLeft: number,
 		patienceTotal: number,
 	}?,
-	-- The id of the minigame this task opens, or nil for a plain mark-and-reach task.
-	-- Mirrors JobTask.minigame; carried here so the client knows which panel to open
-	-- without re-deriving it from content data it does not have.
-	minigame: string?,
-	-- True once the mark has been reached and the minigame panel should be open. The
-	-- clock is frozen for as long as this is true -- see `paused` above for the other
-	-- reason a clock freezes, which this is deliberately kept separate from: an event
-	-- prompt is something that happened to you, a minigame is something you are doing,
-	-- and the HUD tells those two apart on the row.
-	minigameOpen: boolean?,
 }
 
 -- One thing a lesson asks you.

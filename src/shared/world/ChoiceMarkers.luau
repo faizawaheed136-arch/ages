@@ -20,7 +20,10 @@
 -- The label is not decoration. A disc with no words on it is a coloured patch of
 -- carpet, so it is built here rather than left as a later polish pass.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
 
 local ChoiceMarkers = {}
 
@@ -76,6 +79,13 @@ local LABEL_MAX_DISTANCE = 60
 -- than to the disc.
 export type ChoiceMarker = {
 	destroy: () -> (),
+	-- The pickup prompt attached to this marker, or nil for a marker built without
+	-- one. The disc is still only ever a destination -- it does not decide what
+	-- happens -- but a marker built with `pickup` also carries the one thing on top
+	-- of a destination that turns arriving into doing something. The caller connects
+	-- Triggered itself, the same way Interact leaves connecting a badge's click to
+	-- whoever knows what the click should do.
+	prompt: ProximityPrompt?,
 }
 
 -- Everything about how a marker reads, in one argument. An options table rather than
@@ -94,6 +104,12 @@ export type ChoiceLook = {
 	-- left builds destinations, so there is no priced disc anywhere in the game -- see
 	-- ChoicePanel, which draws the price column that used to live here.
 	locked: boolean,
+	-- Whether arriving here should arm the universal pickup key instead of settling
+	-- for being walked onto. True for a task mark -- reaching one is only ever the
+	-- first half of doing the thing it names, and the game should wait to hear you
+	-- press the key before it counts as done. Nil everywhere a destination really is
+	-- just a place: a hiring pad, a "go to class" disc, nothing to press anything at.
+	pickup: boolean?,
 }
 
 -- An outline rather than a backing panel: a panel would be a small piece of UI
@@ -176,7 +192,28 @@ function ChoiceMarkers.Build(parent: Instance, at: Vector3, radius: number, look
 		pulse:Play()
 	end
 
+	-- Built on the pad, not beside it, so it always sits exactly where the disc says
+	-- it does. The disc's own label is the prompt's ActionText too -- both are
+	-- already authored short and imperative ("Stretch it", "Get it"), which is
+	-- precisely what a prompt wants and a second string here would only duplicate.
+	local prompt: ProximityPrompt? = nil
+	if not locked and look.pickup then
+		local p = Instance.new("ProximityPrompt")
+		p.Name = "ChoicePickup"
+		p.ActionText = look.label
+		p.ObjectText = ""
+		p.KeyboardKeyCode = Config.Interact.PickupKeyboardKey
+		p.GamepadKeyCode = Enum.KeyCode.ButtonX
+		p.HoldDuration = 0
+		p.MaxActivationDistance = radius
+		p.RequiresLineOfSight = false
+		p.Style = Enum.ProximityPromptStyle.Default
+		p.Parent = pad
+		prompt = p
+	end
+
 	return {
+		prompt = prompt,
 		destroy = function()
 			-- Cancelled before the part goes, so the tween is not left running
 			-- against a destroyed instance for the rest of the server's life.

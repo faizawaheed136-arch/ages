@@ -16,7 +16,7 @@ local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
-local PizzaUI = require(script.ui.PizzaUI)
+local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
 local BankUI = require(script.ui.BankUI)
@@ -88,15 +88,22 @@ end
 -- remote connections below past the server's initial state push.
 task.spawn(hidePlayerList)
 
+-- Declared ahead of the rest of the remotes below because `taskMark` needs it in its
+-- constructor a few lines down, wiring the pickup key straight to the server the
+-- moment a mark is pressed rather than waiting on a callback set later.
+local RequestTaskPickupRemote = Remotes.Get("RequestTaskPickup")
+
 local ui = StatsUI.new()
 local panel = ChoicePanel.new()
 local lab = LabUI.new()
 local hunt = HuntUI.new()
 local easel = EaselUI.new()
-local pizza = PizzaUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
-local taskMark = TaskMark.new()
+local taskMark = TaskMark.new(function(taskId: string)
+	RequestTaskPickupRemote:FireServer(taskId)
+end)
+local commandsLegend = CommandsLegend.new()
 local prompts = Prompts.new()
 local labDots = LabDots.new()
 local heat = HeatUI.new()
@@ -156,7 +163,6 @@ local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor")
 local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
 local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
-local RequestJobMinigameResultRemote = Remotes.Get("RequestJobMinigameResult")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -493,14 +499,6 @@ easel.onSign = function()
 	RequestArtSignRemote:FireServer()
 end
 
--- The one message a job minigame ever sends: the task it was answering and a score
--- from 0 to 1 that the panel already computed off its own stages. The server clamps
--- it again before it touches a tip -- see WorkService.completeTask -- so nothing here
--- is trusted further than EaselUI's paint clicks are.
-pizza.onResult = function(taskId: string, score: number)
-	RequestJobMinigameResultRemote:FireServer(taskId, score)
-end
-
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
 -- open. The question is put up and taken down by the server's pushes: answers on it
 -- means a question is live, no answers means the teacher is explaining the last one
@@ -792,6 +790,7 @@ end)
 Remotes.Get("ShiftUpdated").OnClientEvent:Connect(function(state: ShiftState)
 	ui:SetShift(state)
 	menu:SetCurrentJob(state)
+	commandsLegend:Set(state.onShift)
 end)
 
 -- A finished sentence the server wants said now -- the first of them is "you've been
@@ -854,27 +853,12 @@ Remotes.Get("TaskUpdated").OnClientEvent:Connect(function(states: { TaskState })
 	-- task is usually still running, it would be pointing the player away from the one
 	-- thing they can still save.
 	local marks: { TaskMark.Mark } = {}
-	local pizzaTaskId: string? = nil
 	for _, state in states do
 		if not state.missed then
 			table.insert(marks, { id = state.id, spot = state.spot, label = state.mark })
 		end
-		if state.minigame == "pizza" and state.minigameOpen then
-			pizzaTaskId = state.id
-		end
 	end
 	taskMark.Set(marks)
-
-	-- The minigame dispatcher. One `if` per minigame id today; a second one joins it
-	-- the same way the first did, off the same push, the day a second flagship job
-	-- earns its own panel. Closes on anything that is not this exact open task --
-	-- finished, missed, or the shift itself ending -- because the panel has nothing
-	-- left to say once the task it was answering is gone.
-	if pizzaTaskId ~= nil then
-		pizza:Open(pizzaTaskId)
-	else
-		pizza:Close()
-	end
 end)
 
 -- The lesson you are sitting. Kept here as well as drawn, because the answers ride
@@ -1285,10 +1269,9 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- gone to hurry up and finish. The wall itself is the server's and comes down with the
 	-- session.
 	easel:Set(nil)
-	-- And the pizza panel, for the same race as the canvas above: a shift does not
-	-- survive death, and a stretch bar still climbing under a death notice would be
-	-- asking somebody who is gone to finish an order.
-	pizza:Close()
+	-- And the commands legend: the shift it was listing keys for does not survive
+	-- death, and a P key advertised over a death notice is a key that does nothing.
+	commandsLegend:Set(false)
 	-- And the manhunt, which is the one of these that would be actively cruel to leave
 	-- up: a search ring still creeping across the street under a death notice would have
 	-- the player watching for a corner they cannot turn any more. The server stops caring

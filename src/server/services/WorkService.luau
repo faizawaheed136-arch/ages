@@ -67,7 +67,7 @@ local TaskUpdatedRemote = Remotes.Get("TaskUpdated")
 local NoticeRemote = Remotes.Get("Notice")
 local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
 local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
-local RequestJobMinigameResultRemote = Remotes.Get("RequestJobMinigameResult")
+local RequestTaskPickupRemote = Remotes.Get("RequestTaskPickup")
 
 local WorkService = {}
 
@@ -209,13 +209,6 @@ type ActiveTask = {
 		patienceLeft: number,
 		patienceTotal: number,
 	}?,
-	-- Mirrors JobTask.minigame. Nil for every task except the ones that name one.
-	minigame: string?,
-	-- True once the mark has been reached and the client panel is open. The Clocks
-	-- pass in tickTasks freezes secondsLeft while this is true, and the Feet pass
-	-- never re-enters the reach branch for a task that already has it set -- the
-	-- task sits open until RequestJobMinigameResult reports a score.
-	minigameOpen: boolean,
 }
 
 local shifts: { [Player]: Shift } = {}
@@ -1159,8 +1152,6 @@ local function taskStateFor(task: ActiveTask, paused: boolean): TaskState
 		missed = task.expired,
 		rush = task.rush ~= nil,
 		fetchBag = fetchBagState,
-		minigame = task.minigame,
-		minigameOpen = task.minigameOpen,
 	}
 end
 
@@ -1192,11 +1183,7 @@ local function pushTasks(player: Player, shift: Shift?, paused: boolean)
 				-- doing anything a signature would notice: serve somebody at the same instant
 				-- the displayed second changes and the row would otherwise keep the old count
 				-- until the next tick.
-				.. `{tostring(state.waiting)}\30`
-				-- Flipping open is the one change on a minigame task that touches neither
-				-- the mark, the clock nor the waiting count -- the reach happened, the
-				-- panel needs to appear, and nothing else on the row moved.
-				.. `{tostring(state.minigameOpen)}`
+				.. `{tostring(state.waiting)}`
 		)
 	end
 	-- The count is in the digest in its own right, so that going from two tasks to none
@@ -1876,8 +1863,6 @@ local function issueTask(player: Player, shift: Shift, only: string?): boolean
 					patienceLeft = patienceTotal,
 					patienceTotal = patienceTotal,
 				},
-				minigame = nil,
-				minigameOpen = false,
 			})
 			return true
 		end
@@ -1901,8 +1886,6 @@ local function issueTask(player: Player, shift: Shift, only: string?): boolean
 			expired = false,
 			expiredFor = 0,
 			customer = customer,
-			minigame = chosen.minigame,
-			minigameOpen = false,
 		})
 		return true
 	end
@@ -1931,19 +1914,7 @@ end
 -- any one task: with two slots, resetting the gap every time something finished would
 -- mean a fast player kept pushing the next arrival away and ended up with less work
 -- than a slow one, which is precisely backwards.
--- `scoreOverride`, when present, is a minigame's own verdict on itself, 0 to 1, and
--- scales the tip the same way fetchBag's patience fraction does below -- down toward
--- a floor rather than to zero, so a fumbled pizza still pays something and only a
--- clean one pays in full. Nil for every ordinary task, which keeps the tip exactly
--- what it always was: a share of the hour.
-local function completeTask(
-	player: Player,
-	data: LifeData,
-	shift: Shift,
-	job: Job,
-	index: number,
-	scoreOverride: number?
-)
+local function completeTask(player: Player, data: LifeData, shift: Shift, job: Job, index: number)
 	local task = shift.tasks[index]
 	if task == nil then
 		return
@@ -1962,12 +1933,6 @@ local function completeTask(
 	-- rateFor already carries the raise their standing earned them.
 	local tasks = Config.Work.Tasks
 	local tip = math.floor(rateFor(data, job) * tasks.TipShareOfHour)
-
-	if scoreOverride ~= nil then
-		local score = math.clamp(scoreOverride, 0, 1)
-		local floor = tasks.MinigameTipFloorShare
-		tip = math.floor(tip * (floor + score * (1 - floor)))
-	end
 
 	-- Fetch-and-bag tips scale with patience. A customer who waited the full
 	-- time tips normally; a customer who stormed off with a half-empty bag
@@ -2011,6 +1976,76 @@ local function completeTask(
 	push(player)
 end
 
+-- What happens when the player presses the pickup key at the mark they are
+-- currently on. The caller has already checked they are actually there -- this is
+-- purely "now do the thing", the same split completeTask keeps between deciding a
+-- task is over and paying for it.
+local function arriveAtSpot(player: Player, data: LifeData, shift: Shift, job: Job, index: number)
+	local task = shift.tasks[index]
+	if task == nil then
+		return
+	end
+
+	if task.fetchBag ~= nil then
+		-- Fetch-and-bag state machine. The spots list alternates between shelf
+		-- stops and counter stops; pressing the key at a shelf collects the next
+		-- uncollected item (if the basket has room), pressing it at a counter
+		-- bags whatever is in the basket and serves the customer.
+		local fb = task.fetchBag
+		local isShelfSpot = task.at % 2 == 1
+		local isLastSpot = task.at == #task.spots
+
+		if isShelfSpot then
+			-- Look for the next uncollected item. If the basket is full the
+			-- player should have gone to the counter instead, but if they
+			-- skipped a stop we let them collect anyway rather than stranding
+			-- the item forever.
+			if fb.basketCount < fb.basketSize then
+				for i, done in fb.collected do
+					if not done then
+						fb.collected[i] = true
+						fb.basketCount += 1
+						break
+					end
+				end
+			end
+		else
+			-- Counter stop. Bag whatever is in the basket and serve the
+			-- customer. If the basket is empty the player is early -- let
+			-- them walk back to the shelf.
+			if fb.basketCount > 0 then
+				fb.basketCount = 0
+				if task.customer ~= nil then
+					task.customer.serve()
+				end
+			end
+		end
+
+		if isLastSpot then
+			completeTask(player, data, shift, job, index)
+		else
+			task.at += 1
+		end
+	elseif task.at < #task.spots then
+		-- Reaching the counter on a rush, with more of it still to come. One person
+		-- served, the line steps up, and the clock keeps running -- the only place in
+		-- this game where finishing something is not the end of the task.
+		--
+		-- The last one is deliberately not handled here: it is the same event, but it
+		-- also ends the task and pays the tip, and completeTask already serves the
+		-- front for exactly that reason.
+		if task.rush and task.at % 2 == 0 and task.customer ~= nil then
+			task.customer.serve()
+		end
+		-- Reached the first of two. The second mark was found when the task was
+		-- issued, so it is already somewhere real -- it simply had nothing to say
+		-- until now.
+		task.at += 1
+	else
+		completeTask(player, data, shift, job, index)
+	end
+end
+
 -- Running out of time. Costs nothing directly and that is deliberate: what a missed
 -- task costs is settled once, at the end of the shift, against how many were missed.
 -- Docking a point here would put eight or nine standing swings inside four minutes
@@ -2043,19 +2078,21 @@ end
 
 -- One tick of the task loop, while a shift is running.
 --
--- Returns nothing and decides nothing about the shift itself. Reaching a mark is the
--- only thing here the player does; everything else is a clock.
+-- Returns nothing and decides nothing about the shift itself. Nothing here is
+-- something the player does directly any more -- reaching a mark arms it, but only
+-- pressing the pickup key at that mark actually moves anything, and that arrives as
+-- RequestTaskPickup rather than through this tick. What is left here is entirely
+-- clocks: counting down, retiring misses, asking for the next thing.
 --
--- Runs in four passes over the list rather than doing everything to one task before
+-- Runs in three passes over the list rather than doing everything to one task before
 -- looking at the next, and the ordering is the correctness of the whole function. Task
--- by task, the task that happened to be first would get its clock, its reach and its
--- refill resolved while the second one was still holding last tick's state -- so a
--- player standing squarely on a mark could watch it expire because the other task was
--- earlier in the list. Every task gets each question asked of it before any task is
--- asked the next one.
+-- by task, the task that happened to be first would get its clock and its refill
+-- resolved while the second one was still holding last tick's state -- so a task could
+-- be asked for before the miss ahead of it in the list had been retired. Every task
+-- gets each question asked of it before any task is asked the next one.
 --
--- Every pass walks backwards, because two of them remove entries.
-local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job, elapsed: number, position: Vector3?)
+-- Every pass walks backwards, because more than one of them remove entries.
+local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job, elapsed: number)
 	-- Held while a prompt is open, and this is the single most load-bearing line in
 	-- the shift loop. A shift moment is several sentences and a choice that changes
 	-- your record; if its clock kept running, the correct way to play would be to
@@ -2086,15 +2123,9 @@ local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job,
 		if task.expired then
 			continue
 		end
-		-- A minigame in progress freezes the clock for the same reason an event
-		-- prompt does: the player is doing the thing the task asked for, and a
-		-- countdown that keeps running through it would be timing the panel
-		-- instead of the work.
-		if not task.minigameOpen then
-			task.secondsLeft -= elapsed
-			if task.secondsLeft <= 0 then
-				failTask(task)
-			end
+		task.secondsLeft -= elapsed
+		if task.secondsLeft <= 0 then
+			failTask(task)
 		end
 		-- Fetch-and-bag patience runs in parallel with the task clock. It does
 		-- not cause a miss on its own -- the task clock still decides that --
@@ -2108,95 +2139,7 @@ local function tickTasks(player: Player, data: LifeData, shift: Shift, job: Job,
 		end
 	end
 
-	-- 3. Feet. A player can only be standing on one mark, and issueTask keeps every
-	-- live mark a stride apart from every other, so at most one of these can fire on a
-	-- tick -- but the loop does not rely on that, because relying on it would make a
-	-- placement bug in another function come out as a scoring bug in this one.
-	if position ~= nil then
-		for index = #shift.tasks, 1, -1 do
-			local task = shift.tasks[index]
-			if task.expired then
-				continue
-			end
-			-- The panel is already open and waiting on a result -- standing on the
-			-- mark again must not re-trigger it or re-run the reach logic below.
-			if task.minigameOpen then
-				continue
-			end
-			if Ground.FlatDistance(position, task.spots[task.at]) > tasks.ReachStuds then
-				continue
-			end
-
-			if task.minigame ~= nil then
-				-- Reached the mark, but a minigame task does not complete on arrival --
-				-- it opens a panel and waits for RequestJobMinigameResult. pushTasks
-				-- below carries the flag to the client on the very next tick.
-				task.minigameOpen = true
-				continue
-			end
-
-			if task.fetchBag ~= nil then
-				-- Fetch-and-bag state machine. The spots list alternates between
-				-- shelf stops and counter stops; reaching a shelf collects the next
-				-- uncollected item (if the basket has room), reaching a counter bags
-				-- whatever is in the basket and serves the customer.
-				local fb = task.fetchBag
-				local isShelfSpot = task.at % 2 == 1
-				local isLastSpot = task.at == #task.spots
-
-				if isShelfSpot then
-					-- Look for the next uncollected item. If the basket is full the
-					-- player should have gone to the counter instead, but if they
-					-- skipped a stop we let them collect anyway rather than stranding
-					-- the item forever.
-					if fb.basketCount < fb.basketSize then
-						for i, done in fb.collected do
-							if not done then
-								fb.collected[i] = true
-								fb.basketCount += 1
-								break
-							end
-						end
-					end
-				else
-					-- Counter stop. Bag whatever is in the basket and serve the
-					-- customer. If the basket is empty the player is early -- let
-					-- them walk back to the shelf.
-					if fb.basketCount > 0 then
-						fb.basketCount = 0
-						if task.customer ~= nil then
-							task.customer.serve()
-						end
-					end
-				end
-
-				if isLastSpot then
-					completeTask(player, data, shift, job, index)
-				else
-					task.at += 1
-				end
-			elseif task.at < #task.spots then
-				-- Reaching the counter on a rush, with more of it still to come. One person
-				-- served, the line steps up, and the clock keeps running -- the only place in
-				-- this game where finishing something is not the end of the task.
-				--
-				-- The last one is deliberately not handled here: it is the same event, but it
-				-- also ends the task and pays the tip, and completeTask already serves the
-				-- front for exactly that reason.
-				if task.rush and task.at % 2 == 0 and task.customer ~= nil then
-					task.customer.serve()
-				end
-				-- Reached the first of two. The second mark was found when the task was
-				-- issued, so it is already somewhere real -- it simply had nothing to say
-				-- until now.
-				task.at += 1
-			else
-				completeTask(player, data, shift, job, index)
-			end
-		end
-	end
-
-	-- 4. The shop asks for the next thing, if it is time and there is room for it.
+	-- 3. The shop asks for the next thing, if it is time and there is room for it.
 	shift.nextTaskIn -= elapsed
 	if shift.nextTaskIn <= 0 then
 		if liveTasks(shift) < slotsFor(shift) and not rushRunning(shift) then
@@ -2626,7 +2569,7 @@ local function tickPlayer(player: Player, elapsed: number)
 	-- Last, and after every way this tick could have ended the shift has been asked.
 	-- A task issued on the same tick the shift finished would paint a mark on the
 	-- floor a fraction of a second before endShift takes it away again.
-	tickTasks(player, data, shift, job, elapsed, position)
+	tickTasks(player, data, shift, job, elapsed)
 
 	push(player)
 end
@@ -3209,8 +3152,13 @@ function WorkService:Start()
 		end
 	end)
 
-	RequestJobMinigameResultRemote.OnServerEvent:Connect(function(player: Player, taskId: unknown, score: unknown)
-		if typeof(taskId) ~= "string" or typeof(score) ~= "number" then
+	-- The universal pickup key, pressed. This is the one moment in the whole shift
+	-- loop where the player actually does something rather than a clock deciding it
+	-- for them, so everything the client claimed is re-checked here: that the task
+	-- is real, live, and that the player is still standing where the prompt said
+	-- they were when they pressed it.
+	RequestTaskPickupRemote.OnServerEvent:Connect(function(player: Player, taskId: unknown)
+		if typeof(taskId) ~= "string" then
 			return
 		end
 		local shift = shifts[player]
@@ -3219,16 +3167,24 @@ function WorkService:Start()
 		end
 		local index: number? = nil
 		for i, task in shift.tasks do
-			if task.id == taskId and task.minigameOpen then
+			if task.id == taskId and not task.expired then
 				index = i
 				break
 			end
 		end
-		-- No match is not an error: the panel can outlive the task it opened for --
-		-- a shift ending or the task being force-cleared out from under it while the
-		-- player is still tapping. The client has already shown its own outcome by
-		-- the time this fires; a dropped send here loses a tip, not a task.
+		-- No match is not an error: the prompt can outlive the task it belongs to --
+		-- a shift ending or the task expiring out from under it while the player is
+		-- mid-press. The HUD has already shown its own outcome by the time this
+		-- fires; a dropped send here costs a step, not the shift.
 		if index == nil then
+			return
+		end
+		local task = shift.tasks[index]
+		local position = characterPosition(player)
+		if position == nil then
+			return
+		end
+		if Ground.FlatDistance(position, task.spots[task.at]) > Config.Work.Tasks.ReachStuds then
 			return
 		end
 		local profile = DataService.GetProfile(player)
@@ -3240,7 +3196,7 @@ function WorkService:Start()
 		if job == nil then
 			return
 		end
-		completeTask(player, data, shift, job, index, score)
+		arriveAtSpot(player, data, shift, job, index)
 	end)
 
 	task.spawn(function()
