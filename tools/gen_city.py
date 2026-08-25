@@ -942,11 +942,12 @@ CAR_MODEL_ATTR = "CarModel"
 SPORTS_DRILL_TAG = "AgesSportsDrill"
 SPORTS_DRILL_KIND = "SportsDrillKind"
 
-# The tags StadiumCrowdService reads to seat and roam real NPCs among the
-# static crowd. A seat anchor is an empty spot in a tier's crowd row -- the
-# row-builder leaves it empty rather than doubling it up with a static
-# mannequin, so a real avatar dropped there doesn't stand inside one. A roam
-# anchor is a stop on a stand's concourse walkway; anchors that share a
+# The tags StadiumCrowdService reads to seat and roam real NPCs in the bowl.
+# Every seat in every tier row carries `STADIUM_CROWD_SEAT_TAG` -- there is no
+# static crowd any more (see `stadium_seat`): the row is built entirely of
+# small, unoccupied seat furniture, and a real avatar dropped on one stands
+# or sits directly at the furniture rather than beside a static double. A
+# roam anchor is a stop on a stand's concourse walkway; anchors that share a
 # `STADIUM_CROWD_STAND_ATTR` value are one stand's loop; a wandering NPC
 # walks its stand's loop and only its stand's loop, never crossing into the
 # next one, so it never has to pathfind past a wall it can't see over.
@@ -5222,7 +5223,12 @@ def running_track(x0, x1, z0, z1):
 basketball_court(850.0, 882.0, 900.0, 918.0)
 tennis_court(900.0, 928.0, 900.0, 914.0)
 playground(830.0, 870.0, 820.0, 850.0)
-running_track(840.0, 980.0, 700.0, 770.0)
+# Named, not inlined, so `beach_band` can carve the baywalk's palms around the
+# track's own footprint instead of guessing it from a second copy of these
+# same four numbers -- see SPORTS_TRACK_Z1 below.
+SPORTS_TRACK_X0, SPORTS_TRACK_X1 = 840.0, 980.0
+SPORTS_TRACK_Z0, SPORTS_TRACK_Z1 = 700.0, 770.0
+running_track(SPORTS_TRACK_X0, SPORTS_TRACK_X1, SPORTS_TRACK_Z0, SPORTS_TRACK_Z1)
 
 for pid, cx, cz in (
     ("basketball_court", 866.0, 909.0),
@@ -5268,8 +5274,6 @@ for pid, cx, cz in (
 # that label, and reusing the same four names (`StandEast` etc.) for the
 # four arcs meant neither needed to change for the bowl to go round; see
 # `stadium_bowl`.
-STAD_PX0, STAD_PX1 = 855.0, 925.0     # the pitch itself, unchanged in size
-STAD_PZ0, STAD_PZ1 = 460.0, 570.0
 STAD_GAP = 5.0                        # clear ground between the touchline and the first tier
 STAD_TIERS = 5
 STAD_RISE = 3.0                       # studs climbed per tier -- taller stands, same footprint
@@ -5279,29 +5283,43 @@ STAD_CONCOURSE = 8.0                  # flat, roofed walkway behind the top tier
 STAD_MARGIN = STAD_GAP + STAD_DEPTH + STAD_CONCOURSE  # 43.0, pitch edge to outer wall
 STAD_TOP_Y = GROUND + STAD_TIERS * STAD_RISE  # top of the highest seating tier
 
-# `STAD_WEST_OUT`..`STAD_NORTH_OUT` used to be `STAD_MARGIN` applied equally on
-# all four sides -- a bowl centred exactly on the pitch. That was the bug: the
-# innermost tier's boundary sits at a fixed inset (`STAD_CONCOURSE +
-# STAD_TIERS * STAD_TREAD` = 38 studs) in from the *outer* wall, not from the
-# pitch, so a symmetric bowl only 43 studs deep at the corner leaves the
-# innermost tier's radius at just `pitch_half + STAD_GAP` on each axis --
-# 40x60 against a 35x55 pitch. A rectangle's corner is `sqrt(2)` further from
-# centre than its edge, so that ellipse clears the touchlines but cuts
-# straight through all four corners of the pitch (checked: 12 of the first
-# tier's 24 facets, plus 4 of the second tier's, land inside the pitch
-# rectangle).
+# The pitch used to sit fixed at x 855..925, z 460..570 and only the bowl's own
+# envelope (`STAD_WEST_OUT`..`STAD_NORTH_OUT`, below) moved to chase it. That
+# could not do two things a real stadium wants at once: sit the pitch exactly
+# in the middle of the bowl on both axes, and grow the bowl noticeably bigger,
+# because the one side that cannot move (`STAD_WEST_OUT`, pinned to the
+# entrance building's sidewalk clearance -- see below) forces the bowl's own
+# centre east of any pitch that stays put, and the crossing 3 studs south of
+# the old south wall left no room to grow that axis either. Both limits are
+# about where the *bowl* sits, not where the *pitch* has to -- so the pitch
+# moves too, east and north into the slack the bowl's fixed neighbours were
+# not using, and the bowl grows to fill the room that opens up behind it.
 #
-# Growing every side equally can't fix this and stay on the headland -- see
-# below -- so the bowl is not centred on the pitch any more. East, south and
-# north each grow independently, as far as they can before their own real
-# obstacle, found by search over all three for the combination that clears
-# the pitch rectangle with the bowl's own centre kept as close as possible
-# to the pitch's -- see below for why exact centring and full clearance
-# cannot both be had:
+# Moved: +7 in x (855..925 to 862..932), +40 in z (460..570 to 500..610).
+# Both chosen so the bowl's centre lands exactly on the new pitch centre on
+# both axes -- true centring, not the 4-stud x drift or the z-only centring
+# either previous pass settled for -- while every wall still clears its own
+# real obstacle by a comfortable margin (checked against each below).
+STAD_PX0, STAD_PX1 = 862.0, 932.0
+STAD_PZ0, STAD_PZ1 = 500.0, 610.0
+
+# Whether a bowl this size actually clears the pitch is not a question one
+# radius can answer: the innermost tier's boundary sits at a fixed inset
+# (`STAD_CONCOURSE + STAD_TIERS * STAD_TREAD` = 38 studs) in from the outer
+# wall, not from the pitch, and a rectangle's corner is `sqrt(2)` further from
+# centre than its edge -- so an ellipse can clear both touchlines and both
+# goal lines and still cut through all four corners of the pitch rectangle,
+# which is exactly what the original symmetric 43-stud-margin bowl did (12 of
+# the first tier's 24 facets landing inside the pitch). Checked properly this
+# time: every one of the 5 tiers' 24 facets, tested as the oriented box it
+# actually is against the pitch rectangle, not just each facet's own radius
+# against the pitch's radius at that angle -- the cheaper check is what let
+# the previous pass believe 6 facets still clipped the corners when the true,
+# full-box count at that geometry was 18. At the geometry below it is 0.
 STAD_WEST_OUT = 812.0    # unchanged -- see why, below
-STAD_EAST_OUT = 976.0    # 19 studs clear of the headland shore at 995 (was 968.0)
-STAD_SOUTH_OUT = 411.0   # 3 studs clear of the wp_bay_head_s crossing at 408 (was 417.0)
-STAD_NORTH_OUT = 619.0   # 81 studs clear of the running track at 700 (was 613.0)
+STAD_EAST_OUT = 982.0    # 13 studs clear of the headland shore at 995
+STAD_SOUTH_OUT = 418.0   # 10 studs clear of the wp_bay_head_s crossing at 408
+STAD_NORTH_OUT = 692.0   # 8 studs clear of the running track's south edge at 700
 # West does not move. `StadiumForecourt`'s `MainEntrance` sits directly
 # against this wall (`ex1 = STAD_WEST_OUT`, see below) and needs the 12
 # studs between it and avenue 6's sidewalk at 799 that it already has at
@@ -5309,95 +5327,86 @@ STAD_NORTH_OUT = 619.0   # 81 studs clear of the running track at 700 (was 613.0
 # sidewalk collision `check_city` caught once already (see the comment on
 # `ex0` below). Moving the entrance instead of the wall was ruled out: it is
 # glued to this wall by design, on the one side of the bowl that faces a
-# road at all.
+# road at all. Because west cannot move, `STAD_PX0`/`STAD_PX1` moved to it
+# instead: the pitch's own centre in x is now exactly `(STAD_WEST_OUT +
+# STAD_EAST_OUT) / 2`, so the bowl's centre sits on the pitch's on this axis
+# without needing the wall to give any ground at all.
 #
-# With west locked, the bowl's own centre cannot sit on the pitch's on both
-# axes and still clear every facet: pushing east out (`STAD_EAST_OUT`) to
-# grow the bowl in x necessarily drags the centre east with it, since west
-# holds still. `STAD_SOUTH_OUT`/`STAD_NORTH_OUT` have no such obstacle,
-# though, so they are picked to put the bowl's centre exactly on the
-# pitch's own centre line in z (`(411+619)/2 == (STAD_PZ0+STAD_PZ1)/2`,
-# both 515) -- the court sits in the middle of the bowl north-to-south,
-# which is the axis a stand looks square down and any drift off centre
-# reads immediately. The 4-stud drift that is left is entirely in x, where
-# it is far less visible looking down the pitch, and is the one axis this
-# file cannot buy back without moving the entrance wall.
+# South had the least room of any side (`STAD_SOUTH_OUT` used to sit only 3
+# studs clear of the crossing at 408) and north had the most (81 studs to the
+# running track) -- both symptoms of the same thing, a bowl sitting off-centre
+# in the 292-stud gap between those two fixed lines (408 and 700). Moving the
+# pitch's own centre 40 studs north balances that gap instead of just growing
+# into whichever half of it happened to be free, which is what makes 0-overlap
+# *and* a visibly bigger bowl possible together: south buys back the margin it
+# was missing, north spends some of the margin it never needed, and the bowl
+# itself grows from 82x104 to 85x137 -- noticeably longer down the pitch,
+# which is the axis a stand actually reads size on. East, the one side with
+# no fixed neighbour on this axis, grows independently to the same 0-overlap
+# search rather than by a fixed amount.
 #
-# The trade for exact z-centring is a slightly larger residual than the
-# tightest possible bowl (which found 3 facets by letting z drift 15.5
-# studs off-centre instead): with the centre held on the pitch's own
-# line, 6 of the 120 tier facets still land a few studs inside the pitch,
-# split evenly between the two corners nearest the fixed west wall (worst
-# case 7.9 studs past the touchline, on a tier 6 studs deep) -- the same
-# corners a real stand would come closest to squaring off, not a stand
-# cutting through the pitch the way the old symmetric-but-undersized bowl
-# did across all four corners at once. The pitch itself (`STAD_PX0`..
-# `STAD_PZ1`) stays its current 70x110: lengthening it only tightens the
-# 3-stud south buffer above, and a search over pitch lengths found no
-# improvement available by growing it, only less room to work with.
+# The pitch itself stays its current 70x110 -- lengthening it was tried in an
+# earlier pass and only tightened the tightest buffer above for no clearance
+# gained; moving the whole pitch, not resizing it, is what actually had room
+# to give.
 
 STAD_SEATS = [(178, 46, 46), (210, 210, 214)]   # home red, alternating with a pale away band
 STAD_STRUCTURE = CONCRETE_GREY
-STAD_SKIN = [(224, 190, 158), (140, 100, 72), (90, 64, 48)]
 
 
-def stadium_spectator(cx, cz, y0, index):
-    """A seated figure cheap enough to scatter by the hundred: a torso and a
-    head, the same two-shape economy the menu rail's icons use (see
-    MenuIcons.luau) -- legible from the pitch, not from the front row."""
-    color = STAD_SKIN[index % len(STAD_SKIN)]
-    box(f"Torso{index}", (cx - 0.9, cx + 0.9, cz - 0.9, cz + 0.9, y0, y0 + 1.4),
-        STAD_SEATS[index % 2], PLASTIC)
-    box(f"Head{index}", (cx - 0.5, cx + 0.5, cz - 0.5, cz + 0.5, y0 + 1.4, y0 + 2.2),
-        color, PLASTIC)
+def stadium_seat(cx, cz, y0, index, stand_label):
+    """One physical stadium seat, tinted in the tier's own alternating
+    home/away banding (`STAD_SEATS`) -- and, tagged `STADIUM_CROWD_SEAT_TAG`,
+    the StadiumCrowdService anchor a real NPC sits at. There is no static
+    crowd separate from the real one any more (see the crowd-tag header
+    comment): every seat in every tier is one of these, so an empty seat
+    still reads as a seat -- the bowl looks properly tiered and full of
+    banding even before a single fan sits down -- and a real avatar dropped
+    onto this same tag just occupies the seat it was already standing in
+    front of, rather than crowding in beside a static double."""
+    box(f"Seat{index}", (cx - 0.9, cx + 0.9, cz - 0.9, cz + 0.9, y0, y0 + 1.0),
+        STAD_SEATS[index % 2], PLASTIC,
+        tags=[STADIUM_CROWD_SEAT_TAG], attrs={STADIUM_CROWD_STAND_ATTR: stand_label})
 
 
-STADIUM_SEAT_ANCHOR_EVERY = 10  # 1 real NPC seat for every 10 static mannequins -- see
-# Config.Stadium.MaxSeatedCrowd (40): ~530 spectator slots in the bowl at this spacing
-# gives roughly 53 real-NPC anchors, comfortably more than the cap needs so the crowd
-# tops back up to 40 seated without hunting for a slot, with a handful left over that
-# sit empty the way a real full house always has a few gaps in it.
+def stadium_crowd_arc(cx, cz, rx, rz, phi0, phi1, y0, start_index, stand_label, exclude_phi=None):
+    """Real seats scattered along one curved tier at roughly `step` studs of
+    arc apart -- the elliptical equivalent of the old `stadium_crowd_row`.
+    Every position built is a `stadium_seat`, denser than the old mannequin
+    row was (3 studs of arc instead of 5) since a seat is one box, not the
+    two-box mannequin plus occasional anchor this replaces -- more of the
+    bowl actually seatable, not more parts than before.
 
-
-def stadium_crowd_arc(cx, cz, rx, rz, phi0, phi1, y0, start_index, stand_label):
-    """Spectators scattered along one curved tier at roughly `step` studs of
-    arc apart -- the elliptical equivalent of the old `stadium_crowd_row`,
-    sparse rather than seat-for-seat for the same reason: a stand this size
-    seated solid is several thousand parts for a crowd nobody can pick an
-    individual out of. Every fifth slot is left empty and marked with a
-    seat anchor instead of a mannequin, so StadiumCrowdService has a real
-    place to seat a real avatar without standing it inside a static one.
-
-    Seat anchors carry the same `Stand` attribute the roam anchors do
-    (`STADIUM_CROWD_STAND_ATTR`) rather than an orientation -- a `box()`
-    part has none to give -- so the service can look up which way that
-    stand faces the pitch from a small, fixed table instead of solving it
-    from geometry at runtime. `stand_label` is still one of the four
-    original quadrant names (`StandSouth` etc.), so that table needs no
-    change even though the seats themselves now sit on a curve."""
-    step = 5.0
+    `exclude_phi`, an optional `(lo, hi)` degree window, skips seats inside
+    it entirely -- StandWest cuts a vomitory tunnel through every tier at
+    phi=180 (see `stadium_bowl`), and a row of seats floating in that open
+    doorway would be exactly the "stands blocking the entrance" bug the
+    tunnel exists to fix, just moved one layer out."""
+    step = 3.0
     mid_r = (rx + rz) / 2.0
     step_deg = step * 180.0 / (math.pi * mid_r)
     n = max(int((phi1 - phi0) / step_deg), 1)
     index = start_index
-    attrs = {STADIUM_CROWD_STAND_ATTR: stand_label}
     for k in range(n):
         phi = phi0 + step_deg / 2 + k * step_deg
+        if exclude_phi is not None and exclude_phi[0] <= phi <= exclude_phi[1]:
+            continue
         px, pz = ellipse_point(phi, cx, cz, rx, rz)
-        if index % STADIUM_SEAT_ANCHOR_EVERY == 0:
-            box(f"SeatAnchor{index}", (px - 0.3, px + 0.3, pz - 0.3, pz + 0.3, y0, y0 + 0.2),
-                STAD_SEATS[index % 2], PLASTIC, transparency=1.0, collide=False,
-                tags=[STADIUM_CROWD_SEAT_TAG], attrs=attrs)
-        else:
-            stadium_spectator(px, pz, y0, index)
+        stadium_seat(px, pz, y0, index, stand_label)
         index += 1
     return index
 
 
 def stadium_crowd_roam_arc(cx, cz, rx, rz, phi0, phi1, y0, stand_label):
-    """Four stops along a stand's curved concourse, tagged as one roam loop
-    -- the elliptical equivalent of the old `stadium_crowd_roam_loop`."""
-    for i, f in enumerate((0.12, 0.38, 0.62, 0.88)):
+    """Six stops along a stand's curved concourse, tagged as one roam loop --
+    the elliptical equivalent of the old `stadium_crowd_roam_loop`. Six, not
+    the original four: `Config.Stadium.MaxRoamingCrowd` is going up
+    substantially so the stands read as properly walked, and
+    StadiumCrowdService divides that cap evenly across the four stands and
+    puts every roamer for a stand on the same loop (`indexAnchors`) -- a
+    bigger loop is more of the concourse actually walked per lap, not more
+    roamers bunched retracing the same four corners."""
+    for i, f in enumerate((0.08, 0.26, 0.44, 0.56, 0.74, 0.92)):
         phi = phi0 + (phi1 - phi0) * f
         px, pz = ellipse_point(phi, cx, cz, rx, rz)
         box(f"RoamAnchor{stand_label}{i}", (px - 0.3, px + 0.3, pz - 0.3, pz + 0.3, y0, y0 + 0.2),
@@ -5410,14 +5419,13 @@ def stad_ellipse(inset):
     outer envelope on every side -- the elliptical equivalent of the old
     `inset_rect`, and the one shape the bowl's tiers, its concourse and its
     dome are all built from, so they stay concentric and actually match
-    each other. `STAD_WEST_OUT`..`STAD_NORTH_OUT` are no longer symmetric
-    around the pitch (see the corner-clearance comment above them): the
-    fixed west wall drags this ellipse's centre 4 studs east of the pitch's
-    own, but `STAD_SOUTH_OUT`/`STAD_NORTH_OUT` have no such obstacle and are
-    chosen so the centre sits exactly on the pitch's own line in z -- the
-    court is centred north-south, the axis that actually reads as centred
-    from pitch level, with only the smaller, harder-to-see x drift left.
-    Every real caller stays inside STAD_GAP..STAD_MARGIN."""
+    each other. `STAD_WEST_OUT`..`STAD_NORTH_OUT` (see the corner-clearance
+    comment above them) are chosen so this ellipse's centre lands exactly on
+    the pitch's own centre on both axes: the pitch itself moved to sit in the
+    middle of the site's real slack rather than the envelope being pulled
+    off-centre around a fixed pitch, so there is no drift left on either
+    axis to note here any more. Every real caller stays inside
+    STAD_GAP..STAD_MARGIN."""
     cx = (STAD_WEST_OUT + STAD_EAST_OUT) / 2
     cz = (STAD_SOUTH_OUT + STAD_NORTH_OUT) / 2
     return (cx, cz, (STAD_EAST_OUT - STAD_WEST_OUT) / 2 - inset,
@@ -5457,6 +5465,21 @@ def stadium_bowl():
     for stand, phi0 in STAD_STAND_PHI0.items():
         phi1 = phi0 + STAD_STAND_ARC
         keep = lambda i, s=stand: stad_quadrant(i) == s
+        # StandWest's facet 12 gets a full cut through every tier, not just the
+        # lintel-door the outer Concourse wall gets below -- "remove the stands
+        # only directly in front of the entrance" means a real vomitory tunnel
+        # you can walk straight through from the atrium to the pitch-side
+        # walkway, not a doorway into a wall of seating that is still solid
+        # behind it. `tier_keep` drops facet 12 from every `Tier{i}` ring
+        # outright; `tunnel_phi` is that same facet's angular span, so the
+        # seats scattered across the tier (`stadium_crowd_arc`) skip it too --
+        # a row of seats floating in an open doorway is exactly this same bug.
+        tier_keep = keep
+        tunnel_phi = None
+        if stand == "StandWest":
+            half_facet = 180.0 / CIRCLE_SEGS
+            tier_keep = lambda i, s=stand: stad_quadrant(i) == s and i != 12
+            tunnel_phi = (180.0 - half_facet, 180.0 + half_facet)
         with group(stand):
             crowd_index = 0
             for i in range(STAD_TIERS):
@@ -5466,10 +5489,10 @@ def stadium_bowl():
                 _, _, rx_far, rz_far = stad_ellipse(far_inset)
                 y1 = GROUND + (i + 1) * STAD_RISE
                 elliptical_ring(f"Tier{i}", cx, cz, rx_far, rz_far, rx_near, rz_near,
-                                 GROUND, y1, STAD_SEATS[i % 2], CONCRETE, keep=keep)
+                                 GROUND, y1, STAD_SEATS[i % 2], CONCRETE, keep=tier_keep)
                 _, _, rx_mid, rz_mid = stad_ellipse((near_inset + far_inset) / 2)
                 crowd_index = stadium_crowd_arc(cx, cz, rx_mid, rz_mid, phi0, phi1,
-                                                 y1, crowd_index, stand)
+                                                 y1, crowd_index, stand, exclude_phi=tunnel_phi)
             top_y = STAD_TOP_Y
             cx, cz, rx_out, rz_out = stad_ellipse(0.0)
             _, _, rx_in, rz_in = stad_ellipse(STAD_CONCOURSE)
@@ -7292,8 +7315,21 @@ def beach_band(index, z0, z1, shore_x):
                                       GROUND_BOTTOM, PAVING + 1.4),
                 TRIM_WHITE, CONCRETE)
     # Palms down the middle of the walk, benches and lamps facing the water.
-    palm_row(walk_x0 + 4.0, walk_x0 + 10.0, z0, z1, PAVING, step=38.0,
-             along="z", label=f"BaywalkPalms{index}")
+    # In the headland band this walk runs right past the stadium's east wall
+    # and, further north, right past the running track -- both sit well west
+    # of the shore but the walk's palms used to be planted at a fixed x/z
+    # offset from the shoreline with no regard for what else was built
+    # inland of it, so a palm at (~953-959, z) landed inside the bowl or the
+    # track for every z between them. `carve` cuts that whole span, with a
+    # little clearance on each side, out of the row instead.
+    palm_gaps = []
+    if shore_x == SHORE_X_HEADLAND:
+        palm_gaps.append((STAD_SOUTH_OUT - 8.0, max(STAD_NORTH_OUT, SPORTS_TRACK_Z1) + 10.0))
+    for pz0, pz1 in carve((z0, z1), palm_gaps):
+        if pz1 - pz0 < 20.0:
+            continue
+        palm_row(walk_x0 + 4.0, walk_x0 + 10.0, pz0, pz1, PAVING, step=38.0,
+                 along="z", label=f"BaywalkPalms{index}{pz0:.0f}")
     with group(f"BaywalkFittings{index}"):
         for i in range(int((z1 - z0) / 76.0)):
             fz = z0 + 38.0 + i * 76.0

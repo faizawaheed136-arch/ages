@@ -179,11 +179,20 @@ local function buildDescription(member: CastMember, ageYears: number?): Humanoid
 	description.BodyTypeScale = member.bodyTypeScale
 
 	description.HeadColor = member.skinColor
-	description.LeftArmColor = member.skinColor
-	description.RightArmColor = member.skinColor
-	description.LeftLegColor = member.skinColor
-	description.RightLegColor = member.skinColor
-	description.TorsoColor = member.skinColor
+
+	-- Arms and torso take the shirt colour when there is one, legs the pants
+	-- colour -- both fall back to skinColor, which is exactly the old
+	-- all-one-shade body for any CastMember that has not been given either.
+	-- This is what makes a crowd of these read as clothed people from across
+	-- a pitch rather than as a few hundred identical skin-toned dummies: no
+	-- asset upload, no shopping trip, just two more colours read off the body.
+	local shirt = member.shirtColor or member.skinColor
+	local pants = member.pantsColor or member.skinColor
+	description.LeftArmColor = shirt
+	description.RightArmColor = shirt
+	description.TorsoColor = shirt
+	description.LeftLegColor = pants
+	description.RightLegColor = pants
 
 	-- 0 is HumanoidDescription's own "empty slot", so an unchosen id is left
 	-- alone rather than written as a zero that would fail to load.

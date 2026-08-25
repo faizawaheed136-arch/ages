@@ -2756,6 +2756,106 @@ Config.Gym = {
 	RoomRadiusStuds = 20,
 }
 
+-- The stadium's ambient crowd. tools/gen_city.py builds every seat in every
+-- tier as a real `AgesStadiumCrowdSeat` anchor now -- there is no separate
+-- static-mannequin fill any more, an empty seat is just an empty seat -- plus
+-- six roam anchors per stand's concourse (`AgesStadiumCrowdRoam`), and
+-- StadiumCrowdService reads both by tag to seat and walk real NPCs through
+-- the bowl. "The crowd looks fake" is only avoided while the caps below stay
+-- fed, which is why StandUp* and SpawnPerTick exist alongside them.
+--
+-- The tag/attribute names here are the Luau side of a pair; the Python side
+-- is `STADIUM_CROWD_SEAT_TAG`/`STADIUM_CROWD_ROAM_TAG`/`STADIUM_CROWD_STAND_
+-- ATTR` in gen_city.py and the two literal strings must match exactly or the
+-- service finds nothing -- there is no shared source for this pair, the same
+-- way `Config.Gym.EquipmentTag` and gen_city.py's own gym tag are two
+-- independently-typed copies of one string.
+Config.Stadium = {
+	SeatTag = "AgesStadiumCrowdSeat",
+	RoamTag = "AgesStadiumCrowdRoam",
+	StandAttribute = "Stand",
+
+	-- How many real NPCs are ever seated/roaming at once. A hard ceiling
+	-- rather than "spawn one per anchor found" for the same reason
+	-- Config.Town.MaxBodied exists: NPCService.Spawn is a web call per rig,
+	-- and nothing under it stops a caller asking for hundreds at once --
+	-- there are well over a thousand seat anchors in the bowl now (every
+	-- seat is one, see gen_city.py's `stadium_seat`). Safe range: 8-200
+	-- seated, 4-48 roaming; MaxRoamingCrowd should stay a multiple of 4 so
+	-- StadiumCrowdService.indexAnchors can split it evenly across the four
+	-- stands. Raised well past the old 40/16 now that density is not the
+	-- bottleneck any more -- SpawnPerTick below is what keeps a cap this
+	-- size from asking NPCService for all of it in one burst.
+	MaxSeatedCrowd = 120,
+	MaxRoamingCrowd = 40,
+
+	-- How fast a roaming spectator walks the concourse. Slower than a
+	-- townsperson (Config.NPC.WalkSpeed) -- someone browsing a concourse
+	-- between stands is not in a hurry to get anywhere.
+	RoamWalkSpeed = 6,
+
+	-- How long a roamer waits at each concourse stop before moving to the
+	-- next. Safe range: 3-20.
+	RoamPauseMinSeconds = 4,
+	RoamPauseMaxSeconds = 12,
+
+	-- How often the crowd is re-checked and topped back up to its caps --
+	-- a lost rig (streaming, a failed build) is rebuilt on the next tick
+	-- rather than left as a gap for the rest of the server's life. Matches
+	-- GangService's TickSeconds for the same "not every frame, not so rare
+	-- it visibly lags" reasoning. Safe range: 2-15.
+	TickSeconds = 5,
+
+	-- How many empty slots (seated and roaming counted together) tickCrowd
+	-- is allowed to start spawning on any one tick. MaxSeatedCrowd and
+	-- MaxRoamingCrowd together can be asking for over 150 rigs from an empty
+	-- server the moment the first player loads in, and NPCService.Spawn is a
+	-- web call per rig -- firing all of them from the same tick in one burst
+	-- of task.spawn calls is the exact overload Config.Town's own bodied-NPC
+	-- cap exists to avoid elsewhere. A low cap here does not slow the crowd
+	-- down for long: at TickSeconds=5 and 8 a tick, the bowl is full inside
+	-- a couple of minutes of a server starting, which nobody is standing in
+	-- the forecourt timing. Safe range: 2-16.
+	SpawnPerTick = 8,
+
+	-- A seated fan sometimes stands up, takes a few steps back into the row
+	-- behind their seat, and sits back down -- read independently per
+	-- occupied seat on every tick, so no two get up in step with each
+	-- other. StandUpChancePerTick is deliberately tiny: at TickSeconds=5 and
+	-- a 120-seat crowd, 0.002 means roughly one fan in the whole bowl stands
+	-- up every couple of ticks, which is already enough motion to keep a
+	-- full stand from reading as a photograph. The step is straight back
+	-- along the stand's own StandFacing direction (see below), away from
+	-- the pitch and into the gap behind the row, not a pathfind through the
+	-- packed seats either side. Safe range: chance 0.0005-0.01, step 3-8
+	-- studs, seconds 3-15.
+	StandUpChancePerTick = 0.002,
+	StandUpStepStuds = 5.0,
+	StandUpMinSeconds = 4,
+	StandUpMaxSeconds = 10,
+
+	-- Every stand's outward-facing direction, as a unit-length (x, z) --
+	-- which way a seated spectator in that stand looks to be watching the
+	-- pitch rather than the wall behind them. A seat anchor is a plain,
+	-- unrotated `box()` part (see gen_city.py), so this is the only place
+	-- that direction is recorded at all.
+	StandFacing = {
+		StandSouth = { x = 0, z = 1 },
+		StandNorth = { x = 0, z = -1 },
+		StandWest = { x = 1, z = 0 },
+		StandEast = { x = -1, z = 0 },
+	},
+
+	-- The same two colours tools/gen_city.py's STAD_SEATS paints the tiers in
+	-- (home red, alternating away pale) -- no shared source between the two,
+	-- same as the tag names above, so a change to one palette means changing
+	-- both by hand. StadiumCrowdService alternates a seated fan between these
+	-- instead of a random Townsfolk shirt colour, so the stand reads as a
+	-- crowd in kit rather than a crowd that happens to be sitting together.
+	HomeShirtColor = Color3.fromRGB(178, 46, 46),
+	AwayShirtColor = Color3.fromRGB(210, 210, 214),
+}
+
 -- People. The pillar of a life this game did not have.
 --
 -- Everybody in AGES until now was a delivery. Somebody walked in, handed over a line

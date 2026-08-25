@@ -185,6 +185,16 @@ export type CastMember = {
 	shirtAssetId: number,
 	pantsAssetId: number,
 	hairAssetId: number,
+	-- Clothing colour, used only while the matching asset id above is 0. A body
+	-- with no shirt asset and no shirt colour renders every limb in `skinColor`
+	-- -- NPCService's own "needs no asset ids at all" claim was only half true
+	-- until these existed, because a torso and a pair of legs painted the same
+	-- shade as the face is not a clothed person, it is a bare mannequin wearing
+	-- its own skin. nil means "not chosen", the same as an asset id of 0, and
+	-- falls back to skinColor so every existing CastMember written before this
+	-- field keeps rendering exactly as it did.
+	shirtColor: Color3?,
+	pantsColor: Color3?,
 	-- Set only on peers: how many years off the player's own age this person is,
 	-- so they are re-sized to the player's age every time they are sent rather
 	-- than being whatever size they were written at. nil means an adult, whose
