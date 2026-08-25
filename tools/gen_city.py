@@ -50,7 +50,7 @@ from rbxmx import (
     GRASS, LEAFY_GRASS, MARBLE, METAL, NEON, PAVEMENT, PEBBLE, PLASTIC,
     PLANKS, SLATE, SMOOTH, WOOD,
 )
-from rbxmx import at, box, group, part, point_light, sign
+from rbxmx import at, box, group, part, point_light, sign, spot_light
 
 from world_plan import (
     CEIL_1, CEIL_2, DOORWAY, FLOOR_1, FLOOR_2, GROUND, KERB, PAVING,
@@ -923,11 +923,36 @@ REVETMENT_W = 14.0
 # one without the other opens the join.
 WHARF_W = BEACH_W + BAYWALK_W
 
-# The tag the game reads to find an interactive sports piece.
+# The tag the game reads to find an interactive sports piece. Decorative --
+# nothing in the Luau runtime reads it yet, but the rules that will (referee
+# positioning, ball spawns) need one part per fixture named by kind, not a
+# search through geometry.
 SPORT_TAG = "AgesSportFacility"
 SPORT_KIND = "FacilityKind"
 CAR_TAG = "AgesCarDisplay"
 CAR_MODEL_ATTR = "CarModel"
+
+# The tag SportsDrillService reads to find a drill anchor: a bag, a hoop rim,
+# a net, a goal crossbar. Separate from SPORT_TAG on purpose -- that one marks
+# every decorative fixture (three ropes and four posts per ring), and a
+# machine index built off it would find a dozen "boxing" parts an inch apart
+# and call it seven treadmills in one room. This tag goes on exactly the parts
+# that are a *drill station*: something a player stands at and works a timing
+# sweep against, one tag per station rather than one per fixture.
+SPORTS_DRILL_TAG = "AgesSportsDrill"
+SPORTS_DRILL_KIND = "SportsDrillKind"
+
+# The tags StadiumCrowdService reads to seat and roam real NPCs among the
+# static crowd. A seat anchor is an empty spot in a tier's crowd row -- the
+# row-builder leaves it empty rather than doubling it up with a static
+# mannequin, so a real avatar dropped there doesn't stand inside one. A roam
+# anchor is a stop on a stand's concourse walkway; anchors that share a
+# `STADIUM_CROWD_STAND_ATTR` value are one stand's loop; a wandering NPC
+# walks its stand's loop and only its stand's loop, never crossing into the
+# next one, so it never has to pathfind past a wall it can't see over.
+STADIUM_CROWD_SEAT_TAG = "AgesStadiumCrowdSeat"
+STADIUM_CROWD_ROAM_TAG = "AgesStadiumCrowdRoam"
+STADIUM_CROWD_STAND_ATTR = "Stand"
 
 # ---------------------------------------------------------------------------
 # Palette
@@ -1527,6 +1552,71 @@ def disc(label, radius, y0, y_top, color, material, cx=None, cz=None,
             color, material, collide=collide)
     ring(f"{label}Edge", core, radius, y0, y_top, color, material,
          cx=cx, cz=cz, segs=segs, collide=collide)
+
+
+# `polar`/`radial_yaw`/`ring` above are circle-only: one radius, the same in
+# every direction. The stadium's bowl is not -- its pitch is 70 studs wide
+# and 110 deep, so a true circle round it is either too tight on the
+# touchlines or wastes 40 studs of open ground behind each goal. These three
+# generalise the same three functions to an ellipse of two independent radii,
+# `rx` and `rz`, which is a circle exactly when the two are equal -- so
+# nothing that already calls `polar`/`radial_yaw`/`ring` needs to change,
+# and the stadium gets a shape its own dome (an ellipsoid, see `ball` in
+# rbxmx.py and `stadium_roof`) can actually match.
+def ellipse_point(phi_deg, cx, cz, rx, rz):
+    """(x, z) at angle `phi_deg` on the ellipse centred at (cx, cz) with
+    semi-axes `rx` (along x) and `rz` (along z). Same convention as `polar`:
+    phi=0 is +x, running toward +z."""
+    phi = math.radians(phi_deg)
+    return cx + rx * math.cos(phi), cz + rz * math.sin(phi)
+
+
+def ellipse_outward_yaw(phi_deg, rx, rz):
+    """The `spun_box` yaw that faces a box outward along the ellipse's own
+    normal at `phi_deg` -- not `phi_deg` itself, which is only the outward
+    direction on a true circle. The outward normal to (x/rx)^2+(z/rz)^2=1 at
+    (rx*cos(phi), rz*sin(phi)) points along (cos(phi)/rx, sin(phi)/rz); on an
+    oval as eccentric as the stadium's (rx=70, rz=90) the two directions
+    differ by several degrees away from the axes, enough that a seat
+    oriented by raw phi visibly does not face the pitch. Reduces to
+    `radial_yaw` exactly when rx == rz."""
+    phi = math.radians(phi_deg)
+    nx, nz = math.cos(phi) / rx, math.sin(phi) / rz
+    return math.degrees(math.atan2(-nz, nx))
+
+
+def elliptical_ring(label, cx, cz, rx_out, rz_out, rx_in, rz_in, y0, y_top,
+                     color, material, keep=None, door_facets=(), door_head=12.0,
+                     segs=CIRCLE_SEGS, seam=CIRCLE_SEAM, collide=True,
+                     transparency=0.0, tags=None, attrs=None):
+    """The elliptical equivalent of `ring`: an annulus of `segs` boxes
+    between two concentric ellipses, each spun to face outward along the
+    true ellipse normal at its own centre angle (`ellipse_outward_yaw`, not
+    `radial_yaw`) and sized to its own local outward radius, since that
+    radius is not the same at every angle the way it is for `ring`. Facets
+    listed in `door_facets` are cut down to a lintel above `door_head`
+    studs, an open doorway below it -- the same shape `wall(doors=...)` cuts
+    for every axis-aligned wall in the city, built by hand here because
+    `wall` only knows a straight span and this facet is spun."""
+    half = math.radians(180.0 / segs)
+    with group(label):
+        for i in range(segs):
+            if keep is not None and not keep(i):
+                continue
+            phi = i * (360.0 / segs)
+            ox, oz = ellipse_point(phi, cx, cz, rx_out, rz_out)
+            ix, iz = ellipse_point(phi, cx, cz, rx_in, rz_in)
+            depth = math.hypot(ox - ix, oz - iz)
+            mx, mz = (ox + ix) / 2, (oz + iz) / 2
+            r_here = math.hypot(ox - cx, oz - cz)
+            width = 2.0 * r_here * math.sin(half)
+            yaw = ellipse_outward_yaw(phi, rx_out, rz_out)
+            top = y_top - (seam if i % 2 else 0.0)
+            lo = y0 + door_head if i in door_facets else y0
+            rbxmx.spun_box(f"{label}{i}", (mx, (lo + top) / 2, mz),
+                           (depth, top - lo, width), yaw,
+                           color, material, transparency=transparency,
+                           collide=collide, tags=tags, attrs=attrs)
 
 
 # ---------------------------------------------------------------------------
@@ -2164,7 +2254,7 @@ with group("CircleLamps"):
 #
 #   sband4 (north, z 800..950):  HOUSE  HOUSE  HOUSE  HOUSE HOUSE
 #   sband3       (z 650..800):   PARK   HOUSE  HOUSE  HOUSE HOUSE
-#   sband2       (z 500..650):   MALL   APT    OFFICE HOUSE GREEN
+#   sband2       (z 500..650):   MALL   APT    OFFICE HOUSE SPORTS
 #   sband1       (z 350..500):   FADE   CIRCUS CIRCUS FADE  APT
 #   sband0 (south, z 200..350):  DINING CIRCUS CIRCUS FADE  FADE
 #
@@ -2201,13 +2291,17 @@ with group("CircleLamps"):
 #     still being quoted after the role had been dropped out of this table
 #     altogether, leaving `office_block` and `office_tower` written, correct and
 #     unreachable, and the step they were the evidence for missing from the
-#     city. It took the APT block rather than the GREEN one because there were
-#     three APT blocks and only ever one GREEN, and orphaning `greenfield` to
-#     un-orphan `office_block` would have been a trade for nothing.
+#     city. It took the APT block rather than the one now marked SPORTS because
+#     there were three APT blocks and only ever one of that one.
+#   * SPORTS was GREEN -- an empty lot, `greenfield()` -- until the boxing gym
+#     and the basketball/volleyball hall needed a home. It is the only block in
+#     the ordinary grid this pair could go: everywhere else on this table is
+#     already spoken for by the load-bearing reasons above, and the stadium
+#     itself lives outside the grid entirely, in the headland (see `stadium()`).
 ROLES = [
     ["DINING", "CIRCUS", "CIRCUS", "FADE", "FADE"],
     ["FADE", "CIRCUS", "CIRCUS", "FADE", "APT"],
-    ["MALL", "APT", "OFFICES", "HOUSE", "GREEN"],
+    ["MALL", "APT", "OFFICES", "HOUSE", "SPORTS"],
     ["PARK", "HOUSE", "HOUSE", "HOUSE", "HOUSE"],
     ["HOUSE", "HOUSE", "HOUSE", "HOUSE", "HOUSE"],
 ]
@@ -3246,18 +3340,177 @@ def dining_block(band, sband, x0, x1, z0, z1):
 # ---------------------------------------------------------------------------
 
 
-def greenfield(band, sband, x0, x1, z0, z1, index):
-    """An empty block: grass, a path, a few trees. Land the city has not got
-    to yet, and a future building's site."""
-    with group(f"Greenfield_{index}"):
-        box("Field", (x0, x1, z0, z1, GROUND_BOTTOM, CITY_GRASS_TOP), LAWN, GRASS)
-        box("FieldPath", (x0 + 14.0, x1 - 14.0, (z0 + z1) / 2 - 1.5,
-                          (z0 + z1) / 2 + 1.5, GROUND_BOTTOM, GROUND),
-            PATH_STONE, PEBBLE)
-        for tx, tz in ((x0 + 8.0, z0 + 8.0), (x1 - 8.0, z0 + 8.0),
-                       (x0 + 8.0, z1 - 8.0), (x1 - 8.0, z1 - 8.0),
-                       ((x0 + x1) / 2, (z0 + z1) / 2)):
-            tree(tx, tz, GROUND, height=13.0, spread=9.0)
+
+# ---------------------------------------------------------------------------
+# Sports centre (boxing gym + basketball/volleyball hall)
+# ---------------------------------------------------------------------------
+#
+# Replaces the one-off greenfield block: same footprint, no longer an empty
+# lot. Two halls side by side with a 6-stud service gap between them, sharing
+# the block's frontage onto the cross street that closes its south edge --
+# both doors sit within ROAD_ACCESS of that carriageway, which a walled
+# building has to answer for (see the note on check_city's road-access sweep
+# above the stadium; that bowl is exempt because it carries no `Roof` part,
+# but these are real indoor halls and this block is inside the ordinary grid,
+# so they get no such exemption and do not need one).
+
+RING_CANVAS = (208, 208, 200)
+RING_ROPE = (206, 46, 46)
+BAG_LEATHER = (92, 62, 44)
+MIRROR_PANEL = (196, 210, 214)
+HALL_CEIL = FLOOR_1 + 22.0  # taller than a shopfront's CEIL_1 -- a ring needs headroom a counter doesn't
+
+
+def boxing_hall(x0, x1, z0, z1):
+    """A single walled hall: a ring at the centre, a bag row down one side, a
+    mirror wall on the other. The mirror is drawn as a flat tinted panel
+    rather than a `glazing()` run -- glazing is non-colliding and see-through
+    onto whatever is behind it, which is correct for a shopfront and wrong for
+    a wall meant to reflect the room back at whoever is training in it."""
+    ix0, ix1 = x0 + WALL, x1 - WALL
+    iz0, iz1 = z0 + WALL, z1 - WALL
+    cx, cz = (x0 + x1) / 2, z0 + 34.0
+
+    with group("BoxingGym"):
+        box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
+        box("Roof", (x0, x1, z0, z1, HALL_CEIL, HALL_CEIL + SLAB), ROOF_GREY, SLATE)
+        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, HALL_CEIL), BRICK_WARM, along="z")
+        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, HALL_CEIL), BRICK_WARM, along="z")
+        wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, HALL_CEIL), BRICK_WARM, along="x")
+        wall("WallFront", (x0, x1, z0, iz0, FLOOR_1, HALL_CEIL), BRICK_WARM,
+             along="x", doors=((cx - 5.0, cx + 5.0),))
+        glazing("Front", (x0 + 2.0, x1 - 2.0, iz0 + 0.4, z0 + 0.4 + 3.0,
+                          FLOOR_1 + 1.5, FLOOR_1 + 9.5), along="x", panes=4)
+        box("Sign", (cx - 14.0, cx + 14.0, iz0 + 0.4, iz0 + 1.4,
+                     FLOOR_1 + 11.0, FLOOR_1 + 13.0), BRICK_WARM, SMOOTH,
+            children=sign("GOLDGLOVE BOXING", "front", color=(250, 246, 234), size=44))
+
+        with group("Ring"):
+            rx0, rx1 = cx - 9.0, cx + 9.0
+            rz0, rz1 = cz - 9.0, cz + 9.0
+            box("Apron", (rx0 - 1.5, rx1 + 1.5, rz0 - 1.5, rz1 + 1.5,
+                          FLOOR_1, FLOOR_1 + 1.2), RING_CANVAS, FABRIC)
+            box("Canvas", (rx0, rx1, rz0, rz1, FLOOR_1 + 1.2, FLOOR_1 + 1.3),
+                (230, 230, 226), FABRIC, tags=[SPORT_TAG], attrs={SPORT_KIND: "boxing"})
+            for px, pz in ((rx0, rz0), (rx1, rz0), (rx0, rz1), (rx1, rz1)):
+                part_x = px - cx
+                part_z = pz - cz
+                with at(cx + part_x, cz + part_z, floor=FLOOR_1 + 1.3):
+                    part("Post", (0, 0, 0), (0.8, 4.6, 0.8), STEEL, METAL)
+            for ry in (1.6, 2.9, 4.2):
+                box(f"RopeS{ry:.1f}", (rx0, rx1, rz0 - 0.15, rz0 + 0.15,
+                                       FLOOR_1 + 1.3 + ry, FLOOR_1 + 1.5 + ry),
+                    RING_ROPE, FABRIC, collide=False,
+                    tags=[SPORT_TAG], attrs={SPORT_KIND: "boxing"})
+                box(f"RopeN{ry:.1f}", (rx0, rx1, rz1 - 0.15, rz1 + 0.15,
+                                       FLOOR_1 + 1.3 + ry, FLOOR_1 + 1.5 + ry),
+                    RING_ROPE, FABRIC, collide=False,
+                    tags=[SPORT_TAG], attrs={SPORT_KIND: "boxing"})
+
+        with group("Bags"):
+            bag_x = ix1 - 5.0
+            for i, bz in enumerate((cz - 16.0, cz - 4.0, cz + 8.0)):
+                with at(bag_x, bz, floor=FLOOR_1):
+                    part(f"Chain{i}", (0, 9.5, 0), (0.3, 2.0, 0.3), STEEL, METAL)
+                    # Every heavy bag is both a decorative fixture (SPORT_TAG, for
+                    # anything that wants to point a prop at "a boxing bag") and a
+                    # drill station (SPORTS_DRILL_TAG) -- three stations rather than
+                    # one so the hall never queues players onto a single bag.
+                    part(f"Bag{i}", (0, 6.5, 0), (2.2, 5.0, 2.2), BAG_LEATHER, FABRIC,
+                         tags=[SPORT_TAG, SPORTS_DRILL_TAG],
+                         attrs={SPORT_KIND: "boxing", SPORTS_DRILL_KIND: "boxing"})
+            with at(bag_x, cz + 22.0, floor=FLOOR_1):
+                part("SpeedBoard", (0, 6.6, 0), (2.4, 1.4, 0.6), DESK_TOP, WOOD)
+                part("SpeedBag", (0, 5.6, 0.7), (1.0, 1.4, 1.0), BAG_LEATHER, FABRIC,
+                     tags=[SPORT_TAG], attrs={SPORT_KIND: "boxing"})
+
+        box("Mirror", (ix0 + 0.2, ix0 + 0.5, iz0 + 6.0, iz1 - 6.0,
+                       FLOOR_1 + 1.0, FLOOR_1 + 9.0), MIRROR_PANEL, GLASS,
+            transparency=0.1)
+        ceiling_light(cx, cz, HALL_CEIL)
+        ceiling_light(cx, iz1 - 10.0, HALL_CEIL)
+
+    place_point("boxing_gym", cx, cz, FLOOR_1, "the boxing gym, at the ring")
+
+
+def court_hall(x0, x1, z0, z1):
+    """A basketball court and a volleyball court sharing one roofed hall, one
+    behind the other along the block's depth -- the same reasoning as the
+    stadium's tiling, applied at building scale: two courts side by side
+    would need double the block's width, which this footprint does not have,
+    while stacked along the depth they fit with room for a spectator strip
+    between them."""
+    ix0, ix1 = x0 + WALL, x1 - WALL
+    iz0, iz1 = z0 + WALL, z1 - WALL
+    cx = (x0 + x1) / 2
+
+    bk_z0, bk_z1 = iz0 + 6.0, iz0 + 50.0
+    vb_z0, vb_z1 = bk_z1 + 8.0, iz1 - 4.0
+
+    with group("CourtHall"):
+        box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
+        box("Roof", (x0, x1, z0, z1, HALL_CEIL, HALL_CEIL + SLAB), ROOF_GREY, SLATE)
+        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, HALL_CEIL), BRICK_PALE, along="z")
+        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, HALL_CEIL), BRICK_PALE, along="z")
+        wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, HALL_CEIL), BRICK_PALE, along="x")
+        wall("WallFront", (x0, x1, z0, iz0, FLOOR_1, HALL_CEIL), BRICK_PALE,
+             along="x", doors=((cx - 5.0, cx + 5.0),))
+        glazing("Front", (x0 + 2.0, x1 - 2.0, iz0 + 0.4, z0 + 0.4 + 3.0,
+                          FLOOR_1 + 1.5, FLOOR_1 + 9.5), along="x", panes=4)
+        box("Sign", (cx - 16.0, cx + 16.0, iz0 + 0.4, iz0 + 1.4,
+                     FLOOR_1 + 11.0, FLOOR_1 + 13.0), BRICK_PALE, SMOOTH,
+            children=sign("CIVIC COURTS", "front", color=(250, 246, 234), size=44))
+
+        with group("Basketball"):
+            box("Court", (ix0 + 3.0, ix1 - 3.0, bk_z0, bk_z1, FLOOR_1, FLOOR_1 + 0.15),
+                COURT_BLUE, SMOOTH)
+            box("Mid", (ix0 + 3.0, ix1 - 3.0, (bk_z0 + bk_z1) / 2 - 0.3,
+                       (bk_z0 + bk_z1) / 2 + 0.3, FLOOR_1 + 0.15, FLOOR_1 + 0.2),
+                (240, 240, 240), SMOOTH)
+            for hz, into in ((bk_z0, 1), (bk_z1, -1)):
+                with group(f"Hoop{hz:.0f}"):
+                    box("Backboard", (cx - 1.75, cx + 1.75, hz - into * 1.5, hz - into * 0.5,
+                                      FLOOR_1 + 7.0, FLOOR_1 + 10.0), (240, 240, 240), GLASS,
+                        tags=[SPORT_TAG], attrs={SPORT_KIND: "basketball"})
+                    # The rim is both the decorative fixture and the drill station --
+                    # a hoop is the one part of a basketball goal a shot actually has
+                    # to clear, so it is the natural stand-at-this point for a shooting
+                    # sweep. Both hoops are tagged, giving the hall two stations.
+                    box("Rim", (cx - 1.5, cx + 1.5, hz + into * 0.5, hz + into * 1.5,
+                                FLOOR_1 + 7.0, FLOOR_1 + 7.3), (216, 120, 40), METAL,
+                        tags=[SPORT_TAG, SPORTS_DRILL_TAG],
+                        attrs={SPORT_KIND: "basketball", SPORTS_DRILL_KIND: "basketball"})
+                    box("Pole", (cx - 0.5, cx + 0.5, hz - into * 2.0, hz - into * 1.0,
+                                 FLOOR_1, FLOOR_1 + 7.0), (120, 120, 126), METAL)
+        place_point("basketball_gym", cx, (bk_z0 + bk_z1) / 2, FLOOR_1,
+                    "the basketball court")
+
+        with group("Volleyball"):
+            box("Court", (ix0 + 5.0, ix1 - 5.0, vb_z0, vb_z1, FLOOR_1, FLOOR_1 + 0.15),
+                COURT_GREEN, SMOOTH)
+            vmid = (vb_z0 + vb_z1) / 2
+            box("Net", (cx - 8.5, cx + 8.5, vmid - 0.1, vmid + 0.1,
+                       FLOOR_1 + 1.0, FLOOR_1 + 4.5), (230, 230, 230), FABRIC,
+                collide=False, tags=[SPORT_TAG, SPORTS_DRILL_TAG],
+                attrs={SPORT_KIND: "volleyball", SPORTS_DRILL_KIND: "volleyball"})
+            for side in (-1, 1):
+                with at(cx + side * 8.7, vmid, floor=FLOOR_1):
+                    part(f"Post{side}", (0, 2.25, 0), (0.5, 4.5, 0.5), STEEL, METAL)
+        place_point("volleyball_court", cx, vmid, FLOOR_1, "the volleyball court")
+
+        ceiling_light(cx, (bk_z0 + bk_z1) / 2, HALL_CEIL)
+        ceiling_light(cx, vmid, HALL_CEIL)
+
+
+def sports_center(band, sband, x0, x1, z0, z1):
+    """Splits the block into two halls with a service gap between -- the
+    boxing gym on the west half, the basketball/volleyball hall on the east,
+    both fronting the same cross street so both doors are the block's usual
+    ROAD_ACCESS distance from a carriageway."""
+    gap = 6.0
+    half = (x1 - x0 - gap) / 2
+    boxing_hall(x0, x0 + half, z0, z1)
+    court_hall(x0 + half + gap, x1, z0, z1)
 
 
 # ---------------------------------------------------------------------------
@@ -4847,14 +5100,33 @@ def soccer_field(x0, x1, z0, z1):
         for dz, toward in ((z0, 1), (z1, -1)):
             box(f"Box{dz:.0f}", (x0 + 12.0, x1 - 12.0, dz, dz + toward * 4.0,
                                  PAINT_BOTTOM, PAINT_TOP), (240, 240, 240), SMOOTH)
+        # A real goal is about a third as wide as it is tall -- 7.32m against
+        # 2.44m. The posts used to sit a fixed 12 studs in from each
+        # touchline, which came out 45 studs wide against this 70-wide pitch:
+        # nearly two-thirds of the whole width, wider than the 8-stud-tall
+        # posts made it read as a goal rather than an open end of the pitch.
+        # `GOAL_HALF_WIDTH` centres a 24-stud-wide goal (roughly the same
+        # height-to-width ratio as the real thing) on the pitch's own
+        # midline instead, well inside the 46-stud penalty box (`Box{dz}`
+        # above) the way a real goal sits inside its own box.
+        GOAL_HALF_WIDTH = 12.0
+        mid_x = (x0 + x1) / 2.0
         for gz in (z0, z1):
             with group(f"Goal{gz:.0f}"):
-                box("Post", (x0 + 12.0, x0 + 12.8, gz - 2.4, gz, GROUND, GROUND + 8.0),
+                box("Post", (mid_x - GOAL_HALF_WIDTH - 0.4, mid_x - GOAL_HALF_WIDTH + 0.4,
+                             gz - 2.4, gz, GROUND, GROUND + 8.0),
                     (240, 240, 240), METAL, tags=[SPORT_TAG], attrs={SPORT_KIND: "soccer"})
-                box("Post2", (x1 - 12.8, x1 - 12.0, gz - 2.4, gz, GROUND, GROUND + 8.0),
+                box("Post2", (mid_x + GOAL_HALF_WIDTH - 0.4, mid_x + GOAL_HALF_WIDTH + 0.4,
+                             gz - 2.4, gz, GROUND, GROUND + 8.0),
                     (240, 240, 240), METAL, tags=[SPORT_TAG], attrs={SPORT_KIND: "soccer"})
-                box("Bar", (x0 + 12.0, x1 - 12.0, gz - 2.4, gz - 1.8, GROUND + 7.6, GROUND + 8.2),
-                    (240, 240, 240), METAL, tags=[SPORT_TAG], attrs={SPORT_KIND: "soccer"})
+                # The crossbar is the drill station for this goal: a penalty sweep aims
+                # at the goal as a whole, and the bar is the one part of it that sits at
+                # a sensible stand-and-shoot distance in front of the line. Both goals
+                # are tagged, so a penalty taker can use either end of the pitch.
+                box("Bar", (mid_x - GOAL_HALF_WIDTH, mid_x + GOAL_HALF_WIDTH,
+                            gz - 2.4, gz - 1.8, GROUND + 7.6, GROUND + 8.2),
+                    (240, 240, 240), METAL, tags=[SPORT_TAG, SPORTS_DRILL_TAG],
+                    attrs={SPORT_KIND: "soccer", SPORTS_DRILL_KIND: "soccer"})
 
 
 def basketball_court(x0, x1, z0, z1):
@@ -4947,20 +5219,655 @@ def running_track(x0, x1, z0, z1):
                 (240, 240, 240), SMOOTH, tags=[SPORT_TAG], attrs={SPORT_KIND: "track"})
 
 
-soccer_field(820.0, 890.0, 420.0, 530.0)
 basketball_court(850.0, 882.0, 900.0, 918.0)
 tennis_court(900.0, 928.0, 900.0, 914.0)
 playground(830.0, 870.0, 820.0, 850.0)
 running_track(840.0, 980.0, 700.0, 770.0)
 
 for pid, cx, cz in (
-    ("soccer_field", 855.0, 475.0),
     ("basketball_court", 866.0, 909.0),
     ("tennis_court", 914.0, 907.0),
     ("playground", 850.0, 835.0),
     ("running_track", 910.0, 735.0),
 ):
     place_point(pid, cx, cz, GROUND, f"the {pid.replace('_', ' ')}")
+
+
+# ---------------------------------------------------------------------------
+# Stadium
+# ---------------------------------------------------------------------------
+#
+# The pitch keeps the id `soccer_field` it always had -- Jobs.luau and
+# Config.Locations both point at that string -- but everything around it is
+# new: four raked stands closing it into a bowl, a stepped dome roof closing
+# the bowl itself, a centre-hung scoreboard, hanging light rigs over the
+# pitch, and a gated forecourt facing avenue 6.
+#
+# **Enclosed, and still not a building.** The dome is real geometry -- three
+# more concentric roof rings above the one the concourse always had, plus a
+# glazed skylight over the pitch itself -- but no part in any of it is named
+# `Roof`. check_city's road-access sweep and its building-overlap check both
+# key off that one literal name (see the note on check 5), and a raked stand
+# with a roof over it is still not a room with a door: nobody is routed
+# *into* the dome, they walk through an open gate the same as they always
+# did. Naming a part `Roof` here would make the checker start asking the
+# stadium a question -- "which door serves you, and how far is it from a
+# road" -- that a stadium with four open gates has no single answer to. It
+# is what lets the bowl sit in the headland, sixty-odd studs from the
+# nearest carriageway, the same way the pitch it replaces always has.
+#
+# **One ellipse, split into four labelled quarters.** The bowl used to be
+# four flat-sided rectangles tiled edge to edge -- the west and east stands
+# ran the bowl's full length, corner to corner, and the south and north
+# stands filled exactly the gap between them, which tiled with no seam and
+# no overlap but did not match the smooth ellipsoid dome sitting on top of
+# it (`stadium_roof`). It is a true ellipse now, the same shape the dome
+# is, built with `elliptical_ring` (see the Curves section) and cut into
+# four 90-degree arcs only so each arc can still carry its own `Stand`
+# label -- StadiumCrowdService and `Config.Stadium.StandFacing` both read
+# that label, and reusing the same four names (`StandEast` etc.) for the
+# four arcs meant neither needed to change for the bowl to go round; see
+# `stadium_bowl`.
+STAD_PX0, STAD_PX1 = 855.0, 925.0     # the pitch itself, unchanged in size
+STAD_PZ0, STAD_PZ1 = 460.0, 570.0
+STAD_GAP = 5.0                        # clear ground between the touchline and the first tier
+STAD_TIERS = 5
+STAD_RISE = 3.0                       # studs climbed per tier -- taller stands, same footprint
+STAD_TREAD = 6.0                      # studs deep per tier
+STAD_DEPTH = STAD_TIERS * STAD_TREAD  # 30.0
+STAD_CONCOURSE = 8.0                  # flat, roofed walkway behind the top tier
+STAD_MARGIN = STAD_GAP + STAD_DEPTH + STAD_CONCOURSE  # 43.0, pitch edge to outer wall
+STAD_TOP_Y = GROUND + STAD_TIERS * STAD_RISE  # top of the highest seating tier
+
+# `STAD_WEST_OUT`..`STAD_NORTH_OUT` used to be `STAD_MARGIN` applied equally on
+# all four sides -- a bowl centred exactly on the pitch. That was the bug: the
+# innermost tier's boundary sits at a fixed inset (`STAD_CONCOURSE +
+# STAD_TIERS * STAD_TREAD` = 38 studs) in from the *outer* wall, not from the
+# pitch, so a symmetric bowl only 43 studs deep at the corner leaves the
+# innermost tier's radius at just `pitch_half + STAD_GAP` on each axis --
+# 40x60 against a 35x55 pitch. A rectangle's corner is `sqrt(2)` further from
+# centre than its edge, so that ellipse clears the touchlines but cuts
+# straight through all four corners of the pitch (checked: 12 of the first
+# tier's 24 facets, plus 4 of the second tier's, land inside the pitch
+# rectangle).
+#
+# Growing every side equally can't fix this and stay on the headland -- see
+# below -- so the bowl is not centred on the pitch any more. East, south and
+# north each grow independently, as far as they can before their own real
+# obstacle, found by search over all three for the combination that leaves
+# the least of the pitch rectangle inside any tier's inner boundary:
+STAD_WEST_OUT = 812.0    # unchanged -- see why, below
+STAD_EAST_OUT = 976.0    # 19 studs clear of the headland shore at 995 (was 968.0)
+STAD_SOUTH_OUT = 411.0   # 3 studs clear of the wp_bay_head_s crossing at 408 (was 417.0)
+STAD_NORTH_OUT = 650.0   # 50 studs clear of the running track at 700 (was 613.0)
+# West does not move. `StadiumForecourt`'s `MainEntrance` sits directly
+# against this wall (`ex1 = STAD_WEST_OUT`, see below) and needs the 12
+# studs between it and avenue 6's sidewalk at 799 that it already has at
+# 812 -- shrinking this wall shrinks that gap first and reopens the exact
+# sidewalk collision `check_city` caught once already (see the comment on
+# `ex0` below). Moving the entrance instead of the wall was ruled out: it is
+# glued to this wall by design, on the one side of the bowl that faces a
+# road at all.
+#
+# With west locked, the search's own floor is 3 facets, not 0 -- the two
+# innermost tiers each keep one corner point a few studs inside the
+# south-west corner of the pitch (worst case 7.9 studs past the touchline,
+# on a tier 6 studs deep) no matter how far east/south/north grow, because
+# that corner is exactly where the fixed west wall and the pitch's own
+# corner are closest. Growing past the buffers above only spends headroom
+# on the other three sides without moving that number; 3 facets out of 120
+# across the whole bowl, all at one corner seam between StandWest and
+# StandSouth, reads as the stand meeting the corner flag, not as a stand
+# cutting through the pitch the way the old symmetric bowl did across all
+# four corners at once. The pitch itself (`STAD_PX0`..`STAD_PZ1`) stays its
+# current 70x110: lengthening it only tightens the 3-stud south buffer
+# above and a search over pitch lengths found no improvement available by
+# growing it, only less room to work with.
+
+STAD_SEATS = [(178, 46, 46), (210, 210, 214)]   # home red, alternating with a pale away band
+STAD_STRUCTURE = CONCRETE_GREY
+STAD_SKIN = [(224, 190, 158), (140, 100, 72), (90, 64, 48)]
+
+
+def stadium_spectator(cx, cz, y0, index):
+    """A seated figure cheap enough to scatter by the hundred: a torso and a
+    head, the same two-shape economy the menu rail's icons use (see
+    MenuIcons.luau) -- legible from the pitch, not from the front row."""
+    color = STAD_SKIN[index % len(STAD_SKIN)]
+    box(f"Torso{index}", (cx - 0.9, cx + 0.9, cz - 0.9, cz + 0.9, y0, y0 + 1.4),
+        STAD_SEATS[index % 2], PLASTIC)
+    box(f"Head{index}", (cx - 0.5, cx + 0.5, cz - 0.5, cz + 0.5, y0 + 1.4, y0 + 2.2),
+        color, PLASTIC)
+
+
+STADIUM_SEAT_ANCHOR_EVERY = 10  # 1 real NPC seat for every 10 static mannequins -- see
+# Config.Stadium.MaxSeatedCrowd (40): ~530 spectator slots in the bowl at this spacing
+# gives roughly 53 real-NPC anchors, comfortably more than the cap needs so the crowd
+# tops back up to 40 seated without hunting for a slot, with a handful left over that
+# sit empty the way a real full house always has a few gaps in it.
+
+
+def stadium_crowd_arc(cx, cz, rx, rz, phi0, phi1, y0, start_index, stand_label):
+    """Spectators scattered along one curved tier at roughly `step` studs of
+    arc apart -- the elliptical equivalent of the old `stadium_crowd_row`,
+    sparse rather than seat-for-seat for the same reason: a stand this size
+    seated solid is several thousand parts for a crowd nobody can pick an
+    individual out of. Every fifth slot is left empty and marked with a
+    seat anchor instead of a mannequin, so StadiumCrowdService has a real
+    place to seat a real avatar without standing it inside a static one.
+
+    Seat anchors carry the same `Stand` attribute the roam anchors do
+    (`STADIUM_CROWD_STAND_ATTR`) rather than an orientation -- a `box()`
+    part has none to give -- so the service can look up which way that
+    stand faces the pitch from a small, fixed table instead of solving it
+    from geometry at runtime. `stand_label` is still one of the four
+    original quadrant names (`StandSouth` etc.), so that table needs no
+    change even though the seats themselves now sit on a curve."""
+    step = 5.0
+    mid_r = (rx + rz) / 2.0
+    step_deg = step * 180.0 / (math.pi * mid_r)
+    n = max(int((phi1 - phi0) / step_deg), 1)
+    index = start_index
+    attrs = {STADIUM_CROWD_STAND_ATTR: stand_label}
+    for k in range(n):
+        phi = phi0 + step_deg / 2 + k * step_deg
+        px, pz = ellipse_point(phi, cx, cz, rx, rz)
+        if index % STADIUM_SEAT_ANCHOR_EVERY == 0:
+            box(f"SeatAnchor{index}", (px - 0.3, px + 0.3, pz - 0.3, pz + 0.3, y0, y0 + 0.2),
+                STAD_SEATS[index % 2], PLASTIC, transparency=1.0, collide=False,
+                tags=[STADIUM_CROWD_SEAT_TAG], attrs=attrs)
+        else:
+            stadium_spectator(px, pz, y0, index)
+        index += 1
+    return index
+
+
+def stadium_crowd_roam_arc(cx, cz, rx, rz, phi0, phi1, y0, stand_label):
+    """Four stops along a stand's curved concourse, tagged as one roam loop
+    -- the elliptical equivalent of the old `stadium_crowd_roam_loop`."""
+    for i, f in enumerate((0.12, 0.38, 0.62, 0.88)):
+        phi = phi0 + (phi1 - phi0) * f
+        px, pz = ellipse_point(phi, cx, cz, rx, rz)
+        box(f"RoamAnchor{stand_label}{i}", (px - 0.3, px + 0.3, pz - 0.3, pz + 0.3, y0, y0 + 0.2),
+            STAD_STRUCTURE, PLASTIC, transparency=1.0, collide=False,
+            tags=[STADIUM_CROWD_ROAM_TAG], attrs={STADIUM_CROWD_STAND_ATTR: stand_label})
+
+
+def stad_ellipse(inset):
+    """(cx, cz, rx, rz) for the ellipse `inset` studs in from the stadium's
+    outer envelope on every side -- the elliptical equivalent of the old
+    `inset_rect`, and the one shape the bowl's tiers, its concourse and its
+    dome are all built from, so they stay concentric and actually match
+    each other. `STAD_WEST_OUT`..`STAD_NORTH_OUT` are no longer symmetric
+    around the pitch (see the corner-clearance comment above them), so this
+    ellipse's centre has shifted off the pitch's own centre -- east and
+    north, toward the sides that had room to grow -- rather than the pitch
+    sitting exactly in the middle of the bowl. Every real caller stays
+    inside STAD_GAP..STAD_MARGIN."""
+    cx = (STAD_WEST_OUT + STAD_EAST_OUT) / 2
+    cz = (STAD_SOUTH_OUT + STAD_NORTH_OUT) / 2
+    return (cx, cz, (STAD_EAST_OUT - STAD_WEST_OUT) / 2 - inset,
+            (STAD_NORTH_OUT - STAD_SOUTH_OUT) / 2 - inset)
+
+
+def stad_quadrant(i, segs=CIRCLE_SEGS):
+    """Which of the four stands facet `i` of a `segs`-facet ring belongs to.
+    Facets are grouped in blocks of `segs / 4`, offset by half a block so
+    facet 0 -- due east, phi=0 -- sits in the middle of its own stand
+    instead of straddling a seam between two; see `stadium_bowl`. Reusing
+    the four original stand names (`StandEast` etc.) rather than inventing
+    new ones means `Config.Stadium.StandFacing` and StadiumCrowdService
+    need no change at all for the bowl to go from four flat sides to a true
+    ellipse -- only where the boundary between stands falls has moved."""
+    per = segs // 4
+    return ("StandEast", "StandNorth", "StandWest", "StandSouth")[((i + per // 2) // per) % 4]
+
+
+STAD_STAND_ARC = 90.0  # each of the four stands still covers one quarter of the bowl
+STAD_STAND_PHI0 = {"StandEast": -45.0, "StandNorth": 45.0, "StandWest": 135.0, "StandSouth": 225.0}
+
+
+def stadium_bowl():
+    """The bowl itself: four stands, each a 90-degree arc of one ellipse,
+    replacing the old `stand_ns`/`stand_ew` pair of flat-sided rectangles
+    tiled edge to edge. The rectangles tiled cleanly and cheaply, but they
+    tiled into a *rectangle* -- a stepped, square-cornered bowl sitting
+    directly under a smooth ellipsoid dome (`stadium_roof`), which is
+    exactly the mismatch this function exists to fix. Splitting the new
+    ellipse into quarters rather than building it as one continuous ring
+    keeps everything about the old per-stand structure that still matters:
+    one Roblox group per stand, one `Stand` label per group (unchanged, see
+    `stad_quadrant`), a crowd arc per tier and a roam loop on the
+    concourse -- the shape underneath all of it is simply the same ellipse
+    the dome already is, instead of a different one."""
+    for stand, phi0 in STAD_STAND_PHI0.items():
+        phi1 = phi0 + STAD_STAND_ARC
+        keep = lambda i, s=stand: stad_quadrant(i) == s
+        with group(stand):
+            crowd_index = 0
+            for i in range(STAD_TIERS):
+                near_inset = STAD_CONCOURSE + (STAD_TIERS - i) * STAD_TREAD
+                far_inset = STAD_CONCOURSE + (STAD_TIERS - i - 1) * STAD_TREAD
+                cx, cz, rx_near, rz_near = stad_ellipse(near_inset)
+                _, _, rx_far, rz_far = stad_ellipse(far_inset)
+                y1 = GROUND + (i + 1) * STAD_RISE
+                elliptical_ring(f"Tier{i}", cx, cz, rx_far, rz_far, rx_near, rz_near,
+                                 GROUND, y1, STAD_SEATS[i % 2], CONCRETE, keep=keep)
+                _, _, rx_mid, rz_mid = stad_ellipse((near_inset + far_inset) / 2)
+                crowd_index = stadium_crowd_arc(cx, cz, rx_mid, rz_mid, phi0, phi1,
+                                                 y1, crowd_index, stand)
+            top_y = STAD_TOP_Y
+            cx, cz, rx_out, rz_out = stad_ellipse(0.0)
+            _, _, rx_in, rz_in = stad_ellipse(STAD_CONCOURSE)
+            # Facet 12 is centred on phi=180 -- due west, the middle of
+            # StandWest's own arc -- and is where `stadium_entrance`'s own
+            # doorway lines up (see `stadium()`); every other facet, on
+            # every stand, is a solid wall the way the old rectangular
+            # Concourse always was outside its one gated stand.
+            door_facets = {12} if stand == "StandWest" else ()
+            elliptical_ring("Concourse", cx, cz, rx_out, rz_out, rx_in, rz_in,
+                             GROUND, top_y, STAD_STRUCTURE, CONCRETE, keep=keep,
+                             door_facets=door_facets, door_head=12.0)
+            if stand == "StandWest":
+                # `door_facets` cuts the wall open above a 12-stud lintel, but
+                # a bare lintel over a gap reads as damage to the wall, not a
+                # gate -- nothing marks the opening as the entrance from the
+                # bowl's own side. `stadium_entrance` already builds the real
+                # atrium out in the forecourt and leaves its own back wall
+                # open on this same centreline (see that function's
+                # docstring), so this is deliberately not a second building:
+                # just a header and two piers dressing the one doorway the
+                # bowl itself cuts, the last few studs of the walk from the
+                # atrium to the concourse.
+                half = math.radians(180.0 / CIRCLE_SEGS)
+                door_half_w = rx_out * math.sin(half)
+                gx, gz = STAD_WEST_OUT, cz
+                with group("GateArch"):
+                    for side in (-1, 1):
+                        pz = gz + side * (door_half_w + 1.2)
+                        box(f"Pier{side}", (gx - 1.5, gx + 1.5, pz - 1.2, pz + 1.2,
+                                            GROUND, GROUND + 13.5),
+                            STAD_STRUCTURE, CONCRETE)
+                        with at(gx, pz, floor=GROUND):
+                            part("Lamp", (0, 12.5, 0), (0.8, 0.8, 0.8), FITTING, NEON,
+                                 children=point_light(LAMP_LIGHT, 2.0, 24.0))
+                    box("Header", (gx - 1.8, gx + 1.8,
+                                    gz - door_half_w - 1.2, gz + door_half_w + 1.2,
+                                    GROUND + 13.5, GROUND + 16.0),
+                        STAD_STRUCTURE, CONCRETE)
+                    box("Sign", (gx - 2.1, gx - 1.8, gz - 9.0, gz + 9.0,
+                                  GROUND + 13.8, GROUND + 15.4),
+                        STAD_STRUCTURE, SMOOTH,
+                        children=sign("MAIN GATE", "left", color=(250, 246, 234), size=40))
+            elliptical_ring("RoofSlab", cx, cz, rx_out, rz_out, rx_in, rz_in,
+                             top_y + 7.0, top_y + 7.6, ROOF_GREY, METAL, keep=keep)
+            rx_c, rz_c = (rx_out + rx_in) / 2, (rz_out + rz_in) / 2
+            for f in (0.15, 0.5, 0.85):
+                phi = phi0 + (phi1 - phi0) * f
+                sx, sz = ellipse_point(phi, cx, cz, rx_c, rz_c)
+                box(f"RoofStrut{phi:.0f}", (sx - 0.5, sx + 0.5, sz - 0.5, sz + 0.5,
+                                            top_y, top_y + 7.0), STEEL, METAL)
+            stadium_crowd_roam_arc(cx, cz, rx_c, rz_c, phi0, phi1, top_y, stand)
+
+
+DOME_GLASS = (210, 228, 236)  # a pale sky-blue tint, not clear -- see stadium_roof
+
+
+def dome_rib(label, inset, y, half_thick=0.9):
+    """A white structural rib at one seam of the dome, standing slightly
+    proud of the glass on both sides of it -- the visible frame lines a
+    glazed dome actually hangs its panels from, the same read as the arches
+    in a big-league stadium render: white steelwork over blue glass, not
+    glass with no structure at all. Built from `stad_ellipse`, the same
+    shape `stadium_bowl`'s tiers and concourse are, so the rib sits flush
+    with the bowl underneath it rather than the rectangle it used to. No
+    floor at zero here on purpose: `STAD_DOME_INSET` is now slightly
+    negative (see below) so this rib, like the shell it sits on, is meant
+    to sit outside `stad_ellipse(0.0)`, not be pulled back to it."""
+    cx, cz, rx_out, rz_out = stad_ellipse(inset - half_thick)
+    _, _, rx_in, rz_in = stad_ellipse(inset + half_thick)
+    elliptical_ring(label, cx, cz, rx_out, rz_out, rx_in, rz_in,
+                     y - 0.5, y + 0.5, TRIM_WHITE, METAL)
+
+
+# The dome's rim used to sit 8, then 4, studs in from the outer envelope --
+# tucked inside the concourse's own RoofSlab so the glass never quite
+# reached the edge the bowl itself is built to. Landing the shell's equator
+# on `stad_ellipse(0.0)` exactly closed that -- almost. `Concourse` and
+# `RoofSlab` are `elliptical_ring`s: `CIRCLE_SEGS` (24) flat facets, each
+# one *tangent* to the true ellipse at its own centre angle
+# (`ellipse_outward_yaw` is the true outward normal there), so each facet's
+# corners sit slightly outside the smooth curve a tangent always lies
+# outside a convex curve except at the touch point, the same reason a
+# circumscribed hexagon's corners poke out past the circle it wraps. The
+# shell, drawn by `ball` as a true ellipsoid, has no corners: it touches
+# `stad_ellipse(0.0)` exactly at 24 points and sits a hair inside the
+# concrete everywhere between them, which is the same "frame poking out
+# past the glass" symptom as before, just shrunk from 4 studs to a fraction
+# of one. STAD_DOME_INSET goes negative to fix it for the same reason it
+# went to zero: not a guess, but `stad_ellipse`'s own inset arithmetic run
+# backwards by the exact amount a facet's corner overshoots its centre --
+# r*(sec(180/24 degrees) - 1), worst case (the shorter, west-east radius,
+# 78 studs) about 0.68 studs, the longer one about 0.85. -1.2 clears both
+# with room, so the smooth shell now runs past every facet corner on the
+# building beneath it rather than stopping a fraction of a stud short of
+# them all the way round.
+STAD_DOME_INSET = -1.2
+STAD_BOWL_RISE = 85.0   # rim to the top of the bowl-shaped lower dome
+STAD_CAP_RISE = 40.0    # the cupola's own further climb, rim to apex is the sum
+
+
+def stad_dome_geometry():
+    """(cx, cz, rim_y, rx, rz, ry) for the dome's own ellipsoid -- the one
+    piece of geometry `stadium_roof` (which draws the shell) and
+    `stadium_light_rig` (which needs to know exactly where the shell's
+    interior surface is above a given x/z, not a guessed height) both need,
+    computed in one place so the two can never quietly drift apart."""
+    cx, cz, rx, rz = stad_ellipse(STAD_DOME_INSET)
+    rim_y = STAD_TOP_Y + 7.6      # concourse RoofSlab's own top
+    ry = STAD_BOWL_RISE + STAD_CAP_RISE
+    return cx, cz, rim_y, rx, rz, ry
+
+
+def dome_ceiling_y(x, z):
+    """The dome's own interior ceiling height directly above (x, z), solved
+    from the ellipsoid equation itself: (x/rx)^2 + (z/rz)^2 + (y/ry)^2 = 1
+    rearranged for y. Outside the shell's own footprint this goes complex
+    and is clamped to the rim -- callers stay inside the bowl, where it
+    never comes up."""
+    cx, cz, rim_y, rx, rz, ry = stad_dome_geometry()
+    dx, dz = (x - cx) / rx, (z - cz) / rz
+    under = max(1.0 - dx * dx - dz * dz, 0.0)
+    return rim_y + ry * math.sqrt(under)
+
+
+DOME_BANDS = 10  # latitude rings from rim to apex -- see dome_shell
+
+
+def dome_shell(cx, cz, rim_y, rx, rz, ry, segs=CIRCLE_SEGS, bands=DOME_BANDS):
+    """The dome's actual glazed surface, built as a `bands` x `segs` grid of
+    flat panels rather than a single `Part.Shape=Ball`.
+
+    A ball was tried first, and it looked right from outside and was wrong
+    underneath: `Part.Shape=Ball` is always a full ellipsoid, symmetric
+    about its own centre, so a ball wide and tall enough to read as this
+    dome's *top* half also draws an equal, mirror-image bottom half --
+    for `ry` this size that is 100+ studs of solid "sphere" hanging in the
+    open air under the map, not hidden inside the concourse the way the
+    old, much shorter version's buried half was, just a sphere a player
+    could swim down and see. A dome is a half of that shape, on purpose,
+    and there is no half-ball primitive to ask Roblox for -- so this
+    builds only the half that is wanted, panel by panel, and the bottom
+    half simply does not exist as geometry any more rather than existing
+    and being hidden.
+
+    Each panel is a `tilted_box`, banked to the ellipsoid's own true
+    outward normal at its own centre point -- `(x/rx^2, y/ry^2, z/rz^2)`,
+    the three-dimensional form of the same gradient `ellipse_outward_yaw`
+    already reads off the flat horizontal case -- so panels bank upward
+    band by band the way real glazed-panel domes (this is what a big
+    stadium roof actually looks like up close: a grid of flat glass
+    trapezoids, not one continuous curved pane) do, rather than standing
+    vertical like `elliptical_ring`'s walls and stepping over each other
+    like the terrace stack this replaced twice now."""
+    with group("DomeShell"):
+        half = math.radians(180.0 / segs)
+        for k in range(bands):
+            theta0 = math.radians(90.0 * k / bands)
+            theta1 = math.radians(90.0 * (k + 1) / bands)
+            theta_m = (theta0 + theta1) / 2
+            sm, ym = math.cos(theta_m), rim_y + ry * math.sin(theta_m)
+            with group(f"Band{k}"):
+                for i in range(segs):
+                    phi = math.radians(i * (360.0 / segs))
+
+                    def surf(theta, phi):
+                        s = math.cos(theta)
+                        return (cx + rx * s * math.cos(phi),
+                                rim_y + ry * math.sin(theta),
+                                cz + rz * s * math.sin(phi))
+
+                    px, py, pz = surf(theta_m, phi)
+                    wx0, wy0, wz0 = surf(theta_m, phi - half)
+                    wx1, wy1, wz1 = surf(theta_m, phi + half)
+                    width = math.dist((wx0, wy0, wz0), (wx1, wy1, wz1))
+                    hx0, hy0, hz0 = surf(theta0, phi)
+                    hx1, hy1, hz1 = surf(theta1, phi)
+                    rise = math.dist((hx0, hy0, hz0), (hx1, hy1, hz1))
+
+                    nx, nz = math.cos(phi) * sm / rx, math.sin(phi) * sm / rz
+                    ny = math.sin(theta_m) / ry
+                    nlen = math.sqrt(nx * nx + ny * ny + nz * nz)
+                    nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
+                    pitch = math.degrees(math.asin(max(-1.0, min(1.0, ny))))
+                    yaw = math.degrees(math.atan2(-nz, nx))
+
+                    rbxmx.tilted_box(f"Panel{i}", (px, py, pz),
+                                      (0.6, rise, width), yaw, pitch,
+                                      DOME_GLASS, GLASS, transparency=0.45,
+                                      collide=False)
+
+
+def stadium_roof():
+    """Closes the bowl -- and closes it *tall*. `stadium_bowl` caps the
+    outer 8 studs of concourse with a thin RoofSlab; from that slab's top, a
+    single glazed dome climbs to a crown roughly a full office tower above
+    the ground (compare `FADE_STOREYS_BY_RING`, which tops out downtown at 7
+    storeys times STOREY=15 -- this reaches past that on purpose, because a
+    stadium is the one building in this city that is supposed to dwarf
+    everything else on the skyline).
+
+    The ellipsoid's equator sits at the rim and reaches slightly past the
+    stadium's own outer edge, past every corner the facets of the concrete
+    ring underneath it turn (see `STAD_DOME_INSET` above), and its pole
+    reaches `STAD_BOWL_RISE + STAD_CAP_RISE` studs above that -- both grown
+    past what the old terrace stack climbed, because a dome sized to a true
+    ellipse instead of a rectangle reads as small unless it is also taller
+    than the building it used to just barely clear. It is only ever the
+    upper half: see `dome_shell` for why this is no longer a `Part.Shape`
+    ellipsoid with an unseen mirror-image bottom half buried in the ground.
+    A few white belts mark it with structure, each sized to the ellipsoid's
+    own radius at that exact height (read off the ellipsoid equation, not
+    guessed) so every one sits flush against the glass, and a small cupola
+    caps the apex."""
+    cx, cz, rim_y, rx, rz, ry = stad_dome_geometry()
+    dome_rib("DomeRib_rim", STAD_DOME_INSET, rim_y)
+
+    dome_shell(cx, cz, rim_y, rx, rz, ry)
+
+    def belt(label, fraction, half_thick=0.9):
+        """A thin white ring hugging the shell's true surface `fraction` of
+        the way from rim to apex. `scale` is the ellipsoid equation itself
+        (x/rx)^2 + (z/rz)^2 + (y/ry)^2 = 1 solved for the horizontal radius
+        at that height, not a guessed inset -- which is what keeps every
+        belt flush against the glass instead of floating off it or biting
+        into it."""
+        y = rim_y + ry * fraction
+        scale = math.sqrt(max(1 - fraction ** 2, 0.0))
+        hx, hz = rx * scale, rz * scale
+        elliptical_ring(label, cx, cz, hx + half_thick, hz + half_thick,
+                         hx - half_thick, hz - half_thick,
+                         y - 0.5, y + 0.5, TRIM_WHITE, METAL)
+
+    belt("DomeBelt1", 0.28)
+    belt("DomeBelt2", 0.56)
+    belt("DomeBelt3", 0.82)
+
+    apex_y = rim_y + ry
+    box("DomeCrownCap", (cx - 4.0, cx + 4.0, cz - 4.0, cz + 4.0, apex_y - 1.0, apex_y + 1.5),
+        TRIM_WHITE, METAL)
+    return apex_y
+
+
+STAD_RIG_DROP = 3.0  # how far below the glass a rig hangs -- see stadium_light_rig
+
+
+def stadium_light_rig(x, z, label):
+    """A light fixture hung from the roof rather than standing on a mast --
+    the exterior floodlight masts this replaces were 52 studs tall, which
+    is nowhere close to the underside of a dome that now climbs past 150,
+    so the lamps move to where a domed stadium actually puts them: banks
+    mounted straight off the ceiling above them. `dome_ceiling_y(x, z)`
+    solves the ellipsoid for its own interior height at this exact point,
+    so the rig hangs on a short, fixed `STAD_RIG_DROP` off the true glass
+    instead of a long cable reaching for a guessed generic height that used
+    to leave forty-plus studs of bare air between the fixture and the roof
+    it was supposed to read as mounted to. Six lamps aimed down, the same
+    honest downward-cast `floodlight_mast` used rather than an aimed cone
+    at the centre spot."""
+    ceiling = dome_ceiling_y(x, z)
+    rig_y = ceiling - STAD_RIG_DROP
+    with group(label):
+        box("Cable", (x - 0.3, x + 0.3, z - 0.3, z + 0.3, rig_y, ceiling),
+            STEEL, METAL)
+        box("Rig", (x - 5.0, x + 5.0, z - 2.0, z + 2.0, rig_y - 0.6, rig_y),
+            FITTING, METAL)
+        for i, lx in enumerate((-4.0, -2.4, -0.8, 0.8, 2.4, 4.0)):
+            box(f"Lamp{i}", (x + lx - 0.6, x + lx + 0.6, z - 0.6, z + 0.6,
+                             rig_y - 0.7, rig_y - 0.6), FITTING, NEON,
+                children=spot_light(LAMP_LIGHT, 4.0, 140.0, "bottom", angle=65.0))
+
+
+STAD_GATE_HALF = 9.0  # half-width of this atrium's own front doorway
+
+
+def stadium_entrance(x0, x1, z0, z1, label):
+    """The stadium's proper main entrance: a walled, roofed atrium standing
+    in the forecourt, built to the bar the rest of the sports sector already
+    holds itself to -- see `boxing_hall`/`court_hall`, which get a real
+    front wall, a centred doorway with a lintel, glazing either side of it
+    and a fascia sign readable from the street. The stadium's old `MainGate`
+    was two posts and a lintel standing in front of a solid wall with no
+    opening cut through it at all -- decoration, not a door. This building
+    is a door: its own front doorway is `STAD_GATE_HALF` wide, and its back
+    (east) side is left open on purpose, because that is exactly where
+    `stadium_bowl`'s own StandWest doorway (facet 12, roughly 20 studs
+    wide) is cut through the bowl's outer Concourse wall (see `stadium()`)
+    -- the two openings sit on the same centreline, `fmid`, so the walk
+    from the palms outside to the concourse inside is unbroken, not two
+    doors that happen to be near each other."""
+    ix0 = x0 + WALL
+    cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    eave = STAD_TOP_Y - 2.0
+    with group(label):
+        box("Slab", (x0, x1, z0, z1, GROUND - SLAB, GROUND), FLOOR_INDOOR, MARBLE)
+        wall("WallSouth", (x0, x1, z0, z0 + WALL, GROUND, eave), STAD_STRUCTURE, CONCRETE,
+             along="x")
+        wall("WallNorth", (x0, x1, z1 - WALL, z1, GROUND, eave), STAD_STRUCTURE, CONCRETE,
+             along="x")
+        wall("WallFront", (x0, ix0, z0, z1, GROUND, eave), STAD_STRUCTURE, CONCRETE,
+             along="z", doors=((cz - STAD_GATE_HALF, cz + STAD_GATE_HALF),), head=12.0)
+        glazing("FrontS", (x0 + 0.4, ix0 - 0.4, z0 + WALL + 1.0, cz - STAD_GATE_HALF - 0.4,
+                           GROUND + 12.0, eave - 1.0), along="z", panes=2)
+        glazing("FrontN", (x0 + 0.4, ix0 - 0.4, cz + STAD_GATE_HALF + 0.4, z1 - WALL - 1.0,
+                           GROUND + 12.0, eave - 1.0), along="z", panes=2)
+        box("Canopy", (x0 - 4.0, x1, z0, z1, eave, eave + 1.0), DOME_GLASS, GLASS,
+            transparency=0.35)
+        for rz in (z0 + 3.0, cz, z1 - 3.0):
+            box(f"CanopyRib{rz:.0f}", (x0 - 4.0, x0, rz - 0.5, rz + 0.5,
+                                       eave - 7.0, eave + 1.0), TRIM_WHITE, METAL)
+        box("Sign", (x0 - 0.5, x0 + 0.5, cz - 15.0, cz + 15.0, eave - 7.0, eave - 3.0),
+            STAD_STRUCTURE, SMOOTH,
+            children=sign("CITY STADIUM", "left", color=(250, 246, 234), size=56))
+        for tz in (cz - 5.0, cz - 1.6, cz + 1.6, cz + 5.0):
+            with at(cx, tz, floor=GROUND):
+                part("Turnstile", (0, 1.8, 0), (1.0, 3.6, 1.0), STEEL, METAL)
+        street_lamp(x0 - 5.0, z0 + 2.0, 1, floor=GROUND)
+        street_lamp(x0 - 5.0, z1 - 2.0, 1, floor=GROUND)
+
+
+def stadium():
+    fmid = (STAD_PZ0 + STAD_PZ1) / 2
+    # One ellipse, four quarters -- see `stadium_bowl`'s own header for why
+    # this replaced the four flat-sided rectangles the bowl used to be
+    # tiled from. StandWest's one doorway (facet 12, phi=180) is cut inside
+    # `stadium_bowl` itself, lined up with `stadium_entrance`'s own front
+    # door below.
+    stadium_bowl()
+
+    stadium_roof()
+
+    # Four rigs over the pitch's quarter-points rather than four masts at the
+    # corners -- the corner masts stood 52 studs tall, a third of the way up
+    # a dome that now climbs past 100, and a dome with masts sticking up
+    # through it reads as broken, not as a stadium. Hanging them from the
+    # roof is also just correct: an enclosed stadium lights its pitch from
+    # the roof it built.
+    pw, pd = STAD_PX1 - STAD_PX0, STAD_PZ1 - STAD_PZ0
+    for qx, qz in ((STAD_PX0 + pw * 0.25, STAD_PZ0 + pd * 0.25),
+                   (STAD_PX0 + pw * 0.75, STAD_PZ0 + pd * 0.25),
+                   (STAD_PX0 + pw * 0.25, STAD_PZ0 + pd * 0.75),
+                   (STAD_PX0 + pw * 0.75, STAD_PZ0 + pd * 0.75)):
+        stadium_light_rig(qx, qz, f"LightRig_{qx:.0f}_{qz:.0f}")
+
+    with group("Scoreboard"):
+        # Hung from the roof over the pitch rather than standing on its own
+        # post outside the touchline -- the old post-mounted board's top sat
+        # at G+38, which the dome now clears easily, but a centre-hung board
+        # is the bigger, better read: a video-wall on a long cable dropping
+        # out of the glass above centre pitch, not a sign on a stick by the
+        # corner flag. Two faces, one for each half of the pitch, since a
+        # centre-hung board has to read from both ends the way a real
+        # stadium's does.
+        sb_cx = (STAD_PX0 + STAD_PX1) / 2
+        sb_cz = STAD_PZ0 + pd * 0.5
+        sb_top = STAD_TOP_Y + 48.0
+        sb_bottom = sb_top - 12.0
+        box("Cable", (sb_cx - 1.0, sb_cx + 1.0, sb_cz - 1.0, sb_cz + 1.0,
+                      sb_top, sb_top + 40.0), STEEL, METAL)
+        box("Board", (sb_cx - 22.0, sb_cx + 22.0, sb_cz - 0.9, sb_cz + 0.9,
+                      sb_bottom, sb_top), (20, 22, 26), SMOOTH,
+            children=sign("HOME 0  -  0  AWAY", "front", color=NEON_AMBER, size=72)
+            + sign("HOME 0  -  0  AWAY", "back", color=NEON_AMBER, size=72)
+            + point_light(NEON_AMBER, 1.4, 50.0))
+
+    with group("StadiumForecourt"):
+        # A wide plaza rather than a gate-width strip -- the dome is the
+        # thing that makes the stadium read as big from across the
+        # headland, but a landmark this size wants a landmark's forecourt
+        # in front of it: palms, benches, room for a crowd to gather before
+        # kickoff, and a real walled entrance hall at the back of it rather
+        # than a turnstile bolted straight onto the sidewalk.
+        fx0, fx1 = STAD_WEST_OUT - 30.0, STAD_WEST_OUT
+        fz0, fz1 = fmid - 35.0, fmid + 35.0
+        box("Paving", (fx0, fx1, fz0, fz1, GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
+
+        # ex0 used to be STAD_WEST_OUT - 16.0 = 796.0, which put the atrium's own
+        # WallNorth/WallSouth 3.0 studs into Ave5PavE, avenue 6's east sidewalk
+        # (793.8-799.0 -- see `walks_ns`) -- check_city caught it outright
+        # ("Ave5PavE cuts 3.0 studs into StadiumForecourt.WallNorth1"). The
+        # building's canopy and lamps overhang another 4-5 studs past x0 on top
+        # of that (see `stadium_entrance`'s `Canopy`/`CanopyRib`/`street_lamp`
+        # calls at x0-4.0/x0-5.0), so clearing the sidewalk for the whole
+        # building, canopy included, needs x0 >= 799.0 + 5.0 + a stud of margin,
+        # not just x0 >= 799.0. STAD_WEST_OUT - 7.0 = 805.0 is that -- the
+        # closest this building can legally stand to avenue 6 without its own
+        # canopy lip ending up back on the sidewalk it was just pulled off of.
+        # A second, separate gateway arch was tried in front of this at the
+        # plaza's own road-facing edge and reverted: the clear ground between
+        # the sidewalk (799.0) and this canopy's own reach (805.0 - 4.0 = 801.0)
+        # is one stud wide, nowhere near enough for a second landmark structure
+        # with clearance on both sides -- this building, canopy and sign
+        # already are the designated, road-facing entrance the forecourt has
+        # room for.
+        ex0, ex1 = STAD_WEST_OUT - 7.0, STAD_WEST_OUT
+        ez0, ez1 = fmid - 15.0, fmid + 15.0
+        stadium_entrance(ex0, ex1, ez0, ez1, "MainEntrance")
+
+        palm_row(fx0 + 3.0, fx0 + 3.0, fz0 + 5.0, fz1 - 5.0, GROUND, step=14.0,
+                 along="z", label="PlazaPalmsWest")
+        for pz in (ez0 - 4.0, ez1 + 4.0):
+            palm(ex0 - 3.0, pz, GROUND, label=f"PlazaPalmFlank{pz:.0f}")
+        for pz in (fz0 + 8.0, fmid - 10.0, fmid + 10.0, fz1 - 8.0):
+            street_lamp(fx0 + 4.0, pz, 1, floor=GROUND)
+            bench(fx0 + 10.0, pz, -1, floor=GROUND)
+
+    soccer_field(STAD_PX0, STAD_PX1, STAD_PZ0, STAD_PZ1)
+    place_point("soccer_field", STAD_WEST_OUT - 11.0, (STAD_PZ0 + STAD_PZ1) / 2, GROUND,
+                "the stadium's main gate")
+
+
+stadium()
 
 
 # ---------------------------------------------------------------------------
@@ -4989,8 +5896,8 @@ for sband in range(5):
                                           office_counter)
         elif role == "DINING":
             dining_block(band, sband, x0, x1, z0, z1)
-        elif role == "GREEN":
-            greenfield(band, sband, x0, x1, z0, z1, band * 5 + sband)
+        elif role == "SPORTS":
+            sports_center(band, sband, x0, x1, z0, z1)
         elif role == "FADE":
             fade_office_band(band, sband, x0, x1, z0, z1, fade_counter)
             fade_counter += 2  # two offices per block

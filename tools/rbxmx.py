@@ -292,6 +292,27 @@ def box(name, bounds, color, material=SMOOTH, transparency=0.0, collide=True,
           color, material, transparency, collide, 1, tags, attrs, children)
 
 
+def ball(name, center, size, color, material=SMOOTH, transparency=0.0, collide=True,
+         tags=None, attrs=None, children=""):
+    """A world-space ellipsoid (`Part.Shape` = Ball), centre and full size --
+    the same size convention as `spun_box`, diameters rather than radii, so a
+    caller measuring one against a `box()` next to it is comparing like units.
+
+    Non-uniform size renders as a smooth ellipsoid, not a sphere stretched to
+    fit -- which is what lets one part be shaped to a rectangular footprint
+    instead of a circle dropped over it. Identity rotation, the same
+    `_TURN_MATRIX[0]` `box()` already uses: a ball looks the same rotated or
+    not, so there is no rotation-matrix arithmetic to get wrong here the way
+    there would be for a tilted panel, which is why this is the shape the
+    stadium's dome is built from (see `stadium_roof` in gen_city.py) rather
+    than a stack of raked box terraces trying to approximate the same curve.
+    """
+    cx, cy, cz = center
+    sx, sy, sz = size
+    _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), _TURN_MATRIX[0],
+          color, material, transparency, collide, 0, tags, attrs, children)
+
+
 def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
              collide=True, tags=None, attrs=None, children=""):
     """A world-space box spun `yaw` degrees about Y, given centre-and-size.
@@ -324,6 +345,40 @@ def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
           color, material, transparency, collide, 1, tags, attrs, children)
 
 
+def tilted_box(name, center, size, yaw, pitch, color, material=SMOOTH,
+                transparency=0.0, collide=True, tags=None, attrs=None,
+                children=""):
+    """A world-space box spun `yaw` degrees about Y like `spun_box`, and then
+    banked `pitch` degrees so its own local X axis (depth/outward) climbs
+    toward local Y (up) -- the panel this file reaches for when a surface is
+    curved in *two* directions at once, not one, which `spun_box`'s single
+    rotation cannot reach (its local X always stays level). Built for the
+    stadium's dome (see `dome_shell` in gen_city.py): a lat/long grid of
+    these, each banked to its own point's true surface normal, is what a
+    dome actually is with box primitives -- the panels of a faceted glass
+    roof, not a stepped terrace stack and not a full sphere half-buried
+    for the sake of a smooth top half no primitive here can cut in two.
+
+    At pitch=0 this is exactly `spun_box`; the two are meant to agree there,
+    since `pitch` composes as a second rotation about the *already-yawed*
+    local Z axis (width, tangential) -- the axis a dome panel's own row and
+    column both hold fixed as it banks from the rim toward the pole.
+    """
+    cx, cy, cz = center
+    sx, sy, sz = size
+    yr, pr = math.radians(yaw), math.radians(pitch)
+    cy_, sy_ = math.cos(yr), math.sin(yr)
+    cp, sp = math.cos(pr), math.sin(pr)
+    r00, r10, r20 = cp * cy_, sp, -cp * sy_
+    r01, r11, r21 = -sp * cy_, cp, sp * sy_
+    r02, r12, r22 = sy_, 0.0, cy_
+    rot = (f"<R00>{r00}</R00><R01>{r01}</R01><R02>{r02}</R02>"
+           f"<R10>{r10}</R10><R11>{r11}</R11><R12>{r12}</R12>"
+           f"<R20>{r20}</R20><R21>{r21}</R21><R22>{r22}</R22>")
+    _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
+          color, material, transparency, collide, 1, tags, attrs, children)
+
+
 def point_light(color, brightness, rng, name="Glow"):
     r, g, b = [c / 255 for c in color]
     return f'''<Item class="PointLight" referent="{_next_ref()}">
@@ -332,6 +387,35 @@ def point_light(color, brightness, rng, name="Glow"):
 <Color3 name="Color"><R>{r}</R><G>{g}</G><B>{b}</B></Color3>
 <float name="Brightness">{brightness}</float>
 <float name="Range">{rng}</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>'''
+
+
+def spot_light(color, brightness, rng, face, angle=90.0, name="Spot"):
+    """A directional cone, cast from one face of whatever part it is nested in
+    (`children=spot_light(...)`) via `box`/`part`'s own `children` parameter --
+    the same way a `PointLight` is hung off a fitting in `point_light` above.
+
+    `face` is one of the strings in the module-level `FACE` map (`"front"`,
+    `"bottom"`, ...), not a raw NormalId, so a floodlight is written the same
+    way a sign's face is: by which way the part is turned, not by a number
+    that means nothing without this file open beside it. Everything in this
+    codebase that needs a cone rather than a glow -- a stadium floodlight
+    aimed down at a pitch, a headlamp aimed along a road -- casts from a
+    fitting's own face rather than carrying a separate aim vector, because a
+    part already has a face pointed the right way once it is placed.
+    """
+    r, g, b = [c / 255 for c in color]
+    return f'''<Item class="SpotLight" referent="{_next_ref()}">
+<Properties>
+<string name="Name">{html.escape(name)}</string>
+<Color3 name="Color"><R>{r}</R><G>{g}</G><B>{b}</B></Color3>
+<float name="Brightness">{brightness}</float>
+<float name="Range">{rng}</float>
+<float name="Angle">{angle}</float>
+<token name="Face">{FACE[face]}</token>
 <bool name="Shadows">true</bool>
 <bool name="Enabled">true</bool>
 </Properties>
