@@ -5294,12 +5294,14 @@ STAD_TOP_Y = GROUND + STAD_TIERS * STAD_RISE  # top of the highest seating tier
 # Growing every side equally can't fix this and stay on the headland -- see
 # below -- so the bowl is not centred on the pitch any more. East, south and
 # north each grow independently, as far as they can before their own real
-# obstacle, found by search over all three for the combination that leaves
-# the least of the pitch rectangle inside any tier's inner boundary:
+# obstacle, found by search over all three for the combination that clears
+# the pitch rectangle with the bowl's own centre kept as close as possible
+# to the pitch's -- see below for why exact centring and full clearance
+# cannot both be had:
 STAD_WEST_OUT = 812.0    # unchanged -- see why, below
 STAD_EAST_OUT = 976.0    # 19 studs clear of the headland shore at 995 (was 968.0)
 STAD_SOUTH_OUT = 411.0   # 3 studs clear of the wp_bay_head_s crossing at 408 (was 417.0)
-STAD_NORTH_OUT = 650.0   # 50 studs clear of the running track at 700 (was 613.0)
+STAD_NORTH_OUT = 619.0   # 81 studs clear of the running track at 700 (was 613.0)
 # West does not move. `StadiumForecourt`'s `MainEntrance` sits directly
 # against this wall (`ex1 = STAD_WEST_OUT`, see below) and needs the 12
 # studs between it and avenue 6's sidewalk at 799 that it already has at
@@ -5309,20 +5311,30 @@ STAD_NORTH_OUT = 650.0   # 50 studs clear of the running track at 700 (was 613.0
 # glued to this wall by design, on the one side of the bowl that faces a
 # road at all.
 #
-# With west locked, the search's own floor is 3 facets, not 0 -- the two
-# innermost tiers each keep one corner point a few studs inside the
-# south-west corner of the pitch (worst case 7.9 studs past the touchline,
-# on a tier 6 studs deep) no matter how far east/south/north grow, because
-# that corner is exactly where the fixed west wall and the pitch's own
-# corner are closest. Growing past the buffers above only spends headroom
-# on the other three sides without moving that number; 3 facets out of 120
-# across the whole bowl, all at one corner seam between StandWest and
-# StandSouth, reads as the stand meeting the corner flag, not as a stand
-# cutting through the pitch the way the old symmetric bowl did across all
-# four corners at once. The pitch itself (`STAD_PX0`..`STAD_PZ1`) stays its
-# current 70x110: lengthening it only tightens the 3-stud south buffer
-# above and a search over pitch lengths found no improvement available by
-# growing it, only less room to work with.
+# With west locked, the bowl's own centre cannot sit on the pitch's on both
+# axes and still clear every facet: pushing east out (`STAD_EAST_OUT`) to
+# grow the bowl in x necessarily drags the centre east with it, since west
+# holds still. `STAD_SOUTH_OUT`/`STAD_NORTH_OUT` have no such obstacle,
+# though, so they are picked to put the bowl's centre exactly on the
+# pitch's own centre line in z (`(411+619)/2 == (STAD_PZ0+STAD_PZ1)/2`,
+# both 515) -- the court sits in the middle of the bowl north-to-south,
+# which is the axis a stand looks square down and any drift off centre
+# reads immediately. The 4-stud drift that is left is entirely in x, where
+# it is far less visible looking down the pitch, and is the one axis this
+# file cannot buy back without moving the entrance wall.
+#
+# The trade for exact z-centring is a slightly larger residual than the
+# tightest possible bowl (which found 3 facets by letting z drift 15.5
+# studs off-centre instead): with the centre held on the pitch's own
+# line, 6 of the 120 tier facets still land a few studs inside the pitch,
+# split evenly between the two corners nearest the fixed west wall (worst
+# case 7.9 studs past the touchline, on a tier 6 studs deep) -- the same
+# corners a real stand would come closest to squaring off, not a stand
+# cutting through the pitch the way the old symmetric-but-undersized bowl
+# did across all four corners at once. The pitch itself (`STAD_PX0`..
+# `STAD_PZ1`) stays its current 70x110: lengthening it only tightens the
+# 3-stud south buffer above, and a search over pitch lengths found no
+# improvement available by growing it, only less room to work with.
 
 STAD_SEATS = [(178, 46, 46), (210, 210, 214)]   # home red, alternating with a pale away band
 STAD_STRUCTURE = CONCRETE_GREY
@@ -5399,11 +5411,13 @@ def stad_ellipse(inset):
     `inset_rect`, and the one shape the bowl's tiers, its concourse and its
     dome are all built from, so they stay concentric and actually match
     each other. `STAD_WEST_OUT`..`STAD_NORTH_OUT` are no longer symmetric
-    around the pitch (see the corner-clearance comment above them), so this
-    ellipse's centre has shifted off the pitch's own centre -- east and
-    north, toward the sides that had room to grow -- rather than the pitch
-    sitting exactly in the middle of the bowl. Every real caller stays
-    inside STAD_GAP..STAD_MARGIN."""
+    around the pitch (see the corner-clearance comment above them): the
+    fixed west wall drags this ellipse's centre 4 studs east of the pitch's
+    own, but `STAD_SOUTH_OUT`/`STAD_NORTH_OUT` have no such obstacle and are
+    chosen so the centre sits exactly on the pitch's own line in z -- the
+    court is centred north-south, the axis that actually reads as centred
+    from pitch level, with only the smaller, harder-to-see x drift left.
+    Every real caller stays inside STAD_GAP..STAD_MARGIN."""
     cx = (STAD_WEST_OUT + STAD_EAST_OUT) / 2
     cz = (STAD_SOUTH_OUT + STAD_NORTH_OUT) / 2
     return (cx, cz, (STAD_EAST_OUT - STAD_WEST_OUT) / 2 - inset,
