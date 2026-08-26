@@ -25,10 +25,14 @@ export type LifeStageId = "Childhood" | "Adolescence" | "Adulthood" | "Elder" | 
 export type AgeUpCause = "Manual" | "Auto" | "Sync" | "Skip" | "Event" | "Custody"
 
 -- Server's verdict on the Age Up button, so the HUD never invents its own
--- gating rule: Hidden (dead, or a first life still in childhood), Cooldown
--- (too soon), Ready, SkipChildhood (offered instead of Ready before the manual
--- age, once the player has already lived childhood at least once).
-export type ManualAgeUpState = "Hidden" | "Cooldown" | "Ready" | "SkipChildhood"
+-- gating rule: Hidden (dead), Cooldown (too soon, self-directed years),
+-- Ready (self-directed years), SkipChildhood (offered instead of ChildReady
+-- before the manual age, once the player has already lived childhood at
+-- least once), ChildCooldown/ChildReady (the same Ready/Cooldown pair, but
+-- for a first-life toddler year on its own, shorter cooldown -- a distinct
+-- name rather than reusing Ready/Cooldown because the two run different
+-- Config constants and the HUD has to know which one to count down against).
+export type ManualAgeUpState = "Hidden" | "Cooldown" | "Ready" | "SkipChildhood" | "ChildCooldown" | "ChildReady"
 
 -- A partial map: a choice names only the stats it moves.
 export type StatDelta = { [StatName]: number }

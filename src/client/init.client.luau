@@ -177,6 +177,16 @@ local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
 -- already, when the row on the HUD was drawn.
 local currentPerson: PersonState? = nil
 
+-- The key the standing-person panel was last opened under, held the same way
+-- phonePanelKey is (declared further down, next to drawPhonePanel) so the
+-- PersonUpdated handler can tell whether the list it is looking at is still
+-- the one it raised. Without this the panel had no way to close itself: a
+-- player walking out of PEOPLE.ReachStuds or running out of things to ask
+-- ends the chat on the server with no reply text at all, the branch that
+-- closes on a reply never fires, and the list sat on screen with buttons
+-- that clicked and did nothing -- the "can't escape the chat window" bug.
+local personPanelKey: string? = nil
+
 -- The content id of the vault door last clicked, held for exactly one reason: calling a
 -- crew member onto the alarm names which bank, and the click that opens this panel is the
 -- only moment that id is ever in this file. Every other bank remote skips it and lets the
@@ -282,14 +292,16 @@ end)
 prompts:On("Person", function(personId: string)
 	local person = currentPerson
 	if person ~= nil and person.id == personId and #person.offers > 0 then
-		panel:ShowOptions({
+		if panel:ShowOptions({
 			key = personId,
 			prompt = person.name,
 			options = person.offers,
 			choose = function(offerId: string)
 				RequestPersonOfferRemote:FireServer(personId, offerId)
 			end,
-		})
+		}) then
+			personPanelKey = personId
+		end
 		return
 	end
 	RequestPersonContactRemote:FireServer(personId)
@@ -760,6 +772,9 @@ end
 -- workout branch never once ran, and the exact staleness this exists to prevent was live
 -- the whole time. Nothing warns about it. Any key added here has to be declared above.
 panel:OnHidden(function(key: string)
+	if personPanelKey ~= nil and personPanelKey == key then
+		personPanelKey = nil
+	end
 	if phonePanelKey ~= nil and phonePanelKey == key then
 		phonePanelKey = nil
 	end
@@ -1090,6 +1105,10 @@ Remotes.Get("PersonUpdated").OnClientEvent:Connect(function(state: PersonState?)
 	if state ~= nil and state.contact then
 		-- A phone call, not a person in the room: it gets the phone panel rather than
 		-- the standing row, which would otherwise claim somebody is next to you.
+		if personPanelKey ~= nil then
+			panel:CloseOptions(personPanelKey)
+			personPanelKey = nil
+		end
 		drawPhonePanel(state)
 		return
 	end
@@ -1105,6 +1124,16 @@ Remotes.Get("PersonUpdated").OnClientEvent:Connect(function(state: PersonState?)
 	if state ~= nil and state.reply ~= nil then
 		panel:CloseOptions(state.id)
 		SpeechBubble.Show(state.id, state.reply, state.replyGood)
+		personPanelKey = nil
+	end
+	-- Walking out of reach, or running out of things to say, both end the chat on
+	-- the server's side with no reply text at all -- the branch above never fires
+	-- for either one. Closed here instead, keyed so this only ever takes down the
+	-- list this file raised: an event or a gang panel opened over it in the
+	-- meantime is not the standing panel's to close.
+	if personPanelKey ~= nil and (state == nil or state.id ~= personPanelKey or #state.offers == 0) then
+		panel:CloseOptions(personPanelKey)
+		personPanelKey = nil
 	end
 	ui:SetPerson(state)
 end)
@@ -1188,14 +1217,16 @@ end)
 menu:OnPersonTapped(function(personId: string)
 	local person = currentPerson
 	if person ~= nil and person.id == personId and #person.offers > 0 then
-		panel:ShowOptions({
+		if panel:ShowOptions({
 			key = personId,
 			prompt = person.name,
 			options = person.offers,
 			choose = function(offerId: string)
 				RequestPersonOfferRemote:FireServer(personId, offerId)
 			end,
-		})
+		}) then
+			personPanelKey = personId
+		end
 		return
 	end
 	RequestPersonContactRemote:FireServer(personId)
@@ -1351,6 +1382,7 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- being driven by someone who no longer can.
 	vehicles:Set(nil)
 	currentPerson = nil
+	personPanelKey = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil
 	workoutPanelKey = nil

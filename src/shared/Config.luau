@@ -73,6 +73,14 @@ Config.SkipChildhoodMinLives = 1
 -- to do in a year. Safe range: 15-120.
 Config.ManualAgeUpCooldownSeconds = 60
 
+-- The same rate limit, but for the years below ManualAgeUpMinAge. Shorter on
+-- purpose: a toddler year has no shift to work and no lesson to sit, so
+-- holding it to the same 60-second gate as a self-directed year would make
+-- the button a waiting room rather than pacing. 15 still stops it being
+-- spammed birth-to-five in one breath, which is what "SkipChildhood" is for
+-- if a player wants that instead. Safe range: 5-30.
+Config.ChildManualAgeUpCooldownSeconds = 15
+
 -- How often the server banks playtime and refreshes the HUD progress bar.
 -- Safe range: 0.5-5. Lower is smoother but costs one remote per player per
 -- tick; against a 50 minute threshold the bar looks continuous even at 5.

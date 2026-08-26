@@ -330,14 +330,23 @@ local function manualState(data: LifeData, livesLived: number): ManualAgeUpState
 	end
 
 	if not isSelfDirected(data) then
-		-- Childhood is content, not a wait, so a first life plays it through.
-		-- Once it has been lived at least once, skipping it becomes the
-		-- player's call. No cooldown applies: the counter is at zero on a fresh
-		-- life, which is exactly when a returning player wants this button.
+		-- Once childhood has been lived at least once, skipping the rest of it
+		-- in one action becomes the player's call. No cooldown applies: the
+		-- counter is at zero on a fresh life, which is exactly when a
+		-- returning player wants this button, and it takes priority over the
+		-- per-year one below -- somebody who has already chosen "skip" is not
+		-- also asking to click through five separate years to get there.
 		if livesLived >= Config.SkipChildhoodMinLives then
 			return "SkipChildhood"
 		end
-		return "Hidden"
+		-- Below the manual age is still played, not skipped -- see
+		-- ChildManualAgeUpCooldownSeconds -- but there is no shift or lesson to
+		-- sit through in these years, so a player who is done with a toddler
+		-- year is not made to wait out the same clock a working adult does.
+		if data.secondsSinceAgeUp < Config.ChildManualAgeUpCooldownSeconds then
+			return "ChildCooldown"
+		end
+		return "ChildReady"
 	end
 
 	if data.secondsSinceAgeUp < Config.ManualAgeUpCooldownSeconds then
@@ -714,11 +723,10 @@ local function onAgeUpRequested(player: Player)
 		return
 	end
 
-	if state ~= "Ready" then
-		-- Refused: dead, too young for the button, or inside the cooldown.
-		-- Re-push the
-		-- authoritative state so a desynced or hostile client's button
-		-- immediately snaps back to what the server actually allows.
+	if state ~= "Ready" and state ~= "ChildReady" then
+		-- Refused: dead, or inside whichever cooldown applies to this age.
+		-- Re-push the authoritative state so a desynced or hostile client's
+		-- button immediately snaps back to what the server actually allows.
 		pushProgress(player, data)
 		return
 	end

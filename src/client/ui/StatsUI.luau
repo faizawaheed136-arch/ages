@@ -1348,8 +1348,9 @@ function StatsUI.SetAgeUpProgress(self: StatsUIHandle, seconds: number, threshol
 	self.progressFill.Size = UDim2.new(fraction, 0, 1, 0)
 
 	-- Through the early years the year is something happening to the player
-	-- rather than something they end — true whether or not a skip is on offer.
-	local childhood = state == "Hidden" or state == "SkipChildhood"
+	-- rather than something they end — true of the per-year child button as
+	-- much as of the skip, since neither one is a shift or a lesson ending.
+	local childhood = state == "Hidden" or state == "SkipChildhood" or state == "ChildReady" or state == "ChildCooldown"
 	-- The bar names what it fills toward but never how long that takes. The
 	-- threshold is a real-world duration, so showing it both broke the fiction
 	-- and told the player the game would advance itself if they sat still.
@@ -1363,10 +1364,18 @@ function StatsUI.SetAgeUpProgress(self: StatsUIHandle, seconds: number, threshol
 		self.ageUpButton.Text = "Skip Childhood"
 		self.ageUpButton.BackgroundColor3 = SKIP_COLOR
 		self.ageUpButton.TextColor3 = Color3.fromRGB(215, 215, 225)
-	elseif state == "Ready" then
+	elseif state == "Ready" or state == "ChildReady" then
 		self.ageUpButton.Text = "Age Up"
 		self.ageUpButton.BackgroundColor3 = READY_COLOR
 		self.ageUpButton.TextColor3 = Color3.fromRGB(30, 25, 10)
+	elseif state == "ChildCooldown" then
+		-- Same countdown treatment as the adult cooldown below, but against the
+		-- shorter child constant -- reading the adult one here would count down
+		-- from a number four times too long against a bar that fills in 15.
+		local remaining = math.max(0, Config.ChildManualAgeUpCooldownSeconds - seconds)
+		self.ageUpButton.Text = `Age Up ({formatDuration(remaining)})`
+		self.ageUpButton.BackgroundColor3 = COOLDOWN_COLOR
+		self.ageUpButton.TextColor3 = Color3.fromRGB(120, 120, 130)
 	else
 		-- Count the wait down rather than just greying out: at a minute-long
 		-- cooldown an unexplained dead button reads as a bug, not a rule.
