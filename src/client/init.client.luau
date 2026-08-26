@@ -29,6 +29,7 @@ local MenuUI = require(script.ui.MenuUI)
 local Minimap = require(script.ui.Minimap)
 local MapUI = require(script.ui.MapUI)
 local ChapterReel = require(script.ui.ChapterReel)
+local VehicleUI = require(script.ui.VehicleUI)
 local MoneyPop = require(script.world.MoneyPop)
 local BonusPop = require(script.world.BonusPop)
 local MilestoneFlash = require(script.world.MilestoneFlash)
@@ -118,6 +119,7 @@ local savings = SavingsUI.new()
 local menu = MenuUI.new()
 local minimap = Minimap.new()
 local mapSheet = MapUI.new()
+local vehicles = VehicleUI.new()
 local dealerMark = DealerMark.new()
 local chapterReel = ChapterReel.new()
 
@@ -163,6 +165,10 @@ local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor")
 local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
 local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
+local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
+local RequestSellVehicleRemote = Remotes.Get("RequestSellVehicle")
+local RequestSpawnVehicleRemote = Remotes.Get("RequestSpawnVehicle")
+local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -460,6 +466,22 @@ end)
 
 carDealer:OnServe(function()
 	RequestCarDealerServeRemote:FireServer()
+end)
+
+vehicles:OnBuy(function(vehicleId: string)
+	RequestBuyVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnSell(function(vehicleId: string)
+	RequestSellVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnSpawn(function(vehicleId: string)
+	RequestSpawnVehicleRemote:FireServer(vehicleId)
+end)
+
+vehicles:OnStore(function()
+	RequestStoreVehicleRemote:FireServer()
 end)
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
@@ -1101,6 +1123,10 @@ Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarD
 	end
 end)
 
+Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
+	vehicles:Set(state)
+end)
+
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)
 	menu:SetBill(state)
 end)
@@ -1310,6 +1336,11 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- gone what they plan to do next.
 	menu:SetVisible(false)
 	chapterReel:Hide()
+	-- And the showroom, for the same reason: a BUY button under a death notice
+	-- is still a control, and the speedometer is worse than either -- a number
+	-- still climbing under a death screen would be claiming the car is still
+	-- being driven by someone who no longer can.
+	vehicles:Set(nil)
 	currentPerson = nil
 	lessonPanelKey = nil
 	phonePanelKey = nil

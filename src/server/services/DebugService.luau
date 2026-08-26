@@ -57,6 +57,8 @@ local BillService = require(script.Parent.BillService)
 local MilestoneService = require(script.Parent.MilestoneService)
 local GossipService = require(script.Parent.GossipService)
 local HouseService = require(script.Parent.HouseService)
+local VehicleService = require(script.Parent.VehicleService)
+local Vehicles = require(script.Parent.Parent.content.Vehicles)
 local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
 local Hideouts = require(script.Parent.Parent.content.Hideouts)
@@ -2896,6 +2898,69 @@ Commands.house = function(player: Player, args: { string }): string
 	return `houses: {table.concat(owned, ", ")}`
 end
 
+-- The showroom and the garage: buy, sell, bring one out, or put it away.
+--   /car                      show the garage and what is out
+--   /car list                 every car on the lot, price and rating
+--   /car buy <id>             buy a car outright
+--   /car sell <id>            sell one already owned
+--   /car spawn <id>           bring an owned car out of the garage
+--   /car store                put the active car away
+Commands.car = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+
+	if arg == "list" then
+		local rows: { string } = {}
+		for _, kind in Vehicles.All do
+			table.insert(
+				rows,
+				string.format(
+					"%s: %s (top %d, accel %d, steer %d)",
+					kind.id,
+					Money.Format(kind.price),
+					kind.topSpeedStuds,
+					kind.acceleration,
+					kind.steerDegrees
+				)
+			)
+		end
+		return table.concat(rows, "\n")
+	end
+
+	if arg == "buy" then
+		local vehicleId = args[2]
+		if vehicleId == nil then
+			return "usage: /car buy <vehicleId>"
+		end
+		local ok = VehicleService.Buy(player, vehicleId)
+		return ok and `bought {vehicleId}` or `could not buy {vehicleId} -- see the notice on screen`
+	end
+
+	if arg == "sell" then
+		local vehicleId = args[2]
+		if vehicleId == nil then
+			return "usage: /car sell <vehicleId>"
+		end
+		local ok = VehicleService.Sell(player, vehicleId)
+		return ok and `sold {vehicleId}` or `could not sell {vehicleId} -- see the notice on screen`
+	end
+
+	if arg == "spawn" then
+		local vehicleId = args[2]
+		if vehicleId == nil then
+			return "usage: /car spawn <vehicleId>"
+		end
+		local ok = VehicleService.Spawn(player, vehicleId)
+		return ok and `{vehicleId} is out front` or `could not spawn {vehicleId} -- see the notice on screen`
+	end
+
+	if arg == "store" then
+		local ok = VehicleService.Store(player)
+		return ok and "parked" or "nothing was out"
+	end
+
+	return VehicleService.Describe(player)
+end
+
 -- Car dealership: show queue state and serve a customer.
 --   /dealer                   show current queue state
 --   /dealer serve             serve the front customer
@@ -2942,7 +3007,8 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/bill [charge], /milestone [reset], /gossip [note <action> <effect>|tick], "
 	.. "/house [buy <id>|sell <id>|job <houseId> <jobId>], /dealer [serve], "
 	.. "/verdict [name] — show or force a ribbon, /moments — print every moment, "
-	.. "/reel — print moments since last chapter break"
+	.. "/reel — print moments since last chapter break, "
+	.. "/car [list|buy <id>|sell <id>|spawn <id>|store]"
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

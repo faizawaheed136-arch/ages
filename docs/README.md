@@ -29,6 +29,7 @@ written down here rather than in anybody's head.
 | [`gangs_spec.md`](gangs_spec.md) | Four gangs, one per city side; bright per-gang bandana; a four-rung ladder conferred face to face. Territory and the city map are deferred. |
 | [`lobby_spec.md`](lobby_spec.md) | Separate lobby place, Robux spins with numeric odds, three deletable slots, real avatar on screen. Settled — do not re-open. |
 | [`economy_direction.md`](economy_direction.md) | Currency arrives with the world in step 3. Paid revives were rejected, and why. |
+| [`vehicles_spec.md`](vehicles_spec.md) | Drivable cars at the dealership: raycast suspension over a physical wheel, why no Server Authority migration was needed, one car spawned at a time, no coordinates ever saved. |
 | [`step3_scope.md`](step3_scope.md) | Playable toddler years, ambient world-triggered events, career branching. |
 
 ## Craft
@@ -37,6 +38,7 @@ written down here rather than in anybody's head.
 |---|---|
 | [`look_and_feel.md`](look_and_feel.md) | The 2025 lighting reset, PBR/atmosphere/post baselines, the game-feel timing table, easing curves. |
 | [`roblox_engineering.md`](roblox_engineering.md) | Server Authority, sports as a third place, remote/buffer costs, network-ownership traps, engine caps, CI tooling. |
+| [`top_games_architecture.md`](top_games_architecture.md) | How top Roblox games structure services, remotes and persistence at scale — confirms AGES's own patterns, and what's missing: per-remote rate limiting, and the multi-server primitives to reach for the day gang territory needs to agree across servers. |
 
 ## Two rules that override everything here
 

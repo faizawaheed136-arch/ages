@@ -1407,6 +1407,105 @@ local function stageMinAge(id: string): number
 	error(`[AGES] Config: no life stage "{id}" to derive an age from`)
 end
 
+-- Drivable cars. What the dealership actually sells, on top of the counter job --
+-- see content/Vehicles.luau for the cars themselves and world/VehicleChassis.luau
+-- for the physics these numbers tune.
+--
+-- **The chassis is raycast suspension, not a physical wheel.** Four rays, one per
+-- corner, each pushing a damped spring: `F = k*x - c*v`, applied through a
+-- VectorForce rather than through a collider a curb can catch. A city built of
+-- kerbs and pavements is exactly the geometry a HingeConstraint wheel gets stuck
+-- on, and the whole reason this chassis was chosen over the older, simpler one is
+-- that it does not touch the road at all -- it only ever measures the distance to
+-- it.
+--
+-- **Ownership is Roblox's own, not a custom one.** The driver's client is handed
+-- network ownership of the assembly the moment they sit down and it is handed back
+-- to the server the moment they stand up. That is the entire multiplayer story: no
+-- Server Authority migration, no clone-and-blend render, because a car -- unlike a
+-- shared ball -- has exactly one owner at a time and Roblox already solves that
+-- correctly once the seat-enter handoff is done explicitly. See VehicleService.
+Config.Vehicles = {
+	-- How many cars a single life may own at once. More than a couple is a garage
+	-- nobody visits; the point is trading up, not collecting.
+	-- Safe range: 1-4.
+	MaxOwned = 2,
+	-- Fraction of the buy price refunded on sale, the same shape and the same
+	-- reasoning as Config.House.ResaleFraction: it makes buying and selling a
+	-- cycle instead of a one-way ratchet, and the loss is the cost of having
+	-- driven it.
+	ResaleFraction = 0.6,
+
+	-- Suspension spring stiffness, in the raycast chassis's own force units --
+	-- not a real-world spring constant, just the k in F = kx - cv. Higher holds
+	-- the body up stiffer and fights bottoming out on landings harder.
+	-- Safe range: 12000-22000.
+	SuspensionStiffness = 17000,
+	-- Damping, c in the same equation. The tutorial rule of thumb this was tuned
+	-- from -- "damping should run about a tenth of stiffness" -- is a starting
+	-- point, not a law: too low and the body bounces after every bump, too high
+	-- and the suspension stops absorbing anything at all.
+	-- Safe range: 1200-2600.
+	SuspensionDamping = 1800,
+	-- How far the suspension can travel before the wheel is airborne, in studs.
+	-- This is also how far a wheel hangs below the body at full droop, which is
+	-- the number that decides whether a car clears a kerb or catches on it.
+	-- Safe range: 1.2-2.2.
+	SuspensionLength = 1.6,
+	-- Wheel radius, in studs. Purely geometric -- where the raycast starts
+	-- counting from -- and it is also what the wheel model is built at, so the
+	-- two can never disagree about where the tyre actually is.
+	-- Safe range: 1.2-1.8.
+	WheelRadius = 1.4,
+
+	-- How much of a car's rated `acceleration` actually reaches the road once it
+	-- is already near top speed, 0-1. Straight-line acceleration at low speed
+	-- for the first plate; a diminishing force as it approaches topSpeedStuds is
+	-- what makes "flat out" mean something rather than the car just stopping
+	-- dead at a wall.
+	-- Safe range: 0.1-0.4.
+	TopSpeedTaper = 0.25,
+	-- Steering is scaled down as the car speeds up, from full `steerDegrees` at a
+	-- stop to this share of it flat out -- the reason a car that turns sharply in
+	-- a parking lot does not spin out doing the same turn at speed. 1 would mean
+	-- no scaling at all.
+	-- Safe range: 0.25-0.55.
+	HighSpeedSteerShare = 0.4,
+	-- Studs per second above which the steering scale in HighSpeedSteerShare is
+	-- fully applied. Below this a car steers at its full rating regardless of
+	-- speed -- parking-lot manoeuvring should feel like parking-lot manoeuvring.
+	-- Safe range: 25-45.
+	SteerTaperStuds = 34,
+
+	-- How many bearings the parking search fans out across, and how wide, when
+	-- looking for somewhere to stand a spawned car near the dealership. Same
+	-- Ground.Bearings pattern every other placement in the game uses, sized for a
+	-- forecourt rather than a room -- a car needs more clearance than a person.
+	-- Safe range: 90-180 degrees, 5-9 bearings.
+	ParkArcDegrees = 140,
+	ParkBearings = 7,
+	-- How far out from the dealership's place point the search starts, and how
+	-- much further it tries once before giving up. A car is bigger than a body,
+	-- so this starts further out than PocketMoneyService's parent-arrival search
+	-- does for a person.
+	-- Safe range: 14-26 studs.
+	ParkStuds = 18,
+	ParkRetryScale = 1.6,
+
+	-- A car left both empty and unridden this long returns to the dealership on
+	-- its own, so an afternoon of parked cars does not become litter across the
+	-- city. Long enough that stepping into a shop for a shift does not lose the
+	-- car parked outside it.
+	-- Safe range: 300-1200 seconds.
+	IdleDespawnSeconds = 600,
+	-- How often the chassis re-derives its suspension forces and drive force.
+	-- Every RenderStepped-equivalent tick, on the server: fast enough that the
+	-- ride does not feel quantised, slow enough not to be the most expensive
+	-- thing running.
+	-- Safe range: 1/60-1/30.
+	TickSeconds = 1 / 60,
+}
+
 -- Monthly living expenses. Money leaves every game month whether the player
 -- wants it to or not, which is the one force that keeps a life from running
 -- forward on autopilot and turning the pocket-money trickle into a flood.

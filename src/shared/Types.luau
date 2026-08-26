@@ -2809,6 +2809,18 @@ export type LifeData = {
 		owned: { [string]: boolean },
 		homeJob: { [string]: string },
 	},
+	-- Vehicle ownership per life. Reset on death, on the same terms as `houses`: a
+	-- new life inherits no garage, just as it inherits no property.
+	--
+	-- `owned` is a set of vehicle ids the life has bought. `active` is which one is
+	-- currently standing in the world -- nil means none is spawned, which is the
+	-- default the moment a car is bought and every time the player has not yet
+	-- pulled one out of the garage this session. Only one is ever spawned per life
+	-- at once; the rest sit in the garage exactly as an unspawned house does.
+	vehicles: {
+		owned: { [string]: boolean },
+		active: string?,
+	},
 	-- Bills tracking per life. Reset on death like money.
 	bills: {
 		debt: number,
@@ -3000,6 +3012,54 @@ export type CarDealerState = {
 	counter: Vector3?,
 	greeting: string?,
 	served: boolean,
+}
+
+-- One car as content declares it: what the dealership sells, and what the chassis
+-- is built and driven from. Sized and coloured rather than modelled, on the same
+-- reasoning Props.luau and Cast.luau give at length -- a car exists and drives
+-- correctly from the first run, and a real mesh dropped into the Studio folder
+-- under a matching name is a swap this file never has to know happened.
+export type VehicleKind = {
+	id: string,
+	name: string,
+	-- What it costs at the dealership, in whole currency units. The only number a
+	-- player judges a car by before ever driving one, same reasoning as
+	-- Job.yearlySalary.
+	price: number,
+	-- The body, as a block: length (Z), width (X), height (Y). The wheelbase and
+	-- track width the chassis is built from are derived from this rather than
+	-- authored a second time, so a car's silhouette and its handling can never
+	-- quietly disagree about how big the car is.
+	size: Vector3,
+	color: Color3,
+	accentColor: Color3,
+	-- Studs per second, flat out. The number a player actually feels; everything
+	-- else about the chassis is tuned to get a car to this and hold it.
+	-- Safe range: 60-140.
+	topSpeedStuds: number,
+	-- How hard the drive force pushes per stud of body mass, roughly -- higher
+	-- reaches top speed sooner and pulls away harder off the line.
+	-- Safe range: 8-20.
+	acceleration: number,
+	-- Maximum steer angle in degrees, both ways. Wider turns sharper and spins
+	-- out sooner; narrower feels like a truck. See Config.Vehicles for the speed
+	-- curve every car steers less sharply along as it goes faster.
+	-- Safe range: 20-40.
+	steerDegrees: number,
+}
+
+-- What the client needs to draw the dealership's showroom floor and a life's own
+-- garage from one push: every car sold, what this life already owns, and which
+-- one -- if any -- is standing in the world right now.
+export type VehicleState = {
+	catalog: { VehicleKind },
+	owned: { [string]: boolean },
+	active: string?,
+	-- Whether a build is in flight for the currently-requested action, so the
+	-- panel can grey its own button rather than let a second click queue a
+	-- second spawn behind the first.
+	busy: boolean,
+	notice: string?,
 }
 
 -- Monthly bill state, pushed whenever a bill is charged or debt changes.

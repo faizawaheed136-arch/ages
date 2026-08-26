@@ -291,6 +291,32 @@ export type RemoteName =
 	-- "I served the customer at the counter." No payload -- the server checks
 	-- that there is a queue and a front customer before granting the tip.
 	| "RequestCarDealerServe"
+	-- The showroom and the garage in one push: every car sold, what this life
+	-- already owns, and which one -- if any -- is standing in the world. Its own
+	-- remote rather than a field on CarDealerUpdated, on the same reasoning that
+	-- keeps HouseUpdated separate from everything else at a counter: the queue is
+	-- the room being alive whether or not anybody is buying a car, and a garage is
+	-- a fact about one life's money, not about the shop floor.
+	| "VehicleUpdated"
+	-- "I want to buy this car." Carries a vehicle id from `content/Vehicles.luau`;
+	-- the server checks the id is real, the price against the balance, and the
+	-- garage is not already at Config.Vehicles.MaxOwned before granting anything.
+	| "RequestBuyVehicle"
+	-- "I want to sell this car." Carries a vehicle id. Refuses on the currently
+	-- active one -- selling the car you are about to be told to get into would
+	-- have to also answer what "active" now points at, and the honest UI move is
+	-- to put it away first.
+	| "RequestSellVehicle"
+	-- "Bring this one out of the garage." Carries a vehicle id already owned; puts
+	-- away whatever was active first, exactly one car standing in the world per
+	-- life at a time. Server-built at a spot near the dealership rather than
+	-- wherever the request was fired from, so a forged id cannot summon a car
+	-- through a wall.
+	| "RequestSpawnVehicle"
+	-- "Put it away." No payload -- despawns whichever car is active, if any. The
+	-- same action idle-timeout and a death both drive from the server side; this
+	-- is the player choosing to do it early.
+	| "RequestStoreVehicle"
 	-- The fight in progress, pushed whole every tick it changes. Whole rather than
 	-- split into "my bars" and "their bars" because a fight is read as one picture --
 	-- a charge held against a wind-up filling opposite it -- and two remotes landing a
@@ -572,6 +598,11 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestToggleApartmentDoor",
 	"CarDealerUpdated",
 	"RequestCarDealerServe",
+	"VehicleUpdated",
+	"RequestBuyVehicle",
+	"RequestSellVehicle",
+	"RequestSpawnVehicle",
+	"RequestStoreVehicle",
 	"FightUpdated",
 	"RequestFightAction",
 	"RequestFightSquare",

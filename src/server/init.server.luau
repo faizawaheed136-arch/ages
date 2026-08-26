@@ -75,6 +75,7 @@ local ReturnService = require(services.ReturnService)
 local DebugService = require(services.DebugService)
 local HouseService = require(services.HouseService)
 local CarDealerService = require(services.CarDealerService)
+local VehicleService = require(services.VehicleService)
 local BillService = require(services.BillService)
 local SavingsService = require(services.SavingsService)
 local MilestoneService = require(services.MilestoneService)
@@ -145,6 +146,12 @@ ApartmentDoorService:Init()
 ApartmentDoorService:Start()
 HouseService:Init()
 CarDealerService:Init()
+-- Beside CarDealerService: same building, same two dependencies already up by
+-- this point -- PlaceService to find the counter, MoneyService to charge for a
+-- car. Owns nothing CarDealerService reads and is read by nothing of its own,
+-- so the two can sit in either order; grouped here because they are the same
+-- showroom floor.
+VehicleService:Init()
 BillService:Init()
 SavingsService:Init()
 MilestoneService:Init()
@@ -152,6 +159,7 @@ GossipService:Init()
 CrimeService:Init()
 HouseService:Start()
 CarDealerService:Start()
+VehicleService:Start()
 BillService:Start()
 SavingsService:Start()
 MilestoneService:Start()
