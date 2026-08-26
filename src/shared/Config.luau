@@ -2120,10 +2120,17 @@ Config.School = {
 	-- carries the question and the answer text, for reading -- but with discs down the
 	-- rows are locked and the floor is the interface.
 	--
-	-- False restores click-to-answer everywhere. Kept a switch rather than deleted
-	-- because a lesson sat in a doorway is exactly the case where the panel is the
-	-- right answer, and because the whole point of the room is a place discs can go.
-	PhysicalLessons = true,
+	-- False, and deliberately: docs/interaction_grammar.md settled this months before
+	-- this switch was written, in the user's own words -- "instead of places on the
+	-- floor to walk on, make the mechanic more appealing like 3 dots over each
+	-- characters head and then the options come up" -- and named lesson answers as one
+	-- of the three examples in the same breath as person offers and event choices. A
+	-- lesson answered by walking onto a disc is the one place that grammar regressed;
+	-- this is what puts it back. Kept a switch rather than deleted because a lesson
+	-- sat in a doorway is exactly the case where the panel is the right answer, and
+	-- because the whole point of the room is a place discs *could* go if that
+	-- decision is ever revisited -- it is not a decision this file gets to make twice.
+	PhysicalLessons = false,
 
 	-- The fan the answer discs are placed in. Distance is how far from the player the
 	-- fan reaches; reach is how near a disc counts as standing on it, and it is also
