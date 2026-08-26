@@ -1357,6 +1357,23 @@ Config.House = {
 	ResaleFraction = 0.7,
 }
 
+-- Apartment entrance doors. Every door is a tagged part in the generated world;
+-- ApartmentDoorService attaches the open/close interaction and swings it on a
+-- tween rather than teleporting the part, so walking up to a block reads as
+-- entering a building and not clipping through a wall.
+Config.ApartmentDoor = {
+	-- How far the door swings open, in degrees, about its hinge edge. 90 is a
+	-- push-open door standing fully clear of the frame; more than that and it
+	-- would swing back past the wall it is hinged to.
+	-- Safe range: 60-100.
+	SwingDegrees = 90,
+	-- How long the open/close tween takes, in seconds. Quick enough that
+	-- walking through does not feel like waiting on the door, slow enough
+	-- that the swing reads as a door and not a flicker.
+	-- Safe range: 0.2-0.6.
+	AnimationSeconds = 0.4,
+}
+
 -- The car dealership queue. Runs alongside the work shift at auto_dealer so the place
 -- feels alive even when nobody is on the clock -- customers line up at the showroom and
 -- the player can serve them whether they are working there or just walking past.
