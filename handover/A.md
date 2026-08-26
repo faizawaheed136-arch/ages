@@ -1,6 +1,52 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-23 (latest) — A real bug in the E bar's fade, and Guide.luau rebuilt as ground chevrons
+## 2026-08-26 (latest) — Stadium/crowd pushed, boot unblocked, two bugs found and left alone
+
+Pushed the stadium work (bowl grown and re-centred, entrance tunnel cut through the west
+stand, the palm cluster that clipped it carved clear, static crowd mannequins replaced with
+real seated/roaming NPCs) — this had been sitting committed locally as `2a15223` from the
+previous session. `git push` was rejected (origin had moved: `adc2464` drivable cars,
+`298fea8` architecture research doc). Merged rather than rebased since the tree had other
+agents' uncommitted work sitting in it that a rebase's clean-tree requirement would have
+forced me to stash anyway; stashed it regardless to merge, resolved three conflicts
+(`init.client.luau`, `DebugService.luau`, `Config.luau` — all purely additive, both sides'
+lines kept), popped the stash back untouched.
+
+**Before pushing, `tools/check.py`'s boot check was red for three reasons, all pre-existing
+and none from this session's stadium work:**
+
+1. `src/server/init.server.luau` has required `ApartmentDoorService` since some earlier,
+   unremembered commit, but the service file itself was sitting **untracked** on disk the
+   whole time — never `git add`ed. Every boot of the game place died on that `require` with
+   nothing after it in the chain ever starting. Fixed: committed the file (it was already
+   complete, 130 lines) and moved its two hardcoded numbers (door swing angle, tween time)
+   into a new `Config.ApartmentDoor` block, since the file didn't have one and the repo's
+   own no-magic-numbers rule applies regardless of who wrote it. This one felt safe to just
+   fix — it's a mechanical "finish committing what was already written" fix, not a design
+   call, and it was blocking boot for everyone pulling `main`.
+2. `src/server/content/LifeEvents/init.luau:77` — the event `tie_mentor_guidance` casts
+   `"mentor"`, who is not in `content/Cast.luau`'s committed cast. The commit that added the
+   event (`7abb7d2`, "Phase 1 chapter spine...") predates this session. The `mentor` cast
+   entry *does* exist, but only in **uncommitted** `Cast.luau` sitting in the working tree
+   right now, mixed in with tie-relationship dialogue that reads like active work-in-progress
+   — not something I should commit a slice of. **Not fixed. Left alone.**
+3. `src/server/content/Vehicles.luau:139` — the `wagon` costs more than `sedan` but is
+   neither faster nor quicker off the line, so the content-balance check refuses to boot
+   rather than ship a car nobody would buy. This is `adc2464`'s own commit, already on
+   `origin/main` before I pulled — I didn't introduce it. Cars/dealership are B's lane
+   (`CarDealerService`/`CarDealerUI` on the ownership list). **Not fixed. Left alone.**
+
+Both #2 and #3 still make `tools/check.py` report FAILED on `main` right now — the boot
+chain throws on the first `require` that hits either one, so *nothing* starts in the game
+place until one of them is resolved. Whoever owns `Cast.luau`/tie content and whoever owns
+`Vehicles.luau` pricing: the fixes are respectively "commit the mentor/rival/sibling cast
+entries already sitting in the tree" and "raise `wagon`'s price or one of its stats in
+`content/Vehicles.luau:139`, or drop the price below `sedan`'s."
+
+Now moving on to the stadium entrance: a proper door, clearing whatever trees still overlap
+it, and a cinematic camera + autograph-fan moment on entry. Separate entry when that lands.
+
+## 2026-08-23 — A real bug in the E bar's fade, and Guide.luau rebuilt as ground chevrons
 
 Same out-of-lane authorization as the entry directly below this one ("proceed anyway with
 everything"), continued in the same session. Two more pieces of the original ask, both
