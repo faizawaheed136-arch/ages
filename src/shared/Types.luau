@@ -857,6 +857,17 @@ export type ProcedureStep = {
 	-- What the board writes on this line. Short: it is one row of a list read at a
 	-- glance from across a room, capped by Config.School.Science.MaxStepLabelLength.
 	label: string,
+	-- True for the handful of steps that are genuinely dangerous to take before the step
+	-- in front of them -- mixing the second reagent in before the first has cooled, and
+	-- the like. Nil (the common case) means this step is only ever *wrong*, never
+	-- dangerous: getting the order wrong costs the share, same as any other step, and
+	-- nothing else happens.
+	--
+	-- Still just a station and a label at authoring time -- this is not the "how" the
+	-- header above forbids, it is a property of *when*, not of what the station does. A
+	-- volatile step never changes what clicking that station does; it only changes what
+	-- commitBench does when the stack shows it was reached ahead of its predecessor.
+	volatile: boolean?,
 }
 
 -- A Science procedure as content authors it: an ordered list of stations, and a name.

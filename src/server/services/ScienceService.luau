@@ -295,6 +295,74 @@ local function verdictFor(bench: Bench, score: number): string
 	return "Right the whole way, but slowly."
 end
 
+-- Whether this stack actually reached a volatile step ahead of the step in front of it.
+-- Not the same test as `orderedMatch` -- that asks how much of the procedure survived in
+-- order as a share, and a volatile step reached early can still leave the rest of the
+-- LCS intact. This asks one narrower question: did the station a volatile step names get
+-- clicked before the station immediately before it in the procedure was ever clicked at
+-- all. That is "mixed the second thing in before the first was ready" in station terms,
+-- and it is the one mistake this verb treats as dangerous rather than merely wrong.
+--
+-- First station position wins on both sides, which matches how a player reads their own
+-- stack: the *first* time you reached for the volatile station is the moment that either
+-- was or was not preceded by the step it needed.
+local function volatileTriggered(bench: Bench): boolean
+	local steps = bench.procedure.steps
+	for index, step in steps do
+		if not step.volatile or index == 1 then
+			continue
+		end
+		local wantsBefore = steps[index - 1].station
+
+		local volatilePos: number? = nil
+		for takenIndex, station in bench.taken do
+			if station == step.station then
+				volatilePos = takenIndex
+				break
+			end
+		end
+		if volatilePos == nil then
+			-- Never reached this station at all -- nothing to have gone off.
+			continue
+		end
+
+		local reachedPredecessor = false
+		for takenIndex = 1, volatilePos - 1 do
+			if bench.taken[takenIndex] == wantsBefore then
+				reachedPredecessor = true
+				break
+			end
+		end
+		if not reachedPredecessor then
+			return true
+		end
+	end
+	return false
+end
+
+-- The bang itself. Cosmetic only -- see Config.School.Science's comment on
+-- ExplosionBlastRadiusStuds for why BlastPressure is zero -- so this never costs a player
+-- health or knocks them anywhere, no matter who is standing at the next bench over.
+-- Silently does nothing if the room has not built yet, which cannot happen in the path
+-- that calls it (a bench only exists inside a built room) but matches Lab.Room's own
+-- contract of "nil means ask again" rather than assuming.
+local function triggerExplosion(bench: Bench)
+	local built = Lab.Room()
+	if built == nil then
+		return
+	end
+	local at = built.benches[bench.index]
+	if at == nil then
+		return
+	end
+	local explosion = Instance.new("Explosion")
+	explosion.Position = at + Vector3.new(0, SCIENCE.ExplosionHeightStuds, 0)
+	explosion.BlastRadius = SCIENCE.ExplosionBlastRadiusStuds
+	explosion.BlastPressure = 0
+	explosion.DestroyJointRadiusPercent = 0
+	explosion.Parent = workspace
+end
+
 -- The window of the board this bench is currently showing. Starts where the stack
 -- stands, so the board answers "what now" rather than repeating what the bench already
 -- records.
@@ -453,14 +521,23 @@ local function commitBench(data: LifeData, session: Session, bench: Bench, spoil
 	-- unpicking if something goes wrong halfway.
 	local matched = orderedMatch(bench.taken, bench.procedure)
 	local score = matched * speedFactorFor(if spoiled then 0 else bench.secondsLeft)
+	-- Checked against the stack before anything below rewrites it, for the same
+	-- idempotency reason: whether this run went off is a fact about the stack as it stood
+	-- the moment commit was pressed, not something to recompute from a mutated bench.
+	local exploded = volatileTriggered(bench)
 
 	bench.committed = true
 	bench.score = score
 	bench.secondsLeft = 0
 	bench.verdict = if spoiled and #bench.taken == 0
 		then "You never started this one."
+		elseif exploded then `It went off. {verdictFor(bench, matched)}`
 		elseif spoiled then `Time. {verdictFor(bench, matched)}`
 		else verdictFor(bench, matched)
+
+	if exploded then
+		triggerExplosion(bench)
+	end
 
 	-- Banks toward the next mastery level. Measured on the ordered match rather than the
 	-- speed-adjusted score, because mastery is about knowing the procedure and charging

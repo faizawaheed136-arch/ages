@@ -2477,6 +2477,21 @@ Config.School.Science = {
 	-- Safe range: 2-6.
 	VerdictSeconds = 3.5,
 
+	-- A handful of procedures carry one step flagged `volatile` -- reaching it before its
+	-- predecessor is a genuinely dangerous mis-order, not just a wrong one, and commitBench
+	-- answers that with a small explosion at the bench rather than only a lower score. By
+	-- owner instruction: "if ur options are to mix 2 things and it says could cause an
+	-- explosion, a small explosion should happen." `content/Procedures.luau`'s own header
+	-- forbade "a result that goes bang" -- this narrows that rule rather than breaking it,
+	-- the same way CLAUDE.md's "combat is allowed" narrows what 13+ actually forbids: the
+	-- explosion is cosmetic only (BlastPressure 0, so no damage and no knockback to
+	-- anything standing nearby), small, and never named after a real dangerous chemical
+	-- combination -- Procedures.luau stays entirely abstract furniture language, as it
+	-- already was.
+	-- Safe range: BlastRadius 4-10, HeightStuds 1-3.
+	ExplosionBlastRadiusStuds = 7,
+	ExplosionHeightStuds = 2,
+
 	-- Content limits, enforced at server start rather than found in play. A step label is
 	-- shorter than a question because it is read off a board in a list rather than a HUD
 	-- row, and ten steps is where the walk stops being a plan and becomes a memory test.

@@ -36,9 +36,19 @@
 --   here teaches by having you do a correct thing, not by testing whether you already
 --   knew it -- same principle as a question's `because` line.
 --
---   Nothing here involves fire, blades, anything a child should not copy, or a result
---   that goes bang. Thirteen-plus is a hard ceiling and a chemistry set is exactly the
---   place a game drifts through it without noticing.
+--   Nothing here involves fire, blades, or anything a child should not copy -- and
+--   nothing here ever names a real dangerous chemical combination; every station and
+--   every procedure stays the same abstract furniture language it always has, on
+--   purpose, so there is nothing here to try at home. A result that goes bang is now
+--   allowed in exactly one narrow shape: a procedure may flag one step `volatile`, and
+--   reaching that station before the station in front of it in the order is scored
+--   exactly like any other mis-order plus one thing more -- ScienceService sets off a
+--   small, cosmetic-only explosion at the bench (Config.School.Science's
+--   ExplosionBlastRadiusStuds comment has the no-damage, no-knockback details). This is
+--   by direct owner instruction, narrowing the rule rather than breaking it: "if ur
+--   options are to mix 2 things and it says could cause an explosion, a small explosion
+--   should happen." Thirteen-plus is still the hard ceiling everything else in this file
+--   was written against -- the bang is small, harmless, and never taught as chemistry.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -157,6 +167,27 @@ local SOURCE: { Procedure } = {
 			{ station = "notebook", label = "Write both masses down" },
 		},
 		minAge = 13,
+		maxAge = 17,
+	},
+	-- The one procedure with a `volatile` step -- see the header. Five steps, and the
+	-- order has a reason a player can work out just from reading the board: you steady
+	-- the first solution before you add the second, the same "you cannot record a mass
+	-- you have not measured" logic `measure_salt` teaches, except this time skipping
+	-- ahead does not just cost the step. Reaching the beaker a second time before ever
+	-- reaching the stirrer is exactly "mixed the second thing in before the first was
+	-- ready", and ScienceService answers that with a small bang at the bench rather than
+	-- only a lower score.
+	{
+		id = "mix_reactive",
+		name = "Mix two volatile solutions",
+		steps = {
+			{ station = "beaker", label = "Pour in the first mix" },
+			{ station = "stirrer", label = "Stir it steady" },
+			{ station = "beaker", label = "Add the second mix", volatile = true },
+			{ station = "sink", label = "Rinse the beaker out" },
+			{ station = "notebook", label = "Note what happened" },
+		},
+		minAge = 12,
 		maxAge = 17,
 	},
 	{
