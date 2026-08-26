@@ -1,6 +1,94 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-26 (latest) — Entrance door + cinematic walkout, and the wagon bug fixed for real
+## 2026-08-26 (latest) — Chat panel bug, toddler Age Up, school answers on the panel, lab explosions
+
+Four commits (`54c54ed`, `c7a0e0f`, `e444f76`, `7394e34`), all client/shared/school work
+rather than world work — the user brought this straight to me mid-session ("i cant escape
+the chat window... move on to the schooling system... i give u free reign to make
+schooling amazing"), so I am logging it here rather than routing it to C, and C should
+treat everything below as already landed rather than open.
+
+**The chat-panel bug** (talking to parents, or anyone standing, left a dead panel you
+could not close): the standing-person `ChoicePanel` was the one panel type in the file
+with no tracked key — every other panel (workout, lesson, phone, report) closes itself
+by comparing a held key against the server's next push; this one only ever closed on a
+reply arriving, and walking out of `PEOPLE.ReachStuds` or running out of things to say
+both end the chat server-side with *no* reply text, so that branch never fired. Added
+`personPanelKey`, wired into `PersonUpdated`, the global `OnHidden` teardown, and the
+death reset. Same shape as every other panel in the file now — no new pattern invented.
+
+**Toddler Age Up** (ages 1-5): a per-year button distinct from the existing all-or-
+nothing `SkipChildhood`, 15s cooldown against a new `Config.ChildManualAgeUpCooldownSeconds`
+rather than the adult `ManualAgeUpCooldownSeconds` (60s) — a toddler year has no shift or
+lesson to wait out, so the same gate would read as a waiting room. Two new
+`ManualAgeUpState` variants, `ChildReady`/`ChildCooldown`, rather than reusing
+`Ready`/`Cooldown`, because the HUD has to know which constant to count down against.
+
+**School quiz mechanic** ("its horrible... not stepping into stones"): turned out to
+already be fully built and dormant. `Config.School.PhysicalLessons` toggles between
+floor-disc answering and panel-row-click answering (`RequestLessonAnswerRemote`), and
+both paths share one scoring function — only the disc path was switched on. Flipped it
+to `false`. This also has a paper trail: `docs/interaction_grammar.md`, settled
+2026-08-01, names "lesson answers" by name as one of the three surfaces the three-dot/
+panel grammar covers. The discs were a regression, not an alternate design — did not
+touch `SchoolService.luau` itself, the flag was the entire fix.
+
+**Lab experiments** ("mix 2 things... could cause an explosion, a small explosion should
+happen"): added `ProcedureStep.volatile: boolean?`. A procedure may flag one step
+volatile; reaching that station before the station in front of it in the taken order
+(checked in `ScienceService.commitBench`, first-position-reached on both sides) sets off
+a small `Explosion` instance at the bench — `BlastPressure = 0`, no damage, no knockback
+to anyone at the next bench — on top of the normal score hit for a mis-order. One new
+procedure, `mix_reactive` (id, 5 steps, ages 12-17), carries the flag. This meant rewriting
+`Procedures.luau`'s own header, which explicitly forbade "a result that goes bang" — narrowed
+rather than broken, by direct owner instruction, the same shape CLAUDE.md's own "combat is
+allowed" reversal takes: small, cosmetic, harmless, and the file still never names a real
+chemical, abstract furniture language throughout as before.
+
+**Researched before touching any of this** (the user asked for it by name — "research big
+games and if u see an even better idea implement it"): BitLife's school is a stat bar plus
+menu choices with zero spatial/physical mechanic; Bloxburg's school building was, as of
+this check, still decorative/non-interactive, with an interactive update only teased, not
+shipped. AGES's dots+panel Q&A plus the ordered-procedure lab (now with the volatile-step
+consequence) already clears both bars. Logged this rather than building anything further
+on the strength of it, since nothing surfaced that beat what's here.
+
+**Scoped down, not skipped**: the general "a choice that names a physical act should
+produce the act" ask (hands up, a push, in any chat window) has no existing target —
+checked every `LifeEvents/*.luau` file; the only "push" choices (`Crime.luau`, `Gym.luau`)
+are verbal/metaphorical, not a literal physical act, and nothing reads "hands up"
+anywhere. Building a generic retrofit framework ahead of any content that needs it is
+exactly the undifferentiated-outcome trap `ProcedureStep`'s own doc comment warns
+against, so instead this is now a documented authoring rule in
+`docs/interaction_grammar.md`, with the lab explosion cited as the built example of the
+pattern — the next life-event choice that is a real physical verb has a real precedent
+and a real rule to follow, rather than a bolt-on system built for nothing yet.
+
+**Staging, since the tree had a sports-drill system, a Locations menu pane, and more
+sitting uncommitted in the same shared files this touches** (`Config.luau`, `Types.luau`,
+`init.client.luau`, `StatsUI.luau`, `LifeService.luau`): none of that is mine and none of
+it is in these four commits. Split every shared file's diff into hunks by hand
+(`git apply --cached` against hand-filtered patches, not `git add -A`/`git add -p`'s own
+UI) and staged only my own hunks per commit; everyone else's edits are still sitting
+exactly where they were, still uncommitted, on disk right now. `tools/check.py` is fully
+clean except the pre-existing, unrelated "map is stale" line (Town/Versailles geometry
+moving under an uncommitted `MapShapes.luau` bake — not this work, confirmed by stashing
+everything and checking clean HEAD separately).
+
+**Not done, and not mine to do without asking:** nothing further on the sports-drill/
+Locations-menu work sitting uncommitted in the tree — untouched, as above. No world
+geometry changed this session, so `check_city.py`/`check_town.py` were not re-run.
+
+**Test plan for the four commits above:** talk to a parent (or anyone), let the
+conversation exhaust its offers or walk away — panel should close on its own. As a life
+under 5, the Age Up button should read "Age Up" with a 15s bar rather than the 60s adult
+one. In a lesson (Math/Reading/Music), answers should come from clicking a row in the
+panel, not walking onto a floor disc. In the Science lab, run the "Mix two volatile
+solutions" procedure and reach the second beaker step before ever touching the stirrer —
+a small explosion should fire at that bench with no damage to anyone standing near it,
+and the verdict text should read "It went off."
+
+## 2026-08-26 — Entrance door + cinematic walkout, and the wagon bug fixed for real
 
 Landed the stadium entrance moment (`26ecdc3`): a `glass_doors()` primitive fills the
 atrium's front doorway with real leaf geometry for the first time anywhere in this
