@@ -1,6 +1,48 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-26 (latest) — Stadium/crowd pushed, boot unblocked, two bugs found and left alone
+## 2026-08-26 (latest) — Entrance door + cinematic walkout, and the wagon bug fixed for real
+
+Landed the stadium entrance moment (`26ecdc3`): a `glass_doors()` primitive fills the
+atrium's front doorway with real leaf geometry for the first time anywhere in this
+generator (every `wall(doors=...)` before this only ever cut a gap), a banner pair
+dresses the bowl's own gate arch, and the `PlazaPalmFlank` pair moved from 4 to 10 studs
+off the doorway edge so their ~11-stud frond reach stops hanging into the opening.
+Crossing the bowl's own gate now fires a once-per-session cinematic: `StadiumEntranceService`
+decides who/when server-side off a tagged trigger part, `StadiumEntrance.luau` owns the
+camera client-side (zoom to a three-quarter hold, a fan NPC walks up for an autograph,
+release back to follow-cam) — camera state can't be anyone else's, so that split is the
+same one every other cutscene-shaped thing in this codebase uses. New `/gate` and
+`/stadium` debug commands.
+
+The working tree had several other pieces of uncommitted work sitting in it at the time
+(a sports-drill system, a Locations menu pane, a Versailles build, town road changes, and
+more) mixed line-for-line into the same shared files this feature also touches
+(`Config.luau`, `Remotes.luau`, `DebugService.luau`, both `init` files). None of it is
+mine and none of it shipped in `26ecdc3` — I hand-built the commit's blobs to contain only
+this feature's own hunks (`git hash-object` + `update-index --cacheinfo` rather than
+`git add`, so the working tree itself was never touched) and left everyone else's edits
+sitting exactly where they were, still uncommitted, for them to land. `MapShapes.luau` was
+regenerated against a temporarily-clean tree (Town/Versailles/`default.project.json`
+stashed out, popped back after) so it reflects only City's own change, not a premature bake
+of Town's or Versailles' in-progress geometry.
+
+**The `wagon`/`sedan` boot crash (`content/Vehicles.luau:139`, logged below on 2026-08-23 as
+B's and left alone) is now fixed (`8c434a1`).** Reason for crossing the ownership line this
+time: it isn't a balance nit, it's `require()` throwing during boot, which kills
+`init.server.luau` before a single service starts — including `BodyService`, so *every*
+player was spawning at full adult size with nothing else in the game running either. The
+user hit this directly after the stadium push and asked for it by name. Fix is one line:
+`topSpeedStuds` 76 -> 81, one stud over the sedan's 80, clearing the dominance check without
+claiming a wagon this size outruns the coupe. `tools/check.py`'s boot section is fully clean
+now (124 modules, `heightScale=0.3` at spawn) modulo the still-uncommitted `mentor` cast
+entry (#2 below, unchanged, still B's).
+
+**Still stale:** `tools/check.py`'s "the map matches the world" check will read stale
+against your local tree right now if Town/Versailles are still uncommitted when you pull —
+that's their geometry moving after `MapShapes.luau` was baked against City alone, not a
+regression. Re-run `python3 tools/gen_mapshapes.py` once Town/Versailles land.
+
+## 2026-08-26 — Stadium/crowd pushed, boot unblocked, two bugs found and left alone
 
 Pushed the stadium work (bowl grown and re-centred, entrance tunnel cut through the west
 stand, the palm cluster that clipped it carved clear, static crowd mannequins replaced with
