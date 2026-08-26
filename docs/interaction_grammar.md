@@ -34,3 +34,29 @@ now rather than approximated.
 a chance of refusal for the relationship system over a guaranteed yes, because "its
 more realistic". When a design fork is realism vs. tidy determinism, expect them to
 pick realism.
+
+**A choice that names a physical act must produce that act, not just prose.** Stated
+2026-08-26: "even in normal chat windows, if ur option is to put ur hands up or to push
+someone, that action should automatically take place" — and, in the same message, about
+the lab: "if ur options are to mix 2 things and it says could cause an explosion, a
+small explosion should happen." Choosing an option is already physical under this
+grammar (you walked up, the dot opened, you picked a row) — this extends the same idea
+to the *outcome*: an option whose label is a literal physical verb should cause that
+verb to visibly happen in the world, not only resolve to `outcome` text and `effects`
+numbers.
+
+The lab is the concrete, built example: `ProcedureStep.volatile` (Types.luau) plus
+ScienceService's `commitBench` is a physical-act choice with a physical-act result —
+reach for the wrong station at the wrong point and a real, cosmetic-only explosion goes
+off at the bench, not just a worse score and a sentence about it.
+
+Checked at the time this note was written: no `LifeEvents/*.luau` choice anywhere in
+the content actually reads as a literal physical act today. The closest hits
+(`Crime.luau`'s `push` — "push back and insist you are qualified", `Gym.luau`'s
+`push_through`) are verbal or metaphorical, not "shove another person" or "raise your
+hands", so there is nothing existing to retrofit yet. Treat this as authoring guidance
+going forward rather than a backlog of choices to fix: the day a life event's option
+label is a real physical verb, it needs a real effect (an animation, a prop moving, a
+Townsfolk NPC reacting) the same way the lab's does — not a generic "physical choice"
+framework built ahead of any content that needs it, which is exactly the
+undifferentiated-outcome trap `ProcedureStep`'s own doc comment warns against.
