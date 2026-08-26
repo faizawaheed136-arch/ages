@@ -63,7 +63,15 @@ local SOURCE: { VehicleKind } = {
 		size = Vector3.new(7.2, 2.9, 18.5),
 		color = Color3.fromRGB(150, 138, 108),
 		accentColor = Color3.fromRGB(58, 52, 40),
-		topSpeedStuds = 76,
+		-- 81, not 76: the dominance check a few lines down refuses a car that
+		-- costs more than a cheaper one without beating it on top speed or
+		-- acceleration, and at 76 this lost to the $6400 sedan's 80 on both
+		-- axes -- a strictly worse car nobody would ever buy, which threw at
+		-- require time and took the whole server down with it (nothing after
+		-- VehicleService in init.server.luau's boot order ever ran). One stud
+		-- over the sedan is enough to clear the check without pretending a
+		-- wagon this size outruns a coupe.
+		topSpeedStuds = 81,
 		acceleration = 10,
 		steerDegrees = 26,
 	},
