@@ -371,6 +371,14 @@ export type RemoteName =
 	-- happens. A press for a task that has finished, expired, or was never issued to
 	-- this player is a no-op.
 	| "RequestTaskPickup"
+	-- "You just walked through the stadium's own gate." Carries no payload --
+	-- StadiumEntranceService already decided this player earns the moment
+	-- (once per session) before firing it, so there is nothing on the wire for
+	-- a client to forge; the only thing this remote can do is play a camera
+	-- cutscene early or not at all. The fan NPC that walks over is a real
+	-- server-spawned visitor, not part of this payload, the same separation
+	-- NPCService.Arrive already keeps between "play a moment" and "who is in it".
+	| "StadiumEntranceCue"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -619,6 +627,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestQuitJob",
 	"RequestGuideToJob",
 	"RequestTaskPickup",
+	"StadiumEntranceCue",
 }
 
 local FOLDER_NAME = "RemoteEvents"

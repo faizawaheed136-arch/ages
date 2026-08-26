@@ -32,6 +32,8 @@ local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
+local StadiumCrowdService = require(script.Parent.StadiumCrowdService)
+local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
@@ -913,6 +915,49 @@ Commands.gym = function(player: Player, args: { string }): string
 	end
 
 	return `usage: /gym [start|end|on|off] — {GymService.Describe(player)}`
+end
+
+
+-- /stadium                     seat/roam pool counts against their caps, and how many
+--                              anchors gen_city.py salted through the bowl.
+-- /stadium on|off              enable/disable the crowd; off tears down every spawned
+--                              rig, which is the fast way to tell "the crowd is thin"
+--                              apart from "the crowd is gone".
+Commands.stadium = function(_player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "on" or arg == "off" then
+		StadiumCrowdService.SetEnabled(arg == "on")
+		return `stadium crowd {arg} — {StadiumCrowdService.Describe()}`
+	end
+	return StadiumCrowdService.Describe()
+end
+
+-- /gate                the entrance moment's own state: gate count, how many
+--                      players have played it this session, on/off.
+-- /gate on|off         enable/disable the whole moment.
+-- /gate play           force it for the caller right now, off the nearest
+--                      gate, without walking to the stadium first -- the
+--                      camera cutscene, the fan, all of it, exactly as a
+--                      real crossing would trigger it.
+-- /gate reset          clear the caller's own "already played" flag, so a
+--                      second /gate play (or a real walk-through) fires again.
+Commands.gate = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "on" or arg == "off" then
+		StadiumEntranceService.SetEnabled(arg == "on")
+		return `stadium entrance {arg} — {StadiumEntranceService.Describe()}`
+	end
+	if arg == "reset" then
+		StadiumEntranceService.ResetPlayer(player.UserId)
+		return `cleared — {StadiumEntranceService.Describe()}`
+	end
+	if arg == "play" then
+		if not StadiumEntranceService.ForcePlayer(player) then
+			return `no gate found — {StadiumEntranceService.Describe()}`
+		end
+		return `fired — {StadiumEntranceService.Describe()}`
+	end
+	return StadiumEntranceService.Describe()
 end
 
 -- Everything about the fight, on one command.
@@ -2992,6 +3037,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
 	.. "/theft [go <place>|fill|on|off|crew <id>], "

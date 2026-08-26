@@ -2972,6 +2972,70 @@ Config.Stadium = {
 	AwayShirtColor = Color3.fromRGB(210, 210, 214),
 }
 
+-- The stadium's entrance moment: walking through the bowl's own gate (not the
+-- forecourt atrium's front door, which is just the building's own threshold)
+-- plays a cinematic camera beat and sends a fan over for an autograph, once
+-- per player per server session. StadiumEntranceService reads GateTag off the
+-- single invisible trigger part tools/gen_city.py's GateArch stands in the
+-- doorway (STADIUM_GATE_TAG there) -- no shared source, so the literal string
+-- must match exactly, the same arrangement as Config.Stadium's tags above.
+Config.StadiumEntrance = {
+	GateTag = "AgesStadiumGate",
+
+	-- Studs from the trigger part that count as having crossed the gate. Wider
+	-- than Config.World.InteractRadius's tighter room distance on purpose: this
+	-- is a doorway a player walks straight through at a normal pace, not an
+	-- object they stop in front of, and the check has to catch a crossing that
+	-- might only be a couple of ticks wide.
+	-- Safe range: 6-14.
+	TriggerRadius = 10,
+
+	-- How often the server checks players against the gate. Cheap: one part,
+	-- checked against whoever is near the stadium. Safe range: 0.1-0.5.
+	TickSeconds = 0.2,
+
+	-- Seconds the camera takes to snap in from the normal follow shot to the
+	-- close cinematic framing. Quick, so it reads as a cut to a replay angle
+	-- rather than a slow pan catching up to something that already happened.
+	-- Safe range: 0.3-1.2.
+	ZoomInSeconds = 0.6,
+
+	-- Seconds the camera holds the close framing before releasing -- long
+	-- enough to read the fan's approach and the autograph beat; too long and
+	-- standing still stops feeling like an entrance and starts feeling like a
+	-- wait. Safe range: 2.5-6.
+	HoldSeconds = 3.5,
+
+	-- Seconds the camera takes easing back out to the normal follow shot.
+	-- Safe range: 0.4-1.5.
+	ReleaseSeconds = 0.8,
+
+	-- The held shot's framing relative to the player: how far back, how high,
+	-- and how far to the side -- a three-quarter portrait rather than a
+	-- straight-on selfie, the same angle a walkout camera holds.
+	-- Safe range: distance 5-10, height 2-5, side 1.5-4.
+	FramingDistanceStuds = 7,
+	FramingHeightStuds = 3.2,
+	FramingSideStuds = 2.4,
+
+	-- Field of view during the held shot. Roblox's default is 70; a narrower
+	-- angle is what reads as a lens actually zoomed in rather than a camera
+	-- that just moved closer with the same wide lens.
+	-- Safe range: 35-55.
+	FramingFov = 42,
+
+	-- Studs from the player the fan stops at to ask for the autograph -- mirrors
+	-- Config.NPC.ApproachStuds, kept separate because this beat is much shorter
+	-- and closer than a delivery's doorstep wait.
+	-- Safe range: 3-6.
+	FanApproachStuds = 4,
+
+	-- Seconds the fan holds the "talk" beat once arrived, before turning away.
+	-- Safe range: 1.5-4.
+	FanTalkBeatSeconds = 2.5,
+}
+
+
 -- People. The pillar of a life this game did not have.
 --
 -- Everybody in AGES until now was a delivery. Somebody walked in, handed over a line

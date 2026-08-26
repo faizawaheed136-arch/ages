@@ -955,6 +955,13 @@ STADIUM_CROWD_SEAT_TAG = "AgesStadiumCrowdSeat"
 STADIUM_CROWD_ROAM_TAG = "AgesStadiumCrowdRoam"
 STADIUM_CROWD_STAND_ATTR = "Stand"
 
+# The tag StadiumEntranceService reads to know where the bowl's own gate
+# opening is -- a single invisible, non-colliding part standing in the
+# StandWest doorway (see GateArch), matched against Config.StadiumEntrance's
+# copy of this same string the way every other tag pair in this file is: no
+# shared source, so a rename here means a rename there too.
+STADIUM_GATE_TAG = "AgesStadiumGate"
+
 # ---------------------------------------------------------------------------
 # Palette
 # ---------------------------------------------------------------------------
@@ -1319,6 +1326,34 @@ def glazing(name, bounds, along="z", panes=1):
         piece_bounds = (x0, x1, a, b, y0, y1) if along == "z" else (a, b, z0, z1, y0, y1)
         box(f"{name}{i + 1}", piece_bounds, GLAZING, GLASS,
             transparency=0.55, collide=False)
+
+
+def glass_doors(name, bounds, along="z", leaves=2, height=DOOR_HEIGHT):
+    """A doorway's own opening, filled with real door leaves instead of standing
+    open as a bare gap in the wall -- every `wall(doors=...)` cut in this codebase
+    up to now has only ever removed material, never put anything back in the hole,
+    which reads as a missing door rather than an open one. Two (or more) glass
+    leaves meet at a centre mullion, each with a horizontal push bar at hand
+    height. Non-colliding on purpose: the wall's own `doors=` cut already defines
+    where a player can walk, and a swinging leaf with no open/close state would
+    just be a wall that looks like a door and blocks like one too."""
+    x0, x1, z0, z1, y0, y1 = bounds
+    lo, hi = (z0, z1) if along == "z" else (x0, x1)
+    step = (hi - lo) / leaves
+    bar_y = y0 + 3.4
+    for i in range(leaves):
+        a, b = lo + i * step + 0.3, lo + (i + 1) * step - 0.3
+        leaf_bounds = (
+            (x0, x1, a, b, y0, y0 + height) if along == "z"
+            else (a, b, z0, z1, y0, y0 + height)
+        )
+        box(f"{name}{i + 1}", leaf_bounds, GLAZING, GLASS, transparency=0.3, collide=False)
+        bar_a, bar_b = a + 0.6, b - 0.6
+        bar_bounds = (
+            (x0, x1, bar_a, bar_b, bar_y, bar_y + 0.25) if along == "z"
+            else (bar_a, bar_b, z0, z1, bar_y, bar_y + 0.25)
+        )
+        box(f"{name}{i + 1}Bar", bar_bounds, STEEL, METAL, collide=False)
 
 
 def ceiling_light(x, z, ceiling, label="CeilingLight"):
@@ -5536,6 +5571,28 @@ def stadium_bowl():
                                   GROUND + 13.8, GROUND + 15.4),
                         STAD_STRUCTURE, SMOOTH,
                         children=sign("MAIN GATE", "left", color=(250, 246, 234), size=40))
+                    # A banner in the home kit's own red on each pier, hung from
+                    # the header down -- the one visual tie between this gate and
+                    # the bowl it stands in, so the last few studs of the walk from
+                    # the atrium read as arriving at *this* team's stadium and not
+                    # a generic concrete doorway. STAD_SEATS[0] is that same red.
+                    for side in (-1, 1):
+                        pz = gz + side * (door_half_w + 1.2)
+                        box(f"Banner{side}", (gx - 1.65, gx - 1.35, pz - 1.0, pz + 1.0,
+                                              GROUND + 6.0, GROUND + 13.4),
+                            STAD_SEATS[0], FABRIC)
+                    # An invisible, non-colliding trigger spanning the doorway itself --
+                    # StadiumEntranceService reads STADIUM_GATE_TAG to know when a player
+                    # has actually walked through this gate (not just stood near the
+                    # piers), and plays the entrance moment once per session. Centred in
+                    # the opening rather than on a pier, so the distance check in the
+                    # service is a true "crossed the threshold" rather than "approached
+                    # one side of it".
+                    box("EntranceTrigger", (gx - 1.0, gx + 1.0,
+                                             gz - door_half_w, gz + door_half_w,
+                                             GROUND, GROUND + 6.0),
+                        STAD_STRUCTURE, SMOOTH, transparency=1, collide=False,
+                        tags=[STADIUM_GATE_TAG])
             elliptical_ring("RoofSlab", cx, cz, rx_out, rz_out, rx_in, rz_in,
                              top_y + 7.0, top_y + 7.6, ROOF_GREY, METAL, keep=keep)
             rx_c, rz_c = (rx_out + rx_in) / 2, (rz_out + rz_in) / 2
@@ -5794,6 +5851,8 @@ def stadium_entrance(x0, x1, z0, z1, label):
              along="x")
         wall("WallFront", (x0, ix0, z0, z1, GROUND, eave), STAD_STRUCTURE, CONCRETE,
              along="z", doors=((cz - STAD_GATE_HALF, cz + STAD_GATE_HALF),), head=12.0)
+        glass_doors("MainDoors", (x0 + 0.1, ix0 - 0.1, cz - STAD_GATE_HALF, cz + STAD_GATE_HALF,
+                                   GROUND, GROUND + DOOR_HEIGHT), along="z", leaves=4)
         glazing("FrontS", (x0 + 0.4, ix0 - 0.4, z0 + WALL + 1.0, cz - STAD_GATE_HALF - 0.4,
                            GROUND + 12.0, eave - 1.0), along="z", panes=2)
         glazing("FrontN", (x0 + 0.4, ix0 - 0.4, cz + STAD_GATE_HALF + 0.4, z1 - WALL - 1.0,
@@ -5893,7 +5952,11 @@ def stadium():
 
         palm_row(fx0 + 3.0, fx0 + 3.0, fz0 + 5.0, fz1 - 5.0, GROUND, step=14.0,
                  along="z", label="PlazaPalmsWest")
-        for pz in (ez0 - 4.0, ez1 + 4.0):
+        # Offset 10 studs past the doorway edge (cz +/- STAD_GATE_HALF), not just past
+        # the entrance building's own footprint: a palm's fronds reach ~11 studs from
+        # its trunk (see `palm()`), so flanking it right at the doorway edge let the
+        # crown hang into the opening and read as trees blocking the entrance.
+        for pz in (ez0 - 10.0, ez1 + 10.0):
             palm(ex0 - 3.0, pz, GROUND, label=f"PlazaPalmFlank{pz:.0f}")
         for pz in (fz0 + 8.0, fmid - 10.0, fmid + 10.0, fz1 - 8.0):
             street_lamp(fx0 + 4.0, pz, 1, floor=GROUND)

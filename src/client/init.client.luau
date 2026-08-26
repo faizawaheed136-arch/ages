@@ -42,6 +42,7 @@ local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
 local SpeechBubble = require(script.world.SpeechBubble)
+local StadiumEntrance = require(script.world.StadiumEntrance)
 
 type Stats = Types.Stats
 type AgeUpCause = Types.AgeUpCause
@@ -1157,6 +1158,14 @@ Remotes.Get("BondMilestone").OnClientEvent:Connect(function(event: Types.BondMil
 		return
 	end
 	ui:ShowNotice(`{event.person} is now your {string.lower(event.label)}.`)
+end)
+
+-- No payload, and no settingCelebrations gate: unlike a milestone or a bond
+-- crossing, which happen many times a life and are worth letting a player
+-- turn down, this fires once a session at most (StadiumEntranceService's own
+-- `seen` set) and is the entrance to a whole building, not a stat update.
+Remotes.Get("StadiumEntranceCue").OnClientEvent:Connect(function()
+	StadiumEntrance.Play()
 end)
 
 Remotes.Get("GossipUpdate").OnClientEvent:Connect(function(event: Types.GossipEvent)
