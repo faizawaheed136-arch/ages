@@ -17,6 +17,7 @@ local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
 local MusicUI = require(script.ui.MusicUI)
+local SoccerHUD = require(script.ui.SoccerHUD)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -62,6 +63,7 @@ type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
 type MusicState = Types.MusicState
+type SoccerMatchState = Types.SoccerMatchState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -104,6 +106,7 @@ local lab = LabUI.new()
 local hunt = HuntUI.new()
 local easel = EaselUI.new()
 local music = MusicUI.new()
+local soccer = SoccerHUD.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -144,6 +147,7 @@ local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
 local RequestPersonOfferRemote = Remotes.Get("RequestPersonOffer")
 local RequestPersonContactRemote = Remotes.Get("RequestPersonContact")
 local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
+local RequestSitRemote = Remotes.Get("RequestSit")
 local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local RequestStartWorkoutRemote = Remotes.Get("RequestStartWorkout")
@@ -156,6 +160,9 @@ local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestMusicNoteRemote = Remotes.Get("RequestMusicNote")
+local RequestSoccerJoinRemote = Remotes.Get("RequestSoccerJoin")
+local RequestSoccerShootRemote = Remotes.Get("RequestSoccerShoot")
+local RequestSoccerPassRemote = Remotes.Get("RequestSoccerPass")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -177,6 +184,7 @@ local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
 local RequestSellVehicleRemote = Remotes.Get("RequestSellVehicle")
 local RequestSpawnVehicleRemote = Remotes.Get("RequestSpawnVehicle")
 local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
+local RequestGuideToLocationRemote = Remotes.Get("RequestGuideToLocation")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -431,6 +439,24 @@ end)
 
 fight:OnSidestep(function()
 	RequestFightActionRemote:FireServer("sidestep")
+end)
+
+-- The pitch. Join is a bare tap -- see SoccerHUD's header for why a press with no free
+-- slot or from someone already rostered is a no-op on the server rather than a queue
+-- entry. Shoot follows the exact shape RequestFightAction's strike does: a held edge,
+-- no charge value, because what a release is worth is the server's clock, not the
+-- client's claim. Pass carries nothing at all -- the server reads the carrier's own
+-- facing and range, same as SoccerHUD's own header explains.
+soccer:OnJoin(function()
+	RequestSoccerJoinRemote:FireServer()
+end)
+
+soccer:OnShoot(function(held: boolean)
+	RequestSoccerShootRemote:FireServer(held)
+end)
+
+soccer:OnPass(function()
+	RequestSoccerPassRemote:FireServer()
 end)
 
 -- One boolean for both of the room's controls, and which one it means is never named here.
@@ -940,6 +966,13 @@ menu:OnJobTapped(function(jobId: string)
 	RequestGuideToJobRemote:FireServer(jobId)
 end)
 
+-- A row pressed on the Locations pane. Points the chevron guide at it, the same
+-- server-resolves-the-place-point arrow a job tap gets -- nothing about where the
+-- place actually is has to travel with the click.
+menu:OnLocationTapped(function(id: string)
+	RequestGuideToLocationRemote:FireServer(id)
+end)
+
 -- The things you are doing right now, inside the shift you are already on. Two
 -- displays of one fact: a row on the HUD per task saying what it is and how long is
 -- left, and a lit mark on the floor per task saying where.
@@ -1055,6 +1088,13 @@ Remotes.Get("MusicUpdated").OnClientEvent:Connect(function(state: MusicState?)
 	music:Set(state)
 end)
 
+-- The pitch, whether or not this player is on it -- see SoccerUpdated's own header for
+-- why this is a broadcast to everyone watching rather than a per-player session state the
+-- way every other push on this list is.
+Remotes.Get("SoccerUpdated").OnClientEvent:Connect(function(state: SoccerMatchState?)
+	soccer:Set(state)
+end)
+
 -- How much of the town is looking for you. Two halves of one fact, driven from the one
 -- push for the same reason the lab's two halves are: the bar says how bad it is, the ring
 -- on the street says where they think you are, and a bar reading "manhunt" over a ring
@@ -1147,10 +1187,13 @@ menu:OnColorsToggled(function(want: boolean)
 	RequestGangColorsRemote:FireServer(want)
 end)
 
--- M, and Escape to close. Safe to claim: nothing else in this client binds a key at all --
--- every other interaction in the game is a tap on a three-dot marker or a button -- so there
--- is no rebinding to do and nothing to collide with. GameProcessedEvent is honoured so that
--- typing an M into the chat bar does not throw the map over the conversation.
+-- M, Tab, Escape, and now L. Every other interaction in the game is a tap on a
+-- three-dot marker or a button; L is the one deliberate exception, on the same
+-- precedent as Config.Interact.PickupKeyboardKey -- a second dedicated key for a
+-- distinct verb, sitting down, rather than folding it into the badge grammar. See
+-- Config.School.Classroom for why sitting is a key press at all. GameProcessedEvent
+-- is honoured so that typing any of these letters into the chat bar does not also
+-- fire the game behind it.
 UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
 	if processed then
 		return
@@ -1159,6 +1202,12 @@ UserInputService.InputBegan:Connect(function(input: InputObject, processed: bool
 		mapSheet:Toggle()
 	elseif input.KeyCode == Enum.KeyCode.Tab then
 		menu:Toggle()
+	elseif input.KeyCode == Enum.KeyCode.L then
+		-- No local guard for "is a lesson actually pending" -- the server already
+		-- refuses a press with nothing to sit down to (see onSitRequested), and a
+		-- refusal the player never notices is the correct outcome of pressing L
+		-- with nothing in front of them.
+		RequestSitRemote:FireServer()
 	elseif input.KeyCode == Enum.KeyCode.Escape then
 		-- One at a time, map first, because the map draws over the menu and closing the
 		-- thing underneath the thing you are looking at is not what Escape means. The

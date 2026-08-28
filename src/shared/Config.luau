@@ -2770,16 +2770,79 @@ Config.School.Art = {
 	},
 }
 
+-- The classroom. Where a quiz subject -- Math, Reading -- actually happens, and until
+-- now the one room a quiz lesson never had: it opened on the school's own forecourt the
+-- instant the player was in AttendRadiusStuds, the same ground the sign and the pad
+-- stand on. See Classroom.luau for why that read as the baseplate rather than a room.
+--
+-- What the room buys is an entry gesture. PhysicalLessons above is unchanged and stays
+-- false -- the question is still a panel and the click still answers it, which is the
+-- settled interaction grammar (docs/interaction_grammar.md) and this does not reopen
+-- that. What changes is what it costs to get a question onto the screen at all: a walk
+-- to an open desk and a deliberate press, "L" or a click on the desk itself, the same
+-- shape every other subject's one-verb-one-commit already has. See SchoolService's
+-- `seated` gate on a Lesson for how the press is enforced server side.
+Config.School.Classroom = {
+	-- Desks in the room, as rows facing the door and a count across each row. Two rows of
+	-- four rather than one row of eight so the room reads as a room instead of a line --
+	-- a lone row the floor partly refuses visibly gaps on one side, and a grid hides the
+	-- same refusal in its middle. Safe range: Rows 1-3, PerRow 2-6.
+	Rows = 2,
+	PerRow = 4,
+
+	-- How far out the grid reaches, as the share its rows are measured against. Smaller
+	-- than Art's: a desk is furniture you sit at once for the length of a lesson, not
+	-- furniture you walk back and forth from, so the room does not need Art's distance to
+	-- make a verb out of the walk. Safe range: 18-32.
+	RoomRadiusStuds = 26,
+
+	-- The desk and the seat on it, as placeholder blocks -- see Lab's buildBlock for why
+	-- furniture in this game is intentionally plain rather than dressed.
+	DeskSize = Vector3.new(4, 2.2, 2.4),
+	SeatSize = Vector3.new(2, 1.4, 2),
+	-- How high the seat surface sits off the floor. Its own number rather than half of
+	-- SeatSize.Y, because a Seat instance's sit point is its top face and a chair a child
+	-- is meant to climb into is shorter than the desk it tucks under.
+	SeatHeightStuds = 1.6,
+
+	-- How close an empty desk's seat has to be for L, or a click on the desk, to sit the
+	-- player in it. Generous, matching Interact.ReachStuds, because finding the one open
+	-- desk in a room of eight should not itself be the test the lesson is measuring.
+	-- Safe range: 6-14.
+	SitReachStuds = 10,
+
+	Build = {
+		-- Bearing, in degrees clockwise from the room's forward, matching the lab and
+		-- studio's convention. Perpendicular to the studio's wall axis (0) on purpose, so
+		-- the two rooms -- both laid out around the same school point -- never reach for
+		-- the same wedge of floor.
+		RowBearing = 90,
+
+		-- How far out the first row sits, and how much farther each row behind it sits,
+		-- both as shares of RoomRadiusStuds. Safe range: First 0.35-0.55, Step 0.25-0.4.
+		FirstRowDistanceShare = 0.45,
+		RowDistanceStep = 0.35,
+
+		-- The gap between one desk and the next along a row, in studs rather than a share
+		-- of the room -- a desk's own width is a stud count, and the row has to add real
+		-- gaps to real desks rather than divide a fixed span by how many happen to fit.
+		-- Safe range: 2.5-5.
+		DeskGapStuds = 3.5,
+
+		LabelMaxDistanceStuds = 45,
+	},
+}
+
 -- Music. A rhythm held rather than a question answered -- the sweep primitive the gym
 -- and the sports campus already use (shared/Sweep.luau), aimed at a beat instead of a
 -- rep.
 --
--- No room of its own, unlike the lab and the studio, and that is a decision rather than
--- an omission: the mechanic is a needle and a press, and a needle reads the same in the
--- front hall as it would in a room built specially to hold it. It runs from the same door
--- point every other subject starts at -- see MusicService, which reads the school's own
--- place point -- and is held to the classroom by School.RoomRadiusStuds, the same radius
--- the quiz path already enforces there.
+-- No room of its own, unlike the lab, the studio and now the classroom, and that is a
+-- decision rather than an omission: the mechanic is a needle and a press, and a needle
+-- reads the same in the front hall as it would in a room built specially to hold it. It
+-- runs from the same door point every other subject starts at -- see MusicService, which
+-- reads the school's own place point -- and is held to the classroom by
+-- School.RoomRadiusStuds, the same radius the quiz path already enforces there.
 Config.School.Music = {
 	-- Notes in one song. The same job QuestionsPerLesson and Hunt.Stops do for their own
 	-- verbs: long enough that one missed beat does not decide the lesson, short enough
@@ -3277,6 +3340,240 @@ Config.SportsDrill = {
 	RoomRadiusStuds = 30,
 }
 
+-- Soccer: the one sport built to full depth -- see docs/school_sports_plan.md's phase 6
+-- and docs/school_and_sports.md's SPORTS section for the research this tuning comes out
+-- of. Basketball and volleyball are meant to follow this exact skeleton later, which is
+-- why this lives at Config.Sports.Soccer rather than Config.Soccer: a second sport gets
+-- a sibling table under the same name, not a second vocabulary to learn.
+--
+-- PE is this match, not a fourth SportsDrill station. See Curriculum's "pe" entry: its
+-- verb is "match", and SchoolService hands the whole afternoon to SoccerService the same
+-- way it already hands Science to a procedure. The four SportsDrill stations -- including
+-- the "Penalty Spot," which shares this same soccer goal's crossbar, see
+-- Config.SportsDrill.Kinds.soccer -- are untouched by this: a rep-and-verdict loop a
+-- player can run alone, at any age SportsDrill allows, to raise athletics. The match
+-- below is the other thing entirely, six bodies and a ball, and it never waits for
+-- anybody to have run a drill first -- it is already running, bot-filled, before the
+-- first player of the server ever walks up to it.
+Config.Sports = {
+	Soccer = {
+		-- The pitch's own goals are already built and tagged by tools/gen_city.py's
+		-- soccer_field() -- two goals, three parts each (Post, Post2, Bar), every one
+		-- carrying Config.World.SportTag with a Config.World.SportKindAttribute of this
+		-- kind. SoccerService reads their positions at runtime rather than a copy of
+		-- gen_city.py's pitch coordinates kept here, on the rule PlaceService's own
+		-- header gives: a coordinate copied out of the world is correct until somebody
+		-- nudges a wall, and then it is a number nothing notices going stale.
+		GoalKind = Config.World.SportKind.Soccer,
+		-- The walk-to destination the same pitch already answers to -- what the guide
+		-- arrows and Config.Places.Walkable call it.
+		PlaceId = "soccer_field",
+
+		TeamSize = 3,
+		-- TeamSize * 2, spelled out rather than computed so a Config reader sees the
+		-- whole roster at a glance without doing the arithmetic themselves.
+		RosterSize = 6,
+
+		-- The pitch's own touchline-to-touchline width, mirroring tools/gen_city.py's
+		-- STAD_PX1 - STAD_PX0 (soccer_field() is built 70 studs wide). Unlike the goals,
+		-- the touchlines are not tagged with Config.World.SportTag -- only the goal posts
+		-- and crossbar are -- so this one number is copied by hand rather than read off a
+		-- part, and it is the one place in this file that can go stale if the pitch is
+		-- ever rebuilt at a different width without updating it here too. Used for
+		-- out-of-bounds and for spreading the kickoff formation across the pitch.
+		PitchWidthStuds = 70,
+
+		-- How far from the pitch's own centre a player is swept into the roster push,
+		-- the join offer, and out-of-bounds checks. Wide enough to hold the whole
+		-- 70x110 playing area soccer_field() builds, plus run-off either end.
+		-- Safe range: 60-100.
+		WatchRadiusStuds = 85,
+		-- Inside this of a goal's own tagged parts, a player is close enough to take
+		-- over a bot's slot. Tighter than WatchRadiusStuds: watching is free, joining
+		-- means walking onto the pitch itself.
+		-- Safe range: 20-45.
+		JoinRadiusStuds = 40,
+
+		-- How often the match loop ticks: ball flight, possession contests, bot moves,
+		-- the clock. Faster than SportsDrill's 0.18s -- six moving bodies and a ball
+		-- read a stutter a solo sweep bar does not.
+		-- Safe range: 0.05-0.15.
+		TickSeconds = 0.1,
+
+		-- The match clock, in real seconds, before it resets to 0-0 and keeps running --
+		-- there is no lobby wait between one match and the next, only a short pause at
+		-- KickoffPauseSeconds. Short on purpose: a match that never posts a result is
+		-- not a game, and a wait for the next one to matter is not a cost this pitch
+		-- ever makes anybody pay, because it is never actually empty.
+		-- Safe range: 120-360.
+		MatchSeconds = 240,
+		-- How long the pitch holds after a goal before play resumes, so the scoreboard
+		-- and the "Goal!" verdict are readable before the next kickoff.
+		-- Safe range: 1.5-5.
+		KickoffPauseSeconds = 2.5,
+		-- How long a non-goal verdict -- "Tackled!", "Wide!", "Saved!" -- holds on the
+		-- HUD before clearing, same shape as Music/SportsDrill's own VerdictSeconds but
+		-- kept short because play never actually pauses for it, unlike a goal.
+		-- Safe range: 1-2.5.
+		VerdictHoldSeconds = 1.6,
+
+		-- ---------------- the ball ----------------
+		BallRadius = 1.0,
+		-- Held this far in front of the carrier, at this height, while dribbling.
+		CarryAheadStuds = 3.0,
+		CarryHeightStuds = 1.2,
+		-- Straight-line drag on a loose ball: studs/second of speed lost per second on
+		-- the ground.
+		RollFriction = 14.0,
+		-- Downward acceleration while the ball is airborne. Matches workspace's own
+		-- default gravity so a shot falls the way anything else in this game does.
+		Gravity = 196.2,
+		-- A loose, grounded ball below this speed simply stops, rather than crawling at
+		-- a fraction of a stud per second forever under friction alone.
+		RestSpeed = 1.5,
+		-- Speed kept after a bounce off the ground or a post, as a fraction of the speed
+		-- it arrived with. Safe range: 0.2-0.6.
+		BounceDamping = 0.35,
+
+		-- ---------------- possession ----------------
+		-- How close a player must be to the ball to carry it or contest it away from
+		-- whoever already is. Read every tick against every player on the roster, not
+		-- on a Touched event -- see the design doc's pitfall list for why a possession
+		-- contest has to be a per-frame distance check.
+		ClaimRadiusStuds = 4.5,
+		-- After losing the ball, this long before the same player can reclaim it. The
+		-- doc's own pitfall: without a cooldown, the tick that just took the ball away
+		-- hands it straight back on the very next tick, because the taker is now also
+		-- the closest body to it.
+		-- Safe range: 0.3-1.2.
+		ClaimCooldownSeconds = 0.6,
+
+		-- ---------------- shooting: charge-and-release ----------------
+		-- The same primitive FightService's strike already proves: charge climbs at
+		-- 1/ShotChargeSeconds per second held, and a release reads whatever share it
+		-- had reached. Safe range: 0.5-2.
+		ShotChargeSeconds = 1.1,
+		-- Below this share, a release still shoots -- there is no dead zone, matching
+		-- Fight.JabShare -- but at the weakest power the range below allows.
+		ShotMinShare = 0.15,
+		-- At or above this share the shot is overcharged: it still fires, but wide and
+		-- high rather than harder, the same "commit too long and pay for it" shape
+		-- FightService's own OverchargeShare already teaches.
+		OverchargeShare = 0.92,
+		ShotMinPower = 40.0,
+		ShotMaxPower = 92.0,
+		-- The best a release can land: this close either side of ShotBandCenter is a
+		-- clean, on-target shot. Outside it the shot still goes -- degrades rather
+		-- than fails, the Madden-meter shape the design doc asks for -- drifting off
+		-- target by up to ShotAccuracyMissStuds the further the release lands from
+		-- the band.
+		ShotBandCenter = 0.55,
+		ShotBandHalf = 0.18,
+		-- The narrower band inside ShotBandHalf that pays Skills.Awards.SoccerShotPerfect
+		-- instead of SoccerShotGood -- the same nested Perfect-inside-Good shape
+		-- SportsDrill's own sweetFraction/perfectFraction split uses, applied to a
+		-- release instead of a sweep hit. Must stay smaller than ShotBandHalf, checked
+		-- at require time in SoccerService, the same guard MusicService runs on its own
+		-- Perfect/Sweet pair.
+		ShotPerfectBandHalf = 0.06,
+		ShotAccuracyMissStuds = 7.0,
+		-- Vertical launch speed at release, as a fraction of the shot's own horizontal
+		-- power -- how much a shot climbs off the ground rather than skimming it, so a
+		-- ball that clears a keeper's legs and drops under the bar is a product of the
+		-- same one release rather than a second, separate "chip" input. Safe range:
+		-- 0.15-0.4.
+		ShotLiftRatio = 0.26,
+
+		-- ---------------- passing ----------------
+		-- A tap, not a second charge meter -- see the design doc's one-verb-per-subject
+		-- table: a pass with its own meter would be a second shot wearing a different
+		-- name, not a second thing to decide.
+		PassSpeedStudsPerSecond = 62.0,
+		-- How wide a cone ahead of the passer counts as "a teammate to find," in
+		-- degrees either side of facing.
+		PassConeDegrees = 100,
+		PassMaxRangeStuds = 55,
+
+		-- ---------------- movement ----------------
+		-- WalkSpeed on the pitch, before the athletics bonus below. Roblox's own
+		-- default is 16; a match is meant to read quicker than a walk around town.
+		BaseWalkSpeed = 20,
+		-- Added on top of BaseWalkSpeed at the top athletics level, tapered linearly
+		-- under it -- see SkillService.LevelOf. This is the lock-in's "drills that
+		-- improve skills, speed and stuff": every perfect rep at a drill station or a
+		-- match event that pays athletics XP is, eventually, a faster player on this
+		-- exact pitch.
+		-- Safe range: 0-8.
+		MaxAthleticsWalkSpeedBonus = 6,
+
+		-- ---------------- bots ----------------
+		-- Bots are drawn on the pitch as simple team-coloured markers moved the same
+		-- kinematic way the ball is -- not a full avatar rig -- so the roster is always
+		-- full and visible without a per-bot web call to build one. Swapping in a real
+		-- NPCService body later changes nothing about the match logic below, which only
+		-- ever asks a roster entry for a position.
+		--
+		-- Scales a bot's shot and pass quality so the pitch stays winnable. Safe range:
+		-- 0.4-0.9.
+		BotSkill = 0.62,
+		-- How close to the opposing goal a bot carrying the ball will attempt a shot
+		-- rather than keep carrying or look for a pass.
+		BotShootRangeStuds = 26,
+		-- How often a bot reconsiders what it is doing. Coarser than TickSeconds on
+		-- purpose -- a bot that replans every physics tick reads as twitchy rather
+		-- than as a player thinking.
+		-- Safe range: 0.2-0.6.
+		BotDecisionSeconds = 0.35,
+		-- The elastic-band shape a team without the ball holds. Three lanes, one per
+		-- roster slot on a side: a deep lane that mostly marks the middle and two wide
+		-- lanes that push higher. Each is a share of the pitch's own half-width
+		-- (lateral) and of the distance to the opposing goal (depth), so the shape
+		-- scales with whatever the pitch's real dimensions turn out to be rather than
+		-- a stud count that could go stale.
+		BotLaneOffsetShare = { -0.55, 0.15, 0.55 },
+		BotLaneDepthShare = { 0.2, 0.62, 0.62 },
+		-- How far a lane is pulled toward the ball's own depth when this bot's team has
+		-- it, as a share of the gap between the lane's resting depth and the ball's.
+		-- 1.0 would put every bot level with the ball; kept well under that so the team
+		-- still has a shape rather than chasing as a clump.
+		-- Safe range: 0.3-0.7.
+		BotAdvanceShare = 0.55,
+		-- Same shape, the other way: how far a lane falls back toward its own goal when
+		-- the other team has the ball.
+		-- Safe range: 0.3-0.7.
+		BotRetreatShare = 0.6,
+		-- How far a lane is pulled sideways toward the ball's own lateral position, as a
+		-- share of the gap between the lane's resting offset and the ball's. Lower than
+		-- the advance/retreat shares on purpose -- depth is what marking is about, and a
+		-- defence that also slides fully sideways leaves its own far post empty.
+		-- Safe range: 0.2-0.5.
+		BotLateralPull = 0.35,
+
+		-- ---------------- PE grading ----------------
+		-- What a PE lesson's `share` is built from, the same weighted-contribution
+		-- shape every verb reduces its own afternoon to before handing it to
+		-- Report.BandFor. A goal is worth the most because it is the one outcome that
+		-- needed the whole chain -- won the ball, beat a marker, scored -- to happen at
+		-- all; a shot on target pays a little even off the scoresheet, because lining
+		-- one up is still the mechanic working.
+		PeGoalWeight = 1.0,
+		PeAssistWeight = 0.6,
+		PeTackleWeight = 0.4,
+		PeShotOnTargetWeight = 0.15,
+		-- The contribution total a share of 1.0 -- a "good" lesson -- represents.
+		-- Roughly one goal and a little more, or a covering performance of tackles and
+		-- shots without one: reachable inside PeLessonSeconds without making a shutout
+		-- the only passing grade.
+		PeContributionTarget = 1.4,
+		-- How long a PE lesson's grading window stays open once the student takes the
+		-- pitch, in real seconds. Short of a full match on purpose, so PE grades one
+		-- showing rather than requiring a student still be there when the clock hits
+		-- zero.
+		-- Safe range: 60-180.
+		PeLessonSeconds = 110,
+	},
+}
+
 -- People. The pillar of a life this game did not have.
 --
 -- Everybody in AGES until now was a delivery. Somebody walked in, handed over a line
@@ -3507,6 +3804,8 @@ Config.Places = {
 		"store",
 		"school",
 		"classroom",
+		"science_lab",
+		"cafeteria",
 		"home",
 		"crossing",
 		"gate",
@@ -3530,6 +3829,9 @@ Config.Places = {
 		"tennis_court",
 		"playground",
 		"running_track",
+		"boxing_gym",
+		"basketball_gym",
+		"volleyball_court",
 		"cafe",
 		"restaurant",
 		"supermarket",
@@ -3547,6 +3849,70 @@ Config.Places = {
 		"north_shop_1",
 		"auto_dealer",
 	},
+}
+
+-- The Locations pane's whole content: every destination a player can point the guide
+-- arrows at from the menu, in the order the pane lists them. Every id here is a real
+-- PlaceService tag already proven live -- most of them are a job's placeId, reachable
+-- today through JobPostsUpdated's own guide arrow, and the sports fields are the same
+-- ids Config.Places.Walkable already sends companions to.
+--
+-- This pane never teleports. Picking a row fires RequestGuideToLocation, the server
+-- resolves the id through PlaceService.Find exactly as WorkService does for a job, and
+-- pushes GuideUpdated -- the player still walks. See PlaceService.Send's own header for
+-- why that is a hard line and not an oversight.
+Config.Locations = {
+	List = {
+		{ id = "corner_shop", label = "Corner Shop" },
+		{ id = "office", label = "Office" },
+		{ id = "bakery", label = "Bakery" },
+		{ id = "library", label = "Library" },
+		{ id = "garage", label = "Garage" },
+		{ id = "gym", label = "Gym" },
+		{ id = "clinic", label = "Clinic" },
+		{ id = "clothing_store", label = "Clothing Store" },
+		{ id = "electronics", label = "Electronics Store" },
+		{ id = "supermarket", label = "Supermarket" },
+		{ id = "cafe", label = "Cafe" },
+		{ id = "pizzeria", label = "Pizzeria" },
+		{ id = "restaurant", label = "Restaurant" },
+		{ id = "dining_1", label = "Fine Dining" },
+		{ id = "post_office", label = "Post Office" },
+		{ id = "bank", label = "Bank" },
+		{ id = "hotel", label = "Hotel" },
+		{ id = "pharmacy", label = "Pharmacy" },
+		{ id = "dental", label = "Dental Clinic" },
+		{ id = "vet", label = "Vet Clinic" },
+		{ id = "construction_site", label = "Construction Site" },
+		{ id = "warehouse", label = "Warehouse" },
+		{ id = "fire_station", label = "Fire Station" },
+		{ id = "police_station", label = "Police Station" },
+		{ id = "mall_entrance", label = "Mall" },
+		{ id = "florist", label = "Florist" },
+		{ id = "bookstore", label = "Bookstore" },
+		{ id = "toy_store", label = "Toy Store" },
+		{ id = "music_store", label = "Music Store" },
+		{ id = "laundromat", label = "Laundromat" },
+		{ id = "gas_station", label = "Gas Station" },
+		{ id = "car_wash", label = "Car Wash" },
+		{ id = "cinema", label = "Cinema" },
+		{ id = "bowling", label = "Bowling Alley" },
+		{ id = "arcade", label = "Arcade" },
+		{ id = "farm", label = "Farm" },
+		{ id = "barbershop", label = "Barbershop" },
+		{ id = "salon", label = "Hair Salon" },
+		{ id = "tattoo_parlor", label = "Tattoo Parlor" },
+		{ id = "auto_dealer", label = "Car Dealership" },
+		{ id = "town_hall", label = "Town Hall" },
+		{ id = "soccer_field", label = "Soccer Field" },
+		{ id = "basketball_court", label = "Basketball Court" },
+		{ id = "tennis_court", label = "Tennis Court" },
+		{ id = "playground", label = "Playground" },
+		{ id = "running_track", label = "Running Track" },
+		{ id = "boxing_gym", label = "Boxing Gym" },
+		{ id = "basketball_gym", label = "Basketball Gym" },
+		{ id = "volleyball_court", label = "Volleyball Court" },
+	} :: { { id: string, label: string } },
 }
 
 -- The town. Everybody in the world who is not one of the four people a life is made of.
@@ -4987,9 +5353,13 @@ Config.Guide = {
 	-- How often the client re-walks the path: re-raycasts every arrow's ground
 	-- height and repositions the pool. The flow animation above updates every
 	-- frame regardless of this -- this interval is about the shape of the path,
-	-- which only changes as fast as the player walks.
+	-- which only changes as fast as the player walks. Tightened from 0.25: the
+	-- near leg only ever moves at this cadence (see rebuildPath), so at an
+	-- ordinary walking speed the old value let the closest arrow visibly drift up
+	-- to a few studs behind the player's actual feet between refreshes, which
+	-- read as lag rather than as a path.
 	-- Safe range: 0.1-1.
-	RefreshSeconds = 0.25,
+	RefreshSeconds = 0.1,
 
 	-- How often the road-following route itself is recomputed against the navmesh --
 	-- a separate, much coarser interval than RefreshSeconds above, because asking
@@ -5217,8 +5587,15 @@ Config.UI = {
 		-- would be on a white background, because they sit on a near-black panel and a
 		-- fully-saturated hue on this ground is a hue that glows.
 		Tabs = {
+			-- First, ahead even of Jobs: the one tab whose whole purpose is getting a
+			-- player somewhere else on this rail faster, so it reads before the
+			-- destinations it points at rather than after them. Everywhere it sends you --
+			-- the gym, the car dealership, a job's own post -- already had an arrow before
+			-- this tab existed; this is that same arrow with a menu in front of it instead
+			-- of a walk-up-and-read sign.
+			{ id = "locations", label = "Locations", color = Color3.fromRGB(178, 158, 220) },
 			{ id = "jobs", label = "Jobs Available", color = Color3.fromRGB(132, 186, 232) },
-			-- Second because it is the pane a player opens most often after work, and
+			-- Third because it is the pane a player opens most often after work, and
 			-- because it is the one that used to be four rows stacked on the HUD: what a
 			-- house cost, what a bill wants and what is in the bank are facts you go and
 			-- look up, not things you need in your eyeline while you are walking.
@@ -5226,11 +5603,13 @@ Config.UI = {
 			{ id = "relationships", label = "Relationships", color = Color3.fromRGB(226, 150, 172) },
 			{ id = "gangs", label = "Gangs", color = Color3.fromRGB(224, 124, 96) },
 			{ id = "skills", label = "Skills", color = Color3.fromRGB(126, 198, 148) },
-			-- The last two are the housekeeping pair, and they sit at the bottom because
-			-- nothing about the life being played is behind them. A player opens the five
-			-- above during a life and these two either once, or when something has gone
-			-- wrong -- which is exactly the ordering the rail should teach.
-			{ id = "codes", label = "Codes", color = Color3.fromRGB(178, 158, 220) },
+			-- The last of the housekeeping pair, and it sits at the bottom because nothing
+			-- about the life being played is behind it. A player opens the panes above
+			-- during a life and this one either once, or when something has gone wrong --
+			-- which is exactly the ordering the rail should teach. Code redemption used to
+			-- have its own tab here; it now lives inside this pane instead, see
+			-- MenuUI.drawSettings, because a code is typed once in a rare while and this was
+			-- already the pane for things you visit to configure rather than to act on.
 			{ id = "settings", label = "Settings", color = Color3.fromRGB(150, 146, 158) },
 		},
 	},
@@ -6079,6 +6458,32 @@ Config.Skills = {
 		RhythmPerfect = 6,
 		-- Safe range: 1-6.
 		RhythmGood = 3,
+
+		-- SoccerService, on a charge-and-release shot resolved against the crossbar/
+		-- posts, same split as GymPerfect/DrillPerfect: a shot that lands in the sweet
+		-- band of the charge pays full, one that lands on target but off the sweet band
+		-- pays the lesser amount, and a shot that misses the frame entirely pays
+		-- nothing. Routed into "athletics" -- see the note on Skills.Definitions for why
+		-- soccer does not get a discipline of its own.
+		-- Safe range: 2-12.
+		SoccerShotPerfect = 6,
+		-- Safe range: 1-6.
+		SoccerShotGood = 3,
+
+		-- SoccerService, the moment a shot crosses the line -- on top of, not instead
+		-- of, the SoccerShotPerfect/Good the shot itself already paid. A goal is the one
+		-- outcome the whole match is organized around, so it is the biggest single
+		-- soccer award in this table, sized against FightWon rather than against the
+		-- drill pair above it.
+		-- Safe range: 10-30.
+		SoccerGoal = 18,
+
+		-- SoccerService, on winning a possession contest by reaching the ball's claim
+		-- radius first while an opponent is carrying. Paid to the tackler only, and only
+		-- once per contest -- see ClaimCooldownSeconds, which is what stops a player
+		-- standing on the ball from farming this.
+		-- Safe range: 2-10.
+		SoccerTackle = 5,
 
 		-- GangService.checkEscape, when a bounty that got above
 		-- Config.Gangs.Earn.GotAwayNeedsBounty falls to nothing without an arrest.

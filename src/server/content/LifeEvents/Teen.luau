@@ -166,6 +166,73 @@ local Teen: { LifeEvent } = {
 			},
 		},
 	},
+	{
+		id = "teen_first_day_school",
+		minAge = 13,
+		maxAge = 13,
+		delivery = "Direct",
+		prompt = "Your first day of high school is today. The hallways are bustling, and you feel both nervous and excited.",
+		writesBack = { "stat:happiness", "stat:health", "stat:smarts" },
+		choices = {
+			{
+				id = "make_friends",
+				label = "Try to make new friends",
+				outcome = "You strike up a conversation with a classmate and feel a surge of belonging.",
+				effects = { happiness = 4, smarts = 2 },
+			},
+			{
+				id = "hide_away",
+				label = "Stay in the back of the class",
+				outcome = "You keep to yourself and avoid the social swirl. You feel safe but a bit lonely.",
+				effects = { happiness = -2, smarts = 1 },
+			},
+		},
+	},
+	{
+		id = "teen_social_media",
+		minAge = 13,
+		maxAge = 14,
+		delivery = "Direct",
+		prompt = "A new social media app is trending among your peers. You can join and post, or stay offline.",
+		writesBack = { "stat:happiness", "stat:health", "stat:looks" },
+		choices = {
+			{
+				id = "join",
+				label = "Create an account and post a photo",
+				outcome = "Your post gets likes and comments. You feel a burst of confidence.",
+				effects = { happiness = 3, looks = 2 },
+			},
+			{
+				id = "stay_offline",
+				label = "Ignore it and stay offline",
+				outcome = "You avoid the noise and keep your focus on schoolwork.",
+				effects = { happiness = -1, smarts = 2 },
+			},
+		},
+	},
+	{
+		id = "teen_hobby_start",
+		minAge = 13,
+		maxAge = 14,
+		delivery = "Direct",
+		prompt = "You find a flyer for a weekend robotics club. It looks fun but will take up your free time.",
+		writesBack = { "stat:happiness", "stat:smarts", "stat:health" },
+		choices = {
+			{
+				id = "join_club",
+				label = "Join the robotics club",
+				outcome = "You learn new skills and make friends who share your interests.",
+				effects = { smarts = 4, happiness = 2, health = -1 },
+				payout = 5,
+			},
+			{
+				id = "skip_club",
+				label = "Skip the club and relax",
+				outcome = "You spend the weekend gaming with friends, feeling rested.",
+				effects = { happiness = 3, smarts = -1 },
+			},
+		},
+	},
 }
 
 return Teen

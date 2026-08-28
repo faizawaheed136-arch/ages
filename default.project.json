@@ -89,6 +89,9 @@
       "City": {
         "$path": "assets/City.rbxmx"
       },
+      "Versailles": {
+        "$path": "assets/Versailles.rbxmx"
+      },
       "SpawnLocation": {
         "$className": "SpawnLocation",
         "$properties": {

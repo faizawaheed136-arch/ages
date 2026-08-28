@@ -136,6 +136,30 @@ local SOURCE: { SchoolSubject } = {
 		minAge = 8,
 		maxAge = SCHOOL_END,
 	},
+
+	-- PE. The one subject that was never a quiz to begin with -- see
+	-- docs/school_sports_plan.md and docs/school_and_sports.md's SPORTS section. The
+	-- verb is a live 3v3 soccer match at the stadium pitch, the same match anybody can
+	-- walk up and join outside of school hours (SoccerService's roster is always
+	-- running, bot-filled, and this lesson takes over one bot's slot for the window
+	-- Config.Sports.Soccer.PeLessonSeconds covers). No teacher and no scene, on the
+	-- same reasoning Music and Geography give: the pitch is already standing a walk
+	-- away, and drawing a classroom around a player about to be sprinting at a ball
+	-- would be furniture nobody stays in the room to see.
+	--
+	-- Starts at eight for the same reason Music and Geography do: reading the ball,
+	-- holding a charge, and finding a teammate are the mechanic, and a six-year-old is
+	-- not the player it is aimed at. The four SportsDrill stations (Config.SportsDrill)
+	-- stay open at every age below this as the solo, un-graded way to touch the same
+	-- ball, rim, net and bag.
+	{
+		id = "pe",
+		name = "PE",
+		verb = "match",
+		blurb = "Three a side, live, on the pitch. Win the ball, beat a marker, put one in the net.",
+		minAge = 8,
+		maxAge = SCHOOL_END,
+	},
 }
 
 -- Validated at require time rather than found in play, and loudly: a subject with a

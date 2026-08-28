@@ -420,18 +420,7 @@ local function rebuildPath(self: GuideHandle)
 		return
 	end
 
-	local straightDistance = (from - target).Magnitude
-	self.distanceText.Text = formatDistance(straightDistance)
 	self.waypoint.Enabled = true
-
-	-- Arrived. The waypoint stays, because knowing what you are standing in front
-	-- of is still worth something; the path goes, because it would now be pointing
-	-- at the ground under your own feet.
-	if straightDistance <= guide.ArrivedRadiusStuds then
-		hideArrowsFrom(self, 1)
-		self.activeCount = 0
-		return
-	end
 
 	-- The route's corner structure is only worth asking the navmesh for again once
 	-- in a while, or the moment the target itself changed underneath it -- either
@@ -449,9 +438,19 @@ local function rebuildPath(self: GuideHandle)
 	end
 
 	local totalDistance = routeLength(self.routePoints)
-	if totalDistance < 1 then
-		-- Directly on top of the target, or a degenerate route. No length to lay
-		-- arrows along; the waypoint alone still says what is there.
+	self.distanceText.Text = formatDistance(totalDistance)
+
+	-- Arrived, judged by the walk still left on the route rather than the
+	-- straight-line distance to the target. A target around a corner can sit
+	-- well inside ArrivedRadiusStuds as the crow flies while most of a block is
+	-- still ahead on foot -- that used to clear the arrows with the player still
+	-- mid-route and nothing left pointing the rest of the way. The route's own
+	-- length already folds in every corner it bends around, so it is the honest
+	-- measure of "arrived", and it doubles as the degenerate-route guard the old
+	-- `totalDistance < 1` check existed for, since ArrivedRadiusStuds is well
+	-- above 1. The waypoint stays regardless -- knowing what you are standing in
+	-- front of is still worth something -- only the path goes.
+	if totalDistance <= guide.ArrivedRadiusStuds then
 		hideArrowsFrom(self, 1)
 		self.activeCount = 0
 		return

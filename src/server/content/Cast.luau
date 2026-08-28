@@ -89,6 +89,75 @@ local Cast: { CastMember } = {
 		pantsAssetId = 0,
 		hairAssetId = 0,
 	},
+	-- Tie-gated relationship archetypes.
+	--
+	-- These are the specific people who hold a mentor, rival, or sibling tie with the
+	-- player. The event system uses their cast id ("mentor", "rival", "sibling") to
+	-- stage the right person when a tie-gated event fires -- the person who is *your*
+	-- mentor shows up, not a random stranger. They are authored bodies so the face is
+	-- stable across a life: your mentor at sixteen is your mentor at sixty.
+	--
+	-- They are placed here, before the gang bosses, because tie events can fire earlier
+	-- in a life than gang content.
+	{
+		id = "mentor",
+		name = "Mentor",
+		gender = "male",
+		skinColor = Color3.fromRGB(180, 135, 100),
+		heightScale = 1.05,
+		widthScale = 1.0,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.7,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	{
+		id = "rival",
+		name = "Rival",
+		gender = "female",
+		skinColor = Color3.fromRGB(150, 110, 85),
+		heightScale = 1.02,
+		widthScale = 0.98,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.75,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	{
+		id = "sibling",
+		name = "Sibling",
+		gender = "male",
+		skinColor = Color3.fromRGB(200, 155, 120),
+		heightScale = 1.0,
+		widthScale = 1.0,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.65,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
+	-- An enemy. The person who holds the enemy tie. The event system uses
+	-- this cast id ("enemy") to stage the right person when an enemy-gated
+	-- event fires -- the person who is *your* enemy shows up.
+	{
+		id = "enemy",
+		name = "Enemy",
+		gender = "female",
+		skinColor = Color3.fromRGB(120, 90, 70),
+		heightScale = 1.05,
+		widthScale = 1.0,
+		headScale = 1,
+		proportionScale = 1,
+		bodyTypeScale = 0.7,
+		shirtAssetId = 0,
+		pantsAssetId = 0,
+		hairAssetId = 0,
+	},
 	-- The four people who run the four gangs.
 	--
 	-- Here rather than in Public.luau, and that placement is forced by Public's own first

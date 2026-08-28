@@ -1,6 +1,90 @@
 # Agent A — the world, and the crime/combat stack
 
-## 2026-08-26 (latest) — Chat panel bug, toddler Age Up, school answers on the panel, lab explosions
+## 2026-08-27 (latest) — the school moved to the back street
+
+Owner instruction, verbatim: "the school is overlapping onto roads and it still isnt big
+enough so move its location. then continue or do it in whatever order you like." Read as
+standing permission to also remove houses if the new site needed the room (a line I'd
+already spent once before elsewhere in this file) — it did.
+
+**The move.** The school no longer fronts the main street between the workplace and the
+crossing. It now sits on the *back* street (world_plan.py's `SCHOOL_X0/X1/Z0/Z1`), on the
+west side, directly across from where houses "1", "3" and "5" used to stand — those three
+are gone (`gen_town.py` filters `BACK_ROW` against the school's frontage z-band and asserts
+exactly 12 remain, so a future footprint change that stops landing on precisely those three
+fails loudly instead of quietly cutting the wrong houses). The old site was two problems at
+once: too narrow for the room count Science alone needs (see the `RoomRadiusStuds` history
+in `Config.luau`), and, per the owner, visibly lapping over the road. The back street had
+the run of frontage the main street didn't.
+
+**One measurement, two files, actually enforced this time.** `world_plan.py` derives every
+school number — outer walls, the two corridor rows (`HALL_E_X0/X1`, `HALL_W_X0/X1`, split at
+different z because Math/Science/Cafeteria's cut doesn't line up with Office/Lobby/Gym's),
+each room as a `Place` object, `EAST_SPLIT_1/2`, `SCIENCE_CENTER_X/Z`. `build_street.py`
+used to re-derive or hardcode a good third of these (leftover literals from the old site:
+`HALL_E_X0 = -131.0` when the corridor had moved to -283). Fixed by importing all of it
+instead of retyping any of it — `SchoolFittings`' lobby/gym/office/corridor-lighting blocks
+now read positions off `W.SCHOOL_LOBBY`/`W.SCHOOL_GYM`/`W.SCHOOL_OFFICE`/`W.SCHOOL_HALL`
+the same way `classroom(W.SCHOOL_MATH)` already did for Math. If the school moves again,
+this is the file that should need touching and the file that shouldn't.
+
+**Three coplanar bugs `check_city.py` check 10 caught**, all stale main-street literals in
+`build_street.py`: `GROUND_X0` was still `SCHOOL_X0 - 24.0` (rebased onto `WORK_X0`, the
+only building left fronting that stretch); `SchoolForecourt` was still paving the old
+main-street apron at the school's new z-band, on top of the gym/library forecourt over in
+Town.rbxmx (deleted — the school's apron is `gen_town.py`'s job now); and the whole School
+interior/fittings section, covered above.
+
+**A fourth bug the coplanar check couldn't see**, because it's a same-asset gap, not a
+cross-asset overlap: `gen_town.py` never actually paved the yard between the school's east
+wall and the back-street sidewalk (`SCHOOL_YARD`, world_plan.py). The "school" place point
+stands in the middle of that yard at `floor=PAVING`; the yard itself was grass, `GROUND`
+height, 0.5 studs short. `check_city.py`'s 12 checks are all cross-asset or spawn-anchored
+and didn't catch it; `check_town.py`'s check 2 (ground under every place point, run against
+the built asset) did, by name, with the exact drop. Added a `SchoolForecourt` box to
+`gen_town.py`'s `Forecourts` group, back-street-specific bounds (`SCHOOL_X1..BACK_WALK_X0`),
+distinct from the main-street forecourt loop already there for Gym/Library/Clinic/etc.
+**Moral, for whoever touches this next: run both checkers, not just one.** They cover
+disjoint halves of the same geometry and neither substitutes for the other — this file's
+own header says so and I still nearly shipped on `check_city.py` alone.
+
+**`SchoolService.luau` was pointed at the wrong center.** `Lab.Build(at)` used `at` =
+the "school" place point, which is the front door / forecourt pad — now up to 89 studs
+from `SCIENCE_CENTER_X/Z`, the middle of the actual science room. world_plan.py already
+laid a `science_lab` place point there for exactly this call (its own comment says so) and
+nothing was reading it. Added `LAB_PLACE_ID = "science_lab"`, looked it up alongside
+`PLACE_ID = "school"`, and pass its position to `Lab.Build`. Same best-effort failure shape
+as everything else in that function: a missing tag warns and moves on rather than taking
+the classroom/cafeteria/pad build down with it.
+
+**Config.School.Science.RoomRadiusStuds** stayed at 30 — checked, not just carried over.
+The room's z-depth grew from 55 to 60 studs when the building moved, so the wall clearance
+at the room's own radius went from 27.5 to 30 studs, and the widest station ring
+(`StationDistanceShare 0.75`) now clears the wall by 7.5 studs instead of 5. More margin
+than before, not less; the comment above the constant now says the current numbers instead
+of the old site's.
+
+**Verified, this session:** `python3 tools/gen_city.py && gen_town.py && house_plan.py &&
+build_street.py` all clean. `python3 tools/check_city.py` — all 12 checks green, including
+check 10 (0 coplanar pairs, was 13). `python3 tools/check_town.py` — all 8 checks green,
+including check 2 (was 1 floating point). `python3 tools/gen_mapshapes.py` re-run (the map
+hash check in `tools/check.py` catches a stale `MapShapes.luau` after any world-geometry
+change — it did, here). `python3 tools/check.py` — all clean, including the three boot
+smoke tests (lobby, game server, game client). Syntax-checked both touched Luau files with
+`luau-compile --binary` directly as well.
+
+**Not done, and worth flagging rather than guessing at:** none of this has been through
+Studio. `rojo build` and `luau-compile` catch a real class of bug (see this file's own
+CLAUDE.md section on what they've caught before) but neither renders anything — the
+portico/canopy geometry, the room proportions once you're standing in them, and whether the
+new site reads as a school from the back-street sidewalk are all things only a Studio sync
+can confirm. Test plan: sync, walk the back street from the north gate down, confirm the
+school reads as a building and not a gap; walk in through the forecourt, confirm the lobby
+desk/gym court/office desks stand in daylight through the windows and none of them clip a
+wall; run `/lab start` (or the debug command ScienceService exposes) and confirm the lab
+now stands among the science room's own benches, not out in the forecourt.
+
+## 2026-08-26 — Chat panel bug, toddler Age Up, school answers on the panel, lab explosions
 
 Four commits (`54c54ed`, `c7a0e0f`, `e444f76`, `7394e34`), all client/shared/school work
 rather than world work — the user brought this straight to me mid-session ("i cant escape

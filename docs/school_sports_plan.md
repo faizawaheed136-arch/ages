@@ -5,9 +5,19 @@ This is the ordered queue for Agent C. The *design* is settled in
 [`activity_design_law.md`](activity_design_law.md). **Read both before phase 1.** This
 file is only the order of work and the seams with the other two agents.
 
-School and sports are **one lane, not two**, because PE class is a graded sports drill.
-That join is what makes school carry the childhood years, and it is why building either
-one alone leaves the other half-useless.
+School and sports are **one lane, not two**, because PE class is the live 3v3 soccer
+match. That join is what makes school carry the childhood years, and it is why building
+either one alone leaves the other half-useless.
+
+**Reconciled 2026-08-28, overriding the original phase order below:** PE is not a graded
+solo drill. PE class opens a grading window on the same always-on soccer pitch anyone can
+walk onto at any time — `SoccerService.Begin` puts the player on the roster and starts
+scoring their performance in that live match; walking onto the pitch outside class does
+the roster half with no grading. The four solo drills (item 29, `SportsDrillService`) are
+untouched by this and stay a separate, always-available system that raises Sport skill
+and speed on their own — they are not what PE grades. See the Soccer Skills section of
+the menu (fed by `SoccerCareer` on the life record) for the career tally either path
+builds toward.
 
 Where the plan and the spec disagree, the spec wins — say so and I will fix the plan.
 
@@ -54,7 +64,8 @@ new content — five levels means five sessions of reuse per asset.
 8. **Music** — 4-lane rhythm. Windows ±80ms Good / ±45ms Great / ±25ms Perfect.
 9. **Geography** — a spatial landmark hunt through school and town. Reward is
    **permanent map markers**; in Bully this is the best reward in the game.
-10. **PE** — deferred to phase 7. It is a sports drill, not its own minigame.
+10. **PE** — built alongside phase 6/7. It is the live 3v3 soccer match graded, not a
+    separate minigame; see the reconciliation note above.
 
 Each subject should buff a verb used *outside* class. That is the mechanism that stops
 school feeling like a detour.
@@ -146,7 +157,9 @@ Football* and *Blue Lock Rivals* prove the audience exists.
 31. **Form** bar filling from completed passes, tackles and shots on target, spendable at
     ≥30% for a timed buff. Purely positive-play driven.
 32. AI opponents scaled by the Sport stat.
-33. **PE class = one of these drills, graded.** The join between the two systems.
+33. **PE class = the live 3v3 match, graded.** The join between the two systems is
+    `SoccerService.Begin`, not the solo drills above — those stay a separate,
+    always-available skill-training system, untouched by the PE join.
 34. **A tutorial is mandatory.** Blue Lock Rivals' single biggest criticism is having
     none, and Football Fusion 2's skill culture exists because of its practice field —
     ship a teleportable practice pitch.

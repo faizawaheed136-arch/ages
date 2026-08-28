@@ -61,8 +61,13 @@ breather. Detention is a **2-minute obby you can escape**, not a timeout.
    (StepMania judge-4 reference is 22.5/45/90ms).
 5. **Geography/History** — a *spatial* hunt through school and town for landmarks. Reward =
    permanent map markers, Bully-style.
-6. **PE** — **a graded sports drill.** Do not build a separate PE minigame; this is the join
-   between the two systems and it is what makes school carry the childhood years.
+6. **PE** — **the live 3v3 soccer match, graded.** *(Reconciled 2026-08-28: soccer was
+   built to full engineering depth rather than as a solo drill — see the Sports section
+   below — and PE grades that same always-on match rather than a separate minigame.
+   `SoccerService.Begin` is the join between the two systems and it is what makes school
+   carry the childhood years. Walking onto the pitch outside class time joins the same
+   roster with no grading window open; the four solo drills further down stay a
+   separate, always-available skill-training system and are not what PE grades.)*
 
 **Grading** → letter A–F → three payouts: currency, **Subject XP into a specialisation track**,
 and a stat. Subject XP gates careers at branching step 3 (Science → doctor/engineer, PE →
@@ -206,5 +211,7 @@ templates is a soccer game with a physics ball.** Build sports as its own place 
   recent form is visible and not just a lifetime record you'll never beat. Layer objectives into
   one run rather than adding more courses.
 - **AI opponents scaled by the Sport stat.**
-- **PE class = one of these drills, graded.**
+- **PE class = the live 3v3 match, graded** (reconciled 2026-08-28 — see the subject-list
+  entry above). These solo drills are a separate, always-available system that raises
+  Sport skill and speed on their own; they are not what PE grades.
 - **A tutorial is mandatory.**

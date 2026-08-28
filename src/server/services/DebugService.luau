@@ -39,6 +39,7 @@ local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local MusicService = require(script.Parent.MusicService)
+local SoccerService = require(script.Parent.SoccerService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
@@ -1556,6 +1557,69 @@ Commands.music = function(player: Player, args: { string }): string
 	end
 
 	return `usage: /music [start|hit|end|level <n>|on|off] — {MusicService.Describe(player)}`
+end
+
+-- The pitch. Unlike every other subject command above, "start" and "join" are two
+-- different things here rather than one: the match never waits for a player, so
+-- "/soccer join" is the harness for that claim on its own -- roster and teleport, no PE
+-- window -- while "/soccer start" is Begin itself, the same PE grading a walk-up-and-sit
+-- would open, for testing the school half. Both skip the walk (join's own JoinRadiusStuds
+-- check included), the same way every other subject's "start" already does.
+--
+--   /soccer                    score, clock, your roster line and the ball, whatever
+--                               is true right now, watching or not.
+--   /soccer join                onto the roster over a bot's slot, no PE opened -- proves
+--                                the match takes a player with school untouched.
+--   /soccer start                Begin: onto the roster if not already there, and a PE
+--                                window opens on top of it.
+--   /soccer goal                scores immediately for whichever slot you are on --
+--                                the fastest way to exercise the reset-to-kickoff path.
+--   /soccer end                  grades the PE window where it stands, same as walking
+--                                off the pitch mid-lesson does.
+--   /soccer off                  the whole pitch dark -- proves the school's "There is
+--                                no PE today" refusal path independently of anything else.
+Commands.soccer = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return SoccerService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		SoccerService.SetEnabled(arg == "on")
+		return `soccer {arg} — {SoccerService.Describe(player)}`
+	end
+
+	if arg == "join" then
+		local joined, refusal = SoccerService.ForceJoin(player)
+		if not joined then
+			return `could not join: {refusal or "no reason given"} — {SoccerService.Describe(player)}`
+		end
+		return `joined the roster — {SoccerService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = SoccerService.ForceStart(player)
+		if not started then
+			return `could not start PE: {refusal or "no reason given"} — {SoccerService.Describe(player)}`
+		end
+		return `PE started — {SoccerService.Describe(player)}`
+	end
+
+	if arg == "goal" then
+		if not SoccerService.ForceGoal(player) then
+			return `not on roster — {SoccerService.Describe(player)}`
+		end
+		return `goal forced — {SoccerService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not SoccerService.ForceEnd(player) then
+			return `no PE window running — {SoccerService.Describe(player)}`
+		end
+		return `PE graded — {SoccerService.Describe(player)}`
+	end
+
+	return `usage: /soccer [join|start|goal|end|on|off] — {SoccerService.Describe(player)}`
 end
 
 -- Heat, and the whole reason this command exists rather than a crime to commit.
@@ -3147,7 +3211,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], "
-	.. "/music [start|hit|end|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/music [start|hit|end|level <n>|on|off], /soccer [join|start|goal|end|on|off], /gym [start|end|on|off], "
 	.. "/drill [start|end|on|off], /stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "

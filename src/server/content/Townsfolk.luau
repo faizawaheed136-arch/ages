@@ -269,6 +269,33 @@ local SKIN_TONES: { Color3 } = {
 	Color3.fromRGB(76, 52, 38),
 }
 
+-- Clothing colours, picked independently of skin so no two townsfolk standing
+-- together read as wearing a uniform. This is the whole fix for a body that
+-- would otherwise render as one flat skin-toned mannequin -- see the comment
+-- on CastMember.shirtColor in Types.luau -- and it costs nothing NPCService's
+-- own header didn't already promise: no asset, no upload, just a second and
+-- third colour read off the body alongside the skin tone it already has.
+local SHIRT_COLORS: { Color3 } = {
+	Color3.fromRGB(196, 62, 62),
+	Color3.fromRGB(58, 110, 178),
+	Color3.fromRGB(72, 150, 96),
+	Color3.fromRGB(224, 184, 64),
+	Color3.fromRGB(120, 88, 168),
+	Color3.fromRGB(226, 140, 62),
+	Color3.fromRGB(64, 176, 176),
+	Color3.fromRGB(214, 96, 150),
+	Color3.fromRGB(60, 64, 72),
+	Color3.fromRGB(238, 238, 232),
+}
+local PANTS_COLORS: { Color3 } = {
+	Color3.fromRGB(48, 52, 64),
+	Color3.fromRGB(72, 60, 48),
+	Color3.fromRGB(38, 42, 46),
+	Color3.fromRGB(96, 96, 100),
+	Color3.fromRGB(58, 78, 92),
+	Color3.fromRGB(112, 84, 60),
+}
+
 local ARCHETYPES: { Archetype } = {
 	{
 		-- The kids on your street. The only townsfolk who are around before school is,
@@ -313,6 +340,28 @@ local ARCHETYPES: { Archetype } = {
 			unemployed = {
 				"What do you do all day?",
 				"I wish I could play all day too.",
+			},
+			-- Lines for when you share a positive tie: friend, closest, mentor, sibling.
+			-- The "close" key is used by the selection logic for any rung tie above
+			-- "known", so a single set of lines covers every warm relationship.
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			-- Lines for when you are rivals. A rival still acknowledges you, but the
+			-- tone is different: charged, competitive, not hostile.
+			rival = {
+				"You think you're better than me?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			-- Lines for when you are enemies. An enemy sees you as a threat or an
+			-- adversary, and says so rather than pretending otherwise.
+			enemy = {
+				"Don't think this changes anything.",
+				"I'm watching you.",
+				"You've got some nerve showing your face here.",
 			},
 		},
 		offers = {
@@ -668,6 +717,21 @@ local ARCHETYPES: { Archetype } = {
 				"Must be nice to sleep in.",
 				"School's better than nothing, right?",
 			},
+			close = {
+				"Hey! Want to hang out after school?",
+				"I saved you a seat at lunch.",
+				"You're the best, you know that?",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"I beat you last time. Let's go again.",
+				"You're not better than me.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
 		},
 		offers = {
 			-- The relationship block, shared by every archetype so whoever you are talking
@@ -986,6 +1050,21 @@ local ARCHETYPES: { Archetype } = {
 				"Nice place you got there.",
 				"Home sweet home, eh?",
 				"First time in your own place?",
+			},
+			close = {
+				"Good to see you, friend. How've you been?",
+				"You look like you need a break. Want to chat?",
+				"I've got some news I wanted to tell you.",
+			},
+			rival = {
+				"Still chasing shadows?",
+				"You think you've won? Prove it.",
+				"I'm not done with you yet.",
+			},
+			enemy = {
+				"Don't pretend we're okay.",
+				"You crossed a line. I haven't forgotten.",
+				"Stay on your side.",
 			},
 		},
 		offers = {
@@ -1316,6 +1395,23 @@ local ARCHETYPES: { Archetype } = {
 			"On a deadline. Sorry -- honestly, sorry.",
 			"Not now. Ask me when this is off my desk.",
 		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
+		},
 		offers = {
 			-- The relationship block, shared by every archetype so whoever you are talking
 			-- to can be talked to at any depth, driven apart, and mended. Written first
@@ -1625,6 +1721,23 @@ local ARCHETYPES: { Archetype } = {
 			"Another time, yeah? Properly, though.",
 			"Not today. I'm no use to anyone today.",
 		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
+		},
 		offers = {
 			-- The relationship block, shared by every archetype so whoever you are talking
 			-- to can be talked to at any depth, driven apart, and mended. Written first
@@ -1903,6 +2016,23 @@ local ARCHETYPES: { Archetype } = {
 			"Can't stop -- I'm late for the thing I'm always late for.",
 			"Not now, sorry. Ask me when I look less like this.",
 			"Rain check. I've got about four minutes and no brain.",
+		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
 		},
 		offers = {
 			-- The relationship block, shared by every archetype so whoever you are talking
@@ -2268,6 +2398,23 @@ local ARCHETYPES: { Archetype } = {
 			"Running late already. I'll find you tomorrow.",
 			"Not now -- the manager's watching. Sorry.",
 		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
+		},
 		offers = {
 			{
 				id = "small_talk",
@@ -2454,6 +2601,23 @@ local ARCHETYPES: { Archetype } = {
 			"Training's starting. I'll catch you after.",
 			"Not now -- we're in the middle of a game.",
 			"Give me five minutes. I'm about to go on.",
+		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
 		},
 		offers = {
 			{
@@ -2759,6 +2923,23 @@ local ARCHETYPES: { Archetype } = {
 			"In a meeting. I'll find you tomorrow.",
 			"Not now -- the elevators are brutal at this hour.",
 		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
+		},
 		offers = {
 			{
 				id = "small_talk",
@@ -3033,6 +3214,23 @@ local ARCHETYPES: { Archetype } = {
 			"Back in a sec. Just checking the stock.",
 			"Busy right now -- sorry! Come back in a bit.",
 			"I'm about to close up. Want to walk together?",
+		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
 		},
 		offers = {
 			{
@@ -3326,6 +3524,23 @@ local ARCHETYPES: { Archetype } = {
 			"The manager's calling. I'll find you later.",
 			"Test drive schedule's full. Come back after lunch?",
 		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
+		},
 		offers = {
 			{
 				id = "small_talk",
@@ -3473,6 +3688,23 @@ local ARCHETYPES: { Archetype } = {
 			"Just showing someone a sedan. One sec?",
 			"The finance team is on the phone. Give me a moment.",
 			"I'm between customers. Talk to you in a bit?",
+		},
+		contextualLines = {
+			close = {
+				"Hey! Good to see you.",
+				"Wanna hang out later?",
+				"I was just thinking about you.",
+			},
+			rival = {
+				"Think you're so smart, don't you?",
+				"Let's see if you can keep up.",
+				"I'm not going to lose to you.",
+			},
+			enemy = {
+				"Stay away from me.",
+				"I hope you fail.",
+				"You don't belong here.",
+			},
 		},
 		offers = {
 			{
@@ -4102,6 +4334,8 @@ for index = 1, TOWN.Count do
 		shirtAssetId = 0,
 		pantsAssetId = 0,
 		hairAssetId = 0,
+		shirtColor = pick(rng, SHIRT_COLORS),
+		pantsColor = pick(rng, PANTS_COLORS),
 	}
 	table.insert(bodies, body)
 

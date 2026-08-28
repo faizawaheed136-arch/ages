@@ -112,7 +112,10 @@ local function stateFor(life: LifeData): { SkillState }
 end
 
 local function push(player: Player, life: LifeData)
-	SKILLS_UPDATED:FireClient(player, { skills = stateFor(life) } :: Types.SkillsState)
+	SKILLS_UPDATED:FireClient(player, {
+		skills = stateFor(life),
+		soccerCareer = life.soccerCareer,
+	} :: Types.SkillsState)
 end
 
 -- Hand a player XP in one discipline for one thing they just did.
@@ -196,7 +199,11 @@ function SkillService.LevelOf(player: Player, skillId: string): number
 end
 
 -- Re-send the whole panel. Called by anything that changed a life wholesale rather
--- than one skill at a time -- a new life beginning, a profile finishing its load.
+-- than one skill at a time -- a new life beginning, a profile finishing its load -- and
+-- also by SoccerService.recordCareer, the one place `soccerCareer` changes: that field
+-- rides along on this same push (see Types.SkillsState) rather than behind SoccerUpdated,
+-- which only reaches a player standing near the pitch, and the menu's Soccer Skills
+-- section needs to read a whole life's tally from anywhere in the town.
 function SkillService.Push(player: Player)
 	local life = lifeDataFor(player)
 	if life == nil then

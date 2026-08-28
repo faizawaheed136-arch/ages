@@ -118,14 +118,13 @@ local BUILDERS: { [string]: (root: Frame, unit: number) -> () } = {
 		ink(root, 0.72, 0.08, 0.22, 0.84, 0.2)
 	end,
 
-	-- A key rather than a gift box. A box says "here is a present", which is the promise
-	-- the pane cannot keep -- most codes a player types are wrong. A key says "this opens
-	-- something if you have one", which is what the box behind this tile actually does.
-	codes = function(root: Frame, unit: number)
-		outline(root, 0.02, 0.28, 0.44, 0.44, 0.5, unit * 0.10)
-		ink(root, 0.42, 0.43, 0.54, 0.14, 0.5)
-		ink(root, 0.68, 0.57, 0.10, 0.20, 0.4)
-		ink(root, 0.86, 0.57, 0.10, 0.15, 0.4)
+	-- A map pin: a round head merged into a tilted-square point, the same trick the
+	-- shield above uses to get a point on the bottom of a rectangle. The universal "go
+	-- here" mark on every map this game is competing with, which is exactly the pane
+	-- behind this tile -- a list of places, each one pointing the guide arrows at itself.
+	locations = function(root: Frame, _unit: number)
+		ink(root, 0.20, 0.04, 0.60, 0.60, 0.5)
+		tilted(root, 0.32, 0.40, 0.36, 0.36, 0.06, 45)
 	end,
 
 	-- Two sliders, one pushed right and one pushed left. A gear is the usual picture and a

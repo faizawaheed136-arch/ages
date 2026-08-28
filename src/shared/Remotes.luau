@@ -39,6 +39,11 @@ export type RemoteName =
 	| "PersonUpdated"
 	| "RequestPersonOffer"
 	| "RequestLessonAnswer"
+	-- "I sat down." The L key, or a click on a desk in the classroom -- see
+	-- Classroom.TrySit. No payload beyond the fact of the press, on the same precedent
+	-- as `RequestRep`: which desk is this room's business, resolved server-side from
+	-- where the player is already standing, not the client's to name.
+	| "RequestSit"
 	-- The two roster remotes. Their prose lives down in `REMOTE_NAMES` rather than being
 	-- repeated here, the same as most of the names above them; what matters at this end is
 	-- only that they are here at all. They were not, for a while, and the gap is worth a
@@ -394,6 +399,12 @@ export type RemoteName =
 	-- happens. A press for a task that has finished, expired, or was never issued to
 	-- this player is a no-op.
 	| "RequestTaskPickup"
+	-- "Point me at this place." Carries a location id off the Locations pane, checked
+	-- against Config.Locations.List and PlaceService the same as RequestGuideToJob --
+	-- an unknown id is refused rather than pointing a line at nothing. This is a plain
+	-- point-and-walk, the same arrow a job destination gets, never a teleport: see the
+	-- header on PlaceService.Send for why that distinction is load-bearing here.
+	| "RequestGuideToLocation"
 	-- "You just walked through the stadium's own gate." Carries no payload --
 	-- StadiumEntranceService already decided this player earns the moment
 	-- (once per session) before firing it, so there is nothing on the wire for
@@ -402,6 +413,31 @@ export type RemoteName =
 	-- server-spawned visitor, not part of this payload, the same separation
 	-- NPCService.Arrive already keeps between "play a moment" and "who is in it".
 	| "StadiumEntranceCue"
+	-- The soccer pitch, pushed as a whole snapshot to every client standing near enough
+	-- to watch -- not only the six on the roster, on the same reasoning MapData pushes
+	-- to everyone rather than only whoever is standing on it: a match with a scoreboard
+	-- nobody outside it can read is not a match a crowd can gather for. Ticks at
+	-- Config.Sports.Soccer.TickSeconds, same shape as WorkoutUpdated/SportsDrillUpdated
+	-- rather than a field on any of them -- this is a different room with a different
+	-- roster and a ball none of those activities have.
+	| "SoccerUpdated"
+	-- "Give me a bot's slot on the pitch." No payload -- the server already knows who is
+	-- watching from WatchRadiusStuds and decides which team and which bot to bump from
+	-- the roster it is already running. A press that lands with no free slot, or from
+	-- someone already on the roster, is a no-op rather than a queue entry: the match
+	-- never stops running long enough to need one.
+	| "RequestSoccerJoin"
+	-- "I am holding the shoot button" / "I let go." Carries a boolean for the held edge,
+	-- exactly the shape RequestFightAction already proved for a charge-and-release
+	-- strike. What it does not carry is a charge value -- the server owns the clock the
+	-- meter is drawn from, so the strongest thing a forged packet can claim is that the
+	-- button went down, same guarantee RequestFightAction gives a bout.
+	| "RequestSoccerShoot"
+	-- "Find me a teammate." No payload -- a tap, not a second charge meter, see the
+	-- design note on Config.Sports.Soccer's passing section. The server reads the
+	-- carrier's own facing and picks the nearest teammate inside PassConeDegrees; a
+	-- press with nobody in the cone is a no-op.
+	| "RequestSoccerPass"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -498,6 +534,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	-- and one handler doing both would be one handler that could confuse them.
 	"RequestPersonOffer",
 	"RequestLessonAnswer",
+	"RequestSit",
 	-- The people the player has met, as a whole list for the HUD's people section.
 	--
 	-- Distinct from PersonUpdated in the way a whole list is always distinct from a
@@ -655,7 +692,12 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestQuitJob",
 	"RequestGuideToJob",
 	"RequestTaskPickup",
+	"RequestGuideToLocation",
 	"StadiumEntranceCue",
+	"SoccerUpdated",
+	"RequestSoccerJoin",
+	"RequestSoccerShoot",
+	"RequestSoccerPass",
 }
 
 local FOLDER_NAME = "RemoteEvents"

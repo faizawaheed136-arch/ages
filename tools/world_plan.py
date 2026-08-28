@@ -379,9 +379,91 @@ CROSSING_Z0, CROSSING_Z1 = DOOR_LINE - 6.0, DOOR_LINE + 6.0
 FRONT_X = -112.0
 FORECOURT_X0 = -112.0
 
-SCHOOL_X0, SCHOOL_X1 = -152.0, FRONT_X
-SCHOOL_Z0, SCHOOL_Z1 = 10.0, 76.0
-SCHOOL_DOOR = 43.0
+# ---------------------------------------------------------------------------
+# The return road
+# ---------------------------------------------------------------------------
+
+# The return leg of the loop south of the street, and the back street that
+# stands on its west side, are both drawn in gen_town.py, which is also where
+# these numbers used to live entirely. They move here because the school now
+# stands on that street too (see below) and build_street.py, which draws the
+# school, cannot import gen_town.py to find out where its own building's front
+# door faces -- the same reason NORTHGATE_Z0/GATE_Z0 already live here rather
+# than in the file that draws the roads they describe.
+#
+# RETURN_X0/X1 is the carriageway; BACK_WALK_X0/X1 is its west pavement,
+# mirroring the sidewalk the main street already has (SIDEWALK, the width of
+# FAR_WALK_X0..X1) rather than choosing a second number for the same kerb.
+RETURN_X0, RETURN_X1 = -225.0, -202.0
+RETURN_MID = (RETURN_X0 + RETURN_X1) / 2
+SIDEWALK = FAR_WALK_X1 - FAR_WALK_X0
+BACK_WALK_X1 = RETURN_X0
+BACK_WALK_X0 = BACK_WALK_X1 - SIDEWALK
+
+# ---------------------------------------------------------------------------
+# The school
+# ---------------------------------------------------------------------------
+
+# Moved off the main street entirely, onto the back street's west side, by
+# direct owner instruction: "the school is overlapping onto roads and it
+# still isnt big enough so move its location."
+#
+# Every FRONT_X-facing footprint on the main street is capped at
+# BUILDING_DEPTH -- 40 studs -- because the return road's own sidewalk
+# (RETURN_X1 + SIDEWALK) runs the entire north-south length of the map right
+# behind it; growing a building on that frontage past about 90 studs deep
+# drives its back wall through a road no matter how far the front wall is
+# pushed, which is what happened at both -232 and -190, the school's last two
+# homes on this site (kept in git blame, not here). That ceiling cannot be
+# raised by resizing in place. It can only be left.
+#
+# The back street's west side has no such ceiling. WEST_EDGE (gen_town.py) is
+# a declared stopping point for what that generator chooses to build, not a
+# wall or a road -- nothing stands past it in any generator, and the baseplate
+# itself runs to MAP_EDGE. A building sited here can be as deep as the design
+# needs rather than as deep as the nearest road allows.
+#
+# The site is the back street's own frontage, chosen rather than found clear:
+# it falls exactly on back-street houses "1", "3" and "5" (gen_town.py's
+# BACK_ROW, z 174-208, 134-168 and 94-128), which is what "or remove houses to
+# compensate" already authorised. SCHOOL_Z0/Z1 line up on their outer edges --
+# 208 is BACK_ROW's own north end (LIB_Z1, no gap needed there) and 94 is
+# house "5"'s own south wall, leaving house "7" its ordinary NEIGHBOUR_GAP to
+# the school's south wall rather than a second, wider gap invented for the
+# occasion. gen_town.py filters BACK_ROW against this same band, so moving the
+# school moves the houses it displaces without a second number to keep in step.
+#
+# The school faces the same way the houses it replaced did: east, onto
+# BACK_WALK's sidewalk and the return road beyond it. That keeps
+# build_street.py's existing convention -- door on the east wall -- true
+# without a structural change, only new coordinates.
+#
+# Depth is chosen room by room rather than as one figure, because the two
+# rows either side of the corridor need different amounts of it. SCHOOL_YARD
+# mirrors BACK_FRONT_YARD (gen_town.py): the gap between the sidewalk and the
+# building's own front wall. EAST_ROOM_DEPTH holds the lobby/office/gym row,
+# which needs no more than the old building's whole depth did. WEST_ROOM_DEPTH
+# holds Math/Science/the cafeteria, and is sized for Science: Lab.Build
+# scatters stations on a ring in every direction from a centre point (see
+# SCIENCE_Z0/Z1 below), not along one axis, so the room has to be wide as well
+# as deep -- unlike the old site, nothing here is forcing a choice between
+# the two.
+SCHOOL_YARD = 6.0
+EAST_ROOM_DEPTH = 39.0
+CORRIDOR_WIDTH = 8.0
+WEST_ROOM_DEPTH = 70.0
+
+SCHOOL_X1 = BACK_WALK_X0 - SCHOOL_YARD
+SCH_IN_X1 = SCHOOL_X1 - WALL
+HALL_E_X1 = SCH_IN_X1 - EAST_ROOM_DEPTH
+HALL_E_X0 = HALL_E_X1 - PARTITION
+HALL_W_X1 = HALL_E_X0 - CORRIDOR_WIDTH
+HALL_W_X0 = HALL_W_X1 - PARTITION
+SCH_IN_X0 = HALL_W_X0 - WEST_ROOM_DEPTH
+SCHOOL_X0 = SCH_IN_X0 - WALL          # -363.5 -- 122 studs deep, was 78
+
+SCHOOL_Z0, SCHOOL_Z1 = 94.0, 208.0    # houses "1"/"3"/"5"'s combined frontage
+SCHOOL_DOOR = (SCHOOL_Z0 + SCHOOL_Z1) / 2   # 151.0 -- house "3"'s own door line
 
 WORK_X0, WORK_X1 = -142.0, FRONT_X
 WORK_Z0, WORK_Z1 = -74.0, -22.0
@@ -471,12 +553,16 @@ HALL_DOOR = (HALL_Z0 + HALL_Z1) / 2
 # The frontage in z order, which is the only order any question about it wants
 # an answer in. Sorted rather than typed in order, so adding a tenth building
 # anywhere in the list puts it in the right place in every gap measurement.
+#
+# Eight buildings now, not nine: the school stood here once, but it has moved
+# to the back street (see SCHOOL_X0 above) and left this frontage for good --
+# it is not confined to a FRONT_X-facing footprint any more, so it has no
+# business in the tuple that measures FRONT_X-facing gaps.
 WEST_FRONTAGE = tuple(sorted((
     ("the garage", GARAGE_Z0, GARAGE_Z1),
     ("the bakery", BAKERY_Z0, BAKERY_Z1),
     ("the clinic", CLINIC_Z0, CLINIC_Z1),
     ("the workplace", WORK_Z0, WORK_Z1),
-    ("the school", SCHOOL_Z0, SCHOOL_Z1),
     ("the gym", GYM_Z0, GYM_Z1),
     ("the library", LIB_Z0, LIB_Z1),
     ("the cafe", CAFE_Z0, CAFE_Z1),
@@ -666,18 +752,75 @@ MIN_HEADROOM = 6.5
 # Rooms
 # ---------------------------------------------------------------------------
 
-# School: one storey, laid out along a spine corridor with the classrooms on the
-# far side of it from the street. Single storey because a stair is the one thing
-# in a building that cannot be got wrong quietly -- it either works or the player
-# is stuck on a landing -- and the workplace below already has the one that has
-# to work. The school gets a second floor when there is a reason to go up there.
-SCHOOL_LOBBY = Place("school lobby", -130.0, -113.5, 33.0, 53.0, FLOOR_1, CEIL_1)
-SCHOOL_HALL = Place("school corridor", -138.0, -131.0, 11.5, 74.5, FLOOR_1, CEIL_1)
-SCHOOL_ROOM_1 = Place("classroom 1", -150.5, -139.0, 11.5, 32.0, FLOOR_1, CEIL_1)
-SCHOOL_ROOM_2 = Place("classroom 2", -150.5, -139.0, 33.0, 53.0, FLOOR_1, CEIL_1)
-SCHOOL_ROOM_3 = Place("classroom 3", -150.5, -139.0, 54.0, 74.5, FLOOR_1, CEIL_1)
-SCHOOL_GYM = Place("school gym", -130.0, -113.5, 54.0, 74.5, FLOOR_1, CEIL_1)
-SCHOOL_OFFICE = Place("school office", -130.0, -113.5, 11.5, 32.0, FLOOR_1, CEIL_1)
+# School: one storey, laid out along a spine corridor with the west row (away
+# from the door) holding the subject rooms and the east row (facing it)
+# holding the lobby, the office and the gym. Single storey because a stair is
+# the one thing in a building that cannot be got wrong quietly -- it either
+# works or the player is stuck on a landing -- and the workplace already has
+# the one that has to work. The school gets a second floor when there is a
+# reason to go up there.
+#
+# HALL_E_X0/X1 and HALL_W_X0/X1 (the corridor's two walls) and SCH_IN_X0/X1
+# (the building's own inner face) are declared with the site above rather
+# than here, because SCH_IN_X0's only job is bounding how deep the west row
+# can go -- it is part of choosing where the building's own walls stand, not
+# part of laying rooms out inside them. build_street.py imports all four
+# rather than re-deriving them, which it used to do independently: two files
+# computing the same wall from the same SCHOOL_X0 is the one-measurement,
+# two-files problem WEST_FRONTAGE already exists to avoid, and there was no
+# reason the corridor should be exempt from it.
+SCH_IN_Z0, SCH_IN_Z1 = SCHOOL_Z0 + WALL, SCHOOL_Z1 - WALL   # 95.5 .. 206.5
+
+# The west row's three z-bands are not equal to each other. Science needs by
+# far the most: `Lab.Build` (Lab.luau) scatters real stations on a ring out to
+# Config.School.Science.RoomRadiusStuds in every direction from a centre
+# point, not along a single axis, so its band has to be wide as well as deep.
+# Math and the cafeteria have no such requirement -- Math answers questions
+# with floor discs fanned around wherever the player is standing
+# (SchoolService.placeDiscs), and the cafeteria is hand-placed furniture with
+# nothing procedural in it -- so Math takes only what a teacher's desk and two
+# rows of pupils' need and the cafeteria takes what both leave over.
+MATH_Z0, MATH_Z1 = SCH_IN_Z0, SCH_IN_Z0 + 25.0
+WEST_SPLIT_1 = MATH_Z1
+SCIENCE_Z0 = WEST_SPLIT_1 + PARTITION
+SCIENCE_Z1 = SCIENCE_Z0 + 60.0
+WEST_SPLIT_2 = SCIENCE_Z1
+CAFETERIA_Z0, CAFETERIA_Z1 = WEST_SPLIT_2 + PARTITION, SCH_IN_Z1
+
+# The east row's three z-bands. The lobby is sized around the door rather
+# than the other way round -- SCHOOL_DOOR sits inside it with room either
+# side for the inner doorway cut through HallEast -- and the office and the
+# school's own gym (a PE court, not the freestanding public gym on the main
+# street: see GYM_X0/X1 above, a different building for a different age of
+# player) take what is left north and south of it.
+OFFICE_Z0, OFFICE_Z1 = SCH_IN_Z0, SCH_IN_Z0 + 43.0
+EAST_SPLIT_1 = OFFICE_Z1
+LOBBY_Z0 = EAST_SPLIT_1 + PARTITION
+LOBBY_Z1 = LOBBY_Z0 + 24.0
+EAST_SPLIT_2 = LOBBY_Z1
+SCH_GYM_Z0, SCH_GYM_Z1 = EAST_SPLIT_2 + PARTITION, SCH_IN_Z1
+assert LOBBY_Z0 < SCHOOL_DOOR < LOBBY_Z1, (
+    f"the lobby now spans z {LOBBY_Z0}..{LOBBY_Z1} and the door is at "
+    f"{SCHOOL_DOOR}. The door has to open into the room it is named for.")
+
+SCHOOL_LOBBY = Place("school lobby", HALL_E_X1, SCH_IN_X1, LOBBY_Z0, LOBBY_Z1, FLOOR_1, CEIL_1)
+SCHOOL_HALL = Place("school corridor", HALL_W_X1, HALL_E_X0, SCH_IN_Z0, SCH_IN_Z1, FLOOR_1, CEIL_1)
+SCHOOL_MATH = Place("math classroom", SCH_IN_X0, HALL_W_X0, MATH_Z0, MATH_Z1, FLOOR_1, CEIL_1)
+SCHOOL_SCIENCE = Place("science lab", SCH_IN_X0, HALL_W_X0, SCIENCE_Z0, SCIENCE_Z1, FLOOR_1, CEIL_1)
+SCHOOL_CAFETERIA = Place("cafeteria", SCH_IN_X0, HALL_W_X0, CAFETERIA_Z0, CAFETERIA_Z1, FLOOR_1, CEIL_1)
+# The centre of the science lab's floor, well clear of every wall -- see the
+# comment above SCIENCE_Z0/Z1. Passed to Lab.Build (via a "science_lab" place
+# point below) instead of the school's own outdoor forecourt point, which is
+# what SchoolService used until now: `ceilingAbove` in Lab.luau raycasts up
+# from the centre it is given and refuses to build at all if there is no roof
+# within a storey of it, and the forecourt has none. That is not a hypothetical
+# -- it is the point PLACE_ID "school" names, and it is outdoors, so Science
+# could never actually have built a single bench before this room existed for
+# it to build one inside.
+SCIENCE_CENTER_X = (SCHOOL_SCIENCE.x0 + SCHOOL_SCIENCE.x1) / 2
+SCIENCE_CENTER_Z = (SCIENCE_Z0 + SCIENCE_Z1) / 2
+SCHOOL_GYM = Place("school gym", HALL_E_X1, SCH_IN_X1, SCH_GYM_Z0, SCH_GYM_Z1, FLOOR_1, CEIL_1)
+SCHOOL_OFFICE = Place("school office", HALL_E_X1, SCH_IN_X1, OFFICE_Z0, OFFICE_Z1, FLOOR_1, CEIL_1)
 
 # Workplace: a store on the ground floor and offices over it, which is one
 # building holding both of the jobs the economy needs -- the one a sixteen year
@@ -717,7 +860,7 @@ STREET_PLACE = Place("street", FAR_WALK_X0, PROPERTY_X, -60.0, 90.0, GROUND, 90.
 
 PLACES = [
     GARDEN, STREET_PLACE,
-    SCHOOL_LOBBY, SCHOOL_HALL, SCHOOL_ROOM_1, SCHOOL_ROOM_2, SCHOOL_ROOM_3,
+    SCHOOL_LOBBY, SCHOOL_HALL, SCHOOL_MATH, SCHOOL_SCIENCE, SCHOOL_CAFETERIA,
     SCHOOL_GYM, SCHOOL_OFFICE,
     WORK_SHOP, WORK_BACK, WORK_STAIR,
     WORK_LANDING, WORK_CORRIDOR, WORK_BREAK, WORK_OPEN, WORK_MEETING,
@@ -775,11 +918,26 @@ PLACE_POINTS = [
     # cannot climb at all.
     ("gate", PROPERTY_X + 3.0, DOOR_LINE, PATH_TOP, "your front gate, on the street"),
     ("crossing", -58.0, DOOR_LINE, PAVING, "the crossing outside your house"),
-    ("school", -105.0, SCHOOL_DOOR, PAVING, "the school forecourt"),
-    # Just inside the classroom door rather than in among the desks. Somewhere
-    # the game can put a player down is somewhere a player can be put down
-    # standing up, and the middle of a row of desks is not that.
-    ("classroom", -141.0, 43.0, FLOOR_1, "a classroom"),
+    # On the back street now, not the main one -- see SCHOOL_X0 above. Set back
+    # from BACK_WALK_X0 by half of SCHOOL_YARD rather than by a chosen offset,
+    # the same rule the old point followed against FRONT_X and FAR_WALK_X0: the
+    # middle of the forecourt, not its edge. gen_town.py's own "wp_school_walk",
+    # on the sidewalk this point faces, is what actually joins it to the rest
+    # of the map -- see the comment there.
+    ("school", SCHOOL_X1 + SCHOOL_YARD / 2, SCHOOL_DOOR, PAVING, "the school forecourt"),
+    # Just inside the math classroom door rather than in among the desks.
+    # Somewhere the game can put a player down is somewhere a player can be
+    # put down standing up, and the middle of a row of desks is not that. The x
+    # is the west row's own centre line (SCIENCE_CENTER_X, shared by all three
+    # rooms in that row since they share an x-band) rather than a chosen depth,
+    # so all three of these points move together if the row's depth ever does.
+    ("classroom", SCIENCE_CENTER_X, (MATH_Z0 + MATH_Z1) / 2, FLOOR_1, "a classroom"),
+    # The centre of the science lab's floor -- see the comment on
+    # SCIENCE_CENTER_X/Z above. This is what SchoolService.buildRoom passes to
+    # Lab.Build instead of the outdoor "school" point, which has no roof over
+    # it and so could never pass Lab.Build's own ceiling check.
+    ("science_lab", SCIENCE_CENTER_X, SCIENCE_CENTER_Z, FLOOR_1, "the science lab, among the benches"),
+    ("cafeteria", SCIENCE_CENTER_X, (CAFETERIA_Z0 + CAFETERIA_Z1) / 2, FLOOR_1, "the cafeteria"),
     ("work", -105.0, WORK_DOOR, PAVING, "outside the store"),
     ("store", -120.0, WORK_DOOR, FLOOR_1, "the shop floor"),
     # In the open plan office rather than in the corridor outside it, because this
@@ -812,18 +970,27 @@ ROUTES = [
     ("across the road", GROUND, [
         (-58.0, DOOR_LINE), (-92.0, DOOR_LINE),
     ]),
-    # The two walks along the street are on the sidewalk, not the road, and the
-    # floor stated here is which of the two -- half a stud apart and it decides
-    # whether the kerb is a step or a wall.
-    ("up the street to school", PAVING, [
-        (-92.0, DOOR_LINE), (-92.0, SCHOOL_DOOR), (-105.0, SCHOOL_DOOR),
-    ]),
+    # The walk from the crossing to the school's own forecourt is deliberately
+    # not here. It used to be a straight sidewalk hop, "up the street to
+    # school", because the school stood on this same street; now it crosses an
+    # alley, a second road and a second sidewalk that gen_town.py draws into a
+    # different asset (Town.rbxmx), which this file's straight-line checker
+    # never loads (see _street_field in read_house.py) and so could never
+    # honestly verify. That walk is check_city's job, which reads every asset
+    # and already checks reachability and detour ratio over the town's own
+    # waypoint graph -- gen_town.py's "wp_school_walk" is what joins the school
+    # to it. What stays here is what this file can actually see: the forecourt
+    # inward, all of it inside Street.rbxmx.
     ("into the school", FLOOR_1, [
-        (-105.0, SCHOOL_DOOR), (-120.0, SCHOOL_DOOR), (-134.5, SCHOOL_DOOR),
-        (-141.0, SCHOOL_DOOR),
+        (SCHOOL_X1 + SCHOOL_YARD / 2, SCHOOL_DOOR),
+        (SCH_IN_X1 - 6.5, SCHOOL_DOOR),
+        ((HALL_W_X1 + HALL_E_X0) / 2, SCHOOL_DOOR),
+        (HALL_W_X0 - 3.0, SCHOOL_DOOR),
     ]),
     ("along the school corridor", FLOOR_1, [
-        (-134.5, 20.0), (-134.5, SCHOOL_DOOR), (-134.5, 66.0),
+        ((HALL_W_X1 + HALL_E_X0) / 2, MATH_Z0 + 1.0),
+        ((HALL_W_X1 + HALL_E_X0) / 2, SCHOOL_DOOR),
+        ((HALL_W_X1 + HALL_E_X0) / 2, CAFETERIA_Z1 - 1.0),
     ]),
     ("down the street to work", PAVING, [
         (-92.0, DOOR_LINE), (-92.0, WORK_DOOR), (-105.0, WORK_DOOR),

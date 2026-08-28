@@ -56,6 +56,7 @@ local SchoolService = require(services.SchoolService)
 local ScienceService = require(services.ScienceService)
 local GeographyService = require(services.GeographyService)
 local ArtService = require(services.ArtService)
+local SoccerService = require(services.SoccerService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
@@ -171,13 +172,16 @@ SavingsService:Start()
 MilestoneService:Start()
 GossipService:Start()
 CrimeService:Start()
--- Before SchoolService, which hands a Science, a Geography or an Art lesson straight to
--- whichever of these owns the verb. Cosmetic like every other line in this list -- all four
--- are running before the first player finishes loading -- but reading it in this order is
--- the truth about which owns which.
+-- Before SchoolService, which hands a Science, a Geography, an Art or a PE lesson
+-- straight to whichever of these owns the verb. Cosmetic like every other line in this
+-- list -- all four are running before the first player finishes loading -- but reading
+-- it in this order is the truth about which owns which. SoccerService also runs the 3v3
+-- match itself, which is not gated on PE at all -- see its own header -- so it has to be
+-- live before SchoolService regardless of whether anyone is being graded on the pitch.
 ScienceService:Start()
 GeographyService:Start()
 ArtService:Start()
+SoccerService:Start()
 SchoolService:Start()
 -- Heat before the officers, because the officers are a function of it: PoliceService's
 -- first tick asks BountyService how many bodies the street should have, and a police force

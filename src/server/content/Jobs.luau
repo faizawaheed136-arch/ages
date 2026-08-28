@@ -274,6 +274,18 @@ local SOURCE: { Job } = {
 		minSmarts = 55,
 	},
 	{
+		id = "electronics_store_manager",
+		title = "Electronics store manager",
+		-- The electronics counter's own top rung, alongside the market's rather
+		-- than under it -- two specialist shops off the same shop floor, so each
+		-- gets somewhere to end up rather than one of them running out of ladder.
+		placeId = "electronics",
+		minAge = 20,
+		yearlySalary = 12000,
+		requires = { jobId = "electronics_retail", standing = 12 },
+		minSmarts = 65,
+	},
+	{
 		id = "supermarket_manager",
 		title = "Supermarket manager",
 		placeId = "supermarket",
@@ -314,6 +326,18 @@ local SOURCE: { Job } = {
 		-- takes: five shifts, the same door the librarian and the mechanic
 		-- walk through off the same rung.
 		requires = { jobId = "bakery", standing = 5 },
+	},
+	{
+		id = "restaurant_manager",
+		title = "Restaurant manager",
+		-- The dining room's own top rung, standing next to the kitchen's rather
+		-- than under it -- carrying a tray well for years earns running the floor,
+		-- not a chef's coat.
+		placeId = "restaurant",
+		minAge = 20,
+		yearlySalary = 10000,
+		requires = { jobId = "restaurant_server", standing = 10 },
+		minSmarts = 55,
 	},
 	{
 		id = "chef",
@@ -455,6 +479,16 @@ local SOURCE: { Job } = {
 		yearlySalary = 2400,
 	},
 	{
+		id = "mall_supervisor",
+		title = "Mall supervisor",
+		-- The one first-rung city job that goes anywhere: a couple of years on
+		-- the mall floor is what running the entrance desk actually asks for.
+		placeId = "mall_entrance",
+		minAge = 18,
+		yearlySalary = 6000,
+		requires = { jobId = "mall_cashier", standing = 10 },
+	},
+	{
 		id = "florist",
 		title = "Florist",
 		placeId = "florist",
@@ -555,6 +589,16 @@ local SOURCE: { Job } = {
 		yearlySalary = 6000,
 	},
 	{
+		id = "salon_director",
+		title = "Salon director",
+		-- The chair's own top rung: a trade this game does not need smarts to
+		-- judge, so neither does running the room it happens in.
+		placeId = "salon",
+		minAge = 20,
+		yearlySalary = 10000,
+		requires = { jobId = "hairdresser", standing = 12 },
+	},
+	{
 		id = "tattoo_artist",
 		title = "Tattoo artist",
 		placeId = "tattoo_parlor",
@@ -573,6 +617,18 @@ local SOURCE: { Job } = {
 		minSmarts = 55,
 	},
 	{
+		id = "dealership_sales_manager",
+		title = "Dealership sales manager",
+		-- The dealership's own top rung: the same bar the bank's row reads by,
+		-- because the job is still a price list and a finance sheet, just more
+		-- of them and somebody else's commission riding on it too.
+		placeId = "auto_dealer",
+		minAge = 20,
+		yearlySalary = 14000,
+		requires = { jobId = "car_salesperson", standing = 12 },
+		minSmarts = 65,
+	},
+	{
 		id = "town_clerk",
 		title = "Town clerk",
 		placeId = "town_hall",
@@ -585,6 +641,88 @@ local SOURCE: { Job } = {
 		placeId = "soccer_field",
 		minAge = 18,
 		yearlySalary = 6400,
+	},
+	-- The athlete ladder. Every other career in this file is climbed the same way --
+	-- turn up, do the shift well, let standing open the next door -- and this one is
+	-- built to look identical from the job posts board on purpose. What is different is
+	-- underneath it: every rung also asks `minSkill`, a floor on the athletics number
+	-- GymService and SportsDrillService have been paying into since the sports campus
+	-- went in, and that floor cannot be worked around by turning up. A player who
+	-- clocked in a hundred shifts and never once landed a perfect sweep sits at
+	-- athletics 1 forever and this ladder simply does not open for them -- which is the
+	-- point of gating a *sport* on something other than a calendar.
+	--
+	-- All three rungs sit at the stadium's own place point rather than one each at the
+	-- gym or the sports center, because the shift being paid for is playing, not
+	-- training -- the training already happened, unpaid, at the drills that earned the
+	-- skill number this ladder reads. See the header comment on `minSkill` in
+	-- Types.luau for why that is its own field instead of a second `minSmarts`.
+	{
+		id = "academy_athlete",
+		title = "Academy athlete",
+		placeId = "soccer_field",
+		-- The same floor as every other first job. Sixteen is where this whole game's
+		-- working life starts, and a trial for the academy is not exempt from that --
+		-- it is a foot in a door, not a career, and the ladder's opening rung should
+		-- read like one.
+		minAge = 16,
+		yearlySalary = 2400,
+		-- "Capable" -- level 3 of 8. Reachable by anyone who has actually gone to the
+		-- gym or the sports campus and landed some sweeps rather than merely stood
+		-- near the equipment: roughly a season of drills judged well, not a childhood
+		-- of them. The trial is a door, not a wall.
+		minSkill = { skillId = "athletics", level = 3 },
+		shiftEvents = {
+			{ id = "academy_athlete.extra_laps", weight = 3, line = "The coach adds an extra set of laps after the whistle. You finish them without complaint.", standing = 1, happiness = -2 },
+			{ id = "academy_athlete.spotted", weight = 2, line = "You put in the best session of the week and the coach notices.", standing = 2, happiness = 3 },
+			{ id = "academy_athlete.missed_bus", weight = 2, line = "You miss the team bus and have to jog to the pitch yourself.", happiness = -3 },
+			{ id = "academy_athlete.teammate", weight = 3, line = "A teammate is struggling with a drill. You stay back and run it with them.", standing = 1, happiness = 2 },
+		},
+	},
+	{
+		id = "club_athlete",
+		title = "Club athlete",
+		placeId = "soccer_field",
+		minAge = 18,
+		yearlySalary = 9600,
+		-- Eight is the same "well thought of" band the office clerk's rung reads, on
+		-- the same reasoning: a season or two of showing up for the academy and being
+		-- worth having around, not a single good trial.
+		requires = { jobId = "academy_athlete", standing = 8 },
+		-- "Practiced" -- level 5 of 8, the ladder's midpoint. The academy proved the
+		-- player could be coached; the club wants proof the practice kept going after
+		-- nobody was making them do it.
+		minSkill = { skillId = "athletics", level = 5 },
+		shiftEvents = {
+			{ id = "club_athlete.match_winner", weight = 2, line = "You score the winning point in a tight match. The crowd is on its feet.", standing = 3, happiness = 5, money = 40 },
+			{ id = "club_athlete.injury_scare", weight = 2, line = "You tweak something in warmup and play through it carefully instead of sitting out.", happiness = -4, standing = 1 },
+			{ id = "club_athlete.press_day", weight = 1, line = "A local paper wants a quote after the game. You keep it modest.", standing = 1 },
+			{ id = "club_athlete.bad_call", weight = 3, line = "A referee's call goes against the team. You hold your temper.", happiness = -3, standing = 1 },
+		},
+	},
+	{
+		id = "pro_athlete",
+		title = "Pro athlete",
+		placeId = "soccer_field",
+		minAge = 20,
+		-- The highest salary in the game, ahead of the manager's rung at the top of the
+		-- office ladder -- deliberately, because this is the one career here built to
+		-- be worth chasing for its own sake rather than for the money along the way,
+		-- and the payoff has to actually look like one at the top.
+		yearlySalary = 20000,
+		-- Sixteen, the same weight the manager's rung asks of the clerk beneath it:
+		-- two years of being relied on, not a single standout season.
+		requires = { jobId = "club_athlete", standing = 16 },
+		-- "Expert" -- level 7 of 8, one rung short of Master. Getting paid to play is
+		-- the ceiling this game puts a price on; being the best who ever played it is
+		-- left as something no salary line needs to cover.
+		minSkill = { skillId = "athletics", level = 7 },
+		shiftEvents = {
+			{ id = "pro_athlete.sponsorship", weight = 1, line = "A sponsor offers a modest endorsement deal. You sign it.", money = 150, standing = 1 },
+			{ id = "pro_athlete.title_match", weight = 1, line = "The title match comes down to the final minute, and it goes your way.", standing = 4, happiness = 6 },
+			{ id = "pro_athlete.travel", weight = 3, line = "An away fixture means two days on the road before the whistle.", happiness = -3 },
+			{ id = "pro_athlete.rookie_mentor", weight = 2, line = "The club asks you to mentor an academy trialist for a week. You take it seriously.", standing = 2, happiness = 2 },
+		},
 	},
 	-- Work-from-home jobs. Each one is anchored to a suburb house the player can
 	-- buy; the placeId is the house id, not a public building. A life must own
@@ -704,6 +842,30 @@ local function validate(job: Job)
 			error(
 				`[AGES content] job "{job.id}" values a word from "{vouch.personId}" at {vouch.worthSmarts} `
 					.. `smarts against a bar of {minSmarts}; it must be worth something and must leave a bar behind`
+			)
+		end
+	end
+
+	-- A skill gate has to name a real discipline and a real rung on the shared ladder,
+	-- or it is a door with no key -- the same failure mode `minSmarts` is checked
+	-- against above, just against Config.Skills instead of Config.Stats.
+	local minSkill = job.minSkill
+	if minSkill ~= nil then
+		local found = false
+		for _, definition in Config.Skills.Definitions do
+			if definition.id == minSkill.skillId then
+				found = true
+				break
+			end
+		end
+		if not found then
+			error(`[AGES content] job "{job.id}" gates on skill "{minSkill.skillId}", which is not in Config.Skills.Definitions`)
+		end
+		local levelCount = #Config.Skills.Levels
+		if minSkill.level <= 1 or minSkill.level > levelCount then
+			error(
+				`[AGES content] job "{job.id}" asks for {minSkill.skillId} level {minSkill.level}; it must be above 1 `
+					.. `-- everybody starts there, so the gate would be decoration -- and no more than the ceiling of {levelCount}`
 			)
 		end
 	end
