@@ -16,6 +16,7 @@ local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
+local MusicUI = require(script.ui.MusicUI)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -55,10 +56,12 @@ type TaskState = Types.TaskState
 type LessonState = Types.LessonState
 type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
+type SportsDrillState = Types.SportsDrillState
 type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
+type MusicState = Types.MusicState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -100,6 +103,7 @@ local panel = ChoicePanel.new()
 local lab = LabUI.new()
 local hunt = HuntUI.new()
 local easel = EaselUI.new()
+local music = MusicUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -144,11 +148,14 @@ local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local RequestStartWorkoutRemote = Remotes.Get("RequestStartWorkout")
 local RequestRepRemote = Remotes.Get("RequestRep")
+local RequestStartDrillRemote = Remotes.Get("RequestStartDrill")
+local RequestDrillRepRemote = Remotes.Get("RequestDrillRep")
 local RequestLabStepRemote = Remotes.Get("RequestLabStep")
 local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
 local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
+local RequestMusicNoteRemote = Remotes.Get("RequestMusicNote")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -262,8 +269,24 @@ ui:OnAgeUpActivated(function()
 	})
 end)
 
+-- One button, two rooms: the gym and the sports campus share the same HUD row (see
+-- StatsUI.applySweep), so the press has to be routed to whichever session actually put
+-- the row up. `ActiveSweepSource` is the same field the row's own display logic reads,
+-- which is what keeps this from ever firing the wrong remote into an empty session.
 ui:OnPushActivated(function()
-	RequestRepRemote:FireServer()
+	local source = ui:ActiveSweepSource()
+	if source == "drill" then
+		RequestDrillRepRemote:FireServer()
+	elseif source == "gym" then
+		RequestRepRemote:FireServer()
+	end
+end)
+
+-- Music's own PUSH button, wired straight to its own remote rather than through
+-- ActiveSweepSource -- see the header on MusicUI for why this session cannot share the
+-- gym/drill row at all, let alone its key.
+music:OnPushActivated(function()
+	RequestMusicNoteRemote:FireServer()
 end)
 
 panel:OnChoice(function(eventId: string, choiceId: string)
@@ -712,6 +735,52 @@ local function drawWorkoutPanel(state: WorkoutState?)
 	end
 end
 
+-- The sports drill offer panel, which opens when the player stands near a station that
+-- is not capped for the year. Same shape as the workout panel above, right down to the
+-- key handling -- the two are mutually exclusive by construction (a player can only be
+-- standing at one physical station at a time) but each gets its own key because the
+-- server can push one nil and the other a fresh offer in either order.
+--
+-- Held for the same reason every panel key here is held: closing has to name what it is
+-- closing, and a birthday or an event landing in between must not be swallowed by a key
+-- that happens to match.
+local drillPanelKey: string? = nil
+
+local function drawDrillPanel(state: SportsDrillState?)
+	local wanted = if state ~= nil and state.phase == "offer" then "drill:offer" else nil
+
+	local open = drillPanelKey
+	if open ~= nil and open ~= wanted then
+		panel:CloseOptions(open)
+		drillPanelKey = nil
+	end
+
+	if state == nil or wanted == nil or drillPanelKey == wanted then
+		return
+	end
+
+	if panel:ShowOptions({
+		key = wanted,
+		prompt = state.stationLabel,
+		options = {
+			{ id = "start", label = "Start a drill", locked = false },
+			{ id = "leave", label = "Leave", locked = false },
+		},
+		choose = function(choiceId: string)
+			-- Close first so the panel never lingers while the server
+			-- validates. Refused starts return a notice instead of a
+			-- state change; the panel stays down and the player reads why.
+			panel:CloseOptions(wanted)
+			drillPanelKey = nil
+			if choiceId == "start" then
+				RequestStartDrillRemote:FireServer(state.station)
+			end
+		end,
+	}) then
+		drillPanelKey = wanted
+	end
+end
+
 -- The person who runs a gang, talking. Raised and taken down entirely by the server: it
 -- goes up when the player clicks the dots and standing in front of them is what keeps it
 -- there, so walking off closes it without this client sending anything.
@@ -780,6 +849,9 @@ panel:OnHidden(function(key: string)
 	end
 	if workoutPanelKey ~= nil and workoutPanelKey == key then
 		workoutPanelKey = nil
+	end
+	if drillPanelKey ~= nil and drillPanelKey == key then
+		drillPanelKey = nil
 	end
 	if reportPanelKey ~= nil and reportPanelKey == key then
 		reportPanelKey = nil
@@ -929,6 +1001,14 @@ Remotes.Get("WorkoutUpdated").OnClientEvent:Connect(function(state: WorkoutState
 	drawWorkoutPanel(state)
 end)
 
+-- The sports drill in progress, or an offer to start one. Same two halves as a
+-- workout push, and the same reason for it: the HUD row and the offer panel must
+-- never disagree about which of the two rooms (if either) the player is currently in.
+Remotes.Get("SportsDrillUpdated").OnClientEvent:Connect(function(state: SportsDrillState?)
+	ui:SetDrill(state)
+	drawDrillPanel(state)
+end)
+
 -- The Science lab in progress. Two halves of one fact, and they are driven from the same
 -- push precisely so they cannot disagree: the panel says what the procedure is, and the
 -- dots on the stations say whether the room is currently something you can act on. A lit
@@ -966,6 +1046,13 @@ end)
 -- hand over the one thing this subject is asking the player to find for themselves.
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
+end)
+
+-- The rhythm lesson in progress. One half of one fact, the same shape the hunt's push
+-- is: the panel is the whole interface, and there is nothing in the world to light --
+-- see the header on MusicUI for why this does not reuse the gym/drill sweep row.
+Remotes.Get("MusicUpdated").OnClientEvent:Connect(function(state: MusicState?)
+	music:Set(state)
 end)
 
 -- How much of the town is looking for you. Two halves of one fact, driven from the one

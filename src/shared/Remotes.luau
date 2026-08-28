@@ -97,6 +97,19 @@ export type RemoteName =
 	-- from the sweep position it is already tracking, so a client that fires this
 	-- twice gains nothing.
 	| "RequestRep"
+	-- The sports drill in progress, pushed as a whole snapshot. Its own remote rather
+	-- than a reuse of `WorkoutUpdated`, on the same precedent that split it from
+	-- `StatsUpdated`: the drill session changes four times a second during the sweep,
+	-- and the gym and the sports campus are separate rooms a player can never be in
+	-- both of at once, so there is nothing for one shared field to disambiguate.
+	| "SportsDrillUpdated"
+	-- "Start a drill at this station." Carries a station kind string from the
+	-- attribute on the part the player is standing next to; the server bounds-checks
+	-- it against Config.SportsDrill.Kinds. Mirrors `RequestStartWorkout` exactly.
+	| "RequestStartDrill"
+	-- "I pushed." Mirrors `RequestRep` exactly, for the drill session instead of
+	-- the workout.
+	| "RequestDrillRep"
 	-- The Science lab in progress, pushed as a whole snapshot. Its own remote rather
 	-- than a field on LessonUpdated, because the two are different activities that
 	-- happen to share a building: a lesson is one question and a clock, and a lab is two
@@ -145,6 +158,16 @@ export type RemoteName =
 	-- screen an inch from the copy, and a comparison you can make without turning your head
 	-- is not the comparison this lesson is about.
 	| "ArtUpdated"
+	-- The rhythm lesson in progress, pushed as a whole snapshot: the count-in, the sweep,
+	-- which note this is and how many are left. Own remote for the reason SportsDrillUpdated
+	-- has one instead of riding WorkoutUpdated: the sweep moves several times a second and
+	-- school's own quiz channel (LessonUpdated) already carries a question, a verdict and a
+	-- skip offer told apart by zeroes -- a moving needle is not a fifth thing to tell apart
+	-- that way.
+	| "MusicUpdated"
+	-- "I pushed." Mirrors `RequestRep`/`RequestDrillRep` exactly: no payload beyond the
+	-- click, the server grades it from the sweep position it already tracks.
+	| "RequestMusicNote"
 	-- Heat, pushed as a whole snapshot: what tier you are at, how many officers are out,
 	-- whether anybody can see you this second, and where the police believe you are.
 	--
@@ -567,6 +590,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"WorkoutUpdated",
 	"RequestStartWorkout",
 	"RequestRep",
+	"SportsDrillUpdated",
+	"RequestStartDrill",
+	"RequestDrillRep",
 	"LabUpdated",
 	"RequestLabStep",
 	"RequestLabUndo",
@@ -575,6 +601,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestReportCardRead",
 	"HuntUpdated",
 	"ArtUpdated",
+	"MusicUpdated",
+	"RequestMusicNote",
 	"BountyUpdated",
 	"TheftUpdated",
 	"RequestArtPaint",

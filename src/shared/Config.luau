@@ -2341,6 +2341,29 @@ Config.School = {
 	MaxAskLength = 96,
 }
 
+-- A handful of other children standing near the school door. Permanent world dressing,
+-- built once in SchoolService.buildRoom the same way the sign and the pad are, rather
+-- than per-player or per-lesson content -- the point is that a school with only a
+-- teacher and no other kids in it never looked like a school at all.
+Config.School.Classmates = {
+	-- How many stand at the door. Content.Subjects has exactly this many classmate
+	-- ids (classmate1..3), so raising this without adding a matching subject reuses
+	-- an id and the group stops reading as different children.
+	-- Safe range: 2-3.
+	Count = 3,
+
+	-- Distance from the door point they stand at. Far enough to clear the "Go to
+	-- class" pad (Work.Hiring.PadRadiusStuds, a fraction of this), close enough
+	-- that they read as being at the same door rather than loitering down the
+	-- street. Safe range: 6-16.
+	RingStuds = 9,
+
+	-- Candidate bearings tried around the door before giving up on a slot, same
+	-- idea as People.Town.StandBearings: more tries than kids so one blocked
+	-- angle does not cost a whole classmate. Safe range: 6-16.
+	Bearings = 8,
+}
+
 -- Science. The first subject with a verb of its own rather than a question with the
 -- word "science" written above it.
 --
@@ -2460,11 +2483,21 @@ Config.School.Science = {
 	-- legitimate way to play. Station reach is tight enough that two stations can stand
 	-- near each other without either answering for the other.
 	-- Safe range: Station 3-5, Bench 4-6, Board 5-9, Cupboard 3-5, Room 30-60.
+	--
+	-- Room dropped from 40 to 30 when the science lab moved into its own room
+	-- in tools/world_plan.py (SCHOOL_SCIENCE). That room grew again when the
+	-- school itself relocated to the back street for more room to expand
+	-- (same file, SCHOOL_X0) -- it is now 60 studs deep on its z-axis, so a
+	-- centre-standing room radius has 30 studs of clearance to the nearest
+	-- wall, not 27.5. 30 still holds: the widest station ring
+	-- (StationDistanceShare 0.75, see below) reaches 22.5 studs, 7.5 short
+	-- of the wall -- more clearance than the smaller room gave it, not
+	-- less, so the tuned value carries over rather than needing to move.
 	StationRadiusStuds = 4,
 	BenchRadiusStuds = 5,
 	BoardRadiusStuds = 7,
 	CupboardRadiusStuds = 4,
-	RoomRadiusStuds = 40,
+	RoomRadiusStuds = 30,
 
 	-- How often the server re-checks players against benches, stations and the cupboard.
 	-- Matches School.TickSeconds because it is the identical proximity job.
@@ -2735,6 +2768,65 @@ Config.School.Art = {
 			{ eventId = "school_library_book", x = -150.0, z = 43.0 },
 		},
 	},
+}
+
+-- Music. A rhythm held rather than a question answered -- the sweep primitive the gym
+-- and the sports campus already use (shared/Sweep.luau), aimed at a beat instead of a
+-- rep.
+--
+-- No room of its own, unlike the lab and the studio, and that is a decision rather than
+-- an omission: the mechanic is a needle and a press, and a needle reads the same in the
+-- front hall as it would in a room built specially to hold it. It runs from the same door
+-- point every other subject starts at -- see MusicService, which reads the school's own
+-- place point -- and is held to the classroom by School.RoomRadiusStuds, the same radius
+-- the quiz path already enforces there.
+Config.School.Music = {
+	-- Notes in one song. The same job QuestionsPerLesson and Hunt.Stops do for their own
+	-- verbs: long enough that one missed beat does not decide the lesson, short enough
+	-- that a song stays a song rather than a metronome left running.
+	-- Safe range: 5-12.
+	NotesPerSong = 8,
+
+	-- The sweep every note is judged against. One shape for the whole song rather than one
+	-- per note, because rhythm is the thing being tested -- a needle that moved differently
+	-- every few seconds would be testing reaction to the needle instead of the beat.
+	-- Safe range: 1.2-2.4 seconds, centre 0.6-0.85, sweet 0.14-0.3, perfect 0.04-0.12,
+	-- perfect below sweet.
+	SweepSeconds = 1.7,
+	Curve = "steady",
+	SweetCenter = 0.72,
+	SweetFraction = 0.22,
+	PerfectFraction = 0.08,
+
+	-- What a "Good" note is worth toward the lesson's grade, out of the 1.0 a "Perfect"
+	-- note gives and the 0 a "Miss" gives. Soft failure in the verb's own units, the same
+	-- principle Hunt.MissedCreditCap runs on: a song that was mostly on the beat and only
+	-- occasionally early or late should grade better than one that was mostly missed, not
+	-- identically to it.
+	-- Safe range: 0.4-0.8.
+	GoodCreditShare = 0.6,
+
+	-- How long the count-in runs before each note's sweep starts moving, by mastery rung.
+	-- This is the entire reward of the subject, and like every other subject's ladder it
+	-- is legibility rather than a lowered target: a higher rung does not narrow the window
+	-- or slow the needle down, it gives the player more warning before it starts moving --
+	-- the same shape as Hunt's ladder revealing more of the map rather than shortening the
+	-- walk.
+	-- Must be exactly School.Mastery.Levels long, rising -- checked at require time in
+	-- MusicService, the same way Hunt.RevealedByLevel and Art.PaletteByLevel are.
+	-- Safe range: 0.5-3.5 each.
+	CountInSecondsByLevel = { 1.0, 1.5, 2.0, 2.5, 3.0 },
+
+	-- How long a note's grade holds before the next count-in starts. Shorter than a
+	-- lesson's own VerdictSeconds: a song is meant to keep moving between notes rather
+	-- than pause on each one the way a question's explanation does.
+	-- Safe range: 0.6-2.
+	VerdictSeconds = 0.9,
+
+	-- How often the server ticks a running song. Matches SportsDrill.TickSeconds -- the
+	-- identical sweep-driving job.
+	-- Safe range: 0.1-0.3.
+	TickSeconds = 0.18,
 }
 
 -- The gym. A room full of machines that is also a place a life goes to spend
@@ -3065,6 +3157,125 @@ Config.StadiumEntrance = {
 	FanTalkBeatSeconds = 2.5,
 }
 
+-- Sports drills. The same push-the-sweep-at-the-right-moment verb GymService already
+-- teaches, aimed at the four stations tools/gen_city.py tags through the sports campus:
+-- a heavy bag in the boxing gym, a free-throw rim and a serve line sharing the court
+-- hall, and a penalty crossbar out on the stadium pitch. Reusing the verb rather than
+-- inventing a second one is deliberate -- see docs' school-and-sports research: the
+-- rule that matters is one distinct verb *per subject*, not one per game system, and
+-- gym and sports are both "effort becomes something you can read" wearing different
+-- scenery. A full charge-and-release soccer engine is the eventual shape of the soccer
+-- half of this, researched separately; this is the solo-drill layer that ships first.
+--
+-- The tag/attribute pair is the Luau side of tools/gen_city.py's own
+-- `SPORTS_DRILL_TAG`/`SPORTS_DRILL_KIND` pair (see the comment on those constants) --
+-- no shared source, so the literal strings must match exactly or SportsDrillService
+-- finds nothing, the same arrangement as Config.Stadium's tags above.
+Config.SportsDrill = {
+	DrillTag = "AgesSportsDrill",
+	DrillKindAttribute = "SportsDrillKind",
+
+	-- How near a station you must be to use it. Matches Config.Gym.ReachStuds --
+	-- a drill station is stood at the same way a machine is.
+	ReachStuds = 6,
+
+	-- A drill is a deliberate session, not a button to hammer: after this many in a
+	-- year, a station is spent until the next birthday. Matches Config.Gym.WorkoutsPerYear
+	-- for the same reason -- unlimited reps is a stat button, not a life.
+	-- Safe range: 1-5.
+	DrillsPerYear = 2,
+
+	MaxStamina = 100,
+	MissStamina = 5,
+
+	-- How much the sweet zone widens as health climbs. See Config.Gym.HealthWindowBonus --
+	-- same shape, same reason: getting fitter should widen the window you can feel
+	-- yourself aiming at, not just move a number outside the activity.
+	-- Safe range: 0-1.
+	HealthWindowBonus = 0.6,
+
+	-- The four stations. Every field is stated by every one, deliberately -- see
+	-- GymService's four machines for why sharing one set of numbers across stations
+	-- that are supposed to feel different is the mistake this format exists to avoid.
+	Kinds = {
+		-- The heavy bag. Late zone, quickening needle -- you commit to a punch before
+		-- the bag is actually there to meet it. Boxing-flavoured: mostly fitness.
+		boxing = {
+			label = "Heavy Bag",
+			curve = "quickening",
+			sweepSeconds = 2.2,
+			sweetCenter = 0.7,
+			sweetFraction = 0.20,
+			perfectFraction = 0.07,
+			reps = 10,
+			repStamina = 11,
+			healthPerPerfect = 3,
+			healthPerGood = 1,
+			happinessPerPerfect = 1,
+			happinessPerGood = 0,
+		},
+		-- Free throws. Generous, easing needle -- the shot is there for longer than it
+		-- looks, which is exactly what a free throw is supposed to feel like.
+		basketball = {
+			label = "Free Throw",
+			curve = "easing",
+			sweepSeconds = 2.4,
+			sweetCenter = 0.55,
+			sweetFraction = 0.22,
+			perfectFraction = 0.08,
+			reps = 10,
+			repStamina = 9,
+			healthPerPerfect = 1,
+			healthPerGood = 0,
+			happinessPerPerfect = 2,
+			happinessPerGood = 1,
+		},
+		-- The serve line. Steady and centred, the widest zone of the four -- the
+		-- teaching station, same job the treadmill does in the gym.
+		volleyball = {
+			label = "Serve Line",
+			curve = "steady",
+			sweepSeconds = 2.0,
+			sweetCenter = 0.5,
+			sweetFraction = 0.26,
+			perfectFraction = 0.10,
+			reps = 12,
+			repStamina = 8,
+			healthPerPerfect = 1,
+			healthPerGood = 1,
+			happinessPerPerfect = 1,
+			happinessPerGood = 0,
+		},
+		-- The penalty spot. Narrow, late and quickening -- the hardest of the four,
+		-- and the one that pays best when it lands. Graduate onto this one.
+		soccer = {
+			label = "Penalty Spot",
+			curve = "quickening",
+			sweepSeconds = 2.6,
+			sweetCenter = 0.78,
+			sweetFraction = 0.16,
+			perfectFraction = 0.05,
+			reps = 8,
+			repStamina = 13,
+			healthPerPerfect = 2,
+			healthPerGood = 1,
+			happinessPerPerfect = 2,
+			happinessPerGood = 0,
+		},
+	},
+
+	-- How long the verdict beat lasts before the next rep starts. Matches
+	-- Config.Gym.VerdictSeconds.
+	VerdictSeconds = 1.2,
+
+	-- How often the server ticks the sweep forward. Matches Config.Gym.TickSeconds.
+	TickSeconds = 0.18,
+
+	-- How far from a station's centre the player must stay. Wider than the gym's room:
+	-- these four stations sit in halls and on a pitch built at sports scale rather than
+	-- a classroom-sized room. Safe range: 20-40.
+	RoomRadiusStuds = 30,
+}
 
 -- People. The pillar of a life this game did not have.
 --
@@ -5770,13 +5981,13 @@ Config.Skills = {
 		{
 			id = "athletics",
 			label = "Athletics",
-			earnedBy = "Timing sweeps on the gym machines",
+			earnedBy = "Timing sweeps on the gym machines and sports drills",
 			color = Color3.fromRGB(96, 200, 255),
 		},
 		{
 			id = "academics",
 			label = "Academics",
-			earnedBy = "Answering lessons correctly",
+			earnedBy = "Answering lessons correctly, and holding a beat in music",
 			color = Color3.fromRGB(150, 140, 255),
 		},
 		{
@@ -5823,6 +6034,14 @@ Config.Skills = {
 		-- Safe range: 1-6.
 		GymGood = 3,
 
+		-- SportsDrillService.answer, per rep, on the grade -- same shape and same
+		-- reasoning as GymPerfect/GymGood, aimed at the sports campus's four stations
+		-- instead of the gym's four machines. A miss pays nothing, for the same reason.
+		-- Safe range: 2-12.
+		DrillPerfect = 6,
+		-- Safe range: 1-6.
+		DrillGood = 3,
+
 		-- SchoolService.answer, per right answer. Time running out is a wrong answer
 		-- here, exactly as it is for the lesson's own grade.
 		-- Safe range: 2-10.
@@ -5848,6 +6067,18 @@ Config.Skills = {
 		-- of doing it badly, not a way of avoiding being graded.
 		-- Safe range: 15-50.
 		ArtCanvas = 30,
+
+		-- MusicService.answer, per note, on the grade the sweep was judged at. Fed into
+		-- "academics" rather than a discipline of its own -- see the note on Skills.Definitions
+		-- for why the list stays at six -- on the same reasoning LessonCorrect already
+		-- establishes: a right answer and a note held on the beat are both a child getting
+		-- the lesson right, and academics is the bar that already means that. A miss pays
+		-- nothing, matching GymPerfect/DrillPerfect: the beat is the only thing this verb
+		-- asks the player to get right.
+		-- Safe range: 2-12.
+		RhythmPerfect = 6,
+		-- Safe range: 1-6.
+		RhythmGood = 3,
 
 		-- GangService.checkEscape, when a bounty that got above
 		-- Config.Gangs.Earn.GotAwayNeedsBounty falls to nothing without an arrest.

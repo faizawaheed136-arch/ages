@@ -65,20 +65,14 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = SCHOOL_END,
 	},
 
-	-- Reading and Music. Both are quiz stubs today and both have a verb owed to them,
-	-- written down here so the debt is legible rather than implied:
+	-- Reading. Still a quiz stub, written down here so the debt is legible rather than
+	-- implied: the verb owed is *finding* rather than knowing. "A passage on the board
+	-- and the answer somewhere in it" is the obvious shape and is also a quiz with more
+	-- words in it, so it is written down as an unsolved problem rather than a plan.
 	--
-	--   Reading -- something where the verb is *finding* rather than knowing. "A passage on
-	--     the board and the answer somewhere in it" is the obvious shape and is also a quiz
-	--     with more words in it, so it is written down as an unsolved problem rather than a
-	--     plan.
-	--   Music   -- a rhythm held rather than a question answered; the input primitive
-	--     already exists for sports and is the obvious place to reuse it.
-	--
-	-- Neither is built. They are on the timetable because a childhood with one subject in
-	-- it is a worse game than one with five placeholders, and because the alternative --
-	-- holding the whole rebuild until all six verbs exist -- means shipping nothing for a
-	-- month.
+	-- Not built. It is on the timetable because a childhood with one subject in it is a
+	-- worse game than one with five placeholders, and because the alternative -- holding
+	-- the whole rebuild until all six verbs exist -- means shipping nothing for a month.
 	{
 		id = "reading",
 		name = "Reading",
@@ -107,11 +101,19 @@ local SOURCE: { SchoolSubject } = {
 		minAge = SCHOOL_START,
 		maxAge = 14,
 	},
+	-- Music. A rhythm held rather than a question answered -- the sweep primitive the
+	-- gym and the sports campus already use (shared/Sweep.luau), pointed at a beat
+	-- instead of a rep: a count-in, then the needle, then a press timed against the
+	-- window rather than a multiple-choice guess about a note's name.
+	--
+	-- Starts at eight for the same reason Geography does: holding a count-in and
+	-- reacting to a moving needle is the mechanic, and a six-year-old is not the
+	-- player that challenges.
 	{
 		id = "music",
 		name = "Music",
-		verb = "quiz",
-		blurb = "Sound, time, and keeping to it.",
+		verb = "rhythm",
+		blurb = "Count in, then hold the beat. Nothing here is asked -- only kept.",
 		minAge = 8,
 		maxAge = 14,
 	},

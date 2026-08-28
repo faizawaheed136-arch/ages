@@ -68,6 +68,7 @@ local CodeService = require(services.CodeService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
+local SportsDrillService = require(services.SportsDrillService)
 local FightService = require(services.FightService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -212,12 +213,23 @@ GangService:Start()
 -- an empty map for the life of the server.
 TerritoryService:Start()
 SkillService:Start()
+-- The athlete ladder's scout, wired the same way FightService.SetWitnessedHandler is a
+-- few lines below rather than a require: SkillService cannot require WorkService back
+-- without a cycle, since WorkService already requires SkillService to read a job's
+-- minSkill gate. Both are up well above this line, so the callback is live before any
+-- player could possibly land a rep that crosses a rung.
+SkillService.SetLevelUpHandler(function(player: Player, skillId: string, beforeLevel: number, afterLevel: number)
+	WorkService.OnSkillLevelUp(player, skillId, beforeLevel, afterLevel)
+end)
 SettingsService:Start()
 CodeService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()
 GymService:Start()
+-- Same room, same reasoning: the sports campus's four stations are tagged parts
+-- found the way the gym's four machines are, so it starts right beside it.
+SportsDrillService:Start()
 -- The fight, after NPCService because squaring somebody up spawns a rig, and after
 -- StatService because the pool a player has to spend is read off their health the moment a
 -- bout opens. Both are up well above this, and so is BountyService: FightService cannot

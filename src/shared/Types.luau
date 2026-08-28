@@ -312,6 +312,21 @@ export type JobVouch = {
 	worthSmarts: number,
 }
 
+-- A skill floor a job asks for, read off SkillService.LevelOf rather than off any
+-- stat. Its own type rather than a second shift of `minSmarts`, because it is asking a
+-- different question -- not "were you taught something", but "have you practiced
+-- something until you were good at it" -- and the two must never be interchangeable or
+-- a smarts grind would quietly buy a place on the athlete ladder.
+export type JobSkillGate = {
+	-- One of Config.Skills.Definitions' ids. Checked against that table at content
+	-- load, the same way a vouch's personId is checked against People.
+	skillId: string,
+	-- A rung on Config.Skills.Levels, 1 through 8. Not XP -- the ladder is shared by
+	-- every discipline precisely so a job can name a level and mean the same thing
+	-- whichever skill it is gating on.
+	level: number,
+}
+
 export type Job = {
 	id: string,
 	title: string,
@@ -344,6 +359,11 @@ export type Job = {
 	-- Who could put in a word for you here, if anyone would. Only ever read alongside
 	-- `minSmarts`, because lowering a bar that does not exist is not a favour.
 	vouch: JobVouch?,
+	-- A discipline you have to have practiced, not been taught. Nil for every job that
+	-- does not care what a player has drilled with their hands -- which today is every
+	-- job except the athlete ladder, the one career this game gates on a skill rather
+	-- than an age, a record, or a classroom.
+	minSkill: JobSkillGate?,
 	-- Job-specific shift events. Picked from first, falling back to the global pool.
 	-- Nil means the job uses only the generic event pool.
 	shiftEvents: { JobShiftEvent }?,
@@ -770,7 +790,7 @@ export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" |
 -- and the list of them is meant to reach zero. It is kept because the alternative was
 -- deleting eleven of a childhood's twelve school years until all six verbs existed, and
 -- a childhood with one subject in it is worse than one with five placeholders.
-export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy"
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "rhythm"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {
@@ -1302,6 +1322,72 @@ export type WorkoutState = {
 	-- Running totals for the session, so the client can show gains.
 	healthGained: number,
 	looksGained: number,
+}
+
+-- A sports drill in progress, pushed as a whole snapshot. The same three phases as
+-- WorkoutState, aimed at the sports campus's four stations instead of the gym's four
+-- machines -- see Config.SportsDrill's header for why this is the same verb rather
+-- than a second one. Kept as its own type instead of reusing WorkoutState because the
+-- two systems' stat gains differ (health/happiness here, health/looks there) and a
+-- shared type would either carry a field neither one graded, or ask a payout in one
+-- system to lie about which stat it moved.
+export type SportsDrillState = {
+	phase: "offer" | "rep" | "verdict",
+	-- Station kind string ("boxing", "basketball", "volleyball", "soccer").
+	station: string,
+	stationLabel: string,
+	rep: number,
+	reps: number,
+	progress: number,
+	sweetCenter: number,
+	sweetHalf: number,
+	perfectHalf: number,
+	sweepSeconds: number,
+	curve: string,
+	elapsedShare: number,
+	stamina: number,
+	maxStamina: number,
+	grade: string?,
+	healthGained: number,
+	happinessGained: number,
+}
+
+-- A rhythm lesson in progress -- Music's verb, and the same sweep primitive as the
+-- gym and the sports drill (see shared/Sweep.luau) held against a note instead of a
+-- rep. One field this state has that neither of those does: `countInSecondsLeft`, the
+-- lead-in warning before the sweep starts moving. That is the lever mastery pulls
+-- here -- see Config.School.Music -- and it follows the rule every other subject's
+-- ladder already keeps: a higher level buys the player more to read, not an easier
+-- target, so nobody is ever handed a win they did not earn a beat.
+export type MusicState = {
+	phase: "leadIn" | "note" | "verdict",
+	songLabel: string,
+	-- Which note of how many, both 1-based -- "3 of 8", the same shape HuntState's
+	-- stop/stops gives a lesson with a fixed length rather than a clock running down.
+	note: number,
+	notes: number,
+	-- Seconds still to count in before the sweep for this note starts, so the panel
+	-- can show a beat landing rather than the target simply appearing already moving.
+	countInSecondsLeft: number,
+	progress: number,
+	sweetCenter: number,
+	sweetHalf: number,
+	perfectHalf: number,
+	sweepSeconds: number,
+	curve: string,
+	elapsedShare: number,
+	-- Notes hit well enough to count, which is what the lesson is graded on -- the
+	-- same "reached so far" figure HuntState.found gives a hunt.
+	hits: number,
+	level: number,
+	levelMax: number,
+	passes: number,
+	passesPerLevel: number,
+	-- Non-nil only during verdict, per note: "Perfect", "Good", or "Miss".
+	grade: string?,
+	-- Set for the beat after the whole song ends. Same slot every other lesson's
+	-- summary uses and read the same way: the closing line, held, then gone.
+	summary: string?,
 }
 
 -- A fight in progress, as the client needs to draw it.
@@ -2626,6 +2712,11 @@ export type LifeData = {
 	-- Per life, like lessonsThisYear and for the same reason: a new body has not
 	-- worked out anywhere yet.
 	workoutsThisYear: { [string]: number },
+	-- Sports drills completed per station kind in the current year, against
+	-- Config.SportsDrill.DrillsPerYear. Same shape as workoutsThisYear, one field
+	-- over: a session at the heavy bag does not spend the free-throw rim's slot.
+	-- Nil-safe: absent keys read as zero. Per life, for the same reason.
+	drillsThisYear: { [string]: number },
 	-- Cumulative XP per skill id, keyed by `Config.Skills.Definitions[n].id`. Absent
 	-- keys read as zero, so a discipline never practised and one that exists but has
 	-- not been touched are the same thing -- which they are.

@@ -51,6 +51,19 @@ local function lifeDataFor(player: Player): LifeData?
 	return Lives.Active(profile.Data)
 end
 
+-- Set by WorkService, not required by it. This file has no idea what a job is and
+-- must stay that way -- WorkService already requires SkillService to read the athlete
+-- ladder's `minSkill` gate, and a require back the other way would be a cycle over
+-- nothing this file needs. A setter is the same fix `FightService.SetWitnessedHandler`
+-- and `BountyService.SetArrestedHandler` use for the identical shape of problem: see
+-- the comment on FightService's wiring in init.server.luau.
+local levelUpHandler: ((Player, string, number, number) -> ())? = nil
+
+-- Called once, from init.server.luau, after both services have started.
+function SkillService.SetLevelUpHandler(handler: (Player, string, number, number) -> ())
+	levelUpHandler = handler
+end
+
 -- Which rung a given XP total stands on, and where the next one begins.
 --
 -- A linear walk rather than a binary search, and it stays that way: the ladder is
@@ -147,7 +160,28 @@ function SkillService.Award(player: Player, skillId: string, xp: number, reason:
 
 	local beforeLevel = bandFor(before)
 	local afterLevel = bandFor(after)
+
+	-- Fired on every award that actually crosses a rung, not on every award -- most
+	-- reps land inside the band they were already in, and a handler woken up on every
+	-- one of those would be doing the threshold check itself just to throw the answer
+	-- away. `afterLevel > beforeLevel` is that check, done once, here, for every caller.
+	if afterLevel > beforeLevel and levelUpHandler ~= nil then
+		levelUpHandler(player, skillId, beforeLevel, afterLevel)
+	end
+
 	return beforeLevel, afterLevel
+end
+
+-- The same read as `LevelOf`, off a `LifeData` directly rather than a `Player`. Split
+-- out for callers that already have the data in hand and nothing else -- WorkService's
+-- `hireRefusalFor` is the first of these, checking the athlete ladder's `minSkill`
+-- gate against a life it was already handed, with no `Player` anywhere in the call. A
+-- second copy of the band walk here would be exactly the kind of curve that drifts
+-- from this one; there is one XP-to-level rule in the file and both entry points read
+-- it the same way.
+function SkillService.LevelOfData(life: LifeData, skillId: string): number
+	local level = bandFor(life.skillXp[skillId] or 0)
+	return level
 end
 
 -- The rung a player stands on in one discipline, for anything that wants to gate on
@@ -158,8 +192,7 @@ function SkillService.LevelOf(player: Player, skillId: string): number
 	if life == nil then
 		return 0
 	end
-	local level = bandFor(life.skillXp[skillId] or 0)
-	return level
+	return SkillService.LevelOfData(life, skillId)
 end
 
 -- Re-send the whole panel. Called by anything that changed a life wholesale rather

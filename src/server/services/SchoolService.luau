@@ -65,6 +65,7 @@ local SkillService = require(script.Parent.SkillService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
+local MusicService = require(script.Parent.MusicService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local Studio = require(script.Parent.Parent.world.Studio)
@@ -104,6 +105,14 @@ local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 -- world is built by hand and this finds it, so moving the building is a drag in Studio
 -- and not an edit here.
 local PLACE_ID = "school"
+
+-- Where the lab actually goes. "school" is the front door -- the pad the player walks
+-- onto and the point the sign hangs from -- and it stands in the forecourt outside the
+-- building, not in the room the lab needs to fit inside. tools/world_plan.py lays a
+-- second point, "science_lab", in the middle of SCHOOL_SCIENCE's own benches for exactly
+-- this call: see its comment on SCIENCE_Z0/Z1 for the room Lab.Build (and
+-- Config.School.Science.RoomRadiusStuds) are actually sized against.
+local LAB_PLACE_ID = "science_lab"
 
 local SCHOOL = Config.School
 
@@ -573,6 +582,97 @@ local function despawnTeacher(player: Player)
 	teacher.rig.model:Destroy()
 end
 
+-- The classmates standing near the door. Pure world dressing: nothing here is keyed by
+-- player, nothing here is ever despawned, and nothing here tracks the player the way the
+-- teacher does -- it is a small huddle that stands at the school for the life of the
+-- server, the same permanence as the sign and the pad. Kept as its own list rather than
+-- folded into `teachers` because the two have almost nothing in common once you take the
+-- rig away: one is per-player lesson state, the other is scenery.
+type Classmate = {
+	rig: SubjectRig,
+	motion: Motion,
+	at: Vector3,
+	heading: number,
+	startedAt: number,
+}
+local classmates: { Classmate } = {}
+
+-- Stands a small group of classmate rigs on a ring around the door point, facing in
+-- toward it so they read as gathered at the school rather than facing out at nothing.
+-- Best-effort exactly like spawnTeacher: a door with nowhere for the group to stand
+-- plays exactly as it did before they existed, one at a time per bearing rather than
+-- refusing the whole group over one blocked angle.
+local function spawnClassmates(at: Vector3)
+	local CLASSMATES = SCHOOL.Classmates
+	local ids = { "classmate1", "classmate2", "classmate3" }
+	local ignore = Ground.IgnoreList()
+	local radius = Config.NPC.BodyRadius
+	local height = Config.NPC.BodyHeight
+	local taken: { Vector3 } = {}
+
+	local placed = 0
+	for _, bearing in Ground.Bearings(360, CLASSMATES.Bearings) do
+		if placed >= CLASSMATES.Count then
+			break
+		end
+
+		local direction = CFrame.fromAxisAngle(Vector3.yAxis, math.rad(-bearing)) * Vector3.new(0, 0, -1)
+		local candidate = at + direction * CLASSMATES.RingStuds
+
+		-- No reachability test, on the same reasoning PeopleService.spotFor gives for a
+		-- townsperson's own ring: this group is not walking to the door, it is already
+		-- standing there when the world loads.
+		local floor = Ground.SpotAt(candidate, radius, height, ignore)
+		if floor == nil then
+			continue
+		end
+		if not Ground.Apart(floor, taken, radius * 2) then
+			continue
+		end
+		table.insert(taken, floor)
+		placed += 1
+
+		local subject = Subjects.ById[ids[placed]]
+		if subject == nil then
+			continue
+		end
+
+		local rig = SubjectModels.Build(subject)
+		rig.model.Parent = schoolFolder()
+		local motion = SubjectMotion.Attach(rig)
+
+		local heading = headingTo(at - floor)
+		rig.model:PivotTo(poseAt(floor, heading))
+
+		local classmate: Classmate = {
+			rig = rig,
+			motion = motion,
+			at = floor,
+			heading = heading,
+			startedAt = os.clock(),
+		}
+		table.insert(classmates, classmate)
+
+		-- Idling forever rather than for a lesson's length. `SubjectMotion`'s posed idle
+		-- already supplies the breathing and head drift that make a stationary biped read
+		-- as alive rather than propped up -- see SubjectMotion.luau -- so there is nothing
+		-- else this loop needs to do.
+		task.spawn(function()
+			while true do
+				RunService.Heartbeat:Wait()
+				classmate.motion.apply({
+					root = poseAt(classmate.at, classmate.heading),
+					traveled = 0,
+					elapsed = os.clock() - classmate.startedAt,
+					moving = false,
+					turning = 0,
+					settled = false,
+				})
+			end
+		end)
+	end
+end
+
 -- Whether the room has been furnished yet. Built lazily rather than at Start, because
 -- the place point may stream in after the server does -- and a school that only exists
 -- if the building happened to be loaded at boot is a school that is missing on exactly
@@ -657,15 +757,30 @@ local function buildRoom(): boolean
 	})
 	attendAt = at
 
-	-- The lab goes up with the school and around the same point, because it is a room in
-	-- the same building and the pad outside is its door too. Built here rather than
-	-- lazily on the first Science lesson so that a Studio session can see the benches
-	-- standing the moment the world loads -- a room that only appears once somebody is
-	-- nine is a room nobody can check.
+	-- A few other kids at the door. See spawnClassmates for why this is scenery rather
+	-- than lesson state, and Config.School.Classmates for the numbers.
+	spawnClassmates(at)
+
+	-- The lab goes up with the school, but around its own point (LAB_PLACE_ID above) and
+	-- not the front door -- the school grew past a building small enough for one centre
+	-- to serve both, and a lab built around the forecourt now lands outside the room
+	-- SCHOOL_SCIENCE was measured for. Built here rather than lazily on the first
+	-- Science lesson so that a Studio session can see the benches standing the moment
+	-- the world loads -- a room that only appears once somebody is nine is a room nobody
+	-- can check.
 	--
 	-- Best effort, and a failure is not a failure of school: Lab.Build refusing means
-	-- Science refuses at the door with a reason, and every other subject carries on.
-	Lab.Build(at)
+	-- Science refuses at the door with a reason, and every other subject carries on. A
+	-- missing science_lab point is the same kind of best-effort failure as a floor
+	-- Lab.Build itself refuses, so it is logged and swallowed the same way rather than
+	-- taking buildRoom's own success down with it -- the classroom, cafeteria and pad
+	-- above have already gone up by this point and should stay up.
+	local labPlace = PlaceService.Find(LAB_PLACE_ID)
+	if labPlace ~= nil then
+		Lab.Build(labPlace.part.Position)
+	else
+		warn(`SchoolService: no part tagged "{LAB_PLACE_ID}" -- the science lab has no room to build in`)
+	end
 
 	-- And the art room, for the same reasons in the same order -- a room in the same
 	-- building, standing before anybody is old enough to be sent to it, and free to fail
@@ -1290,6 +1405,22 @@ local function beginLesson(player: Player, data: LifeData, room: Vector3): boole
 		return true
 	end
 
+	if subject.verb == "rhythm" then
+		local ok, refusal = MusicService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "There is no music today.", false)
+			return false
+		end
+		-- Cleared for the same reason as the three above.
+		--
+		-- No teacher and no scene here either, and for the same reason as Geography's: the
+		-- verb is a needle and a press, and a classroom drawn around a player about to be
+		-- looking at nothing but a sweep bar is a room built for nobody to look at.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
 	local questions = Lessons.For(ageYearsOf(data), SCHOOL.QuestionsPerLesson)
 	if #questions == 0 then
 		-- Impossible if the content file loaded, which checks every age has enough
@@ -1550,6 +1681,13 @@ local function tickPlayer(player: Player, elapsed: number)
 			return
 		end
 
+		-- And so is a song. Same failure, same place: the moment a rhythm lesson opens, the
+		-- player is still standing on the school pad that started it, and without this the
+		-- tick loop would start a second lesson on top of the one already sweeping.
+		if MusicService.IsRunning(player) then
+			return
+		end
+
 		local at = attendAt
 		if at == nil or Ground.FlatDistance(position, at) > SCHOOL.AttendRadiusStuds then
 			return
@@ -1735,6 +1873,7 @@ function SchoolService.OnAgeUp(player: Player)
 		and not ScienceService.IsRunning(player)
 		and not GeographyService.IsRunning(player)
 		and not ArtService.IsRunning(player)
+		and not MusicService.IsRunning(player)
 		and yearJustEnded >= SCHOOL.StartAge
 		and yearJustEnded <= SCHOOL.EndAge
 
@@ -1779,6 +1918,7 @@ function SchoolService.ResetForNewLife(player: Player)
 	ScienceService.ResetForNewLife(player)
 	GeographyService.ResetForNewLife(player)
 	ArtService.ResetForNewLife(player)
+	MusicService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

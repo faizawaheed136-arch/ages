@@ -32,11 +32,13 @@ local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
+local SportsDrillService = require(script.Parent.SportsDrillService)
 local StadiumCrowdService = require(script.Parent.StadiumCrowdService)
 local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
+local MusicService = require(script.Parent.MusicService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
@@ -917,6 +919,45 @@ Commands.gym = function(player: Player, args: { string }): string
 	return `usage: /gym [start|end|on|off] — {GymService.Describe(player)}`
 end
 
+-- /drill                       station found, the nearby station's curve, sweep length,
+--                               and yearly caps -- same reading as bare /gym, aimed at
+--                               the sports campus's four stations instead of the gym's.
+-- /drill start                 a drill where you stand.
+-- /drill end                   ends the session the way walking out does.
+-- /drill on|off                the whole system dark, for telling a drill bug apart
+--                               from a station-index bug.
+Commands.drill = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return SportsDrillService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		SportsDrillService.SetEnabled(arg == "on")
+		return `drill {arg} — {SportsDrillService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = SportsDrillService.ForceStart(player)
+		if not started then
+			return `could not start: {refusal or "no reason given"} — {SportsDrillService.Describe(player)}`
+		end
+		return `drill started — {SportsDrillService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not SportsDrillService.ForceEnd(player) then
+			return `no drill running — {SportsDrillService.Describe(player)}`
+		end
+		return `drill ended — {SportsDrillService.Describe(player)}`
+	end
+
+	return `usage: /drill [start|end|on|off] — {SportsDrillService.Describe(player)}`
+end
 
 -- /stadium                     seat/roam pool counts against their caps, and how many
 --                              anchors gen_city.py salted through the bowl.
@@ -1446,6 +1487,75 @@ Commands.art = function(player: Player, args: { string }): string
 	end
 
 	return `usage: /art [start|sign|end|shift|refill|level <n>|on|off] — {ArtService.Describe(player)}`
+end
+
+-- Music, and the fastest of the four verb commands to actually judge, because the sweep
+-- is only a couple of seconds and it is in front of everything else worth testing.
+--
+--   /music                     the door, the level, the count-in it buys, and whatever
+--                               song is running -- phase, note, hits, credit.
+--   /music start                a song from wherever you are standing, skipping the walk
+--                               to school but nothing else.
+--   /music hit                  counts the note in hand as a Perfect without waiting for
+--                               the sweep or the press. The one to spam: it walks a whole
+--                               song, the count-in, the note advancing, the closing line
+--                               and the report card row, in eight presses instead of a
+--                               couple of minutes of real timing.
+--   /music end                  grades the song where it stands, the way walking out does.
+--   /music level 1 then /music level 5
+--                               one second of warning against three, on the same sweep.
+--                               If the difference does not feel like being handed time to
+--                               think rather than an easier needle, the ladder is a number
+--                               and needs rewriting rather than retuning.
+--   /music off                  the whole verb dark, so a music bug can be told apart from
+--                               a school one -- /school start should then hand music to the
+--                               quiz path instead of refusing.
+Commands.music = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return MusicService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		MusicService.SetEnabled(arg == "on")
+		return `music {arg} — {MusicService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = MusicService.ForceStart(player)
+		if not started then
+			return `could not start a song: {refusal or "no reason given"} — {MusicService.Describe(player)}`
+		end
+		return `song started — {MusicService.Describe(player)}`
+	end
+
+	if arg == "hit" then
+		if not MusicService.ForceHit(player) then
+			return `nothing to hit — {MusicService.Describe(player)}`
+		end
+		return `note hit — {MusicService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not MusicService.ForceEnd(player) then
+			return `no song running — {MusicService.Describe(player)}`
+		end
+		return `song graded — {MusicService.Describe(player)}`
+	end
+
+	if arg == "level" then
+		local level = tonumber(args[2])
+		if level == nil or not MusicService.SetLevel(player, level) then
+			return `usage: /music level <1-{#Config.School.Music.CountInSecondsByLevel}> — {MusicService.Describe(player)}`
+		end
+		return MusicService.Describe(player)
+	end
+
+	return `usage: /music [start|hit|end|level <n>|on|off] — {MusicService.Describe(player)}`
 end
 
 -- Heat, and the whole reason this command exists rather than a crime to commit.
@@ -3036,8 +3146,9 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/places, /zones, /go <place>, /job [start|end|quit|task [id]|fail|skip <n>|moment|hours <n>|standing <jobId> <n>], "
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
-	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
-	.. "/stadium [on|off], /gate [on|off|play|reset], "
+	.. "/art [start|sign|end|shift|refill|level <n>|on|off], "
+	.. "/music [start|hit|end|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/drill [start|end|on|off], /stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
 	.. "/theft [go <place>|fill|on|off|crew <id>], "

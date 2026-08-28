@@ -22,6 +22,7 @@ local DeliveryService = require(script.Parent.DeliveryService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local GymService = require(script.Parent.GymService)
+local SportsDrillService = require(script.Parent.SportsDrillService)
 local FightService = require(script.Parent.FightService)
 local PeopleService = require(script.Parent.PeopleService)
 local VehicleService = require(script.Parent.VehicleService)
@@ -420,6 +421,9 @@ function LifeService.Die(player: Player)
 	-- a dead body and a PUSH button that did nothing, so end it and clear
 	-- the yearly caps.
 	GymService.ResetForNewLife(player)
+	-- Same reason, same shape: a drill session left running on a dead body is a
+	-- sweep bar and a PUSH button belonging to nobody.
+	SportsDrillService.ResetForNewLife(player)
 	-- And the fight, which is the sharpest case of the lot. A bout left running would keep
 	-- ticking against a dead player -- an opponent still winding up, still landing strikes,
 	-- still taking footing off somebody who has no footing to lose -- and the death screen
@@ -572,6 +576,9 @@ function LifeService.AgeUp(player: Player, cause: AgeUpCause)
 	-- A new year of machines: the per-machine yearly caps reset, and any
 	-- workout in progress is graded on the year it started in.
 	GymService.OnAgeUp(player)
+
+	-- A new year of stations: same reset, same reason, for the sports campus.
+	SportsDrillService.OnAgeUp(player)
 
 	-- And a year of everybody you did not go and see. Last of the three because it is
 	-- the only one that looks purely backwards: work and school each hand out a fresh

@@ -119,6 +119,23 @@ local function buildLabel(part: BasePart, text: string, width: number): TextLabe
 	return label
 end
 
+-- An art room is also an indoor room. Like the lab, it is called with the school's
+-- forecourt point and would otherwise spill its easel and paint cupboard onto the road.
+-- Raycast upward from the centre: no ceiling within a storey means outdoors, and the
+-- room refuses rather than cluttering the street.
+local function ceilingAbove(center: Vector3): boolean
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.IgnoreWater = true
+	params.RespectCanCollide = true
+	local result = workspace:Raycast(
+		center + Vector3.new(0, 2, 0),
+		Vector3.new(0, 14, 0),
+		params
+	)
+	return result ~= nil
+end
+
 -- Builds the room around a centre point, once. Nil means it could not be laid at all,
 -- which the caller turns into Art refusing at the door with a reason rather than into a
 -- lesson that opens onto nothing.
@@ -126,6 +143,11 @@ function Studio.Build(center: Vector3): ArtRoom?
 	local existing = room
 	if existing ~= nil then
 		return existing
+	end
+
+	-- Must be indoors: an art room on the forecourt would put its furniture on the road.
+	if not ceilingAbove(center) then
+		return nil
 	end
 
 	local wallAt = onCircle(center, BUILD.WallBearing, BUILD.WallDistanceShare)

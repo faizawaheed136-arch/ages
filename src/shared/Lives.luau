@@ -83,6 +83,9 @@ function Lives.New(): LifeData
 		-- true of the newborn, and the right thing to hand a save written before the gym
 		-- existed: that life has not worked out this year, which is exactly true.
 		workoutsThisYear = {},
+		-- Empty, for the same reason workoutsThisYear is: true of the newborn, and
+		-- true of a save written before the sports campus existed.
+		drillsThisYear = {},
 		-- Right for the newborn this describes, and right for a save written before school
 		-- existed: that life has sat no lessons this year, which is exactly true -- there was
 		-- nothing to sit.
