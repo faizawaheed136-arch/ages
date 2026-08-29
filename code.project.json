@@ -26,6 +26,12 @@
           "$path": "src/client"
         }
       }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "School": {
+        "$path": "assets/School.rbxmx"
+      }
     }
   }
 }
