@@ -920,6 +920,55 @@ export type MusicNote = {
 export type MusicJudgement = "perfect" | "great" | "good" | "miss"
 
 -- The music lesson as the client draws it.
+-- PE, which is a graded sports drill rather than a lesson -- see content/Curriculum.luau
+-- and services/PEService.luau for why that is the whole point of the subject.
+--
+-- The meter is the golf three-click: one click starts it, the second sets power, the third
+-- sets accuracy. Every field the client needs to *draw* that meter is sent from the server
+-- rather than read from Config, for the reason MusicState sends its judgement windows: the
+-- windows are what fitness and mastery buy, and a client that computed them could disagree
+-- with the server that scored against them.
+export type PEState = {
+	active: boolean,
+	line: string,
+	-- Which drill is on, and how far through it you are.
+	drill: string,
+	attempt: number,
+	attempts: number,
+	-- Which click comes next: "power" or "accuracy". Never "ready" -- the first click of an
+	-- attempt starts the power sweep, so there is no idle phase to represent.
+	phase: string,
+	-- `os.clock()` on the server when the current sweep started, converted by the client to
+	-- its own clock on receipt. The marker is drawn from this and nothing else.
+	sweepStartedAt: number,
+	-- How long the running sweep takes to cross. The accuracy sweep is faster than the power
+	-- one, and faster again if the last click overswung -- which is the whole risk in the
+	-- risk/reward.
+	sweepSeconds: number,
+	-- Where the overswing zone starts on the power bar, as a share of it. Past here you get
+	-- more power and a faster accuracy sweep.
+	overswingFrom: number,
+	-- The accuracy bands, as shares of the bar.
+	perfectFrom: number,
+	perfectTo: number,
+	goodFrom: number,
+	goodTo: number,
+	-- The power locked in by the second click, or 0 before it. Drawn as a held marker so you
+	-- can see what you are about to spend.
+	power: number,
+	-- Running tallies. `scored` is in attempts, so 4.2 out of 6 is a share of 0.7.
+	scored: number,
+	bestAttempt: number,
+	lastLine: string,
+	-- What this drill has to reach to pass, which rises with mastery. Sent so the bar can be
+	-- drawn with the mark on it rather than the player being graded against a number they
+	-- were never shown.
+	passShare: number,
+	secondsLeft: number,
+	masteryLevel: number,
+	atField: boolean,
+}
+
 export type MusicState = {
 	active: boolean,
 	line: string,
@@ -951,7 +1000,7 @@ export type MusicState = {
 	masteryLevel: number,
 }
 
-export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep"
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep" | "drill"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {

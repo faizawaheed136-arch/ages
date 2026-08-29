@@ -19,6 +19,7 @@ local EaselUI = require(script.ui.EaselUI)
 local NerveUI = require(script.ui.NerveUI)
 local WordUI = require(script.ui.WordUI)
 local MusicUI = require(script.ui.MusicUI)
+local DrillUI = require(script.ui.DrillUI)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -65,6 +66,7 @@ type ArtState = Types.ArtState
 type NerveState = Types.NerveState
 type ReadingState = Types.ReadingState
 type MusicState = Types.MusicState
+type PEState = Types.PEState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -109,6 +111,7 @@ local easel = EaselUI.new()
 local nerve = NerveUI.new()
 local words = WordUI.new()
 local music = MusicUI.new()
+local drill = DrillUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -162,6 +165,7 @@ local RequestNerveHoldRemote = Remotes.Get("RequestNerveHold")
 local RequestReadingPlaceRemote = Remotes.Get("RequestReadingPlace")
 local RequestReadingSubmitRemote = Remotes.Get("RequestReadingSubmit")
 local RequestMusicHitRemote = Remotes.Get("RequestMusicHit")
+local RequestPEClickRemote = Remotes.Get("RequestPEClick")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -583,6 +587,13 @@ end)
 -- with the claim and what that does and does not buy.
 music:OnHit(function(index: number, offsetMs: number)
 	RequestMusicHitRemote:FireServer(index, offsetMs)
+end)
+
+-- One click of the PE meter, carrying the marker position it was taken at. Unlike the note
+-- above this is *not* a judgement -- the server scores it, and first checks the value against
+-- its own marker. The panel sends where the bar was; it does not say what that was worth.
+drill:OnClick(function(value: number)
+	RequestPEClickRemote:FireServer(value)
 end)
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
@@ -1027,6 +1038,10 @@ Remotes.Get("MusicUpdated").OnClientEvent:Connect(function(state: MusicState?)
 	music:Set(state)
 end)
 
+Remotes.Get("PEUpdated").OnClientEvent:Connect(function(state: PEState?)
+	drill:Set(state)
+end)
+
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
 end)
@@ -1409,6 +1424,9 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	words:Set(nil)
 	-- And the lanes, which would otherwise keep falling under a death notice.
 	music:Set(nil)
+	-- And the meter, for the same reason: a marker sweeping over a death notice is a lesson
+	-- the player is no longer alive to sit.
+	drill:Set(nil)
 	-- And the commands legend: the shift it was listing keys for does not survive
 	-- death, and a P key advertised over a death notice is a key that does nothing.
 	commandsLegend:Set(false)

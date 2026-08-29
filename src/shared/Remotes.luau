@@ -216,6 +216,9 @@ export type RemoteName =
 	-- startled. It also means the client holds the answers, which is why the server scores
 	-- the offsets it is sent rather than the hits -- see RequestMusicHit.
 	| "MusicUpdated"
+	-- PE. One state remote out and one click in, the same shape as music: see RequestPEClick
+	-- for why the click carries a value rather than a timestamp.
+	| "PEUpdated"
 	-- One note hit: which note, and how far off the client was in milliseconds.
 	--
 	-- The offset is the client\'s measurement and cannot be anything else -- the round trip is
@@ -225,6 +228,13 @@ export type RemoteName =
 	-- was actually due around now. That does not make cheating impossible; it makes it cost
 	-- more than playing.
 	| "RequestMusicHit"
+	-- One click of the three-click meter, carrying the marker position the player clicked at
+	-- as a share of the bar. The *value* rather than the moment, for the reason the music hit
+	-- carries an offset: the marker is drawn on the client and a server that recomputed the
+	-- position from arrival time would score a different bar than the one the player saw, and
+	-- would punish ping rather than timing. The server validates the value is in range and
+	-- that the sweep is actually running before it spends it.
+	| "RequestPEClick"
 	-- "My hands are in the drawer" / "they are not any more." One remote with a boolean
 	-- rather than two, because the two are the same fact and a start that arrived without
 	-- its stop -- or in the wrong order after a hiccup -- would leave a player taking
@@ -639,7 +649,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestReadingPlace",
 	"RequestReadingSubmit",
 	"MusicUpdated",
+	"PEUpdated",
 	"RequestMusicHit",
+	"RequestPEClick",
 	"RequestTillHold",
 	"RequestTillOpen",
 	"RequestTillCallCrew",

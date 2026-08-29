@@ -67,6 +67,7 @@ local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local ReadingService = require(script.Parent.ReadingService)
 local MusicService = require(script.Parent.MusicService)
+local PEService = require(script.Parent.PEService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local School = require(script.Parent.Parent.world.School)
@@ -1242,10 +1243,11 @@ end
 -- already checked everything about the player, and there is no longer a room to fail
 -- against.
 --
--- Six shapes come out of here, and which one depends entirely on the subject's verb. A
+-- Seven shapes come out of here, and which one depends entirely on the subject's verb. A
 -- "quiz" subject runs the loop in the rest of this file. A "procedure" subject hands the
 -- whole afternoon to ScienceService, a "hunt" subject to GeographyService, a "copy" subject
--- to ArtService, a "build" subject to ReadingService and a "keep" subject to MusicService --
+-- to ArtService, a "build" subject to ReadingService, a "keep" subject to MusicService and a
+-- "drill" subject to PEService --
 -- and this file does nothing further with any of them, including the smarts and the yearly
 -- count, which each verb pays and spends itself. That split is deliberate: the alternative
 -- is a School that knows how every verb is scored, which is the file that would have to be
@@ -1335,6 +1337,21 @@ local function beginLesson(player: Player, data: LifeData, room: Vector3): boole
 		-- Cleared for the same reason as the three above, and no teacher or scene for the same
 		-- reason the art room gets none: the music room is already standing a few studs away,
 		-- and a classroom drawn on top of it would be two rooms in one lesson.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
+	if subject.verb == "drill" then
+		local ok, refusal = PEService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "There is no PE today.", false)
+			return false
+		end
+		-- Cleared for the same reason as the others, and no teacher or scene for geography's
+		-- reason rather than the art room's: the drill happens out on the track, and a
+		-- classroom built around a player who is about to walk out of it is furniture nobody
+		-- will be in the room to see.
 		notices[player] = nil
 		push(player)
 		return true
@@ -1831,6 +1848,7 @@ function SchoolService.ResetForNewLife(player: Player)
 	ArtService.ResetForNewLife(player)
 	ReadingService.ResetForNewLife(player)
 	MusicService.ResetForNewLife(player)
+	PEService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

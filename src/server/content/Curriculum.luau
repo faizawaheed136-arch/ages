@@ -123,6 +123,32 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = SCHOOL_END,
 	},
 
+	-- PE. The join between school and sports, and the only subject on this list that does not
+	-- pay smarts.
+	--
+	-- `docs/school_and_sports.md` names it exactly: *"PE -- a graded sports drill. Do not build
+	-- a separate PE minigame; this is the join between the two systems and it is what makes
+	-- school carry the childhood years."* So it awards **health into athletics**, and a good
+	-- report in PE is what a player takes with them into sport rather than into a career at a
+	-- desk. It was the one subject missing from the timetable entirely.
+	--
+	-- The verb is the golf three-click meter -- power, then placement, with an overswing zone
+	-- that buys power with time. See Config.School.PE, which holds it deliberately as a *sports*
+	-- primitive rather than a school one, because the soccer build takes the same numbers.
+	--
+	-- Runs the whole of school. Unlike Science and Music there is no floor here that a small
+	-- child cannot clear: the meter is three clicks, and being bad at it is legible at six in a
+	-- way that holding a beat across four lanes is not. It is the one subject that gets easier
+	-- to be *good* at as the character grows, because the window widens with health.
+	{
+		id = "pe",
+		name = "PE",
+		verb = "drill",
+		blurb = "Power, then placement. The greedy swing is the one that costs you.",
+		minAge = SCHOOL_START,
+		maxAge = SCHOOL_END,
+	},
+
 	-- Geography. The errand, and the one lesson where the game stops telling you where
 	-- things are: you are given a place's *name* and nothing else, and you walk. Every
 	-- other destination in AGES arrives as a lit disc with a beam over it and a distance

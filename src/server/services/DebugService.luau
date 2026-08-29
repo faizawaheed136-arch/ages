@@ -32,6 +32,7 @@ local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local School = require(script.Parent.Parent.world.School)
+local PEService = require(script.Parent.PEService)
 local GymService = require(script.Parent.GymService)
 local StadiumCrowdService = require(script.Parent.StadiumCrowdService)
 local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
@@ -3298,6 +3299,62 @@ Commands.prom = function(_player: Player, args: { string }): string
 
 	local changed = School.SetEvent("prom")
 	return if changed then "the gym is dressed for prom — walk in and look" else "prom was already on"
+end
+
+-- PE, the graded sports drill -- the one subject that pays health into athletics rather
+-- than smarts into academics.
+--
+--   /pe                       whether the field was found, your mastery level and fitness,
+--                             the pass mark those two produce, and the drill if one is on.
+--   /pe start                 a drill where you stand, without waiting for the timetable.
+--                             The meter is three clicks: start, power, place.
+--   /pe end                   the whistle, grading what was actually done.
+--   /pe perfect | good | poor plays the drill out to that grade, for seeing the report card
+--                             and the mastery rung without six clean clicks. The kind way to
+--                             check the numbers, since the third click is the hard one.
+--   /pe off                   the system dark, for telling a PE bug apart from a school one.
+--
+-- Worth watching once with `/stats` open: the reward lands in **health**, and nowhere else in
+-- the school tree does that.
+Commands.pe = function(player: Player, args: { string }): string
+	if DataService.GetProfile(player) == nil then
+		return "no profile loaded yet"
+	end
+
+	local arg = string.lower(args[1] or "")
+	if arg == "" then
+		return PEService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		PEService.SetEnabled(arg == "on")
+		return `PE {arg} — {PEService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = PEService.ForceStart(player)
+		if not started then
+			return `could not start a drill: {refusal or "no reason given"}`
+		end
+		return PEService.Describe(player)
+	end
+
+	if arg == "end" then
+		if not PEService.ForceEnd(player) then
+			return "no drill running"
+		end
+		return PEService.Describe(player)
+	end
+
+	if arg == "perfect" or arg == "good" or arg == "poor" then
+		local ok, refusal = PEService.Autoplay(player, arg)
+		if not ok then
+			return refusal or "could not play it out"
+		end
+		return PEService.Describe(player)
+	end
+
+	return "/pe, /pe start, /pe end, /pe perfect|good|poor, /pe on|off"
 end
 
 Commands.help = function(_player: Player, _args: { string }): string

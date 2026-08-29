@@ -3059,6 +3059,155 @@ Config.School.Building = {
 -- looser than that because Roblox input is not a rhythm-game input stack, and the ceiling
 -- is deliberately generous rather than merciful -- a mastered subject should feel *easy*,
 -- because the reward for mastering it is being allowed to stop attending.
+-- PE: the graded sports drill.
+--
+-- Every other subject pays smarts into academics. This one pays **health into athletics**,
+-- and that is the entire reason it is on the timetable rather than being a separate
+-- activity. `docs/school_and_sports.md` is explicit: *"PE -- a graded sports drill. Do not
+-- build a separate PE minigame; this is the join between the two systems and it is what
+-- makes school carry the childhood years."* A PE class that awarded smarts would be a
+-- lesson wearing a tracksuit.
+--
+-- **The meter is the golf three-click**, which that document ranks first of twelve input
+-- primitives: *"Zero RNG, every input owns one variable. The most reusable meter in all of
+-- gaming, and the overswing zone is free risk/reward."* One click starts the marker, the
+-- second sets power, the third sets accuracy:
+--
+--   click 1   the power marker starts sweeping
+--   click 2   locks power at the marker. Past OverswingFrom you get more power *and* a
+--             faster accuracy sweep -- the risk is bought with the reward, not rolled for
+--   click 3   locks accuracy against a centre window
+--
+-- It is deliberately a different problem from the gym's single timing window. The gym asks
+-- "can you hit a moving target"; this asks "how much are you willing to make that harder
+-- for yourself". A player who has mastered the treadmill knows nothing yet about this.
+--
+-- Built here rather than inside PEService so the soccer build can take the same numbers:
+-- this meter is the sports input primitive, and PE is its first customer rather than its
+-- owner.
+Config.School.PE = {
+	-- Attempts per drill. Enough that one fluffed shot is not the lesson, few enough that the
+	-- class stays inside the 90-150s the school spec allows a period.
+	-- Safe range: 4-10.
+	Attempts = 6,
+
+	-- How long the power marker takes to cross the bar, and the accuracy marker after it. The
+	-- accuracy sweep is faster because it is the one being defended: an accuracy sweep as slow
+	-- as the power one would make overswing free.
+	-- Safe range: 1.4-3 and 0.9-2.
+	PowerSweepSeconds = 2.0,
+	AccuracySweepSeconds = 1.35,
+
+	-- What overswinging costs: the accuracy sweep runs this much faster. At 1.5 the window is
+	-- the same width in studs and 50% shorter in time, which is the honest way to make a choice
+	-- expensive -- it does not shrink the target, it shortens the clock.
+	-- Safe range: 1.15-2.
+	OverswingSpeedup = 1.5,
+
+	-- Where the overswing zone starts, as a share of the power bar.
+	-- Safe range: 0.7-0.92.
+	OverswingFrom = 0.8,
+
+	-- The accuracy bands, as shares of the bar, before fitness widens them. Centred, unlike
+	-- some of the gym's machines: a shot you are aiming is aimed at the middle.
+	-- Safe range: 0.1-0.3 and 0.03-0.12.
+	GoodFraction = 0.22,
+	PerfectFraction = 0.08,
+
+	-- How much the bands widen at full health, as a share of their own width. The same
+	-- mechanism as Config.Gym.HealthWindowBonus and for the same reason: progression that
+	-- lives in a readout is progression you cannot feel. A fit character's window is visibly
+	-- wider than an unfit one's.
+	-- Safe range: 0-1.
+	HealthWindowBonus = 0.5,
+
+	-- **The kindest rule in the spec, and it is stolen deliberately.** A missed accuracy click
+	-- does not score zero -- it falls back to the character's own fitness. From the ranked
+	-- primitives: *"missing it falls back to your ratings rather than failing outright. The
+	-- kindest failure design in sports games. Steal this rule specifically."*
+	--
+	-- A miss at 0 health scores MissFloor of the power spent; at full health, MissFloorFit. So
+	-- a fit character is never humiliated by one bad click, and an unfit one has a reason to
+	-- train. Safe range: 0-0.3 and 0.2-0.6, MissFloorFit above MissFloor.
+	MissFloor = 0.08,
+	MissFloorFit = 0.38,
+
+	-- What a band multiplies the power by.
+	-- Safe range: 0.5-0.85 and 1 -- Perfect should not exceed the power actually spent.
+	GoodMultiplier = 0.7,
+	PerfectMultiplier = 1.0,
+
+	-- How near the drill you must stay. Walk further and the class is over, graded on what you
+	-- did -- the same walk-out rule every other subject has.
+	-- Safe range: 30-80.
+	ReachStuds = 55,
+
+	-- The pass mark, and how much it rises per mastery rung. **This is the "rising threshold on
+	-- the same minigame" the school spec asks for** -- level 5 is not a new drill, it is the
+	-- same drill wanting more of it. Five rungs at 0.06 takes the bar from 0.45 to 0.69, which
+	-- is demanding without ever being unreachable.
+	-- Safe range: 0.3-0.6 and 0-0.1.
+	PassShare = 0.45,
+	PassSharePerLevel = 0.06,
+
+	-- How far the value a click claims may sit from where the server's own marker was when it
+	-- arrived, as a share of the bar.
+	--
+	-- The click carries a *value* rather than a moment, which is right -- see RequestPEClick --
+	-- but it means a client could simply claim a perfect one. This is the bound on that. At
+	-- 0.25 on a 2s sweep it forgives about half a second of ping and lag-spike, and refuses a
+	-- claim that could not have come from the bar the player was looking at.
+	--
+	-- A refused click is *dropped*, not scored as a miss: punishing a genuine lag spike with a
+	-- failed attempt is how a fair rule becomes the thing players hate. Safe range: 0.12-0.4.
+	ClickTolerance = 0.25,
+
+	-- How often the drill is re-examined: the walk-off check and the clock.
+	-- Safe range: 0.15-0.5. Its own rather than shared with another subject's, because a tick
+	-- rate borrowed from elsewhere is a number that changes when somebody tunes a different
+	-- lesson.
+	TickSeconds = 0.25,
+
+	-- How long a drill may run before it is called, in seconds. A backstop for a player who
+	-- opens the meter and walks away from the keyboard rather than out of the field.
+	-- Safe range: 120-360.
+	TimeoutSeconds = 240,
+
+	-- The three drills, cycled so a year of PE is not one shot repeated. They differ in the
+	-- shape of the problem rather than its difficulty, which is the rule the gym's four
+	-- machines follow:
+	--
+	--   penalty   the teaching drill. Slow, wide, forgiving. Learn the three clicks.
+	--   cross     fast power, generous accuracy. Rewards committing early.
+	--   freekick  slow power, tight accuracy. Rewards not overswinging at all.
+	Drills = {
+		{
+			id = "penalty",
+			label = "Penalties",
+			line = "Six from the spot. Start the meter, set your power, then place it.",
+			powerScale = 1.0,
+			accuracyScale = 1.0,
+			windowScale = 1.15,
+		},
+		{
+			id = "cross",
+			label = "Crossing",
+			line = "Six from the wing. The power runs quick -- commit before it looks right.",
+			powerScale = 0.72,
+			accuracyScale = 1.1,
+			windowScale = 1.0,
+		},
+		{
+			id = "freekick",
+			label = "Free kicks",
+			line = "Six over the wall. All the time in the world for power, none for placing it.",
+			powerScale = 1.25,
+			accuracyScale = 0.78,
+			windowScale = 0.85,
+		},
+	},
+}
+
 Config.School.Music = {
 	-- Lanes. Four, and it is the number the whole genre settled on for one hand: three is not
 	-- enough for a pattern to have shape and five needs a thumb doing two jobs.
@@ -6733,6 +6882,9 @@ Config.Skills = {
 		-- school, and inventing a sixth skill for one call site would put a row in the skills
 		-- panel that only ever moves on Tuesdays.
 		-- Safe range: 15-40.
+		-- One PE drill, cleared. Paid into athletics rather than academics, which is the
+		-- whole point of the subject -- see content/Curriculum.luau.
+		DrillCleared = 26,
 		MusicPiece = 26,
 	},
 }
