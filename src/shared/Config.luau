@@ -3215,6 +3215,30 @@ Config.School.Building = {
 -- Everyone here is spawned **at the player's own age**, the way BullyService does it. That
 -- one argument is what makes them schoolmates rather than adults loitering in a corridor,
 -- and it is the whole difference between a school and a bus station.
+-- Sitting down, on L.
+--
+-- The school has sofas, bleachers, benches and a couple of hundred cafeteria stools in it and
+-- there was no way to be on any of them, which made all of that furniture scenery. One key,
+-- and what happens depends on what is near you: next to a bench you sit on the bench, in the
+-- middle of a corridor you sit where you stand.
+Config.Sit = {
+	-- How far a seat can be and still be the one you meant. Generous enough that you do not
+	-- have to stand precisely, tight enough that it never picks a chair through a wall.
+	-- Safe range: 4-10.
+	ReachStuds = 7,
+
+	-- How far above a seat's surface the character's root sits. A Roblox root is at about hip
+	-- height, so this is what stops a sit either sinking into the bench or hovering over it.
+	-- Safe range: 1.5-3.5.
+	HipHeightStuds = 2.4,
+
+	-- How far above or below your own hips a surface may be and still count as a seat. This is
+	-- the check that stops "BenchBase" -- a skirting board at ankle height -- and the top of a
+	-- wall from both reading as somewhere to sit.
+	-- Safe range: 2-6.
+	MaxRiseStuds = 4,
+}
+
 Config.School.Crowd = {
 	-- How many students at once, and how many of those are walking rather than standing.
 	-- Fourteen reads as a busy corridor without asking for fourteen web calls at once.
