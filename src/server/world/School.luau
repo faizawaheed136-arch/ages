@@ -513,6 +513,69 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 	Kit.Slab(parent, "RoofLeft", at((-half + ATRIUM_X1) / 2, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), sideW, ATRIUM_Z2 - ATRIUM_Z1, SLAB * 2, { color = OFF_WHITE })
 	Kit.Slab(parent, "RoofRight", at((half + ATRIUM_X2) / 2, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), sideW, ATRIUM_Z2 - ATRIUM_Z1, SLAB * 2, { color = OFF_WHITE })
 
+	-- The crown: a cornice at the roofline and a parapet standing above it.
+	--
+	-- Laid as four runs round the perimeter rather than as one box, because the front of the
+	-- building is glass and a parapet that crossed the glazing head would read as a beam
+	-- floating in front of the windows.
+	local proud = BUILDING.CorniceProudStuds
+	local corniceRuns = {
+		{ name = "CorniceFront", a = at(-half - proud, roofY, -proud), b = at(half + proud, roofY, -proud) },
+		{ name = "CorniceBack", a = at(-half - proud, roofY, D + proud), b = at(half + proud, roofY, D + proud) },
+		{ name = "CorniceLeft", a = at(-half - proud, roofY, -proud), b = at(-half - proud, roofY, D + proud) },
+		{ name = "CorniceRight", a = at(half + proud, roofY, -proud), b = at(half + proud, roofY, D + proud) },
+	}
+	for _, run in corniceRuns do
+		-- The cornice oversails, so it throws a shadow line along the top of the wall. That
+		-- shadow is the whole point: it is what separates the building from the sky.
+		local band = Kit.Wall(parent, run.name, run.a, run.b, 2.2, WALL_T + proud * 2, { color = OFF_WHITE })
+		if band ~= nil then
+			band.CastShadow = false
+		end
+		-- And the parapet above it, set back to the wall line.
+		Kit.Wall(
+			parent,
+			run.name:gsub("Cornice", "Parapet"),
+			run.a + Vector3.new(0, 2.2, 0),
+			run.b + Vector3.new(0, 2.2, 0),
+			BUILDING.ParapetHeightStuds,
+			WALL_T,
+			{ color = WHITE }
+		)
+	end
+
+	-- A blue coping capping the parapet, which is the school's own accent finishing the
+	-- building rather than an extra colour introduced at the top.
+	for _, run in corniceRuns do
+		local cap = Kit.Wall(
+			parent,
+			run.name:gsub("Cornice", "Coping"),
+			run.a + Vector3.new(0, 2.2 + BUILDING.ParapetHeightStuds, 0),
+			run.b + Vector3.new(0, 2.2 + BUILDING.ParapetHeightStuds, 0),
+			0.9,
+			WALL_T + 1.2,
+			{ color = BLUE }
+		)
+		if cap ~= nil then
+			cap.CastShadow = false
+		end
+	end
+
+	-- The base course. A wall that meets the ground with nothing at the bottom looks dropped
+	-- rather than built, and this is four parts.
+	local plinthRuns = {
+		{ name = "PlinthFront", a = at(-half, 0.3, -BUILDING.PlinthProudStuds), b = at(half, 0.3, -BUILDING.PlinthProudStuds) },
+		{ name = "PlinthBack", a = at(-half, 0.3, D + BUILDING.PlinthProudStuds), b = at(half, 0.3, D + BUILDING.PlinthProudStuds) },
+		{ name = "PlinthLeft", a = at(-half - BUILDING.PlinthProudStuds, 0.3, 0), b = at(-half - BUILDING.PlinthProudStuds, 0.3, D) },
+		{ name = "PlinthRight", a = at(half + BUILDING.PlinthProudStuds, 0.3, 0), b = at(half + BUILDING.PlinthProudStuds, 0.3, D) },
+	}
+	for _, run in plinthRuns do
+		Kit.Wall(parent, run.name, run.a, run.b, BUILDING.PlinthHeightStuds, WALL_T + BUILDING.PlinthProudStuds, {
+			color = CONCRETE,
+			material = Enum.Material.Concrete,
+		})
+	end
+
 	local lantern = Kit.Slab(parent, "Lantern", at(0, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), BUILDING.AtriumWidthStuds, BUILDING.AtriumDepthStuds, 0.5, {
 		color = GLASS_TINT,
 		material = Enum.Material.Glass,

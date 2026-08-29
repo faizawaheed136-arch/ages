@@ -2798,6 +2798,23 @@ Config.School.Building = {
 	Floors = 3,
 	FloorHeightStuds = 18,
 
+	-- The three horizontal lines that turn a stack of boxes into a building: a base course at
+	-- the ground, a cornice at the roofline, and a parapet standing above it.
+	--
+	-- This is the same argument as the mullions, one storey up. A wall that meets the ground
+	-- with no plinth looks like it was dropped there, and a roof that simply stops has no crown
+	-- -- both read as untextured geometry however good the proportions underneath are. Real
+	-- buildings are legible because they are banded horizontally, and three bands is the
+	-- cheapest possible version of that: about forty parts for the whole elevation.
+	--
+	-- The parapet does a second job. It hides the roof slab's cut edge from anyone standing on
+	-- the plaza, which is the angle the school is nearly always seen from.
+	-- Safe range: 2-6, 1-3, 3-9 and 0.6-2.
+	PlinthHeightStuds = 3.5,
+	PlinthProudStuds = 1.2,
+	ParapetHeightStuds = 5,
+	CorniceProudStuds = 1.6,
+
 	-- The slab between storeys, and the walls. Thin, because every stud of thickness is a
 	-- stud of floor area lost twice over on an interior wall.
 	-- Safe range: 0.8-2 each.
