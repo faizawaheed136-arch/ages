@@ -110,6 +110,12 @@ local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 -- and not an edit here.
 local PLACE_ID = "school"
 
+-- How hard the eager builder tries before it gives up and says so. Thirty tries two seconds
+-- apart is a minute, which is far longer than a map takes to stream and short enough that a
+-- genuinely missing place point is reported while somebody is still looking at the console.
+local SCHOOL_BUILD_ATTEMPTS = 30
+local SCHOOL_BUILD_RETRY_SECONDS = 2
+
 local SCHOOL = Config.School
 
 -- One lesson in progress. Only ever one per player -- you cannot be in two classrooms.
@@ -2129,6 +2135,38 @@ function SchoolService.Describe(player: Player): string
 end
 
 function SchoolService:Start()
+	-- **The building goes up on its own.**
+	--
+	-- buildRoom used to be reached only from the lesson path, so the school existed the moment
+	-- somebody sat their first class and not before. That was invisible while this codebase was
+	-- the only thing laying a school -- an empty lot looks like an empty lot either way -- but
+	-- it stopped being acceptable the moment School.Build started *standing the map's own
+	-- school down*. Lazily meant the player walked up to Agent A's building, and only saw this
+	-- one after triggering a lesson. The swap has to have already happened by the time anyone
+	-- can look at the plot.
+	--
+	-- Retried rather than attempted once: the place point arrives with the map, which streams,
+	-- and a builder that gave up on the first tick would leave the old school standing forever
+	-- on a slow load. Stops the moment it succeeds, so the cost is a handful of table lookups
+	-- at startup and nothing at all afterwards.
+	task.spawn(function()
+		for _ = 1, SCHOOL_BUILD_ATTEMPTS do
+			local ok, err = pcall(buildRoom)
+			if not ok then
+				warn(`[AGES] school build failed: {err}`)
+			elseif School.Plan() ~= nil then
+				return
+			end
+			task.wait(SCHOOL_BUILD_RETRY_SECONDS)
+		end
+		-- Out of attempts. Said out loud rather than left silent, because the symptom -- the
+		-- map's school still standing where this one should be -- looks like a code bug and is
+		-- actually a missing place point.
+		if School.Plan() == nil then
+			warn(`[AGES] the school never laid: no "{PLACE_ID}" place point after {SCHOOL_BUILD_ATTEMPTS} tries`)
+		end
+	end)
+
 	Players.PlayerAdded:Connect(function(player: Player)
 		-- Pushed once the profile exists, so a rejoining player's row starts blank
 		-- rather than holding whatever the last occupant of the slot was looking at.
