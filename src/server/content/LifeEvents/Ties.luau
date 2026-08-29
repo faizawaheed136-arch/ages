@@ -6,9 +6,18 @@
 -- when the player stands near somebody they share that tie with, so the picker
 -- can prefer them without the event needing to name a specific cast member.
 --
--- The cast field is still required on each one so a rig appears when they fire.
--- The cast is the *kind* of person, not the tied individual -- the tied person
--- is who turns up, and the cast is what the world builds for them.
+-- None of these sets `cast`, and that is the fix rather than an omission. `cast`
+-- takes a *cast id* -- one specific authored person -- and "mentor" is a tie id, not
+-- a person: the mentor is whichever townsperson this particular life promoted, which
+-- is known only at context time and is already carried by the tag above.
+--
+-- These four events used to read `cast = "mentor"`, `"rival"`, `"sibling"`, `"enemy"`
+-- on the belief that the field took a *kind* of person. It does not, Cast holds no
+-- such members, and the content validator threw on require -- which took EventService,
+-- then init.server, then every service in the game place down with it. The symptom was
+-- a place that loaded with nothing running at all, which reads as a broken build rather
+-- than as a content error, and it is why this is written down instead of just deleted.
+-- Types.LifeEvent documents nil as allowed and falling back to the first cast member.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
@@ -24,7 +33,6 @@ local Ties: { LifeEvent } = {
 		minAge = 16,
 		maxAge = 70,
 		delivery = "NPCApproach",
-		cast = "mentor",
 		repeatable = true,
 		weight = 0.6,
 		tags = { "tie:mentor:*" },
@@ -61,7 +69,6 @@ local Ties: { LifeEvent } = {
 		minAge = 16,
 		maxAge = 60,
 		delivery = "NPCApproach",
-		cast = "rival",
 		repeatable = true,
 		weight = 0.5,
 		tags = { "tie:rival:*" },
@@ -98,7 +105,6 @@ local Ties: { LifeEvent } = {
 		minAge = 16,
 		maxAge = 60,
 		delivery = "NPCApproach",
-		cast = "sibling",
 		repeatable = true,
 		weight = 0.7,
 		tags = { "tie:sibling:*" },
@@ -136,7 +142,6 @@ local Ties: { LifeEvent } = {
 		minAge = 16,
 		maxAge = 999,
 		delivery = "NPCApproach",
-		cast = "enemy",
 		repeatable = true,
 		weight = 0.4,
 		tags = { "tie:enemy:*" },
