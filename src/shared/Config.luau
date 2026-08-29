@@ -2822,7 +2822,7 @@ Config.School.Building = {
 	-- that clear with room to spare; below about 175 it starts to bite again.
 	-- Safe range: 240-360 and 170-260.
 	WidthStuds = 228,
-	DepthStuds = 176,
+	DepthStuds = 170,
 
 	-- Where the building sits relative to its place point.
 	--
@@ -2836,8 +2836,14 @@ Config.School.Building = {
 	-- studs west of the point. This follows that, which also lands the school on ground that
 	-- was already a school and is therefore known to be clear.
 	-- Safe range: -90 to 90 on both.
+	-- A hair of lift, so the school's slabs never sit at *exactly* the height of the town's.
+	-- Two surfaces at the same Y z-fight: the renderer has no way to choose between them and
+	-- the ground flickers as the camera moves. check_city calls it coplanar and its tolerance
+	-- is 0.005, so three hundredths of a stud clears it by six times over while being far too
+	-- small to see or to step up.
+	OffsetYStuds = 0.03,
 	OffsetXStuds = -53,
-	OffsetZStuds = 8,
+	OffsetZStuds = -2,
 
 	-- The atrium: a hole cut through the first two floors behind the entrance, so walking in
 	-- puts a ceiling three storeys up rather than one. This is the single most load-bearing

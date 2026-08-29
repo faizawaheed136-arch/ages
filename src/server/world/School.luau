@@ -58,7 +58,7 @@ local D = BUILDING.DepthStuds
 -- How far the building sits from its place point. Applied once, in Build's toWorld, so every
 -- room anchor, every prop and the baked asset all move together -- an offset applied in more
 -- than one place is an offset that will disagree with itself.
-local OFFSET = Vector3.new(BUILDING.OffsetXStuds, 0, BUILDING.OffsetZStuds)
+local OFFSET = Vector3.new(BUILDING.OffsetXStuds, BUILDING.OffsetYStuds, BUILDING.OffsetZStuds)
 local FLOOR_H = BUILDING.FloorHeightStuds
 local SLAB = BUILDING.SlabThicknessStuds
 local WALL_T = BUILDING.WallThicknessStuds
