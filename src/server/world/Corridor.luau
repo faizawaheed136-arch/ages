@@ -121,11 +121,23 @@ end
 -- which the caller turns into the corridor simply not running today rather than into a
 -- stare-down against somebody standing in mid-air.
 --
+-- `layProps` is false when the school building is standing, and that is the whole of how
+-- these two modules avoid building the same hallway twice. School.luau lays the corridor
+-- floor, the lockers, the benches and the lighting as part of the architecture; this module
+-- then wants nothing from the world except *where people stand*, which is arithmetic along
+-- an axis. When there is no building -- the place point exists but the building is off or
+-- failed to lay -- it falls back to laying its own hallway, so the bully system is never
+-- dependent on the architecture having worked.
+--
+-- `library` is where taken homework is redone. Handed in rather than assumed, because with
+-- the building up that is the actual library on the far side of the ground floor, and
+-- without it there is nowhere better than the far end of this corridor.
+--
 -- The one thing that can genuinely fail here is the station count, and it is checked
 -- rather than clamped: a tier that asks for a station the corridor does not have is a
 -- content error that would otherwise present as the corridor mysteriously not getting
 -- harder, months later, with nothing in any log about it.
-function Corridor.Build(center: Vector3): CorridorRoom?
+function Corridor.Build(center: Vector3, layProps: boolean, library: Vector3?): CorridorRoom?
 	local existing = room
 	if existing ~= nil then
 		return existing
@@ -155,8 +167,42 @@ function Corridor.Build(center: Vector3): CorridorRoom?
 	local across = axis:Cross(Vector3.new(0, 1, 0)).Unit
 	local halfWidth = BUILD.WidthStuds / 2
 
-	-- The floor. Thin, and laid rather than dropped: it sits just under the walking plane
-	-- so it reads as a surface instead of a step the player has to climb onto.
+	-- Where somebody can stand, spread down the middle of the run. Mouth first, so tier one
+	-- puts a bully in the open where they can be seen from the door and the later tiers push
+	-- them further in -- the escalation is which of these are occupied, and that is a change
+	-- to the space rather than to any number.
+	local stations: { Vector3 } = {}
+	for i = 1, BUILD.StationCount do
+		local share = i / (BUILD.StationCount + 1)
+		table.insert(stations, start + axis * (BUILD.LengthStuds * share))
+	end
+
+	if layProps then
+		Corridor.layProps(start, finish, axis, across, halfWidth)
+	end
+
+	local libraryAt = library or finish
+	if layProps then
+		local desk = buildBlock("LibraryDesk", libraryAt, Vector3.new(7, 3, 2.5), Color3.fromRGB(120, 92, 64))
+		buildLabel(desk, "Library desk", 7)
+	end
+
+	local built: CorridorRoom = {
+		center = center,
+		start = start,
+		finish = finish,
+		axis = axis,
+		stations = stations,
+		library = libraryAt,
+	}
+	room = built
+	return built
+end
+
+-- The hallway itself, laid only when there is no school building to have laid it already.
+-- Kept as a function rather than deleted because the fallback is real: a place point with
+-- the building switched off still has to give the corridor system somewhere to happen.
+function Corridor.layProps(start: Vector3, finish: Vector3, axis: Vector3, across: Vector3, halfWidth: number)
 	local floor = Instance.new("Part")
 	floor.Name = "CorridorFloor"
 	floor.Size = Vector3.new(BUILD.WidthStuds, 0.4, BUILD.LengthStuds)
@@ -182,16 +228,6 @@ function Corridor.Build(center: Vector3): CorridorRoom?
 		end
 	end
 
-	-- Where somebody can stand, spread down the middle of the run. Mouth first, so tier
-	-- one puts a bully in the open where they can be seen from the door and the later
-	-- tiers push them further in -- the escalation is which of these are occupied, and
-	-- that is a change to the space rather than to any number.
-	local stations: { Vector3 } = {}
-	for i = 1, BUILD.StationCount do
-		local share = i / (BUILD.StationCount + 1)
-		table.insert(stations, start + axis * (BUILD.LengthStuds * share))
-	end
-
 	-- A bench between each pair of stations, off to one side. Placed off-centre on purpose:
 	-- a bench in the middle of the run would be the one thing in here the player has to
 	-- walk around, and this room charges in length only.
@@ -201,23 +237,6 @@ function Corridor.Build(center: Vector3): CorridorRoom?
 		buildBlock(`Bench{i}`, at, BUILD.BenchSize, Color3.fromRGB(146, 118, 86))
 	end
 
-	-- The library desk, at the far end. This is the whole of the forced traversal: a bully
-	-- who takes your homework has put the length of this corridor between you and the top
-	-- of your next lesson, and that walk is what turns a tax into a rhythm.
-	local libraryAt = finish
-	local desk = buildBlock("LibraryDesk", libraryAt, Vector3.new(7, 3, 2.5), Color3.fromRGB(120, 92, 64))
-	buildLabel(desk, "Library desk", 7)
-
-	local built: CorridorRoom = {
-		center = center,
-		start = start,
-		finish = finish,
-		axis = axis,
-		stations = stations,
-		library = libraryAt,
-	}
-	room = built
-	return built
 end
 
 -- The corridor as it stands, or nil if it has not been laid yet. Read rather than built

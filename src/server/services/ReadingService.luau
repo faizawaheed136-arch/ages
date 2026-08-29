@@ -48,6 +48,7 @@ local PlaceService = require(script.Parent.PlaceService)
 local SkillService = require(script.Parent.SkillService)
 local StatService = require(script.Parent.StatService)
 local ReadingRoom = require(script.Parent.Parent.world.ReadingRoom)
+local School = require(script.Parent.Parent.world.School)
 local Words = require(script.Parent.Parent.content.Words)
 
 type LifeData = Types.LifeData
@@ -157,7 +158,11 @@ local function ensureRoom(): boolean
 		return false
 	end
 	roomBuilt = true
-	return ReadingRoom.Build(place.part.Position) ~= nil
+	-- Raises the building if nobody has yet. Idempotent, and called from here as well as from
+	-- SchoolService so that a Reading lesson forced from the debug console before anybody has
+	-- walked to school still finds a room to stand in.
+	School.Build(place.part.Position)
+	return ReadingRoom.Build(School.RoomAt("reading") or place.part.Position) ~= nil
 end
 
 local function notice(player: Player, text: string)

@@ -2745,6 +2745,201 @@ Config.School.Art = {
 -- treadmill into the gym later can replace the part and keep the mechanic. The
 -- generator stamps the tag on the machine and an attribute naming which machine
 -- it is; this file is the only place the two strings are agreed.
+-- The school building itself.
+--
+-- What stood here before was a sign, a pad and three rooms hung off one point in open air.
+-- It had no walls, no floors and nothing above head height, which is why it read as a menu
+-- with a roof on rather than as somewhere a child spends twelve years.
+--
+-- This is a real building: three storeys, two wings around a double-height atrium, a
+-- glazed front, an aquatic centre and a gym attached on either side, and a running track
+-- behind it. It is laid in Luau at runtime around the school place point, exactly as the
+-- lab and the art room already were -- which is the whole reason it can exist at all
+-- without anybody regenerating the eleven megabytes of City.rbxmx that tools/ owns.
+--
+-- **Every dimension below is in studs and every one of them is a real measurement.** A
+-- Roblox character is about 5 studs tall and walks at 16 studs a second, so a corridor at
+-- 14 studs wide is a wide school corridor, a classroom at 40x32 seats a class with room to
+-- walk behind the chairs, and a floor at 18 studs is a tall storey a person can live on
+-- rather than a crawlspace. Nothing here is a number that looked nice.
+--
+-- The rooms the verbs run in -- the lab, the studio, the reading desk, the corridor -- are
+-- positioned *inside* this building rather than beside it. The building is the architecture
+-- and those are the furniture; School.RoomAt is the join, and it is the only thing that
+-- knows which room a subject happens in.
+Config.School.Building = {
+	-- Off switch. A school that fails to lay leaves the pad, the sign and the verb rooms
+	-- exactly as they were, so this can be turned off without taking school down with it.
+	Enabled = true,
+
+	-- Storeys, and how tall each one is.
+	--
+	-- Three because the reference has three and because a two-storey school has no reason
+	-- for the stairs to exist. Eighteen studs is deliberately generous -- a character is
+	-- about five -- so that a floor reads as a room somebody could live on rather than as a
+	-- gap between slabs, and so the atrium cut through the first two has real height in it.
+	-- Safe range: 2-4 and 14-24. Below ~14 the light panels are in your hair.
+	Floors = 3,
+	FloorHeightStuds = 18,
+
+	-- The slab between storeys, and the walls. Thin, because every stud of thickness is a
+	-- stud of floor area lost twice over on an interior wall.
+	-- Safe range: 0.8-2 each.
+	SlabThicknessStuds = 1.2,
+	WallThicknessStuds = 1,
+
+	-- The main block, before the wings. Wide rather than deep, so the front elevation is
+	-- what you see from the road and the building reads long rather than blocky.
+	--
+	-- These were 210x140 and both were too small, which a layout audit caught rather than a
+	-- playtest: at that depth the band of rooms along the back was 32 studs deep, and the art
+	-- room alone lays its wall and its paint cupboard 81 studs apart -- so the studio would
+	-- have stood with its cupboard through the back wall of the building. The depth is set by
+	-- the deepest thing any subject lays inside it, and that is the art room.
+	-- Safe range: 240-360 and 170-260.
+	WidthStuds = 300,
+	DepthStuds = 210,
+
+	-- The atrium: a hole cut through the first two floors behind the entrance, so walking in
+	-- puts a ceiling three storeys up rather than one. This is the single most load-bearing
+	-- number for whether the building feels big, and it is why Floors and FloorHeightStuds
+	-- are worth arguing about.
+	-- Safe range: 60-120 and 50-90, and both well inside Width/Depth.
+	AtriumWidthStuds = 90,
+	AtriumDepthStuds = 66,
+
+	-- Corridors. Wide enough that a class emptying into one is not a queue, and wide enough
+	-- for somebody to stand across you in it with room to walk round -- which the corridor
+	-- system depends on.
+	-- Safe range: 12-20.
+	CorridorWidthStuds = 16,
+
+	-- The band of rooms along the back of each floor: how deep it is, how many rooms are cut
+	-- out of it, and the wall thickness between them.
+	--
+	-- **The depth is not a taste decision.** It is set by the deepest thing any subject lays
+	-- inside one of these rooms, and that is the art room: Studio puts the study wall at 0.7
+	-- of a 60-stud radius on one bearing and the paint cupboard at 0.65 on the opposite one,
+	-- which is 81 studs apart before the walls. Anything under about 90 puts the cupboard
+	-- through the back of the building -- silently, because nothing in the tree measures a
+	-- room against the furniture another module lays in it.
+	-- Safe range: 90-130, 3-5 and 1-4.
+	BackBandDepthStuds = 99,
+	RoomsPerFloor = 4,
+	RoomGapStuds = 2,
+
+	-- How far the glazing runs up each storey, as a share of the floor height. Not 1: a
+	-- ribbon of solid wall at the head and the sill is what makes glass read as a window
+	-- wall rather than as a missing wall.
+	-- Safe range: 0.5-0.85.
+	GlassShare = 0.68,
+
+	-- The front plaza: the steps, the welcome sign and the crossing outside them.
+	Entrance = {
+		-- Safe range: 40-90 and 20-50.
+		PlazaWidthStuds = 70,
+		PlazaDepthStuds = 34,
+		-- How far the canopy projects over the doors, and how high it sits.
+		-- Safe range: 8-20 and 10-18.
+		CanopyDepthStuds = 14,
+		CanopyHeightStuds = 14,
+		-- Columns across the front. Six reads as a school and not a temple.
+		-- Safe range: 4-10.
+		ColumnCount = 6,
+		-- The trees down the approach, per side.
+		-- Safe range: 3-8.
+		TreesPerSide = 5,
+	},
+
+	-- The aquatic centre, attached on one side. A pool hall with a barrel-vaulted glass roof,
+	-- which is the thing that makes it read as an aquatic centre from outside rather than as
+	-- a shed with water in it.
+	Pool = {
+		-- Safe range: 70-120 and 50-90.
+		HallWidthStuds = 96,
+		HallDepthStuds = 68,
+		-- The water itself, inside the hall.
+		-- Safe range: 50-80, 24-44 and 4-10.
+		WaterWidthStuds = 64,
+		WaterDepthStuds = 34,
+		WaterDepthBelowStuds = 7,
+		-- Lanes painted on the bottom.
+		-- Safe range: 4-10.
+		Lanes = 6,
+		-- The barrel roof: how many ribs, and how high the arch springs.
+		-- Safe range: 7-16 and 10-22.
+		RoofRibs = 11,
+		RoofRiseStuds = 15,
+		-- Spectator benches down one side.
+		-- Safe range: 2-5.
+		BenchRows = 3,
+	},
+
+	-- The gym, attached on the other side. A tall clear-span box, because that is what a gym
+	-- is: the height is the whole of it.
+	Gym = {
+		-- Safe range: 70-110, 50-80 and 24-40.
+		WidthStuds = 88,
+		DepthStuds = 62,
+		HeightStuds = 30,
+		-- Safe range: 2-4.
+		HoopCount = 2,
+	},
+
+	-- The running track and the field inside it, behind the building. An oval, so the corners
+	-- are real curves rather than four straights meeting at a mitre.
+	Track = {
+		-- The straight, and the radius of each turn. A real track is roughly this shape at
+		-- about a third scale, which is the scale everything in Roblox is at.
+		-- Safe range: 90-160 and 40-70.
+		StraightStuds = 120,
+		TurnRadiusStuds = 52,
+		-- Safe range: 4-8 and 3-6.
+		Lanes = 6,
+		LaneWidthStuds = 4,
+		-- How finely the curve is stepped. Higher is smoother and costs parts.
+		-- Safe range: 12-40.
+		CurveSegments = 26,
+		-- Goalposts at each end of the infield.
+		GoalWidthStuds = 24,
+		GoalHeightStuds = 10,
+	},
+
+	-- Fit-out counts. These are what make a room read as the room it is rather than as an
+	-- empty box with a sign on it, and they are the numbers to raise if the building ever
+	-- feels thin.
+	FitOut = {
+		-- Safe range: 8-24.
+		LockersPerCorridorWall = 16,
+		-- Desks per classroom, laid in rows.
+		-- Safe range: 8-24.
+		DesksPerClassroom = 15,
+		-- Safe range: 3-6.
+		DeskRows = 3,
+		-- Cafeteria tables, library shelves, cooking benches.
+		-- Safe range: 6-20 each.
+		CafeteriaTables = 12,
+		LibraryShelves = 10,
+		CookingBenches = 9,
+		-- Ceiling light panels per room, along each axis.
+		-- Safe range: 2-6 each.
+		LightsAcross = 3,
+		LightsAlong = 4,
+		-- The blue floor rugs the reference is full of. Purely visual and the cheapest thing
+		-- in here that makes a white tiled floor stop reading as a warehouse.
+		-- Safe range: 0-8.
+		RugsPerCommonRoom = 3,
+		-- Hedge planters, which do the same job vertically.
+		-- Safe range: 0-10.
+		PlantersPerCommonRoom = 4,
+	},
+
+	-- How far away a room\'s name sign can still be read. Matches the lab, the studio, the
+	-- corridor and the reading room rather than inventing a fifth number.
+	-- Safe range: 30-90.
+	LabelMaxDistanceStuds = 60,
+}
+
 -- Reading, and the one lesson where the answer is built rather than picked.
 --
 -- Two words stand on the board with letters missing, and there is one tray of tiles
@@ -3097,12 +3292,17 @@ Config.School.Bully = {
 		-- Safe range: 3-6.
 		StationCount = 3,
 
-		-- Which way the corridor runs out of the school point, in degrees, and how far off
-		-- the point it starts. Turned away from the lab and the art room so that three rooms
-		-- built around one point do not stand inside each other.
+		-- Which way the corridor runs from the point it is handed, in degrees, and how far
+		-- along before the first station.
+		--
+		-- 270 is +x, which is straight along the school building\'s own hallway -- the corridor
+		-- is handed the left-hand end of it and measures forward. This used to be 210 and an
+		-- arbitrary bearing off the place point, which was right when the corridor was laying
+		-- its own hallway in open air and is wrong now that there is a building with a corridor
+		-- already in it.
 		-- Safe range: 0-359 and 12-30.
-		BearingDegrees = 210,
-		StartOffsetStuds = 18,
+		BearingDegrees = 270,
+		StartOffsetStuds = 22,
 
 		-- Placeholder furniture, in studs, in the same blocky spirit as the lab's and the
 		-- studio's: stand-ins for models a builder drops in later.

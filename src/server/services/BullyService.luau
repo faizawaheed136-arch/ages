@@ -59,6 +59,7 @@ local PlaceService = require(script.Parent.PlaceService)
 local SkillService = require(script.Parent.SkillService)
 local StatService = require(script.Parent.StatService)
 local Corridor = require(script.Parent.Parent.world.Corridor)
+local School = require(script.Parent.Parent.world.School)
 local Bullies = require(script.Parent.Parent.content.Bullies)
 
 type LifeData = Types.LifeData
@@ -169,7 +170,17 @@ local function ensureCorridor(): boolean
 		return false
 	end
 	corridorBuilt = true
-	return Corridor.Build(place.part.Position) ~= nil
+	School.Build(place.part.Position)
+
+	-- With the building up the hallway already exists, so the corridor lays no props of its
+	-- own -- it only works out where people stand along it. Homework is redone in the actual
+	-- library rather than at a desk invented at the end of the run, which is the whole reason
+	-- that walk is worth making.
+	local line = School.RoomAt("corridor")
+	if line ~= nil then
+		return Corridor.Build(line, false, School.RoomAt("library")) ~= nil
+	end
+	return Corridor.Build(place.part.Position, true, nil) ~= nil
 end
 
 -- Which tier this life is at, by how many corridors it has won. Walks the list rather

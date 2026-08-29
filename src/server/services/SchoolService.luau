@@ -68,6 +68,7 @@ local ArtService = require(script.Parent.ArtService)
 local ReadingService = require(script.Parent.ReadingService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
+local School = require(script.Parent.Parent.world.School)
 local Studio = require(script.Parent.Parent.world.Studio)
 local SubjectModels = require(script.Parent.Parent.world.SubjectModels)
 local SubjectMotion = require(script.Parent.Parent.world.SubjectMotion)
@@ -658,15 +659,25 @@ local function buildRoom(): boolean
 	})
 	attendAt = at
 
-	-- The lab goes up with the school and around the same point, because it is a room in
-	-- the same building and the pad outside is its door too. Built here rather than
-	-- lazily on the first Science lesson so that a Studio session can see the benches
-	-- standing the moment the world loads -- a room that only appears once somebody is
-	-- nine is a room nobody can check.
+	-- The building itself, before any of the rooms that go inside it. Idempotent, and
+	-- deliberately called from three places -- here, ReadingService and BullyService -- so
+	-- that whichever system reaches the school first is the one that raises it and none of
+	-- them has to be ordered against the others.
+	--
+	-- Best effort. A school that fails to lay costs a nice-looking building and not the
+	-- afternoon: the pad, the sign and every verb below still work without it, because each
+	-- falls back to the bare place point when there is no room to sit in.
+	School.Build(at)
+
+	-- The lab, in the room the building named "science" -- or around the bare place point if
+	-- there is no building, which is what it always did. Built here rather than lazily on
+	-- the first Science lesson so that a Studio session can see the benches standing the
+	-- moment the world loads: a room that only appears once somebody is nine is a room
+	-- nobody can check.
 	--
 	-- Best effort, and a failure is not a failure of school: Lab.Build refusing means
 	-- Science refuses at the door with a reason, and every other subject carries on.
-	Lab.Build(at)
+	Lab.Build(School.RoomAt("science") or at)
 
 	-- And the art room, for the same reasons in the same order -- a room in the same
 	-- building, standing before anybody is old enough to be sent to it, and free to fail
@@ -674,7 +685,7 @@ local function buildRoom(): boolean
 	-- same point as the lab and much wider than it, which is deliberate: see
 	-- Config.School.Art.RoomRadiusStuds for why the walk from the easel to the paint
 	-- cupboard has to cost real seconds.
-	Studio.Build(at)
+	Studio.Build(School.RoomAt("art") or at)
 
 	return true
 end
