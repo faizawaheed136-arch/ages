@@ -22,6 +22,17 @@
 
 local Kit = {}
 
+-- How often a glazed wall is divided, and how heavy the divisions are.
+--
+-- Eight studs is a bay a little wider than a doorway, which is what makes it work: the eye
+-- has a human-sized unit to measure the elevation against, and a wall that was one huge sheet
+-- becomes a legible count of bays. Wider than about twelve and the effect is lost; tighter
+-- than about six and a long elevation turns into a fence.
+-- Safe range: 6-12, 0.3-0.8, 8-16.
+local MULLION_SPACING_STUDS = 8
+local MULLION_WIDTH_STUDS = 0.5
+local MULLION_TRANSOM_MIN_HEIGHT = 11
+
 -- The material every painted surface uses unless told otherwise. SmoothPlastic rather than
 -- Plastic because Plastic carries a subtle noise texture that reads as dirt at the scale a
 -- school is built at, and it is the difference between "clean modern building" and "old".
@@ -160,6 +171,59 @@ function Kit.GlassWall(
 	local headBase = Vector3.new(from.X, from.Y + bandHeight + glassHeight, from.Z)
 	local headTo = Vector3.new(to.X, to.Y + bandHeight + glassHeight, to.Z)
 	Kit.Wall(parent, `{name}Head`, headBase, headTo, bandHeight, thickness, { color = frameColor })
+
+	-- Mullions: the uprights that divide a glazed elevation into bays.
+	--
+	-- This is the single highest-value detail in the whole kit per part spent, and the reason
+	-- is scale rather than decoration. A ninety-stud pane of flat glass has nothing in it to
+	-- measure the building against, so the eye reads it as one enormous window and the whole
+	-- elevation loses its size -- which is exactly why the school looked toy-like next to a
+	-- town of small houses. Divide the same glass every eight studs and each bay is suddenly
+	-- door-sized, the building is legibly three storeys, and not one dimension has changed.
+	--
+	-- Every glazed wall in the school goes through this function -- the frontage, both wings,
+	-- the gym, the pool hall and every classroom elevation -- so the spacing here is the
+	-- glazing rhythm of the entire building.
+	local span = (to - from).Magnitude
+	if span > MULLION_SPACING_STUDS then
+		local bays = math.max(1, math.floor(span / MULLION_SPACING_STUDS + 0.5))
+		local direction = (to - from).Unit
+		for index = 1, bays - 1 do
+			local along = from + direction * (span * (index / bays))
+			local base = Vector3.new(along.X, from.Y + bandHeight, along.Z)
+			local bar = Kit.Block(
+				parent,
+				`{name}Mullion{index}`,
+				base + Vector3.new(0, glassHeight / 2, 0),
+				Vector3.new(MULLION_WIDTH_STUDS, glassHeight, thickness * 0.9),
+				{
+					color = frameColor,
+					-- Turned to stand square in the wall, the same way Kit.Wall turns its own
+					-- panels: a mullion at the wall's angle rather than the world's.
+					yawDegrees = -math.deg(math.atan2(direction.Z, direction.X)),
+				}
+			)
+			bar.CastShadow = false
+		end
+
+		-- A transom across the middle, which is what stops tall bays reading as slots. Only on
+		-- glazing tall enough to want one -- a low clerestory divided horizontally looks like
+		-- a mistake rather than a window.
+		if glassHeight > MULLION_TRANSOM_MIN_HEIGHT then
+			local transom = Kit.Wall(
+				parent,
+				`{name}Transom`,
+				Vector3.new(from.X, from.Y + bandHeight + glassHeight / 2, from.Z),
+				Vector3.new(to.X, to.Y + bandHeight + glassHeight / 2, to.Z),
+				MULLION_WIDTH_STUDS,
+				thickness * 0.9,
+				{ color = frameColor, collide = false }
+			)
+			if transom ~= nil then
+				transom.CastShadow = false
+			end
+		end
+	end
 end
 
 -- A structural column, by the centre of its base.
