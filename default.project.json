@@ -1,6 +1,8 @@
 {
   "name": "ages",
-  "globIgnorePaths": ["**/*.tmp.*"],
+  "globIgnorePaths": [
+    "**/*.tmp.*"
+  ],
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
@@ -26,8 +28,16 @@
         "GeographicLatitude": 41.7,
         "Brightness": 2.4,
         "ExposureCompensation": 0.15,
-        "Ambient": [0.16862, 0.17254, 0.19607],
-        "OutdoorAmbient": [0.42352, 0.43921, 0.47843],
+        "Ambient": [
+          0.16862,
+          0.17254,
+          0.19607
+        ],
+        "OutdoorAmbient": [
+          0.42352,
+          0.43921,
+          0.47843
+        ],
         "EnvironmentDiffuseScale": 0.55,
         "EnvironmentSpecularScale": 0.4,
         "FogEnd": 4000
@@ -39,8 +49,16 @@
           "Offset": 0.15,
           "Haze": 1.2,
           "Glare": 0.25,
-          "Color": [0.79607, 0.80784, 0.81960],
-          "Decay": [0.42352, 0.44705, 0.50196]
+          "Color": [
+            0.79607,
+            0.80784,
+            0.8196
+          ],
+          "Decay": [
+            0.42352,
+            0.44705,
+            0.50196
+          ]
         }
       },
       "Bloom": {
@@ -96,8 +114,16 @@
           "Locked": true,
           "Transparency": 1,
           "CanCollide": false,
-          "Position": [8, 1.14, -21.5],
-          "Size": [4, 0.2, 4]
+          "Position": [
+            8,
+            1.14,
+            -21.5
+          ],
+          "Size": [
+            4,
+            0.2,
+            4
+          ]
         }
       },
       "Baseplate": {
@@ -105,10 +131,28 @@
         "$properties": {
           "Anchored": true,
           "Locked": true,
-          "Color": [0.38823, 0.37254, 0.38823],
-          "Position": [0, -10, 0],
-          "Size": [2048, 20, 2048]
+          "Color": [
+            0.38823,
+            0.37254,
+            0.38823
+          ],
+          "Position": [
+            0,
+            -10,
+            0
+          ],
+          "Size": [
+            2048,
+            20,
+            2048
+          ]
         }
+      },
+      "School": {
+        "$path": "assets/School.rbxmx"
+      },
+      "Versailles": {
+        "$path": "assets/Versailles.rbxmx"
       }
     }
   }

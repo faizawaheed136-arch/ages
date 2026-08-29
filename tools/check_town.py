@@ -54,7 +54,11 @@ TOWN_ASSETS = ("Town", "Street")
 # is standing in whatever the *city* put there. The furniture files are here
 # because a place point inside a wardrobe is the same defect as one inside a
 # counter and there is no reason to be able to see only one of them.
-SOLID_ASSETS = TOWN_ASSETS + ("House", "Furniture", "SchoolFurniture", "City")
+# "School" is assets/School.rbxmx, baked by tools/gen_school.py. It has to be listed or
+# the three place points that stand on the school floor -- classroom, science_lab,
+# cafeteria -- read as floating in mid-air, because the checker cannot see the floor
+# holding them up. check_city globs the directory and needs no equivalent change.
+SOLID_ASSETS = TOWN_ASSETS + ("House", "Furniture", "SchoolFurniture", "City", "School")
 
 # Groups that are the world rather than things standing in it. Named rather
 # than inferred: the list is short, it changes about once a year, and a rule

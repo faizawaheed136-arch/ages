@@ -54,6 +54,11 @@ local VEND = BUILDING.Vending
 
 local W = BUILDING.WidthStuds
 local D = BUILDING.DepthStuds
+
+-- How far the building sits from its place point. Applied once, in Build's toWorld, so every
+-- room anchor, every prop and the baked asset all move together -- an offset applied in more
+-- than one place is an offset that will disagree with itself.
+local OFFSET = Vector3.new(BUILDING.OffsetXStuds, 0, BUILDING.OffsetZStuds)
 local FLOOR_H = BUILDING.FloorHeightStuds
 local SLAB = BUILDING.SlabThicknessStuds
 local WALL_T = BUILDING.WallThicknessStuds
@@ -122,7 +127,12 @@ local function schoolFolder(): Folder
 	end
 	local made = Instance.new("Folder")
 	made.Name = "SchoolBuilding"
-	made.Parent = workspace
+	-- Not parented into the world when the building is baked: the parts are only being laid
+	-- to work out where the rooms are, and are destroyed as soon as that is known. A folder
+	-- that reached workspace first would replicate a second school for one frame.
+	if not BUILDING.Baked then
+		made.Parent = workspace
+	end
 	folder = made
 	return made
 end
@@ -1286,7 +1296,10 @@ function School.Build(center: Vector3): Plan?
 	-- names that false positive and says the checks that produced them were dropped rather
 	-- than tuned, so the fix belongs here.
 	local function toWorld(x: number, y: number, z: number): Vector3
-		return center + Vector3.new(x, y, z)
+		-- OFFSET is applied here and nowhere else: the place point marks the door, and the
+		-- building sits back from it. Both this and SetEvent's copy must agree, or prom would
+		-- be laid where the gym used to be.
+		return center + OFFSET + Vector3.new(x, y, z)
 	end
 
 	-- The map's own school comes down first, or the player walks through two buildings
@@ -1309,6 +1322,18 @@ function School.Build(center: Vector3): Plan?
 	anchors.gym = buildGym(parent, toWorld)
 	local field = buildTrack(parent, toWorld)
 	anchors.track = field
+
+	-- With the building already baked into the map, the parts just laid are a duplicate
+	-- standing inside it. The *anchors* are what this run was for -- they are computed by
+	-- laying the rooms, not stored anywhere -- so the geometry is thrown away and the plan is
+	-- kept. Nothing was ever parented into the world; see schoolFolder.
+	if BUILDING.Baked then
+		local existing = folder
+		if existing ~= nil then
+			existing:Destroy()
+		end
+		folder = nil
+	end
 
 	local built: Plan = {
 		center = center,
@@ -1380,7 +1405,10 @@ function School.SetEvent(id: string?): boolean
 
 	local center = current.center
 	local function toWorld(x: number, y: number, z: number): Vector3
-		return center + Vector3.new(x, y, z)
+		-- OFFSET is applied here and nowhere else: the place point marks the door, and the
+		-- building sits back from it. Both this and SetEvent's copy must agree, or prom would
+		-- be laid where the gym used to be.
+		return center + OFFSET + Vector3.new(x, y, z)
 	end
 
 	local parent = eventParent()

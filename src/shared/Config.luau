@@ -2772,6 +2772,22 @@ Config.School.Building = {
 	-- exactly as they were, so this can be turned off without taking school down with it.
 	Enabled = true,
 
+	-- Whether the building is already in the map as baked geometry.
+	--
+	-- `tools/gen_school.py` runs the real builder under the boot harness and writes what it
+	-- lays into `assets/School.rbxmx`, which the project mounts. That is what makes the school
+	-- visible in Studio **without pressing Play** -- runtime geometry does not exist until a
+	-- server starts, and a map you have to run to look at is not a map.
+	--
+	-- With this true the builder still runs, because the room anchors every verb positions
+	-- against are computed *by* laying the building -- but its parts are discarded instead of
+	-- being parented into the world. One school in the map, one set of anchors in memory, and
+	-- no second copy standing inside the first.
+	--
+	-- Set false to go back to laying it at runtime, which is the right setting if the asset is
+	-- stale: `check.py` cannot tell, because a stale asset is still valid XML.
+	Baked = true,
+
 	-- Storeys, and how tall each one is.
 	--
 	-- Three because the reference has three and because a two-storey school has no reason
@@ -2796,9 +2812,32 @@ Config.School.Building = {
 	-- room alone lays its wall and its paint cupboard 81 studs apart -- so the studio would
 	-- have stood with its cupboard through the back wall of the building. The depth is set by
 	-- the deepest thing any subject lays inside it, and that is the art room.
+	-- Brought in from 300x210, which read as a campus rather than a school and left the
+	-- building crowding its neighbours on the plot. Down about 12% across and 10% deep -- a
+	-- trim rather than a rebuild, and both still inside the range the art room forces.
+	--
+	-- **The depth is the one that cannot be cut freely.** It is set by the deepest thing any
+	-- subject lays inside it: the art room puts its wall and its paint cupboard 81 studs apart,
+	-- so at the old 140 the studio stood with its cupboard through the back wall. 190 keeps
+	-- that clear with room to spare; below about 175 it starts to bite again.
 	-- Safe range: 240-360 and 170-260.
-	WidthStuds = 300,
-	DepthStuds = 210,
+	WidthStuds = 228,
+	DepthStuds = 176,
+
+	-- Where the building sits relative to its place point.
+	--
+	-- The place point marks the *door*, not the middle -- it is what routes, signs and walk-tos
+	-- navigate to, so it has to stay where the map put it. But a building centred on its own
+	-- door sits half a footprint further forward than it should, which is what pushed this one
+	-- into its neighbours.
+	--
+	-- Measured rather than guessed: the map's own school centres on (-291, 146) and the
+	-- `school` place point is at (-238, 151), so the map itself puts the building about 53
+	-- studs west of the point. This follows that, which also lands the school on ground that
+	-- was already a school and is therefore known to be clear.
+	-- Safe range: -90 to 90 on both.
+	OffsetXStuds = -53,
+	OffsetZStuds = 8,
 
 	-- The atrium: a hole cut through the first two floors behind the entrance, so walking in
 	-- puts a ceiling three storeys up rather than one. This is the single most load-bearing
@@ -2889,7 +2928,7 @@ Config.School.Building = {
 		-- Safe range: 34-70, 20-44 and 6-20.
 		WingWidthStuds = 48,
 		WingDepthStuds = 30,
-		WingProjectionStuds = 14,
+		WingProjectionStuds = 6,
 
 		-- The pitched roof on each wing. Stepped, like the pediment, for the same reason.
 		-- Safe range: 5-14 and 3-7.
