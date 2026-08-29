@@ -102,6 +102,7 @@ local SchoolService = {}
 local LessonUpdatedRemote = Remotes.Get("LessonUpdated")
 local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
 local ReportCardUpdatedRemote = Remotes.Get("ReportCardUpdated")
+local TimetableUpdatedRemote = Remotes.Get("TimetableUpdated")
 local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 
 -- The place id the classroom answers to. A part in Studio carries this on its place
@@ -1046,6 +1047,69 @@ end
 -- can happen without a birthday replacing the whole card anyway.
 local pushedCards: { [Player]: string } = {}
 
+-- The year's timetable, as the player sees it.
+--
+-- Built from the same subjectForSlot the lesson loop calls, so the panel cannot drift from
+-- what actually gets taught -- if the rotation changes, both change together. `lessonsThisYear`
+-- is what separates done from still to come: it counts the afternoons already sat, so slot
+-- N is behind you exactly when N <= that count.
+local function timetableFor(player: Player): Types.Timetable?
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return nil
+	end
+	local data = Lives.Active(profile.Data)
+	local ageYears = ageYearsOf(data)
+	local entries: { Types.TimetableEntry } = {}
+	for slot = 1, SCHOOL.LessonsPerYear do
+		local subject = subjectForSlot(ageYears, slot)
+		if subject ~= nil then
+			local state: "done" | "now" | "later"
+			if slot <= data.lessonsThisYear then
+				state = "done"
+			elseif slot == data.lessonsThisYear + 1 then
+				state = "now"
+			else
+				state = "later"
+			end
+			table.insert(entries, {
+				slot = slot,
+				subjectId = subject.id,
+				name = subject.name,
+				blurb = subject.blurb,
+				state = state,
+			})
+		end
+	end
+	if #entries == 0 then
+		return nil
+	end
+	return { ageYears = ageYears, entries = entries }
+end
+
+local pushedTimetables: { [Player]: string } = {}
+
+local function pushTimetable(player: Player)
+	local table_ = timetableFor(player)
+	-- Digested on the year and the progress through it, which is everything that can change
+	-- what is drawn. Without this the panel would be resent every tick of the school clock.
+	local digest = if table_ == nil
+		then "none"
+		else `{table_.ageYears}|{#table_.entries}|`
+			.. table.concat((function()
+				local marks = {}
+				for _, entry in table_.entries do
+					table.insert(marks, entry.state)
+				end
+				return marks
+			end)(), ",")
+	if pushedTimetables[player] == digest then
+		return
+	end
+	pushedTimetables[player] = digest
+	TimetableUpdatedRemote:FireClient(player, table_)
+end
+
 local function pushCard(player: Player)
 	local card = cardFor(player)
 	local digest = if card == nil then "none" else `card:{card.ageYears}`
@@ -1562,6 +1626,7 @@ local function tickPlayer(player: Player, elapsed: number)
 			if walkedOff then
 				cards[player] = nil
 				pushCard(player)
+		pushTimetable(player)
 			end
 			return
 		end
@@ -1638,6 +1703,7 @@ local function tickPlayer(player: Player, elapsed: number)
 		if data.pendingReport ~= nil then
 			cards[player] = true
 			pushCard(player)
+		pushTimetable(player)
 			return
 		end
 
@@ -1766,6 +1832,7 @@ local function onCardRead(player: Player, ageYears: unknown)
 	if report == nil then
 		cards[player] = nil
 		pushCard(player)
+		pushTimetable(player)
 		return
 	end
 	if ageYears ~= report.ageYears then
@@ -1779,6 +1846,7 @@ local function onCardRead(player: Player, ageYears: unknown)
 	cards[player] = nil
 	data.pendingReport = nil
 	pushCard(player)
+		pushTimetable(player)
 end
 
 -- A birthday. The year's lessons refill, and a year nobody turned up to is charged
@@ -1896,6 +1964,7 @@ function SchoolService.ResetForNewLife(player: Player)
 	-- Takes down a card that was on screen when the life ended. `forget` has already
 	-- dropped the digest, so this pushes nil rather than being deduplicated away.
 	pushCard(player)
+		pushTimetable(player)
 end
 
 -- Studio harness: sits a lesson wherever the player is standing, skipping the walk to
@@ -2173,12 +2242,14 @@ function SchoolService:Start()
 		task.spawn(function()
 			if DataService.WaitForProfile(player) ~= nil then
 				push(player)
+				pushTimetable(player)
 			end
 		end)
 	end)
 
 	Players.PlayerRemoving:Connect(function(player: Player)
 		forget(player)
+		pushedTimetables[player] = nil
 	end)
 
 	RequestLessonAnswerRemote.OnServerEvent:Connect(function(player: Player, index: unknown, answerId: unknown)

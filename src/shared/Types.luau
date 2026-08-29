@@ -1003,6 +1003,28 @@ export type MusicState = {
 export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep" | "drill"
 
 -- One school subject as content declares it.
+-- One period on the timetable, as the player sees it.
+--
+-- Sent rather than derived on the client, for the reason every other panel in this game is
+-- pushed: the rotation lives in one function on the server (SchoolService.subjectForSlot) and
+-- a client that recomputed it would be a second copy of the timetable, free to disagree with
+-- the one that actually decides what lesson you sit.
+export type TimetableEntry = {
+	slot: number,
+	subjectId: SchoolSubjectId,
+	name: string,
+	blurb: string,
+	-- "done" is behind you, "now" is the one the next bell rings for, "later" is still to come.
+	-- Three states rather than a boolean because "which one is next" is the single thing a
+	-- player opens a timetable to find out.
+	state: "done" | "now" | "later",
+}
+
+export type Timetable = {
+	ageYears: number,
+	entries: { TimetableEntry },
+}
+
 export type SchoolSubject = {
 	id: SchoolSubjectId,
 	-- Shown on the board, the timetable and the report. Title case, one or two words:
