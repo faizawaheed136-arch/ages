@@ -33,6 +33,7 @@ local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
 local School = require(script.Parent.Parent.world.School)
 local PEService = require(script.Parent.PEService)
+local SchoolCrowdService = require(script.Parent.SchoolCrowdService)
 local GymService = require(script.Parent.GymService)
 local StadiumCrowdService = require(script.Parent.StadiumCrowdService)
 local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
@@ -3240,7 +3241,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
 	.. "/read [start|solve|end|on|off], /music [start|auto [grade]|end|on|off], "
-	.. "/pe [start|end|perfect|good|poor|on|off], /prom [on|off], "
+	.. "/pe [start|end|perfect|good|poor|on|off], /prom [on|off], /students [clear|on|off], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
@@ -3356,6 +3357,36 @@ Commands.pe = function(player: Player, args: { string }): string
 	end
 
 	return "/pe, /pe start, /pe end, /pe perfect|good|poor, /pe on|off"
+end
+
+-- The other students.
+--
+--   /students                 how many are standing, roaming and still arriving, whether
+--                             the school is built, and whether anyone is near enough for
+--                             the cohort to exist at all. The three things that explain an
+--                             empty corridor, in the order they go wrong.
+--   /students off             the cohort torn down, for telling a crowd bug apart from a
+--                             school one -- and for measuring what the rigs actually cost.
+--   /students clear           torn down and refilled from scratch, which is also what a new
+--                             life does. The fastest way to watch them arrive.
+--
+-- Students are spawned at *your* age, so a corridor at six and a corridor at seventeen are
+-- different corridors. Worth running /age 6 then /age 17 next to each other once.
+Commands.students = function(_player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+
+	if arg == "" then
+		return SchoolCrowdService.Describe()
+	end
+	if arg == "on" or arg == "off" then
+		SchoolCrowdService.SetEnabled(arg == "on")
+		return `students {arg} — {SchoolCrowdService.Describe()}`
+	end
+	if arg == "clear" then
+		SchoolCrowdService.Clear()
+		return `cleared — {SchoolCrowdService.Describe()}`
+	end
+	return "/students, /students clear, /students on|off"
 end
 
 Commands.help = function(_player: Player, _args: { string }): string

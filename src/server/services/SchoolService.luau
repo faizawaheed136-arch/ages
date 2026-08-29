@@ -68,6 +68,7 @@ local ArtService = require(script.Parent.ArtService)
 local ReadingService = require(script.Parent.ReadingService)
 local MusicService = require(script.Parent.MusicService)
 local PEService = require(script.Parent.PEService)
+local SchoolCrowdService = require(script.Parent.SchoolCrowdService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local School = require(script.Parent.Parent.world.School)
@@ -1849,6 +1850,10 @@ function SchoolService.ResetForNewLife(player: Player)
 	ReadingService.ResetForNewLife(player)
 	MusicService.ResetForNewLife(player)
 	PEService.ResetForNewLife(player)
+	-- And the other students, who would otherwise be standing at the *previous* life's
+	-- school: the building is rebuilt around whichever place point the next life walks
+	-- into, and a cohort left at the old one is a class of ghosts.
+	SchoolCrowdService.Clear()
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

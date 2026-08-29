@@ -3085,6 +3085,65 @@ Config.School.Building = {
 -- Built here rather than inside PEService so the soccer build can take the same numbers:
 -- this meter is the sports input primitive, and PE is its first customer rather than its
 -- owner.
+-- The other students.
+--
+-- The school had nobody in it. Teachers spawn for a lesson and bullies stand in the
+-- corridor, and that was the entire population of a building with fourteen rooms -- so
+-- every reference photograph of the genre is full of people and ours was an empty set with
+-- the lights on. A school is *other children*; that is what the word means.
+--
+-- Modelled on StadiumCrowdService, which already solved the hard half of this, and the two
+-- lessons it learned are the two that matter:
+--
+-- 1. **A rig is a web call.** NPCService.Spawn goes through
+--    Players:CreateHumanoidModelFromDescription, so a cap and a per-tick budget are not
+--    tuning, they are the difference between a school and a server that stalls on the first
+--    player to walk through the gate.
+-- 2. **Top up on a tick, never spawn once.** Streaming and failed builds lose rigs silently,
+--    and a missing student is not something a player reports -- it is something they never
+--    know was supposed to be there.
+--
+-- Everyone here is spawned **at the player's own age**, the way BullyService does it. That
+-- one argument is what makes them schoolmates rather than adults loitering in a corridor,
+-- and it is the whole difference between a school and a bus station.
+Config.School.Crowd = {
+	-- How many students at once, and how many of those are walking rather than standing.
+	-- Fourteen reads as a busy corridor without asking for fourteen web calls at once.
+	-- Safe range: 6-24, and Roaming below Max.
+	Max = 14,
+	Roaming = 6,
+
+	-- How many empty slots one tick may start filling. Low on purpose: the caps above can be
+	-- asking for the whole crowd the moment a player loads in, and firing all of them at once
+	-- is exactly the web-call burst the stadium's own budget exists to avoid.
+	-- Safe range: 1-3.
+	SpawnPerTick = 2,
+
+	-- How often the pool is re-examined.
+	-- Safe range: 1-4.
+	TickSeconds = 2,
+
+	-- How near the building a player must be for the school to be populated at all. Beyond
+	-- this the crowd is torn down: a full cohort of rigs standing in an empty building on the
+	-- other side of the map is pure cost.
+	--
+	-- Generously larger than the building so students are already there as you walk up rather
+	-- than popping in around you, which is the tell that a crowd is spawned rather than alive.
+	-- Safe range: 200-500.
+	NearStuds = 320,
+
+	-- How far a standing student may drift from the spot they were given, so a row of them
+	-- does not read as a shelf of dolls.
+	-- Safe range: 3-12.
+	ScatterStuds = 7,
+
+	-- Roamers, walking the building between rooms.
+	-- Safe range: 8-16, and 2-10 seconds.
+	WalkSpeed = 11,
+	PauseMinSeconds = 3,
+	PauseMaxSeconds = 9,
+}
+
 Config.School.PE = {
 	-- Attempts per drill. Enough that one fluffed shot is not the lesson, few enough that the
 	-- class stays inside the 90-150s the school spec allows a period.
