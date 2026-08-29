@@ -2878,6 +2878,41 @@ Config.School.Building = {
 		-- Safe range: 2-8 and 1-5.
 		HedgesPerSide = 4,
 		LampsPerSide = 2,
+
+		-- The two wings, stepped forward either side of the entrance bay.
+		--
+		-- This is the shape that makes the reference read as a *campus* rather than as a block.
+		-- A single flat elevation, however long and however well banded, is one wall; two wings
+		-- brought forward give the approach a courtyard to walk into, and give the building a
+		-- silhouette from three-quarters on -- which is the angle a player actually arrives at,
+		-- never the head-on elevation drawings are done in.
+		-- Safe range: 34-70, 20-44 and 6-20.
+		WingWidthStuds = 48,
+		WingDepthStuds = 30,
+		WingProjectionStuds = 14,
+
+		-- The pitched roof on each wing. Stepped, like the pediment, for the same reason.
+		-- Safe range: 5-14 and 3-7.
+		WingRoofRiseStuds = 9,
+		WingRoofSteps = 4,
+
+		-- The tall clipped cones down the forecourt. The most recognisable planting in the
+		-- reference photographs and the cheapest thing on this list -- a stack of narrowing
+		-- blocks reads as topiary at any distance a player sees it from.
+		-- Safe range: 2-8, 4-8 and 14-30.
+		TopiaryPerSide = 5,
+		TopiaryTiers = 6,
+		TopiaryHeightStuds = 22,
+
+		-- Black railings along the frontage, with a gap left for the gate.
+		-- Safe range: 14-40 and 10-26.
+		RailingPosts = 26,
+		GateWidthStuds = 18,
+
+		-- Flagpoles either side of the doors.
+		-- Safe range: 0-3 and 18-34.
+		FlagpolesPerSide = 1,
+		FlagpoleHeightStuds = 26,
 	},
 
 	-- The aquatic centre, attached on one side. A pool hall with a barrel-vaulted glass roof,

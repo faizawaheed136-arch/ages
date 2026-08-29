@@ -27,11 +27,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 
 local Kit = require(script.Parent.Kit)
+local StandDown = require(script.Parent.StandDown)
 
 local GymRoom = {}
 
 local GYM = Config.Gym
 local BUILD = GYM.Build
+
+local STAND_DOWN_KEY = "TownGym"
 
 local W = BUILD.WidthStuds
 local D = BUILD.DepthStuds
@@ -83,6 +86,15 @@ function GymRoom.Build(center: Vector3): Room?
 	if existing ~= nil then
 		return existing
 	end
+
+	-- The town's own gym comes down first, and this one is **not** optional tidying.
+	--
+	-- `Workspace.Town.Gym` carries real GymKind attributes on four machines. Laying a second
+	-- gym on the same place point without moving it means GymService indexes both sets, and
+	-- half the equipment a player walks up to is standing inside a wall. This swaps one
+	-- complete set of four kinds for another rather than removing a capability -- which is the
+	-- only reason a model with attributes on it may be stood down at all.
+	StandDown.Hide(STAND_DOWN_KEY, { { parent = "Town", model = "Gym" } })
 
 	local parent = gymFolder()
 	local function at(x: number, y: number, z: number): Vector3
@@ -258,6 +270,9 @@ function GymRoom.Clear()
 	end
 	folder = nil
 	room = nil
+	-- And the town's own gym goes back, or clearing this one would leave the town with no gym
+	-- at all -- which is worse than the duplicate this replaced.
+	StandDown.Restore(STAND_DOWN_KEY)
 end
 
 return GymRoom
