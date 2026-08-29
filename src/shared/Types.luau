@@ -770,6 +770,76 @@ export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" |
 -- and the list of them is meant to reach zero. It is kept because the alternative was
 -- deleting eleven of a childhood's twelve school years until all six verbs existed, and
 -- a childhood with one subject in it is worse than one with five placeholders.
+-- How a bully's patience falls while you are holding, which is the only thing that
+-- makes one of them different to play against. Same input every time, different
+-- opponent -- the seventh requirement in the activity law, and the reason there are
+-- three of these rather than one bully with a difficulty number on it.
+--
+--   steady  -- falls at one rate and never lies. The one you learn the verb on.
+--   bluffer -- falls fast, then jumps back up once when it is nearly out. Releasing on
+--              the first sight of the window loses to this one; waiting one beat beats
+--              it, and that beat is the technique.
+--   mirror  -- falls in proportion to how fast your own nerve is rising, so holding
+--              longer does not help and the window has to be taken early.
+export type BullyDrain = "steady" | "bluffer" | "mirror"
+
+-- What they are standing there for. Money is the small frequent cost; homework is the
+-- one that puts a walk in your afternoon; seat is the pure standing contest with nothing
+-- taken, which exists so the corridor is not only ever a tax.
+export type BullyDemand = "money" | "homework" | "seat"
+
+-- One bully as content declares them.
+export type BullyArchetype = {
+	id: string,
+	-- The body the corridor builds for them. A whole CastMember rather than a cast id
+	-- because a bully is not one of the recurring people: the cast is the handful of faces
+	-- a life keeps meeting, and putting four interchangeable corridor kids in it would
+	-- dilute the one thing that list is for.
+	body: CastMember,
+	-- Seconds they will stand there before their patience is gone. The clock you are
+	-- playing against; Config.School.Bully.Bell is the one you are playing under.
+	patienceSeconds: number,
+	drain: BullyDrain,
+	demand: BullyDemand,
+	-- What they say when they step across you, when you face them down, and when you back
+	-- off. Three lines rather than one, because an encounter that reads the same whichever
+	-- way it went is an encounter the player stops reading.
+	openingLine: string,
+	standUpLine: string,
+	backDownLine: string,
+	-- The ages this one turns up between, matched the way a subject's band is.
+	minAge: number,
+	maxAge: number,
+}
+
+-- The stare-down as the client draws it. Pushed on change rather than per frame, for the
+-- reason the lesson HUD is: a bar that redraws four times a second cannot be read.
+export type NerveState = {
+	active: boolean,
+	-- Who is in front of you and what they want, in their words. Empty while inactive.
+	bullyName: string,
+	line: string,
+	-- Both 0..Config.School.Bully.Nerve.OverholdCeilingShare, and both shares of the same
+	-- bar so the client never has to know what either is measured in.
+	nerve: number,
+	patience: number,
+	-- The band the player is trying to release inside, as shares of the same bar. Sent
+	-- rather than computed on the client because it is what the nerve number *buys*, and a
+	-- window the client derived could disagree with the one the server scored against.
+	windowLow: number,
+	windowHigh: number,
+	holding: boolean,
+	-- Seconds before somebody else reaches you and the window closes to its narrowest,
+	-- or nil when nobody is coming. This is the second clock, and at the tiers where the
+	-- corridor sends people in pairs it is the whole of the difficulty: the first bar
+	-- tells you when the window *opens* and this one tells you when it shrinks, so the
+	-- release has to land between two clocks rather than after one.
+	--
+	-- Nil below those tiers, which is deliberate -- a countdown that is always on screen
+	-- and usually irrelevant is a countdown players learn to stop reading.
+	secondsToBackup: number?,
+}
+
 export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy"
 
 -- One school subject as content declares it.
@@ -2680,6 +2750,34 @@ export type LifeData = {
 	-- the count is the one the rules run on precisely so a change to what a card shows can
 	-- never move what school charges.
 	schoolYear: { SchoolLessonRecord },
+	-- Nerve, 0..Config.Stats.Max. What the corridor has taught you about being stood in
+	-- front of, and the only thing that widens the release window in a stare-down.
+	--
+	-- Deliberately *not* a fifth entry in StatName. The four stats are a closed union read
+	-- by the stats HUD, the decay table, every job gate and every life event, and a fifth
+	-- would have to be threaded through all of them to be worth anything -- for a number
+	-- that only one system reads. Kept here for the same reason subjectMastery is kept
+	-- here rather than folded into smarts: being hard to push around is not a fact about
+	-- how clever you are.
+	--
+	-- Per life. Nobody inherits a spine either.
+	bullyNerve: number,
+	-- How many bullies this life has faced down, ever. Read only to pick the tier the
+	-- corridor is currently at -- see Config.School.Bully.Tiers -- so it is a count of
+	-- reputation rather than a score, and nothing pays out of it.
+	--
+	-- Never decremented. Backing down does not un-earn a corridor you already won, which
+	-- is the same soft-failure rule Mastery.Record states about subjects: a ladder you can
+	-- slide down turns the encounter before the top rung into a thing to be afraid of.
+	bullyStandUps: number,
+	-- Whether somebody has your homework. Set when a bully takes it, cleared by redoing it
+	-- at the library desk or by the birthday that ends the year.
+	--
+	-- A flag rather than a count because there is only ever one piece of it: this is the
+	-- consumable that makes the corridor generate its own pacing -- burst, forced walk,
+	-- burst -- and a stack of missing homework would just be a debt, which is a number,
+	-- which is the thing the activity law says not to reach for.
+	homeworkTaken: boolean,
 	-- Heat, 0..Config.Crime.MaxBounty. What the police are currently prepared to spend on
 	-- finding you, and the number every tier is read off.
 	--

@@ -37,6 +37,7 @@ local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
 local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
+local BullyService = require(script.Parent.BullyService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
@@ -65,6 +66,7 @@ local LifeEvents = require(script.Parent.Parent.content.LifeEvents)
 local Flags = require(script.Parent.Parent.content.Flags)
 local Hideouts = require(script.Parent.Parent.content.Hideouts)
 local Vaults = require(script.Parent.Parent.content.Vaults)
+local Bullies = require(script.Parent.Parent.content.Bullies)
 local Gangs = require(script.Parent.Parent.content.Gangs)
 
 type StatName = Types.StatName
@@ -1383,6 +1385,102 @@ end
 --   /art off                  the whole verb dark, so an art bug can be told apart from a
 --                             school one -- /school start should then hand art to the
 --                             quiz path instead of refusing.
+-- /nerve -- the corridor, and the one system in school you cannot test by walking to a
+-- pad. Everything about a stare-down is over in five seconds and half of it depends on
+-- what the life already is, so without this the only way to see the window widen is to
+-- play thirty corridors and the only way to see an overhold tip into a fight is to lose
+-- one on purpose at exactly the right moment.
+--
+--   /nerve                    both bars, the tier, the window this life has earned, and
+--                             who is currently stood in front of you.
+--   /nerve go [id]            puts somebody in front of you where you stand, ignoring
+--                             cooldowns and the corridor -- see /nerve list for ids.
+--   /nerve stood              ends it as though the release landed in the window.
+--   /nerve backed             ends it as though the release landed under their patience.
+--   /nerve over               ends it as an overhold, which is the only path into a
+--                             fight and therefore the only way to test that door.
+--   /nerve end                ends it the way walking away does: no outcome, no toll.
+--   /nerve set <0-100>        sets this life\'s nerve, which is the only way to watch the
+--                             release window physically widen without playing for it.
+--   /nerve homework [on|off]  takes or returns the homework, for testing the library walk
+--                             without having to lose a stare-down to somebody who wants it.
+--   /nerve list               every archetype, with the drain and demand of each.
+--   /nerve off                the corridor dark, so a bully bug can be told apart from a
+--                             school bug by turning one of them off.
+Commands.nerve = function(player: Player, args: { string }): string
+	local arg = args[1]
+
+	if arg == nil then
+		return BullyService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		BullyService.SetEnabled(arg == "on")
+		return `corridor {arg} — {BullyService.Describe(player)}`
+	end
+
+	if arg == "list" then
+		local lines = { "bullies:" }
+		for _, bully in Bullies.All do
+			table.insert(
+				lines,
+				`  {bully.id}  {bully.body.name}  {bully.drain}/{bully.demand}`
+					.. `  patience {bully.patienceSeconds}s  ages {bully.minAge}-{bully.maxAge}`
+			)
+		end
+		return table.concat(lines, "\n")
+	end
+
+	if arg == "go" then
+		local started, refusal = BullyService.ForceEngage(player, args[2])
+		if not started then
+			return `nobody stepped across you: {refusal or "no reason given"} — {BullyService.Describe(player)}`
+		end
+		return `somebody is in front of you — {BullyService.Describe(player)}`
+	end
+
+	if arg == "stood" or arg == "backed" or arg == "over" then
+		-- "over" rather than "overheld" on the command line, because the outcome name the
+		-- service uses is the one the code reads and this is the one a person types.
+		local outcome = if arg == "over" then "overheld" else arg
+		local ok, refusal = BullyService.ForceResolve(player, outcome)
+		if not ok then
+			return `could not resolve: {refusal or "no reason given"} — {BullyService.Describe(player)}`
+		end
+		return `resolved as {outcome} — {BullyService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not BullyService.ForceEnd(player) then
+			return `nothing to walk away from — {BullyService.Describe(player)}`
+		end
+		return `you walked away — {BullyService.Describe(player)}`
+	end
+
+	if arg == "set" then
+		local value = tonumber(args[2])
+		if value == nil then
+			return `usage: /nerve set <0-{Config.Stats.Max}> — {BullyService.Describe(player)}`
+		end
+		local ok, refusal = BullyService.SetNerve(player, value)
+		if not ok then
+			return `could not set nerve: {refusal or "no reason given"}`
+		end
+		return `nerve set — {BullyService.Describe(player)}`
+	end
+
+	if arg == "homework" then
+		local taken = args[2] ~= "off"
+		if not BullyService.SetHomeworkTaken(player, taken) then
+			return "no profile loaded"
+		end
+		return `homework {if taken then "taken" else "returned"} — {BullyService.Describe(player)}`
+	end
+
+	return `usage: /nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off]`
+		.. ` — {BullyService.Describe(player)}`
+end
+
 Commands.art = function(player: Player, args: { string }): string
 	if DataService.GetProfile(player) == nil then
 		return "no profile loaded yet"
@@ -3037,6 +3135,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/school [start|end|card|year <n>|mastery <subject> <n>|interact], /lab [start|end|level <n>|refill|on|off], "
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
+	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "

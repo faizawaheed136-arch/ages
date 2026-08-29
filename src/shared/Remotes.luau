@@ -171,6 +171,25 @@ export type RemoteName =
 	-- study keeps moving: holding on covers more of the canvas and lets what you have
 	-- already done go stale.
 	| "RequestArtSign"
+	-- The stare-down in the corridor, pushed as a whole snapshot: both bars, the band the
+	-- player is aiming to release inside, and how long the bell will wait.
+	--
+	-- The window is sent rather than derived on the client, and that is the load-bearing
+	-- choice on this channel. It is what a life's nerve *buys* -- the band physically
+	-- widens as you get harder to push around -- so a client that computed it could
+	-- disagree with the server that scored against it, and the player would watch
+	-- themselves release inside a green band and be told they backed down.
+	--
+	-- What it does not carry is who else is in the corridor. A bully working somebody else
+	-- is a thing you see by looking down the hall, and a channel that listed them would
+	-- turn a room you read into a list you read.
+	| "NerveUpdated"
+	-- Hold and release, as one boolean. The whole input of the corridor.
+	--
+	-- The release *value* is what decides the encounter and the server owns the bar, so
+	-- this carries intent and never a score: a client that sent "I released at 0.71" would
+	-- be a client that could send 0.71 whenever it liked.
+	| "RequestNerveHold"
 	-- "My hands are in the drawer" / "they are not any more." One remote with a boolean
 	-- rather than two, because the two are the same fact and a start that arrived without
 	-- its stop -- or in the wrong order after a hiccup -- would leave a player taking
@@ -579,6 +598,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"TheftUpdated",
 	"RequestArtPaint",
 	"RequestArtSign",
+	"NerveUpdated",
+	"RequestNerveHold",
 	"RequestTillHold",
 	"RequestTillOpen",
 	"RequestTillCallCrew",

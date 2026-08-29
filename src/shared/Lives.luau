@@ -98,6 +98,13 @@ function Lives.New(): LifeData
 		-- procedure, because until now there were none to run.
 		subjectMastery = {},
 		subjectPasses = {},
+		-- Zero nerve, no corridors won, and nobody holding your homework -- true of the
+		-- newborn, and the only honest thing to hand a save written before the corridor
+		-- existed. That life was never stood in front of, so it has learned nothing about
+		-- it, and starting it part-way up would be the game crediting a fight it never saw.
+		bullyNerve = 0,
+		bullyStandUps = 0,
+		homeworkTaken = false,
 		-- Empty, which reads as "no lessons yet this year" and "no year finished yet" --
 		-- true of the newborn, and the right thing to hand a save written before the record
 		-- existed. That life's school years genuinely have no verdict: they were lived by a

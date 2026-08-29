@@ -16,6 +16,7 @@ local ChoicePanel = require(script.ui.ChoicePanel)
 local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
+local NerveUI = require(script.ui.NerveUI)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -59,6 +60,7 @@ type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
+type NerveState = Types.NerveState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -100,6 +102,7 @@ local panel = ChoicePanel.new()
 local lab = LabUI.new()
 local hunt = HuntUI.new()
 local easel = EaselUI.new()
+local nerve = NerveUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -149,6 +152,7 @@ local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
 local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
+local RequestNerveHoldRemote = Remotes.Get("RequestNerveHold")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -533,6 +537,16 @@ end
 easel.onSign = function()
 	RequestArtSignRemote:FireServer()
 end
+
+-- Holding your nerve in the corridor, and it is the whole input of that system: down and
+-- up, nothing else.
+--
+-- Intent only, never a score. The server owns both bars and decides what a release was
+-- worth -- a client that sent "I let go at 0.71" would be a client that could send 0.71
+-- whenever it liked, and the one number in the corridor worth cheating is that one.
+nerve:OnHold(function(holding: boolean)
+	RequestNerveHoldRemote:FireServer(holding)
+end)
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
 -- open. The question is put up and taken down by the server's pushes: answers on it
@@ -964,6 +978,10 @@ end)
 -- part changing colour with nothing announcing it. There is deliberately no client-side
 -- flash, outline or marker to go with a shift -- lighting up the cell that moved would
 -- hand over the one thing this subject is asking the player to find for themselves.
+Remotes.Get("NerveUpdated").OnClientEvent:Connect(function(state: NerveState?)
+	nerve:Set(state)
+end)
+
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
 end)
@@ -1335,6 +1353,11 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- gone to hurry up and finish. The wall itself is the server's and comes down with the
 	-- session.
 	easel:Set(nil)
+	-- And the corridor. The same race as the two above, and the least defensible of the
+	-- three to leave standing: a bar still climbing against somebody's patience under a
+	-- death notice would have the player holding a key for an encounter that cannot be won
+	-- or lost by anybody any more.
+	nerve:Set(nil)
 	-- And the commands legend: the shift it was listing keys for does not survive
 	-- death, and a P key advertised over a death notice is a key that does nothing.
 	commandsLegend:Set(false)

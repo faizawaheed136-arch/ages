@@ -56,6 +56,7 @@ local SchoolService = require(services.SchoolService)
 local ScienceService = require(services.ScienceService)
 local GeographyService = require(services.GeographyService)
 local ArtService = require(services.ArtService)
+local BullyService = require(services.BullyService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
@@ -178,6 +179,11 @@ ScienceService:Start()
 GeographyService:Start()
 ArtService:Start()
 SchoolService:Start()
+-- After the lessons, and it does not matter, which is worth saying because it looks as
+-- though it should. The corridor holds no verb of its own and hands nothing to anybody --
+-- it lays a room around the same school place point the lessons use and then waits for
+-- somebody to walk down it. Nothing in school reads it and it reads nothing in school.
+BullyService:Start()
 -- Heat before the officers, because the officers are a function of it: PoliceService's
 -- first tick asks BountyService how many bodies the street should have, and a police force
 -- that started answering before there was a number to answer from would spend its opening

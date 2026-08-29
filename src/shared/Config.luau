@@ -2745,6 +2745,270 @@ Config.School.Art = {
 -- treadmill into the gym later can replace the part and keep the mechanic. The
 -- generator stamps the tag on the machine and an attribute naming which machine
 -- it is; this file is the only place the two strings are agreed.
+-- The corridor between lessons, and the people standing in it.
+--
+-- School had one shape before this: you walked to a pad and a lesson happened. Nothing
+-- stood between the door and the desk, so the school building was a menu with a roof on.
+-- This is what fills the walk -- somebody wants something from you, and the walk is
+-- where they ask.
+--
+-- The verb is holding your nerve, and it is a stare-down rather than a fight. You hold;
+-- your nerve rises and their patience falls; you let go when you think you are above
+-- them. That is the whole input, it is one key, and the release *value* is what decides
+-- it -- so it costs nothing on a phone and nothing at 200ms of ping.
+--
+-- What makes it a decision rather than a reflex is that there are two clocks, not one.
+-- Their patience is the clock you are playing against, and the bell is the clock you are
+-- playing under: standing your ground takes seconds the lesson has already started
+-- spending. Backing down is free and instant and costs you the toll. That is the shape
+-- the activity law asks for -- two queues at half load rather than one at full -- and it
+-- is why this is not simply a button that pays out.
+--
+-- 13+, deliberately and throughout. This is a toll and a stare, never an assault: no
+-- gore, no injury, nobody degraded, and the player is never the aggressor unprompted. If
+-- it tips into contact at all it tips into FightService, which is already a contest with
+-- a winner that ends with somebody back on their feet.
+Config.School.Bully = {
+	-- Off switch for the whole system, so a corridor that misbehaves in a playtest can be
+	-- taken out without unpicking the school around it. Read once per tick.
+	Enabled = true,
+
+	-- How often the corridor is looked at, in seconds. Fast, because this is the only tick
+	-- in school that a player is holding a key through: the two bars move against each
+	-- other on this clock, and a coarse one would make the release land somewhere other
+	-- than where the player watched it land.
+	-- Safe range: 0.05-0.2. Above ~0.2 the bar visibly steps.
+	TickSeconds = 0.1,
+
+	-- The years anybody is in the corridor at all. Starts above School.StartAge because a
+	-- six-year-old being shaken down is not the game this is: the corridor is a teenage
+	-- pressure, and the early years are left as the uncomplicated ones on purpose.
+	-- Safe range: 10-13, and never below School.StartAge.
+	MinAge = 11,
+	MaxAge = Config.School.EndAge,
+
+	-- How near a bully has to be before they step across you, and how far you have to get
+	-- for them to lose interest. Two numbers rather than one so leaving is not a coin
+	-- balanced on the edge of the radius you arrived through -- a single distance makes the
+	-- encounter re-trigger while you are walking away from it.
+	-- Safe range: 10-20 and 22-40, and Release must exceed Engage by at least 8.
+	EngageRadiusStuds = 14,
+	ReleaseRadiusStuds = 28,
+
+	-- Seconds before the same bully steps across the same player again. Long enough that
+	-- walking the corridor twice in a lesson is not two shakedowns, short enough that it is
+	-- not a once-a-day event you forget exists.
+	-- Safe range: 45-180.
+	CooldownSeconds = 90,
+
+	-- The stare-down itself.
+	Nerve = {
+		-- Where your nerve starts, as a share of the bar, before the Nerve stat moves it.
+		-- Deliberately not zero: a child who has never stood up to anybody still has some,
+		-- and starting at the floor would make the first encounter unwinnable rather than
+		-- hard, which is the difference between a challenge and a wall.
+		-- Safe range: 0.1-0.35.
+		BaseShare = 0.18,
+
+		-- How much of the bar LifeData.bullyNerve is worth at its ceiling, added to
+		-- BaseShare.
+		-- Kept under half so the stat is an advantage and never a guarantee: a maxed player
+		-- who releases badly still loses, which is requirement six done honestly -- the
+		-- progression widens your margin, it does not play the game for you.
+		-- Safe range: 0.15-0.4.
+		StatShare = 0.3,
+
+		-- How fast nerve climbs while the key is held, in share per second.
+		-- Safe range: 0.2-0.5. Above ~0.5 the bar outruns the eye.
+		RisePerSecond = 0.34,
+
+		-- The release window, as a share of the bar above their patience. This is the band
+		-- the player is aiming to let go inside, and it is what LifeData.bullyNerve widens --
+		-- physically, on screen, the way Stardew grows the fishing bar. A stat that only
+		-- moved a hidden multiplier would be invisible inside the verb, which the law names
+		-- as the failure to avoid.
+		-- Safe range: 0.08-0.2 and 0.1-0.3, and Max must exceed Min.
+		WindowMinShare = 0.12,
+		WindowMaxShare = 0.24,
+
+		-- What holding past their patience costs. The bar keeps climbing after they have run
+		-- out, and letting go up there is overcommitting -- you did not face them down, you
+		-- made a scene. Kept above 1 so the bar has somewhere to go: an overhold has to be
+		-- visible as *too far*, not as the bar simply stopping.
+		-- Safe range: 1.1-1.5.
+		OverholdCeilingShare = 1.25,
+	},
+
+	-- How each drain in Types.BullyDrain actually falls. These are the numbers that make
+	-- three opponents out of one verb, so they are the numbers to move when the corridor
+	-- stops teaching -- not the patience lengths, which only make it longer.
+	Drain = {
+		-- How much faster the bluffer's patience falls than a steady one. Faster on purpose:
+		-- the whole lie is that the window looks like it is arriving early.
+		-- Safe range: 1.2-1.8.
+		BlufferRate = 1.45,
+
+		-- Where the bluffer's patience jumps back, and by how much. Once, ever, per
+		-- encounter -- a bluff that repeated would be a pattern to wait out rather than a
+		-- thing to learn, and the second time it happened the player would simply stop
+		-- releasing until it was over.
+		-- Safe range: 0.25-0.45 and 0.15-0.35.
+		BlufferJumpAt = 0.34,
+		BlufferJumpBy = 0.22,
+
+		-- How much of your own nerve rise the mirror subtracts from their patience. Above 1
+		-- so that leaning harder genuinely brings the window forward faster than you are
+		-- climbing toward it -- which is what makes holding the wrong answer against this
+		-- one, and it is the only opponent here where that is true.
+		-- Safe range: 1.1-2.0.
+		MirrorFactor = 1.5,
+	},
+
+	-- Whether overholding against somebody you have already faced down tips into a real
+	-- fight. This is the physical layer, and it is deliberately the only door into one:
+	-- you cannot start a fight in the corridor, you can only fail to end a stare-down with
+	-- somebody who already knows you will not back off.
+	--
+	-- FightService owns what happens next, which is already a 13+ contest with a winner --
+	-- no gore, a stagger rather than damage, and everybody back on their feet at the end.
+	-- If it refuses for any reason the overhold simply resolves as an overhold, so this can
+	-- be turned off without leaving a hole in the corridor.
+	TipsIntoFight = true,
+
+	-- The second clock. Standing your ground costs seconds, and the lesson has already
+	-- started spending them -- this is what stops the corridor being free upside.
+	Bell = {
+		-- Real seconds of grace from the bell before the lesson counts you late. Matches the
+		-- ~30 seconds the school design settles on, and is deliberately generous: the
+		-- consequence for lateness is loss of upside, never punishment-by-waiting.
+		-- Safe range: 20-45.
+		GraceSeconds = 30,
+
+		-- What arriving late costs, as a share of the lesson score. One segment's worth, so
+		-- a player who won the corridor and walked in late has traded one thing for another
+		-- rather than lost the afternoon.
+		-- Safe range: 0.1-0.3.
+		LateScoreShare = 0.2,
+	},
+
+	-- What they take when you back down, and what it costs you.
+	Toll = {
+		-- Lunch money, in the same currency as everything else. Small and frequent is the
+		-- rule: this should sting for a moment, not reset your week.
+		-- Safe range: 3-15.
+		Money = 6,
+
+		-- Backing down costs a little confidence and standing up buys a little. Both small,
+		-- because the corridor is a texture the whole of school runs on, and a texture that
+		-- moved stats hard would out-earn the lessons it is supposed to be framing.
+		-- Safe range: -3 to 0, and 0 to 3.
+		HappinessOnBackDown = -1,
+		HappinessOnStandUp = 2,
+
+		-- How much a faced-down bully moves LifeData.bullyNerve, and how much backing down
+		-- does.
+		-- Asymmetric on purpose: you learn more from the one you stood up to, and the one you
+		-- walked away from should not be a ladder you can slide down -- see School.Mastery for
+		-- the same rule stated about subjects.
+		-- Safe range: 1-4 and -1 to 0.
+		NerveOnStandUp = 2,
+		NerveOnBackDown = 0,
+	},
+
+	-- Your homework, which is the consumable that makes the corridor generate its own
+	-- pacing. A bully who takes it has not failed your lesson -- they have put a walk
+	-- between you and the top of it, and the walk is to the library. Burst, traversal,
+	-- burst, for the price of one flag on a profile.
+	Homework = {
+		-- How many rungs of the next lesson the missing homework costs. One, so it is a real
+		-- loss that a single detour undoes.
+		-- Safe range: 1-2.
+		LevelPenalty = 1,
+
+		-- Real seconds at the library desk to redo it. Short: this is the chorus between two
+		-- verses, not a third activity.
+		-- Safe range: 6-20.
+		RedoSeconds = 10,
+	},
+
+	-- Stepping in when they are working somebody else. The positive half of the system and
+	-- the reason it is not only a tax: a classmate you stood up for is a classmate who
+	-- knows you, which is the ties ladder being fed by school rather than beside it.
+	Intervene = {
+		-- How near the pair you must be for the three-dot to offer it.
+		-- Safe range: 8-18.
+		RadiusStuds = 12,
+
+		-- What winning on somebody else's behalf is worth in bond. Higher than what winning
+		-- for yourself is worth in nerve, deliberately: the game should pay better for the
+		-- harder, kinder choice, and this is the only place in school where one player's
+		-- afternoon can improve another person's.
+		-- Safe range: 2-8.
+		BondOnWin = 5,
+	},
+
+	-- How the corridor gets harder, and it is the space that changes rather than the
+	-- numbers. At the bottom they stand in the open where you can see them from the door;
+	-- as your reputation rises they take the chokepoints; at the top they come in pairs and
+	-- hold both ways round. Spatial escalation forces re-planning, and a bully with more
+	-- hit points would not.
+	-- Safe range: 2-5 tiers, standUps ascending, stations within Build.StationCount.
+	--
+	-- `paired` is where the second clock comes from. At a paired tier a second bully starts
+	-- walking the moment the first steps across you, and when they arrive the release
+	-- window shrinks to its narrowest whatever your nerve is -- so the release has to land
+	-- after the window opens and before it closes. Two clocks at half load each, which is
+	-- the shape the activity law asks for and the reason this is not one bar with a bigger
+	-- number on it at the top tier.
+	BackupSeconds = 3.2,
+
+	Tiers = {
+		{ standUps = 0, stations = 1, paired = false, label = "in the open" },
+		{ standUps = 3, stations = 2, paired = false, label = "at the corner" },
+		{ standUps = 7, stations = 3, paired = true, label = "both ways round" },
+	},
+
+	-- The corridor itself, laid around the school place point exactly as the lab and the art
+	-- room are. Built in Luau at runtime rather than shipped as geometry, which is what lets
+	-- the school grow without anybody regenerating an eleven-megabyte asset.
+	Build = {
+		-- How far out from the school point the corridor runs, and how wide. Longer than the
+		-- art room is across, because the length *is* the mechanic: a corridor you can cross
+		-- in two steps has no chokepoint in it and nowhere for a second bully to stand.
+		-- Safe range: 40-90 and 10-20.
+		LengthStuds = 64,
+		WidthStuds = 14,
+
+		-- How many places along it somebody can stand. Must be at least the largest
+		-- Tiers[].stations above, or the top tier asks for a station the corridor does not
+		-- have -- which is checked at require time rather than discovered on a spawn.
+		-- Safe range: 3-6.
+		StationCount = 3,
+
+		-- Which way the corridor runs out of the school point, in degrees, and how far off
+		-- the point it starts. Turned away from the lab and the art room so that three rooms
+		-- built around one point do not stand inside each other.
+		-- Safe range: 0-359 and 12-30.
+		BearingDegrees = 210,
+		StartOffsetStuds = 18,
+
+		-- Placeholder furniture, in studs, in the same blocky spirit as the lab's and the
+		-- studio's: stand-ins for models a builder drops in later.
+		LockerSize = Vector3.new(2.5, 7, 1.2),
+		BenchSize = Vector3.new(6, 1.6, 2),
+
+		-- How many lockers line each wall. Cosmetic, and the only thing in this block that
+		-- is: the corridor has to read as a school rather than as a box with people in it.
+		-- Safe range: 4-20.
+		LockersPerWall = 10,
+
+		-- How far away the corridor's own labels can still be read. Matches the lab's and the
+		-- studio's rather than inventing a third number that would drift from them.
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+}
+
 Config.Gym = {
 	-- The tag a part carries to be read as gym equipment, and the attribute
 	-- naming the machine: "treadmill", "bench", "dumbbells", "pullup". A kind
