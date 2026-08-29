@@ -1,0 +1,31 @@
+{
+  "name": "ages-code-only",
+  "globIgnorePaths": [
+    "**/*.tmp.*"
+  ],
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "ProfileStore": {
+        "$path": "vendor/ProfileStore"
+      }
+    },
+    "ReplicatedStorage": {
+      "$path": "src/shared"
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}

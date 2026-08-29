@@ -3242,6 +3242,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
 	.. "/read [start|solve|end|on|off], /music [start|auto [grade]|end|on|off], "
 	.. "/pe [start|end|perfect|good|poor|on|off], /prom [on|off], /students [clear|on|off], "
+	.. "/oldschool [restore|override], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
@@ -3387,6 +3388,51 @@ Commands.students = function(_player: Player, args: { string }): string
 		return `cleared — {SchoolCrowdService.Describe()}`
 	end
 	return "/students, /students clear, /students on|off"
+end
+
+-- The map ships its own school, and this one replaces it.
+--
+--   /oldschool                whether the map's school is stood down, and whether this one
+--                             is up in its place.
+--   /oldschool restore        puts the map's school back and takes this one down, so the
+--                             two can be compared by eye rather than by argument.
+--   /oldschool override       stands the map's school down again and rebuilds this one.
+--
+-- The map's school is *hidden*, never destroyed -- it is parented into ServerStorage, so a
+-- wrong call here costs a drag in Studio rather than a re-sync. Neither of its two models
+-- carries a single attribute, so nothing tagged, no place point and no event anchor moves
+-- with them; the street's place points are a sibling and are never touched.
+Commands.oldschool = function(player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+
+	if arg == "" then
+		return table.concat({
+			`the map's school: {if School.OldSchoolStoodDown() then "stood down" else "standing"}`,
+			`this one: {if School.Plan() ~= nil then "built" else "not built"}`,
+		}, "\n")
+	end
+
+	if arg == "restore" then
+		local put = School.RestoreOldSchool()
+		if put == 0 then
+			return "the map's school was never stood down"
+		end
+		return `put {put} model(s) back — walk away and back to see it`
+	end
+
+	if arg == "override" then
+		local place = PlaceService.Find("school")
+		if place == nil then
+			return "no school place point in this map"
+		end
+		School.Clear()
+		if School.Build(place.part.Position) == nil then
+			return "could not lay the school"
+		end
+		return `the map's school is down and this one is up — {PEService.Describe(player)}`
+	end
+
+	return "/oldschool, /oldschool restore, /oldschool override"
 end
 
 Commands.help = function(_player: Player, _args: { string }): string

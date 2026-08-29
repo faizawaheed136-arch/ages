@@ -2849,6 +2849,35 @@ Config.School.Building = {
 		-- The trees down the approach, per side.
 		-- Safe range: 3-8.
 		TreesPerSide = 5,
+
+		-- The pediment: the shallow gable over the entrance bay.
+		--
+		-- This is the single most load-bearing shape in the reference photographs and it is worth
+		-- saying why. Every building in this game is a flat-topped box, because a flat top is what
+		-- an extruded floor plan gives you for free. A school in the reference reads as *civic* --
+		-- as somewhere with a front rather than merely a wall facing the road -- and almost all of
+		-- that is one triangle over the doors. It costs a dozen parts and it changes the whole
+		-- elevation.
+		-- Safe range: 26-60, 6-16 and 2-6.
+		PedimentWidthStuds = 44,
+		PedimentRiseStuds = 11,
+		PedimentSteps = 5,
+
+		-- The crest over the doors, and the welcome board under it. Both are in the reference and
+		-- both are what stop the frontage being an anonymous glazed box.
+		-- Safe range: 7-16.
+		CrestRadiusStuds = 10,
+
+		-- Blue pilaster stripes up the white elevation. The reference's facade is banded rather
+		-- than plain, and the banding is what gives a long frontage a rhythm instead of a length.
+		-- Safe range: 6-20 and 1.5-5.
+		PilasterCount = 14,
+		PilasterWidthStuds = 3,
+
+		-- Clipped hedges and lamp standards down the approach, per side.
+		-- Safe range: 2-8 and 1-5.
+		HedgesPerSide = 4,
+		LampsPerSide = 2,
 	},
 
 	-- The aquatic centre, attached on one side. A pool hall with a barrel-vaulted glass roof,
@@ -3758,33 +3787,49 @@ Config.Gym = {
 	-- dense on purpose -- the reference is a room where every square foot has iron on it, and
 	-- that reads as a serious gym in a way a sparse one never does.
 	Build = {
-		-- Safe range: 90-150 and 60-110.
-		WidthStuds = 118,
-		DepthStuds = 82,
-		-- Tall, because a rack is 8 studs and the room has to have air above it.
-		-- Safe range: 18-30.
-		HeightStuds = 22,
+		-- **Smaller than the reference on purpose.** The Power Lifters floor in the reference
+		-- photographs is a warehouse -- two storeys of air, a running track's worth of concrete,
+		-- and equipment scattered far enough apart that the far wall is a different room. That
+		-- reads as impressive in a screenshot and as empty to walk through, which is the exact
+		-- mistake the school gymnasium already had to be corrected for.
+		--
+		-- So this keeps the reference's *character* -- brick, pendants, racks on platforms,
+		-- colour-coded plates -- at about half its floor area. Same iron, less walking. A gym is
+		-- meant to feel crowded and slightly too warm.
+		-- Safe range: 70-110 and 48-80.
+		WidthStuds = 86,
+		DepthStuds = 60,
+		-- Still tall, because a rack is 8 studs and the room has to have air above it -- but a
+		-- single storey rather than the reference's two.
+		-- Safe range: 15-22.
+		HeightStuds = 17,
 
 		-- Squat racks on platforms down the back, benches in front of them, treadmills along
 		-- one wall, dumbbell racks along the other. These counts are the whole of how full the
 		-- room looks.
+		-- Counts come down with the room, but by less than the floor area does -- that is what
+		-- makes it denser rather than merely smaller. Every kind GymService implements still has
+		-- at least two of it, so a busy server never has one machine for the whole floor.
 		-- Safe range: 3-8, 3-8, 3-8 and 2-5.
-		Racks = 6,
-		Benches = 5,
-		Treadmills = 5,
-		DumbbellRacks = 3,
+		Racks = 5,
+		Benches = 4,
+		Treadmills = 4,
+		DumbbellRacks = 2,
 
 		-- The lifting platform under each rack.
-		-- Safe range: 10-18 and 8-14.
-		PlatformWidthStuds = 13,
-		PlatformDepthStuds = 10,
+		-- Safe range: 9-16 and 7-12.
+		PlatformWidthStuds = 11,
+		PlatformDepthStuds = 9,
 
 		-- Pendant lights on the ceiling, in a grid. The reference is lit by dozens of small
 		-- hanging lamps rather than by panels, and that alone is most of why it reads as a
 		-- warehouse gym instead of a school corridor.
+		-- The lamp grid stays dense as the room shrinks: the reference reads as a warehouse gym
+		-- because of dozens of small hanging lights, and thinning them in proportion to the floor
+		-- would trade away the one thing worth keeping.
 		-- Safe range: 4-10 and 3-8.
-		LightsAcross = 7,
-		LightsAlong = 5,
+		LightsAcross = 6,
+		LightsAlong = 4,
 
 		-- A mirrored wall down one side, which is the other half of what a gym looks like.
 		-- Safe range: 0.4-0.9.

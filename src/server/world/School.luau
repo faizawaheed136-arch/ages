@@ -298,6 +298,92 @@ local function buildSlabWithVoid(parent: Instance, at: (number, number, number) 
 	Kit.Railing(parent, `{name}RailD`, at(ATRIUM_X2, railY, ATRIUM_Z1), at(ATRIUM_X2, railY, ATRIUM_Z2), 4, PALE_BLUE)
 end
 
+-- The front of the building: pediment, crest, welcome board, pilasters, hedges and lamps.
+--
+-- Split out of buildShell rather than folded into it, because everything here is *elevation*
+-- rather than structure -- none of it holds a floor up, and all of it exists so the school
+-- reads as a school from the road. buildShell is about where the walls are; this is about
+-- what the walls look like when you arrive.
+local function buildFrontage(parent: Instance, at: (number, number, number) -> Vector3)
+	local half = W / 2
+	local roofY = 0.4 + FLOOR_H * BUILDING.Floors
+
+	-- The pediment, stepped rather than a true triangle: Roblox has no wedge in this kit and a
+	-- staircase of five slabs reads as a gable from the ground, which is the only place anyone
+	-- looks at it from.
+	for step = 1, ENTRANCE.PedimentSteps do
+		local share = (step - 1) / ENTRANCE.PedimentSteps
+		local width = ENTRANCE.PedimentWidthStuds * (1 - share)
+		local y = roofY + (ENTRANCE.PedimentRiseStuds / ENTRANCE.PedimentSteps) * (step - 0.5)
+		Kit.Block(parent, `Pediment{step}`, at(0, y, -1.2), Vector3.new(width, ENTRANCE.PedimentRiseStuds / ENTRANCE.PedimentSteps + 0.2, 3), {
+			color = WHITE,
+		})
+	end
+
+	-- The crest. A disc with the school's initials on it, which is the detail the reference
+	-- puts dead centre above the doors and the one that makes the building feel named.
+	local crest = Instance.new("Part")
+	crest.Name = "Crest"
+	crest.Shape = Enum.PartType.Cylinder
+	crest.Size = Vector3.new(1.2, ENTRANCE.CrestRadiusStuds * 2, ENTRANCE.CrestRadiusStuds * 2)
+	-- Turned to face the road: a Roblox cylinder runs along X, so it needs a quarter turn about
+	-- Y to present its face forward rather than its edge.
+	crest.CFrame = CFrame.new(at(0, roofY - 6, -2)) * CFrame.Angles(0, math.rad(90), 0)
+	crest.Anchored = true
+	crest.CanCollide = false
+	crest.Color = PALE_BLUE
+	crest.Material = Enum.Material.SmoothPlastic
+	crest.Parent = parent
+
+	local crestFace = Kit.Block(parent, "CrestFace", at(0, roofY - 6, -2.7), Vector3.new(ENTRANCE.CrestRadiusStuds * 1.3, ENTRANCE.CrestRadiusStuds * 1.3, 0.3), {
+		color = WHITE,
+	})
+	crestFace.CastShadow = false
+	Kit.Sign(crestFace, "AGES\nHIGH", ENTRANCE.CrestRadiusStuds * 1.2, LABEL_DIST * 2, Color3.fromRGB(46, 96, 168))
+
+	-- The welcome board over the doors.
+	local welcome = Kit.Block(parent, "WelcomeBoard", at(0, ENTRANCE.CanopyHeightStuds + 3.5, -1.4), Vector3.new(30, 5, 0.5), {
+		color = PALE_BLUE,
+	})
+	welcome.CastShadow = false
+	Kit.Sign(welcome, "WELCOME", 26, LABEL_DIST * 2, Color3.fromRGB(255, 255, 255))
+
+	-- Blue pilasters up the elevation. Full height, so they read as structure rather than as
+	-- paint, and skipped across the entrance bay so they never cross the doors or the crest.
+	for index = 1, ENTRANCE.PilasterCount do
+		local share = (index - 0.5) / ENTRANCE.PilasterCount
+		local x = -half + W * share
+		if math.abs(x) > ENTRANCE.PedimentWidthStuds / 2 + 4 then
+			Kit.Block(parent, `Pilaster{index}`, at(x, roofY / 2, -0.9), Vector3.new(ENTRANCE.PilasterWidthStuds, roofY, 1.6), {
+				color = PALE_BLUE,
+			}).CastShadow = false
+		end
+	end
+
+	-- Clipped hedges and lamp standards down the approach. The reference lines its forecourt
+	-- with both, and a bare slab of concrete in front of a school is the one thing that makes
+	-- an otherwise finished building look unfinished.
+	local plazaD = ENTRANCE.PlazaDepthStuds
+	for side = -1, 1, 2 do
+		for index = 1, ENTRANCE.HedgesPerSide do
+			local z = -6 - (index / (ENTRANCE.HedgesPerSide + 1)) * plazaD
+			Kit.Block(parent, `Hedge{side}_{index}`, at(side * (ENTRANCE.PlazaWidthStuds / 2 + 5), 2.4, z), Vector3.new(9, 4.4, 9), {
+				color = Color3.fromRGB(96, 150, 96),
+				material = Enum.Material.Grass,
+			})
+		end
+		for index = 1, ENTRANCE.LampsPerSide do
+			local z = -10 - (index / (ENTRANCE.LampsPerSide + 1)) * plazaD
+			local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 3)
+			Kit.Column(parent, `LampPost{side}_{index}`, at(x, 0.4, z), 16, 1, CONCRETE)
+			Kit.Block(parent, `LampHead{side}_{index}`, at(x, 16.6, z), Vector3.new(3.4, 1.2, 3.4), {
+				color = Color3.fromRGB(255, 246, 214),
+				material = Enum.Material.Neon,
+			}).CastShadow = false
+		end
+	end
+end
+
 local function buildShell(parent: Instance, at: (number, number, number) -> Vector3)
 	local half = W / 2
 
@@ -1057,8 +1143,55 @@ local function buildTrack(parent: Instance, at: (number, number, number) -> Vect
 			Kit.LightPanel(parent, `FloodHead{sx}_{sz}`, base + Vector3.new(0, 35, 0), 8, 4)
 		end
 	end
-
 	return at(0, 0.5, centreZ)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Standing down the old school.
+-- ---------------------------------------------------------------------------------------
+
+-- The map ships a school of its own: `Workspace.Street.School` and `Street.SchoolFittings`,
+-- 69 and 233 instances, generated by tools/ and owned by Agent A. This one is laid in code on
+-- the same ground, so without this both exist at once and the player walks through two
+-- buildings occupying one plot.
+--
+-- Verified safe before it was written: **neither model carries a single attribute.** No place
+-- points, no AgesEvent anchors, no interact tags -- the street's place points live in
+-- `Street.PlacePoints`, which is a sibling and is never touched. So removing these takes away
+-- geometry and nothing else, and every lookup in the game still resolves.
+--
+-- Hidden rather than destroyed, and that is deliberate. Destroy is not reversible inside a
+-- session, and the map belongs to another agent: parenting to a holding folder means the old
+-- school can be put back by hand in Studio, and means a mistake here costs a drag rather than
+-- a re-sync. It also survives being run twice.
+local OLD_SCHOOL_MODELS = { "School", "SchoolFittings" }
+local stowed: Folder? = nil
+
+local function standDownOldSchool(): number
+	local street = workspace:FindFirstChild("Street")
+	if street == nil then
+		return 0
+	end
+
+	local moved = 0
+	for _, name in OLD_SCHOOL_MODELS do
+		local model = street:FindFirstChild(name)
+		if model ~= nil then
+			local hold = stowed
+			if hold == nil or hold.Parent == nil then
+				hold = Instance.new("Folder")
+				hold.Name = "StreetSchoolStoodDown"
+				-- ServerStorage rather than workspace: out of the world entirely, so it cannot be
+				-- walked into, raycast against or streamed to a client, but still there to drag
+				-- back if this was the wrong call.
+				hold.Parent = game:GetService("ServerStorage")
+				stowed = hold
+			end
+			model.Parent = hold
+			moved += 1
+		end
+	end
+	return moved
 end
 
 -- ---------------------------------------------------------------------------------------
@@ -1093,8 +1226,13 @@ function School.Build(center: Vector3): Plan?
 		return center + Vector3.new(x, y, z)
 	end
 
+	-- The map's own school comes down first, or the player walks through two buildings
+	-- standing in one plot. See standDownOldSchool for why this hides rather than destroys.
+	standDownOldSchool()
+
 	buildSite(parent, toWorld)
 	buildShell(parent, toWorld)
+	buildFrontage(parent, toWorld)
 	buildStairs(parent, toWorld)
 	buildCorridors(parent, toWorld)
 	local anchors = buildRooms(parent, toWorld)
@@ -1301,6 +1439,34 @@ end
 -- Which event is dressed, or nil. Read rather than built.
 function School.Event(): string?
 	return currentEvent
+end
+
+-- Puts the map's own school back and takes this one down. The undo, for deciding by eye which
+-- building the game should have.
+function School.RestoreOldSchool(): number
+	local hold = stowed
+	if hold == nil then
+		return 0
+	end
+	local street = workspace:FindFirstChild("Street")
+	if street == nil then
+		return 0
+	end
+	local put = 0
+	for _, model in hold:GetChildren() do
+		model.Parent = street
+		put += 1
+	end
+	hold:Destroy()
+	stowed = nil
+	School.Clear()
+	return put
+end
+
+-- Whether the map's school is currently stood down.
+function School.OldSchoolStoodDown(): boolean
+	local hold = stowed
+	return hold ~= nil and hold.Parent ~= nil and #hold:GetChildren() > 0
 end
 
 -- The building as it stands, or nil if it has not been laid. Read rather than built, so a
