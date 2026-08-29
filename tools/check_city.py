@@ -30,6 +30,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from world_plan import MAP_EDGE  # noqa: E402
 
+# This report prints "≥100 house models", and on Windows a console defaults to cp1252,
+# which has no such character -- so the *first passing check* raised UnicodeEncodeError and
+# took the whole gate down with it. Twelve sections that never ran, and a traceback that
+# names an encoding rather than the city, so it reads as a broken tool rather than as a gate
+# nobody on this platform has been able to run.
+#
+# Reconfiguring rather than dropping the character: the symbol is right, and a gate that
+# quietly rewrites its own output to suit a terminal is a gate that will disagree with the
+# one the other platform runs. `errors="replace"` so an exotic glyph degrades to a question
+# mark instead of resurrecting exactly this failure.
+#
+# check_town.py already reconfigures stdout for its own reason (line buffering, so
+# measurements do not surface above their section header); this is the same idea for a
+# different platform. Both are safe on macOS, where the encoding is already UTF-8.
+if sys.stdout.encoding is not None and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 CITY_PATH = ASSETS / "City.rbxmx"

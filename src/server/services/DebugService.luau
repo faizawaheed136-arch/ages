@@ -3240,6 +3240,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
 	.. "/read [start|solve|end|on|off], /music [start|auto [grade]|end|on|off], "
+	.. "/pe [start|end|perfect|good|poor|on|off], /prom [on|off], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "
