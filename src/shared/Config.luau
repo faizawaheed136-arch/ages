@@ -436,6 +436,7 @@ Config.World = {
 	SportKind = {
 		Soccer = "soccer",
 		Basketball = "basketball",
+		Volleyball = "volleyball",
 		Tennis = "tennis",
 		Playground = "playground",
 		Track = "track",
@@ -3570,6 +3571,241 @@ Config.Sports = {
 		-- showing rather than requiring a student still be there when the clock hits
 		-- zero.
 		-- Safe range: 60-180.
+		PeLessonSeconds = 110,
+	},
+
+	-- Basketball: the second sport built to the soccer skeleton -- same shape, same
+	-- rule (PE is this match, not a separate drill; SportsDrill's "basketball" free-
+	-- throw station is untouched and stays the solo, always-available loop). The one
+	-- structural difference the sport itself forces: there are two basketball courts
+	-- in the built world (tools/gen_city.py's outdoor basketball_court() in the sports
+	-- park, and the indoor hoop pair inside court_hall's "Civic Courts" hall), so unlike
+	-- soccer's single pitch, BasketballService cannot assume every tagged hoop belongs
+	-- to the one match. It resolves PlaceId to an anchor part and keeps only the hoop
+	-- pair nearest it -- see the header of BasketballService.luau. The indoor hall was
+	-- chosen as the live-match venue because that is where the SportsDrill free-throw
+	-- station already lives; the outdoor court stays park scenery, the same way a
+	-- bench is scenery.
+	Basketball = {
+		HoopKind = Config.World.SportKind.Basketball,
+		PlaceId = "basketball_gym",
+
+		TeamSize = 3,
+		RosterSize = 6,
+
+		-- court_hall()'s indoor court is ix0+3..ix1-3 wide and bk_z0..bk_z1 long
+		-- (44 studs). Copied by hand for the same reason PitchWidthStuds is: the
+		-- court's own painted lines are not SportTag-tagged, only the hoops are.
+		CourtWidthStuds = 44,
+
+		-- Narrower than soccer's watch/join radii -- a basketball hall is a room, not
+		-- an open pitch, and a wide watch radius here would sweep in the volleyball
+		-- court sharing the same building. Safe range: 30-50.
+		WatchRadiusStuds = 38,
+		-- Safe range: 15-30.
+		JoinRadiusStuds = 22,
+
+		TickSeconds = 0.1,
+
+		-- Shorter than soccer's clock -- a basketball possession is seconds, not tens
+		-- of seconds, and scoring is frequent by design, so the same "always running,
+		-- never actually empty" pitch reads right at a brisker pace. Safe range:
+		-- 90-240.
+		MatchSeconds = 180,
+		-- After a made basket, same job as soccer's KickoffPauseSeconds.
+		TipoffPauseSeconds = 2.0,
+		VerdictHoldSeconds = 1.4,
+
+		-- ---------------- the ball ----------------
+		BallRadius = 0.8,
+		CarryAheadStuds = 2.2,
+		CarryHeightStuds = 1.0,
+		RollFriction = 12.0,
+		Gravity = 196.2,
+		RestSpeed = 1.5,
+		-- Livelier than soccer's 0.35 -- a basketball is built to bounce, and a dead
+		-- rebound off the rim would read as a bug on the one sport whose ball is
+		-- famous for bouncing. Safe range: 0.4-0.7.
+		BounceDamping = 0.55,
+
+		-- ---------------- possession ----------------
+		ClaimRadiusStuds = 4.0,
+		ClaimCooldownSeconds = 0.5,
+
+		-- ---------------- shooting: charge-and-release ----------------
+		-- Same primitive as soccer's shot, held against the hoop instead of a
+		-- crossbar. Safe range: 0.5-2.
+		ShotChargeSeconds = 0.9,
+		ShotMinShare = 0.15,
+		OverchargeShare = 0.92,
+		ShotMinPower = 34.0,
+		ShotMaxPower = 78.0,
+		ShotBandCenter = 0.55,
+		ShotBandHalf = 0.18,
+		ShotPerfectBandHalf = 0.06,
+		ShotAccuracyMissStuds = 4.5,
+		-- Steeper arc than a soccer shot's 0.26 -- a shot has to drop through a rim
+		-- from above, not skim under a bar. Safe range: 0.4-0.7.
+		ShotLiftRatio = 0.55,
+		-- Beyond this distance from the hoop's own base, a made shot pays
+		-- ThreePointValue instead of TwoPointValue -- the one scoring rule this sport
+		-- has that soccer does not. Roughly the court's own three-point arc, scaled to
+		-- CourtWidthStuds rather than copied from a real-world 22-23.75ft line, which
+		-- would not fit this court's own 44-stud length.
+		ThreePointRadiusStuds = 16.0,
+		TwoPointValue = 2,
+		ThreePointValue = 3,
+
+		-- ---------------- passing ----------------
+		PassSpeedStudsPerSecond = 54.0,
+		PassConeDegrees = 100,
+		PassMaxRangeStuds = 34,
+
+		-- ---------------- movement ----------------
+		BaseWalkSpeed = 18,
+		MaxAthleticsWalkSpeedBonus = 5,
+
+		-- ---------------- bots ----------------
+		BotSkill = 0.62,
+		-- How close to the hoop a bot carrying the ball will attempt a shot rather
+		-- than keep carrying or look for a pass. Kept inside ThreePointRadiusStuds so
+		-- a bot mostly takes the safer two, the same "play it straight" bias
+		-- SoccerService's own bots hold.
+		BotShootRangeStuds = 14,
+		BotDecisionSeconds = 0.3,
+		-- Same elastic-band shape as soccer's, tightened for a much shorter court --
+		-- see Config.Sports.Soccer.BotLaneOffsetShare's own header for what each
+		-- number means.
+		BotLaneOffsetShare = { -0.5, 0, 0.5 },
+		BotLaneDepthShare = { 0.25, 0.6, 0.6 },
+		BotAdvanceShare = 0.6,
+		BotRetreatShare = 0.65,
+		BotLateralPull = 0.4,
+
+		-- ---------------- PE grading ----------------
+		-- A basket is worth the most for the same reason a goal is; a rebound and a
+		-- steal pay because winning the ball back is the mechanic working even off
+		-- the scoresheet.
+		PeBasketWeight = 1.0,
+		PeAssistWeight = 0.5,
+		PeReboundWeight = 0.3,
+		PeStealWeight = 0.35,
+		PeContributionTarget = 1.4,
+		PeLessonSeconds = 110,
+	},
+
+	-- Volleyball: the third sport, and the first one that is not a possession game.
+	-- Soccer and basketball share one shape -- carry the ball, contest it away from
+	-- somebody, shoot at a target -- because both are literally the same sport at the
+	-- system level once the target changes from a goal to a hoop. Volleyball is not:
+	-- the ball may never be held, there is no tackle or steal, and the whole match is
+	-- a rally of three touches a side (bump, set, spike) ending when it lands or goes
+	-- out. See VolleyballService.luau's header for why this is not SoccerService with
+	-- different verb names, unlike Basketball above which mostly is.
+	Volleyball = {
+		NetKind = Config.World.SportKind.Volleyball,
+		PlaceId = "volleyball_court",
+
+		-- 3 a side matches the note carried over from the design conversation
+		-- (soccer 3v3, basketball 3v3, volleyball 4v4) doubled up: volleyball needs
+		-- one more body per side than the other two because a three-touch rally with
+		-- only three players leaves nobody free to cover the width of a 17-stud net.
+		TeamSize = 4,
+		RosterSize = 8,
+
+		-- court_hall()'s volleyball court is ix0+5..ix1-5 wide; the net itself spans
+		-- cx-8.5..cx+8.5, 17 studs.
+		NetWidthStuds = 17,
+		WatchRadiusStuds = 34,
+		JoinRadiusStuds = 20,
+
+		TickSeconds = 0.1,
+
+		-- A volleyball set is short by design -- "first to a target score" reads
+		-- truer to the sport than a countdown clock, but this game's whole pitch
+		-- pattern is "always running," so it is still a clock: long enough for
+		-- several rallies, short enough that a set actually finishes.
+		-- Safe range: 90-200.
+		MatchSeconds = 150,
+		-- After a point, before the next serve -- same job as soccer's
+		-- KickoffPauseSeconds.
+		ServePauseSeconds = 2.0,
+		VerdictHoldSeconds = 1.4,
+
+		-- ---------------- the ball ----------------
+		BallRadius = 0.7,
+		Gravity = 196.2,
+		-- Volleyball has no carrying and no rolling stop -- the ball is airborne
+		-- between touches or it has landed and the rally is over -- so RollFriction
+		-- and RestSpeed do not apply here the way they do to soccer and basketball's
+		-- ground game. BounceDamping still governs a ball that clips the net cord or
+		-- the floor before the rally is called dead.
+		BounceDamping = 0.4,
+
+		-- ---------------- the rally: bump / set / spike ----------------
+		-- Three touches a side, never more, the sport's own hard rule -- not a tunable.
+		TouchesPerSide = 3,
+		-- How long a player has to make contact once the ball is in range before the
+		-- touch is treated as missed. Short: a rally is read on reaction, not on
+		-- standing under the ball and waiting. Safe range: 0.4-1.0.
+		TouchWindowSeconds = 0.6,
+		-- How close the ball must be to a player to be touchable at all.
+		TouchRadiusStuds = 5.0,
+
+		-- A bump is the free, low-risk touch that keeps the rally alive -- a tap, not
+		-- a charge, on the same "no second meter for every verb" rule Soccer's own
+		-- passing keeps. It always sends the ball up and toward the setter's side of
+		-- the court.
+		BumpSpeedStudsPerSecond = 38.0,
+		BumpLiftRatio = 0.7,
+
+		-- A set is the same free tap, aimed instead at a teammate near the net rather
+		-- than at the setter -- the touch that hands a teammate the spike.
+		SetSpeedStudsPerSecond = 30.0,
+		SetLiftRatio = 0.85,
+		SetConeDegrees = 110,
+		SetMaxRangeStuds = 14,
+
+		-- A spike is the one charge-and-release verb this sport has, the same
+		-- primitive as a soccer shot or a basketball shot, aimed across the net at
+		-- the floor of the far side instead of at a goal. Safe range: 0.5-1.5.
+		SpikeChargeSeconds = 0.7,
+		SpikeMinShare = 0.15,
+		OverchargeShare = 0.92,
+		SpikeMinPower = 40.0,
+		SpikeMaxPower = 88.0,
+		SpikeBandCenter = 0.55,
+		SpikeBandHalf = 0.18,
+		SpikePerfectBandHalf = 0.06,
+		SpikeAccuracyMissStuds = 5.0,
+		-- Flatter than a shot's lift -- a spike is meant to be hit down and hard, not
+		-- lobbed. Safe range: 0.05-0.25.
+		SpikeLiftRatio = 0.12,
+
+		-- ---------------- movement ----------------
+		BaseWalkSpeed = 18,
+		MaxAthleticsWalkSpeedBonus = 5,
+
+		-- ---------------- bots ----------------
+		BotSkill = 0.62,
+		BotDecisionSeconds = 0.3,
+		-- How a bot picks which of its three touches to play: a ball still deep on
+		-- its own side is bumped, one already near the net is set, and a set sitting
+		-- up for it is spiked. Distances as a share of NetWidthStuds so the shape
+		-- scales with the court the same way Soccer's bot lanes scale with pitch
+		-- width.
+		BotSpikeRangeShare = 0.35,
+
+		-- ---------------- PE grading ----------------
+		-- A kill (a spike that scores) is worth the most for the same reason a goal
+		-- or a basket is; keeping the rally alive at all -- any clean touch -- still
+		-- pays, because volleyball's whole mechanic is three players cooperating to
+		-- not let the ball die, and a lesson that only graded kills would teach
+		-- nobody to bump.
+		PeKillWeight = 1.0,
+		PeAssistWeight = 0.5,
+		PeTouchWeight = 0.2,
+		PeContributionTarget = 1.4,
 		PeLessonSeconds = 110,
 	},
 }

@@ -68,6 +68,20 @@ class Place(Room):
 # never draw over each other where they overlap. Safe range: anything from 0.5 to
 # 1.03 works; above 1.03 the seam flickers.
 GROUND = 1.02
+# The least two stacked ground surfaces may differ in height.
+#
+# This is the number the whole ground stack of all three generators is built out
+# of. Two surfaces that lap in plan and finish in the same plane is the one
+# defect the depth buffer cannot arbitrate: neither wins, so the graphics card
+# picks per frame and the ground flickers as the camera moves. Seventy of those
+# had shipped before check_city grew a gate for them (its check 13).
+#
+# It is four times that gate's COPLANAR tolerance on purpose. A stack built to
+# exactly the tolerance passes the gate and still flickers in the engine, so the
+# number the geometry is built to has to be comfortably clear of the number the
+# gate accepts. Safe range: 0.01 .. 0.05. Below 0.01 the flicker comes back at
+# distance; above 0.05 the lip starts to catch the eye at a kerb.
+GROUND_STEP = 0.02
 # Kerb height, and so the height of every sidewalk, forecourt and ground floor.
 # Half a stud is a kerb you can see and step over without the character animating
 # a climb. Safe range 0.3-1.0.
@@ -464,6 +478,45 @@ SCHOOL_X0 = SCH_IN_X0 - WALL          # -363.5 -- 122 studs deep, was 78
 
 SCHOOL_Z0, SCHOOL_Z1 = 94.0, 208.0    # houses "1"/"3"/"5"'s combined frontage
 SCHOOL_DOOR = (SCHOOL_Z0 + SCHOOL_Z1) / 2   # 151.0 -- house "3"'s own door line
+
+# ---------------------------------------------------------------------------
+# The school's playing fields
+# ---------------------------------------------------------------------------
+
+# The track, the courts and the playground stood on the headland east of the
+# stadium until the water went round it. They are moving here, south of the
+# school, and these are the two numbers both generators need to agree about to
+# do it: where the town stops going west, and which band of its frontage is the
+# way through.
+#
+# Why here at all: a school with a field behind it is a place a life passes
+# through twice a day, and the land south of the school is the only empty land
+# touching it. Everything west of the back row's gardens is bare baseplate.
+#
+# Why it costs a house: the gap between the school's south wall and the next
+# plot down is one neighbour's gap -- six studs, the width of an internal door
+# -- and a hundred-and-twenty-stud corridor that narrow is a tunnel, not a way
+# into a park. So back-row house "7" goes, the way houses "1", "3" and "5" went
+# for the school itself, and its own frontage becomes the entrance. That also
+# answers the owner's "get rid of a street of houses as theres too much anyway"
+# by one plot in the direction it was asked for.
+#
+# Both are transcriptions with a gate on them, the same arrangement
+# MAP_SOUTH_EDGE has and for the same reason: the numbers they name are
+# gen_town.py's (HOUSE_DEPTH, NEIGHBOUR_GAP, BACK_HOUSE_X0, BACK_GARDEN) and
+# gen_town.py imports this file rather than the other way round. gen_town
+# asserts both against what it actually builds; gen_city, which cannot see
+# gen_town at all, lays the fields against them.
+TOWN_WEST_EDGE = -296.1
+FIELDS_WAY_Z0, FIELDS_WAY_Z1 = 54.0, 88.0
+# How much of that plot is actually paved. The way is set back one neighbour's
+# gap from each side, so it reads as a gap between two houses that has been
+# given a surface rather than as a plot with a road across it. gen_city.py runs
+# the fields' own spine path at this same width, which is the point of stating
+# it here: the two halves of one path are drawn in two files and meet on
+# TOWN_WEST_EDGE.
+FIELDS_WAY_PAVE = 22.0
+FIELDS_WAY_MID = (FIELDS_WAY_Z0 + FIELDS_WAY_Z1) / 2
 
 WORK_X0, WORK_X1 = -142.0, FRONT_X
 WORK_Z0, WORK_Z1 = -74.0, -22.0

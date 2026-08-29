@@ -115,6 +115,8 @@ local function push(player: Player, life: LifeData)
 	SKILLS_UPDATED:FireClient(player, {
 		skills = stateFor(life),
 		soccerCareer = life.soccerCareer,
+		basketballCareer = life.basketballCareer,
+		volleyballCareer = life.volleyballCareer,
 	} :: Types.SkillsState)
 end
 

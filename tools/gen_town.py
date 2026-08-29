@@ -58,7 +58,7 @@ from world_plan import (
     DOORWAY, DOOR_LINE, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1, FLOOR_2, STOREY,
     FORECOURT_X0,
     FRONT_X, GARAGE_DOOR, GARAGE_X0, GARAGE_X1, GARAGE_Z0, GARAGE_Z1,
-    GATE_CLEAR, GROUND, GYM_DOOR, GYM_X0, GYM_X1, GYM_Z0, GYM_Z1,
+    GATE_CLEAR, GROUND, GROUND_STEP, GYM_DOOR, GYM_X0, GYM_X1, GYM_Z0, GYM_Z1,
     HALL_DOOR, HALL_X0, HALL_X1, HALL_Z0, HALL_Z1,
     BUILDING_DEPTH, LIB_FRONT, LIB_DOOR, LIB_X0, LIB_X1, LIB_Z0, LIB_Z1,
     NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
@@ -67,6 +67,7 @@ from world_plan import (
     NORTHGATE_CLEAR, NORTHGATE_MID, NORTHGATE_WALK, NORTHGATE_Z0, NORTHGATE_Z1,
     RETURN_MID, RETURN_X0, RETURN_X1,
     ROAD_MID, ROAD_X0, ROAD_X1, SCHOOL_DOOR, SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
+    FIELDS_WAY_Z0, FIELDS_WAY_Z1, FIELDS_WAY_MID, FIELDS_WAY_PAVE, TOWN_WEST_EDGE,
     SIDEWALK, SLAB, SOUTHGATE_CLEAR, STORE_FRONT,
     STREET_Z0, STREET_Z1, TRUNK_WIDTH, WEST_FRONTAGE, WEST_GAP,
     WALL,
@@ -471,18 +472,43 @@ assert 12 <= len(BACK_ROW) <= 18, (
 
 # The school (world_plan.py, SCHOOL_X0 above) was sited directly on top of
 # houses "1", "3" and "5" -- the owner's "or remove houses to compensate",
-# already spent rather than re-asked for. Filtered here rather than left out
-# of the generation loop above so the loop's own numbering (odd, north to
-# south) stays the one true count and this is legibly a subtraction from it,
-# not a second row with its own start point to keep in step by hand.
+# already spent rather than re-asked for. House "7", one plot further south, is
+# gone for the school's playing fields: see FIELDS_WAY_Z0 in world_plan.py for
+# why a park behind the school needs a whole plot's frontage to get into rather
+# than the six-stud gap between two buildings.
+#
+# Filtered here rather than left out of the generation loop above so the loop's
+# own numbering (odd, north to south) stays the one true count and this is
+# legibly a subtraction from it, not a second row with its own start point to
+# keep in step by hand.
 BACK_ROW = [house for house in BACK_ROW
-            if not (house[0] >= SCHOOL_Z0 and house[1] <= SCHOOL_Z1)]
-assert len(BACK_ROW) == 12, (
+            if not (house[0] >= SCHOOL_Z0 and house[1] <= SCHOOL_Z1)
+            and not (house[0] >= FIELDS_WAY_Z0 and house[1] <= FIELDS_WAY_Z1)]
+assert len(BACK_ROW) == 11, (
     f"filtering the back row against the school's frontage (z {SCHOOL_Z0}.."
-    f"{SCHOOL_Z1}) left {len(BACK_ROW)} houses, not 12. The school was sited "
-    f"to land exactly on houses \"1\", \"3\" and \"5\" and nothing else -- if "
+    f"{SCHOOL_Z1}) and the fields way (z {FIELDS_WAY_Z0}..{FIELDS_WAY_Z1}) left "
+    f"{len(BACK_ROW)} houses, not 11. The school was sited to land exactly on "
+    f"houses \"1\", \"3\" and \"5\" and the way on \"7\", and nothing else -- if "
     f"the school's footprint or the row's pitch has changed, this filter is "
     f"now cutting the wrong houses.")
+# The way's band *is* a plot of this row, not a band that happens to fall near
+# one. world_plan.py has to state it as a literal (it cannot see HOUSE_DEPTH or
+# NEIGHBOUR_GAP), so this is the gate on that transcription: if the row's pitch
+# moves, the way stops lining up with a frontage and this fires rather than the
+# park quietly acquiring a corner of somebody's garden.
+assert (FIELDS_WAY_Z1 == SCHOOL_Z0 - NEIGHBOUR_GAP
+        and FIELDS_WAY_Z1 - FIELDS_WAY_Z0 == HOUSE_DEPTH), (
+    f"the fields way is set to z {FIELDS_WAY_Z0}..{FIELDS_WAY_Z1} and house "
+    f"\"7\"'s plot is z {SCHOOL_Z0 - NEIGHBOUR_GAP - HOUSE_DEPTH}.."
+    f"{SCHOOL_Z0 - NEIGHBOUR_GAP}. The way is meant to be exactly that plot. "
+    f"Fix FIELDS_WAY_Z0/Z1 in world_plan.py.")
+# And the same gate on the other transcription: gen_city lays the fields' east
+# edge on TOWN_WEST_EDGE and has no way to see this row's back gardens.
+assert WEST_EDGE == TOWN_WEST_EDGE, (
+    f"the town's west edge is {WEST_EDGE} and world_plan.py tells gen_city.py "
+    f"it is {TOWN_WEST_EDGE}. The playing fields are laid against that number "
+    f"from a file that cannot see this one, so the two grounds now either lap "
+    f"or leave a gap. Fix TOWN_WEST_EDGE.")
 
 # ---------------------------------------------------------------------------
 # The parade at the tip end
@@ -1212,6 +1238,20 @@ PLACE_POINTS.append(
      "the back street, outside the school"))
 _check_joins("wp_school_walk", _back_walk + _back,
              "the back street's sidewalk outside the school")
+
+# The way west into the playing fields, on the plot house "7" gave up. Two
+# points, because the run is 61 studs and one point at either end of it is what
+# joins the back street to a park in a different asset: the east one is checked
+# against the back street here, and the west one is the far end gen_city.py
+# picks the chain up from at TOWN_WEST_EDGE. Same split as the alleys above --
+# what this file can see, it checks; the cross-asset half is check_city's.
+PLACE_POINTS.extend(
+    (f"wp_fields_way_{_i}", _x, FIELDS_WAY_MID, PAVING,
+     "the way into the playing fields")
+    for _i, _x in enumerate((BACK_WALK_X0 - 8.0, WEST_EDGE + 6.0)))
+_check_chain(["wp_fields_way_0", "wp_fields_way_1"], 0, "the way into the fields")
+_check_joins("wp_fields_way_0", _back_walk + _back,
+             "the east end of the way into the playing fields")
 
 # ---------------------------------------------------------------------------
 # Palette
@@ -2070,6 +2110,21 @@ with group("Sidewalks"):
             (ALLEY_X0, ALLEY_X1, _az0, _az1,
              GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
 
+    # The way into the school's playing fields, on the plot house "7" gave up
+    # for it. It runs from the back street's own pavement to the town's west
+    # edge and gen_city.py carries it on from there -- the fields are in
+    # City.rbxmx, which this file cannot see, so the two halves meet on
+    # TOWN_WEST_EDGE and nowhere else.
+    #
+    # Set back one neighbour's gap from each side of the plot rather than paved
+    # kerb to kerb, so the way reads as a gap between two houses that has been
+    # given a surface, which is what it is. That also leaves the strip either
+    # side as grass for the trees below.
+    box("FieldsWay", (WEST_EDGE, BACK_WALK_X0,
+                      FIELDS_WAY_MID - FIELDS_WAY_PAVE / 2,
+                      FIELDS_WAY_MID + FIELDS_WAY_PAVE / 2,
+                      GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+
     box("TopKerbN", (BACK_WALK_X0, NEAR_WALK_X1, NORTHGATE_Z1, NORTHGATE_Z1 + KERB_WIDTH,
                      GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
     box("TopPavingN", (BACK_WALK_X0, NEAR_WALK_X1, NORTHGATE_Z1 + KERB_WIDTH,
@@ -2298,7 +2353,13 @@ with group("Garage"):
 # a door on the west face with a step onto the alley paving, and place points
 # at each entrance.
 APT_DEPTH = 20.0
-APT_X0 = RETURN_X1 + SIDEWALK + 5.0                    # -186.5, front wall set back from road edge
+# Bare ground between the return road's pavement and the front wall. The front
+# path is laid across this and stops at APT_SETBACK_X0: the pavement east of
+# that line is ReturnPaving's, and a second slab finishing at the same PAVING
+# height would flicker against it the length of every doorway.
+APT_SETBACK = 5.0
+APT_SETBACK_X0 = RETURN_X1 + SIDEWALK                  # -191.5, outer pavement edge
+APT_X0 = APT_SETBACK_X0 + APT_SETBACK                  # -186.5, front wall set back from road edge
 APT_X1 = APT_X0 + APT_DEPTH                 # -166.5, back wall (adjusted after moving front wall)
 
 # Z spans match the three service buildings exactly.
@@ -2337,7 +2398,7 @@ def apt_shell(name, x0, x1, z0, z1, door_z, wall_color, abandoned=False):
     with group(name):
         with group(f"{name}Structure"):
             # Foundation: slab with a slight depression for pooling water.
-            box("Path", (x0 - WALL - SIDEWALK, x0 - WALL, door_z - 2.2, door_z + 2.2, PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
+            box("Path", (APT_SETBACK_X0, x0 - WALL, door_z - 2.2, door_z + 2.2, PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
             box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
             # Floor line between storeys.
             box("MidSlab", (ix0, ix1, iz0, iz1, FLOOR_2 - SLAB, FLOOR_2), FLOOR_INDOOR, MARBLE)
@@ -3059,8 +3120,9 @@ with group("Park"):
     # A pond with a stone rim, two crossing paths, benches and a picnic table,
     # and trees ringing the edges. Open on purpose: nothing here is fenced, so
     # the player can cut across the grass to the road whenever they want.
+    # A step under the lawn, not level with it -- see the south park's pond.
     box("Pond", (PARK_X0 + 6.0, PARK_X0 + 22.0, PARK_Z0 + 6.0, PARK_Z0 + 18.0,
-                 GROUND - 0.6, GROUND), (92, 128, 152), SMOOTH)
+                 GROUND - 0.6, GROUND - GROUND_STEP), (92, 128, 152), SMOOTH)
     box("PondRim", (PARK_X0 + 5.2, PARK_X0 + 22.8, PARK_Z0 + 5.2, PARK_Z0 + 18.8,
                     GROUND, GROUND + 0.3), (150, 150, 150), CONCRETE, collide=False)
     box("PathA", (PARK_X0 + 18.0, PARK_X1 - 8.0, PARK_Z0 + 12.0, PARK_Z0 + 17.0,
@@ -3107,8 +3169,11 @@ _FOUNT_Z = PARK2_Z0 + 46.0                   # south of the gazebo
 
 with group("SouthPark"):
     # --- Pond ---
+    # Water finishes a step under the lawn it is sunk into, not level with it:
+    # the grass runs on beneath the pond and two surfaces in the same plane is
+    # the one thing the depth buffer cannot settle.
     box("Pond", (PARK2_X0 + 6.0, PARK2_X0 + 22.0, PARK2_Z0 + 6.0, PARK2_Z0 + 18.0,
-                 GROUND - 0.6, GROUND), (92, 128, 152), SMOOTH)
+                 GROUND - 0.6, GROUND - GROUND_STEP), (92, 128, 152), SMOOTH)
     box("PondRim", (PARK2_X0 + 5.2, PARK2_X0 + 22.8, PARK2_Z0 + 5.2, PARK2_Z0 + 18.8,
                     GROUND, GROUND + 0.3), (150, 150, 150), CONCRETE, collide=False)
 
@@ -3118,25 +3183,38 @@ with group("SouthPark"):
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
     box("PathRingS", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, PARK2_Z1 - 17.0, PARK2_Z1 - 12.0,
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    box("PathRingW", (PARK2_X0 + 12.0, PARK2_X0 + 17.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
+    # Cross path east-west through the middle, and the centre line running south
+    # off it to the fountain. Named before the ring legs because the legs are
+    # carved at them: the two of them together occupy one continuous band of z
+    # that the north-south legs would otherwise pave a second time.
+    _CROSS_Z0, _CROSS_Z1 = PARK2_Z0 + 24.0, PARK2_Z0 + 36.0
+    _CENTRE_Z0, _CENTRE_Z1 = _GAZE_Z + _GAZE_R + 1.0, _FOUNT_Z - _GAZE_R - 1.0
+    box("PathCross", (PARK2_X0 + 8.0, PARK2_X1 - 8.0, _CROSS_Z0, _CROSS_Z1,
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    box("PathRingE", (PARK2_X1 - 17.0, PARK2_X1 - 12.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
-                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    # Centre line from gazebo to fountain
-    box("PathCentre", (PARK2_X0 + 14.0, PARK2_X1 - 14.0,
-                       _GAZE_Z + _GAZE_R + 1.0, _FOUNT_Z - _GAZE_R - 1.0,
+    box("PathCentre", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, _CENTRE_Z0, _CENTRE_Z1,
                        GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    # Cross path east-west through the middle
-    box("PathCross", (PARK2_X0 + 8.0, PARK2_X1 - 8.0,
-                      PARK2_Z0 + 24.0, PARK2_Z0 + 36.0,
-                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    assert _CENTRE_Z0 == _CROSS_Z1, (
+        f"the centre path starts at z {_CENTRE_Z0} and the cross path ends at "
+        f"{_CROSS_Z1}. They must meet exactly, or the ring legs' single carve "
+        f"band leaves either a gap in the paving or a second overlap.")
+    # The two north-south legs, each carved where that band crosses them. A leg
+    # laid whole would finish in the same plane as the paths it runs through,
+    # which flickers; the crossing paving belongs to the path that is wider there.
+    for _leg, _lx0, _lx1 in (("PathRingW", PARK2_X0 + 12.0, PARK2_X0 + 17.0),
+                             ("PathRingE", PARK2_X1 - 17.0, PARK2_X1 - 12.0)):
+        for _lz0, _lz1 in ((PARK2_Z0 + 17.0, _CROSS_Z0), (_CENTRE_Z1, PARK2_Z1 - 17.0)):
+            box(f"{_leg}{_lz0:.0f}", (_lx0, _lx1, _lz0, _lz1,
+                                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
 
     # --- Gazebo ---
     with group("Gazebo"):
-        # Octagonal floor
+        # Octagonal floor. It tops one step proud of the path it stands on rather
+        # than flush with it -- the cross path runs under this deck, and level is
+        # the one relationship two stacked surfaces may not have.
+        _GAZE_TOP = GROUND + 0.5 + GROUND_STEP
         box("Floor", (_GAZE_X - _GAZE_R, _GAZE_X + _GAZE_R,
                       _GAZE_Z - _GAZE_R, _GAZE_Z + _GAZE_R,
-                      GROUND + 0.15, GROUND + 0.5), PATH_STONE, CONCRETE)
+                      GROUND + 0.15, _GAZE_TOP), PATH_STONE, CONCRETE)
         # Six pillars around the perimeter
         _pillar_angles = (0, 60, 120, 180, 240, 300)
         for _a in _pillar_angles:
@@ -3158,7 +3236,7 @@ with group("SouthPark"):
         # Floor detail: painted circles under the gazebo
         box("FloorPaint", (_GAZE_X - 5.0, _GAZE_X + 5.0,
                            _GAZE_Z - 5.0, _GAZE_Z + 5.0,
-                           GROUND + 0.5, GROUND + 0.55), (160, 140, 110), CONCRETE, collide=False)
+                           _GAZE_TOP, _GAZE_TOP + 0.05), (160, 140, 110), CONCRETE, collide=False)
 
     # --- Tiered fountain ---
     with group("Fountain"):
@@ -3166,10 +3244,14 @@ with group("SouthPark"):
         box("BasinBase", (_FOUNT_X - 4.5, _FOUNT_X + 4.5,
                           _FOUNT_Z - 4.5, _FOUNT_Z + 4.5,
                           GROUND + 0.3, GROUND + 1.0), STEEL, METAL)
-        # Water in basin
+        # Water in basin, filled to just under the rim rather than to it. The
+        # basin is a solid block, so water level with its top is two surfaces in
+        # one plane; a step of shadow under the rim is also how a full basin
+        # actually reads.
         box("BasinWater", (_FOUNT_X - 4.0, _FOUNT_X + 4.0,
                            _FOUNT_Z - 4.0, _FOUNT_Z + 4.0,
-                           GROUND + 0.85, GROUND + 1.0), (92, 128, 152), SMOOTH, collide=False)
+                           GROUND + 0.85, GROUND + 1.0 - GROUND_STEP),
+            (92, 128, 152), SMOOTH, collide=False)
         # Middle column
         box("Column", (_FOUNT_X - 1.2, _FOUNT_X + 1.2,
                        _FOUNT_Z - 1.2, _FOUNT_Z + 1.2,

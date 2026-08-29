@@ -18,8 +18,8 @@ second copy of the suburb but with a working city --
   * a restaurant row with a dining terrace;
   * twenty storefronts lining the main street;
   * thirteen civic buildings (cinema to farm) across the north end;
-  * a sports park with a soccer pitch, basketball, tennis, playground and
-    running track;
+  * a stadium on the headland, and the school's playing fields -- basketball,
+    tennis, playground and running track -- on the open land west of the town;
   * two greenfield blocks left as empty, tree-lined terrain.
 
 **The swap contract.** The same as the town, because the city is the town's
@@ -47,13 +47,13 @@ import zlib
 import rbxmx
 from rbxmx import (
     ASPHALT, BRICK, CONCRETE, CORRODED_METAL, DIAMOND_PLATE, FABRIC, GLASS,
-    GRASS, LEAFY_GRASS, MARBLE, METAL, NEON, PAVEMENT, PEBBLE, PLASTIC,
-    PLANKS, SLATE, SMOOTH, WOOD,
+    GRANITE, GRASS, LEAFY_GRASS, LIMESTONE, MARBLE, METAL, NEON, PAVEMENT,
+    PEBBLE, PLASTIC, PLANKS, SLATE, SMOOTH, WOOD,
 )
 from rbxmx import at, box, group, part, point_light, sign, spot_light
 
 from world_plan import (
-    CEIL_1, CEIL_2, DOORWAY, FLOOR_1, FLOOR_2, GROUND, KERB, PAVING,
+    CEIL_1, CEIL_2, DOORWAY, FLOOR_1, FLOOR_2, GROUND, GROUND_STEP, KERB, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, SLAB, STOREY,
     TRUNK_WIDTH, WALL,
     # The town's own street, so the gate road can tee off it by name instead of
@@ -76,6 +76,14 @@ from world_plan import (
     # Half the baseplate. The city's east edge and the west estate's west edge
     # are both this, and neither of them is a typed 1024 any more.
     MAP_EDGE,
+    # The school's playing fields, laid on the empty land west of the town. The
+    # town owns the school and the way in; this file owns the fields themselves,
+    # because the court, track and playground builders live here and a second
+    # copy of them in gen_town.py would be two hundred lines of the same asphalt.
+    # Four numbers cross the seam: the town's west edge and the south face of
+    # the school, which are where the fields stop, and the middle and width of
+    # the paved way house "7" gave up, which is where the path meets them.
+    SCHOOL_Z0, STREET_Z0, TOWN_WEST_EDGE, FIELDS_WAY_MID, FIELDS_WAY_PAVE,
 )
 
 from house_plan import _ASSETS
@@ -102,17 +110,35 @@ DOOR_HEIGHT = 9.0
 # point count grows for no routing benefit, above 68 there is no margin left
 # and the next small edit anywhere breaks a chain nobody is looking at.
 ROUTE_STEP = 68
-# The city's own grass sits two hundredths under the town's ground so that
-# roads laid on top (top GROUND) never share a plane with the grass underneath
-# them and z-fight. The seam where the city meets the town is a hairline.
-CITY_GRASS_TOP = GROUND - 0.02
-# The same hairline, the other way up, for the one road this file draws over
-# ground the *town* generator laid. The town's lawns top at GROUND exactly, so a
-# city road at GROUND is coplanar with them; this puts it a fiftieth clear. Too
-# small to be a step a player can feel, big enough that the depth buffer has an
-# opinion. Safe range: 0.01 .. 0.05 -- below 0.01 the flicker comes back at
-# distance, above 0.05 the lip starts to catch the eye at a kerb.
-GRASS_LIFT = 0.02
+# How far the city's own grass sits under the town's ground plane.
+#
+# Not one step but three, and the extra two are a budget rather than padding:
+# the lowest paved thing in the city is the Circle's ring, which sinks once to
+# let the spoke roads win its four mouths and again to settle its own facet
+# seams. Both sinks eat into the gap between road and lawn, and when this was a
+# bare GROUND - 0.02 they ate all of it -- sixteen facets of ring finished
+# within a rounding error of the grass under them. The assertion next to
+# CIRCLE_SEAM is what holds the budget; this is the budget.
+CITY_GRASS_SINK = GROUND_STEP * 3
+CITY_GRASS_TOP = GROUND - CITY_GRASS_SINK
+# The same hairline, the other way up, for a lawn this file draws over ground
+# some other generator laid, or over its own CityGround. Both of those top at a
+# known plane and a second lawn at the same height is the same flicker.
+GRASS_LIFT = GROUND_STEP
+# A floor laid on a floor.
+#
+# The usual building here stands on bare ground and pours a full SLAB, topping
+# at FLOOR_1. That is right until the block it stands on is paved -- the mall's
+# shop units on the mall's own screed, the bank and the civic blocks on the
+# government quarter's setts -- and then the slab finishes in the paving's plane
+# and the two fight over every pixel of the floor. Those floors are drawn as a
+# thin inlay one step proud of what they sit on instead, which is also what they
+# are: a unit's floor finish over the concourse it was fitted into.
+#
+# Three steps rather than one so the part is thicker than Roblox's 0.05 minimum
+# with room to spare; a 0.02 slab is legal to write and gets rounded to
+# something else on load.
+FLOOR_INLAY = GROUND_STEP * 3
 
 # ---------------------------------------------------------------------------
 # The plan
@@ -318,10 +344,14 @@ PRECINCT_AVE_X1 = AVE[5] + AVE_W[5]
 # pavement starts here.
 PRECINCT_INNER_X1 = PRECINCT_AVE_X0 - AVE_WALK
 # The service road along the top of the precinct. Its south pavement lands at
-# 1117.2, which clears the north strip's back wall at 1116 by 1.2 studs -- the
-# strip is not moved and its buildings are not resized.
+# 1120, which clears the government quarter's back wall at 1116 by four studs --
+# the quarter is not moved and its buildings are not resized.
 NORTH_ROAD_Z0 = 1124.0
 NORTH_ROAD_Z1 = NORTH_ROAD_Z0 + WCS_W
+# Road plus both pavements, in the form `carve` wants. The same thing CS_FULL is
+# for the numbered cross streets: anything running north-south past this road
+# has to yield the corner squares to it.
+NORTH_SVC_FULL = [(NORTH_ROAD_Z0 - CS_WALK, NORTH_ROAD_Z1 + CS_WALK)]
 
 # ---------------------------------------------------------------------------
 # The works
@@ -379,6 +409,7 @@ WORKS_AVE = (0, 3, 5)
 # built hard against z=60 and inserting a row in front of it had to be one
 # number, not forty.
 SOUTH_ROW_DEPTH = [136.0, 154.0, 110.0]
+
 # What a cross street costs the map, kerb to kerb with both pavements.
 CS_PITCH = WCS_W + 2 * CS_WALK
 
@@ -424,10 +455,10 @@ STEP_ROW_Z = SOUTH_ROW_Z[2]     # the step-down band
 def ave_z0(k):
     """How far south avenue `k` runs.
 
-    All six carry into the step-down band -- it is city rather than works, and
-    it is laid out in the financial district's five bands because of it, so the
-    offices in it line up with the towers above them. Three of the six -- 1, 4
-    and 6 -- carry on past it into the works and stop at its south street.
+    All six carry into the step-down band below the city -- it is city rather
+    than works, and is laid out in the financial district's bands because of it,
+    so the offices in it line up with the towers above them. Three of them --
+    1, 4 and 6 -- carry on past it into the works and stop at its south street.
 
     Everything that draws an avenue (the carriageway, the pavements, the centre
     line, the waypoint chain and surface_floor) and everything that asks which
@@ -440,6 +471,65 @@ def cs_aves(c):
     """The avenues that cross south street `c`: an avenue crosses it if it runs
     at least that far south."""
     return [k for k in range(len(AVE)) if ave_z0(k) <= c]
+
+
+# ---------------------------------------------------------------------------
+# The arena superblock
+# ---------------------------------------------------------------------------
+#
+# Two grid blocks taken as one piece of ground, and the local avenue between
+# them stopped at each end instead of run through it.
+#
+# The arena is 184 studs across. A band between two avenues is 114, so it does
+# not fit in a block, and there is nowhere else on the map to put it: the city
+# is boxed in on all four sides -- the bay east, the connector and the estate
+# west, the civic precinct above the grid, the works below it. Extending the map
+# south was tried and abandoned; it moved MAP_SOUTH_EDGE, which the town's own
+# south house row is laid against, and cost three hundred studs of bare new land
+# to gain one building. The land had to come out of the grid instead.
+#
+# **Which two blocks, and what they cost.** Bands 4 and 5 of the southern row --
+# ROLES[0][3] and ROLES[0][4] -- were both FADE, mid-rise offices on the ramp
+# down off the financial district's 195-stud towers. Nothing load-bearing is
+# lost: no house (the ten HOUSE blocks are the sixty addresses check_city
+# counts), no apartment, no CIRCUS quadrant, no block any waypoint is hard-coded
+# into. And the site fronts cross street 1 with the financial district directly
+# across it, so the arena stands at the top of downtown rather than out in the
+# suburbs. It is still a ramp: the drum tops out around eighty studs, between
+# the towers behind it and the fade band beside it.
+#
+# **Why the avenue and not a cross street.** Avenue 5 is the sixteen-stud local
+# (see AVE_W) and it is the only road inside the site. The cross street here is
+# cross street 2, which is the Circle's spine -- cutting it would leave the ring
+# a 46-stud stub for an east arm, teeing into avenue 4 barely clear of the
+# promenade. The avenue is *interrupted*, not shortened: it still runs south of
+# cross street 1 through the financial district and north of cross street 2
+# through the rest of the grid, so both ends of the gap are ordinary
+# T-junctions whose intersection tiles are already drawn.
+ARENA_BAND = 3            # west band of the pair; the east band is ARENA_BAND + 1
+ARENA_SBAND = 0
+ARENA_AVE = ARENA_BAND + 1        # the avenue the superblock swallows: avenue 5
+
+
+def ave_gaps(k):
+    """The z bands avenue `k` is not drawn over.
+
+    Kerb to kerb of the two cross streets that bound the superblock, so the
+    avenue stops on a junction at each end rather than in the middle of a block.
+    Read by the carve lists that draw the carriageway, the pavements and the
+    centre line, and by `on_avenue` for everything that instead asks whether a
+    point is standing on the road -- surface_floor and the waypoint chain."""
+    if k != ARENA_AVE:
+        return []
+    return [(CS[ARENA_SBAND] + CS_W[ARENA_SBAND], CS[ARENA_SBAND + 1])]
+
+
+def on_avenue(k, z):
+    """Whether avenue `k` is really drawn at this z. `ave_z0(k)..AVE_Z1` less
+    whatever `ave_gaps` takes out of the middle."""
+    if not (ave_z0(k) < z < AVE_Z1):
+        return False
+    return not any(g0 <= z <= g1 for g0, g1 in ave_gaps(k))
 
 
 # Gaps used to carve roads and sidewalks out of each other at crossings. A road
@@ -699,8 +789,13 @@ GREEN_X1 = AVE[0] - AVE_WALK
 # whether or not anything lands in them -- they opened onto bare grass before
 # the Backs existed and they open onto the green now, which is the first time
 # they have looked deliberate.
-GREEN_Z0 = SOUTH_CS[2]
-GREEN_Z1 = SOUTH_CS[3] + WCS_W
+# Counted from the end and not the start. These are "the last two south streets"
+# -- the pair that brackets the row nearest the city -- and saying so from the
+# north end means inserting a row further south leaves them alone. Written as
+# [2] and [3] they were a fixed distance from the *bottom* of the map, and the
+# green followed the works south the first time a row was added in front of it.
+GREEN_Z0 = SOUTH_CS[-2]
+GREEN_Z1 = SOUTH_CS[-1] + WCS_W
 # The footpath leaves by the back gate, so its line is the gate's line. Same
 # half-width as the front path: one house, two paths, one width.
 GREEN_PATH_Z = BACK_GATE_MID
@@ -826,14 +921,26 @@ CIRCLE_SPOKE_EVERY = CIRCLE_SEGS // 4
 # to cover its full sector at the *outer* radius, so neighbours lap each other by
 # a couple of studs at the inner edge. Overlapping volume is harmless and normal
 # here; two overlapping tops in the same plane is not, because neither can win
-# the pixel and the road flickers. Alternate facets therefore finish a hundredth
-# of a stud lower. That is a step no player can feel and a difference the depth
-# buffer can decide on. Safe range: 0.005 .. 0.03.
-CIRCLE_SEAM = 0.01
-# ...and the whole ring sits a hundredth under GROUND for the same reason at the
-# four mouths, where the spoke roads run over it. The spoke wins, which is right:
-# a junction should look like the straight road continuing into the circle.
-CIRCLE_SINK = 0.005
+# the pixel and the road flickers. Alternate facets therefore finish one step
+# lower. That is a step no player can feel and a difference the depth buffer can
+# decide on.
+CIRCLE_SEAM = GROUND_STEP
+# ...and the whole ring sits a step under GROUND for the same reason at the four
+# mouths, where the spoke roads run over it. The spoke wins, which is right: a
+# junction should look like the straight road continuing into the circle.
+CIRCLE_SINK = GROUND_STEP
+
+# Both sinks are subtracted from the same gap -- the one between the road plane
+# and the grass under it -- so the ring's low facets are the deepest paved thing
+# in the city and the only place that gap can run out. It did: at CIRCLE_SINK
+# 0.005 and CIRCLE_SEAM 0.01 over a lawn a bare 0.02 down, sixteen facets
+# finished five thousandths above the grass and the whole ring flickered. The
+# lawn was lowered to make room rather than the sinks shaved, because the sinks
+# are each doing a visible job and the depth of the grass under a road is not.
+assert GROUND - CIRCLE_SINK - CIRCLE_SEAM >= CITY_GRASS_TOP + GROUND_STEP, (
+    f"the Circle's low facets top at {GROUND - CIRCLE_SINK - CIRCLE_SEAM:.3f}, "
+    f"which is not a clear {GROUND_STEP} over the lawn at {CITY_GRASS_TOP:.3f}. "
+    f"Raise CITY_GRASS_SINK or lower CIRCLE_SINK/CIRCLE_SEAM.")
 
 # What the spokes are carved back to. The roads stop at the carriageway's outer
 # radius and the pavements at the ring pavement's, so each spoke tees into the
@@ -869,6 +976,8 @@ CIRCLE_X_WALK = [(CIRCLE_X - CIRCLE_R_WALK, CIRCLE_X + CIRCLE_R_WALK)]
 # water goes around it. What that produces on the map is a headland with a bay
 # to its south and another to its north, which is a better coastline than any
 # straight edge would have been and cost nothing but honouring what was there.
+# (The courts and the track have since gone to the school; what is left out
+# there is the stadium, which is the reason the headland still has to be land.)
 #
 # The waterline in the two straight bands and at the headland. Named rather than
 # repeated, because the marina and the works wharf are both built off "the shore
@@ -877,6 +986,21 @@ CIRCLE_X_WALK = [(CIRCLE_X - CIRCLE_R_WALK, CIRCLE_X + CIRCLE_R_WALK)]
 # and one was.
 SHORE_X_BAY = 845.0
 SHORE_X_HEADLAND = 995.0
+
+# How far the headland runs. It used to reach z 940, because it had to carry the
+# stadium *and* the sports park; with the park gone to the school there was a
+# 228-stud stretch of empty coastal grass north of the stadium that existed only
+# because something used to be on it. It is water now, and what that buys is the
+# thing the stadium was always worth having: the bowl stands on a peninsula with
+# the bay on three sides of it, reachable across the neck at x < SHORE_X_BAY.
+#
+# The stadium is fitted to these two, not the other way round -- see the assert
+# beside STAD_NORTH_OUT, which is what stops a later nudge to the bowl from
+# quietly putting a stand in the sea.
+HEADLAND_Z0, HEADLAND_Z1 = 400.0, 712.0
+# What a piece of headland has to keep clear of the waterline at either end: the
+# width of the crossing waypoints' band plus room to stand behind them.
+HEADLAND_CLEAR = 8.0
 
 # (z0, z1, x of the waterline, what the land does when it meets the water).
 # Land runs from CITY_X0 to that x.
@@ -891,9 +1015,9 @@ SHORE_X_HEADLAND = 995.0
 # onto the sand, which is what a real seafront does there too.
 SHORE = [
     (WORKS_Z0, WORKS_Z1, SHORE_X_BAY, "quay"),
-    (WORKS_Z1, 400.0, SHORE_X_BAY, "beach"),
-    (400.0, 940.0, SHORE_X_HEADLAND, "beach"),
-    (940.0, CITY_Z1, SHORE_X_BAY, "beach"),
+    (WORKS_Z1, HEADLAND_Z0, SHORE_X_BAY, "beach"),
+    (HEADLAND_Z0, HEADLAND_Z1, SHORE_X_HEADLAND, "beach"),
+    (HEADLAND_Z1, CITY_Z1, SHORE_X_BAY, "beach"),
 ]
 # How far inland the sand runs, and how wide the paved walk behind it is.
 #
@@ -922,6 +1046,14 @@ REVETMENT_W = 14.0
 # See the note on BEACH_W: this is that number's other half, and moving either
 # one without the other opens the join.
 WHARF_W = BEACH_W + BAYWALK_W
+# The quay's coping: how far its face reaches back behind the shoreline and how
+# far it stands out into the water. The apron stops at the inner edge rather than
+# running under it, because both finish at PAVING and a slab lapping the coping
+# by a stud and a half is the whole length of the wharf flickering. The last
+# stud and a half of the quay is the coping's own top, which is what it is on a
+# real one.
+QUAY_FACE_IN = 1.4
+QUAY_FACE_OUT = 1.6
 
 # The tag the game reads to find an interactive sports piece. Decorative --
 # nothing in the Luau runtime reads it yet, but the rules that will (referee
@@ -1014,12 +1146,47 @@ PALM_TRUNK = (166, 142, 112)
 PALM_FROND = (94, 168, 96)
 PALM_FROND_2 = (118, 186, 108)
 
-# Deco neon. Used as thin bands on parapets and under signs, never as a wall:
-# neon is a line in this palette, and a neon surface is a mistake.
-NEON_PINK = (255, 108, 176)
-NEON_CYAN = (96, 236, 244)
-NEON_LIME = (176, 244, 120)
+# Shop neon. A thin band under a sign or along an awning, never a wall: neon is
+# a line in this palette and a neon surface is a mistake. Pink, cyan and lime
+# stood here beside it and went unused once downtown took its own two colours --
+# a palette entry nothing draws is the same orphan as a function nothing calls.
 NEON_AMBER = (255, 186, 88)
+
+# Downtown's two, and they are deliberately not the four above.
+#
+# Those four are shop neon: they sit at eye level, on an awning or under a sign,
+# where a saturated line is legible and the thing next to it is a doorway.
+#
+# **Height decides the colour, not the building.** These two were taken right
+# down to (96, 44, 74) and (44, 58, 104) to stop the skyline reading as a
+# fairground -- which fixed the roofs and ruined the streets, because a deep
+# rose at street level is not a highlight, it is a dark stripe. The rule that
+# actually holds is the one below: colour lives *down here*, where it is seen
+# against a wall and read as a lit edge, and the roofline is white. So these go
+# back to the light tints that worked, and nothing at roof height uses them.
+DOWNTOWN_NEON = [
+    (246, 176, 206),   # light rose
+    (158, 200, 246),   # light blue
+]
+
+# What a band at roof height is instead.
+#
+# A crown is seen against open sky, the highest contrast anything in the city
+# gets, and it is seen from half the map at once. Colour up there is a claim
+# every tower makes simultaneously and the skyline cannot absorb twenty of them.
+# White can: it reads as the building's own edge catching the light, which is
+# what a lit parapet is, and it leaves the pink and the blue down at the doors
+# where they mean "this is the way in".
+CROWN_NEON = (234, 238, 246)
+# How far a band at roof height is taken down. Applied to CROWN_NEON, never to
+# DOWNTOWN_NEON -- a street band takes its colour whole.
+NEON_ROOF_DIM = 0.55   # safe range 0.35 .. 0.8; 1.0 puts the fairground back
+
+
+def dim(color, k):
+    """`color` scaled toward black. See NEON_ROOF_DIM for why a roof band and a
+    street band cannot share one value."""
+    return tuple(int(round(c * k)) for c in color)
 
 # The works, and the one place the seafront palette is deliberately broken.
 #
@@ -1745,6 +1912,13 @@ PAINT_THICK = 0.12
 # city and not two.
 PAINT_TOP = GROUND + PAINT_LIFT
 PAINT_BOTTOM = PAINT_TOP - PAINT_THICK
+# Paint over paint. Two markings that cross -- a zebra crossing over the ring's
+# lane line, a centre circle over a halfway line -- are one coat on a real
+# surface and two boxes here, and two boxes at one height flicker over every
+# stud they share. The upper is the one painted last, which on a road is always
+# the crossing and on a pitch is always the circle.
+PAINT_OVER_TOP = PAINT_TOP + GROUND_STEP
+PAINT_OVER_BOTTOM = PAINT_OVER_TOP - PAINT_THICK
 DASH = 6.0
 GAP = 6.0
 
@@ -1824,7 +1998,12 @@ with group("Streets"):
     # no crossing on it at all.
     for za, zb in carve((CONN_Z0, CONN_Z1), GATE_FULL + NORTHGATE_FULL + EST_CS_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "Conn", sides="west")
-    for za, zb in carve((CONN_Z0, CONN_Z1), CS_FULL):
+    # ...and at the north service road, which is a cross street in every way
+    # that matters here -- it tees into the connector's east kerb at the top of
+    # the map. It is not in CS_FULL because it is not one of the numbered cross
+    # streets, and being left out of the carve is what laid the whole corner
+    # square twice: once as this pavement running past, once as NorthSvc's own.
+    for za, zb in carve((CONN_Z0, CONN_Z1), CS_FULL + NORTH_SVC_FULL):
         walks_ns(CONN_X0, CONN_X1, za, zb, CONN_WALK, "ConnE", sides="east")
 
     # Gate road: the only link between the town and the city, running east from
@@ -1922,10 +2101,12 @@ with group("Streets"):
     for k, a in enumerate(AVE):
         at_circle = k == CIRCLE_AVE
         for za, zb in carve((ave_z0(k), AVE_Z1),
-                            CS_ROAD + WCS_ROAD + (CIRCLE_Z_ROAD if at_circle else [])):
+                            CS_ROAD + WCS_ROAD + ave_gaps(k)
+                            + (CIRCLE_Z_ROAD if at_circle else [])):
             road_ns(a, a + AVE_W[k], za, zb, f"Ave{k}")
         for za, zb in carve((ave_z0(k), AVE_Z1),
-                            CS_FULL + WCS_FULL + (CIRCLE_Z_WALK if at_circle else [])):
+                            CS_FULL + WCS_FULL + ave_gaps(k)
+                            + (CIRCLE_Z_WALK if at_circle else [])):
             walks_ns(a, a + AVE_W[k], za, zb, AVE_WALK, f"Ave{k}")
 
     # Cross streets: carved at the avenues, and taking the corner squares --
@@ -2031,8 +2212,13 @@ with group("Streets"):
     # drawn across the mouth of a side road is a kerb the road runs under.
     road_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
             "PrecinctAve")
-    walks_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W[CS_LAST], NORTH_ROAD_Z0,
-             AVE_WALK, "PrecinctAve", sides="west")
+    # The walk stops a pavement's width short of the service road, not at its
+    # kerb: the north-south sidewalk yields the corner square to the east-west
+    # one (see the note on CS_FULL). Run to NORTH_ROAD_Z0 and the avenue's west
+    # kerb and pavement both finish inside NorthSvc's south pavement, in its
+    # plane, over the whole corner.
+    walks_ns(PRECINCT_AVE_X0, PRECINCT_AVE_X1, CS[CS_LAST] + CS_W[CS_LAST],
+             NORTH_ROAD_Z0 - CS_WALK, AVE_WALK, "PrecinctAve", sides="west")
     # From the connector's east kerb, not from its centre: the connector is
     # already tarmac at x 19..42, and starting this one inside it would lay two
     # carriageways in the same place. It stops at the avenue's east edge so the
@@ -2053,7 +2239,8 @@ with group("Streets"):
     dashes_ew(NORTH_ROAD_Z0 + WCS_W / 2, CONN_X1, PRECINCT_AVE_X1, [], "NorthSvc")
     for k, a in enumerate(AVE):
         dashes_ns(a + AVE_W[k] / 2, ave_z0(k), AVE_Z1,
-                  CS_ROAD + WCS_ROAD + (CIRCLE_Z_WALK if k == CIRCLE_AVE else []),
+                  CS_ROAD + WCS_ROAD + ave_gaps(k)
+                  + (CIRCLE_Z_WALK if k == CIRCLE_AVE else []),
                   f"Ave{k}")
     for j, c in enumerate(CS):
         dashes_ew(c + CS_W[j] / 2, CS_X0, CS_X1,
@@ -2083,9 +2270,9 @@ with group("Streets"):
             _mx, _mz = polar(CIRCLE_ISLAND + CIRCLE_ROAD_W / 2, _phi)
             rbxmx.spun_box(
                 f"ZebraDash{_q}_{_s}",
-                (_mx + _tan[0] * _off, (PAINT_BOTTOM + PAINT_TOP) / 2,
+                (_mx + _tan[0] * _off, (PAINT_OVER_BOTTOM + PAINT_OVER_TOP) / 2,
                  _mz + _tan[1] * _off),
-                (CIRCLE_ROAD_W - 2.0, PAINT_TOP - PAINT_BOTTOM, 2.4),
+                (CIRCLE_ROAD_W - 2.0, PAINT_OVER_TOP - PAINT_OVER_BOTTOM, 2.4),
                 radial_yaw(_phi), ROAD_PAINT, SMOOTH)
 
 
@@ -2185,10 +2372,11 @@ FOUNTAIN_WATER = 2.2
 MONUMENT_STAGES = 5
 MONUMENT_STAGE_H = 34.0
 MONUMENT_W0, MONUMENT_W1 = 9.0, 3.4
-# The four deco neons, cycled up the shaft. They were declared with the palette
-# and never used by anything, which is the one thing this file is not allowed to
-# leave lying around; a lit monument is what they were declared for.
-MONUMENT_NEONS = [NEON_CYAN, NEON_PINK, NEON_AMBER, NEON_LIME]
+# The monument is a hundred and eighty-six studs of column, so every band on it
+# except the first is sky -- it is a roofline, not a street, and it takes the
+# roofline's white. See CROWN_NEON. It used to cycle the four shop neons, which
+# put an amber-and-lime mast at the exact centre of downtown.
+MONUMENT_NEON = dim(CROWN_NEON, NEON_ROOF_DIM)
 
 with group("CircleIsland"):
     # Kerb first, because it is the edge everything else is measured against and
@@ -2242,15 +2430,16 @@ with group("CircleIsland"):
             (CIRCLE_X - _w / 2 - 0.6, CIRCLE_X + _w / 2 + 0.6,
              CIRCLE_Z - _w / 2 - 0.6, CIRCLE_Z + _w / 2 + 0.6,
              _y + MONUMENT_STAGE_H - 1.2, _y + MONUMENT_STAGE_H),
-            MONUMENT_NEONS[_s % len(MONUMENT_NEONS)], NEON, collide=False)
+            MONUMENT_NEON, NEON, collide=False)
         _y += MONUMENT_STAGE_H
     box("MonumentFinial",
         (CIRCLE_X - 1.4, CIRCLE_X + 1.4, CIRCLE_Z - 1.4, CIRCLE_Z + 1.4,
          _y, _y + 6.0), CITY_HALL_MARBLE, MARBLE)
+    _finial = MONUMENT_NEON
     box("MonumentLight",
         (CIRCLE_X - 2.2, CIRCLE_X + 2.2, CIRCLE_Z - 2.2, CIRCLE_Z + 2.2,
-         _y + 6.0, _y + 10.4), NEON_AMBER, NEON, collide=False,
-        children=point_light(NEON_AMBER, 3.0, 90.0))
+         _y + 6.0, _y + 10.4), _finial, NEON, collide=False,
+        children=point_light(_finial, 3.0, 90.0))
 
     # Palms off the diagonals so none of them stands in a path, and benches on
     # the axes looking out at the traffic.
@@ -2289,10 +2478,10 @@ with group("CircleLamps"):
 # -> 34 -> 17, which is the whole reason the fade district exists.
 #
 #   sband4 (north, z 800..950):  HOUSE  HOUSE  HOUSE  HOUSE HOUSE
-#   sband3       (z 650..800):   PARK   HOUSE  HOUSE  HOUSE HOUSE
+#   sband3       (z 650..800):   PARK   HOUSE  HOUSE  HOUSE ARENA
 #   sband2       (z 500..650):   MALL   APT    OFFICE HOUSE SPORTS
-#   sband1       (z 350..500):   FADE   CIRCUS CIRCUS FADE  APT
-#   sband0 (south, z 200..350):  DINING CIRCUS CIRCUS FADE  FADE
+#   sband1       (z 350..500):   FADE   CIRCUS CIRCUS FADE  HOUSE
+#   sband0 (south, z 200..350):  MIXED  CIRCUS CIRCUS FADE  FADE
 #
 # Ten HOUSE blocks, and that number is a floor rather than a taste: each block
 # holds six houses and check_city.py requires sixty of them with a door each,
@@ -2329,16 +2518,25 @@ with group("CircleLamps"):
 #     unreachable, and the step they were the evidence for missing from the
 #     city. It took the APT block rather than the one now marked SPORTS because
 #     there were three APT blocks and only ever one of that one.
+#   * ARENA takes a whole block and there is exactly one. It sits at [3][4]
+#     because that is the block facing the back of the soccer stadium, which is
+#     where the city's second big venue belongs and where six houses used to
+#     look at a hundred thousand empty seats. Those six went to [1][4] -- two
+#     cross streets south, into the low half of the city -- and that swap is
+#     why the APT block that was there is gone. **The ten HOUSE blocks are a
+#     floor, not a preference:** check_city counts sixty addresses and there is
+#     no slack in the number, so ARENA could only ever have been paid for by
+#     turning some other role into HOUSE in the same edit.
 #   * SPORTS was GREEN -- an empty lot, `greenfield()` -- until the boxing gym
 #     and the basketball/volleyball hall needed a home. It is the only block in
 #     the ordinary grid this pair could go: everywhere else on this table is
 #     already spoken for by the load-bearing reasons above, and the stadium
 #     itself lives outside the grid entirely, in the headland (see `stadium()`).
 ROLES = [
-    ["DINING", "CIRCUS", "CIRCUS", "FADE", "FADE"],
-    ["FADE", "CIRCUS", "CIRCUS", "FADE", "APT"],
+    ["MIXED", "CIRCUS", "CIRCUS", "FADE", "FADE"],
+    ["FADE", "CIRCUS", "CIRCUS", "FADE", "HOUSE"],
     ["MALL", "APT", "OFFICES", "HOUSE", "SPORTS"],
-    ["PARK", "HOUSE", "HOUSE", "HOUSE", "HOUSE"],
+    ["PARK", "HOUSE", "HOUSE", "HOUSE", "ARENA"],
     ["HOUSE", "HOUSE", "HOUSE", "HOUSE", "HOUSE"],
 ]
 
@@ -2825,6 +3023,11 @@ def apartment_block(band, sband, x0, x1, z0, z1, counter):
 MALL_X = 96.0
 MALL_Z = 100.0
 MALL_CORRIDOR = 12.0
+# The reveal between two shop units. Two studs is what leaves a shadow line
+# between neighbouring shopfronts; without it the row glazes over into one
+# continuous window and the mall reads as a single shop the length of the
+# building.
+MALL_UNIT_GAP = 2.0
 
 
 def mall_shop(pid, label, x0, x1, z0, z1, front, kind):
@@ -2841,7 +3044,11 @@ def mall_shop(pid, label, x0, x1, z0, z1, front, kind):
     wall_color = STORE_WALLS[zlib.crc32(pid.encode()) % len(STORE_WALLS)]
 
     with group(f"MallShop_{pid}"):
-        box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
+        # No slab. The mall pours one for its whole footprint, in this exact
+        # colour and material, and a unit that poured its own laid a second
+        # floor in the first one's plane -- eight shops, fifty studs of flicker
+        # each. A shop unit is a partition and a shopfront inside a building,
+        # not a building.
         box("Roof", (x0, x1, z0, z1, CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
         wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, CEIL_1), wall_color, along="z")
         wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, CEIL_1), wall_color, along="z")
@@ -2859,13 +3066,22 @@ def mall_shop(pid, label, x0, x1, z0, z1, front, kind):
             glazing("Front", (x0 + 1.5, x1 - 1.5, iz1 + 0.4, z1 - 0.4,
                               FLOOR_1 + 1.5, FLOOR_1 + 9.5), along="x", panes=3)
 
-        box("Counter", (cx - 6.0, cx + 6.0, iz0 + 2.0, iz0 + 5.0,
+        # Counter and sign sized off the unit rather than typed at 12 and 16
+        # studs. Those two numbers were measured in a 22-stud unit and were the
+        # only thing stopping the mall from holding more shops: the moment the
+        # row is solved out of the corridor instead of stepped at a fixed pitch,
+        # a narrower unit gets a counter wider than its own interior and a
+        # nameplate that overhangs its neighbour's shopfront. Neither is an
+        # error anything checks for -- they are legal boxes in the wrong place.
+        counter_half = min(6.0, (x1 - x0) / 2 - 3.0)
+        sign_half = min(8.0, (x1 - x0) / 2 - 1.0)
+        box("Counter", (cx - counter_half, cx + counter_half, iz0 + 2.0, iz0 + 5.0,
                         FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
         box("Gondola", (ix0 + 3.0, ix0 + 6.0, iz0 + 8.0, iz1 - 4.0,
                         FLOOR_1, FLOOR_1 + 7.5), SHELF, METAL)
         box("Stock", (ix0 + 3.2, ix0 + 5.8, iz0 + 8.4, iz1 - 4.4,
                       FLOOR_1 + 1.8, FLOOR_1 + 3.4), STOCK, PLANKS, collide=False)
-        box("Sign", (cx - 8.0, cx + 8.0, iz0 + 0.4, iz0 + 1.4,
+        box("Sign", (cx - sign_half, cx + sign_half, iz0 + 0.4, iz0 + 1.4,
                      FLOOR_1 + 11.0, FLOOR_1 + 13.0), wall_color, SMOOTH,
             children=sign(label, "front" if front == "north" else "back",
                           color=(250, 246, 234), size=52))
@@ -2881,17 +3097,36 @@ def mall(band, sband, x0, x1, z0, z1):
     mid_z = (z0 + z1) / 2
     corr_z0, corr_z1 = mid_z - MALL_CORRIDOR / 2, mid_z + MALL_CORRIDOR / 2
 
+    # Six units a side, not four, and the last two on each side came off the
+    # main street.
+    #
+    # That street ran nineteen shopfronts down eight hundred studs of frontage
+    # at a constant thirty-stud pitch, three to a band, six bands running, and
+    # the effect of that from the pavement is a wall with doors in it -- there
+    # was no room left for a tree, a bench or a gap, because the widths and the
+    # minimum gap between them added up to exactly the length of the street.
+    # Four shops moving indoors is what bought the room, and the four that moved
+    # are the four a mall is actually made of: books, records, toys and
+    # electronics are mall tenants everywhere, and none of them wants a kerb.
+    #
+    # The place ids do not change. `toy_store`, `music_store`, `bookstore` and
+    # `electronics` are all `placeId`s in Jobs.luau -- the job finds the shop by
+    # id and does not care which building it is in.
     north_shops = [
         ("mall_jewelry", "AURUM JEWELERS"),
         ("mall_shoes", "STEPPER SHOES"),
         ("mall_sports", "SPORTZONE"),
         ("mall_gaming", "PIXEL PLAY"),
+        ("bookstore", "PAGES & PRESS"),
+        ("music_store", "FREQUENCY"),
     ]
     south_shops = [
         ("optometrist", "SIGHT & SOUND"),
         ("pet_shop", "TREATS & TAILS"),
         ("mall_kids", "KIDDIE KORNER"),
         ("mall_foodcourt", "THE FOODCOURT"),
+        ("toy_store", "PLAYPEN"),
+        ("electronics", "VOLT ELECTRONICS"),
     ]
 
     with group("Mall"):
@@ -2911,18 +3146,24 @@ def mall(band, sband, x0, x1, z0, z1):
         # corridor are the shops' front walls (glazed), so only the corridor
         # slab needs laying.
         box("Corridor", (x0 + WALL, x1 - WALL, corr_z0, corr_z1,
-                         FLOOR_1 - 0.2, FLOOR_1), PATH_STONE, MARBLE)
+                         FLOOR_1, FLOOR_1 + FLOOR_INLAY), PATH_STONE, MARBLE)
 
-        for i, (pid, label) in enumerate(north_shops):
-            sx0 = cx0 + i * 24.0
-            mall_shop(pid, label, sx0, sx0 + 22.0, corr_z1, z1 - WALL, "south", "shop")
-            place_point(pid, sx0 + 11.0, corr_z1 + 6.0, FLOOR_1,
-                        f"the {label.lower()}, at the counter")
-        for i, (pid, label) in enumerate(south_shops):
-            sx0 = cx0 + i * 24.0
-            mall_shop(pid, label, sx0, sx0 + 22.0, z0 + WALL, corr_z0, "north", "shop")
-            place_point(pid, sx0 + 11.0, corr_z0 - 6.0, FLOOR_1,
-                        f"the {label.lower()}, at the counter")
+        # The pitch is solved out of the corridor, not stepped at a typed 24.
+        # A typed pitch fits the row it was measured in and hangs the last unit
+        # out of the end wall of the next one -- the same defect `works_depot`
+        # writes about, and here it would be a shopfront standing in the mall's
+        # west wall the first time a shop was added.
+        for shops, (uz0, uz1), face, ppz in (
+            (north_shops, (corr_z1, z1 - WALL), "south", corr_z1 + 6.0),
+            (south_shops, (z0 + WALL, corr_z0), "north", corr_z0 - 6.0),
+        ):
+            pitch = (cx1 - cx0) / len(shops)
+            for i, (pid, label) in enumerate(shops):
+                sx0 = cx0 + i * pitch
+                mall_shop(pid, label, sx0, sx0 + pitch - MALL_UNIT_GAP,
+                          uz0, uz1, face, "shop")
+                place_point(pid, sx0 + (pitch - MALL_UNIT_GAP) / 2, ppz, FLOOR_1,
+                            f"the {label.lower()}, at the counter")
 
         # Benches down the corridor.
         for x in (cx0 + 20.0, cx0 + 44.0, cx0 + 68.0):
@@ -2944,7 +3185,13 @@ def mall(band, sband, x0, x1, z0, z1):
 def city_park(band, sband, x0, x1, z0, z1):
     """A square of green with a pond, a fountain, paths and trees."""
     with group("CityPark"):
-        box("Park", (x0, x1, z0, z1, GROUND_BOTTOM, CITY_GRASS_TOP), LAWN, GRASS)
+        # One step over CityGround rather than level with it. The block under
+        # this is already LAWN/GRASS at exactly CITY_GRASS_TOP, so a park lawn
+        # drawn at that height is two hundred studs of grass with no way to
+        # decide which copy is in front. The park wins, and has to: it is the
+        # thing the paths and the pond are measured from.
+        box("Park", (x0, x1, z0, z1, GROUND_BOTTOM, CITY_GRASS_TOP + GRASS_LIFT),
+            LAWN, GRASS)
         # Pond in the west: a blue pool with a sandy rim.
         pond_x0, pond_x1 = x0 + 3.0, x0 + 20.0
         pond_z0, pond_z1 = z0 + 3.0, z0 + 16.0
@@ -3036,92 +3283,369 @@ def office_tower(office_no, x0, x1, z0, z1):
                 f"tower {office_no}, the ground-floor office")
 
 
-RISE_LOBBY_H = 18.0
-# The mast only goes on a tower of this many storeys or more, and since the mast is
-# the tallest thing the financial district owns, this is the threshold that decides
-# what the Circle has to beat.
-RISE_MAST_STOREYS = 9
-RISE_MAST_H = 18.0
+# ---------------------------------------------------------------------------
+# Shaped towers
+# ---------------------------------------------------------------------------
+#
+# The tower builder these replaced extruded a rectangle, put a setback and an
+# antenna on it and stopped. That is one building, and at the density downtown
+# is going to it reads as twenty copies of one building -- the storey count
+# varies and the silhouette does not, so the whole skyline is the same tower at
+# eight heights.
+#
+# These do not extrude. A shaft here is `TOWER_SEGS` plates stacked up, and the
+# *width and yaw of a plate are functions of its own height* -- so the profile
+# curves and the tower turns as it rises. That is the entire idea, and it is
+# where the variety comes from: a tower that turns two degrees a plate is a
+# different building from one that does not, and it costs the same parts.
+#
+# Four styles, and they are four presets of the same two functions rather than
+# four builders, because four builders is four places for the crown to stop
+# matching the shaft it stands on. See TOWER_STYLES.
+#
+# **Everything stays inside its own footprint.** A square plate spun 45 degrees
+# measures w*sqrt(2) across, so a shaft that twists cannot also fill its block:
+# it is inset to whatever the widest yaw it actually reaches needs, and
+# `tower_fit` asserts that rather than trusting the caller. Without it the
+# corner of plate 12 hangs over the sidewalk -- and check_city reads a rotated
+# part's true oriented box (see the SAT note on check 5), so it would be caught,
+# but as an overlap between two towers a hundred studs apart rather than as the
+# inset being wrong here.
+TOWER_SEGS = 16          # plates per shaft. 16 reads as a smooth turn from the
+                         # street and keeps a tall tower under 60 parts.
+                         # Safe range: 10 .. 28.
+TOWER_BAND_H = 1.1       # the slab band capping each plate. This is the
+                         # horizontal line that makes a glass shaft read as
+                         # floors instead of as one very tall pane, and it is
+                         # the single cheapest thing on this list.
+TOWER_PODIUM_H = 20.0    # the base storeys, below the first shaft plate
+TOWER_ROOF = (52, 56, 64)
+TOWER_MULLION = (104, 112, 126)   # the band capping each plate: a dark frame,
+                                  # not a white one -- see TOWER_GLASS
+TOWER_SPIRE = (150, 158, 170)
+
+# **The glass is one family and only the shade moves.**
+#
+# Every reference skyline for this district is a wall of the same blue-grey at
+# several depths. None of them is multicoloured by day. A downtown built out of
+# eight different glass tints reads as a toy shelf at noon *and* as nothing
+# after dark, because the colour has already been spent on the daylight -- and
+# the colour after dark is the whole point.
+#
+# The family used to sit at (58, 74, 92) and below, which is *navy*, not glass.
+# Real curtain wall is bright: it is a mirror pointed at the sky, so at noon it
+# is nearly the colour of the sky and the mullions are the only dark lines on
+# it. Five stops now instead of four, and the whole range is lifted about forty
+# points -- same one hue, same discipline, but the district reads as glass in
+# daylight instead of as five hundred studs of dark stone.
+TOWER_GLASS = [
+    (108, 138, 168),   # the family shade
+    (86, 114, 146),    # a stop darker
+    (140, 174, 204),   # a stop lighter
+    (70, 96, 126),     # the darkest, for the towers that should recede
+    (168, 200, 224),   # the clear one: near-sky, for the towers that should read
+                       # as pure glass. Deliberately at the end of the list, so a
+                       # palette indexed by band puts at most one per block.
+]
+# How much of the sky comes through a shaft plate. Lifted with the palette: a
+# light pane at the old 0.42 reads as painted metal, and the whole point of a
+# glass tower is that the building behind it is faintly there.
+TOWER_GLASS_TRANSPARENCY = 0.5   # safe range 0.3 .. 0.65
+# Where the colour actually lives: the crown ring and the light line over the
+# base, both emissive, so they exist at night and nowhere else. A band and a
+# lamp, never a lit surface -- the same rule the Circus crowns follow, for the
+# same reason: a glowing face reads as a mistake at night and a glowing edge
+# reads as a building.
+TOWER_CROWN_NEON = DOWNTOWN_NEON
 
 
-def high_rise_skyline(storeys):
-    """The highest point of a high-rise: its mast if it has one, else its setback.
+def tower_width(t, taper, bulge):
+    """Width multiplier at height fraction `t` -- 0 at the podium top, 1 at the
+    crown.
 
-    Split out of `high_rise` because the Circle's towers are sized against it and
-    the alternative was measuring the generated file by hand and typing the answer
-    into a comment -- which is exactly how the shoulder line in CIRCUS_STOREYS came
-    to claim 150 for a tower that measures 135.5.
+    `taper` is how much narrower the top is than the base. `bulge` lifts the
+    middle so the profile is a curve rather than a cone, which is the whole
+    difference between the reference towers and a spike: Lakhta and Shanghai
+    Tower both swell before they close, and a straight cone reads as an aerial
+    on a podium rather than as a building.
     """
-    tower_top = FLOOR_1 + RISE_LOBBY_H + (storeys - 1) * (STOREY + SLAB)
-    if storeys >= RISE_MAST_STOREYS:
-        return tower_top + RISE_MAST_H
-    return tower_top + SLAB + STOREY * 0.6 + SLAB
+    return (1.0 - taper * t) + bulge * math.sin(math.pi * t)
 
 
-def high_rise(no, x0, x1, z0, z1, storeys, glass_color):
-    """A varied-height skyscraper with a stepped setback roof and ground-floor
-    lobby. `storeys` is the number of 15-stud floors; lobby is extra 3 studs."""
+def tower_fit(base_w, base_d, twist, taper, bulge):
+    """The widest axis-aligned span the shaft ever reaches, over every plate.
+
+    Measured over the plates that are actually built rather than solved, because
+    the widest plate is not always the bottom one once `bulge` is non-zero and
+    is never the bottom one once `twist` is: a plate is widest in x at whatever
+    yaw puts its diagonal closest to the x axis, and which plate that is depends
+    on all three parameters at once. Returning it lets the caller inset by the
+    real number instead of by sqrt(2) everywhere, which would throw away a
+    third of the footprint on the towers that do not twist at all.
+    """
+    wx = wz = 0.0
+    for i in range(TOWER_SEGS):
+        t = (i + 0.5) / TOWER_SEGS
+        k = tower_width(t, taper, bulge)
+        w, d = base_w * k, base_d * k
+        rad = math.radians(twist * t)
+        c, s = abs(math.cos(rad)), abs(math.sin(rad))
+        wx = max(wx, d * c + w * s)
+        wz = max(wz, d * s + w * c)
+    return wx, wz
+
+
+# twist   -- degrees the shaft turns from podium to crown
+# taper   -- how much narrower the crown is than the base, 0..1
+# bulge   -- how far the waist swells past a straight taper
+# spire   -- studs of mast above the crown, 0 for none
+# cross   -- second plate at 45 degrees, so the footprint reads octagonal
+# steps   -- setback shoulders cut into the shaft, 0 for a continuous one
+TOWER_STYLES = {
+    # Evolution Tower: a square plan that turns a full half-turn on the way up
+    # and barely tapers. The twist is the building.
+    "twist":   dict(twist=155.0, taper=0.30, bulge=0.00, spire=0.0,  cross=False, steps=0),
+    # Lakhta Center: five-sided, closing to almost nothing under a long spire.
+    # The taper is severe on purpose -- the spire has to look like the top of
+    # the tower rather than something parked on it.
+    "spire":   dict(twist=42.0,  taper=0.68, bulge=0.06, spire=58.0, cross=True,  steps=0),
+    # Jin Mao: no twist at all, shoulders instead. The odd one out, and here so
+    # the skyline has a building whose profile is steps rather than a curve.
+    "setback": dict(twist=0.0,   taper=0.44, bulge=0.00, spire=20.0, cross=False, steps=4),
+    # Shanghai Tower: turns, swells, and closes into a lit crown.
+    "crown":   dict(twist=105.0, taper=0.52, bulge=0.09, spire=24.0, cross=True,  steps=0),
+    # The straight one. No twist, almost no taper, no mast -- a flat-topped
+    # glass slab with a lit parapet, which is what most of a real downtown
+    # actually is. It is in here because a skyline of nothing but sculpted
+    # towers is as monotonous as a skyline of nothing but boxes: the sculpted
+    # ones only read as special when there is something ordinary beside them.
+    "straight": dict(twist=0.0,  taper=0.08, bulge=0.00, spire=0.0,  cross=False, steps=0),
+    # The same idea a size up: a broad slab that recedes behind the others and
+    # gives the front row something to stand against.
+    "slab":    dict(twist=0.0,   taper=0.16, bulge=0.00, spire=0.0,  cross=False, steps=2),
+}
+
+
+def tower_shaft(cx, cz, base_w, base_d, y0, y1, glass, style):
+    """The stack of plates, bottom to top. Returns the top plate's (width,
+    depth, yaw) so a crown or a spire can be sized and turned to sit on the
+    plate it actually stands on rather than on a second guess at it."""
+    twist, taper = style["twist"], style["taper"]
+    bulge, cross, steps = style["bulge"], style["cross"], style["steps"]
+    span = y1 - y0
+    seg_h = span / TOWER_SEGS
+    w = d = yaw = 0.0
+    for i in range(TOWER_SEGS):
+        t = (i + 0.5) / TOWER_SEGS
+        k = tower_width(t, taper, bulge)
+        # A shoulder every `steps` plates: the plate steps in early rather than
+        # following the curve, which is what a setback tower does and what the
+        # curve on its own cannot express.
+        if steps:
+            k *= 1.0 - 0.06 * (i * steps // TOWER_SEGS)
+        w, d = base_w * k, base_d * k
+        yaw = twist * t
+        cy = y0 + (i + 0.5) * seg_h
+        rbxmx.spun_box(f"Plate{i}", (cx, cy, cz), (d, seg_h - TOWER_BAND_H, w),
+                       yaw, glass, GLASS, transparency=TOWER_GLASS_TRANSPARENCY,
+                       collide=False)
+        if cross:
+            rbxmx.spun_box(f"PlateX{i}", (cx, cy, cz),
+                           (d * 0.82, seg_h - TOWER_BAND_H, w * 0.82), yaw + 45.0,
+                           glass, GLASS, transparency=TOWER_GLASS_TRANSPARENCY,
+                           collide=False)
+        # The band sits at the *top* of its own plate, so the tower is capped by
+        # one and the podium is not -- the base wants the podium's own parapet
+        # under it, not a band floating a plate's height above the lobby roof.
+        rbxmx.spun_box(f"Band{i}", (cx, y0 + (i + 1) * seg_h - TOWER_BAND_H / 2, cz),
+                       (d + 0.6, TOWER_BAND_H, w + 0.6), yaw,
+                       TOWER_MULLION, SMOOTH, collide=False)
+    return w, d, yaw
+
+
+def tower_crown(no, cx, cz, w, d, yaw, y, spire):
+    """What closes the shaft: a roof cap, a lit ring, and an optional mast.
+
+    The ring is a band round the cap rather than a glowing top surface, and the
+    mast tapers in three lengths rather than being one thin box -- a constant
+    section reads as scaffolding from the street, which is what the financial
+    district's existing masts already look like.
+    """
+    rbxmx.spun_box("Roof", (cx, y + SLAB / 2, cz), (d, SLAB, w), yaw,
+                   TOWER_ROOF, CONCRETE)
+    # White, not the tower's own colour: `neon` is the street band and stays at
+    # the doors. See CROWN_NEON.
+    _crown = dim(CROWN_NEON, NEON_ROOF_DIM)
+    rbxmx.spun_box("Crown", (cx, y + SLAB + 1.3, cz), (d + 1.0, 1.6, w + 1.0), yaw,
+                   _crown, NEON, collide=False,
+                   children=point_light(_crown, 2.4, 70.0))
+    if spire <= 0.0:
+        return
+    base = y + SLAB + 2.2
+    lo, hi = min(w, d), 0.0
+    for i, frac in enumerate((0.5, 0.32, 0.16)):
+        seg = spire * (0.45, 0.33, 0.22)[i]
+        hi = base + seg
+        rbxmx.spun_box(f"Spire{i}", (cx, (base + hi) / 2, cz),
+                       (lo * frac, seg, lo * frac), yaw, TOWER_SPIRE, METAL)
+        base = hi
+    # The mast lamp. Dimmed with everything else at roof height: it sits on the
+    # highest object in the city and it was the brightest thing in the skyline,
+    # which is backwards.
+    _lamp = dim((255, 70, 50), NEON_ROOF_DIM)
+    box("SpireLight", (cx - 0.9, cx + 0.9, cz - 0.9, cz + 0.9, hi - 1.6, hi - 0.4),
+        _lamp, NEON, collide=False,
+        children=point_light(_lamp, 2.0, 42.0))
+
+
+def shaped_tower(no, x0, x1, z0, z1, floors, glass, style="twist", neon=None,
+                 tint=0, front="south"):
+    """One downtown tower: podium with a real lobby, shaped shaft, lit crown.
+
+    Footprint is given corner-to-corner like every other building in this file,
+    and the shaft is inset inside it by however much its own twist needs -- see
+    the header. `floors` counts STOREY + SLAB the same way every other building
+    in this file does, so a tower and an office block on the same street agree
+    about what a storey is.
+
+    `front` is which street the lobby door and the place point face. It exists
+    because a block is two rows deep now: the south row opens onto the street
+    below it and the north row onto the street above, and a tower that always
+    fronted south would put half the district's doors -- and half its place
+    points -- against the back of the tower in front of it, out of reach of the
+    32-stud road test in check_city.
+    """
+    spec = TOWER_STYLES[style]
+    cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    podium_top = FLOOR_1 + TOWER_PODIUM_H
+    top = podium_top + floors * (STOREY + SLAB)
+    # `no` is a label, not a number ("1_w"), so the crown colour cycles on an
+    # explicit `tint` rather than on the name -- indexing a palette by `no`
+    # reads fine and silently becomes string formatting the first time a
+    # caller passes anything but an int.
+    neon = neon or TOWER_CROWN_NEON[tint % len(TOWER_CROWN_NEON)]
+
+    # How wide the plates may be. Solved from the style's own worst plate rather
+    # than assumed, then asserted -- a style edited to twist further silently
+    # grows its own footprint, and this is the line that says so.
+    avail_x, avail_z = (x1 - x0) - 2.0, (z1 - z0) - 2.0
+    fit_x, fit_z = tower_fit(1.0, 1.0, spec["twist"], spec["taper"], spec["bulge"])
+    base_w = min(avail_x / fit_x, avail_z / fit_z)
+    base_d = base_w
+    gx, gz = tower_fit(base_w, base_d, spec["twist"], spec["taper"], spec["bulge"])
+    assert gx <= avail_x + 1e-6 and gz <= avail_z + 1e-6, (
+        f"tower {no} ({style}) spans {gx:.1f}x{gz:.1f} inside a footprint of "
+        f"{avail_x:.1f}x{avail_z:.1f}. tower_fit and the inset above disagree -- "
+        f"if you changed TOWER_STYLES['{style}'], that is what moved.")
+
     ix0, ix1 = x0 + WALL, x1 - WALL
     iz0, iz1 = z0 + WALL, z1 - WALL
-    cx = (x0 + x1) / 2
-    cz = (z0 + z1) / 2
-    # Each storey is STOREY tall with a SLAB on top; the lobby is slightly taller.
-    lobby_h = RISE_LOBBY_H
-    tower_top = FLOOR_1 + lobby_h + (storeys - 1) * (STOREY + SLAB)
+    # `s` is "outward, toward the street this tower faces". Everything on the
+    # front elevation -- the door, the canopy, the nameplate, the place point --
+    # is written once against it rather than twice against a conditional.
+    s = 1.0 if front == "south" else -1.0
+    fz, ifz = (z0, iz0) if front == "south" else (z1, iz1)
+    bz, ibz = (z1, iz1) if front == "south" else (z0, iz0)
 
-    with group(f"HighRise_{no}"):
-        box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
-        # Main tower body, setback a few studs at the top.
-        box("Tower", (x0 + 3.0, x1 - 3.0, z0 + 3.0, z1 - 3.0,
-                      FLOOR_1 + lobby_h, tower_top),
-            glass_color, GLASS, transparency=0.45, collide=False)
-        # Roof slab and setback.
-        box("Roof", (x0 + 3.0, x1 - 3.0, z0 + 3.0, z1 - 3.0,
-                     tower_top, tower_top + SLAB),
-            (72, 76, 82), CONCRETE)
-        box("Setback", (x0 + 6.0, x1 - 6.0, z0 + 6.0, z1 - 6.0,
-                        tower_top + SLAB, tower_top + SLAB + STOREY * 0.6),
-            glass_color, GLASS, transparency=0.45, collide=False)
-        box("SetRoof", (x0 + 6.0, x1 - 6.0, z0 + 6.0, z1 - 6.0,
-                        tower_top + SLAB + STOREY * 0.6,
-                        tower_top + SLAB + STOREY * 0.6 + SLAB),
-            (72, 76, 82), CONCRETE)
-        # Antenna mast on the highest.
-        if storeys >= RISE_MAST_STOREYS:
-            box("Mast", (cx - 0.6, cx + 0.6, cz - 0.6, cz + 0.6,
-                          tower_top + SLAB + STOREY * 0.6,
-                          tower_top + RISE_MAST_H),
-                (80, 84, 90), METAL)
-            box("MastLight", (cx - 1.0, cx + 1.0, cz - 1.0, cz + 1.0,
-                              tower_top + RISE_MAST_H - 2.0,
-                              tower_top + RISE_MAST_H - 1.0),
-                (240, 60, 40), NEON, collide=False)
+    with group(f"Tower_{no}"):
+        # No plinth and no white box. The base stands straight on the pavement
+        # in the tower's own dark stone, glazed on all four sides at street
+        # level, and the only bright thing on it is a light line under the
+        # shaft. A slab under the footprint reads as a platform the building
+        # sits in the middle of, and a marble base reads as a different building
+        # bolted to the bottom of this one -- the point of a dense block is that
+        # the wall meets the kerb and the tower is one object all the way down.
+        # The base is four walls and a roof, not a solid block. It was a solid
+        # block, with the lobby walls drawn *inside* it and a door cut in a wall
+        # that had twenty studs of stone behind it -- so every tower in the
+        # district had a doorway into rock and a place point the player could
+        # stand on but never walk into.
+        #
+        # The base is the shaft's own glass taken down a couple of stops, cast
+        # in smooth stone rather than brick. Both halves of that are corrections
+        # of the same mistake. It was a flat grey (46, 50, 58) shared by every
+        # tower in the city, in the `wall` helper's default BRICK -- so a
+        # district of sculpted glass towers stood on twenty identical courses of
+        # grey masonry, and from the street the first twenty studs of downtown
+        # were a brick wall. Deriving the colour instead means the base belongs
+        # to the tower above it and no two neighbours share one.
+        base_stone = dim(glass, 0.72)
+        _door = (cx - DOORWAY / 2, cx + DOORWAY / 2)
+        wall("WallBack", (x0, x1) + span(ibz, bz) + (FLOOR_1, podium_top),
+             base_stone, SMOOTH, along="x")
+        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, podium_top),
+             base_stone, SMOOTH, along="z")
+        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, podium_top),
+             base_stone, SMOOTH, along="z")
+        wall("WallFront", (x0, x1) + span(fz, ifz) + (FLOOR_1, podium_top),
+             base_stone, SMOOTH, along="x", doors=(_door,))
+        glass_doors("Door", _door + span(fz, ifz) + (FLOOR_1, FLOOR_1 + DOOR_HEIGHT),
+                    along="x")
+        # Glazed in each wall's own thickness. Given the whole interior depth
+        # instead -- which is what the first draft did -- `glazing` reads it as
+        # "one pane this deep" and fills the room with five translucent slabs.
+        glazing("GlazeFront", (x0 + 2.0, x1 - 2.0) + span(fz, ifz)
+                + (FLOOR_1 + DOOR_HEIGHT + 1.0, podium_top - 3.0), along="x", panes=5)
+        glazing("GlazeWest", (x0, ix0) + (z0 + 2.0, z1 - 2.0)
+                + (FLOOR_1 + 2.0, podium_top - 3.0), along="z", panes=4)
+        glazing("GlazeEast", (ix1, x1) + (z0 + 2.0, z1 - 2.0)
+                + (FLOOR_1 + 2.0, podium_top - 3.0), along="z", panes=4)
+        box("BaseRoof", (x0, x1, z0, z1, podium_top - 2.4, podium_top),
+            base_stone, SMOOTH)
+        # The light line, and it is a *line*: four thin bands round the base's
+        # four faces, proud of the wall by the width of a reveal.
+        #
+        # It used to be one box spanning `x0 - 0.8 .. x1 + 0.8` by
+        # `z0 - 0.8 .. z1 + 0.8` -- the whole footprint -- so every tower in the
+        # district wore a fifty-by-sixty-stud sheet of saturated colour on its
+        # shoulders. From above that is a coloured lid; from the street it is a
+        # glowing slab the building appears to be standing in. A reveal is an
+        # edge, and an edge is four bands.
+        _ny0, _ny1 = podium_top - 1.2, podium_top - 0.2
+        for _side, _nb in (
+            ("S", (x0 - 0.6, x1 + 0.6, z0 - 0.6, z0 + 0.2)),
+            ("N", (x0 - 0.6, x1 + 0.6, z1 - 0.2, z1 + 0.6)),
+            ("W", (x0 - 0.6, x0 + 0.2, z0 + 0.2, z1 - 0.2)),
+            ("E", (x1 - 0.2, x1 + 0.6, z0 + 0.2, z1 - 0.2)),
+        ):
+            # One lamp, on the band over the door, rather than four stacked at
+            # the same height -- four point lights on one parapet is four times
+            # the cost for a glow the eye reads once.
+            lit = _side == ("S" if front == "south" else "N")
+            box(f"BaseNeon{_side}", _nb + (_ny0, _ny1), neon, NEON, collide=False,
+                children=point_light(neon, 1.4, 46.0) if lit else "")
+        w, d, yaw = tower_shaft(cx, cz, base_w, base_d,
+                                podium_top, top, glass, spec)
+        tower_crown(no, cx, cz, w, d, yaw, top, spec["spire"])
 
-        # Lobby interior (ground floor, fronting south).
-        wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="x")
-        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="z")
-        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="z")
-        door_z0, door_z1 = cx - DOORWAY / 2, cx + DOORWAY / 2
-        wall("WallFront", (x0, x1, z0, iz0, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="x", doors=((door_z0, door_z1),))
-        glazing("LobbyWin", (x0 + 1.5, x1 - 1.5, iz0 + 0.4, z1 - 0.4,
-                             FLOOR_1 + 1.5, FLOOR_1 + lobby_h - 1.0),
-                along="x", panes=4)
-        box("Reception", (ix0 + 4.0, ix0 + 10.0, iz1 - 6.0, iz1 - 2.0,
-                          FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
-        box("Sofa", (ix1 - 8.0, ix1 - 3.0, iz1 - 6.0, iz1 - 2.0,
-                     FLOOR_1 + 1.2, FLOOR_1 + 2.0), (120, 140, 110), FABRIC)
-        ceiling_light(cx, cz, FLOOR_1 + lobby_h - 0.5)
-        box("Sign", (cx - 10.0, cx + 10.0, z0 - 1.6, z0 - 0.6,
-                     FLOOR_1 + 13.0, FLOOR_1 + 15.0),
-            RISE_FRAME, SMOOTH,
-            children=sign(f"RISE {no}", "front", color=(250, 246, 234), size=60))
+        box("Canopy", (cx - DOORWAY, cx + DOORWAY)
+            + span(fz - s * 4.0, fz + s * 0.4)
+            + (FLOOR_1 + 12.4, FLOOR_1 + 13.4), TOWER_ROOF, SMOOTH,
+            collide=False)
+        box("Reception", (ix0 + 5.0, ix0 + 13.0)
+            + span(ibz - s * 7.0, ibz - s * 3.0) + (FLOOR_1, FLOOR_1 + 3.0),
+            DESK_TOP, WOOD)
+        ceiling_light(cx, cz, podium_top - 3.0)
 
-    place_point(f"rise_{no}", cx, z0 + 2.0, FLOOR_1,
-                f"rise {no}, the lobby")
+    place_point(f"tower_{no}", cx, fz + s * 2.0, FLOOR_1, f"tower {no}, the lobby")
+    return top + spec["spire"]
+
+
+def shaped_tower_skyline(floors, style):
+    """The highest point of a `shaped_tower`: its spire tip, or its crown if it
+    has no spire.
+
+    Split out because the Circle's height rule is asserted against this number
+    and the alternative
+    to a function is measuring the generated file by hand and typing the answer
+    into a comment -- which is how CIRCUS_STOREYS came to claim 150 for a tower
+    that measures 135.5. Anything that changes a tower's height has to change
+    it here, in one place, or the assertion is guarding a building nobody
+    built.
+    """
+    spec = TOWER_STYLES[style]
+    top = FLOOR_1 + TOWER_PODIUM_H + floors * (STOREY + SLAB)
+    return top + SLAB + 2.2 + spec["spire"]
 
 
 def grand_bank(x0, x1, z0, z1):
@@ -3135,7 +3659,10 @@ def grand_bank(x0, x1, z0, z1):
     # Columns along the south portico.
     column_spacing = (x1 - x0 - 4.0) / 4.0
     with group("Bank"):
-        box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), BANK_MARBLE, MARBLE)
+        # An inlay, not a slab: the bank stands in the government quarter, whose
+        # paving is laid for the whole quarter before anything goes up on it.
+        box("Slab", (x0, x1, z0, z1, FLOOR_1, FLOOR_1 + FLOOR_INLAY),
+            BANK_MARBLE, MARBLE)
         box("Roof", (x0, x1, z0, z1, bank_h, bank_h + SLAB),
             TRIM_WHITE, CONCRETE)
         # Dome on top.
@@ -3347,28 +3874,39 @@ def dining_restaurant(pid, label, x0, x1, z0, z1):
     place_point(pid, cx, z0 + 2.0, FLOOR_1, f"the {label.lower()}, by the door")
 
 
-def dining_block(band, sband, x0, x1, z0, z1):
-    """Six restaurants along the south edge of the block, with a terrace of
-    tables and trees behind them."""
-    names = [
-        ("dining_1", "EL SOL"), ("dining_2", "LA PLAYA"), ("dining_3", "BISTRO VERDE"),
-        ("dining_4", "SAPORI"), ("dining_5", "THE GRILL"), ("dining_6", "CASA LINDA"),
-    ]
-    rw = (x1 - x0 - 8.0) / 6
-    for i, (pid, label) in enumerate(names):
-        rx0 = x0 + 4.0 + i * rw
-        dining_restaurant(pid, label, rx0, rx0 + rw - 2.0, z0, z0 + 30.0)
-    # Terrace: tables on the grass north of the restaurants.
-    tz0 = z0 + 34.0
-    for i in range(4):
-        for j in range(3):
-            tx = x0 + 10.0 + i * 26.0
-            tz = tz0 + 8.0 + j * 14.0
-            desk(tx, tz, GROUND, side="north", width=4.0, depth=2.2, label="Table")
-            chair(tx - 2.6, tz, GROUND, side="south")
-            chair(tx + 2.6, tz, GROUND, side="south")
-    for tx in (x0 + 6.0, x1 - 6.0, (x0 + x1) / 2):
-        tree(tx, z1 - 4.0, GROUND, height=12.0, spread=8.0)
+# A table and its two chairs need this much floor, and the terrace is laid out
+# by dividing the ground it is given rather than by stepping a fixed pitch off
+# one corner. The fixed-pitch version silently drew nothing on a strip narrower
+# than its own first step -- every table failed the bounds guard and the caller
+# got an empty stone rectangle with no complaint from anywhere.
+TERRACE_PITCH_X = 13.0
+TERRACE_PITCH_Z = 12.0
+TERRACE_MARGIN = 5.0
+
+
+def dining_terrace(x0, x1, z0, z1, label="DiningTerrace"):
+    """Paved outdoor seating: what is left of a restaurant's quadrant once the
+    building has taken its frontage.
+
+    Sits on `GROUND`, one step over the lawn CityGround lays, the same plane
+    every other in-block plaza in this file uses -- a terrace at PAVING would
+    stand six hundredths of a stud above the sidewalk it runs into, which is a
+    lip the player trips on and the eye reads as a mistake."""
+    cols = max(1, int((x1 - x0 - 2 * TERRACE_MARGIN) // TERRACE_PITCH_X))
+    rows = max(1, int((z1 - z0 - 2 * TERRACE_MARGIN) // TERRACE_PITCH_Z))
+    with group(label):
+        box("Paving", (x0, x1, z0, z1, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        for i in range(cols):
+            for j in range(rows):
+                tx = x0 + (x1 - x0) * (i + 0.5) / cols
+                tz = z0 + (z1 - z0) * (j + 0.5) / rows
+                desk(tx, tz, GROUND, side="north", width=4.0, depth=2.2,
+                     label="Table")
+                chair(tx - 2.6, tz, GROUND, side="south")
+                chair(tx + 2.6, tz, GROUND, side="south")
+        for tx in (x0 + 3.0, x1 - 3.0):
+            tree(tx, z1 - 4.0, GROUND, height=11.0, spread=7.0)
 
 
 # ---------------------------------------------------------------------------
@@ -3550,6 +4088,229 @@ def sports_center(band, sband, x0, x1, z0, z1):
 
 
 # ---------------------------------------------------------------------------
+# The Garden: the indoor arena
+# ---------------------------------------------------------------------------
+#
+# The block this stands on was six houses, on the last avenue, looking straight
+# at the back of the soccer stadium -- a residential street with a hundred
+# thousand seats at the end of it. The houses have gone two cross streets south,
+# where the rest of the low city is, and the block they were on now holds the
+# one building the city was missing: a covered arena, which is what a life sim
+# needs for the half of its sport that is not played on grass.
+#
+# It is a drum, not a box. That is the whole point of the building and the
+# reason it is worth the parts: every other large interior in this city is
+# rectangular, so the one round room in the world reads as somewhere you have
+# arrived at rather than another hall. `elliptical_ring` already builds the
+# stadium's bowl out of spun facets and is reused wholesale here -- a second
+# implementation of "an annulus of boxes" is the thing this file asserts against
+# everywhere else.
+#
+# Named "The Garden" rather than after the building it is modelled on. The
+# nickname is what the place is actually called, and a real venue's registered
+# name painted across a Roblox marquee is a trademark problem the game does not
+# need to have.
+ARENA_MARGIN = 5.0          # plaza between the drum and the block edge
+ARENA_WALL_T = 3.2          # thickness of the drum wall
+ARENA_ARCADE_H = 15.0       # the glazed street-level band under the drum
+ARENA_DRUM_H = 46.0         # top of the drum, where the roof starts
+ARENA_ROOF_RINGS = 3        # steps in the dome; each one draws a ring of facets
+ARENA_ROOF_RISE = 4.5       # how much each step climbs
+ARENA_ROOF_STEP = 7.0       # how far each step draws in
+ARENA_TIERS = 3
+ARENA_RISE = 5.0            # how much a seating tier climbs over the one inside it
+ARENA_TREAD = 8.0           # how deep one seating tier is
+ARENA_BOWL_GAP = 6.0        # concourse between the top tier and the drum wall
+ARENA_COURT_X = 11.0        # half-width of the show court
+ARENA_COURT_Z = 17.0        # half-length
+ARENA_DOOR_H = 13.0
+# Which facets of the 24 are cut open. 12 is due west -- the city side, where the
+# marquee and the main doors are -- and 0 is due east, facing the stadium, so the
+# two big venues share a route rather than turning their backs on each other.
+ARENA_WEST_FACETS = (11, 12, 13)
+ARENA_EAST_FACET = 0
+ARENA_STONE = (228, 210, 182)
+ARENA_TRIM = (196, 176, 148)
+ARENA_SEATS = [(84, 106, 150), (168, 60, 66)]   # two rings, home colours
+ARENA_FLOOR = (216, 172, 116)
+ARENA_COURT_LINE = (248, 246, 240)
+
+
+def arena_bowl(cx, cz, floor):
+    """The seating: `ARENA_TIERS` concentric rings stepping up and out from the
+    court, then the concourse floor behind the top one."""
+    for i in range(ARENA_TIERS):
+        r_in_x = ARENA_COURT_X + 4.0 + i * ARENA_TREAD
+        r_in_z = ARENA_COURT_Z + 4.0 + i * ARENA_TREAD
+        elliptical_ring(f"Tier{i}", cx, cz,
+                        r_in_x + ARENA_TREAD, r_in_z + ARENA_TREAD,
+                        r_in_x, r_in_z,
+                        floor, floor + (i + 1) * ARENA_RISE,
+                        ARENA_SEATS[i % len(ARENA_SEATS)], CONCRETE)
+
+
+def arena_block(band, sband, x0, x1, z0, z1):
+    """One block, one building: a round arena with a show court in it.
+
+    Takes the whole block rather than sharing it, which nothing else in the grid
+    does. A drum with a plaza round it is the shape the building is -- half a
+    block of arena beside half a block of something else would be a hall, and
+    the city already has one of those on the block below this."""
+    cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    rx = (x1 - x0) / 2 - ARENA_MARGIN
+    rz = (z1 - z0) / 2 - ARENA_MARGIN
+    ix, iz = rx - ARENA_WALL_T, rz - ARENA_WALL_T
+    # The bowl has to fit inside the drum with a concourse behind it. Asserted
+    # rather than assumed: every one of these is a tunable above, and a court
+    # widened by four studs silently pushes the top tier into the wall, which
+    # draws as seating embedded in stone and reads as nothing at all.
+    bowl_x = ARENA_COURT_X + 4.0 + ARENA_TIERS * ARENA_TREAD
+    bowl_z = ARENA_COURT_Z + 4.0 + ARENA_TIERS * ARENA_TREAD
+    assert bowl_x + ARENA_BOWL_GAP <= ix and bowl_z + ARENA_BOWL_GAP <= iz, (
+        f"the arena bowl reaches {bowl_x:.1f}x{bowl_z:.1f} inside a drum of "
+        f"{ix:.1f}x{iz:.1f} with {ARENA_BOWL_GAP} studs of concourse wanted. "
+        f"Shrink ARENA_COURT_*, ARENA_TREAD or ARENA_TIERS -- the block cannot "
+        f"grow, it is the grid.")
+    drum_top = GROUND + ARENA_DRUM_H
+    doors = set(ARENA_WEST_FACETS) | {ARENA_EAST_FACET}
+
+    with group(f"Arena{band}_{sband}"):
+        box("Plaza", (x0, x1, z0, z1, GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
+        # The drum, in two bands. The glazed arcade at the bottom is what stops
+        # a fifty-stud stone cylinder reading as a silo: at street level the
+        # building is mostly window, and the solid mass starts above head
+        # height -- which is what the wall of an arena actually does, because
+        # the concourse behind it is the part with people in it.
+        elliptical_ring("Arcade", cx, cz, rx, rz, ix, iz,
+                        GROUND, GROUND + ARENA_ARCADE_H, GLAZING, GLASS,
+                        transparency=0.45, door_facets=doors,
+                        door_head=ARENA_DOOR_H)
+        elliptical_ring("Drum", cx, cz, rx, rz, ix, iz,
+                        GROUND + ARENA_ARCADE_H, drum_top, ARENA_STONE, LIMESTONE)
+        # Vertical fins on the drum, on the facet seams. One ring of thin boxes
+        # and the only thing giving a curved wall any scale from across the
+        # avenue -- an unbroken cylinder has no way to tell the eye how big it
+        # is.
+        for f in range(0, CIRCLE_SEGS, 2):
+            phi = f * CIRCLE_STEP + CIRCLE_STEP / 2
+            fx, fz = ellipse_point(phi, cx, cz, rx + 0.4, rz + 0.4)
+            rbxmx.spun_box(f"Fin{f}", (fx, (GROUND + ARENA_ARCADE_H + drum_top) / 2, fz),
+                           (1.6, drum_top - GROUND - ARENA_ARCADE_H, 3.0),
+                           ellipse_outward_yaw(phi, rx, rz), ARENA_TRIM, LIMESTONE,
+                           collide=False)
+        # The band the drum wears at the top of the arcade, and the one thing on
+        # this building that is lit in colour. Same rule as the towers: the
+        # highlight is at the doors, not on the roof.
+        _neon = DOWNTOWN_NEON[1]
+        elliptical_ring("ArcadeBand", cx, cz, rx + 0.8, rz + 0.8, ix, iz,
+                        GROUND + ARENA_ARCADE_H - 1.2, GROUND + ARENA_ARCADE_H,
+                        _neon, NEON, collide=False)
+
+        # The dome: rings stepping in and up off the drum, and a cap over the
+        # hole the last one leaves. Not a smooth shell -- the steps are what a
+        # spun-box ring can honestly build, and they read as the ribbed roof
+        # this kind of arena has rather than as a failed sphere.
+        ry = drum_top
+        rrx, rrz = rx, rz
+        for r in range(ARENA_ROOF_RINGS):
+            elliptical_ring(f"Roof{r}", cx, cz, rrx, rrz,
+                            rrx - ARENA_ROOF_STEP, rrz - ARENA_ROOF_STEP,
+                            ry, ry + ARENA_ROOF_RISE, ARENA_TRIM, CONCRETE)
+            rrx -= ARENA_ROOF_STEP
+            rrz -= ARENA_ROOF_STEP
+            ry += ARENA_ROOF_RISE
+        box("RoofCap", (cx - rrx, cx + rrx, cz - rrz, cz + rrz, ry, ry + SLAB),
+            ARENA_TRIM, CONCRETE)
+        _crown = dim(CROWN_NEON, NEON_ROOF_DIM)
+        box("RoofBand", (cx - rrx - 0.6, cx + rrx + 0.6,
+                         cz - rrz - 0.6, cz + rrz + 0.6,
+                         ry + SLAB, ry + SLAB + 1.2), _crown, NEON, collide=False,
+            children=point_light(_crown, 2.2, 70.0))
+
+        # The marquee, on the west face, over the main doors. An arena is known
+        # by its marquee before it is known by its roof.
+        mx = cx - rx
+        box("Marquee", (mx - 9.0, mx + 1.0, cz - 22.0, cz + 22.0,
+                        GROUND + ARENA_DOOR_H + 1.0, GROUND + ARENA_DOOR_H + 8.0),
+            ARENA_TRIM, SMOOTH)
+        box("MarqueeFace", (mx - 9.4, mx - 8.9, cz - 21.0, cz + 21.0,
+                            GROUND + ARENA_DOOR_H + 2.0, GROUND + ARENA_DOOR_H + 7.0),
+            (18, 20, 26), SMOOTH,
+            children=sign("THE GARDEN", "left", color=(255, 214, 120), size=64))
+        for i in range(6):
+            lz = cz - 20.0 + i * 8.0
+            box(f"MarqueeLamp{i}", (mx - 9.6, mx - 9.2, lz - 1.6, lz + 1.6,
+                                    GROUND + ARENA_DOOR_H + 0.6,
+                                    GROUND + ARENA_DOOR_H + 1.4),
+                NEON_AMBER, NEON, collide=False,
+                children=point_light(NEON_AMBER, 1.4, 26.0) if i % 2 == 0 else "")
+
+        # Inside: the floor, the bowl, the court and the thing hanging over it.
+        #
+        # The floor is laid *on* the plaza rather than instead of it -- one
+        # inlay step up, the same way every other indoor surface in this file
+        # meets the ground it stands on. Given the plaza's own height it is two
+        # slabs topping in the same plane over the same hundred studs, which is
+        # a flicker and is what check 13 reports.
+        afloor = GROUND + FLOOR_INLAY
+        box("Floor", (cx - ix, cx + ix, cz - iz, cz + iz,
+                      GROUND_BOTTOM, afloor), FLOOR_INDOOR, CONCRETE)
+        arena_bowl(cx, cz, afloor)
+        box("Court", (cx - ARENA_COURT_X, cx + ARENA_COURT_X,
+                      cz - ARENA_COURT_Z, cz + ARENA_COURT_Z,
+                      afloor, afloor + FLOOR_INLAY), ARENA_FLOOR, WOOD)
+        _cl = afloor + FLOOR_INLAY
+        box("CentreLine", (cx - ARENA_COURT_X, cx + ARENA_COURT_X,
+                           cz - 0.3, cz + 0.3, _cl, _cl + 0.06),
+            ARENA_COURT_LINE, SMOOTH, collide=False)
+        for _s in (-1, 1):
+            box(f"Key{_s}", (cx - 5.0, cx + 5.0,
+                             cz + _s * (ARENA_COURT_Z - 12.0) - 0.3,
+                             cz + _s * (ARENA_COURT_Z - 12.0) + 0.3,
+                             _cl, _cl + 0.06), ARENA_COURT_LINE, SMOOTH,
+                collide=False)
+            # A hoop at each end, on a stanchion behind the baseline the way a
+            # show court's is -- a backboard growing out of the floor is the
+            # detail that says "this room is for basketball" from the top tier.
+            hz = cz + _s * (ARENA_COURT_Z - 2.0)
+            box(f"Stanchion{_s}", (cx - 1.2, cx + 1.2, hz - 1.2, hz + 1.2,
+                                   GROUND, GROUND + 11.0), STEEL, METAL)
+            box(f"Backboard{_s}", (cx - 4.0, cx + 4.0,
+                                   hz - _s * 2.4 - 0.2, hz - _s * 2.4 + 0.2,
+                                   GROUND + 9.0, GROUND + 12.0),
+                TRIM_WHITE, GLASS, transparency=0.35)
+            box(f"Hoop{_s}", (cx - 1.6, cx + 1.6,
+                              hz - _s * 4.4, hz - _s * 2.6,
+                              GROUND + 10.0, GROUND + 10.3),
+                (232, 108, 60), METAL, collide=False)
+        # The scoreboard. Hung in the middle over the court, which is the one
+        # thing every arena has and no other room in this city does.
+        sy = GROUND + 30.0
+        box("ScoreboardRig", (cx - 0.6, cx + 0.6, cz - 0.6, cz + 0.6,
+                              sy + 12.0, ry), STEEL, METAL, collide=False)
+        box("Scoreboard", (cx - 9.0, cx + 9.0, cz - 9.0, cz + 9.0,
+                           sy, sy + 12.0), (24, 26, 32), SMOOTH)
+        for _fx, _fz, _face in ((cx - 9.2, cz, "left"), (cx + 9.2, cz, "right")):
+            box(f"ScoreFace{_face}", (_fx - 0.3, _fx + 0.3, cz - 8.0, cz + 8.0,
+                                      sy + 2.0, sy + 10.0), (40, 44, 54), SMOOTH,
+                children=sign("THE GARDEN", _face, color=(255, 214, 120), size=48))
+        for _i in range(CIRCLE_SEGS // 4):
+            _phi = _i * 4 * CIRCLE_STEP + CIRCLE_STEP * 2
+            _lx, _lz = ellipse_point(_phi, cx, cz, ix - 4.0, iz - 4.0)
+            ceiling_light(_lx, _lz, drum_top - 1.0, label=f"BowlLight{_i}")
+
+    # Three points, and the split is the walk: the doors on the plaza, the
+    # concourse just inside them, and the courtside. One point on a building
+    # this size would put "the arena" fifty studs from anything a player came
+    # here to do.
+    place_point("arena", cx - rx - 3.0, cz, GROUND, "the garden, at the doors")
+    place_point("arena_concourse", cx - ix + 3.0, cz, GROUND + FLOOR_INLAY,
+                "the garden, on the concourse")
+    place_point("arena_court", cx, cz - ARENA_COURT_Z + 3.0, GROUND + FLOOR_INLAY,
+                "the garden, courtside")
+
+
+# ---------------------------------------------------------------------------
 # Storefronts (main street) and civic buildings
 # ---------------------------------------------------------------------------
 
@@ -3628,24 +4389,27 @@ GARAGE_BAYS = {
 #   * width >= 28, or the glazing runs cross over and vanish (see GLASS_STYLES).
 #   * A garage stays single-storey. Its roll-up door's head is measured off
 #     CEIL_1, so a second storey would leave the opening under a floor.
+#
+# Four trades that used to be here are not any more -- bookstore, electronics,
+# toy_store and music_store are mall units now. See the note on `north_shops`
+# in `mall()` for why: with nineteen of these the street's widths plus its
+# minimum gaps came to exactly the length of the street, so there was no
+# frontage left over for anything that is not a shop, and a main street with no
+# trees, no benches and no gaps in it is a wall with doors in it.
 SHOP_FRONTS = {
     # z 60..196 -- the eating end of the street. Three awnings in a row, which is
     # what makes it read as a restaurant strip rather than three more shops.
     "cafe": ("cafe", 28.0, 2, AWNING_RED, "full"),
     "restaurant": ("restaurant", 30.0, 2, AWNING_GREEN, "full"),
     "pizzeria": ("pizzeria", 28.0, 1, AWNING_MUSTARD, "full"),
-    "supermarket": ("market", 30.0, 1, None, "full"),
     # z 218..346
+    "supermarket": ("market", 30.0, 1, None, "full"),
     "pharmacy": ("counter", 34.0, 2, AWNING_BLUE, "full"),
-    "florist": ("market", 28.0, 1, AWNING_GREEN, "full"),
-    "bookstore": ("shelves", 32.0, 2, None, "high"),
     # z 368..496
-    "electronics": ("shelves", 36.0, 2, None, "full"),
+    "florist": ("market", 28.0, 1, AWNING_GREEN, "full"),
     "hardware": ("workshop", 34.0, 1, None, "high"),
-    "toy_store": ("shelves", 28.0, 1, AWNING_MUSTARD, "full"),
     # z 518..646
     "clothing_store": ("racks", 38.0, 2, None, "full"),
-    "music_store": ("racks", 28.0, 1, None, "narrow"),
     "laundromat": ("laundromat", 30.0, 1, AWNING_BLUE, "full"),
     # z 668..796 -- the chairs. All three are the same trade at heart, so they
     # are separated by roofline and glass rather than by fittings.
@@ -4033,45 +4797,177 @@ def street_fittings(name, x0, x1, z0, z1, front, trade):
         ceiling_light(cx, cz, CEIL_1)
 
 
+# ---------------------------------------------------------------------------
+# What stands on the main street when a shop does not
+# ---------------------------------------------------------------------------
+#
+# Four of these, and they are the whole reason four shops moved into the mall.
+# A shopping street is not a continuous run of frontage -- it is shops with
+# things between them, and the things between them are what tell a player where
+# they are. Nineteen storefronts at a constant pitch gave the player one cue
+# repeated nineteen times; fifteen storefronts with a terrace, a garden, a
+# fountain and a row of kiosks between them gives six bands that can be told
+# apart from the far pavement.
+#
+# All four take the same (z0, z1) a shop would and stand in the same 24-stud
+# strip, so the table below can hold them in the same list and the solver does
+# not have to know which is which.
+
+STREET_FILLERS = {}   # kind -> builder(x0, x1, z0, z1, label)
+
+
+def street_filler(kind):
+    """Register a main-street filler under the name the table uses."""
+    def wrap(fn):
+        STREET_FILLERS[kind] = fn
+        return fn
+    return wrap
+
+
+@street_filler("terrace")
+def street_terrace(x0, x1, z0, z1, label):
+    """Outdoor tables. Goes at the eating end, between the restaurants, which is
+    the one place on the street where the tables have a reason to be."""
+    dining_terrace(x0 + 1.0, x1 - 1.0, z0, z1, label=label)
+
+
+@street_filler("garden")
+def street_garden(x0, x1, z0, z1, label):
+    """A pocket garden: lawn, a path through it to the pavement, four trees and
+    two benches facing the street."""
+    cz = (z0 + z1) / 2
+    with group(label):
+        box("Lawn", (x0, x1, z0, z1, GROUND_BOTTOM,
+                     CITY_GRASS_TOP + GRASS_LIFT), LAWN, GRASS)
+        box("Path", (x0, x1, cz - 3.0, cz + 3.0, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        for tz in (z0 + 6.0, z1 - 6.0):
+            for tx in (x0 + 7.0, x1 - 7.0):
+                tree(tx, tz, GROUND, height=14.0, spread=9.0)
+        bench(x0 + 5.0, cz - 5.0, 1)
+        bench(x0 + 5.0, cz + 5.0, 1)
+        street_lamp(x1 - 3.0, cz, -1, floor=GROUND)
+
+
+@street_filler("plaza")
+def street_plaza(x0, x1, z0, z1, label):
+    """A paved square with a fountain in it. The one place on the street a
+    player would stop rather than pass through, so it gets the water."""
+    cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    with group(label):
+        box("Paving", (x0, x1, z0, z1, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        box("Basin", (cx - 7.0, cx + 7.0, cz - 7.0, cz + 7.0,
+                      GROUND, GROUND + 2.4), BANK_MARBLE, MARBLE)
+        box("Water", (cx - 5.6, cx + 5.6, cz - 5.6, cz + 5.6,
+                      GROUND + 1.6, GROUND + 2.2), WATER, SMOOTH,
+            transparency=0.35, collide=False)
+        box("Jet", (cx - 1.0, cx + 1.0, cz - 1.0, cz + 1.0,
+                    GROUND + 2.2, GROUND + 7.0), WATER, SMOOTH,
+            transparency=0.55, collide=False)
+        for bz in (cz - 10.0, cz + 10.0):
+            bench(cx, bz, 1 if bz < cz else -1, floor=GROUND)
+        for lz in (z0 + 4.0, z1 - 4.0):
+            street_lamp(x1 - 3.0, lz, -1, floor=GROUND)
+
+
+@street_filler("kiosks")
+def street_kiosks(x0, x1, z0, z1, label):
+    """Two kiosks and a tree between them: a newsstand and a flower cart.
+
+    Small buildings, on purpose. Everything else on this street is thirty studs
+    of frontage two storeys high, and a pair of huts a player can see over is
+    the only thing on it that gives the row a sense of scale."""
+    cz = (z0 + z1) / 2
+    with group(label):
+        box("Paving", (x0, x1, z0, z1, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        for i, (kz, colour, awning) in enumerate(
+                ((z0 + 5.0, (236, 226, 206), AWNING_MUSTARD),
+                 (z1 - 13.0, (222, 232, 224), AWNING_GREEN))):
+            kx0, kx1 = x0 + 8.0, x0 + 18.0
+            with group(f"Kiosk{i}"):
+                box("Body", (kx0, kx1, kz, kz + 8.0, GROUND, GROUND + 9.0),
+                    colour, SMOOTH)
+                box("Counter", (kx0 - 2.4, kx0, kz + 1.0, kz + 7.0,
+                                GROUND + 3.6, GROUND + 4.2), DESK_TOP, WOOD)
+                box("Roof", (kx0 - 1.0, kx1 + 1.0, kz - 1.0, kz + 9.0,
+                             GROUND + 9.0, GROUND + 10.0), ROOF_GREY, SLATE)
+                box("Awning", (kx0 - 5.0, kx0 - 0.4, kz, kz + 8.0,
+                               GROUND + 7.4, GROUND + 8.6), awning, FABRIC,
+                    collide=False)
+        tree((x0 + x1) / 2 + 4.0, cz, GROUND, height=15.0, spread=10.0)
+        street_lamp(x1 - 3.0, cz, -1, floor=GROUND)
+
+
 # The street, band by band. Widths, rooflines, awnings and glass all live in
-# SHOP_FRONTS -- this is only which shops stand where, in order along z.
+# SHOP_FRONTS -- this is only what stands where, in order along z.
+#
+# An entry is either a shop, `("shop", pid, label)`, or a filler,
+# `("filler", kind, width)`. Both take frontage out of the band, which is the
+# whole point: a filler is not a leftover gap, it is a slot the solver has to
+# find room for, and the moment it stops fitting the band says so rather than
+# quietly closing up.
+#
+# **The trades are deliberately not sorted into themed triples any more.** They
+# were -- an eating band, a chairs band, a motor band, and three bands of
+# whatever was left -- which is a plausible way to write the table and a bad way
+# to walk down the street: every band was three shops of one kind, so the whole
+# street was six things rather than fifteen. The two ends keep their theme,
+# because a restaurant strip and a garage end are real, and the middle is mixed.
+# Where the main street's south end is: the city's own south edge, the same
+# number the financial district starts from.
+MAIN_Z0 = 60.0
+
+
+def main_band(k):
+    """The clear frontage in band `k`: from the far pavement of the cross street
+    below it to the near pavement of the one above.
+
+    Derived, because four of the six were typed and three of those were wrong.
+    They ran eight studs into the cross street's own north pavement and got away
+    with it for exactly as long as the gap solver happened to push the first
+    shop clear -- which it stopped doing the moment the shops in a band changed,
+    and check_city reported it as `C0PavN cuts 0.5 studs into
+    supermarket.WallSouth1`. The sixth carried a comment claiming its pavement
+    ended at 826 when the numbers above say 818: a measurement typed once,
+    never re-measured, and eight studs of frontage quietly lost with it.
+    """
+    z0 = MAIN_Z0 if k == 0 else CS[k - 1] + CS_W[k - 1] + CS_WALK
+    return z0, CS[k] - CS_WALK
+
+
 MAIN_STREET = [
-    (60.0, 196.0, [
-        ("cafe", "CAFE ASTER"),
-        ("restaurant", "TORRE RESTAURANT"),
-        ("pizzeria", "VESUVIO PIZZERIA"),
-        ("supermarket", "MIDWAY MARKET"),
+    (main_band(0), [
+        ("shop", "cafe", "CAFE ASTER"),
+        ("shop", "restaurant", "TORRE RESTAURANT"),
+        ("filler", "terrace", 30.0),
+        ("shop", "pizzeria", "VESUVIO PIZZERIA"),
     ]),
-    (218.0, 346.0, [
-        ("pharmacy", "FIRST PHARMACY"),
-        ("florist", "STEM & BLOOM"),
-        ("bookstore", "PAGES & PRESS"),
+    (main_band(1), [
+        ("shop", "supermarket", "MIDWAY MARKET"),
+        ("filler", "garden", 34.0),
+        ("shop", "pharmacy", "FIRST PHARMACY"),
     ]),
-    (368.0, 496.0, [
-        ("electronics", "VOLT ELECTRONICS"),
-        ("hardware", "IRON & WOOD"),
-        ("toy_store", "PLAYPEN"),
+    (main_band(2), [
+        ("shop", "florist", "STEM & BLOOM"),
+        ("filler", "plaza", 30.0),
+        ("shop", "hardware", "IRON & WOOD"),
     ]),
-    (518.0, 646.0, [
-        ("clothing_store", "THREAD & CO"),
-        ("music_store", "FREQUENCY"),
-        ("laundromat", "CLEAN SPIN"),
+    (main_band(3), [
+        ("shop", "clothing_store", "THREAD & CO"),
+        ("filler", "kiosks", 26.0),
+        ("shop", "laundromat", "CLEAN SPIN"),
     ]),
-    (668.0, 796.0, [
-        ("barbershop", "THE CLIPPERS"),
-        ("salon", "LUMIERE SALON"),
-        ("tattoo_parlor", "INKWELL TATTOO"),
+    (main_band(4), [
+        ("shop", "barbershop", "THE CLIPPERS"),
+        ("shop", "salon", "LUMIERE SALON"),
+        ("shop", "tattoo_parlor", "INKWELL TATTOO"),
     ]),
-    # 826, not 818. The band used to claim eight studs of the cross street's own
-    # north pavement, which ends at 826.0 -- it was only ever safe because three
-    # equal 30-stud shops left a 9.5-stud gap that pushed the first one clear by
-    # a stud and a half. Widen any shop here and the vet walks into the kerb,
-    # which is what happened the moment this table gained widths, and which
-    # check_city's "no street runs through a building" reported by name.
-    (826.0, 946.0, [
-        ("vet", "ANIMAL CLINIC"),
-        ("gas_station", "TANK & GO"),
-        ("car_wash", "WASH & GLIDE"),
+    (main_band(5), [
+        ("shop", "vet", "ANIMAL CLINIC"),
+        ("shop", "gas_station", "TANK & GO"),
+        ("shop", "car_wash", "WASH & GLIDE"),
     ]),
 ]
 
@@ -4091,11 +4987,18 @@ def shop_front(pid):
     return row
 
 
+def slot_width(slot):
+    """How much frontage one entry in a MAIN_STREET band takes."""
+    if slot[0] == "shop":
+        return shop_front(slot[1])[1]
+    return slot[2]
+
+
 def place_main_street():
     colour = 0
-    for (z0, z1, stores) in MAIN_STREET:
-        n = len(stores)
-        widths = [shop_front(pid)[1] for pid, _ in stores]
+    for (z0, z1), slots in MAIN_STREET:
+        n = len(slots)
+        widths = [slot_width(s) for s in slots]
         gap = (z1 - z0 - sum(widths)) / (n + 1)
         # Checked rather than trusted. The bands are fixed by the cross streets
         # either side of them, so a width raised by four studs comes straight
@@ -4104,16 +5007,29 @@ def place_main_street():
         if gap < MIN_SHOP_GAP:
             raise ValueError(
                 f"main street band z {z0}..{z1} is over-subscribed: "
-                f"{n} shops totalling {sum(widths)} studs leave a {gap:.1f}-stud gap, "
+                f"{n} slots totalling {sum(widths)} studs leave a {gap:.1f}-stud gap, "
                 f"under the {MIN_SHOP_GAP} minimum. Narrow one of "
-                f"{[pid for pid, _ in stores]} in SHOP_FRONTS."
+                f"{[s[1] for s in slots]} in SHOP_FRONTS, or narrow a filler in "
+                f"MAIN_STREET."
             )
         cursor = z0 + gap
-        for i, (pid, label) in enumerate(stores):
-            trade, width, storeys, awning, glass = shop_front(pid)
+        for slot, width in zip(slots, widths):
             sz0 = cursor
             sz1 = sz0 + width
             cursor = sz1 + gap
+            if slot[0] == "filler":
+                kind = slot[1]
+                if kind not in STREET_FILLERS:
+                    raise KeyError(
+                        f"main street band z {z0}..{z1} asks for a {kind!r} filler "
+                        f"and nothing is registered under that name. Decorate a "
+                        f"builder with @street_filler({kind!r})."
+                    )
+                STREET_FILLERS[kind](MAIN_X0, MAIN_X1, sz0, sz1,
+                                     f"MainStreet{kind.title()}{sz0:.0f}")
+                continue
+            _, pid, label = slot
+            trade, _w, storeys, awning, glass = shop_front(pid)
             door_z = (sz0 + sz1) / 2
             wall_color = STORE_WALLS[colour % len(STORE_WALLS)]
             colour += 1
@@ -4166,7 +5082,12 @@ def car_dealership(x0, x1, z0, z1, name, brand):
         show_cz = (show_z0 + show_z1) / 2
 
         with group("Showroom"):
-            box("Slab", (show_x0, show_x1, show_z0, show_z1,
+            # To `mid_z`, not to `show_z1`. The two halves share a party wall and
+            # so overlap by its thickness everywhere else, which is right for
+            # walls and roofs and wrong for floors: both halves poured a slab
+            # over the same three studs of it, in the same plane. The floors
+            # abut on the centreline and the wall stands across the join.
+            box("Slab", (show_x0, show_x1, show_z0, mid_z,
                          FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
             box("Roof", (show_x0, show_x1, show_z0, show_z1,
                          CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
@@ -4200,7 +5121,7 @@ def car_dealership(x0, x1, z0, z1, name, brand):
         svc_cx = (x0 + x1) / 2
 
         with group("ServiceBays"):
-            box("Slab", (x0, x1, svc_z0, svc_z1, FLOOR_1 - SLAB, FLOOR_1),
+            box("Slab", (x0, x1, mid_z, svc_z1, FLOOR_1 - SLAB, FLOOR_1),
                 FLOOR_INDOOR, MARBLE)
             box("Roof", (x0, x1, svc_z0, svc_z1, CEIL_1, CEIL_1 + SLAB),
                 ROOF_GREY, SLATE)
@@ -4271,15 +5192,55 @@ FADE_SLAB = 1.0
 FADE_STOREY = 15.0
 
 
-def fade_office(no, x0, x1, z0, z1, storeys, name="FadeOffice"):
+# The mid-rise district's own materials, and the reason it has a list at all.
+#
+# Every one of these buildings used to be the same three colours in the same two
+# materials -- one glass, one marble, one concrete roof -- so sixteen of them
+# across the four fade blocks were one building stamped sixteen times. The
+# sculpted towers on the waterfront got all the variety in the city and the
+# ordinary blocks between them got none, which is backwards: the sculpted ones
+# are four hundred studs away and read as a silhouette, and these are the ones a
+# player actually walks past.
+#
+# Three axes, all indexed off the building's own number so the pattern never
+# repeats on one street: the curtain wall's tint, and the cladding the lobby is
+# faced in -- a colour and a *material*, because at ten studs the material is
+# the thing the eye is reading and a wall of flat colour reads as unfinished.
+FADE_GLASS = [
+    (146, 180, 206),
+    (172, 202, 222),
+    (124, 158, 188),
+    (188, 214, 230),
+]
+FADE_CLADDING = [
+    (RISE_MARBLE, MARBLE),        # polished stone
+    ((222, 214, 200), LIMESTONE), # sawn limestone
+    ((198, 200, 204), CONCRETE),  # board-marked concrete
+    ((214, 196, 178), GRANITE),   # warm granite
+]
+
+
+def fade_office(no, x0, x1, z0, z1, storeys, name="FadeOffice", front="south"):
     """A mid-rise office block: flat roof, glass curtain wall, ground-floor
-    lobby. `storeys` is the number of 15-stud floors above the lobby."""
+    lobby. `storeys` is the number of 15-stud floors above the lobby.
+
+    `front` is which street the door, the sign and the place point face, the
+    same way `shaped_tower` takes one and for the same reason: a block two rows
+    deep has a north row whose street is above it, and an office that always
+    opened south put half of them face to face down an alley."""
     ix0, ix1 = x0 + WALL, x1 - WALL
     iz0, iz1 = z0 + WALL, z1 - WALL
     cx = (x0 + x1) / 2
     cz = (z0 + z1) / 2
+    # "Outward, toward the street this office faces". See `shaped_tower`.
+    s = 1.0 if front == "south" else -1.0
+    fz, ifz = (z0, iz0) if front == "south" else (z1, iz1)
+    bz, ibz = (z1, iz1) if front == "south" else (z0, iz0)
     lobby_h = 18.0
     tower_top = FLOOR_1 + lobby_h + (storeys - 1) * (FADE_STOREY + FADE_SLAB)
+    glass = FADE_GLASS[no % len(FADE_GLASS)]
+    clad, clad_mat = FADE_CLADDING[(no // 2) % len(FADE_CLADDING)]
+    neon = DOWNTOWN_NEON[no % len(DOWNTOWN_NEON)]
 
     with group(f"{name}_{no}"):
         box("Slab", (x0, x1, z0, z1, FLOOR_1 - FADE_SLAB, FLOOR_1),
@@ -4287,7 +5248,16 @@ def fade_office(no, x0, x1, z0, z1, storeys, name="FadeOffice"):
         # Glass tower body.
         box("Tower", (x0 + 2.0, x1 - 2.0, z0 + 2.0, z1 - 2.0,
                       FLOOR_1 + lobby_h, tower_top),
-            (140, 170, 195), GLASS, transparency=0.5, collide=False)
+            glass, GLASS, transparency=0.5, collide=False)
+        # The floor lines. One thin band per storey, standing a third of a stud
+        # proud of the glass -- the cheapest thing on this building and the one
+        # that makes it read as an office rather than as a tinted block, because
+        # a curtain wall is horizontal and a plain box has no scale at all.
+        for _f in range(1, storeys):
+            _fy = FLOOR_1 + lobby_h + _f * (FADE_STOREY + FADE_SLAB) - FADE_SLAB
+            box(f"Floorline{_f}", (x0 + 1.7, x1 - 1.7, z0 + 1.7, z1 - 1.7,
+                                   _fy, _fy + FADE_SLAB),
+                clad, SMOOTH, collide=False)
         # Flat roof slab.
         box("Roof", (x0 + 2.0, x1 - 2.0, z0 + 2.0, z1 - 2.0,
                      tower_top, tower_top + FADE_SLAB),
@@ -4297,30 +5267,238 @@ def fade_office(no, x0, x1, z0, z1, storeys, name="FadeOffice"):
                         tower_top + FADE_SLAB, tower_top + FADE_SLAB + 2.0),
             (90, 94, 100), CONCRETE)
         # Lobby walls.
-        wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="x")
+        wall("WallBack", (x0, x1) + span(ibz, bz) + (FLOOR_1, FLOOR_1 + lobby_h),
+             clad, clad_mat, along="x")
         wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="z")
+             clad, clad_mat, along="z")
         wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="z")
+             clad, clad_mat, along="z")
         door_z0, door_z1 = cx - DOORWAY / 2, cx + DOORWAY / 2
-        wall("WallSouth", (x0, x1, z0, iz0, FLOOR_1, FLOOR_1 + lobby_h),
-             RISE_MARBLE, along="x", doors=((door_z0, door_z1),))
-        glazing("LobbyWin", (x0 + 1.5, x1 - 1.5, iz0 + 0.4, z1 - 0.4,
-                             FLOOR_1 + 1.5, FLOOR_1 + lobby_h - 1.0),
+        wall("WallFront", (x0, x1) + span(fz, ifz) + (FLOOR_1, FLOOR_1 + lobby_h),
+             clad, clad_mat, along="x", doors=((door_z0, door_z1),))
+        # Glazed in the front wall's own thickness. It used to be given
+        # `iz0 + 0.4 .. z1 - 0.4` -- the whole interior depth -- which `glazing`
+        # reads as four panes each fifty studs deep, so the lobby was filled
+        # with translucent slabs rather than fronted by a window.
+        glazing("LobbyWin", (x0 + 1.5, x1 - 1.5) + span(fz, ifz)
+                + (FLOOR_1 + 1.5, FLOOR_1 + lobby_h - 1.0),
                 along="x", panes=4)
-        box("Reception", (ix0 + 4.0, ix0 + 10.0, iz1 - 6.0, iz1 - 2.0,
-                          FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
-        box("Sofa", (ix1 - 8.0, ix1 - 3.0, iz1 - 6.0, iz1 - 2.0,
-                     FLOOR_1 + 1.2, FLOOR_1 + 2.0), (120, 140, 110), FABRIC)
+        glass_doors("Door", (door_z0, door_z1) + span(fz, ifz)
+                    + (FLOOR_1, FLOOR_1 + DOOR_HEIGHT), along="x")
+        # The highlight, on the lobby's own head rather than on the roof. Same
+        # rule as the towers: colour at the door, white in the sky.
+        box("EntranceNeon", (x0 + 1.2, x1 - 1.2)
+            + span(fz - s * 0.5, fz + s * 0.3)
+            + (FLOOR_1 + lobby_h - 1.4, FLOOR_1 + lobby_h - 0.6),
+            neon, NEON, collide=False,
+            children=point_light(neon, 1.3, 32.0))
+        box("Reception", (ix0 + 4.0, ix0 + 10.0)
+            + span(ibz - s * 6.0, ibz - s * 2.0)
+            + (FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
+        box("Sofa", (ix1 - 8.0, ix1 - 3.0)
+            + span(ibz - s * 6.0, ibz - s * 2.0)
+            + (FLOOR_1 + 1.2, FLOOR_1 + 2.0), (120, 140, 110), FABRIC)
         ceiling_light(cx, cz, FLOOR_1 + lobby_h - 0.5)
-        box("Sign", (cx - 8.0, cx + 8.0, z0 - 1.6, z0 - 0.6,
-                     FLOOR_1 + 12.0, FLOOR_1 + 14.0),
+        box("Sign", (cx - 8.0, cx + 8.0)
+            + span(fz - s * 1.6, fz - s * 0.6)
+            + (FLOOR_1 + 12.0, FLOOR_1 + 14.0),
             RISE_FRAME, SMOOTH,
-            children=sign(f"FADE {no}", "front", color=(250, 246, 234), size=52))
+            children=sign(f"FADE {no}", "front" if front == "south" else "back",
+                          color=(250, 246, 234), size=52))
 
-    place_point(f"fade_{no}", cx, z0 + 2.0, FLOOR_1,
+    place_point(f"fade_{no}", cx, fz + s * 2.0, FLOOR_1,
                 f"fade {no}, the lobby")
+
+
+# ---------------------------------------------------------------------------
+# The other half of downtown
+# ---------------------------------------------------------------------------
+
+# Every building south of the Circle was drawn from one of two vocabularies: a
+# sculpted glass tower on the waterfront, a glass mid-rise on the band behind
+# it. Twenty of the first and eight of the second, sorted into two solid stripes
+# -- which is the whole reason downtown reads as a rendering rather than as a
+# place. Cities are not sorted. What makes a real downtown look built over time
+# is that the block beside the glass tower is eighty years older than it, in
+# stone, two thirds its height, and nobody ever knocked it down.
+#
+# So this is that building, and it goes into *both* districts rather than into a
+# third stripe of its own: a handful of them among the waterfront towers, and
+# one of the two slots on every fade block. Swapping in one direction only would
+# just move the seam.
+#
+# Deliberately not brick and deliberately not grey. Warm sawn stone is what the
+# era actually built in, it is the one family that sits beside a blue-grey
+# curtain wall without fighting it, and grey masonry downtown is the exact thing
+# that had to be taken off the tower podiums.
+MASONRY_BASE_H = 22.0        # retail base; taller than an office lobby on purpose
+MASONRY_STOREY = 13.0        # a pre-war floor is shorter than a modern one
+MASONRY_WINDOW_H = 7.0       # the punched opening inside that floor
+MASONRY_CORNICE_H = 2.4
+MASONRY_CAP_H = 7.0
+# Where the shaft steps back, as a fraction of its storeys. Safe range 0.5..0.8:
+# below a half the building is a plinth with a tower on it, above four fifths
+# the setback is a lip rather than a step.
+MASONRY_SETBACK_FRAC = 0.62
+MASONRY_INSET = 3.5          # how far it steps back when it does
+MASONRY_PIERS = 4            # piers per street face; 0 leaves a ribbon window
+MASONRY_PIER_W = 3.0
+MASONRY_PIER_D = 0.8         # how far a pier stands proud of the glass
+MASONRY_WINDOW = (108, 128, 142)
+MASONRY_STONE = [
+    ((232, 216, 188), LIMESTONE),   # pale sawn limestone
+    ((216, 196, 168), GRANITE),     # warm granite
+    ((238, 228, 210), MARBLE),      # cream marble
+    ((222, 202, 176), CONCRETE),    # cast stone
+]
+
+
+def masonry_skyline(storeys):
+    """The top of a masonry tower's cap.
+
+    Split out for the same reason `shaped_tower_skyline` is: the Circle's
+    clearance rule reads the tallest thing on the waterfront, and some of those
+    are now this rather than a glass tower. A second copy of this arithmetic in
+    the assertion is a rule guarding a building nobody built."""
+    return (FLOOR_1 + MASONRY_BASE_H + storeys * MASONRY_STOREY
+            + MASONRY_CORNICE_H + MASONRY_CAP_H)
+
+
+def masonry_tower(tag, x0, x1, z0, z1, storeys, tint=0, front="south",
+                  slab=False):
+    """A pre-war stone tower: a deep retail base, a shaft of punched window
+    courses running between piers, a setback with a cornice under it, and a cap.
+
+    `slab` is whether it pours its own ground plate. False on the waterfront,
+    where `FinPaving` already covers the whole band -- a second plate at the same
+    height over the same footprint is precisely what check 13 exists to find.
+    """
+    if storeys < 2:
+        raise SystemExit(
+            f"[gen_city] masonry_tower {tag!r} was asked for {storeys} storeys. "
+            f"It needs at least two: the setback splits the shaft in half, and a "
+            f"half with no floors in it draws an inside-out box rather than "
+            f"failing."
+        )
+    stone, stone_mat = MASONRY_STONE[tint % len(MASONRY_STONE)]
+    trim = dim(stone, 0.88)
+    neon = DOWNTOWN_NEON[tint % len(DOWNTOWN_NEON)]
+    cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    ix0, ix1 = x0 + WALL, x1 - WALL
+    iz0, iz1 = z0 + WALL, z1 - WALL
+    # "Outward, toward the street this building faces". See `shaped_tower`.
+    s = 1.0 if front == "south" else -1.0
+    fz, ifz = (z0, iz0) if front == "south" else (z1, iz1)
+    bz, ibz = (z1, iz1) if front == "south" else (z0, iz0)
+
+    base_top = FLOOR_1 + MASONRY_BASE_H
+    low_n = min(storeys - 1, max(1, int(round(storeys * MASONRY_SETBACK_FRAC))))
+    high_n = storeys - low_n
+    mid = base_top + low_n * MASONRY_STOREY
+    shaft_top = base_top + storeys * MASONRY_STOREY
+    cornice_top = shaft_top + MASONRY_CORNICE_H
+    cap_top = cornice_top + MASONRY_CAP_H
+    ux0, ux1 = x0 + 1.0 + MASONRY_INSET, x1 - 1.0 - MASONRY_INSET
+    uz0, uz1 = z0 + 1.0 + MASONRY_INSET, z1 - 1.0 - MASONRY_INSET
+
+    with group(f"Masonry_{tag}"):
+        if slab:
+            box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1),
+                FLOOR_INDOOR, MARBLE)
+        # The base is four walls, not a solid block, for the reason the tower
+        # podiums are: a door cut into twenty studs of stone is a doorway into
+        # rock, and the place point outside it is somewhere a player can stand
+        # but never walk into.
+        _door = (cx - DOORWAY / 2, cx + DOORWAY / 2)
+        wall("WallBack", (x0, x1) + span(ibz, bz) + (FLOOR_1, base_top),
+             stone, stone_mat, along="x")
+        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, base_top),
+             stone, stone_mat, along="z")
+        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, base_top),
+             stone, stone_mat, along="z")
+        wall("WallFront", (x0, x1) + span(fz, ifz) + (FLOOR_1, base_top),
+             stone, stone_mat, along="x", doors=(_door,))
+        glass_doors("Door", _door + span(fz, ifz)
+                    + (FLOOR_1, FLOOR_1 + DOOR_HEIGHT), along="x")
+        glazing("BaseWin", (x0 + 2.0, x1 - 2.0) + span(fz, ifz)
+                + (FLOOR_1 + DOOR_HEIGHT + 1.5, base_top - 4.5),
+                along="x", panes=5)
+        box("BaseCornice", (x0 - 0.8, x1 + 0.8, z0 - 0.8, z1 + 0.8,
+                            base_top - 1.8, base_top), trim, stone_mat)
+        box("Reception", (ix0 + 4.0, ix0 + 10.0)
+            + span(ibz - s * 6.0, ibz - s * 2.0) + (FLOOR_1, FLOOR_1 + 3.0),
+            DESK_TOP, WOOD)
+        ceiling_light(cx, cz, base_top - 2.6)
+        # The highlight, on the head of the base and nowhere else. Same rule the
+        # glass towers follow, and the reason the old buildings needed one at
+        # all: an unlit stone block beside a lit tower does not read as older,
+        # it reads as switched off.
+        box("EntranceNeon", (x0 + 1.0, x1 - 1.0)
+            + span(fz - s * 1.0, fz - s * 0.2)
+            + (base_top - 3.4, base_top - 2.6), neon, NEON, collide=False,
+            children=point_light(neon, 1.3, 34.0))
+        box("Sign", (cx - 8.0, cx + 8.0)
+            + span(fz - s * 1.6, fz - s * 0.6)
+            + (FLOOR_1 + 13.0, FLOOR_1 + 15.0), trim, SMOOTH,
+            children=sign(tag.upper(), "front" if front == "south" else "back",
+                          color=(250, 246, 234), size=52))
+
+        # The shaft, in two portions with the upper one stepped back. Each
+        # storey is a stone spandrel with a window course over it, both at full
+        # footprint -- that horizontal grain is the whole difference between this
+        # and a curtain wall. The piers laid over the top of it are what stop the
+        # grain reading as a ribbon window, which is the one thing this era did
+        # not build.
+        for pname, py0, pn, pins in (("Low", base_top, low_n, 1.0),
+                                     ("High", mid, high_n, 1.0 + MASONRY_INSET)):
+            px0, px1 = x0 + pins, x1 - pins
+            pz0, pz1 = z0 + pins, z1 - pins
+            pty = py0 + pn * MASONRY_STOREY
+            for i in range(pn):
+                sy = py0 + i * MASONRY_STOREY
+                wy = sy + MASONRY_STOREY - MASONRY_WINDOW_H
+                box(f"{pname}Sill{i}", (px0, px1, pz0, pz1, sy, wy),
+                    stone, stone_mat)
+                box(f"{pname}Win{i}", (px0, px1, pz0, pz1, wy,
+                                       sy + MASONRY_STOREY),
+                    MASONRY_WINDOW, GLASS, transparency=0.35, collide=False)
+            for qi, (qx, qz, qsx, qsz) in enumerate(
+                    ((px0, pz0, 1.0, 1.0), (px1, pz0, -1.0, 1.0),
+                     (px0, pz1, 1.0, -1.0), (px1, pz1, -1.0, -1.0))):
+                box(f"{pname}Quoin{qi}",
+                    span(qx - qsx * MASONRY_PIER_D, qx + qsx * MASONRY_PIER_W)
+                    + span(qz - qsz * MASONRY_PIER_D, qz + qsz * MASONRY_PIER_W)
+                    + (py0, pty), trim, stone_mat, collide=False)
+            step = (px1 - px0) / (MASONRY_PIERS + 1)
+            for j in range(1, MASONRY_PIERS + 1):
+                pxc = px0 + j * step
+                for k, (fa, fb) in enumerate(((pz0 - MASONRY_PIER_D, pz0),
+                                              (pz1, pz1 + MASONRY_PIER_D))):
+                    box(f"{pname}Pier{j}{'SN'[k]}",
+                        (pxc - MASONRY_PIER_W / 2, pxc + MASONRY_PIER_W / 2,
+                         fa, fb, py0, pty), trim, stone_mat, collide=False)
+
+        # The cornice under the setback, oversailing the portion below it. This
+        # is the shadow line that makes a stone building read as stone from four
+        # hundred studs away, and it is one box.
+        box("SetbackCornice", (x0 + 0.2, x1 - 0.2, z0 + 0.2, z1 - 0.2,
+                               mid - 1.2, mid + 1.2), trim, stone_mat)
+        box("Cornice", (ux0 - 1.6, ux1 + 1.6, uz0 - 1.6, uz1 + 1.6,
+                        shaft_top, cornice_top), trim, stone_mat)
+        cw = max(4.0, (ux1 - ux0) / 2 - 4.0)
+        cd = max(4.0, (uz1 - uz0) / 2 - 4.0)
+        box("Cap", (cx - cw, cx + cw, cz - cd, cz + cd, cornice_top, cap_top),
+            stone, stone_mat)
+        # White at roof height, dimmed with every other crown in the city. See
+        # CROWN_NEON: the pink and the blue stay down at the door.
+        _crown = dim(CROWN_NEON, NEON_ROOF_DIM)
+        box("CapBand", (cx - cw - 0.6, cx + cw + 0.6, cz - cd - 0.6, cz + cd + 0.6,
+                        cap_top - 1.4, cap_top - 0.4), _crown, NEON, collide=False,
+            children=point_light(_crown, 2.0, 60.0))
+
+    place_point(f"masonry_{tag}", cx, fz + s * 2.0, FLOOR_1,
+                f"the {tag} building, the lobby")
+    return cap_top
 
 
 # How tall a fade-district office is, by ring distance from the Circle.
@@ -4391,7 +5569,21 @@ def fade_office_band(band, sband, x0, x1, z0, z1, counter):
         # right-hand tower is the inner one.
         inner = 0 if x0 >= CIRCLE_X else 1
         storeys = base_storeys + (1 if i == inner else 0)
-        fade_office(counter, bx0, bx0 + bw, z0, z1, storeys, name="FadeOffice")
+        # One of the two is stone, and which one alternates by block so the
+        # district is mixed rather than merely striped a second time -- a rule
+        # that put every stone building on the west half would be the same
+        # sorting problem one axis over.
+        #
+        # `counter != 1` pins the first office in the district as an office:
+        # Townsfolk.luau stands its fade_worker on `fade_1`, and that file
+        # belongs to another agent. The parity happens to spare it today; this
+        # says so out loud rather than leaving it to luck.
+        if i == (band + sband) % 2 and counter != 1:
+            masonry_tower(f"{band}{sband}{'we'[i]}", bx0, bx0 + bw, z0, z1,
+                          storeys, tint=counter, slab=True)
+        else:
+            fade_office(counter, bx0, bx0 + bw, z0, z1, storeys,
+                        name="FadeOffice")
         counter += 1
     box(f"FadePlaza{sband}_{counter}", (px0, px1, z0, z1, GROUND_BOTTOM, GROUND),
         PATH_STONE, PEBBLE)
@@ -4401,6 +5593,124 @@ def fade_office_band(band, sband, x0, x1, z0, z1, counter):
         bench(px0 + 5.0, bz, 1)
         bench(px1 - 5.0, bz, -1)
     return counter
+
+
+# ---------------------------------------------------------------------------
+# Mixed block: one sculpted tower, one mid-rise, one restaurant, on the same
+# block
+# ---------------------------------------------------------------------------
+#
+# This block was six identical narrow restaurants in a row with a picnic-table
+# square behind them -- a food court dropped into the densest corner of the
+# city, one street from the waterfront towers and two from the Circle. It read
+# as a village that the downtown had grown around and forgotten to demolish.
+#
+# What replaces it is the thing every real downtown block actually is: more than
+# one kind of building. A block of nothing but sculpted towers is as monotonous
+# as a block of nothing but shopfronts -- the towers only read as tall because
+# something beside them is short, and the short things only read as old because
+# something beside them is new. So the four quadrants alternate on the diagonal,
+# never two of a kind sharing a street frontage:
+#
+#     nw  mid-rise office   |  ne  sculpted tower      (front onto the street above)
+#     ----------------------+----------------------
+#     sw  sculpted tower    |  se  restaurant + terrace (front onto the street below)
+#
+# The restaurant is not sentiment. `dining_1` is the Chef job's `placeId` in
+# Jobs.luau, which is Agent B's file: delete the place point and a job in the
+# game points at a building that is not in the world. One restaurant keeps it,
+# and one restaurant on a block of towers is a corner unit rather than a food
+# court.
+
+# Where the two alleys fall, as a fraction of the block. Never 0.5, for the
+# reason FIN_SPLIT_X says at length: four equal quarters is a grid, and the four
+# buildings have to be four different sizes or the block reads as a stamp.
+#
+# The x split is west of centre so the east quadrants are the wide ones -- the
+# restaurant needs frontage and a terrace beside it, and the wide quadrant is
+# the only one that can carry both.
+MIXED_SPLIT_X = 0.44
+MIXED_SPLIT_Z = 0.47
+MIXED_GAP = 6.0     # the alley between quadrants; same as FIN_GAP, same reason
+# How much of the restaurant's quadrant the building takes. The rest is its
+# terrace, which is what makes the corner read as a restaurant from across the
+# street rather than as a low shed.
+MIXED_DINING_FRAC = 0.62
+# Storeys for the two sculpted towers. Sized off the mid-rise they stand beside
+# (fade_storeys gives 7 here, topping at 115.5) so the block steps rather than
+# jumps, and both are far below the Circle -- the assertion that guards that
+# only knows about the waterfront, so this one is held by hand and by this note.
+MIXED_TOWER_FLOORS = (6, 7)
+MIXED_TOWER_STYLES = ("setback", "crown")
+
+
+def mixed_block(band, sband, x0, x1, z0, z1, fade_no):
+    """Four different buildings on one block. Returns the next free fade number.
+
+    The mid-rise takes a number out of the same sequence the fade district uses,
+    rather than a sequence of its own: it *is* one of the city's mid-rise
+    offices, it is just standing next to a tower, and two numbering schemes for
+    one kind of building is two places for a `fade_N` place point id to collide.
+    """
+    sx = x0 + (x1 - x0) * MIXED_SPLIT_X
+    sz = z0 + (z1 - z0) * MIXED_SPLIT_Z
+    wx0, wx1 = x0, sx - MIXED_GAP / 2
+    ex0, ex1 = sx + MIXED_GAP / 2, x1
+    szl0, szl1 = z0, sz - MIXED_GAP / 2
+    nz0, nz1 = sz + MIXED_GAP / 2, z1
+
+    # The alleys, paved and planted. The north-south one runs the full depth of
+    # the block and the east-west one yields the crossing to it -- the same
+    # give-way rule every road and sidewalk in this file follows, and the reason
+    # is check 13 rather than taste: two plates that lap and top in the same
+    # plane are a z-fight nobody can win, and a full cross laps over 48 studs.
+    with group(f"MixedAlley{band}_{sband}"):
+        box("AlleyNS", (wx1, ex0, z0, z1, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        box("AlleyEWWest", (x0, wx1, szl1, nz0, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        box("AlleyEWEast", (ex0, x1, szl1, nz0, GROUND_BOTTOM, GROUND),
+            PATH_STONE, PEBBLE)
+        for bz in (z0 + 24.0, z1 - 24.0):
+            bench(wx1 + 1.5, bz, 1)
+            bench(ex0 - 1.5, bz, -1)
+        for bx in (x0 + 24.0, x1 - 24.0):
+            tree(bx, (szl1 + nz0) / 2, GROUND, height=13.0, spread=9.0)
+
+    # The two towers' lobby floors.
+    #
+    # `shaped_tower` pours no slab on purpose -- it stands straight on whatever
+    # the block is paved with, which on the waterfront is the block-wide
+    # `FinPaving`. On a mixed block there is no block-wide paving to stand on
+    # (the restaurant and the mid-rise both pour their own floors, and a third
+    # plate under them would top in the same plane as both), so the two towers
+    # get a plate each, footprint for footprint. Without it the lobby is a hole
+    # in the lawn and the tower's place point floats -- which is exactly what
+    # check 4 said the first time this block was built.
+    for _tag, _tb in (("SW", (wx0, wx1, szl0, szl1)),
+                      ("NE", (ex0, ex1, nz0, nz1))):
+        box(f"MixedTowerFloor{band}_{sband}{_tag}",
+            _tb + (GROUND_BOTTOM, PAVING), PAVING_GREY, CONCRETE)
+
+    shaped_tower(f"m{band}{sband}sw", wx0, wx1, szl0, szl1,
+                 MIXED_TOWER_FLOORS[0],
+                 TOWER_GLASS[band % len(TOWER_GLASS)],
+                 style=MIXED_TOWER_STYLES[0], tint=0, front="south")
+    shaped_tower(f"m{band}{sband}ne", ex0, ex1, nz0, nz1,
+                 MIXED_TOWER_FLOORS[1],
+                 TOWER_GLASS[(band + 2) % len(TOWER_GLASS)],
+                 style=MIXED_TOWER_STYLES[1], tint=1, front="north")
+    fade_office(fade_no, wx0, wx1, nz0, nz1, fade_storeys(band, sband),
+                name="FadeOffice", front="north")
+
+    # The restaurant fronts the cross street below the block, with its terrace
+    # to the east of it -- outdoor tables belong on the street, not behind the
+    # kitchen, and the alley side is where the block's own shade is.
+    dx = ex0 + (ex1 - ex0) * MIXED_DINING_FRAC
+    dining_restaurant("dining_1", "Bistro Verde", ex0, dx, szl0, szl1)
+    dining_terrace(dx + 2.0, ex1, szl0, szl1,
+                   label=f"MixedTerrace{band}_{sband}")
+    return fade_no + 1
 
 
 # ---------------------------------------------------------------------------
@@ -4560,7 +5870,15 @@ CIRCUS_SPREAD = 22.0
 # carries CIRCUS_LIFT plus the largest CIRCUS_QUAD_LIFT, and at 9 it passes 21:1 and
 # starts to read as an aerial rather than a building. Raise the lift, never the arc.
 CIRCUS_ARC = (8, 14, 8)
-CIRCUS_LIFT = 6
+# Raised 6 -> 10 as the waterfront grew: the spire style tops out 58 studs above
+# its own crown, so which band the rotation hands a spire to moves the tallest
+# rival by tens of studs and takes the Circle's win with it. This is the
+# smallest lift that clears the current rival by CIRCUS_CLEARANCE, and the
+# minimality assertion below is what holds it there -- it is also what will
+# catch the next person who changes FIN_HEIGHTS, FIN_STYLES or
+# FIN_STYLE_STRIDE, in either direction, since a rival that shrinks leaves the
+# Circle winning by luck.
+CIRCUS_LIFT = 10
 # Kept small and all-positive: a negative entry here would drop a quadrant under the
 # mast, and a large one buys slenderness at the tallest corner rather than variety.
 CIRCUS_QUAD_LIFT = (0, 2, 1, 3)
@@ -4645,11 +5963,21 @@ def circus_tower(no, phi_deg, storeys, glass, stucco, neon):
                   (90, 94, 100), CONCRETE)
         # The crown. A line of light round the parapet, which is the palette's
         # own rule for neon -- a band, never a surface -- and the thing that
-        # makes the Circle read as downtown once the lighting goes warm.
+        # makes the Circle read as downtown once the lighting goes warm. White
+        # rather than the tower's own colour: see CROWN_NEON.
+        crown = dim(CROWN_NEON, NEON_ROOF_DIM)
         at_radius("Crown", mid, CIRCUS_DEPTH - 2.8, CIRCUS_WIDTH - 2.8,
                   top + CIRCUS_SLAB + 1.4, top + CIRCUS_SLAB + 2.6,
+                  crown, NEON, collide=False,
+                  children=point_light(crown, 2.2, 60.0))
+        # ...and the tower's own colour goes here instead, on the lip of the
+        # entrance canopy, eighteen studs off the promenade. That is the whole
+        # trade: from the island the twelve towers are one white roofline, and
+        # from the pavement each one has a different lit door.
+        at_radius("EntranceNeon", front + 1.6, 5.2, DOORWAY + 6.4,
+                  FLOOR_1 + CIRCUS_LOBBY_H - 3.4, FLOOR_1 + CIRCUS_LOBBY_H - 3.0,
                   neon, NEON, collide=False,
-                  children=point_light(neon, 2.2, 60.0))
+                  children=point_light(neon, 1.6, 34.0))
         px, pz = polar(front - 0.7, phi_deg)
         rbxmx.spun_box("Sign", (px, FLOOR_1 + 13.5, pz), (1.0, 3.0, 16.0), yaw,
                        RISE_FRAME, SMOOTH,
@@ -4677,10 +6005,16 @@ def circus_block(band, sband, x0, x1, z0, z1, counter):
     # below key off it too -- a second way of saying "which quadrant" is a second thing
     # that can disagree with the first.
     for i, storeys in enumerate(circus_arc(counter // len(CIRCUS_ARC))):
+        # Same glass family and same two crown colours as the waterfront towers.
+        # The Circle stands in the middle of the district it is supposed to
+        # crown, and it used to be drawn from a different glass list and a
+        # different four-colour neon list than the towers around it -- which is
+        # how the centre of downtown ended up the one place where the skyline
+        # changed palette.
         circus_tower(counter + i, base + (i - 1) * CIRCUS_SPREAD, storeys,
-                     RISE_GLASS[(counter + i) % len(RISE_GLASS)],
+                     TOWER_GLASS[(counter + i) % len(TOWER_GLASS)],
                      CIRCUS_STUCCO[(counter + i) % len(CIRCUS_STUCCO)],
-                     MONUMENT_NEONS[(counter + i) % len(MONUMENT_NEONS)])
+                     TOWER_CROWN_NEON[(counter + i) % len(TOWER_CROWN_NEON)])
 
     # The corner of the block the arc does not reach: paved, planted and lit,
     # rather than left as the lawn it would otherwise be. The towers stand on a
@@ -4741,40 +6075,6 @@ NORTH_X0 = CIVIC_X0
 NORTH_X1 = CIVIC_X1
 NORTH_GAP = 4.0
 
-# The north strip, west to east. One row per slot in the band:
-#
-#   (slot, id, sign, kind, front, storeys, awning, glass, weight)
-#
-# `slot` is what gets built -- a shop, a civic service, or a pocket park.
-# `front` is which wall the door is in, and it is the whole point of this table
-# now that the strip has a road on *both* sides of it. Until the precinct loop
-# went in, the strip's north wall faced 400 studs of nothing and every door had
-# to be on the promenade; now the service road runs along the top of it, so the
-# three services that need a vehicle to reach them -- an engine bay, a police
-# yard, a depot -- turn round and open onto the road, and the retail keeps its
-# south front where the footfall is. That alternation is also what stops the row
-# reading as one wall: a north-facing building shows the promenade its back and
-# its roofline instead of another identical shopfront.
-#
-# `weight` is a *share* of the band, not a width in studs. Widths are solved
-# from it below so the row always fills the band exactly however the band moves.
-# Written as literal widths this table would have had to be re-added-up by hand
-# the day the precinct avenue pulled CIVIC_X1 west, which is the same class of
-# mistake as every other frozen number in this file.
-NORTH_ROW = [
-    ("shop",  "north_shop_1", "NORTH CAFÉ", "cafe", "south", 2, AWNING_RED, "full", 1.00),
-    ("civic", "north_shop_2", "NORTH FIRE STATION", "fire", "north", 1, None, "none", 1.45),
-    ("shop",  "north_shop_3", "NORTH PHARMACY", "counter", "south", 1, AWNING_BLUE, "full", 0.95),
-    ("park",  "north_green_w", "Bell Green", None, None, 0, None, None, 0.95),
-    ("civic", "north_shop_4", "NORTH POLICE POST", "police", "north", 2, None, "high", 1.25),
-    ("shop",  "north_shop_5", "IRON & WOOD NORTH", "workshop", "south", 1, None, "high", 1.00),
-    ("civic", "north_shop_6", "CITY DEPOT", "warehouse", "north", 1, None, "none", 1.25),
-    ("park",  "north_green_e", "Foundry Green", None, None, 0, None, None, 0.80),
-    ("shop",  "north_shop_7", "NORTH BAKERY", "cafe", "south", 2, AWNING_MUSTARD, "full", 0.95),
-    ("shop",  "north_shop_8", "THE NORTH GRILL", "restaurant", "south", 1, None, "full", 0.95),
-]
-
-
 def solve_row(x0, x1, weights, gaps):
     """(start, end) for each slot in a band, given relative widths.
 
@@ -4798,7 +6098,153 @@ def solve_row(x0, x1, weights, gaps):
     return spans
 
 
-NORTH_SLOTS = solve_row(NORTH_X0, NORTH_X1, [row[8] for row in NORTH_ROW], NORTH_GAP)
+# The government quarter, west to east. One row per slot in the band:
+#
+#   (kind, id, name, storeys, weight)
+#
+# This band used to be the north shopping strip: five little shopfronts, three
+# duplicate emergency services and two fifty-stud pocket parks, standing
+# directly behind City Hall. It read as a parade of huts pinned to the back of a
+# monument, and the two parks read as gaps somebody had not got round to
+# filling -- which is exactly what they were, since the row was solved from
+# weights and the parks were what absorbed the remainder.
+#
+# It is a government quarter now, facing City Hall across the promenade, and the
+# reason it works where the strip did not is scale: four monumental stone
+# buildings the same height as the hall opposite them make the promenade a
+# civic space with two sides, where a row of one-storey shops made it a car park
+# with a town hall at one end. The bank came up here from the waterfront for the
+# same reason -- a neoclassical bank with a dome was the one building in the
+# financial district that was not a tower, and it belongs with the courthouse.
+#
+# `north_shop_1` survives as the quarter's canteen because Config.Places.Walkable
+# and Townsfolk's `north_worker` both name it. The id is load-bearing and the
+# building it points at is not, which is why the id is kept verbatim and the
+# thing it opens onto changed.
+GOV_ROW = [
+    ("block", "courthouse", "CITY COURTHOUSE", 3, 1.15),
+    ("bank",  "bank", "UNION BANK", 2, 1.30),
+    ("plaza", "gov_plaza", "UNION SQUARE", 0, 0.85),
+    ("block", "north_shop_1", "CIVIC CANTEEN", 2, 0.90),
+    ("block", "treasury", "CITY TREASURY", 3, 1.10),
+    ("block", "archive", "STATE ARCHIVE", 2, 1.00),
+]
+
+GOV_SLOTS = solve_row(NORTH_X0, NORTH_X1, [row[4] for row in GOV_ROW], NORTH_GAP)
+
+# Limestone, one family, three values -- the same rule the towers follow, for
+# the same reason. The old strip took a different STORE_WALLS pastel per unit,
+# which is right for a shopping street where each unit is a different business
+# and wrong for a quarter where every building belongs to the same institution.
+GOV_STONE = [(236, 230, 216), (226, 218, 202), (242, 238, 226)]
+GOV_PLINTH = (176, 170, 158)     # the granite base course
+GOV_CORNICE = (250, 247, 238)
+GOV_PILASTER_W = 2.6             # face width of a pilaster. Safe range 2 .. 4.
+GOV_PLINTH_H = 3.2               # base course height, flush with the wall face
+GOV_CORNICE_H = 1.6
+GOV_PARAPET_H = 3.4
+# Pilasters are laid at this pitch and the count is solved from the frontage, so
+# a slot that widens gets more of them rather than wider ones. Written as a
+# count instead, the courthouse and the canteen would carry the same five and
+# the wider building would read as the blurrier photograph of the two.
+GOV_PILASTER_PITCH = 15.0        # safe range 11 .. 20
+GOV_WINDOW_H = 9.0               # tall sash between pilasters. Safe range 7 .. 12.
+
+
+def civic_block(pid, label, x0, x1, z0, z1, storeys, stone):
+    """A stone civic office: granite base course, pilastered south front, tall
+    windows between the pilasters, cornice and parapet.
+
+    Everything fronts south. This band has a road behind it and City Hall in
+    front of it, and the strip that stood here turned three of its ten
+    buildings round to face the service road -- which is correct for an engine
+    bay and wrong for a ministry. A government quarter addresses its square.
+
+    There is no floor slab under the walls: the quarter lays one paved ground
+    for the whole band and each building puts a thin floor inlay *on top* of it.
+    A per-building slab with its top at PAVING is coplanar with the paving it
+    stands on, and two surfaces at the same height is a flicker, not a floor.
+    """
+    cx = (x0 + x1) / 2
+    ix0, ix1 = x0 + WALL, x1 - WALL
+    iz0, iz1 = z0 + WALL, z1 - WALL
+    eaves = FLOOR_1 + storeys * (STOREY + SLAB)
+    cornice_y = eaves + GOV_CORNICE_H
+    door = (cx - DOORWAY / 2, cx + DOORWAY / 2)
+    with group(pid):
+        box("Floor", (x0, x1, z0, z1, FLOOR_1, FLOOR_1 + FLOOR_INLAY),
+            FLOOR_INDOOR, MARBLE)
+        wall("WallSouth", (x0, x1, z0, iz0, FLOOR_1, eaves), stone, CONCRETE,
+             along="x", doors=(door,))
+        wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, eaves), stone, CONCRETE, along="x")
+        wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, eaves), stone, CONCRETE, along="z")
+        wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, eaves), stone, CONCRETE, along="z")
+        glass_doors("Door", door + (z0, iz0, FLOOR_1, FLOOR_1 + DOOR_HEIGHT), along="x")
+        # The base course is flush with the wall face, not proud of it. A ledge
+        # here would be the plinth this district just had removed from under
+        # every tower -- a band of darker stone says "base" without putting a
+        # step round the building.
+        box("Base", (x0, x1, z0, iz0, FLOOR_1, FLOOR_1 + GOV_PLINTH_H), GOV_PLINTH, CONCRETE)
+        # Pilasters and the windows between them, both solved from the same
+        # division of the frontage so a window is always a bay and never half of
+        # one. Storey-height glass, set back into the wall's own thickness.
+        bays = max(2, int(round((x1 - x0) / GOV_PILASTER_PITCH)))
+        step = (x1 - x0) / bays
+        for b in range(bays + 1):
+            px = x0 + b * step
+            box(f"Pilaster{b}", (px - GOV_PILASTER_W / 2, px + GOV_PILASTER_W / 2,
+                                 z0 - 0.7, z0 + 0.2, FLOOR_1, cornice_y),
+                GOV_CORNICE, CONCRETE, collide=False)
+        for level in range(storeys):
+            wy = FLOOR_1 + GOV_PLINTH_H + 1.6 + level * (STOREY + SLAB)
+            for b in range(bays):
+                px = x0 + b * step
+                if px + step / 2 > door[0] and px + step / 2 < door[1] and level == 0:
+                    continue
+                glazing(f"Win{level}_{b}",
+                        (px + GOV_PILASTER_W, px + step - GOV_PILASTER_W, z0, iz0,
+                         wy, wy + GOV_WINDOW_H),
+                        along="x", panes=2)
+        box("Cornice", (x0 - 1.2, x1 + 1.2, z0 - 1.2, z1 + 1.2, eaves, cornice_y),
+            GOV_CORNICE, CONCRETE)
+        box("Parapet", (x0, x1, z0, z1, cornice_y, cornice_y + GOV_PARAPET_H),
+            stone, CONCRETE)
+        box("Counter", (cx - 12.0, cx + 12.0, iz1 - 5.0, iz1 - 1.0,
+                        FLOOR_1, FLOOR_1 + 3.0), DESK_TOP, WOOD)
+        ceiling_light(cx, (z0 + z1) / 2, eaves - 1.0)
+        box("Sign", (cx - 16.0, cx + 16.0, z0 - 1.5, z0 - 0.8,
+                     cornice_y + 0.6, cornice_y + 2.6), GOV_CORNICE, SMOOTH,
+            collide=False,
+            children=sign(label, "front", color=(58, 54, 46), size=48))
+    place_point(pid, cx, z0 + 3.0, FLOOR_1, f"the {label.lower()}, by the door")
+
+
+def gov_square(x0, x1, z0, z1):
+    """The one open slot in the quarter: a paved square with a flagpole row.
+
+    Paved rather than lawned, and one square rather than the two pocket parks
+    that used to sit in this band. A government quarter's open ground is a place
+    people stand in front of a building, so it is the same stone as the
+    promenade and it lines up with the gap between the bank and the canteen --
+    which makes it a view through to City Hall rather than a hole in a row.
+    """
+    cx = (x0 + x1) / 2
+    with group("GovSquare"):
+        box("Setts", (x0, x1, z0, z1, PAVING, PAVING + 0.04), PATH_STONE, PEBBLE,
+            collide=False)
+        for i, px in enumerate((cx - 14.0, cx, cx + 14.0)):
+            box(f"FlagPole{i}", (px - 0.5, px + 0.5, z0 + 9.0, z0 + 10.0,
+                                 PAVING, PAVING + 34.0), STEEL, METAL)
+            box(f"Flag{i}", (px + 0.5, px + 9.0, z0 + 9.2, z0 + 9.4,
+                             PAVING + 25.0, PAVING + 33.0),
+                (AWNING_RED, TRIM_WHITE, AWNING_BLUE)[i], FABRIC, collide=False)
+        for tz in (z0 + 20.0, z1 - 14.0):
+            tree(x0 + 10.0, tz, PAVING, height=16.0, spread=11.0, label="SquareTree")
+            tree(x1 - 10.0, tz, PAVING, height=16.0, spread=11.0, label="SquareTree")
+        bench(cx - 12.0, z1 - 8.0, -1, floor=PAVING)
+        bench(cx + 12.0, z1 - 8.0, -1, floor=PAVING)
+        street_lamp(cx, (z0 + z1) / 2, 1, floor=PAVING)
+
 
 
 def pocket_park(x0, x1, z0, z1, name, label):
@@ -4833,56 +6279,31 @@ def pocket_park(x0, x1, z0, z1, name, label):
             children=sign(label, "back", color=(238, 240, 232), size=32))
 
 
-def north_business_strip():
-    """The north strip: shops facing the promenade, services facing the service
-    road behind them, and two pocket parks cut through the row."""
-    prom_z0, prom_z1 = CIVIC_Z1, NORTH_Z0
-    # Each building is its own top-level model, deliberately not wrapped in one
-    # "NorthStrip" group the way it used to be. check_city walks outermost
-    # models: with the whole row inside one, the eight shops were a single
-    # 668-stud box and check 5 could not see an overlap between two of them --
-    # which matters a great deal more now that their widths are solved from
-    # weights rather than being eight equal slices of the band.
-    with group("NorthStripGround"):
-        # The apron between the buildings' north walls and the service road's
-        # pavement. Without it a north-facing door opens onto four studs of
-        # grass and then a kerb, which reads as a building somebody forgot to
-        # finish rather than as a yard.
-        box("NorthApron", (NORTH_X0, PRECINCT_INNER_X1, NORTH_Z1,
-                           NORTH_ROAD_Z0 - CS_WALK, GROUND_BOTTOM, PAVING - 0.02),
+def government_quarter():
+    """The band behind City Hall: four stone civic buildings, the bank, and one
+    paved square, all fronting the promenade."""
+    prom_z0 = CIVIC_Z1
+    with group("GovQuarterGround"):
+        # Ground for the whole band, laid once and owned by the band. Every
+        # building on it draws its floor as an inlay above this rather than as a
+        # slab of its own, so nothing in the quarter is coplanar with anything
+        # else -- see civic_block for the failure that rule exists to stop.
+        box("GovPaving", (NORTH_X0 - AVE_WALK, PRECINCT_INNER_X1, NORTH_Z0,
+                          NORTH_ROAD_Z0 - CS_WALK, GROUND_BOTTOM, PAVING),
             PAVING_GREY, PAVEMENT)
-        # Lamps and benches down the promenade, in front of the shops rather
-        # than in them, and benches facing the shopfronts.
-        for _sx0, _sx1 in NORTH_SLOTS[::3]:
+        for _sx0, _sx1 in GOV_SLOTS[::2]:
             street_lamp((_sx0 + _sx1) / 2, prom_z0 + 5.0, 1, floor=PAVING)
-        bench(NORTH_X0 + 8.0, prom_z1 - 6.0, -1)
-        bench(NORTH_X1 - 8.0, prom_z1 - 6.0, -1)
-    for i, row in enumerate(NORTH_ROW):
-        slot, pid, label, kind, front, storeys, awning, glass, _w = row
-        sx0, sx1 = NORTH_SLOTS[i]
-        sz_cx = (sx0 + sx1) / 2
-        if slot == "park":
-            pocket_park(sx0, sx1, NORTH_Z0, NORTH_Z1, pid, label)
-            continue
-        wall_color = STORE_WALLS[i % len(STORE_WALLS)]
-        # The door is in whichever wall faces a road, and the place point is
-        # always two studs inside it -- so the spot the game puts a player
-        # down on is the spot the door is, whichever way the building turned.
-        door_z = NORTH_Z0 + 2.0 if front == "south" else NORTH_Z1 - 2.0
-        ftype = "garage" if glass == "none" else "shop"
-        with group(pid):
-            storefront(label, sx0, sx1, NORTH_Z0, NORTH_Z1, sz_cx, wall_color,
-                       front=front, front_type=ftype, storeys=storeys,
-                       awning=awning, glass=glass,
-                       bays=GARAGE_BAYS.get(kind, 1) if ftype == "garage" else 1)
-            if slot == "civic":
-                civic_fittings(kind, sx0, sx1, NORTH_Z0, NORTH_Z1, front=front)
-            else:
-                street_fittings(pid, sx0, sx1, NORTH_Z0, NORTH_Z1, front, kind)
-        place_point(pid, sz_cx, door_z, FLOOR_1,
-                    f"the {label.lower()}, by the door")
+    for i, (kind, pid, label, storeys, _w) in enumerate(GOV_ROW):
+        sx0, sx1 = GOV_SLOTS[i]
+        if kind == "plaza":
+            gov_square(sx0, sx1, NORTH_Z0, NORTH_Z1)
+        elif kind == "bank":
+            grand_bank(sx0, sx1, NORTH_Z0 + 6.0, NORTH_Z1)
+        else:
+            civic_block(pid, label, sx0, sx1, NORTH_Z0, NORTH_Z1, storeys,
+                        GOV_STONE[i % len(GOV_STONE)])
     palm_row(NORTH_X0, NORTH_X1, prom_z0 + 12.0, prom_z0 + 18.0, PAVING,
-             step=64.0, along="x", label="NorthStripPalms")
+             step=64.0, along="x", label="PromenadePalms")
 
 
 # Called below, after civic_fittings is defined -- the strip's three services
@@ -5113,7 +6534,7 @@ palm_row(CIVIC_X0, CIVIC_X1, PRECINCT_Z0 + 8.0, PRECINCT_Z0 + 14.0, PAVING,
 
 # Built here rather than beside its own definition, because three of its slots
 # are civic services and civic_fittings is only bound above.
-north_business_strip()
+government_quarter()
 
 
 # ---------------------------------------------------------------------------
@@ -5131,8 +6552,11 @@ def soccer_field(x0, x1, z0, z1):
         box("LineN", (x0, x1, z1 - 0.4, z1 + 0.4, PAINT_BOTTOM, PAINT_TOP), (240, 240, 240), SMOOTH)
         box("Half", (x0, x1, (z0 + z1) / 2 - 0.3, (z0 + z1) / 2 + 0.3, PAINT_BOTTOM, PAINT_TOP),
             (240, 240, 240), SMOOTH)
+        # The centre spot sits on the halfway line by definition, so it is
+        # painted over it rather than in it -- see PAINT_OVER_TOP.
         box("Center", ((x0 + x1) / 2 - 1.0, (x0 + x1) / 2 + 1.0, (z0 + z1) / 2 - 1.0,
-                       (z0 + z1) / 2 + 1.0, PAINT_BOTTOM, PAINT_TOP), (240, 240, 240), SMOOTH)
+                       (z0 + z1) / 2 + 1.0, PAINT_OVER_BOTTOM, PAINT_OVER_TOP),
+            (240, 240, 240), SMOOTH)
         for dz, toward in ((z0, 1), (z1, -1)):
             box(f"Box{dz:.0f}", (x0 + 12.0, x1 - 12.0, dz, dz + toward * 4.0,
                                  PAINT_BOTTOM, PAINT_TOP), (240, 240, 240), SMOOTH)
@@ -5255,21 +6679,119 @@ def running_track(x0, x1, z0, z1):
                 (240, 240, 240), SMOOTH, tags=[SPORT_TAG], attrs={SPORT_KIND: "track"})
 
 
-basketball_court(850.0, 882.0, 900.0, 918.0)
-tennis_court(900.0, 928.0, 900.0, 914.0)
-playground(830.0, 870.0, 820.0, 850.0)
-# Named, not inlined, so `beach_band` can carve the baywalk's palms around the
-# track's own footprint instead of guessing it from a second copy of these
-# same four numbers -- see SPORTS_TRACK_Z1 below.
-SPORTS_TRACK_X0, SPORTS_TRACK_X1 = 840.0, 980.0
-SPORTS_TRACK_Z0, SPORTS_TRACK_Z1 = 700.0, 770.0
-running_track(SPORTS_TRACK_X0, SPORTS_TRACK_X1, SPORTS_TRACK_Z0, SPORTS_TRACK_Z1)
+# The school's playing fields.
+#
+# These four -- court, court, playground, track -- stood on the headland east of
+# the city until the water was taken round it. They are not city amenities and
+# never really were: the school is the only building in the world that has a use
+# for a running track, and it is forty minutes' walk away on the far side of the
+# map. They now lie where a school's fields lie, on the open land immediately
+# south and west of it.
+#
+# The band is bounded on three sides by numbers that already existed, and by one
+# that did not:
+#
+#   * east on TOWN_WEST_EDGE -- the town's grass stops there, and the fields'
+#     grass starts there. Same edge, two files, no overlap and no gap.
+#   * north on SCHOOL_Z0, the school's own south face, so the fields run right up
+#     under its windows.
+#   * south on STREET_Z0, which is where the town's back-row lawn stops as well.
+#     The two southern edges are the same line for the same reason.
+#   * west on nothing but width. FIELDS_W is the only picked number here, and it
+#     is picked to hold a 140-stud track with a margin either side; the land west
+#     of it is empty to the map edge, so it is free to change.
+FIELDS_X1 = TOWN_WEST_EDGE
+FIELDS_W = 268.0
+FIELDS_X0 = FIELDS_X1 - FIELDS_W
+FIELDS_Z0, FIELDS_Z1 = STREET_Z0, SCHOOL_Z0
 
+with group("SchoolFields"):
+    box("Ground", (FIELDS_X0, FIELDS_X1, FIELDS_Z0, FIELDS_Z1,
+                   GROUND_BOTTOM, CITY_GRASS_TOP), LAWN, GRASS)
+
+    # Three paths, tiled rather than crossed. Every one of them stops on the
+    # face of the next instead of running through it: two slabs of paving at the
+    # same top height sharing a square is check 13's whole subject, and a path
+    # network is where that mistake is easiest to make -- a crossroads drawn as
+    # two long rectangles is a coplanar overlap by construction.
+    #
+    # The spine enters on the way the town left for it, at FIELDS_WAY_MID and
+    # FIELDS_WAY_PAVE wide, so the two halves of the walk are the same walk.
+    FIELDS_SPINE_Z0 = FIELDS_WAY_MID - FIELDS_WAY_PAVE / 2
+    FIELDS_SPINE_Z1 = FIELDS_WAY_MID + FIELDS_WAY_PAVE / 2
+    FIELDS_PATH_W = 22.0
+    # The north-south path, and the one number the courts are hung off.
+    FIELDS_CROSS_X1 = -360.0
+    FIELDS_CROSS_X0 = FIELDS_CROSS_X1 - FIELDS_PATH_W
+    FIELDS_CROSS_MID = (FIELDS_CROSS_X0 + FIELDS_CROSS_X1) / 2
+    # The south walk, along the bottom of the band, which is what reaches the
+    # track. It stops on the cross path's west face; the cross path runs down to
+    # meet it and stops on the spine's south face. Its south edge is measured up
+    # from FIELDS_Z0 rather than down from a picked number, so it cannot walk off
+    # the end of the ground the way a `FIELDS_Z0 + 14` top edge did.
+    FIELDS_SOUTH_Z0 = FIELDS_Z0 + 8.0
+    FIELDS_SOUTH_Z1 = FIELDS_SOUTH_Z0 + FIELDS_PATH_W
+    FIELDS_SOUTH_MID = (FIELDS_SOUTH_Z0 + FIELDS_SOUTH_Z1) / 2
+
+    box("Spine", (FIELDS_X0 + 6.0, FIELDS_X1, FIELDS_SPINE_Z0, FIELDS_SPINE_Z1,
+                  GROUND_BOTTOM, PAVING), PAVING_GREY, PAVEMENT)
+    box("CrossWalk", (FIELDS_CROSS_X0, FIELDS_CROSS_X1,
+                      FIELDS_SOUTH_Z0, FIELDS_SPINE_Z0,
+                      GROUND_BOTTOM, PAVING), PAVING_GREY, PAVEMENT)
+    box("SouthWalk", (FIELDS_X0 + 6.0, FIELDS_CROSS_X0,
+                      FIELDS_SOUTH_Z0, FIELDS_SOUTH_Z1,
+                      GROUND_BOTTOM, PAVING), PAVING_GREY, PAVEMENT)
+
+# The track sits in the south-west, on the only quarter of the band wide enough
+# for it, with the south walk running along its foot. The other three face the
+# cross path, in the order a school uses them: courts nearest the school, the
+# playground furthest from it and nearest the way home.
+SPORTS_TRACK_X0, SPORTS_TRACK_X1 = -530.0, -390.0
+SPORTS_TRACK_Z0, SPORTS_TRACK_Z1 = -94.0, -24.0
+running_track(SPORTS_TRACK_X0, SPORTS_TRACK_X1, SPORTS_TRACK_Z0, SPORTS_TRACK_Z1)
+basketball_court(-350.0, -318.0, 34.0, 52.0)
+tennis_court(-348.0, -320.0, 4.0, 18.0)
+playground(-352.0, -312.0, -46.0, -16.0)
+
+# Trees along the north edge, under the school, and down the west boundary --
+# planted on the grass and nowhere near the paving, which check 7 is watching.
+with group("SchoolFieldsTrees"):
+    # The west boundary row skips the two places a walk reaches the west end of
+    # the band. check 7 measures *trunks* against paving -- a canopy over a path
+    # is a tree beside a path, a trunk in one is a tree in the middle of it.
+    for _tz in range(int(FIELDS_Z0) + 30, int(FIELDS_Z1) - 10, 34):
+        if (FIELDS_SPINE_Z0 - 4.0 <= _tz <= FIELDS_SPINE_Z1 + 4.0
+                or FIELDS_SOUTH_Z0 - 4.0 <= _tz <= FIELDS_SOUTH_Z1 + 4.0):
+            continue
+        tree(FIELDS_X0 + 14.0, float(_tz), GROUND, label=f"FieldsTreeW{_tz}")
+    for _tx in range(int(FIELDS_X0) + 60, int(FIELDS_X1) - 20, 38):
+        tree(float(_tx), FIELDS_Z1 - 6.0, GROUND, label=f"FieldsTreeN{_tx}")
+
+with group("SchoolFieldsFittings"):
+    # Both rows are on the spine's south verge, twenty studs apart along it, so
+    # a bench faces the walk from one side and a lamp reaches over it from the
+    # other -- and neither is standing in the north tree row at FIELDS_Z1 - 6.
+    # Both are on grass, so both are given GROUND: street_lamp defaults to
+    # PAVING because every other lamp in the city is on a sidewalk, and taking
+    # that default here would float them half a stud.
+    for _i, _bx in enumerate((-330.0, -420.0, -500.0)):
+        bench(_bx, FIELDS_SPINE_Z0 - 5.0, 1, label=f"FieldsBench{_i}")
+        street_lamp(_bx + 20.0, FIELDS_SPINE_Z0 - 3.0, 0, floor=GROUND,
+                    label=f"FieldsLamp{_i}")
+
+# The ids are the ones Jobs.luau and Config.Locations already name. Only the
+# coordinates moved; a place point that changed its id would have moved the
+# amenity out of the game as well as across the map.
+#
+# The track's point is on its own start line rather than out in the infield.
+# That is where a runner stands, and it is the one spot on a ring that means
+# something -- the centre of a running track is a patch of grass.
 for pid, cx, cz in (
-    ("basketball_court", 866.0, 909.0),
-    ("tennis_court", 914.0, 907.0),
-    ("playground", 850.0, 835.0),
-    ("running_track", 910.0, 735.0),
+    ("basketball_court", -334.0, 43.0),
+    ("tennis_court", -334.0, 11.0),
+    ("playground", -332.0, -31.0),
+    ("running_track", SPORTS_TRACK_X0 + 2.0,
+     (SPORTS_TRACK_Z0 + SPORTS_TRACK_Z1) / 2),
 ):
     place_point(pid, cx, cz, GROUND, f"the {pid.replace('_', ' ')}")
 
@@ -5354,7 +6876,18 @@ STAD_PZ0, STAD_PZ1 = 500.0, 610.0
 STAD_WEST_OUT = 812.0    # unchanged -- see why, below
 STAD_EAST_OUT = 982.0    # 13 studs clear of the headland shore at 995
 STAD_SOUTH_OUT = 418.0   # 10 studs clear of the wp_bay_head_s crossing at 408
-STAD_NORTH_OUT = 692.0   # 8 studs clear of the running track's south edge at 700
+STAD_NORTH_OUT = 692.0   # 12 studs clear of the wp_bay_head_n crossing at 704
+# The bowl is now the only reason the headland is land, so the headland is the
+# thing it has to fit inside rather than a backdrop it happens to sit on. Both
+# ends of it are within one HEADLAND_CLEAR of the water, and a nudge to either
+# number that put a stand in the bay would otherwise show up as a stadium with
+# no shoreline in front of it -- which reads as scenery, not as a mistake.
+assert (STAD_SOUTH_OUT - HEADLAND_Z0 >= HEADLAND_CLEAR
+        and HEADLAND_Z1 - STAD_NORTH_OUT >= HEADLAND_CLEAR), (
+    f"the stadium runs z {STAD_SOUTH_OUT}..{STAD_NORTH_OUT} on a headland of "
+    f"z {HEADLAND_Z0}..{HEADLAND_Z1}, which leaves less than "
+    f"{HEADLAND_CLEAR} studs of shore at one end. Move the bowl or lengthen "
+    f"the headland -- HEADLAND_Z0/Z1 are where the water starts.")
 # West does not move. `StadiumForecourt`'s `MainEntrance` sits directly
 # against this wall (`ex1 = STAD_WEST_OUT`, see below) and needs the 12
 # studs between it and avenue 6's sidewalk at 799 that it already has at
@@ -5844,7 +7377,10 @@ def stadium_entrance(x0, x1, z0, z1, label):
     cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
     eave = STAD_TOP_Y - 2.0
     with group(label):
-        box("Slab", (x0, x1, z0, z1, GROUND - SLAB, GROUND), FLOOR_INDOOR, MARBLE)
+        # An inlay: this building stands on the forecourt, which is paved to
+        # GROUND under the whole of it before anything goes up.
+        box("Slab", (x0, x1, z0, z1, GROUND, GROUND + FLOOR_INLAY),
+            FLOOR_INDOOR, MARBLE)
         wall("WallSouth", (x0, x1, z0, z0 + WALL, GROUND, eave), STAD_STRUCTURE, CONCRETE,
              along="x")
         wall("WallNorth", (x0, x1, z1 - WALL, z1, GROUND, eave), STAD_STRUCTURE, CONCRETE,
@@ -5918,14 +7454,24 @@ def stadium():
             + point_light(NEON_AMBER, 1.4, 50.0))
 
     with group("StadiumForecourt"):
-        # A wide plaza rather than a gate-width strip -- the dome is the
+        # A long plaza rather than a gate-width strip -- the dome is the
         # thing that makes the stadium read as big from across the
         # headland, but a landmark this size wants a landmark's forecourt
         # in front of it: palms, benches, room for a crowd to gather before
         # kickoff, and a real walled entrance hall at the back of it rather
         # than a turnstile bolted straight onto the sidewalk.
-        fx0, fx1 = STAD_WEST_OUT - 30.0, STAD_WEST_OUT
-        fz0, fz1 = fmid - 35.0, fmid + 35.0
+        #
+        # It gets that room along the wall rather than out from it, and this is
+        # the correction of a real defect: `fx0` was `STAD_WEST_OUT - 30`, which
+        # is x 782 -- eleven studs inside avenue 6's carriageway and two inside
+        # the junction square at its foot. The plaza was paved over the road.
+        # The west edge is now measured from the avenue's own sidewalk instead
+        # of guessed at, and the depth that leaves (13 studs, the same 13 the
+        # note on STAD_WEST_OUT is written against) is bought back in z: 130
+        # studs of frontage along the bowl's west wall, which is what a stadium
+        # concourse looks like anyway.
+        fx0, fx1 = AVE[5] + AVE_W[5] + AVE_WALK, STAD_WEST_OUT
+        fz0, fz1 = fmid - 65.0, fmid + 65.0
         box("Paving", (fx0, fx1, fz0, fz1, GROUND_BOTTOM, GROUND), PATH_STONE, PEBBLE)
 
         # ex0 used to be STAD_WEST_OUT - 16.0 = 796.0, which put the atrium's own
@@ -5950,17 +7496,26 @@ def stadium():
         ez0, ez1 = fmid - 15.0, fmid + 15.0
         stadium_entrance(ex0, ex1, ez0, ez1, "MainEntrance")
 
-        palm_row(fx0 + 3.0, fx0 + 3.0, fz0 + 5.0, fz1 - 5.0, GROUND, step=14.0,
-                 along="z", label="PlazaPalmsWest")
+        # Two rows down the flanks, not one down the whole frontage. The plaza
+        # is thirteen studs deep and the entrance's canopy reaches x 801 of it,
+        # so a row at 802 running the full length of the plaza plants palms in
+        # the doorway -- fronds reach eleven studs (see `palm()`).
+        for _fz0, _fz1 in ((fz0 + 6.0, ez0 - 12.0), (ez1 + 12.0, fz1 - 6.0)):
+            palm_row(fx0 + 3.0, fx0 + 3.0, _fz0, _fz1, GROUND, step=14.0,
+                     along="z", label=f"PlazaPalms{_fz0:.0f}")
         # Offset 10 studs past the doorway edge (cz +/- STAD_GATE_HALF), not just past
         # the entrance building's own footprint: a palm's fronds reach ~11 studs from
         # its trunk (see `palm()`), so flanking it right at the doorway edge let the
         # crown hang into the opening and read as trees blocking the entrance.
         for pz in (ez0 - 10.0, ez1 + 10.0):
             palm(ex0 - 3.0, pz, GROUND, label=f"PlazaPalmFlank{pz:.0f}")
-        for pz in (fz0 + 8.0, fmid - 10.0, fmid + 10.0, fz1 - 8.0):
+        # Both kept off the entrance's own z band for the same reason as the
+        # palms, and the benches sit back against the bowl wall (fx1 - 4) where
+        # there is nothing behind them -- fx0 + 10 is now x 809, which is inside
+        # the entrance hall.
+        for pz in (fz0 + 12.0, ez0 - 20.0, ez1 + 20.0, fz1 - 12.0):
             street_lamp(fx0 + 4.0, pz, 1, floor=GROUND)
-            bench(fx0 + 10.0, pz, -1, floor=GROUND)
+            bench(fx1 - 4.0, pz, -1, floor=GROUND)
 
     soccer_field(STAD_PX0, STAD_PX1, STAD_PZ0, STAD_PZ1)
     place_point("soccer_field", STAD_WEST_OUT - 11.0, (STAD_PZ0 + STAD_PZ1) / 2, GROUND,
@@ -5994,10 +7549,13 @@ for sband in range(5):
         elif role == "OFFICES":
             office_counter = office_block(band, sband, x0, x1, z0, z1,
                                           office_counter)
-        elif role == "DINING":
-            dining_block(band, sband, x0, x1, z0, z1)
+        elif role == "MIXED":
+            fade_counter = mixed_block(band, sband, x0, x1, z0, z1,
+                                       fade_counter)
         elif role == "SPORTS":
             sports_center(band, sband, x0, x1, z0, z1)
+        elif role == "ARENA":
+            arena_block(band, sband, x0, x1, z0, z1)
         elif role == "FADE":
             fade_office_band(band, sband, x0, x1, z0, z1, fade_counter)
             fade_counter += 2  # two offices per block
@@ -6020,7 +7578,116 @@ for sband in range(5):
 # where until the step-down band was built they fronted onto open ground.
 FIN_Z0, FIN_Z1 = CITY_Z0, CS[0] - CS_WALK
 FIN_HEIGHTS = [10, 8, 12, 7, 9]  # storeys per band, varied skyline
-FIN_GLASS = RISE_GLASS
+# One family, four shades. Not four colours: a district where every tower is a
+# different hue reads as a toybox by day and has nothing left to say at night,
+# because the eye has already been given all the colour it is going to get. The
+# glass stays one blue-grey and only its value moves, which is what leaves the
+# crown neon somewhere to land after dark.
+FIN_GLASS = TOWER_GLASS
+# Which silhouette each band gets. The waterfront is the one row of towers seen
+# end-on from the marina and the south pier, so it is the row where a repeated
+# profile shows worst -- six styles across the rotation, never the same one
+# twice in a row along the front. `straight` and `slab` are in here on purpose:
+# an all-sculpted skyline is as flat as an all-boxy one, and the plain shafts
+# are what make the twisted ones read as deliberate rather than as the only
+# thing the generator knows how to draw.
+FIN_STYLES = ["spire", "straight", "twist", "slab", "crown", "setback"]
+FIN_STYLE_STRIDE = 5  # must stay coprime with len(FIN_STYLES); see fin_towers
+assert math.gcd(FIN_STYLE_STRIDE, len(FIN_STYLES)) == 1, (
+    f"FIN_STYLE_STRIDE {FIN_STYLE_STRIDE} shares a factor with {len(FIN_STYLES)} styles, "
+    f"so the four bands will not all get different silhouettes. Pick a stride "
+    f"coprime with the number of styles.")
+
+# Four towers to a block, as a 2x2 with a cross alley.
+#
+# It was two, side by side, and each one got the block's whole 136-stud depth
+# against 49 studs of width -- a slab, not a tower, and eight slabs in a row is
+# a wall with the sky showing through it. Four at 49 x 66 is a proportion a
+# tower can actually be built at, and it doubles the density of the district
+# without taking a stud more ground.
+FIN_GAP = 6.0
+# Where the alley falls, as a fraction of the block. **Never 0.5.** A block cut
+# down the middle four times running is a grid, and the thing that makes a real
+# downtown read as one is that no two blocks are cut the same way -- so the
+# alley wanders and the four towers in a block are four different sizes.
+FIN_SPLIT_X = [0.54, 0.44, 0.58, 0.47, 0.51]
+FIN_SPLIT_Z = [0.48, 0.56, 0.44, 0.53, 0.58]
+# Which corner of a block the alley opens, and which street that corner's tower
+# faces. The north pair front the cross street above them, the south pair the
+# street below -- see `shaped_tower`'s `front` for why that is not cosmetic.
+FIN_QUADS = (("sw", 0, 0, "south"), ("se", 1, 0, "south"),
+             ("nw", 0, 1, "north"), ("ne", 1, 1, "north"))
+# Storeys off the band's headline height, per corner. Rotated by the band so
+# the tall corner walks along the waterfront rather than lining up into a
+# second, accidental grid.
+#
+# **All of them are zero or negative, and that is the rule rather than the
+# taste.** FIN_HEIGHTS is the ceiling the Circle's clearance assertion is sized
+# against, and a positive entry here raises the district's tallest tower without
+# touching the constant that is supposed to state it -- the first draft used
+# (0, 3, -2, 5) and pushed the waterfront 46 studs over the middle of the city,
+# which the assertion caught and the only available fix for was a 31-storey
+# Circle. Vary downward: the district gets four different rooflines a block and
+# the number the rest of the file reasons about does not move.
+FIN_QUAD_LIFT = [0, -3, -6, -2]
+
+# One quadrant a band is stone rather than glass -- see `masonry_tower` for why
+# downtown needs any. Which corner walks along the waterfront rather than lining
+# up: at four quadrants a stride of 3 visits every corner before repeating,
+# where a stride of 2 would put the stone building on the same diagonal in every
+# band and rebuild the stripe this is meant to break.
+FIN_MASONRY_STRIDE = 3
+FIN_MASONRY_OFFSET = 1
+assert math.gcd(FIN_MASONRY_STRIDE, len(FIN_QUADS)) == 1, (
+    f"FIN_MASONRY_STRIDE {FIN_MASONRY_STRIDE} shares a factor with "
+    f"{len(FIN_QUADS)} quadrants, so the stone building sits on the same corner "
+    f"in every band. Pick a stride coprime with the number of quadrants.")
+
+
+def fin_masonry_quad(band):
+    """Which quadrant of `band` is the old building."""
+    return (band * FIN_MASONRY_STRIDE + FIN_MASONRY_OFFSET) % len(FIN_QUADS)
+
+
+def fin_towers():
+    """(name, band, ex, ez, front, floors, style, kind) for every building on
+    the waterfront, in build order.
+
+    One list, read by `financial_district` below *and* by the Circle's height
+    assertion above it. The two used to derive these heights independently --
+    the builder from FIN_HEIGHTS and the rule from `max(FIN_HEIGHTS)` -- which
+    is the one-measurement-two-places problem this file asserts against
+    everywhere else, and it is worse here than usual: the failure is silent and
+    the symptom is a Circle that is no longer the tallest thing in its own city.
+    """
+    # From band 0, not band 1. The westernmost block used to hold the grand
+    # bank, which is why the loop started one band in and why FIN_HEIGHTS[0]
+    # was a number nothing read. The bank has gone up to the government quarter
+    # and the block is towers like every other -- an all-modern downtown was the
+    # point of moving it.
+    for band in range(0, 5):
+        base = FIN_HEIGHTS[band]
+        for q, (tag, ex, ez, face) in enumerate(FIN_QUADS):
+            floors = max(4, base + FIN_QUAD_LIFT[(q + band) % len(FIN_QUAD_LIFT)])
+            # The stride must be coprime with len(FIN_STYLES) or bands repeat
+            # each other wholesale: at six styles a stride of 3 gives every odd
+            # band the same four silhouettes as every other odd band, which is
+            # exactly the sameness the six styles were added to break.
+            style = FIN_STYLES[(band * FIN_STYLE_STRIDE + q) % len(FIN_STYLES)]
+            kind = "stone" if q == fin_masonry_quad(band) else "glass"
+            yield (f"{band}{tag}", band, ex, ez, face, floors, style, kind)
+
+
+def fin_skyline(floors, style, kind):
+    """The highest point of one waterfront building, whichever kind it is.
+
+    The Circle's clearance rule needs the tallest thing in the district and the
+    district is no longer one kind of building. Asking `shaped_tower_skyline`
+    about a stone one would quietly overstate it by twenty studs -- which is the
+    safe direction, and is exactly why it would never have been noticed."""
+    if kind == "stone":
+        return masonry_skyline(floors)
+    return shaped_tower_skyline(floors, style)
 
 # The Circle is the middle of the city and every one of its twelve towers has to be
 # the tallest thing in it. Asserted here, rather than in the CIRCUS block, for the
@@ -6047,7 +7714,8 @@ def circus_skyline(storeys):
 
 
 CIRCUS_SKYLINE = [circus_skyline(n) for n in CIRCUS_STOREYS]
-_rival = max(high_rise_skyline(n) for n in FIN_HEIGHTS)
+_rival = max(fin_skyline(floors, style, kind)
+             for *_head, floors, style, kind in fin_towers())
 _floor = _rival + CIRCUS_CLEARANCE
 
 assert min(CIRCUS_SKYLINE) >= _floor, (
@@ -6113,28 +7781,42 @@ assert len(_rooflines) >= CIRCUS_MIN_ROOFLINES, (
 
 
 with group("FinancialDistrict"):
-    # The grand bank in the first band.
-    bank_x0 = AVE[0] + AVE_W[0] + AVE_WALK
-    bank_x1 = AVE[1] - AVE_WALK
-    grand_bank(bank_x0, bank_x1, FIN_Z0, FIN_Z1)
+    # Ground for the whole band, laid before anything stands on it. The towers
+    # used to each carry a plinth, so the block interior only had a floor where a
+    # building happened to be -- and the moment those went, `wp_fin_plaza` and
+    # `wp_fin_plaza_n` were left standing over a hole in the cross alley. Ground
+    # belongs to the block, not to the building.
+    for _band in range(0, 5):
+        box(f"FinPaving{_band}",
+            (AVE[_band] + AVE_W[_band] + AVE_WALK, AVE[_band + 1] - AVE_WALK,
+             FIN_Z0, FIN_Z1, GROUND_BOTTOM, PAVING), PAVING_GREY, CONCRETE)
 
-    # High-rises in the remaining four bands.
-    for band in range(1, 5):
-        bx0 = AVE[band] + AVE_W[band] + AVE_WALK
-        bx1 = AVE[band + 1] - AVE_WALK
-        # Two towers per band, split the width roughly in half with a plaza.
-        mid_x = (bx0 + bx1) / 2
-        tw = (bx1 - bx0) / 2 - 2.0
-        h1 = FIN_HEIGHTS[band]
-        h2 = FIN_HEIGHTS[band - 1] if band > 1 else FIN_HEIGHTS[0]
-        high_rise(f"{band}_w", bx0, bx0 + tw, FIN_Z0, FIN_Z1,
-                  h1, FIN_GLASS[band % len(FIN_GLASS)])
-        high_rise(f"{band}_e", mid_x + 2.0, bx1, FIN_Z0, FIN_Z1,
-                  h2, FIN_GLASS[(band + 2) % len(FIN_GLASS)])
+    # Four shaped towers in each of the five bands, as a 2x2 around a
+    # cross alley. Read off `fin_towers()` rather than recomputing the heights
+    # here -- see that function for why the two must not derive them separately.
+    for _i, (_no, _band, _ex, _ez, _face, _floors, _style, _kind) in \
+            enumerate(fin_towers()):
+        _bx0 = AVE[_band] + AVE_W[_band] + AVE_WALK
+        _bx1 = AVE[_band + 1] - AVE_WALK
+        _sx = _bx0 + (_bx1 - _bx0) * FIN_SPLIT_X[_band]
+        _sz = FIN_Z0 + (FIN_Z1 - FIN_Z0) * FIN_SPLIT_Z[_band]
+        _xs = ((_bx0, _sx - FIN_GAP / 2), (_sx + FIN_GAP / 2, _bx1))
+        _zs = ((FIN_Z0, _sz - FIN_GAP / 2), (_sz + FIN_GAP / 2, FIN_Z1))
+        if _kind == "stone":
+            # No slab: FinPaving already floors the whole band. The stone
+            # building takes the same storey count the glass tower it replaced
+            # would have had and comes out about twenty studs shorter on its own
+            # vocabulary -- which is the step, and it is not typed anywhere.
+            masonry_tower(_no, _xs[_ex][0], _xs[_ex][1], _zs[_ez][0], _zs[_ez][1],
+                          _floors, tint=_i, front=_face)
+        else:
+            shaped_tower(_no, _xs[_ex][0], _xs[_ex][1], _zs[_ez][0], _zs[_ez][1],
+                         _floors, FIN_GLASS[(_band + _i) % len(FIN_GLASS)],
+                         style=_style, tint=_i, front=_face)
     # Street furniture goes on the avenue pavements, not in the middle of the
     # band. There is no plaza here and there never was room for one: the bank
-    # fills its band wall to wall and each of the other four is two towers with
-    # two studs between them, so the "plaza" this used to draw was an inverted
+    # fills its band wall to wall and each of the other four is four towers
+    # around a six-stud alley, so the "plaza" this used to draw was an inverted
     # box (x0 215 > x1 213) and its trees and benches stood inside the bank and
     # inside the towers. The pavements are the only open ground in the
     # district, and street trees are what actually belongs on them.
@@ -7378,16 +9060,16 @@ def beach_band(index, z0, z1, shore_x):
                                       GROUND_BOTTOM, PAVING + 1.4),
                 TRIM_WHITE, CONCRETE)
     # Palms down the middle of the walk, benches and lamps facing the water.
-    # In the headland band this walk runs right past the stadium's east wall
-    # and, further north, right past the running track -- both sit well west
-    # of the shore but the walk's palms used to be planted at a fixed x/z
-    # offset from the shoreline with no regard for what else was built
-    # inland of it, so a palm at (~953-959, z) landed inside the bowl or the
-    # track for every z between them. `carve` cuts that whole span, with a
-    # little clearance on each side, out of the row instead.
+    # In the headland band this walk runs right past the stadium's east wall.
+    # The palms used to be planted at a fixed x/z offset from the shoreline
+    # with no regard for what was built inland of it, so a palm at (~953-959, z)
+    # landed inside the bowl for every z the stadium covered. `carve` cuts that
+    # span, with a little clearance on each side, out of the row instead.
+    # (It used to have to clear the running track as well, which stood north of
+    # the stadium until the fields moved to the school.)
     palm_gaps = []
     if shore_x == SHORE_X_HEADLAND:
-        palm_gaps.append((STAD_SOUTH_OUT - 8.0, max(STAD_NORTH_OUT, SPORTS_TRACK_Z1) + 10.0))
+        palm_gaps.append((STAD_SOUTH_OUT - 8.0, STAD_NORTH_OUT + 10.0))
     for pz0, pz1 in carve((z0, z1), palm_gaps):
         if pz1 - pz0 < 20.0:
             continue
@@ -7442,15 +9124,15 @@ def quay_band(index, z0, z1, shore_x):
         # The apron, at pavement height rather than ground: a wharf is a built
         # surface, and the half-stud lip against the lawn behind it is the same
         # kerb every pavement in the city has.
-        box("Apron", (apron_x0, shore_x, z0, z1, GROUND_BOTTOM, PAVING),
-            CONCRETE_GREY, CONCRETE)
+        box("Apron", (apron_x0, shore_x - QUAY_FACE_IN, z0, z1,
+                      GROUND_BOTTOM, PAVING), CONCRETE_GREY, CONCRETE)
         # The face itself, standing in the water so there is no seam at the
         # waterline where the seabed would otherwise show through.
-        box("Face", (shore_x - 1.4, shore_x + 1.6, z0, z1, SEA_FLOOR - 1.0, PAVING),
-            CONCRETE_GREY, CONCRETE)
+        box("Face", (shore_x - QUAY_FACE_IN, shore_x + QUAY_FACE_OUT, z0, z1,
+                     SEA_FLOOR - 1.0, PAVING), CONCRETE_GREY, CONCRETE)
         # A rubbing strake down the face, which is the one detail that stops it
         # reading as a plain wall from a boat's height.
-        box("Fender", (shore_x + 1.6, shore_x + 2.4, z0, z1,
+        box("Fender", (shore_x + QUAY_FACE_OUT, shore_x + 2.4, z0, z1,
                        SEA_TOP - 0.6, SEA_TOP + 1.6), (56, 54, 52), SMOOTH)
         for i in range(int((z1 - z0) / 26.0)):
             bz = z0 + 13.0 + i * 26.0
@@ -7460,7 +9142,8 @@ def quay_band(index, z0, z1, shore_x):
             # walks off the edge, which they will, and the shelf is only 2.6
             # studs down but a wall with no way out of the water is a trap.
             if i % 3 == 1:
-                box(f"Ladder{i}", (shore_x + 1.6, shore_x + 2.2, bz + 4.0, bz + 5.4,
+                box(f"Ladder{i}", (shore_x + QUAY_FACE_OUT, shore_x + 2.2,
+                                   bz + 4.0, bz + 5.4,
                                    SEA_FLOOR, PAVING), STEEL, METAL)
     with group(f"QuayFittings{index}"):
         for i in range(int((z1 - z0) / 78.0)):
@@ -7512,7 +9195,7 @@ def surface_floor(x, z):
     if CONN_X0 < x < CONN_X1 and CONN_Z0 < z < CONN_Z1:
         return GROUND
     for k, a in enumerate(AVE):
-        if a < x < a + AVE_W[k] and ave_z0(k) < z < AVE_Z1:
+        if a < x < a + AVE_W[k] and on_avenue(k, z):
             return GROUND
     for j, c in enumerate(CS):
         if c < z < c + CS_W[j] and CS_X0 < x < CS_X1:
@@ -7531,9 +9214,9 @@ def surface_floor(x, z):
     if CONN_X1 < x < CONN_X1 + CONN_WALK and CONN_Z0 < z < CONN_Z1:
         return PAVING
     for k, a in enumerate(AVE):
-        if a - AVE_WALK < x < a and ave_z0(k) < z < AVE_Z1:
+        if a - AVE_WALK < x < a and on_avenue(k, z):
             return PAVING
-        if a + AVE_W[k] < x < a + AVE_W[k] + AVE_WALK and ave_z0(k) < z < AVE_Z1:
+        if a + AVE_W[k] < x < a + AVE_W[k] + AVE_WALK and on_avenue(k, z):
             return PAVING
     for j, c in enumerate(CS):
         if CS_X0 < x < CS_X1 and c - CS_WALK < z < c:
@@ -7589,13 +9272,17 @@ for i, z in enumerate(range(60, 1120, ROUTE_STEP)):
 # waypoint() so that the reason is visible where the lattice is written: the
 # ring's own chain below replaces them, and a silent filter would hide the day
 # somebody moves the Circle and the grid quietly loses two points.
+#
+# Avenue 5's points are skipped over the arena superblock for the same reason
+# and by the same rule that stops the road being drawn there -- see `ave_gaps`.
+# The arena's own forecourt chain replaces them.
 def in_circle(x, z):
     return math.hypot(x - CIRCLE_X, z - CIRCLE_Z) < CIRCLE_R_WALK
 
 
 for k, a in enumerate(AVE):
     for i, z in enumerate(range(int(ave_z0(k)), int(AVE_Z1), ROUTE_STEP)):
-        if in_circle(a + AVE_W[k] / 2, float(z)):
+        if in_circle(a + AVE_W[k] / 2, float(z)) or not on_avenue(k, float(z)):
             continue
         waypoint(f"wp_ave{k}_{i}", a + AVE_W[k] / 2, float(z), f"avenue {k + 1}")
 
@@ -7758,12 +9445,19 @@ for i in range(4):
     waypoint(f"wp_circle_isle_{i}", _wx, _wz,
              "the Circle's island, by the monument", PAVING)
 
-# Mall corridor waypoint (emitted above as a place point) plus the sports
-# park's own lattice.
+# Mall corridor waypoint (emitted above as a place point) plus the strip of
+# green between avenue 6 and the water, which runs the whole east side.
+#
+# The column is at x 810, west of SHORE_X_BAY, so every one of these is on land
+# in all four shore bands and none of them cares where the waterline is. The
+# spurs east of it do care: there used to be three more, at (850,835), (850,909)
+# and (870,735), laid to reach a sports park that stood out on the headland.
+# Both the park and that stretch of headland are gone -- the fields went to the
+# school and the land went under the bay -- and the three of them were left
+# standing in open water, which is exactly what check 6 called them.
 for z in (460, 528, 596, 664, 732, 800, 868, 936):
-    waypoint(f"wp_park_{z:.0f}", 810.0, float(z), "the east park, by the avenue")
-for x, z in ((850.0, 475.0), (850.0, 835.0), (850.0, 909.0), (870.0, 735.0)):
-    waypoint(f"wp_park_{x:.0f}_{z:.0f}", x, z, "across the east park")
+    waypoint(f"wp_park_{z:.0f}", 810.0, float(z), "the east green, by the avenue")
+waypoint("wp_park_850_475", 850.0, 475.0, "the stadium's south lawn")
 
 # City park edges, so the fountain chains to the avenue lattice.
 waypoint("wp_cpark_w", 99.0, 740.0, "the park's west edge", GROUND)
@@ -7854,11 +9548,38 @@ for _j, _c in enumerate(CS):
     waypoint(f"wp_bay_cs{_j}", AVE[5] + AVE_W[5] / 2, _c + CS_W[_j] / 2,
              f"cross street {_j + 1}, at the bay end", GROUND)
 
-# Across the headland, clear of the pitch to the south and the courts to the
-# north, joining the southern and northern walks to the one behind the park.
+# Across the headland, clear of the stadium to the south and to the north,
+# joining the southern and northern walks to the one behind it.
+# Both crossings are measured off the headland's own ends rather than typed, so
+# that shortening the peninsula moves them with it instead of leaving one of
+# them standing in the water it just made.
 for _x in (824.0, 892.0, 960.0):
-    waypoint(f"wp_bay_head_s_{_x:.0f}", _x, 408.0, "the headland, south of the park", GROUND)
-    waypoint(f"wp_bay_head_n_{_x:.0f}", _x, 932.0, "the headland, north of the park", GROUND)
+    waypoint(f"wp_bay_head_s_{_x:.0f}", _x, HEADLAND_Z0 + HEADLAND_CLEAR,
+             "the headland, south of the stadium", GROUND)
+    waypoint(f"wp_bay_head_n_{_x:.0f}", _x, HEADLAND_Z1 - HEADLAND_CLEAR,
+             "the headland, north of the stadium", GROUND)
+
+# The school's playing fields, out on the west side of the town. Three chains,
+# all on the paving laid for them: the spine in from the town's way, the cross
+# path south past the courts, and the south walk west to the track.
+#
+# The east end of the spine is the only cross-asset link in the set. It sits a
+# short step from `wp_fields_way_1`, which gen_town.py lays at TOWN_WEST_EDGE +
+# 6 on the same FIELDS_WAY_MID: the town checks its own half of that walk and
+# this file checks its own, and check_city's reachability sweep -- which reads
+# both files -- is the only thing that sees the join. That is the same
+# arrangement the gate roads use.
+for _i, _x in enumerate((-320.0, -380.0, -440.0, -500.0, -548.0)):
+    waypoint(f"wp_fields_spine_{_i}", _x, FIELDS_WAY_MID,
+             "the walk through the school's playing fields", PAVING)
+for _i, _z in enumerate((40.0, 0.0, -40.0, -80.0)):
+    waypoint(f"wp_fields_cross_{_i}", FIELDS_CROSS_MID, _z,
+             "the path past the school's courts", PAVING)
+for _i, _x in enumerate((-400.0, -460.0, -520.0)):
+    waypoint(f"wp_fields_south_{_i}", _x, FIELDS_SOUTH_MID,
+             "the walk along the foot of the playing fields", PAVING)
+waypoint("wp_fields_corner", FIELDS_CROSS_MID, FIELDS_SOUTH_MID,
+         "the corner of the playing fields", PAVING)
 
 # The south pier, out to the marina. The deck ends at the shore plus the pier's
 # own length, so the last of these has to sit inside it -- a waypoint past the

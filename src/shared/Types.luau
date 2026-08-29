@@ -1412,6 +1412,89 @@ export type SoccerMatchState = {
 	career: SoccerCareer,
 }
 
+-- A life's whole basketball record, same shape as SoccerCareer -- see
+-- Config.Sports.Basketball's header for why basketball is soccer's own skeleton with
+-- a hoop instead of a goal.
+export type BasketballCareer = {
+	matchesPlayed: number,
+	points: number,
+	assists: number,
+	rebounds: number,
+	steals: number,
+	shotsTaken: number,
+	shotsMade: number,
+}
+
+export type BasketballRosterEntry = {
+	name: string,
+	team: "home" | "away",
+	isBot: boolean,
+	isYou: boolean,
+	isCarrier: boolean,
+}
+
+export type BasketballMatchState = {
+	running: boolean,
+	homeScore: number,
+	awayScore: number,
+	secondsLeft: number,
+	roster: { BasketballRosterEntry },
+	yourTeam: ("home" | "away")?,
+	onRoster: boolean,
+	isCarrier: boolean,
+	charging: boolean,
+	chargeShare: number,
+	verdict: string?,
+	canJoin: boolean,
+	gradingPe: boolean,
+	career: BasketballCareer,
+}
+
+-- A life's whole volleyball record. Kills and digs stand in for SoccerCareer's goals
+-- and tackles -- the two events that show up in the box score of the real sport --
+-- and `touches` is the volume stat underneath both, the same job SoccerCareer's
+-- shotsTaken plays for shotsOnTarget.
+export type VolleyballCareer = {
+	matchesPlayed: number,
+	kills: number,
+	assists: number,
+	digs: number,
+	touches: number,
+}
+
+-- No isCarrier -- volleyball has no carrier, the ball is never held. See
+-- Config.Sports.Volleyball's header.
+export type VolleyballRosterEntry = {
+	name: string,
+	team: "home" | "away",
+	isBot: boolean,
+	isYou: boolean,
+}
+
+export type VolleyballMatchState = {
+	running: boolean,
+	homeScore: number,
+	awayScore: number,
+	secondsLeft: number,
+	roster: { VolleyballRosterEntry },
+	yourTeam: ("home" | "away")?,
+	onRoster: boolean,
+	-- Which touch the ball is asking of you right now, or nil while it is not
+	-- yours to play -- a bump, a set or a spike, in that rally order. The HUD reads
+	-- this instead of a single isCarrier flag because, unlike soccer or basketball,
+	-- what you may do to the ball changes touch to touch rather than staying the
+	-- same verb the whole time you have it.
+	touchPhase: ("bump" | "set" | "spike")?,
+	-- The spike's own charge-and-release meter, same shape as Soccer/Basketball's
+	-- shot -- only live while touchPhase is "spike".
+	charging: boolean,
+	chargeShare: number,
+	verdict: string?,
+	canJoin: boolean,
+	gradingPe: boolean,
+	career: VolleyballCareer,
+}
+
 -- A rhythm lesson in progress -- Music's verb, and the same sweep primitive as the
 -- gym and the sports drill (see shared/Sweep.luau) held against a note instead of a
 -- rep. One field this state has that neither of those does: `countInSecondsLeft`, the
@@ -1842,6 +1925,8 @@ export type SkillState = {
 export type SkillsState = {
 	skills: { SkillState },
 	soccerCareer: SoccerCareer,
+	basketballCareer: BasketballCareer,
+	volleyballCareer: VolleyballCareer,
 }
 
 -- One preference, as the settings pane draws it. The label and both captions come down
@@ -2825,6 +2910,9 @@ export type LifeData = {
 	-- five other bodies, and PE keeps grading every window regardless of how many good
 	-- ones came before. Per life, like everything else here.
 	soccerCareer: SoccerCareer,
+	-- Same reasoning as soccerCareer, one per match sport.
+	basketballCareer: BasketballCareer,
+	volleyballCareer: VolleyballCareer,
 	-- Per life, like everything else here. Nobody inherits an education.
 	subjectMastery: { [string]: number },
 	-- Passes banked toward the *next* mastery level in each subject, keyed the same way.

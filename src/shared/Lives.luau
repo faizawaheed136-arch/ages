@@ -97,6 +97,24 @@ function Lives.New(): LifeData
 			shotsTaken = 0,
 			shotsOnTarget = 0,
 		},
+		-- Same reasoning as soccerCareer, one per match sport -- see Types.luau's
+		-- BasketballCareer/VolleyballCareer.
+		basketballCareer = {
+			matchesPlayed = 0,
+			points = 0,
+			assists = 0,
+			rebounds = 0,
+			steals = 0,
+			shotsTaken = 0,
+			shotsMade = 0,
+		},
+		volleyballCareer = {
+			matchesPlayed = 0,
+			kills = 0,
+			assists = 0,
+			digs = 0,
+			touches = 0,
+		},
 		-- Right for the newborn this describes, and right for a save written before school
 		-- existed: that life has sat no lessons this year, which is exactly true -- there was
 		-- nothing to sit.
