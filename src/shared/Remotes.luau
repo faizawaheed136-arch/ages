@@ -190,6 +190,23 @@ export type RemoteName =
 	-- this carries intent and never a score: a client that sent "I released at 0.71" would
 	-- be a client that could send 0.71 whenever it liked.
 	| "RequestNerveHold"
+	-- The reading lesson: both words, the tray, what is in hand, and how many takebacks are
+	-- left. Pushed whole rather than as deltas, for the reason every other school channel is
+	-- -- the panel is redrawn on receipt and a tray that arrived in pieces could be drawn
+	-- half-spent.
+	--
+	-- It carries the *answer* in the sense that the gaps and the tray together imply it, and
+	-- that is unavoidable and fine: the subject is recognising which letters a word is
+	-- missing, not being unable to see the letters. What it does not carry is which tile
+	-- belongs in which gap.
+	| "ReadingUpdated"
+	-- Take a tile, or put the one in hand into a gap, or pull a placed one back out. One
+	-- remote for all three because they are one verb with a target: nil target means put
+	-- down what you are holding.
+	| "RequestReadingPlace"
+	-- Hand in a word as it stands. The commit, and the only irreversible thing in the
+	-- lesson.
+	| "RequestReadingSubmit"
 	-- "My hands are in the drawer" / "they are not any more." One remote with a boolean
 	-- rather than two, because the two are the same fact and a start that arrived without
 	-- its stop -- or in the wrong order after a hiccup -- would leave a player taking
@@ -600,6 +617,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestArtSign",
 	"NerveUpdated",
 	"RequestNerveHold",
+	"ReadingUpdated",
+	"RequestReadingPlace",
+	"RequestReadingSubmit",
 	"RequestTillHold",
 	"RequestTillOpen",
 	"RequestTillCallCrew",

@@ -56,6 +56,7 @@ local FightService = require(script.Parent.FightService)
 local MoneyService = require(script.Parent.MoneyService)
 local NPCService = require(script.Parent.NPCService)
 local PlaceService = require(script.Parent.PlaceService)
+local SkillService = require(script.Parent.SkillService)
 local StatService = require(script.Parent.StatService)
 local Corridor = require(script.Parent.Parent.world.Corridor)
 local Bullies = require(script.Parent.Parent.content.Bullies)
@@ -291,6 +292,11 @@ local function resolve(player: Player, data: LifeData, outcome: string)
 		data.bullyStandUps += 1
 		data.bullyNerve = math.clamp(data.bullyNerve + TOLL.NerveOnStandUp, 0, NERVE_MAX)
 		StatService.AddStat(player, "happiness", TOLL.HappinessOnStandUp)
+		-- The same nerve discipline getting away from the police pays into, deliberately
+		-- rather than a school ladder of its own -- see Config.Skills.Awards.StoodUp. It is
+		-- also the only progression here the player can see in a panel: bullyNerve widens the
+		-- window and is felt rather than read, and this is the half that is read.
+		SkillService.Award(player, "nerve", Config.Skills.Awards.StoodUp, "stood your ground")
 		notice(player, archetype.standUpLine)
 	elseif outcome == "backed" then
 		data.bullyNerve = math.clamp(data.bullyNerve + TOLL.NerveOnBackDown, 0, NERVE_MAX)

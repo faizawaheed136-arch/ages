@@ -840,7 +840,67 @@ export type NerveState = {
 	secondsToBackup: number?,
 }
 
-export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy"
+-- One square of a word on the board. Either a letter that was always there, or a gap
+-- waiting for one, or a gap somebody has put a tile into.
+--
+-- `placed` and `letter` are separate because a filled gap and a given letter must not be
+-- the same thing to the panel: a player has to be able to see at a glance which letters
+-- are theirs to take back and which are the word\'s own, and one field could not say.
+export type WordCell = {
+	letter: string,
+	-- True when this square was a gap the player filled. Only these can be taken back.
+	placed: boolean,
+	-- True when this square is still empty. `letter` is "" when it is.
+	gap: boolean,
+}
+
+-- One word being built. Two of these are live at once, which is where the whole decision
+-- in this subject lives: the tray is shared, so a letter spent here is a letter the other
+-- word does not get.
+export type WordTarget = {
+	id: string,
+	cells: { WordCell },
+	-- True once it has been handed in and is waiting to be replaced. Kept for a beat rather
+	-- than removed immediately, so the player sees the word they finished rather than a
+	-- slot that changed under them.
+	done: boolean,
+}
+
+-- One tile in the tray.
+export type TrayTile = {
+	id: string,
+	letter: string,
+	-- True once it has been placed into a gap. Spent tiles stay in the tray, greyed, rather
+	-- than vanishing -- a tray that shuffles up under the thumb is a tray you cannot aim at,
+	-- and seeing what you have already spent is half of knowing what is left.
+	spent: boolean,
+}
+
+-- The reading lesson as the client draws it.
+export type ReadingState = {
+	active: boolean,
+	-- The closing line, or a refusal. Survives `active` going false for a beat.
+	line: string,
+	targets: { WordTarget },
+	tray: { TrayTile },
+	-- Which tile is in hand, or nil. Held on the server rather than the client because the
+	-- placement is scored server-side and a tile the client thought it was holding would be
+	-- a placement the server refuses for no visible reason.
+	heldTileId: string?,
+	-- Takebacks left. This is what mastery buys and it is deliberately a number on screen:
+	-- the margin the player is being given has to be visible inside the verb, not folded
+	-- into a hidden tolerance.
+	takebacks: number,
+	wordsDone: number,
+	wordsTarget: number,
+	secondsLeft: number,
+	-- Where they are standing, so the panel can light the controls that are actually live.
+	atDesk: boolean,
+	atShelf: boolean,
+	masteryLevel: number,
+}
+
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {

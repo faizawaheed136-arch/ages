@@ -65,28 +65,29 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = SCHOOL_END,
 	},
 
-	-- Reading and Music. Both are quiz stubs today and both have a verb owed to them,
-	-- written down here so the debt is legible rather than implied:
+	-- Reading. The debt above is paid: the verb is *building* the word rather than knowing
+	-- it. Two words stand on the board with letters missing and there is one tray of tiles
+	-- between them, so a letter spent on one is a letter the other does not get -- which is
+	-- the whole subject. It is the only lesson here where the answer is assembled rather
+	-- than chosen, found or copied, and that is what keeps it from being one of the others
+	-- wearing a different name.
 	--
-	--   Reading -- something where the verb is *finding* rather than knowing. "A passage on
-	--     the board and the answer somewhere in it" is the obvious shape and is also a quiz
-	--     with more words in it, so it is written down as an unsolved problem rather than a
-	--     plan.
-	--   Music   -- a rhythm held rather than a question answered; the input primitive
-	--     already exists for sports and is the obvious place to reuse it.
-	--
-	-- Neither is built. They are on the timetable because a childhood with one subject in
-	-- it is a worse game than one with five placeholders, and because the alternative --
-	-- holding the whole rebuild until all six verbs exist -- means shipping nothing for a
-	-- month.
+	-- The note that used to stand here called this an unsolved problem, on the grounds that
+	-- "a passage on the board and the answer somewhere in it" is a quiz with more words. That
+	-- was correct about *that* shape and is left recorded because it is the trap: the way out
+	-- was not a better question, it was to stop asking one.
 	{
 		id = "reading",
 		name = "Reading",
-		verb = "quiz",
-		blurb = "Words, and what they are doing. The answer is usually in the question.",
+		verb = "build",
+		blurb = "Two words, one tray of letters, and not enough of them to be careless.",
 		minAge = SCHOOL_START,
 		maxAge = SCHOOL_END,
 	},
+
+	-- Music. Still a quiz stub, and the one verb still owed on this timetable: a rhythm held
+	-- rather than a question answered. Left on the board because a childhood with five
+	-- subjects and one placeholder is a better game than one that waits.
 
 	-- Art. Copy the study on the wall onto your canvas, one square of paint at a time,
 	-- while the study quietly changes behind your back. The only subject here that can be

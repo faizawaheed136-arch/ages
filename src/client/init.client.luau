@@ -17,6 +17,7 @@ local LabUI = require(script.ui.LabUI)
 local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
 local NerveUI = require(script.ui.NerveUI)
+local WordUI = require(script.ui.WordUI)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -61,6 +62,7 @@ type LabState = Types.LabState
 type HuntState = Types.HuntState
 type ArtState = Types.ArtState
 type NerveState = Types.NerveState
+type ReadingState = Types.ReadingState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -103,6 +105,7 @@ local lab = LabUI.new()
 local hunt = HuntUI.new()
 local easel = EaselUI.new()
 local nerve = NerveUI.new()
+local words = WordUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -153,6 +156,8 @@ local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
 local RequestArtPaintRemote = Remotes.Get("RequestArtPaint")
 local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestNerveHoldRemote = Remotes.Get("RequestNerveHold")
+local RequestReadingPlaceRemote = Remotes.Get("RequestReadingPlace")
+local RequestReadingSubmitRemote = Remotes.Get("RequestReadingSubmit")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -546,6 +551,27 @@ end
 -- whenever it liked, and the one number in the corridor worth cheating is that one.
 nerve:OnHold(function(holding: boolean)
 	RequestNerveHoldRemote:FireServer(holding)
+end)
+
+-- Taking a tile, putting one into a gap, and pulling one back out, on one remote -- they
+-- are one verb with a target, and three would be three ways for the client and the server
+-- to disagree about what is in the player\'s hand.
+--
+-- A tile id is sent as the first argument and a board position as two numbers, which is
+-- what lets the server tell the two apart without a fourth field saying which this is.
+words:OnPlace(function(targetIndex: number?, cellIndex: number?, tileId: string?)
+	if tileId ~= nil then
+		RequestReadingPlaceRemote:FireServer(tileId)
+	else
+		RequestReadingPlaceRemote:FireServer(targetIndex, cellIndex)
+	end
+end)
+
+-- Handing a word in: the commit, and the only irreversible thing in the lesson. The server
+-- re-checks the player is at the desk and that the word is not already in, and refuses with
+-- a line rather than silently.
+words:OnSubmit(function(targetIndex: number)
+	RequestReadingSubmitRemote:FireServer(targetIndex)
 end)
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
@@ -982,6 +1008,10 @@ Remotes.Get("NerveUpdated").OnClientEvent:Connect(function(state: NerveState?)
 	nerve:Set(state)
 end)
 
+Remotes.Get("ReadingUpdated").OnClientEvent:Connect(function(state: ReadingState?)
+	words:Set(state)
+end)
+
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
 end)
@@ -1358,6 +1388,10 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- death notice would have the player holding a key for an encounter that cannot be won
 	-- or lost by anybody any more.
 	nerve:Set(nil)
+	-- And the board, for the same reason as the three above it: a clock counting down over a
+	-- half-built word under a death notice is the game asking somebody who is gone to finish
+	-- their homework.
+	words:Set(nil)
 	-- And the commands legend: the shift it was listing keys for does not survive
 	-- death, and a P key advertised over a death notice is a key that does nothing.
 	commandsLegend:Set(false)

@@ -38,6 +38,7 @@ local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local BullyService = require(script.Parent.BullyService)
+local ReadingService = require(script.Parent.ReadingService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
@@ -1407,6 +1408,56 @@ end
 --   /nerve list               every archetype, with the drain and demand of each.
 --   /nerve off                the corridor dark, so a bully bug can be told apart from a
 --                             school bug by turning one of them off.
+-- /read -- the reading board. Everything about it depends on what was dealt, so without
+-- this the only way to see the hand-in, the scoring or the takeback ladder is to spell six
+-- words by hand at the right desk at the right age.
+--
+--   /read                     both words with their answers, the tray, the clock and the
+--                             takebacks left.
+--   /read start               a lesson from where you stand, so the room can be tested
+--                             without walking a childhood to it.
+--   /read solve               fills every gap on the board correctly, which is the only
+--                             quick way to reach the hand-in and the scoring.
+--   /read end                 grades it where it stands, the way walking out does.
+--   /read off                 the whole verb dark, so a reading bug can be told apart from
+--                             a school bug by turning one of them off.
+Commands.read = function(player: Player, args: { string }): string
+	local arg = args[1]
+
+	if arg == nil then
+		return ReadingService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		ReadingService.SetEnabled(arg == "on")
+		return `reading {arg} — {ReadingService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = ReadingService.ForceStart(player)
+		if not started then
+			return `could not start a board: {refusal or "no reason given"} — {ReadingService.Describe(player)}`
+		end
+		return `board dealt — {ReadingService.Describe(player)}`
+	end
+
+	if arg == "solve" then
+		if not ReadingService.Solve(player) then
+			return `no board to solve — {ReadingService.Describe(player)}`
+		end
+		return `every gap filled — {ReadingService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not ReadingService.ForceEnd(player) then
+			return `no board running — {ReadingService.Describe(player)}`
+		end
+		return `graded where it stood — {ReadingService.Describe(player)}`
+	end
+
+	return `usage: /read [start|solve|end|on|off] — {ReadingService.Describe(player)}`
+end
+
 Commands.nerve = function(player: Player, args: { string }): string
 	local arg = args[1]
 
@@ -3136,6 +3187,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
+	.. "/read [start|solve|end|on|off], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "

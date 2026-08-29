@@ -2745,6 +2745,118 @@ Config.School.Art = {
 -- treadmill into the gym later can replace the part and keep the mechanic. The
 -- generator stamps the tag on the machine and an attribute naming which machine
 -- it is; this file is the only place the two strings are agreed.
+-- Reading, and the one lesson where the answer is built rather than picked.
+--
+-- Two words stand on the board with letters missing, and there is one tray of tiles
+-- between them. That is the entire design: a letter spent on the left is a letter the
+-- right does not get, so the decision is never "which letter goes here" -- it is almost
+-- always obvious which letter goes here -- it is *which word to spend it on*. Two queues
+-- at half load each, which the activity law says is far more engaging than one at full,
+-- and it costs one shared tray to build rather than a second minigame.
+--
+-- The technique that falls out of it, and the reason this holds up past repetition thirty:
+-- fill the word that needs the rarer letters first. Nothing teaches that and nothing says
+-- it on screen. A player who has not noticed it still finishes most lessons; a player who
+-- has finishes more of them, which is the shape a discovered optimum is supposed to have.
+--
+-- What mastery buys here is **takebacks**, and it buys nothing else. Not shorter words, not
+-- more time, not a bigger tray -- the margin you are given for being wrong, counted on
+-- screen. That is requirement six of the activity law taken literally: the progression has
+-- to widen the player\'s own tolerance somewhere they can see it, and a wage going up would
+-- be invisible inside the verb.
+--
+-- Difficulty is the age band instead, and it lives entirely in content/Words.luau. A
+-- seven-year-old fills one gap in a four-letter word and a sixteen-year-old fills three in
+-- a nine-letter one, and neither is a different mechanic.
+Config.School.Reading = {
+	-- How long the board may be worked before it is taken away and scored as it stands.
+	-- Between the quiz\'s hundred seconds and the canvas\'s two minutes, because a word is
+	-- quicker to see than a picture is to copy and slower than a question is to answer.
+	-- Safe range: 70-160.
+	SecondsPerLesson = 110,
+
+	-- How many words a full lesson is. The score is what share of these came back, so this
+	-- is the denominator of the whole subject.
+	-- Safe range: 4-10. Above ~10 the tray refills stop being a decision and become a chore.
+	WordsPerLesson = 6,
+
+	-- How many stand on the board at once. **Two, and this is the load-bearing number in the
+	-- file.** One is a conveyor belt: the tray has one claim on it and every placement is
+	-- forced. Three is not three decisions, it is one decision with more reading -- the eye
+	-- cannot hold three letter-sets against one tray, and playtests of that shape in other
+	-- games collapse into working left to right. Two is the only count where the tray is
+	-- genuinely contested and the contest is legible.
+	-- Safe range: 2-3, and 2 unless something has been measured.
+	TargetsAtOnce = 2,
+
+	-- How often the lesson is looked at, in seconds. Slow, unlike the corridor\'s: nothing
+	-- here moves on its own except the clock, and every change comes from a tap.
+	-- Safe range: 0.2-1.
+	TickSeconds = 0.25,
+
+	-- The tray.
+	Tray = {
+		-- How many tiles are dealt at once. Has to comfortably cover the gaps standing on the
+		-- board plus enough spare that a placement is a choice rather than the only tile that
+		-- fits -- a tray with exactly the right letters in it is a tray that plays itself.
+		-- Safe range: 8-16.
+		Size = 12,
+
+		-- How many of those are decoys: letters no gap on the board currently wants. Without
+		-- these the tray is an answer key and the lesson is dragging tiles in the only order
+		-- they go. With too many it is a search, and searching is not what this subject is
+		-- about -- the pressure is meant to come from the tray being *shared*, not from it
+		-- being cluttered.
+		-- Safe range: 2-6, and always below Size minus the largest gap count in content.
+		Decoys = 4,
+
+		-- How near the shelf you must be to draw a fresh tray, and how near the desk you must
+		-- be to place a tile. Both borrowed from the art room\'s own radii rather than invented,
+		-- so a player who has learned how close is close enough in one school room has learned
+		-- it for the other.
+		-- Safe range: 6-14.
+		ReachStuds = 9,
+	},
+
+	-- Takebacks: pulling a placed tile back out of a gap. The undo window, and the whole of
+	-- what mastery buys.
+	--
+	-- Must be exactly Mastery.Levels long, and ReadingService errors at require time if it is
+	-- not -- the same guard Art keeps on its palette ladder, and for the same reason: a rung
+	-- the verb has no answer for is a promotion the player is told about and cannot feel.
+	-- Safe range: ascending, first entry 1-2, last 4-8.
+	TakebacksByLevel = { 1, 2, 3, 4, 6 },
+
+	-- The reading room, laid around the school place point like the lab, the studio and the
+	-- corridor. Two things in it and the distance between them is the pacing: the desk you
+	-- build at, and the shelf you draw a fresh tray from when the tray is spent.
+	--
+	-- The walk is deliberately shorter than the art room\'s. There the distance *is* the
+	-- mechanic -- fetching paint costs you sight of the picture. Here the mechanic is the
+	-- allocation at the desk, and a long walk would only interrupt it; the shelf exists so
+	-- the tray is a resource with a refill cost, not so the room is big.
+	Build = {
+		-- Safe range: 14-30.
+		RoomRadiusStuds = 20,
+		-- Where the desk and the shelf sit on that circle, in degrees, and how far out as a
+		-- share of the radius. Turned away from the lab, the studio and the corridor so four
+		-- rooms around one point do not stand inside each other.
+		-- Safe range: 0-359 and 0.3-1.
+		DeskBearing = 90,
+		DeskDistanceShare = 0.45,
+		ShelfBearing = 30,
+		ShelfDistanceShare = 1,
+
+		-- Placeholder furniture, in studs, in the same blocky spirit as the lab\'s.
+		DeskSize = Vector3.new(7, 3, 3),
+		ShelfSize = Vector3.new(6, 7, 1.5),
+
+		-- How far away the room\'s own labels can still be read. Matches the other three.
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+}
+
 -- The corridor between lessons, and the people standing in it.
 --
 -- School had one shape before this: you walked to a pad and a lesson happened. Nothing
@@ -6121,6 +6233,31 @@ Config.Skills = {
 		-- it would make the only unbanked discipline in the game a members-only one.
 		-- Safe range: 15-45.
 		GotAway = 30,
+
+		-- BullyService.resolve, on a stare-down the player faced down. Nothing at all for
+		-- backing off or overholding, for the reason FightWon pays nothing for a loss: both
+		-- are outcomes a player can produce on demand by doing nothing, and paying for them
+		-- would make the release decorative.
+		--
+		-- Feeds the same nerve discipline GotAway does rather than a school one of its own,
+		-- and that is the point of it. Nerve is what you did not flinch at; whether the thing
+		-- you did not flinch at was a police cordon or somebody in a corridor is a difference
+		-- the skill has no reason to care about, and a second nerve ladder would be the game
+		-- disagreeing with itself about what the word means. It is also the cross-system
+		-- upgrade the activity law asks for: an afternoon at school moves a discipline the
+		-- crime stack reads.
+		-- Safe range: 8-25.
+		StoodUp = 14,
+
+		-- ReadingService.finish, multiplied by the words actually handed in, so a board walked
+		-- away from at two words pays for two. Awarded however the lesson ended, for the
+		-- reason ArtCanvas is: leaving early is a way of doing it badly, not a way of avoiding
+		-- being graded.
+		--
+		-- Per word rather than per lesson, and small, because six of them land at once at the
+		-- end of a good afternoon and the ceiling above is what stops that being a level.
+		-- Safe range: 3-10.
+		WordBuilt = 6,
 	},
 }
 
