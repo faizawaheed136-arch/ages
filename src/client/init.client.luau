@@ -18,6 +18,7 @@ local HuntUI = require(script.ui.HuntUI)
 local EaselUI = require(script.ui.EaselUI)
 local NerveUI = require(script.ui.NerveUI)
 local WordUI = require(script.ui.WordUI)
+local MusicUI = require(script.ui.MusicUI)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -63,6 +64,7 @@ type HuntState = Types.HuntState
 type ArtState = Types.ArtState
 type NerveState = Types.NerveState
 type ReadingState = Types.ReadingState
+type MusicState = Types.MusicState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -106,6 +108,7 @@ local hunt = HuntUI.new()
 local easel = EaselUI.new()
 local nerve = NerveUI.new()
 local words = WordUI.new()
+local music = MusicUI.new()
 local guide = Guide.new()
 local jobPosts = JobPosts.Board()
 local taskMark = TaskMark.new(function(taskId: string)
@@ -158,6 +161,7 @@ local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestNerveHoldRemote = Remotes.Get("RequestNerveHold")
 local RequestReadingPlaceRemote = Remotes.Get("RequestReadingPlace")
 local RequestReadingSubmitRemote = Remotes.Get("RequestReadingSubmit")
+local RequestMusicHitRemote = Remotes.Get("RequestMusicHit")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -572,6 +576,13 @@ end)
 -- a line rather than silently.
 words:OnSubmit(function(targetIndex: number)
 	RequestReadingSubmitRemote:FireServer(targetIndex)
+end)
+
+-- A note claimed. The panel judged it, because the window is shorter than the round trip and
+-- there is no honest alternative -- see MusicUI and MusicService for what the server does
+-- with the claim and what that does and does not buy.
+music:OnHit(function(index: number, offsetMs: number)
+	RequestMusicHitRemote:FireServer(index, offsetMs)
 end)
 
 -- The lesson panel, which is the one panel in the game nobody clicks anything to
@@ -1012,6 +1023,10 @@ Remotes.Get("ReadingUpdated").OnClientEvent:Connect(function(state: ReadingState
 	words:Set(state)
 end)
 
+Remotes.Get("MusicUpdated").OnClientEvent:Connect(function(state: MusicState?)
+	music:Set(state)
+end)
+
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
 end)
@@ -1392,6 +1407,8 @@ Remotes.Get("PlayerDied").OnClientEvent:Connect(function(ageYears: number, ribbo
 	-- half-built word under a death notice is the game asking somebody who is gone to finish
 	-- their homework.
 	words:Set(nil)
+	-- And the lanes, which would otherwise keep falling under a death notice.
+	music:Set(nil)
 	-- And the commands legend: the shift it was listing keys for does not survive
 	-- death, and a P key advertised over a death notice is a key that does nothing.
 	commandsLegend:Set(false)

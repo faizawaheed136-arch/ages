@@ -85,10 +85,6 @@ local SOURCE: { SchoolSubject } = {
 		maxAge = SCHOOL_END,
 	},
 
-	-- Music. Still a quiz stub, and the one verb still owed on this timetable: a rhythm held
-	-- rather than a question answered. Left on the board because a childhood with five
-	-- subjects and one placeholder is a better game than one that waits.
-
 	-- Art. Copy the study on the wall onto your canvas, one square of paint at a time,
 	-- while the study quietly changes behind your back. The only subject here that can be
 	-- soft-failed by degree without a right answer ever existing: a cell painted in the
@@ -108,13 +104,23 @@ local SOURCE: { SchoolSubject } = {
 		minAge = SCHOOL_START,
 		maxAge = 14,
 	},
+	-- Music, and the last verb this timetable owed. Four lanes, a chart you can see coming,
+	-- and one thing to be good at: being on time. It is the only subject here scored on *when*
+	-- you act rather than on what you choose, which is what keeps it from being any of the
+	-- other five with different furniture.
+	--
+	-- The band opens at eight for the reason Science opens at nine: holding a beat across four
+	-- lanes has a floor a six-year-old cannot clear, and a player who cannot is not being
+	-- challenged, they are being excluded. It runs to the end of school rather than stopping at
+	-- fourteen as it did as a stub -- there was never a reason for music to end, and that
+	-- ceiling was inherited from the placeholder rather than chosen.
 	{
 		id = "music",
 		name = "Music",
-		verb = "quiz",
-		blurb = "Sound, time, and keeping to it.",
+		verb = "keep",
+		blurb = "Four lanes and a downbeat. You can see it coming; that is not the hard part.",
 		minAge = 8,
-		maxAge = 14,
+		maxAge = SCHOOL_END,
 	},
 
 	-- Geography. The errand, and the one lesson where the game stops telling you where

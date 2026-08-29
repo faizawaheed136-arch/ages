@@ -66,6 +66,7 @@ local ScienceService = require(script.Parent.ScienceService)
 local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local ReadingService = require(script.Parent.ReadingService)
+local MusicService = require(script.Parent.MusicService)
 local Ground = require(script.Parent.Parent.world.Ground)
 local Lab = require(script.Parent.Parent.world.Lab)
 local School = require(script.Parent.Parent.world.School)
@@ -1241,13 +1242,17 @@ end
 -- already checked everything about the player, and there is no longer a room to fail
 -- against.
 --
--- Five shapes come out of here, and which one depends entirely on the subject's verb.
--- A "quiz" subject runs the loop in the rest of this file. A "procedure" subject hands the
+-- Six shapes come out of here, and which one depends entirely on the subject's verb. A
+-- "quiz" subject runs the loop in the rest of this file. A "procedure" subject hands the
 -- whole afternoon to ScienceService, a "hunt" subject to GeographyService, a "copy" subject
--- to ArtService and a "build" subject to ReadingService -- and this file does nothing
--- further with any of them, including the smarts and the yearly count, which each verb pays
--- and spends itself. That split is deliberate: the alternative is a School that knows how
--- every verb is scored, which is the file that would have to be edited six times over.
+-- to ArtService, a "build" subject to ReadingService and a "keep" subject to MusicService --
+-- and this file does nothing further with any of them, including the smarts and the yearly
+-- count, which each verb pays and spends itself. That split is deliberate: the alternative
+-- is a School that knows how every verb is scored, which is the file that would have to be
+-- edited six times over.
+--
+-- Math is the only subject still on the quiz path, and that is a decision rather than a
+-- debt -- see content/Curriculum.luau.
 local function beginLesson(player: Player, data: LifeData, room: Vector3): boolean
 	local subject = subjectFor(data)
 	if subject == nil then
@@ -1316,6 +1321,20 @@ local function beginLesson(player: Player, data: LifeData, room: Vector3): boole
 		-- reading room is already built and already standing a few studs away, so a classroom
 		-- drawn on top of it would be two rooms occupying one lesson. The walk to the desk is
 		-- the opening of the verb.
+		notices[player] = nil
+		push(player)
+		return true
+	end
+
+	if subject.verb == "keep" then
+		local ok, refusal = MusicService.Begin(player, data)
+		if not ok then
+			notice(player, refusal or "The music room is closed today.", false)
+			return false
+		end
+		-- Cleared for the same reason as the three above, and no teacher or scene for the same
+		-- reason the art room gets none: the music room is already standing a few studs away,
+		-- and a classroom drawn on top of it would be two rooms in one lesson.
 		notices[player] = nil
 		push(player)
 		return true
@@ -1811,6 +1830,7 @@ function SchoolService.ResetForNewLife(player: Player)
 	GeographyService.ResetForNewLife(player)
 	ArtService.ResetForNewLife(player)
 	ReadingService.ResetForNewLife(player)
+	MusicService.ResetForNewLife(player)
 	local profile = DataService.GetProfile(player)
 	if profile ~= nil then
 		local data = Lives.Active(profile.Data)

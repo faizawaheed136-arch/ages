@@ -39,6 +39,7 @@ local GeographyService = require(script.Parent.GeographyService)
 local ArtService = require(script.Parent.ArtService)
 local BullyService = require(script.Parent.BullyService)
 local ReadingService = require(script.Parent.ReadingService)
+local MusicService = require(script.Parent.MusicService)
 local BountyService = require(script.Parent.BountyService)
 local PoliceService = require(script.Parent.PoliceService)
 local TheftService = require(script.Parent.TheftService)
@@ -1421,6 +1422,55 @@ end
 --   /read end                 grades it where it stands, the way walking out does.
 --   /read off                 the whole verb dark, so a reading bug can be told apart from
 --                             a school bug by turning one of them off.
+-- /music -- the rhythm lesson. Everything about it happens in a hundred-beat window at
+-- millisecond resolution, so without an autoplay there is no way to reach the scoring, the
+-- report line or a mastery rung except by playing a whole piece by hand at the right age.
+--
+--   /music                    the windows this life has earned, the tallies and the streak.
+--   /music start              a piece from where you stand.
+--   /music auto [grade]       judges every remaining note at perfect, great or good, which
+--                             is the only quick way to see a band other than F.
+--   /music end                grades it where it stands, the way walking off does.
+--   /music off                the verb dark, so a music bug can be told apart from a school
+--                             bug by turning one of them off.
+Commands.music = function(player: Player, args: { string }): string
+	local arg = args[1]
+
+	if arg == nil then
+		return MusicService.Describe(player)
+	end
+
+	if arg == "on" or arg == "off" then
+		MusicService.SetEnabled(arg == "on")
+		return `music {arg} — {MusicService.Describe(player)}`
+	end
+
+	if arg == "start" then
+		local started, refusal = MusicService.ForceStart(player)
+		if not started then
+			return `could not start a piece: {refusal or "no reason given"} — {MusicService.Describe(player)}`
+		end
+		return `piece started — {MusicService.Describe(player)}`
+	end
+
+	if arg == "auto" then
+		local ok, refusal = MusicService.Autoplay(player, args[2] or "perfect")
+		if not ok then
+			return `could not autoplay: {refusal or "no reason given"} — {MusicService.Describe(player)}`
+		end
+		return `played out — {MusicService.Describe(player)}`
+	end
+
+	if arg == "end" then
+		if not MusicService.ForceEnd(player) then
+			return `no piece running — {MusicService.Describe(player)}`
+		end
+		return `graded where it stood — {MusicService.Describe(player)}`
+	end
+
+	return `usage: /music [start|auto [perfect|great|good]|end|on|off] — {MusicService.Describe(player)}`
+end
+
 Commands.read = function(player: Player, args: { string }): string
 	local arg = args[1]
 
@@ -3187,7 +3237,7 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/geo [start|find|end|level <n>|on|off], "
 	.. "/art [start|sign|end|shift|refill|level <n>|on|off], /gym [start|end|on|off], "
 	.. "/nerve [go [id]|stood|backed|over|end|set <n>|homework [on|off]|list|on|off], "
-	.. "/read [start|solve|end|on|off], "
+	.. "/read [start|solve|end|on|off], /music [start|auto [grade]|end|on|off], "
 	.. "/stadium [on|off], /gate [on|off|play|reset], "
 	.. "/fight [<style>|rival|win|lose|end|on|off], "
 	.. "/bounty [<n>|clear|arrest|on|off], /police [clear|on|off], /spot [heat <n>|colors on|off], "

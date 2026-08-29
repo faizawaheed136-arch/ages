@@ -207,6 +207,24 @@ export type RemoteName =
 	-- Hand in a word as it stands. The commit, and the only irreversible thing in the
 	-- lesson.
 	| "RequestReadingSubmit"
+	-- The music lesson: the chart, the downbeat, the windows this life has earned and the
+	-- tallies so far. Pushed whole on every change, like every other school channel.
+	--
+	-- The chart goes out **once, complete, at the start**. That is deliberate and it is the
+	-- difference between a rhythm lesson and a reaction test: a player who can see the next
+	-- four bars is reading music, and a player who is sent one note at a time is being
+	-- startled. It also means the client holds the answers, which is why the server scores
+	-- the offsets it is sent rather than the hits -- see RequestMusicHit.
+	| "MusicUpdated"
+	-- One note hit: which note, and how far off the client was in milliseconds.
+	--
+	-- The offset is the client\'s measurement and cannot be anything else -- the round trip is
+	-- longer than the window being measured, so a server-timed rhythm game is unplayable. The
+	-- server therefore treats it as a claim rather than a fact: it checks the note exists, has
+	-- not been hit, that the offset is inside the widest window it granted, and that the note
+	-- was actually due around now. That does not make cheating impossible; it makes it cost
+	-- more than playing.
+	| "RequestMusicHit"
 	-- "My hands are in the drawer" / "they are not any more." One remote with a boolean
 	-- rather than two, because the two are the same fact and a start that arrived without
 	-- its stop -- or in the wrong order after a hiccup -- would leave a player taking
@@ -620,6 +638,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"ReadingUpdated",
 	"RequestReadingPlace",
 	"RequestReadingSubmit",
+	"MusicUpdated",
+	"RequestMusicHit",
 	"RequestTillHold",
 	"RequestTillOpen",
 	"RequestTillCallCrew",

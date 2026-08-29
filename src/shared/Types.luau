@@ -900,7 +900,58 @@ export type ReadingState = {
 	masteryLevel: number,
 }
 
-export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build"
+-- One note in a chart. Sent to the client at the start of a lesson and never again: the
+-- whole piece is known up front, which is what lets a player *read ahead* and is the
+-- difference between a rhythm lesson and a reaction test.
+export type MusicNote = {
+	-- Milliseconds from the downbeat. Integer, because a note at 1000.4ms and a note at
+	-- 1000ms are the same note and only one of them survives a round trip as a float.
+	atMs: number,
+	-- 1..Config.School.Music.Lanes.
+	lane: number,
+	-- How long it is held for, in milliseconds, or 0 for a tap. A held note is the second
+	-- queue: it occupies a hand while the other lanes keep arriving.
+	holdMs: number,
+}
+
+-- How a note was judged. Named rather than numbered because the words are shown to the
+-- player and a band that only existed as an index would be renamed in one place and not
+-- the other.
+export type MusicJudgement = "perfect" | "great" | "good" | "miss"
+
+-- The music lesson as the client draws it.
+export type MusicState = {
+	active: boolean,
+	line: string,
+	-- The whole chart, sent once. Empty while inactive.
+	notes: { MusicNote },
+	-- `os.clock()` on the server when the downbeat falls, converted to the client\'s own
+	-- clock by the client on receipt. The one number everything else is measured from.
+	startedAt: number,
+	-- The judgement windows this life has earned, in milliseconds. Sent rather than read
+	-- from Config on the client for the reason the corridor sends its release window: it is
+	-- what mastery *buys*, and a client that computed it could disagree with the server that
+	-- scored against it.
+	perfectMs: number,
+	greatMs: number,
+	goodMs: number,
+	-- Running tallies, so the panel can show a streak without keeping its own count and
+	-- drifting from the server\'s.
+	perfect: number,
+	great: number,
+	good: number,
+	missed: number,
+	streak: number,
+	bestStreak: number,
+	notesTotal: number,
+	secondsLeft: number,
+	-- Where they are standing, so the panel lights the lanes only when the server would
+	-- honour a hit.
+	atStand: boolean,
+	masteryLevel: number,
+}
+
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep"
 
 -- One school subject as content declares it.
 export type SchoolSubject = {

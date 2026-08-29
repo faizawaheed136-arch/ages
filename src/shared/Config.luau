@@ -2940,6 +2940,122 @@ Config.School.Building = {
 	LabelMaxDistanceStuds = 60,
 }
 
+-- Music, and the only lesson scored on *when* you act rather than on what you choose.
+--
+-- Four lanes, notes falling down them, and one thing to be good at: being on time. Every
+-- other subject in this school asks a question -- which step, which colour, which letter,
+-- which word -- and this one asks none. That is what keeps it from being any of the other
+-- five with different furniture on the floor.
+--
+-- **The chart is sent complete, at the downbeat, and never again.** A player who can see the
+-- next four bars is reading music; a player sent one note at a time is being startled, and
+-- the difference is whether the skill being trained is anticipation or reflex. It is also
+-- the reason the second queue exists: a held note occupies a hand while the other three
+-- lanes keep arriving, so the piece is a planning problem and not a stream of prompts.
+--
+-- **What mastery buys is the windows, and this is the cleanest instance of that rule in the
+-- game.** A level-one player is judged at 25/45/80ms; a level-five player at nearly twice
+-- that. Nothing else changes -- same chart, same lanes, same tempo -- and the player can
+-- feel their own margin widen, which is exactly what the activity law asks a progression to
+-- do and exactly what a wage going up cannot.
+--
+-- The windows are grounded rather than invented: StepMania judge-4 is 22.5/45/90ms and is
+-- the reference the whole rhythm genre is calibrated against. The floor here is a hair
+-- looser than that because Roblox input is not a rhythm-game input stack, and the ceiling
+-- is deliberately generous rather than merciful -- a mastered subject should feel *easy*,
+-- because the reward for mastering it is being allowed to stop attending.
+Config.School.Music = {
+	-- Lanes. Four, and it is the number the whole genre settled on for one hand: three is not
+	-- enough for a pattern to have shape and five needs a thumb doing two jobs.
+	-- Safe range: 4-5.
+	Lanes = 4,
+
+	-- How long a lesson runs, and how often it is looked at. The tick is slow because nothing
+	-- here moves on the server: the chart is fixed at the downbeat and the client owns every
+	-- frame of it. This clock only ends the lesson.
+	-- Safe range: 70-150 and 0.2-1.
+	SecondsPerLesson = 105,
+	TickSeconds = 0.25,
+
+	-- The judgement windows, in milliseconds, at mastery level one and at the top of the
+	-- ladder. Every level in between is interpolated.
+	--
+	-- Each list must be exactly Mastery.Levels long and MusicService errors at require time if
+	-- it is not -- the same guard Art keeps on its palette and Reading on its takebacks, and
+	-- for the same reason: a rung that buys nothing is a level-up the player is told about and
+	-- cannot feel.
+	-- Safe range: ascending, and Perfect < Great < Good at every level.
+	PerfectMsByLevel = { 25, 30, 36, 42, 48 },
+	GreatMsByLevel = { 45, 52, 60, 68, 76 },
+	GoodMsByLevel = { 80, 90, 100, 112, 124 },
+
+	-- What each judgement is worth, as a share of a perfect note. A miss is zero and costs
+	-- nothing else: the score is what you hit, never a penalty for what you did not, which is
+	-- the soft-failure rule every activity here runs on.
+	-- Safe range: 1, 0.5-0.85, 0.2-0.5.
+	PerfectScore = 1,
+	GreatScore = 0.7,
+	GoodScore = 0.35,
+
+	-- How far past a note the server will still accept a hit for it, in milliseconds. Wider
+	-- than the widest Good window on purpose: the client is measuring against its own clock
+	-- and a strict equality here would reject honest hits from a player on a bad connection.
+	-- It is a sanity bound, not a second judgement.
+	-- Safe range: 200-500.
+	AcceptMs = 320,
+
+	-- The chart.
+	Chart = {
+		-- Milliseconds per beat. 500 is 120bpm, which is the tempo almost every rhythm tutorial
+		-- in existence opens on because it is the one a person taps without being told to.
+		-- Safe range: 380-700.
+		BeatMs = 500,
+
+		-- How long the piece is, in beats, and how long the count-in is before the first note.
+		-- The count-in is not politeness: without it the first note arrives before the player
+		-- has found the lanes, and every chart would open on a guaranteed miss.
+		-- Safe range: 48-160 and 4-8.
+		Beats = 96,
+		CountInBeats = 4,
+
+		-- The chance a beat carries a note at all, and the chance a note that exists is a hold.
+		-- Under one so the piece breathes: a note on every beat is a drum roll, and a drum roll
+		-- has no rhythm in it to read.
+		-- Safe range: 0.5-0.85 and 0.05-0.25.
+		NoteChance = 0.68,
+		HoldChance = 0.14,
+
+		-- How many beats a hold lasts.
+		-- Safe range: 2-6.
+		HoldBeats = 3,
+
+		-- The chance a beat carries a *second* note in another lane. This is the second queue
+		-- and it is what makes the piece a planning problem: two lanes at once means choosing
+		-- which hand goes where a bar early.
+		-- Safe range: 0.1-0.35. Above ~0.35 it stops being music and becomes a wall.
+		ChordChance = 0.22,
+
+		-- How many beats into the piece before chords and holds are allowed to appear. A piece
+		-- that opens on its hardest figure teaches nothing, because the player has not yet
+		-- worked out where the lanes are.
+		-- Safe range: 8-24.
+		RampBeats = 16,
+	},
+
+	-- The music room fit-out: where the player stands to play, and how near they have to be.
+	Build = {
+		-- Safe range: 14-30.
+		RoomRadiusStuds = 18,
+		-- Safe range: 0-359 and 0.2-0.8.
+		StandBearing = 0,
+		StandDistanceShare = 0.4,
+		-- Safe range: 6-14.
+		ReachStuds = 9,
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+}
+
 -- Reading, and the one lesson where the answer is built rather than picked.
 --
 -- Two words stand on the board with letters missing, and there is one tray of tiles
@@ -6458,6 +6574,17 @@ Config.Skills = {
 		-- end of a good afternoon and the ceiling above is what stops that being a level.
 		-- Safe range: 3-10.
 		WordBuilt = 6,
+
+		-- MusicService.finish, multiplied by the share of the piece actually kept, so a chart
+		-- walked out on halfway pays half. Awarded however the lesson ended, like ArtCanvas
+		-- and WordBuilt: leaving early is a way of doing it badly, not a way of dodging a
+		-- grade.
+		--
+		-- Into academics rather than a discipline of its own. A music lesson at school is
+		-- school, and inventing a sixth skill for one call site would put a row in the skills
+		-- panel that only ever moves on Tuesdays.
+		-- Safe range: 15-40.
+		MusicPiece = 26,
 	},
 }
 

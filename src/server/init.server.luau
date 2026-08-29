@@ -58,6 +58,7 @@ local GeographyService = require(services.GeographyService)
 local ArtService = require(services.ArtService)
 local BullyService = require(services.BullyService)
 local ReadingService = require(services.ReadingService)
+local MusicService = require(services.MusicService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
@@ -172,14 +173,15 @@ SavingsService:Start()
 MilestoneService:Start()
 GossipService:Start()
 CrimeService:Start()
--- Before SchoolService, which hands a Science, Geography, Art or Reading lesson straight
--- to whichever of these owns the verb. Cosmetic like every other line in this list -- all
--- five are running before the first player finishes loading -- but reading it in this order
--- is the truth about which owns which.
+-- Before SchoolService, which hands a Science, Geography, Art, Reading or Music lesson
+-- straight to whichever of these owns the verb. Cosmetic like every other line in this list
+-- -- all six are running before the first player finishes loading -- but reading it in this
+-- order is the truth about which owns which.
 ScienceService:Start()
 GeographyService:Start()
 ArtService:Start()
 ReadingService:Start()
+MusicService:Start()
 SchoolService:Start()
 -- After the lessons, and it does not matter, which is worth saying because it looks as
 -- though it should. The corridor holds no verb of its own and hands nothing to anybody --
