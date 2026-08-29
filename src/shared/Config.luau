@@ -2875,15 +2875,110 @@ Config.School.Building = {
 		BenchRows = 3,
 	},
 
-	-- The gym, attached on the other side. A tall clear-span box, because that is what a gym
-	-- is: the height is the whole of it.
+	-- The gymnasium, attached on the other side. A clear-span box, because that is what a gym
+	-- is -- but a *compact* one, and that is a correction rather than a default.
+	--
+	-- It was 88 x 62 x 30 and read as an aircraft hangar with a hoop in it. A school gym is
+	-- supposed to feel like a room you can shout across: the whole point of the space is that
+	-- everyone in it is aware of everyone else, and at 88 studs across a class scatters into
+	-- it and disappears. Smaller is also what makes it work as the prom hall -- a dance floor
+	-- in the middle of a hangar is six people in a field.
+	-- Safe range: 60-90, 44-70 and 22-32.
 	Gym = {
-		-- Safe range: 70-110, 50-80 and 24-40.
-		WidthStuds = 88,
-		DepthStuds = 62,
-		HeightStuds = 30,
+		WidthStuds = 72,
+		DepthStuds = 52,
+		HeightStuds = 26,
 		-- Safe range: 2-4.
 		HoopCount = 2,
+		-- Wall bars, benches and a climbing rope down the sides -- the things that make a gym
+		-- read as a school gym rather than as a sports hall. Denser than the old room was
+		-- despite being smaller, which is the whole idea of compact.
+		-- Safe range: 4-12 and 2-6.
+		WallBars = 8,
+		RopeCount = 3,
+	},
+
+	-- Prom, and every other night the gymnasium is dressed for something.
+	--
+	-- The gym is the venue on purpose. A school has exactly one room big enough to put
+	-- everybody in, and dressing *that* room -- rather than building a ballroom nobody visits
+	-- for the other three hundred days of the year -- is both what a real school does and the
+	-- only version of this that does not add a dead space to the map.
+	--
+	-- Everything here is a layer laid over the gym and taken down again, which is why it is
+	-- its own block: School.SetEvent puts it up and clears it, and the gym underneath is
+	-- untouched throughout.
+	Events = {
+		-- The dance floor, in the middle of the room.
+		-- Safe range: 24-44.
+		FloorStuds = 34,
+		-- The stage the throne sits on, at one end.
+		-- Safe range: 14-30, 6-14 and 2-5.
+		StageWidthStuds = 22,
+		StageDepthStuds = 10,
+		StageRiseStuds = 3,
+
+		-- Balloons. The single most load-bearing decoration in the reference: a room with
+		-- balloon clusters in it reads as a party from any angle, and a room without them reads
+		-- as a gym with the lights off however much else is in there.
+		-- Safe range: 4-14 and 3-8.
+		BalloonClusters = 9,
+		BalloonsPerCluster = 5,
+
+		-- The arch by the entrance, in balloons.
+		-- Safe range: 9-21 -- odd, so one balloon sits at the crown.
+		ArchBalloons = 15,
+
+		-- Streamers across the ceiling, and how many coloured spots wash the floor.
+		-- Safe range: 4-12 and 4-12.
+		Streamers = 8,
+		Spotlights = 8,
+
+		-- Folding chairs round the edge, and round tables.
+		-- Safe range: 8-30 and 3-10.
+		Chairs = 20,
+		Tables = 6,
+	},
+
+	-- The student lounge: the room the reference photographs spend the most time in, and the
+	-- one thing the school had no equivalent of at all.
+	--
+	-- It exists because a school is not only lessons. Every other room in this building is
+	-- somewhere you are sent; this is the one you *choose*, which is what makes the building
+	-- somewhere a player hangs around rather than a place they visit twice a year.
+	Lounge = {
+		-- Safe range: 6-16, 2-6 and 1-4.
+		Sofas = 8,
+		Armchairs = 6,
+		PoolTables = 1,
+		-- Safe range: 3-10.
+		DiningTables = 6,
+		Planters = 6,
+		Rugs = 3,
+		-- The wall-mounted screen.
+		-- Safe range: 12-24 and 6-12.
+		ScreenWidthStuds = 18,
+		ScreenHeightStuds = 9,
+	},
+
+	-- Vending machines. Two kinds, standing in pairs where the reference has them: the
+	-- corridor on every floor, and the lounge.
+	--
+	-- Built rather than bought, like everything else in this file -- a machine that needed a
+	-- catalog mesh is a machine that does not appear on a fresh install.
+	Vending = {
+		-- Safe range: 5-9, 10-16 and 2-5.
+		WidthStuds = 7,
+		HeightStuds = 13,
+		DepthStuds = 3.4,
+		-- The snack machine's window grid. Sixteen, numbered 001 upward, because the numbers
+		-- are what make it read as a vending machine rather than as a fridge.
+		-- Safe range: 3-5 and 3-5.
+		Columns = 4,
+		Rows = 4,
+		-- How near you must be to use one.
+		-- Safe range: 6-12.
+		ReachStuds = 8,
 	},
 
 	-- The running track and the field inside it, behind the building. An oval, so the corners
@@ -3438,6 +3533,60 @@ Config.School.Bully = {
 }
 
 Config.Gym = {
+	-- The room itself, laid in code around the gym place point.
+	--
+	-- The equipment in this game has always been *found* rather than built: GymService walks
+	-- CollectionService for parts tagged AgesGymEquipment and reads a GymKind off each. That
+	-- is a good design and it is not changing -- but it meant the gym only existed if somebody
+	-- had hand-placed four parts in Studio, and on a fresh place there was nothing there at
+	-- all.
+	--
+	-- So this lays a real gym and tags what it lays. GymService does not know the difference:
+	-- a bench built here and a bench dragged in by hand arrive down the same signal. Anything
+	-- hand-placed keeps working exactly as it did.
+	--
+	-- Modelled on a powerlifting floor rather than a health club: racks and platforms down one
+	-- side, benches in the middle, cardio along the glass, dumbbells on the wall. Compact and
+	-- dense on purpose -- the reference is a room where every square foot has iron on it, and
+	-- that reads as a serious gym in a way a sparse one never does.
+	Build = {
+		-- Safe range: 90-150 and 60-110.
+		WidthStuds = 118,
+		DepthStuds = 82,
+		-- Tall, because a rack is 8 studs and the room has to have air above it.
+		-- Safe range: 18-30.
+		HeightStuds = 22,
+
+		-- Squat racks on platforms down the back, benches in front of them, treadmills along
+		-- one wall, dumbbell racks along the other. These counts are the whole of how full the
+		-- room looks.
+		-- Safe range: 3-8, 3-8, 3-8 and 2-5.
+		Racks = 6,
+		Benches = 5,
+		Treadmills = 5,
+		DumbbellRacks = 3,
+
+		-- The lifting platform under each rack.
+		-- Safe range: 10-18 and 8-14.
+		PlatformWidthStuds = 13,
+		PlatformDepthStuds = 10,
+
+		-- Pendant lights on the ceiling, in a grid. The reference is lit by dozens of small
+		-- hanging lamps rather than by panels, and that alone is most of why it reads as a
+		-- warehouse gym instead of a school corridor.
+		-- Safe range: 4-10 and 3-8.
+		LightsAcross = 7,
+		LightsAlong = 5,
+
+		-- A mirrored wall down one side, which is the other half of what a gym looks like.
+		-- Safe range: 0.4-0.9.
+		MirrorShare = 0.7,
+
+		-- How far away the room's own labels can still be read. Matches the school's.
+		-- Safe range: 30-90.
+		LabelMaxDistanceStuds = 60,
+	},
+
 	-- The tag a part carries to be read as gym equipment, and the attribute
 	-- naming the machine: "treadmill", "bench", "dumbbells", "pullup". A kind
 	-- the service has no routine for is refused at load, not in play.

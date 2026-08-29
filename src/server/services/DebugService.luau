@@ -31,6 +31,7 @@ local DeliveryService = require(script.Parent.DeliveryService)
 local PlaceService = require(script.Parent.PlaceService)
 local WorkService = require(script.Parent.WorkService)
 local SchoolService = require(script.Parent.SchoolService)
+local School = require(script.Parent.Parent.world.School)
 local GymService = require(script.Parent.GymService)
 local StadiumCrowdService = require(script.Parent.StadiumCrowdService)
 local StadiumEntranceService = require(script.Parent.StadiumEntranceService)
@@ -3256,6 +3257,48 @@ local HELP_TEXT = "commands: /ageup [n], /age <years>, /die, /stat <name> <value
 	.. "/verdict [name] — show or force a ribbon, /moments — print every moment, "
 	.. "/reel — print moments since last chapter break, "
 	.. "/car [list|buy <id>|sell <id>|spawn <id>|store]"
+
+-- Dressing the gymnasium for a night, and taking it down again.
+--
+--   /prom                     what is on, if anything.
+--   /prom on                  the gym dressed for prom: dance floor, stage and throne,
+--                             balloon arch, streamers, coloured floor wash, chairs.
+--                             Walk into the gym to see it -- the layer is laid over the
+--                             room rather than replacing it, so the hoops and the wall
+--                             bars are still there behind the decorations.
+--   /prom off                 taken down. The gym should be exactly a gym again, which
+--                             is the half worth checking: a layer that cannot be removed
+--                             is the easy thing to get wrong.
+--
+-- Refuses before the building exists rather than silently doing nothing, because "I typed
+-- /prom on and nothing happened" is otherwise indistinguishable from a broken layer.
+Commands.prom = function(_player: Player, args: { string }): string
+	local arg = string.lower(args[1] or "")
+
+	if arg == "" then
+		local current = School.Event()
+		if current == nil then
+			return "nothing on in the gym — /prom on to dress it"
+		end
+		return `the gym is dressed for {current} — /prom off to take it down`
+	end
+
+	if arg ~= "on" and arg ~= "off" then
+		return "/prom, /prom on, or /prom off"
+	end
+
+	if arg == "off" then
+		local changed = School.SetEvent(nil)
+		return if changed then "prom taken down — the gym is a gym again" else "nothing was on"
+	end
+
+	if School.Plan() == nil then
+		return "no school building yet, so no gym to dress — walk to the school first"
+	end
+
+	local changed = School.SetEvent("prom")
+	return if changed then "the gym is dressed for prom — walk in and look" else "prom was already on"
+end
 
 Commands.help = function(_player: Player, _args: { string }): string
 	return HELP_TEXT

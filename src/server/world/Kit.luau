@@ -355,4 +355,170 @@ function Kit.Bunting(parent: Instance, name: string, from: Vector3, to: Vector3,
 	end
 end
 
+-- A balloon on a string. Two parts, and the string is the half that matters: a ball
+-- hanging in mid-air reads as a bug, and a ball with a line down to the floor reads as a
+-- party. It is the cheapest signal in the whole kit.
+function Kit.Balloon(parent: Instance, name: string, base: Vector3, height: number, color: Color3)
+	local ball = Instance.new("Part")
+	ball.Name = `{name}Ball`
+	ball.Shape = Enum.PartType.Ball
+	ball.Size = Vector3.new(3.2, 3.8, 3.2)
+	ball.CFrame = CFrame.new(base + Vector3.new(0, height, 0))
+	ball.Anchored = true
+	ball.CanCollide = false
+	ball.Color = color
+	ball.Material = Enum.Material.SmoothPlastic
+	ball.CastShadow = false
+	ball.Parent = parent
+
+	Kit.Block(parent, `{name}String`, base + Vector3.new(0, height / 2, 0), Vector3.new(0.1, height, 0.1), {
+		color = Color3.fromRGB(238, 238, 242),
+	}).CastShadow = false
+end
+
+-- A bunch of them, fanned so no two are at the same height. Even heights read as a rack of
+-- balls; uneven ones read as balloons.
+function Kit.BalloonCluster(parent: Instance, name: string, base: Vector3, count: number, colors: { Color3 })
+	if #colors == 0 or count < 1 then
+		return
+	end
+	for index = 1, count do
+		local angle = (index / count) * math.pi * 2
+		local spread = 2.4
+		local at = base + Vector3.new(math.cos(angle) * spread, 0, math.sin(angle) * spread)
+		Kit.Balloon(parent, `{name}_{index}`, at, 9 + (index % 3) * 2.2, colors[((index - 1) % #colors) + 1])
+	end
+end
+
+-- An arch of them over a doorway. Odd counts put one balloon at the crown, which is what
+-- makes it read as an arch rather than as two columns.
+function Kit.BalloonArch(parent: Instance, name: string, center: Vector3, span: number, rise: number, count: number, colors: { Color3 })
+	if #colors == 0 or count < 3 then
+		return
+	end
+	for index = 1, count do
+		local share = (index - 1) / (count - 1)
+		local angle = math.pi * share
+		local at = center + Vector3.new(-math.cos(angle) * (span / 2), math.sin(angle) * rise, 0)
+		local ball = Instance.new("Part")
+		ball.Name = `{name}{index}`
+		ball.Shape = Enum.PartType.Ball
+		ball.Size = Vector3.new(3.6, 4, 3.6)
+		ball.CFrame = CFrame.new(at)
+		ball.Anchored = true
+		ball.CanCollide = false
+		ball.Color = colors[((index - 1) % #colors) + 1]
+		ball.Material = Enum.Material.SmoothPlastic
+		ball.CastShadow = false
+		ball.Parent = parent
+	end
+end
+
+-- A streamer strung between two points, sagging in the middle. Same idea as Bunting but a
+-- continuous ribbon rather than flags, which is what a ceiling wants -- flags read as an
+-- outdoor fete and ribbons read as a hall somebody decorated.
+function Kit.Streamer(parent: Instance, name: string, from: Vector3, to: Vector3, segments: number, color: Color3)
+	local delta = to - from
+	for index = 1, segments do
+		local a = (index - 1) / segments
+		local b = index / segments
+		local pa = from + delta * a - Vector3.new(0, math.sin(a * math.pi) * 3.5, 0)
+		local pb = from + delta * b - Vector3.new(0, math.sin(b * math.pi) * 3.5, 0)
+		local seg = Kit.Wall(parent, `{name}{index}`, pa, pb, 0.45, 0.12, {
+			color = color,
+			material = Enum.Material.Fabric,
+			collide = false,
+		})
+		if seg ~= nil then
+			seg.CastShadow = false
+		end
+	end
+end
+
+-- A hanging pendant lamp: cord, shade, and a neon disc for the bulb.
+--
+-- Dozens of these rather than a few ceiling panels is most of the difference between a room
+-- that reads as a warehouse gym and one that reads as a school corridor, and it costs three
+-- parts each because the light itself is neon rather than a real PointLight -- sixty real
+-- lights in one room would cost more than the building.
+function Kit.Pendant(parent: Instance, name: string, ceiling: Vector3, drop: number, shadeColor: Color3)
+	Kit.Block(parent, `{name}Cord`, ceiling - Vector3.new(0, drop / 2, 0), Vector3.new(0.12, drop, 0.12), {
+		color = Color3.fromRGB(40, 42, 48),
+	}).CastShadow = false
+
+	Kit.Block(parent, `{name}Shade`, ceiling - Vector3.new(0, drop, 0), Vector3.new(2.6, 1.6, 2.6), {
+		color = shadeColor,
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	local bulb = Kit.Block(parent, `{name}Bulb`, ceiling - Vector3.new(0, drop + 0.9, 0), Vector3.new(2, 0.25, 2), {
+		color = Color3.fromRGB(255, 244, 214),
+		material = Enum.Material.Neon,
+	})
+	bulb.CastShadow = false
+end
+
+-- A coloured wash on the floor, for a room that is being lit for something. Flat, bright and
+-- non-collidable: it is a pool of light rather than an object, and anything the player can
+-- stand on would make the dance floor a step.
+function Kit.Spotlight(parent: Instance, name: string, at: Vector3, radius: number, color: Color3)
+	local pool = Kit.Rug(parent, name, at, radius, color)
+	pool.Material = Enum.Material.Neon
+	pool.Transparency = 0.55
+	return pool
+end
+
+-- A mirrored wall. High reflectance and a hair of transparency, which at Roblox's shading is
+-- what reads as glass with something behind it rather than as a grey panel.
+function Kit.Mirror(parent: Instance, name: string, from: Vector3, to: Vector3, height: number)
+	local pane = Kit.Wall(parent, name, from, to, height, 0.4, {
+		color = Color3.fromRGB(206, 216, 226),
+		material = Enum.Material.Glass,
+		transparency = 0.25,
+		reflectance = 0.75,
+		collide = true,
+	})
+	if pane ~= nil then
+		pane.CastShadow = false
+	end
+	return pane
+end
+
+-- A loaded barbell: the bar, and a stack of coloured plates at each end.
+--
+-- The plates are the whole point. A grey bar on a rack is a stick; competition plates are
+-- colour-coded by weight -- red, blue, yellow, green -- and a rack of them is instantly a
+-- gym. This is the single highest-value prop in the kit per part spent.
+function Kit.Barbell(parent: Instance, name: string, center: Vector3, length: number, plates: number)
+	Kit.Block(parent, `{name}Bar`, center, Vector3.new(length, 0.45, 0.45), {
+		color = Color3.fromRGB(196, 200, 206),
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	local plateColors = {
+		Color3.fromRGB(206, 66, 62),
+		Color3.fromRGB(56, 110, 196),
+		Color3.fromRGB(226, 194, 74),
+		Color3.fromRGB(86, 176, 108),
+	}
+	for side = -1, 1, 2 do
+		for index = 1, plates do
+			local offset = side * (length / 2 - 1.4 - (index - 1) * 0.9)
+			local plate = Instance.new("Part")
+			plate.Name = `{name}Plate{side}_{index}`
+			plate.Shape = Enum.PartType.Cylinder
+			-- A Roblox cylinder runs along X, which is already the bar's axis, so a plate needs
+			-- no rotation at all -- unlike Rug, which has to be turned on its side.
+			plate.Size = Vector3.new(0.5, 3.6 - (index - 1) * 0.5, 3.6 - (index - 1) * 0.5)
+			plate.CFrame = CFrame.new(center + Vector3.new(offset, 0, 0))
+			plate.Anchored = true
+			plate.CanCollide = false
+			plate.Color = plateColors[((index - 1) % #plateColors) + 1]
+			plate.Material = Enum.Material.SmoothPlastic
+			plate.CastShadow = false
+			plate.Parent = parent
+		end
+	end
+end
+
 return Kit

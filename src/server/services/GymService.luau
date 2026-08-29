@@ -33,6 +33,8 @@ local DataService = require(script.Parent.DataService)
 local StatService = require(script.Parent.StatService)
 local SkillService = require(script.Parent.SkillService)
 local Ground = require(script.Parent.Parent.world.Ground)
+local GymRoom = require(script.Parent.Parent.world.GymRoom)
+local PlaceService = require(script.Parent.PlaceService)
 
 type LifeData = Types.LifeData
 type WorkoutState = Types.WorkoutState
@@ -45,6 +47,32 @@ local RequestRepRemote = Remotes.Get("RequestRep")
 local NoticeRemote = Remotes.Get("Notice")
 
 local GYM = Config.Gym
+local GYM_PLACE_ID = "gym"
+
+-- Whether the room has been laid. Separate from GymRoom.Room() because a failed lookup has
+-- to be retried and a successful build must not be repeated.
+local roomBuilt = false
+
+-- Lays the gym once its place point has streamed in.
+--
+-- Retried rather than given up on, for the reason the school building is: the place point may
+-- not exist on the first tick, and a room that gave up immediately would never appear. Costs
+-- one table lookup per tick after it succeeds.
+--
+-- Nothing here touches the equipment index. GymRoom tags what it builds and CollectionService
+-- fires the added signal Start() is already listening on, so the machines register themselves
+-- through exactly the path a hand-placed one does.
+local function ensureRoom(): boolean
+	if roomBuilt then
+		return true
+	end
+	local place = PlaceService.Find(GYM_PLACE_ID)
+	if place == nil then
+		return false
+	end
+	roomBuilt = true
+	return GymRoom.Build(place.part.Position) ~= nil
+end
 local SKILL_AWARDS = Config.Skills.Awards
 local KINDS = GYM.Kinds
 
@@ -818,9 +846,16 @@ function GymService:Start()
 		end
 	end)
 
+	-- Lay the room. Tried once here so a gym is standing before the first player can walk
+	-- into it, and retried on the tick below if the place point has not arrived yet.
+	pcall(ensureRoom)
+
 	task.spawn(function()
 		while true do
 			local elapsed = task.wait(GYM.TickSeconds)
+			if not roomBuilt then
+				pcall(ensureRoom)
+			end
 			for _, player in Players:GetPlayers() do
 				local ok, err = pcall(tickPlayer, player, elapsed)
 				if not ok then

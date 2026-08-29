@@ -47,6 +47,9 @@ local POOL = BUILDING.Pool
 local GYM = BUILDING.Gym
 local TRACK = BUILDING.Track
 local FIT = BUILDING.FitOut
+local EVENTS = BUILDING.Events
+local LOUNGE = BUILDING.Lounge
+local VEND = BUILDING.Vending
 
 local W = BUILDING.WidthStuds
 local D = BUILDING.DepthStuds
@@ -169,11 +172,15 @@ local function planRooms(): { Rect }
 	local d1, d2 = slotX(3)
 
 	return {
-		-- Ground floor. Two rooms rather than four: a cafeteria and a library are both big
-		-- rooms, and cutting them to a quarter of the frontage each would make them read as
-		-- classrooms with the wrong furniture in them.
+		-- Ground floor. The cafeteria takes two slots because it is the one room the whole
+		-- school is in at once and a quarter of the frontage would make it read as a classroom
+		-- with the wrong furniture in it. The library and the lounge take one each.
 		{ id = "cafeteria", label = "Cafeteria", floor = 1, x1 = a1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "cafeteria" },
-		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "library" },
+		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "library" },
+		-- The one room in the building nobody sends you to. Every other space here is somewhere
+		-- you are told to be; this is the one you choose, and it is what makes the school
+		-- somewhere a player hangs around rather than somewhere they visit twice a year.
+		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "lounge" },
 
 		-- Second floor: the subjects with a verb of their own. Science, Art and Reading are
 		-- named here and left empty on purpose -- ScienceService, ArtService and ReadingService
@@ -388,6 +395,109 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	end
 end
 
+-- A vending machine. Two kinds off one function, because they are the same cabinet with a
+-- different face -- and building them separately would mean two places to fix the plinth.
+--
+-- The numbered slots are the detail that does the work. A glass box with coloured blocks in
+-- it is a fridge; the same box with 001 through 016 under the shelves is unmistakably a
+-- vending machine, and it costs sixteen labels.
+local function buildVendingMachine(parent: Instance, name: string, base: Vector3, snacks: boolean, facing: number)
+	local w, h, d = VEND.WidthStuds, VEND.HeightStuds, VEND.DepthStuds
+
+	local body = Kit.Block(parent, `{name}Body`, base + Vector3.new(0, h / 2, 0), Vector3.new(w, h, d), {
+		color = if snacks then Color3.fromRGB(226, 228, 236) else Color3.fromRGB(44, 52, 96),
+		yawDegrees = facing,
+		collide = true,
+	})
+
+	-- The window, and the shelves behind it.
+	local glassW = w * 0.62
+	local glassX = -w * 0.14
+	Kit.Block(parent, `{name}Glass`, base + Vector3.new(glassX, h * 0.58, -d * 0.52), Vector3.new(glassW, h * 0.6, 0.25), {
+		color = Color3.fromRGB(180, 208, 232),
+		material = Enum.Material.Glass,
+		transparency = 0.5,
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	if snacks then
+		local itemColors = {
+			Color3.fromRGB(214, 76, 68),
+			Color3.fromRGB(72, 122, 206),
+			Color3.fromRGB(96, 176, 108),
+			Color3.fromRGB(232, 176, 72),
+			Color3.fromRGB(238, 238, 240),
+			Color3.fromRGB(104, 72, 54),
+		}
+		for row = 1, VEND.Rows do
+			local shelfY = h * 0.84 - (row - 1) * (h * 0.15)
+			Kit.Block(parent, `{name}Shelf{row}`, base + Vector3.new(glassX, shelfY - 1.4, -d * 0.4), Vector3.new(glassW, 0.2, d * 0.5), {
+				color = Color3.fromRGB(198, 202, 210),
+				yawDegrees = facing,
+			}).CastShadow = false
+			for column = 1, VEND.Columns do
+				local index = (row - 1) * VEND.Columns + column
+				local x = glassX - glassW / 2 + glassW * ((column - 0.5) / VEND.Columns)
+				Kit.Block(parent, `{name}Item{index}`, base + Vector3.new(x, shelfY, -d * 0.4), Vector3.new(1.1, 1.7, 0.9), {
+					color = itemColors[((index - 1) % #itemColors) + 1],
+					yawDegrees = facing,
+				}).CastShadow = false
+			end
+			-- The slot numbers, one label per row rather than per item: sixteen billboards on
+			-- one machine is sixteen draw calls for something read once.
+			local strip = Kit.Block(parent, `{name}Strip{row}`, base + Vector3.new(glassX, shelfY - 1.9, -d * 0.55), Vector3.new(glassW, 0.7, 0.15), {
+				color = Color3.fromRGB(246, 246, 248),
+				yawDegrees = facing,
+			})
+			strip.CastShadow = false
+			local first = (row - 1) * VEND.Columns + 1
+			Kit.Sign(strip, string.format("%03d", first) .. "  -  " .. string.format("%03d", first + VEND.Columns - 1), 8, LABEL_DIST * 0.5, Color3.fromRGB(52, 58, 70))
+		end
+	else
+		-- The coffee machine: a cup in a recess, and the drinks list.
+		Kit.Block(parent, `{name}Recess`, base + Vector3.new(glassX, h * 0.3, -d * 0.4), Vector3.new(glassW * 0.7, h * 0.22, d * 0.5), {
+			color = Color3.fromRGB(232, 232, 238),
+			yawDegrees = facing,
+		}).CastShadow = false
+		Kit.Block(parent, `{name}Cup`, base + Vector3.new(glassX, h * 0.28, -d * 0.45), Vector3.new(1.5, 2, 1.5), {
+			color = Color3.fromRGB(238, 232, 224),
+			yawDegrees = facing,
+		}).CastShadow = false
+		local menu = Kit.Block(parent, `{name}Menu`, base + Vector3.new(glassX, h * 0.62, -d * 0.55), Vector3.new(glassW, h * 0.24, 0.2), {
+			color = Color3.fromRGB(28, 30, 40),
+			yawDegrees = facing,
+		})
+		menu.CastShadow = false
+		Kit.Sign(menu, "LATTE  ·  CAPPUCCINO  ·  AMERICANO", 10, LABEL_DIST * 0.6, Color3.fromRGB(150, 196, 240))
+	end
+
+	-- The keypad and the reader, which every machine in the reference has and which are what
+	-- make the right-hand third of the cabinet read as controls rather than as blank panel.
+	Kit.Block(parent, `{name}Pad`, base + Vector3.new(w * 0.32, h * 0.55, -d * 0.52), Vector3.new(w * 0.24, h * 0.3, 0.2), {
+		color = Color3.fromRGB(24, 26, 36),
+		yawDegrees = facing,
+	}).CastShadow = false
+	Kit.Block(parent, `{name}Reader`, base + Vector3.new(w * 0.32, h * 0.8, -d * 0.52), Vector3.new(w * 0.22, 2, 0.2), {
+		color = Color3.fromRGB(46, 92, 178),
+		material = Enum.Material.Neon,
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	-- The delivery tray at the bottom.
+	Kit.Block(parent, `{name}Tray`, base + Vector3.new(glassX, h * 0.12, -d * 0.5), Vector3.new(glassW * 0.8, 1.8, 0.25), {
+		color = Color3.fromRGB(38, 40, 50),
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	return body
+end
+
+-- A pair of them, side by side, the way the reference always has them.
+local function buildVendingPair(parent: Instance, name: string, at: (number, number, number) -> Vector3, x: number, y: number, z: number, facing: number)
+	buildVendingMachine(parent, `{name}Coffee`, at(x - VEND.WidthStuds * 0.6, y, z), false, facing)
+	buildVendingMachine(parent, `{name}Snacks`, at(x + VEND.WidthStuds * 0.6, y, z), true, facing)
+end
+
 -- ---------------------------------------------------------------------------------------
 -- Corridors, and the lockers down them.
 -- ---------------------------------------------------------------------------------------
@@ -430,6 +540,12 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			Kit.Rug(parent, `CorridorRug{floor}_{index}`, at(x, y + 0.35, corridorZ + 2), 7, PALE_BLUE)
 			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + 4), 3.2, 8)
 		end
+
+		-- A pair of machines against the back wall of the corridor on every floor. Against the
+		-- *back* rather than the locker wall on purpose: the lockers are where the corridor
+		-- system stands people, and a cabinet in that run would be somewhere to be cornered
+		-- against rather than somewhere to buy a drink.
+		buildVendingPair(parent, `CorridorVending{floor}`, at, half - 34, y + 0.2, corridorZ + CORRIDOR_W / 2 - 2, 180)
 	end
 end
 
@@ -539,6 +655,100 @@ local function fitCooking(parent: Instance, at: (number, number, number) -> Vect
 	end
 end
 
+local function fitLounge(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	local depth = rect.z2 - rect.z1
+	local cx, cz = rectCenter(rect)
+
+	-- Warm floor, because this is the one room in the school that is not tiled. It is the
+	-- fastest way to say "you are allowed to relax here" and it costs one part.
+	Kit.Slab(parent, "LoungeFloor", at(cx, y + 0.08, cz), width - 2, depth - 2, 0.3, {
+		color = Color3.fromRGB(216, 186, 162),
+		material = Enum.Material.WoodPlanks,
+	})
+
+	-- The pool table: the thing the reference room is built around. Bed, rails, pockets, cues
+	-- and a rack of balls -- worth the parts, because it is the single object that says this
+	-- is somewhere people spend a free period.
+	for table_ = 1, LOUNGE.PoolTables do
+		local px = cx
+		local pz = rect.z1 + depth * 0.34
+		Kit.Block(parent, `PoolBed{table_}`, at(px, y + 2.6, pz), Vector3.new(20, 0.6, 11), {
+			color = Color3.fromRGB(58, 132, 82),
+			material = Enum.Material.Fabric,
+		})
+		Kit.Block(parent, `PoolFrame{table_}`, at(px, y + 2.1, pz), Vector3.new(22, 1.6, 13), {
+			color = Color3.fromRGB(122, 78, 54),
+			material = Enum.Material.Wood,
+		})
+		for side = -1, 1, 2 do
+			Kit.Block(parent, `PoolLeg{table_}_{side}`, at(px + side * 7, y + 1.1, pz), Vector3.new(3.4, 2.2, 9), {
+				color = Color3.fromRGB(104, 66, 46),
+			})
+		end
+		-- The rack, and the cue ball apart from it.
+		local ballColors = {
+			Color3.fromRGB(226, 196, 74), Color3.fromRGB(62, 96, 186), Color3.fromRGB(206, 70, 62),
+			Color3.fromRGB(126, 82, 176), Color3.fromRGB(232, 138, 62), Color3.fromRGB(86, 160, 96),
+		}
+		for ball = 1, 6 do
+			local row = math.floor((ball - 1) / 3)
+			local column = (ball - 1) % 3
+			Kit.Block(parent, `PoolBall{ball}`, at(px + 5 + row * 1.1, y + 3.2, pz - 1.2 + column * 1.2), Vector3.new(0.9, 0.9, 0.9), {
+				color = ballColors[ball],
+			}).CastShadow = false
+		end
+		Kit.Block(parent, `PoolCue{table_}`, at(px - 3, y + 3.1, pz), Vector3.new(13, 0.24, 0.24), {
+			color = Color3.fromRGB(196, 156, 108),
+		}).CastShadow = false
+	end
+
+	-- The screen on the wall.
+	local screen = Kit.Block(parent, "LoungeScreen", at(rect.x2 - 3, y + 11, cz), Vector3.new(0.5, LOUNGE.ScreenHeightStuds, LOUNGE.ScreenWidthStuds), {
+		color = Color3.fromRGB(20, 22, 28),
+	})
+	screen.CastShadow = false
+	Kit.Block(parent, "LoungeScreenFrame", at(rect.x2 - 3.3, y + 11, cz), Vector3.new(0.3, LOUNGE.ScreenHeightStuds + 1.2, LOUNGE.ScreenWidthStuds + 1.2), {
+		color = Color3.fromRGB(52, 56, 66),
+	}).CastShadow = false
+
+	-- Sofas and armchairs round the back, dining tables at the front.
+	for index = 1, LOUNGE.Sofas do
+		local x = rect.x1 + width * (((index - 1) % 2 + 0.5) / 2)
+		local z = rect.z2 - 10 - math.floor((index - 1) / 2) * 9
+		Kit.Block(parent, `LoungeSofa{index}`, at(x, y + 1.9, z), Vector3.new(11, 3.8, 5), {
+			color = Color3.fromRGB(118, 132, 190),
+			material = Enum.Material.Fabric,
+		})
+		Kit.Block(parent, `LoungeSofaBack{index}`, at(x, y + 4.2, z + 2.2), Vector3.new(11, 4.6, 1.2), {
+			color = Color3.fromRGB(104, 118, 176),
+			material = Enum.Material.Fabric,
+		})
+	end
+
+	for index = 1, LOUNGE.DiningTables do
+		local x = rect.x1 + width * (((index - 1) % 3 + 0.5) / 3)
+		local z = rect.z1 + 8 + math.floor((index - 1) / 3) * 10
+		Kit.Block(parent, `LoungeTable{index}`, at(x, y + 3, z), Vector3.new(8, 0.4, 5), { color = Color3.fromRGB(150, 110, 72) })
+		Kit.Block(parent, `LoungeTableLeg{index}`, at(x, y + 1.5, z), Vector3.new(1, 3, 1), { color = Color3.fromRGB(96, 72, 52) })
+		for seat = -1, 1, 2 do
+			Kit.Block(parent, `LoungeChair{index}_{seat}`, at(x + seat * 5, y + 1.8, z), Vector3.new(2.6, 0.4, 2.6), {
+				color = Color3.fromRGB(96, 124, 186),
+			})
+		end
+	end
+
+	for index = 1, LOUNGE.Rugs do
+		Kit.Rug(parent, `LoungeRug{index}`, at(rect.x1 + width * (index / (LOUNGE.Rugs + 1)), y + 0.4, cz + 6), 7, Color3.fromRGB(150, 178, 220))
+	end
+	for index = 1, LOUNGE.Planters do
+		Kit.Planter(parent, `LoungePlanter{index}`, at(rect.x1 + width * (index / (LOUNGE.Planters + 1)), y + 0.2, rect.z2 - 3), 3, 9)
+	end
+
+	-- And the machines, against the back wall where the reference has them.
+	buildVendingPair(parent, "LoungeVending", at, cx, y + 0.2, rect.z2 - 4, 180)
+end
+
 local function fitCommon(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
 	local width = rect.x2 - rect.x1
 	for index = 1, FIT.RugsPerCommonRoom do
@@ -598,6 +808,8 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 			fitLibrary(parent, at, rect, y)
 		elseif rect.kind == "cooking" then
 			fitCooking(parent, at, rect, y)
+		elseif rect.kind == "lounge" then
+			fitLounge(parent, at, rect, y)
 		elseif rect.kind == "common" then
 			fitCommon(parent, at, rect, y)
 		end
@@ -752,6 +964,29 @@ local function buildGym(parent: Instance, at: (number, number, number) -> Vector
 		Kit.Block(parent, `Bleacher{row}`, at(x1 - 6 - row * 3, 0.4 + row * 2, cz), Vector3.new(3, 2, GYM.DepthStuds - 20), { color = OFF_WHITE })
 	end
 
+	-- Wall bars down the back and climbing ropes from the roof. Both are here because the
+	-- room got smaller: a compact gym has to be *denser* to still read as a gym, and these are
+	-- the two things that say "school gymnasium" rather than "sports hall" for almost no
+	-- parts. A bare box at 72 studs would read as emptier than the 88-stud one it replaced.
+	for index = 1, GYM.WallBars do
+		local share = (index - 0.5) / GYM.WallBars
+		local x = x0 + GYM.WidthStuds * share
+		for rung = 1, 9 do
+			Kit.Block(parent, `WallBar{index}_{rung}`, at(x, 2 + rung * 1.6, GYM.DepthStuds - 2), Vector3.new(5, 0.4, 0.4), {
+				color = WOOD,
+				material = Enum.Material.Wood,
+			}).CastShadow = false
+		end
+	end
+
+	for index = 1, GYM.RopeCount do
+		local x = x0 + GYM.WidthStuds * (index / (GYM.RopeCount + 1))
+		Kit.Block(parent, `Rope{index}`, at(x, GYM.HeightStuds / 2 + 2, cz - 12), Vector3.new(0.35, GYM.HeightStuds - 4, 0.35), {
+			color = Color3.fromRGB(184, 156, 108),
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+	end
+
 	for index = 1, 10 do
 		Kit.LightPanel(parent, `GymLight{index}`, at(x0 + GYM.WidthStuds * (((index - 1) % 5 + 0.5) / 5), 0.4 + GYM.HeightStuds - 1.5, cz + (if index > 5 then 16 else -16)), 10, 3)
 	end
@@ -885,6 +1120,189 @@ function School.Build(center: Vector3): Plan?
 	return built
 end
 
+-- ---------------------------------------------------------------------------------------
+-- Events: the nights the gymnasium is dressed for something.
+-- ---------------------------------------------------------------------------------------
+
+-- Everything an event puts up lives in its own folder, so taking it down is one Destroy and
+-- the gym underneath is never touched. That separation is the whole design: the gym is a gym
+-- three hundred days a year and a ballroom on the other five, and neither version has to
+-- know the other exists.
+local eventFolder: Folder? = nil
+local currentEvent: string? = nil
+
+local function eventParent(): Folder
+	local existing = eventFolder
+	if existing ~= nil and existing.Parent ~= nil then
+		return existing
+	end
+	local made = Instance.new("Folder")
+	made.Name = "SchoolEvent"
+	made.Parent = workspace
+	eventFolder = made
+	return made
+end
+
+-- Dresses the gymnasium for prom, or clears it.
+--
+-- The gym is the venue on purpose, and it is worth saying why rather than treating it as
+-- obvious. A school has exactly one room big enough to hold everybody, and every real school
+-- therefore holds its dances in it. Building a separate ballroom would mean adding a space
+-- that is dead for all but one night a year -- which is the opposite of what a map this size
+-- needs, and which the reference photographs confirm: that is a basketball court under the
+-- streamers, and you can see the wall bars behind the stage.
+--
+-- Passing nil takes it all down. Returns whether anything changed, so a caller can tell the
+-- difference between "prom started" and "prom was already on".
+function School.SetEvent(id: string?): boolean
+	if currentEvent == id then
+		return false
+	end
+
+	local existing = eventFolder
+	if existing ~= nil then
+		existing:Destroy()
+	end
+	eventFolder = nil
+	currentEvent = id
+
+	if id == nil then
+		return true
+	end
+
+	local current = plan
+	if current == nil then
+		-- No building, so no gym to dress. Recorded as the current event anyway: the caller
+		-- asked for prom and prom is what is on, it simply has nowhere to be yet.
+		return true
+	end
+
+	local center = current.center
+	local function toWorld(x: number, y: number, z: number): Vector3
+		return center + Vector3.new(x, y, z)
+	end
+
+	local parent = eventParent()
+	local half = W / 2
+	local x0 = half
+	local cx = x0 + GYM.WidthStuds / 2
+	local cz = GYM.DepthStuds / 2
+
+	local partyColors = {
+		Color3.fromRGB(236, 118, 176),
+		Color3.fromRGB(146, 106, 214),
+		Color3.fromRGB(98, 168, 236),
+		Color3.fromRGB(246, 196, 96),
+		Color3.fromRGB(240, 240, 246),
+	}
+
+	-- The dance floor: a parquet square in the middle, lit from above. Everything else in the
+	-- room arranges itself around this, which is why it is laid first.
+	Kit.Slab(parent, "DanceFloor", toWorld(cx, 0.9, cz), EVENTS.FloorStuds, EVENTS.FloorStuds, 0.4, {
+		color = Color3.fromRGB(196, 150, 104),
+		material = Enum.Material.WoodPlanks,
+	})
+
+	-- Coloured washes over it. Neon discs rather than real lights for the reason the ceiling
+	-- panels are: a dozen PointLights in one room costs more than the building.
+	for index = 1, EVENTS.Spotlights do
+		local angle = (index / EVENTS.Spotlights) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.3
+		Kit.Spotlight(
+			parent,
+			`PromSpot{index}`,
+			toWorld(cx + math.cos(angle) * r, 1.2, cz + math.sin(angle) * r),
+			7,
+			partyColors[((index - 1) % #partyColors) + 1]
+		)
+	end
+
+	-- The stage at the far end, with the throne on it.
+	local stageZ = cz + GYM.DepthStuds / 2 - EVENTS.StageDepthStuds - 4
+	Kit.Slab(parent, "PromStage", toWorld(cx, 0.4 + EVENTS.StageRiseStuds, stageZ), EVENTS.StageWidthStuds, EVENTS.StageDepthStuds, EVENTS.StageRiseStuds, {
+		color = Color3.fromRGB(196, 62, 78),
+		material = Enum.Material.Fabric,
+	})
+	Kit.Block(parent, "PromThrone", toWorld(cx, 0.4 + EVENTS.StageRiseStuds + 3, stageZ + 1), Vector3.new(6, 6, 4), {
+		color = Color3.fromRGB(226, 186, 84),
+		material = Enum.Material.Metal,
+	})
+	Kit.Block(parent, "PromThroneBack", toWorld(cx, 0.4 + EVENTS.StageRiseStuds + 8, stageZ + 2.6), Vector3.new(6, 10, 1), {
+		color = Color3.fromRGB(226, 186, 84),
+		material = Enum.Material.Metal,
+	})
+
+	-- The banner over the stage.
+	local banner = Kit.Block(parent, "PromBanner", toWorld(cx, 16, stageZ + 4), Vector3.new(EVENTS.StageWidthStuds + 8, 4, 0.4), {
+		color = Color3.fromRGB(236, 118, 176),
+	})
+	banner.CastShadow = false
+	Kit.Sign(banner, "AGES PROM", 24, LABEL_DIST * 2, Color3.fromRGB(255, 250, 252))
+
+	-- The DJ booth, off to one side of the stage.
+	Kit.Block(parent, "DjBooth", toWorld(cx - EVENTS.StageWidthStuds * 0.75, 2.4, stageZ - 2), Vector3.new(9, 4.8, 4), {
+		color = Color3.fromRGB(64, 46, 96),
+	})
+	Kit.Block(parent, "DjDeck", toWorld(cx - EVENTS.StageWidthStuds * 0.75, 5, stageZ - 2), Vector3.new(9.4, 0.4, 4.4), {
+		color = Color3.fromRGB(28, 30, 40),
+	})
+
+	-- The balloon arch at the way in, and clusters round the room.
+	Kit.BalloonArch(parent, "PromArch", toWorld(cx, 0.4, cz - GYM.DepthStuds / 2 + 6), 26, 16, EVENTS.ArchBalloons, partyColors)
+
+	for index = 1, EVENTS.BalloonClusters do
+		local angle = (index / EVENTS.BalloonClusters) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.78
+		Kit.BalloonCluster(
+			parent,
+			`PromBalloons{index}`,
+			toWorld(cx + math.cos(angle) * r, 0.4, cz + math.sin(angle) * r),
+			EVENTS.BalloonsPerCluster,
+			partyColors
+		)
+	end
+
+	-- Streamers across the ceiling, corner to corner.
+	for index = 1, EVENTS.Streamers do
+		local share = (index - 0.5) / EVENTS.Streamers
+		local z = cz - GYM.DepthStuds / 2 + GYM.DepthStuds * share
+		Kit.Streamer(
+			parent,
+			`PromStreamer{index}`,
+			toWorld(x0 + 3, GYM.HeightStuds - 3, z),
+			toWorld(x0 + GYM.WidthStuds - 3, GYM.HeightStuds - 3, z),
+			8,
+			partyColors[((index - 1) % #partyColors) + 1]
+		)
+	end
+
+	-- Folding chairs round the edge and a few round tables, so the room has somewhere to sit
+	-- out a song. Deliberately at the perimeter: chairs on the floor would be the one thing
+	-- that stops it being a dance floor.
+	for index = 1, EVENTS.Chairs do
+		local angle = (index / EVENTS.Chairs) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.92
+		Kit.Block(parent, `PromChair{index}`, toWorld(cx + math.cos(angle) * r, 2, cz + math.sin(angle) * r), Vector3.new(2.6, 0.4, 2.6), {
+			color = Color3.fromRGB(48, 52, 68),
+			yawDegrees = -math.deg(angle),
+		})
+	end
+	for index = 1, EVENTS.Tables do
+		local angle = ((index - 0.5) / EVENTS.Tables) * math.pi * 2
+		local r = EVENTS.FloorStuds * 1.12
+		local spot = toWorld(cx + math.cos(angle) * r, 0.4, cz + math.sin(angle) * r)
+		Kit.Block(parent, `PromTable{index}`, spot + Vector3.new(0, 3, 0), Vector3.new(7, 0.4, 7), { color = Color3.fromRGB(246, 240, 244) })
+		Kit.Block(parent, `PromTableLeg{index}`, spot + Vector3.new(0, 1.5, 0), Vector3.new(1.2, 3, 1.2), { color = Color3.fromRGB(120, 96, 108) })
+	end
+
+	return true
+end
+
+-- Which event is dressed, or nil. Read rather than built.
+function School.Event(): string?
+	return currentEvent
+end
+
 -- The building as it stands, or nil if it has not been laid. Read rather than built, so a
 -- debug command describing the school cannot be the thing that creates it.
 function School.Plan(): Plan?
@@ -915,6 +1333,9 @@ function School.Clear()
 	end
 	folder = nil
 	plan = nil
+	-- And whatever the gym was dressed for. A prom left standing over a school that no longer
+	-- exists is the kind of thing that survives a new life and cannot be explained.
+	School.SetEvent(nil)
 end
 
 return School
