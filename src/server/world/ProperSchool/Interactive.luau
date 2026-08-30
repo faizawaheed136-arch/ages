@@ -22,10 +22,8 @@ local Interactive = {}
 
 local WHITE = Color3.fromRGB(242, 243, 246)
 local BLUE = Color3.fromRGB(58, 122, 206)
-local DARK_WOOD = Color3.fromRGB(96, 66, 44)
 local TIMBER = Color3.fromRGB(148, 104, 66)
 local METAL = Color3.fromRGB(126, 132, 142)
-local SLATE = Color3.fromRGB(44, 50, 60)
 local GLASS_TINT = Color3.fromRGB(196, 220, 240)
 
 local SMOOTH = Enum.Material.SmoothPlastic
@@ -437,121 +435,35 @@ local function buildLunchCounter(origin: Vector3, furniture: Instance)
 end
 
 -- ---------------------------------------------------------------------------------------
--- 6. Administration
+-- 6. Administration -- seating only
 -- ---------------------------------------------------------------------------------------
 
-local function buildAdmin(origin: Vector3, furniture: Instance, seating: Instance)
-	local rooms: { [string]: any } = {}
-	for _, room in Layout.RoomsOn(1) do
-		rooms[room.id] = room
-	end
+-- **The admin furniture is baked now, so this only makes it sittable.**
+--
+-- It used to be built here, which meant the reception desk, the principal's office and the
+-- staff room existed only while the server was running and the editor showed three empty
+-- rooms. Geometry moved to Furniture.luau; what is left is the half that genuinely cannot be
+-- baked -- a Seat and a prompt per sittable surface.
+--
+-- Matched on the names Furniture gives them. That is the seam between the two files and it is
+-- load-bearing: rename a chair there and it stops being sittable here, with no error.
+local ADMIN_SEATS = { "ReceptionChair", "ExecChair", "GuestChair%-?1", "Couch%-?1" }
 
-	local function seatAt(surface: BasePart)
-		makeSeat(surface, seating)
-	end
-
-	-- ---- Main lobby: a curved reception desk, built as a fan of straight segments.
-	local lobby = rooms.lobby
-	if lobby then
-		local model = Instance.new("Model")
-		model.Name = "Reception"
-		model.Parent = furniture
-		local cx = (lobby.x1 + lobby.x2) / 2
-		local cz = Layout.FrontBandZ1 + 22
-		local radius = 13
-		local segments = 7
-		local sweep = math.rad(110)
-		for i = 1, segments do
-			local a = -sweep / 2 + sweep * ((i - 0.5) / segments)
-			local px = cx + math.sin(a) * radius
-			local pz = cz + math.cos(a) * radius
-			local cf = CFrame.new(origin + Vector3.new(px, 0, pz)) * CFrame.Angles(0, -a, 0)
-			part(model, `DeskBody{i}`, cf * CFrame.new(0, 2, 0), Vector3.new(radius * sweep / segments + 1, 4, 3), PLANKS, DARK_WOOD)
-			part(model, `DeskTop{i}`, cf * CFrame.new(0, 4.2, 0), Vector3.new(radius * sweep / segments + 1.4, 0.5, 4), SMOOTH, Color3.fromRGB(226, 228, 232))
-			-- The privacy partition: open above the counter rather than a solid screen, so the
-			-- receptionist can still be seen.
-			part(model, `DeskScreen{i}`, cf * CFrame.new(0, 6, 0.4), Vector3.new(radius * sweep / segments + 1, 3, 0.3), Enum.Material.Glass, GLASS_TINT).CanCollide =
-				false
+local function seatAdminFurniture(root: Instance, seating: Instance): number
+	local made = 0
+	for _, surface in root:GetDescendants() do
+		if not surface:IsA("BasePart") then
+			continue
 		end
-		local monitorCf = CFrame.new(origin + Vector3.new(cx, 6, cz + radius - 1.5))
-		part(model, "Monitor", monitorCf, Vector3.new(6, 3.6, 0.3), SMOOTH, SLATE)
-		part(model, "MonitorScreen", monitorCf * CFrame.new(0, 0, -0.2), Vector3.new(5.4, 3, 0.1), Enum.Material.Neon, Color3.fromRGB(120, 180, 230)).CanCollide =
-			false
-		part(model, "MonitorStand", monitorCf * CFrame.new(0, -2.4, 0), Vector3.new(1, 1.6, 1), SMOOTH, SLATE)
-		local chair = part(model, "ReceptionChair", CFrame.new(origin + Vector3.new(cx, 2, cz + radius + 3)), Vector3.new(3, 0.4, 3), SMOOTH, SLATE)
-		seatAt(chair)
-	end
-
-	-- ---- Principal's office.
-	local principal = rooms.principal
-	if principal then
-		local model = Instance.new("Model")
-		model.Name = "PrincipalOffice"
-		model.Parent = furniture
-		local cx = (principal.x1 + principal.x2) / 2
-		local cz = (Layout.FrontBandZ1 + Layout.FrontBandZ2) / 2
-
-		part(model, "ExecDeskBody", CFrame.new(origin + Vector3.new(cx, 2, cz)), Vector3.new(16, 4, 7), PLANKS, Color3.fromRGB(58, 40, 28))
-		part(model, "ExecDeskTop", CFrame.new(origin + Vector3.new(cx, 4.3, cz)), Vector3.new(17, 0.6, 8), PLANKS, Color3.fromRGB(74, 50, 34))
-
-		local chair = part(model, "ExecChair", CFrame.new(origin + Vector3.new(cx, 2.2, cz - 6)), Vector3.new(4, 0.5, 4), SMOOTH, SLATE)
-		part(model, "ExecChairBack", CFrame.new(origin + Vector3.new(cx, 6, cz - 8)), Vector3.new(4, 7, 0.6), SMOOTH, SLATE)
-		seatAt(chair)
-
-		for side = -1, 1, 2 do
-			local guest = part(model, `GuestChair{side}`, CFrame.new(origin + Vector3.new(cx + side * 5, 2, cz + 7)), Vector3.new(3, 0.4, 3), SMOOTH, BLUE)
-			part(model, `GuestChairBack{side}`, CFrame.new(origin + Vector3.new(cx + side * 5, 4, cz + 8.4)), Vector3.new(3, 4, 0.4), SMOOTH, BLUE)
-			seatAt(guest)
-		end
-
-		part(model, "FilingCabinet", CFrame.new(origin + Vector3.new(principal.x1 + 6, 5, cz - 14)), Vector3.new(5, 10, 4), Enum.Material.Metal, METAL)
-		for drawer = 1, 3 do
-			part(
-				model,
-				`FilingDrawer{drawer}`,
-				CFrame.new(origin + Vector3.new(principal.x1 + 6, 1.6 + drawer * 3, cz - 11.8)),
-				Vector3.new(4.4, 2.4, 0.4),
-				Enum.Material.Metal,
-				Color3.fromRGB(158, 164, 174)
-			).CanCollide = false
-		end
-	end
-
-	-- ---- Staff room.
-	local staff = rooms.staff
-	if staff then
-		local model = Instance.new("Model")
-		model.Name = "StaffRoom"
-		model.Parent = furniture
-		local cx = (staff.x1 + staff.x2) / 2
-		local cz = (Layout.FrontBandZ1 + Layout.FrontBandZ2) / 2
-
-		part(model, "BreakTableTop", CFrame.new(origin + Vector3.new(cx, 3.2, cz + 6)), Vector3.new(22, 0.6, 7), PLANKS, TIMBER)
-		for side = -1, 1, 2 do
-			part(model, `BreakTableLeg{side}`, CFrame.new(origin + Vector3.new(cx + side * 9, 1.6, cz + 6)), Vector3.new(1, 3.2, 6), SMOOTH, METAL)
-		end
-
-		-- The counter run, with a sink set into it.
-		local counterZ = Layout.FrontBandZ1 + 4
-		part(model, "KitchenCounter", CFrame.new(origin + Vector3.new(cx, 3, counterZ)), Vector3.new(24, 0.6, 5), SMOOTH, Color3.fromRGB(216, 220, 228))
-		part(model, "KitchenBody", CFrame.new(origin + Vector3.new(cx, 1.5, counterZ)), Vector3.new(24, 3, 4.4), SMOOTH, WHITE)
-		part(model, "Sink", CFrame.new(origin + Vector3.new(cx - 6, 2.9, counterZ)), Vector3.new(5, 0.8, 3.4), Enum.Material.Metal, Color3.fromRGB(198, 204, 214)).CanCollide =
-			false
-		part(model, "Tap", CFrame.new(origin + Vector3.new(cx - 6, 4.5, counterZ - 1.6)), Vector3.new(0.4, 2.4, 0.4), Enum.Material.Metal, METAL).CanCollide =
-			false
-
-		-- Two couches, each a base, a back and two arms.
-		for index = -1, 1, 2 do
-			local sx = cx + index * 11
-			local sz = cz + 16
-			local base = part(model, `Couch{index}`, CFrame.new(origin + Vector3.new(sx, 2, sz)), Vector3.new(12, 2.6, 5), Enum.Material.Fabric, Color3.fromRGB(96, 118, 168))
-			part(model, `CouchBack{index}`, CFrame.new(origin + Vector3.new(sx, 4.4, sz + 2.2)), Vector3.new(12, 5, 1.2), Enum.Material.Fabric, Color3.fromRGB(84, 104, 152))
-			for arm = -1, 1, 2 do
-				part(model, `CouchArm{index}_{arm}`, CFrame.new(origin + Vector3.new(sx + arm * 6.2, 3.4, sz)), Vector3.new(1.2, 3.4, 5), Enum.Material.Fabric, Color3.fromRGB(84, 104, 152))
+		for _, pattern in ADMIN_SEATS do
+			if surface.Name:match(`^{pattern}$`) then
+				makeSeat(surface, seating)
+				made += 1
+				break
 			end
-			seatAt(base)
 		end
 	end
+	return made
 end
 
 -- ---------------------------------------------------------------------------------------
@@ -656,7 +568,7 @@ function Interactive.Build(): ()
 	local fixtures, switches = buildLighting(origin, lighting, architecture)
 	local seats = buildSeating(root, furniture)
 	local lunch = buildLunchCounter(origin, furniture)
-	buildAdmin(origin, furniture, seating)
+	local adminSeats = seatAdminFurniture(root, seating)
 	local spawns = buildSpawns(origin, props)
 
 	local ok, note = stairsAreComplete(root)
@@ -664,7 +576,7 @@ function Interactive.Build(): ()
 	print(
 		`[ProperSchool] interactive: {doors} doors, {lockers} lockers, {fixtures} light fixtures on `
 			.. `{switches} switches, {seats} seats, lunch counter {if lunch then "up" else "missing kitchen"}, `
-			.. `{spawns} spawns. Stairs: {note}.`
+			.. `{spawns} spawns, {adminSeats} admin seats. Stairs: {note}.`
 	)
 	if not ok then
 		warn(`[ProperSchool] stairs incomplete ({note}) -- add backup teleport pads before shipping`)

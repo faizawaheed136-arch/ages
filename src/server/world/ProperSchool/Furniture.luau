@@ -32,8 +32,11 @@ local BOOK = {
 	Color3.fromRGB(104, 72, 132),
 }
 
+local SLATE = Color3.fromRGB(44, 50, 60)
+
 local SMOOTH = Enum.Material.SmoothPlastic
 local PLANKS = Enum.Material.WoodPlanks
+local METALLIC = Enum.Material.Metal
 
 -- Anything on a surface clears it by this much. One grid unit -- see the header.
 local CLEAR = 0.25
@@ -213,6 +216,104 @@ function Furniture.PopulateCafeteria(roomCenter: Vector3, roomSize: Vector3, par
 end
 
 -- ---------------------------------------------------------------------------------------
+-- Administration
+-- ---------------------------------------------------------------------------------------
+--
+-- **These are baked, which is why they live here rather than in Interactive.**
+--
+-- Anything built in Interactive exists only once the server is running, so it is invisible in
+-- the editor. Geometry belongs in the bake and behaviour belongs at runtime, and the seam
+-- between them is the part name: Interactive finds `ReceptionChair`, `ExecChair`, `GuestChair*`
+-- and `Couch*` below and hangs a Seat and an L prompt on each. Rename one here and it stops
+-- being sittable, silently -- which is the cost of the split and worth knowing about.
+
+-- The reception desk, curved as a fan of straight segments. Roblox has no curved primitive, and
+-- seven chords across 110 degrees reads as a curve from anywhere a player stands.
+function Furniture.PopulateLobby(roomCenter: Vector3, roomSize: Vector3, parent: Instance?)
+	local into = parent or Tree.Build().Furniture
+	local y = roomCenter.Y
+	local cx = roomCenter.X
+	local cz = roomCenter.Z - roomSize.Z / 2 + 22
+	local radius = 13
+	local segments = 7
+	local sweep = math.rad(110)
+	local chord = radius * sweep / segments
+
+	for i = 1, segments do
+		local a = -sweep / 2 + sweep * ((i - 0.5) / segments)
+		local px = cx + math.sin(a) * radius
+		local pz = cz + math.cos(a) * radius
+		local turn = Vector3.new(0, -math.deg(a), 0)
+		block(into, `DeskBody{i}`, Vector3.new(px, y + 2, pz), Vector3.new(chord + 1, 4, 3), PLANKS, DARK_WOOD, turn)
+		block(into, `DeskTop{i}`, Vector3.new(px, y + 4.2, pz), Vector3.new(chord + 1.4, 0.5, 4), SMOOTH, Color3.fromRGB(226, 228, 232), turn)
+		-- The privacy screen is glass and stops at counter height plus three, so the desk
+		-- screens the paperwork without hiding the person behind it.
+		block(into, `DeskScreen{i}`, Vector3.new(px, y + 6, pz), Vector3.new(chord + 1, 3, 0.3), Enum.Material.Glass, Color3.fromRGB(196, 220, 240), turn)
+	end
+
+	block(into, "Monitor", Vector3.new(cx, y + 6, cz + radius - 1.5), Vector3.new(6, 3.6, 0.3), SMOOTH, SLATE)
+	block(into, "MonitorScreen", Vector3.new(cx, y + 6, cz + radius - 1.8), Vector3.new(5.4, 3, 0.1), Enum.Material.Neon, Color3.fromRGB(120, 180, 230))
+	block(into, "MonitorStand", Vector3.new(cx, y + 3.6, cz + radius - 1.5), Vector3.new(1, 1.6, 1), SMOOTH, METAL)
+	block(into, "ReceptionChair", Vector3.new(cx, y + 2, cz + radius + 3), Vector3.new(3, 0.4, 3), SMOOTH, SLATE)
+	block(into, "ReceptionChairBack", Vector3.new(cx, y + 4.2, cz + radius + 4.4), Vector3.new(3, 4, 0.4), SMOOTH, SLATE)
+end
+
+function Furniture.PopulateOffice(roomCenter: Vector3, roomSize: Vector3, parent: Instance?)
+	local into = parent or Tree.Build().Furniture
+	local y = roomCenter.Y
+	local cx, cz = roomCenter.X, roomCenter.Z
+
+	block(into, "ExecDeskBody", Vector3.new(cx, y + 2, cz), Vector3.new(16, 4, 7), PLANKS, Color3.fromRGB(58, 40, 28))
+	block(into, "ExecDeskTop", Vector3.new(cx, y + 4.3, cz), Vector3.new(17, 0.6, 8), PLANKS, Color3.fromRGB(74, 50, 34))
+	block(into, "ExecChair", Vector3.new(cx, y + 2.2, cz - 6), Vector3.new(4, 0.5, 4), SMOOTH, SLATE)
+	block(into, "ExecChairBack", Vector3.new(cx, y + 6, cz - 8), Vector3.new(4, 7, 0.6), SMOOTH, SLATE)
+
+	for side = -1, 1, 2 do
+		block(into, `GuestChair{side}`, Vector3.new(cx + side * 5, y + 2, cz + 7), Vector3.new(3, 0.4, 3), SMOOTH, CHAIR)
+		block(into, `GuestChairBack{side}`, Vector3.new(cx + side * 5, y + 4, cz + 8.4), Vector3.new(3, 4, 0.4), SMOOTH, CHAIR)
+	end
+
+	local cabX = roomCenter.X - roomSize.X / 2 + 6
+	block(into, "FilingCabinet", Vector3.new(cabX, y + 5, cz - 14), Vector3.new(5, 10, 4), METALLIC, METAL)
+	for drawer = 1, 3 do
+		block(into, `FilingDrawer{drawer}`, Vector3.new(cabX, y + 1.6 + drawer * 3, cz - 11.7), Vector3.new(4.4, 2.4, 0.4), METALLIC, Color3.fromRGB(158, 164, 174))
+	end
+end
+
+function Furniture.PopulateStaffRoom(roomCenter: Vector3, roomSize: Vector3, parent: Instance?)
+	local into = parent or Tree.Build().Furniture
+	local y = roomCenter.Y
+	local cx, cz = roomCenter.X, roomCenter.Z
+
+	block(into, "BreakTableTop", Vector3.new(cx, y + 3.2, cz + 6), Vector3.new(22, 0.6, 7), PLANKS, WOOD)
+	for side = -1, 1, 2 do
+		block(into, `BreakTableLeg{side}`, Vector3.new(cx + side * 9, y + 1.6, cz + 6), Vector3.new(1, 3.2, 6), SMOOTH, METAL)
+	end
+
+	local counterZ = roomCenter.Z - roomSize.Z / 2 + 4
+	block(into, "KitchenBody", Vector3.new(cx, y + 1.5, counterZ), Vector3.new(24, 3, 4.4), SMOOTH, Color3.fromRGB(242, 243, 246))
+	block(into, "KitchenCounter", Vector3.new(cx, y + 3.2, counterZ), Vector3.new(24, 0.6, 5), SMOOTH, Color3.fromRGB(216, 220, 228))
+	block(into, "Sink", Vector3.new(cx - 6, y + 3.1, counterZ), Vector3.new(5, 0.8, 3.4), METALLIC, Color3.fromRGB(198, 204, 214))
+	block(into, "Tap", Vector3.new(cx - 6, y + 4.8, counterZ - 1.6), Vector3.new(0.4, 2.4, 0.4), METALLIC, METAL)
+
+	-- The pair is spaced off the room's width, not a fixed eleven studs.
+	--
+	-- Two 12-stud couches with 6.2-stud arms need 35.6 studs between their outer edges, and the
+	-- staff room is 40 wide -- so a hard-coded offset put both outer arms through the side walls.
+	-- Derived, they sit clear whatever the room turns out to be.
+	local couchOffset = roomSize.X * 0.22
+	for index = -1, 1, 2 do
+		local sx = cx + index * couchOffset
+		local sz = cz + 16
+		block(into, `Couch{index}`, Vector3.new(sx, y + 2, sz), Vector3.new(12, 2.6, 5), Enum.Material.Fabric, Color3.fromRGB(96, 118, 168))
+		block(into, `CouchBack{index}`, Vector3.new(sx, y + 4.4, sz + 2.2), Vector3.new(12, 5, 1.2), Enum.Material.Fabric, Color3.fromRGB(84, 104, 152))
+		for arm = -1, 1, 2 do
+			block(into, `CouchArm{index}_{arm}`, Vector3.new(sx + arm * 6.2, y + 3.4, sz), Vector3.new(1.2, 3.4, 5), Enum.Material.Fabric, Color3.fromRGB(84, 104, 152))
+		end
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
 -- Driver
 -- ---------------------------------------------------------------------------------------
 
@@ -241,6 +342,12 @@ function Furniture.Build(origin: Vector3?, parent: Instance?): ()
 				Furniture.PopulateLibrary(centre, size, into)
 			elseif room.kind == "cafeteria" then
 				Furniture.PopulateCafeteria(centre, size, into)
+			elseif room.kind == "lobby" then
+				Furniture.PopulateLobby(centre, size, into)
+			elseif room.kind == "office" then
+				Furniture.PopulateOffice(centre, size, into)
+			elseif room.kind == "staff" then
+				Furniture.PopulateStaffRoom(centre, size, into)
 			end
 		end
 	end
