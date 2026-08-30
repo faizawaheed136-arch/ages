@@ -178,7 +178,7 @@ Interact.IdAttribute = ID_ATTRIBUTE
 -- walk away. Keeping it off "Person" also keeps the two populations honest -- the people you
 -- can befriend are not the people who want a fight, and a shopkeeper who could be challenged
 -- from the same panel that sells you bread would make every tie in the game feel negotiable.
-export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss" | "Fight" | "Apartment"
+export type InteractKind = "Person" | "Event" | "Station" | "Till" | "Vault" | "Boss" | "Fight" | "Apartment" | "Fixture"
 
 -- Who this is, written over their head. Nil on anything that is not a person: there is
 -- no nameplate over a dog, a rug or a front door.

@@ -30,7 +30,7 @@ export type Shape = {
 
 local MapShapes = {}
 
-MapShapes.SourceHash = "0933ed03eb13c7c8"
+MapShapes.SourceHash = "dd818720347b27a2"
 
 -- The box the geometry actually occupies. Wider than the box the place points
 -- measure, because a coastline has no doorway on it.
@@ -41,7 +41,7 @@ MapShapes.Extent = {
 	maxZ = 1152.0,
 }
 
--- 1104 shapes.
+-- 1105 shapes.
 local All: { Shape } = {
 	{ x = -453.5, z = 183.0, widthStuds = 64.0, depthStuds = 34.0, rotationDegrees = -0.0, kind = "surface", color = Color3.fromRGB(146, 190, 236) },
 	{ x = 934.5, z = -316.0, widthStuds = 179.0, depthStuds = 368.0, rotationDegrees = 0.0, kind = "surface", color = Color3.fromRGB(214, 200, 166) },
@@ -1033,6 +1033,7 @@ local All: { Shape } = {
 	{ x = -263.0, z = 235.0, widthStuds = 49.0, depthStuds = 19.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(158, 118, 78) },
 	{ x = -379.0, z = 1002.0, widthStuds = 364.0, depthStuds = 66.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 104, 112) },
 	{ x = -206.0, z = 227.0, widthStuds = 43.0, depthStuds = 5.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(92, 98, 116) },
+	{ x = -291.5, z = 205.6, widthStuds = 120.0, depthStuds = 3.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(226, 230, 238) },
 	{ x = 643.0, z = -252.0, widthStuds = 212.0, depthStuds = 76.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 104, 112) },
 	{ x = -377.0, z = 241.0, widthStuds = 50.7, depthStuds = 30.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(146, 170, 200) },
 	{ x = -377.0, z = 241.0, widthStuds = 51.1, depthStuds = 30.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(158, 118, 78) },

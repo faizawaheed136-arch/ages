@@ -3139,6 +3139,11 @@ Config.School.Building = {
 	--
 	-- Built rather than bought, like everything else in this file -- a machine that needed a
 	-- catalog mesh is a machine that does not appear on a fresh install.
+	-- Water fountains along the corridor. The one fixture every school has and this one had
+	-- none of.
+	-- Safe range: 1-4 per floor.
+	FountainsPerFloor = 2,
+
 	Vending = {
 		-- Safe range: 5-9, 10-16 and 2-5.
 		WidthStuds = 7,
@@ -3969,6 +3974,76 @@ Config.School.Bully = {
 		-- Safe range: 30-90.
 		LabelMaxDistanceStuds = 60,
 	},
+}
+
+-- The fixtures you can press E on: machines, fountains, doors.
+--
+-- **The design problem here is that a button which pays out is not a mechanic.** A vending
+-- machine that gives happiness for a keypress is an idle payout pad with a nice mesh, and
+-- docs/activity_design_law.md is explicit that those are the thing to avoid. So every one of
+-- these is a *trade*, and the trade is what makes it a decision:
+--
+--   The snack machine costs money. Money is earned, so spending it on two points of mood is a
+--   real choice against everything else money buys.
+--
+--   The coffee machine costs more and takes a point of health with it. It is coffee and sugar
+--   before a lesson: a genuinely two-sided deal rather than a smaller reward.
+--
+--   The fountain is free, and therefore has the smallest effect and the longest wait. Free
+--   and unlimited would be the payout pad; free and slow is a breather.
+--
+-- The cooldowns are per fixture kind and live only for the session. That is deliberate: they
+-- exist to stop a player standing at one machine pressing E, not to be an economy. Rejoining
+-- clears them, and farming two points of happiness across a rejoin is not a thing anybody
+-- will do twice.
+Config.Fixtures = {
+	-- How near you must be. Slightly tighter than a conversation, because a machine is a thing
+	-- you stand at.
+	-- Safe range: 6-14.
+	ReachStuds = 10,
+
+	-- The label distance for the prompt itself.
+	-- Safe range: 20-60.
+	PromptDistanceStuds = 30,
+
+	Kinds = {
+		snack = {
+			label = "Snack machine",
+			action = "Buy",
+			cost = 3,
+			happiness = 2,
+			health = 0,
+			cooldownSeconds = 45,
+			notice = "A packet of something orange. Worth it.",
+			broke = "No change. The machine does not take promises.",
+		},
+		coffee = {
+			label = "Coffee machine",
+			action = "Buy",
+			cost = 5,
+			happiness = 3,
+			-- The point of health is the whole design. See the header.
+			health = -1,
+			cooldownSeconds = 45,
+			notice = "Hot, sweet, and mostly sugar. You feel great and slightly worse.",
+			broke = "The card reader blinks red at you.",
+		},
+		fountain = {
+			label = "Water fountain",
+			action = "Drink",
+			cost = 0,
+			happiness = 1,
+			health = 0,
+			-- Twice the wait, because it is free. Free and fast would be the payout pad.
+			cooldownSeconds = 90,
+			notice = "Cold, and the arc is slightly too short. Familiar.",
+			broke = "",
+		},
+	},
+
+	-- What the cooldown says when you are early. One line, because a refusal that explains
+	-- itself once is information and a refusal that explains itself every time is nagging.
+	TooSoon = "Not just yet.",
 }
 
 Config.Gym = {

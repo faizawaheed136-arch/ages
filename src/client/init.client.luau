@@ -187,6 +187,7 @@ local RequestBuyHouseRemote = Remotes.Get("RequestBuyHouse")
 local RequestSellHouseRemote = Remotes.Get("RequestSellHouse")
 local RequestCarDealerServeRemote = Remotes.Get("RequestCarDealerServe")
 local RequestToggleApartmentDoorRemote = Remotes.Get("RequestToggleApartmentDoor")
+local RequestUseFixtureRemote = Remotes.Get("RequestUseFixture")
 local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
 local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
 local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
@@ -405,6 +406,15 @@ end)
 -- animates the swing and validates distance. The click is the whole answer, no panel.
 prompts:On("Apartment", function(blockName: string)
 	RequestToggleApartmentDoorRemote:FireServer(blockName)
+end)
+
+-- Machines, fountains and anything else in the school you stand at and press E.
+--
+-- The id is the *kind* rather than an instance id, and that is on purpose: the server finds
+-- which machine you are at by proximity, so there is nothing here worth forging. Sending an
+-- instance would mean trusting the client about which object it was standing at.
+prompts:On("Fixture", function(kind: string)
+	RequestUseFixtureRemote:FireServer(kind)
 end)
 
 -- Clicking the dots at the car dealership counter. Its own kind so the client

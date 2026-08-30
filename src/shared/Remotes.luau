@@ -125,6 +125,7 @@ export type RemoteName =
 	-- a fifth tenant told apart by yet another zero is how a channel stops being readable.
 	| "ReportCardUpdated"
 	| "TimetableUpdated"
+	| "RequestUseFixture"
 	-- "I have read it." Carries the age the card was about, which the server checks
 	-- against the card it actually staged -- so a press that lands after a birthday has
 	-- replaced the card cannot put away a year the player has not seen.
@@ -638,6 +639,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestLabCommit",
 	"ReportCardUpdated",
 	"TimetableUpdated",
+	"RequestUseFixture",
 	"RequestReportCardRead",
 	"HuntUpdated",
 	"ArtUpdated",

@@ -952,6 +952,37 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + 4), 3.2, 8)
 		end
 
+		-- Water fountains against the locker wall, which is where a school puts them: on the
+		-- circulation route, not tucked in a corner. Two per floor so there is one near either
+		-- stair rather than a single one everybody walks the length of the building for.
+		for index = 1, BUILDING.FountainsPerFloor do
+			local share = (index - 0.5) / BUILDING.FountainsPerFloor
+			local x = -half + W * share
+			local z = corridorZ - CORRIDOR_W / 2 + 1.4
+
+			-- The back panel, the basin, and the spout. Three parts, and the basin is the one that
+			-- has to read as a basin from standing height -- it is wider than it is deep and sits
+			-- at hip height, which is the whole silhouette of a drinking fountain.
+			Kit.Block(parent, `FountainBack{floor}_{index}`, at(x, y + 5, z), Vector3.new(5, 8, 0.8), {
+				color = Color3.fromRGB(206, 212, 222),
+				material = Enum.Material.Metal,
+			})
+			Kit.Block(parent, `Fountain{floor}_{index}`, at(x, y + 3.6, z + 1.2), Vector3.new(6, 1.2, 3), {
+				color = Color3.fromRGB(226, 230, 238),
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `FountainBasin{floor}_{index}`, at(x, y + 3.9, z + 1.2), Vector3.new(4.4, 0.5, 2), {
+				color = Color3.fromRGB(150, 190, 216),
+				material = Enum.Material.Glass,
+				transparency = 0.3,
+			}).CastShadow = false
+			Kit.Block(parent, `FountainSpout{floor}_{index}`, at(x, y + 4.6, z + 0.5), Vector3.new(0.5, 0.9, 0.5), {
+				color = Color3.fromRGB(186, 192, 202),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+
 		-- A pair of machines against the back wall of the corridor on every floor. Against the
 		-- *back* rather than the locker wall on purpose: the lockers are where the corridor
 		-- system stands people, and a cabinet in that run would be somewhere to be cornered
