@@ -84,6 +84,17 @@ local PALE_BLUE = Color3.fromRGB(146, 190, 236)
 local GLASS_TINT = Color3.fromRGB(196, 220, 240)
 local WOOD = Color3.fromRGB(158, 118, 78)
 local DARK = Color3.fromRGB(64, 68, 78)
+
+-- Stair treads and balustrade glass, taken off the reference photograph rather than invented.
+-- The stair there is charcoal against a pale building with clear glass sides; the contrast is
+-- doing the work, not the shape.
+local STAIR_TREAD = Color3.fromRGB(78, 82, 92)
+local GLASS_CLEAR = Color3.fromRGB(214, 226, 238)
+
+-- Library timber. The reference shelves are dark walnut, not the mid pine the rest of the
+-- building uses -- a library reads as a library partly because its furniture is heavier than
+-- everything around it.
+local WALNUT = Color3.fromRGB(96, 66, 46)
 local WATER = Color3.fromRGB(64, 156, 214)
 local TRACK_RED = Color3.fromRGB(168, 76, 66)
 local GRASS = Color3.fromRGB(102, 148, 84)
@@ -895,7 +906,10 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 				at(x, toY, endZ),
 				flightW,
 				flightSteps,
-				OFF_WHITE
+				-- Dark treads. The reference stair is charcoal against a pale building, and that
+				-- value contrast is the whole reason it reads as a staircase from across the
+				-- atrium. White treads in a white room are a ramp with seams.
+				STAIR_TREAD
 			)
 			if not laid then
 				error(
@@ -921,14 +935,20 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 
 			-- A rail down the open side of the flight, which is the difference between a stair
 			-- and a ramp with steps drawn on it.
-			Kit.Railing(
-				parent,
-				`StairRail{floor}_{side}`,
-				at(x + flightW / 2, fromY + 1, startZ),
-				at(x + flightW / 2, toY + 1, endZ),
-				4,
-				PALE_BLUE
-			)
+			-- Balustrades down *both* sides, in clear glass with a dark handrail -- Kit.Railing
+			-- already builds exactly that pair. It was one side only and tinted blue; the
+			-- reference is glass you can see the atrium through, which is what stops a stair in
+			-- the middle of a void feeling like a wall.
+			for edge = -1, 1, 2 do
+				Kit.Railing(
+					parent,
+					`StairRail{floor}_{side}_{edge}`,
+					at(x + edge * flightW / 2, fromY + 1, startZ),
+					at(x + edge * flightW / 2, toY + 1, endZ),
+					4,
+					GLASS_CLEAR
+				)
+			end
 		end
 	end
 	-- Kept so a future edit that shortens the atrium is told what it broke.
@@ -1282,9 +1302,42 @@ local function fitClassroom(parent: Instance, at: (number, number, number) -> Ve
 		end
 	end
 
-	-- The board, and the teacher\'s desk in front of it.
-	Kit.Block(parent, `Board{rect.id}`, at(cx, y + 8, rect.z2 - 1.2), Vector3.new(width * 0.5, 8, 0.4), { color = Color3.fromRGB(38, 42, 48) })
-	Kit.Block(parent, `TeacherDesk{rect.id}`, at(cx, y + 2.2, rect.z2 - 7), Vector3.new(9, 4.4, 3.4), { color = WOOD })
+	-- The board, framed and with a pen tray. A dark rectangle on a wall is a rectangle; a
+	-- frame and a tray are what make it a whiteboard, and they are two parts.
+	Kit.Block(parent, `BoardFrame{rect.id}`, at(cx, y + 8, rect.z2 - 1.4), Vector3.new(width * 0.5 + 1.4, 9.4, 0.3), {
+		color = Color3.fromRGB(198, 202, 210),
+	}).CastShadow = false
+	Kit.Block(parent, `Board{rect.id}`, at(cx, y + 8, rect.z2 - 1.2), Vector3.new(width * 0.5, 8, 0.4), { color = Color3.fromRGB(238, 240, 244) })
+	Kit.Block(parent, `BoardTray{rect.id}`, at(cx, y + 3.7, rect.z2 - 1.7), Vector3.new(width * 0.5, 0.4, 1), {
+		color = Color3.fromRGB(176, 180, 190),
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	-- The teacher desk, with a screen and a chair behind it. Same reasoning as the library
+	-- counter: a bare slab is a plinth, a screen on it is a desk somebody works at.
+	Kit.Block(parent, `TeacherDesk{rect.id}`, at(cx, y + 2.2, rect.z2 - 7), Vector3.new(9, 4.4, 3.4), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	Kit.Block(parent, `TeacherTop{rect.id}`, at(cx, y + 4.6, rect.z2 - 7), Vector3.new(10, 0.4, 4), { color = OFF_WHITE })
+	Kit.Block(parent, `TeacherScreen{rect.id}`, at(cx - 2, y + 6.2, rect.z2 - 6.4), Vector3.new(4.2, 2.8, 0.3), {
+		color = Color3.fromRGB(30, 32, 40),
+	}).CastShadow = false
+	Kit.Block(parent, `TeacherChair{rect.id}`, at(cx, y + 1.7, rect.z2 - 10), Vector3.new(2.8, 0.4, 2.8), { color = DARK })
+
+	-- A run of low storage down one side, and something green in the corner. Every reference
+	-- classroom has cupboards under the window and a plant; an empty perimeter is what makes a
+	-- room read as a box with desks in it.
+	Kit.Block(parent, `Storage{rect.id}`, at(rect.x1 + 4, y + 2.4, cz), Vector3.new(4, 4.8, (rect.z2 - rect.z1) * 0.45), {
+		color = OFF_WHITE,
+		collide = true,
+	})
+	Kit.Block(parent, `StorageTop{rect.id}`, at(rect.x1 + 4, y + 5, cz), Vector3.new(4.6, 0.4, (rect.z2 - rect.z1) * 0.45 + 0.6), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+	}).CastShadow = false
+	Kit.Planter(parent, `ClassPlant{rect.id}`, at(rect.x2 - 5, y + 0.2, rect.z2 - 6), 3, 9)
 end
 
 local function fitCafeteria(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
@@ -1390,20 +1443,85 @@ local function fitLibrary(parent: Instance, at: (number, number, number) -> Vect
 		local row = math.floor((index - 1) / 5)
 		local x = rect.x1 + width * ((column + 0.5) / 5)
 		local z = rect.z1 + 14 + row * 20
-		Kit.Block(parent, `Stack{index}`, at(x, y + 6, z), Vector3.new(4, 12, 16), { color = WOOD })
-		-- The books: three bands of colour rather than individual spines, which at this scale
-		-- is what a full shelf looks like and costs three parts instead of ninety.
-		for band = 1, 3 do
-			Kit.Block(parent, `Books{index}_{band}`, at(x, y + 2.5 + band * 3, z), Vector3.new(4.3, 2.2, 15), {
-				color = if band == 1 then Color3.fromRGB(196, 106, 92) elseif band == 2 then Color3.fromRGB(96, 138, 190) else Color3.fromRGB(214, 186, 108),
-			})
+		-- Taller, darker, and with a shelf line between every band. The reference stacks are
+		-- walnut, nearly ceiling height, and *densely* full -- the colour of the spines is the
+		-- brightest thing in the room and the wood is the darkest, and the room lives on that.
+		Kit.Block(parent, `Stack{index}`, at(x, y + 7.5, z), Vector3.new(4, 15, 16), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		-- Five bands rather than three, each a different mix, with a shelf board under it. A
+		-- band of flat colour reads as a painted stripe; a band with a board beneath it reads as
+		-- books standing on a shelf, and the board is one part.
+		local spines = {
+			Color3.fromRGB(198, 92, 84),
+			Color3.fromRGB(86, 132, 194),
+			Color3.fromRGB(216, 184, 104),
+			Color3.fromRGB(122, 158, 108),
+			Color3.fromRGB(158, 108, 172),
+		}
+		for band = 1, 5 do
+			local by = y + 1.6 + band * 2.7
+			Kit.Block(parent, `Books{index}_{band}`, at(x, by, z), Vector3.new(4.3, 2.1, 15), {
+				color = spines[((index + band) % #spines) + 1],
+			}).CastShadow = false
+			Kit.Block(parent, `Shelf{index}_{band}`, at(x, by - 1.2, z), Vector3.new(4.5, 0.3, 15.4), {
+				color = Color3.fromRGB(72, 50, 34),
+			}).CastShadow = false
 		end
 	end
 
-	-- The desk you are sent to, and a reading area with rugs.
-	Kit.Block(parent, "LibraryDesk", at((rect.x1 + rect.x2) / 2, y + 2.4, rect.z1 + 5), Vector3.new(22, 4.8, 4), { color = WHITE })
+	-- The desk you are sent to. Counter, worktop, and two monitors -- the reference desk has
+	-- screens on it, and a bare slab reads as a plinth rather than as somewhere staffed.
+	local cx = (rect.x1 + rect.x2) / 2
+	Kit.Block(parent, "LibraryDesk", at(cx, y + 2.4, rect.z1 + 5), Vector3.new(22, 4.8, 4), { color = WHITE })
+	Kit.Block(parent, "LibraryDeskTop", at(cx, y + 5, rect.z1 + 5), Vector3.new(23.5, 0.5, 5.2), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+	})
+	for index = -1, 1, 2 do
+		Kit.Block(parent, `LibraryMonitor{index}`, at(cx + index * 5, y + 6.8, rect.z1 + 5.6), Vector3.new(4.4, 3, 0.3), {
+			color = Color3.fromRGB(30, 32, 40),
+		}).CastShadow = false
+		Kit.Block(parent, `LibraryMonitorStand{index}`, at(cx + index * 5, y + 5.4, rect.z1 + 5.6), Vector3.new(0.6, 1.4, 0.6), {
+			color = Color3.fromRGB(120, 126, 138),
+		}).CastShadow = false
+	end
+
+	-- Rectangular rugs down the aisles, not discs. The reference lays long blue mats between
+	-- the stacks, which is a different shape doing a different job: a disc decorates a spot, a
+	-- runner tells you which way the room is walked.
 	for index = 1, FIT.RugsPerCommonRoom do
-		Kit.Rug(parent, `LibraryRug{index}`, at(rect.x1 + width * (index / (FIT.RugsPerCommonRoom + 1)), y + 0.35, rect.z1 + 10), 8, PALE_BLUE)
+		Kit.Slab(
+			parent,
+			`LibraryRug{index}`,
+			at(rect.x1 + width * (index / (FIT.RugsPerCommonRoom + 1)), y + 0.35, rect.z1 + depth * 0.45),
+			14,
+			depth * 0.5,
+			0.25,
+			{ color = Color3.fromRGB(74, 128, 200), material = Enum.Material.Fabric, collide = false }
+		)
+	end
+
+	-- Low benches between the stacks to read on, and a planter at each end of the run.
+	for index = 1, 4 do
+		local bx = rect.x1 + width * ((index - 0.5) / 4)
+		Kit.Block(parent, `LibraryBench{index}`, at(bx, y + 2.2, rect.z1 + depth * 0.72), Vector3.new(11, 0.7, 3.4), {
+			color = Color3.fromRGB(206, 210, 218),
+			collide = true,
+		})
+		for leg = -1, 1, 2 do
+			Kit.Block(parent, `LibraryBenchLeg{index}_{leg}`, at(bx + leg * 4.4, y + 1.1, rect.z1 + depth * 0.72), Vector3.new(0.5, 2.2, 3), {
+				color = Color3.fromRGB(96, 102, 114),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+	-- Beside the desk, not in the aisles. The stacks are 16 deep and centred 14 studs in, so
+	-- anything past z1 + 6 is inside a bookshelf -- which is where these first landed.
+	for side = -1, 1, 2 do
+		Kit.Planter(parent, `LibraryPlanter{side}`, at(cx + side * 15, y + 0.2, rect.z1 + 3.5), 3.4, 10)
 	end
 end
 
