@@ -6667,12 +6667,12 @@
 <Item class="Part" referent="RBXSCHOOL0482">
 <Properties>
 <string name="Name">Crest</string>
-<CoordinateFrame name="CFrame"><X>-366.5</X><Y>50.45</Y><Z>153.0</Z><R00>6.123233995736766e-17</R00><R01>0</R01><R02>1.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.0</R20><R21>0</R21><R22>6.123233995736766e-17</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-366.5</X><Y>50.45</Y><Z>153.0</Z><R00>1.0</R00><R01>-0.0</R01><R02>0</R02><R10>0.0</R10><R11>1.0</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.2</X><Y>20.0</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8653,12 +8653,12 @@
 <Item class="Part" referent="RBXSCHOOL0630">
 <Properties>
 <string name="Name">FloorDiscBig1_1</string>
-<CoordinateFrame name="CFrame"><X>-457.7</X><Y>2.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-457.7</X><Y>2.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8668,12 +8668,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0631">
 <Properties>
 <string name="Name">FloorDiscBig1_2</string>
-<CoordinateFrame name="CFrame"><X>-412.1</X><Y>2.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-412.1</X><Y>2.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8683,12 +8683,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0632">
 <Properties>
 <string name="Name">FloorDiscBig1_3</string>
-<CoordinateFrame name="CFrame"><X>-366.5</X><Y>2.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-366.5</X><Y>2.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8698,12 +8698,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0633">
 <Properties>
 <string name="Name">FloorDiscBig1_4</string>
-<CoordinateFrame name="CFrame"><X>-320.9</X><Y>2.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-320.9</X><Y>2.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8713,12 +8713,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0634">
 <Properties>
 <string name="Name">FloorDiscBig1_5</string>
-<CoordinateFrame name="CFrame"><X>-275.3</X><Y>2.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-275.3</X><Y>2.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8728,12 +8728,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0635">
 <Properties>
 <string name="Name">FloorDiscBig2_1</string>
-<CoordinateFrame name="CFrame"><X>-457.7</X><Y>20.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-457.7</X><Y>20.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8743,12 +8743,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0636">
 <Properties>
 <string name="Name">FloorDiscBig2_2</string>
-<CoordinateFrame name="CFrame"><X>-412.1</X><Y>20.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-412.1</X><Y>20.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8758,12 +8758,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0637">
 <Properties>
 <string name="Name">FloorDiscBig2_3</string>
-<CoordinateFrame name="CFrame"><X>-366.5</X><Y>20.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-366.5</X><Y>20.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8773,12 +8773,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0638">
 <Properties>
 <string name="Name">FloorDiscBig2_4</string>
-<CoordinateFrame name="CFrame"><X>-320.9</X><Y>20.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-320.9</X><Y>20.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8788,12 +8788,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0639">
 <Properties>
 <string name="Name">FloorDiscBig2_5</string>
-<CoordinateFrame name="CFrame"><X>-275.3</X><Y>20.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-275.3</X><Y>20.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8803,12 +8803,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0640">
 <Properties>
 <string name="Name">FloorDiscBig3_1</string>
-<CoordinateFrame name="CFrame"><X>-457.7</X><Y>38.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-457.7</X><Y>38.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8818,12 +8818,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0641">
 <Properties>
 <string name="Name">FloorDiscBig3_2</string>
-<CoordinateFrame name="CFrame"><X>-412.1</X><Y>38.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-412.1</X><Y>38.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8833,12 +8833,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0642">
 <Properties>
 <string name="Name">FloorDiscBig3_3</string>
-<CoordinateFrame name="CFrame"><X>-366.5</X><Y>38.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-366.5</X><Y>38.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8848,12 +8848,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0643">
 <Properties>
 <string name="Name">FloorDiscBig3_4</string>
-<CoordinateFrame name="CFrame"><X>-320.9</X><Y>38.35</Y><Z>222.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-320.9</X><Y>38.35</Y><Z>222.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8863,12 +8863,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0644">
 <Properties>
 <string name="Name">FloorDiscBig3_5</string>
-<CoordinateFrame name="CFrame"><X>-275.3</X><Y>38.35</Y><Z>214.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-275.3</X><Y>38.35</Y><Z>214.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>52.0</Y><Z>52.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4293849848</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8884,12 +8884,12 @@
 <Item class="Part" referent="RBXSCHOOL0646">
 <Properties>
 <string name="Name">FloorDiscSmall1_1</string>
-<CoordinateFrame name="CFrame"><X>-441.7</X><Y>2.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-441.7</X><Y>2.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8899,12 +8899,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0647">
 <Properties>
 <string name="Name">FloorDiscSmall1_2</string>
-<CoordinateFrame name="CFrame"><X>-396.1</X><Y>2.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-396.1</X><Y>2.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8914,12 +8914,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0648">
 <Properties>
 <string name="Name">FloorDiscSmall1_3</string>
-<CoordinateFrame name="CFrame"><X>-350.5</X><Y>2.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-350.5</X><Y>2.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8929,12 +8929,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0649">
 <Properties>
 <string name="Name">FloorDiscSmall1_4</string>
-<CoordinateFrame name="CFrame"><X>-304.9</X><Y>2.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-304.9</X><Y>2.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8944,12 +8944,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0650">
 <Properties>
 <string name="Name">FloorDiscSmall1_5</string>
-<CoordinateFrame name="CFrame"><X>-259.3</X><Y>2.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-259.3</X><Y>2.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8959,12 +8959,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0651">
 <Properties>
 <string name="Name">FloorDiscSmall2_1</string>
-<CoordinateFrame name="CFrame"><X>-441.7</X><Y>20.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-441.7</X><Y>20.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8974,12 +8974,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0652">
 <Properties>
 <string name="Name">FloorDiscSmall2_2</string>
-<CoordinateFrame name="CFrame"><X>-396.1</X><Y>20.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-396.1</X><Y>20.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -8989,12 +8989,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0653">
 <Properties>
 <string name="Name">FloorDiscSmall2_3</string>
-<CoordinateFrame name="CFrame"><X>-350.5</X><Y>20.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-350.5</X><Y>20.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9004,12 +9004,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0654">
 <Properties>
 <string name="Name">FloorDiscSmall2_4</string>
-<CoordinateFrame name="CFrame"><X>-304.9</X><Y>20.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-304.9</X><Y>20.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9019,12 +9019,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0655">
 <Properties>
 <string name="Name">FloorDiscSmall2_5</string>
-<CoordinateFrame name="CFrame"><X>-259.3</X><Y>20.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-259.3</X><Y>20.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9034,12 +9034,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0656">
 <Properties>
 <string name="Name">FloorDiscSmall3_1</string>
-<CoordinateFrame name="CFrame"><X>-441.7</X><Y>38.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-441.7</X><Y>38.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9049,12 +9049,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0657">
 <Properties>
 <string name="Name">FloorDiscSmall3_2</string>
-<CoordinateFrame name="CFrame"><X>-396.1</X><Y>38.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-396.1</X><Y>38.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9064,12 +9064,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0658">
 <Properties>
 <string name="Name">FloorDiscSmall3_3</string>
-<CoordinateFrame name="CFrame"><X>-350.5</X><Y>38.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-350.5</X><Y>38.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9079,12 +9079,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0659">
 <Properties>
 <string name="Name">FloorDiscSmall3_4</string>
-<CoordinateFrame name="CFrame"><X>-304.9</X><Y>38.39</Y><Z>211.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-304.9</X><Y>38.39</Y><Z>211.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4283073744</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -9094,12 +9094,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0660">
 <Properties>
 <string name="Name">FloorDiscSmall3_5</string>
-<CoordinateFrame name="CFrame"><X>-259.3</X><Y>38.39</Y><Z>223.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-259.3</X><Y>38.39</Y><Z>223.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>30.0</Y><Z>30.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -12793,12 +12793,12 @@
 <Item class="Part" referent="RBXSCHOOL0936">
 <Properties>
 <string name="Name">LibraryRug1</string>
-<CoordinateFrame name="CFrame"><X>-351.75</X><Y>2.4</Y><Z>235.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-351.75</X><Y>2.4</Y><Z>235.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>16.0</Y><Z>16.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -12808,12 +12808,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0937">
 <Properties>
 <string name="Name">LibraryRug2</string>
-<CoordinateFrame name="CFrame"><X>-338.0</X><Y>2.4</Y><Z>235.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-338.0</X><Y>2.4</Y><Z>235.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>16.0</Y><Z>16.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -12823,12 +12823,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL0938">
 <Properties>
 <string name="Name">LibraryRug3</string>
-<CoordinateFrame name="CFrame"><X>-324.25</X><Y>2.4</Y><Z>235.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-324.25</X><Y>2.4</Y><Z>235.0</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>16.0</Y><Z>16.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -14566,12 +14566,12 @@
 <Item class="Part" referent="RBXSCHOOL1065">
 <Properties>
 <string name="Name">LoungeRug1</string>
-<CoordinateFrame name="CFrame"><X>-294.75</X><Y>2.45</Y><Z>280.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-294.75</X><Y>2.45</Y><Z>280.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4288066268</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -14581,12 +14581,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL1066">
 <Properties>
 <string name="Name">LoungeRug2</string>
-<CoordinateFrame name="CFrame"><X>-281.0</X><Y>2.45</Y><Z>280.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-281.0</X><Y>2.45</Y><Z>280.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4288066268</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -14596,12 +14596,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL1067">
 <Properties>
 <string name="Name">LoungeRug3</string>
-<CoordinateFrame name="CFrame"><X>-267.25</X><Y>2.45</Y><Z>280.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-267.25</X><Y>2.45</Y><Z>280.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4288066268</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -27796,12 +27796,12 @@
 <Item class="Part" referent="RBXSCHOOL2076">
 <Properties>
 <string name="Name">staffRug1</string>
-<CoordinateFrame name="CFrame"><X>-294.75</X><Y>38.4</Y><Z>274.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-294.75</X><Y>38.4</Y><Z>274.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -27811,12 +27811,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL2077">
 <Properties>
 <string name="Name">staffRug2</string>
-<CoordinateFrame name="CFrame"><X>-281.0</X><Y>38.4</Y><Z>274.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-281.0</X><Y>38.4</Y><Z>274.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>
@@ -27826,12 +27826,12 @@
 </Item><Item class="Part" referent="RBXSCHOOL2078">
 <Properties>
 <string name="Name">staffRug3</string>
-<CoordinateFrame name="CFrame"><X>-267.25</X><Y>38.4</Y><Z>274.5</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-267.25</X><Y>38.4</Y><Z>274.5</Z><R00>6.123233995736766e-17</R00><R01>-1.0</R01><R02>0</R02><R10>1.0</R10><R11>6.123233995736766e-17</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.12</X><Y>14.0</Y><Z>14.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
-<token name="shape">1</token>
+<token name="shape">2</token>
 <Color3uint8 name="Color3uint8">4287807212</Color3uint8>
 <float name="Transparency">0.0</float>
 <float name="Reflectance">0</float>

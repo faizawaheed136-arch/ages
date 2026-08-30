@@ -382,7 +382,16 @@ def emit(rows: list[dict]) -> None:
                 color = (row["r"], row["g"], row["b"])
                 # Cylinders (rugs, plates) come out as flat boxes: rbxmx writes blocks and
                 # balls, and a disc drawn as a square is a much smaller lie than a missing one.
-                if row["shape"] == "Ball":
+                if row["shape"] == "Cylinder":
+                    # Baked as a real cylinder rather than falling through to spun_box, which
+                    # turned every disc in the building into a square. The roll is what lays it
+                    # flat; see Kit.Rug and rbxmx.disc.
+                    rbxmx.disc(
+                        row["name"], center, size, row.get("roll", 0),
+                        color, material=material,
+                        transparency=row["transparency"], collide=row["collide"],
+                    )
+                elif row["shape"] == "Ball":
                     rbxmx.ball(
                         row["name"], center, size,
                         color, material=material,

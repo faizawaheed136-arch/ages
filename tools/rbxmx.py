@@ -313,6 +313,33 @@ def ball(name, center, size, color, material=SMOOTH, transparency=0.0, collide=T
           color, material, transparency, collide, 0, tags, attrs, children)
 
 
+def disc(name, center, size, roll, color, material=SMOOTH, transparency=0.0,
+         collide=True, tags=None, attrs=None, children=""):
+    """A cylinder (`Part.Shape` = Cylinder), rolled `roll` degrees about Z.
+
+    This existed nowhere and it needed to: without it every cylinder emitted here
+    fell through to `spun_box` and came out a **rectangle**. A Roblox cylinder's
+    length runs along X, so a flat disc lying on the floor is a quarter turn about
+    Z -- which is what `Kit.Rug` does at runtime, and what had no equivalent when
+    that same geometry was baked into an asset. Every rug, floor inlay and light
+    pool in the school was a square in the built map and a circle in play.
+
+    Size is the unrotated part size, the same convention the runtime uses:
+    (thickness, diameter, diameter) for a floor disc.
+    """
+    cx, cy, cz = center
+    sx, sy, sz = size
+    rad = math.radians(roll)
+    c, s = math.cos(rad), math.sin(rad)
+    # Roll about Z: +X turns toward +Y. At 90 the cylinder's axis stands vertical,
+    # which is what lays it flat as a disc.
+    rot = (f"<R00>{c}</R00><R01>{-s}</R01><R02>0</R02>"
+           f"<R10>{s}</R10><R11>{c}</R11><R12>0</R12>"
+           f"<R20>0</R20><R21>0</R21><R22>1</R22>")
+    _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
+          color, material, transparency, collide, 2, tags, attrs, children)
+
+
 def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
              collide=True, tags=None, attrs=None, children=""):
     """A world-space box spun `yaw` degrees about Y, given centre-and-size.
