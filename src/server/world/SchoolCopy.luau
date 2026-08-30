@@ -1,0 +1,2950 @@
+--!strict
+-- **The editable copy of school v1. This file is a fork and it is meant to diverge.**
+--
+-- `world/School.luau` builds the v1 that is already in the map and players walk around; this
+-- builds `Workspace.SchoolV1Copy`, which stands on its own empty ground west of it. They start
+-- identical. Every change asked for on the copy lands here, and v1 is never touched.
+--
+-- The fork is one line deep, which is why it is a fork rather than a rewrite: the whole builder
+-- hangs off `Config.School.Building`, so the copy takes a deep copy of that table, applies its
+-- own overrides, and the other 2900 lines are unchanged. Read `PLAN` below to see exactly how
+-- the copy differs from v1 -- if it is not in there, the two are the same.
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+local Kit = require(script.Parent.Kit)
+local StandDown = require(script.Parent.StandDown)
+
+local SchoolCopy = {}
+
+
+-- ---------------------------------------------------------------------------------------
+-- What the copy changes about v1
+-- ---------------------------------------------------------------------------------------
+
+-- A deep copy, because `Config.School.Building` is a live table v1 is reading at the same time.
+-- Mutating it in place would edit v1 from here, which is the one thing this file exists to
+-- avoid, and it would do it silently.
+local function deepCopy(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local out = {}
+	for key, inner in pairs(value) do
+		out[key] = deepCopy(inner)
+	end
+	return out
+end
+
+local PLAN = deepCopy(Config.School.Building)
+
+-- **Every difference from v1 is in this block and nowhere else.**
+--
+-- Wide enough for two players to pass without either stopping. v1 runs 16, which is walkable
+-- and reads as a service corridor; the brief asks for 20-24 and 24 is the top of that, which is
+-- also what lets a locker bank stand against a wall without narrowing the route to nothing.
+PLAN.CorridorWidthStuds = 24
+
+-- Two floors, hard cap. v1 is already two; this is written down so that a later change adding a
+-- storey has to argue with a line of code rather than slip past. Extra space comes from the
+-- footprint below, never from another floor.
+PLAN.Floors = 2
+
+-- Where the extra room comes from instead. The wider corridor has to be taken out of something,
+-- and taking it out of the rooms would make every classroom shallower -- so the building grows
+-- on Z by the 8 studs the corridor gained, and the rooms keep the depth they had.
+PLAN.DepthStuds = Config.School.Building.DepthStuds + 8
+
+local BUILDING = PLAN
+local ENTRANCE = BUILDING.Entrance
+local POOL = BUILDING.Pool
+local GYM = BUILDING.Gym
+local TRACK = BUILDING.Track
+local FIT = BUILDING.FitOut
+-- How tall a room door stands.
+--
+-- Twelve. Eight is the textbook number -- an R15 avatar is five studs and builders use seven
+-- to eight for a door -- and it was still wrong here, because those numbers are for a room with
+-- a 10-stud ceiling. In a 27-stud storey an 8-stud door is a hatch: correct against the avatar
+-- and far too small against the wall it is cut into. A door has to be read against the room.
+local DOOR_H = 12
+local EVENTS = BUILDING.Events
+local LOUNGE = BUILDING.Lounge
+local VEND = BUILDING.Vending
+
+local W = BUILDING.WidthStuds
+local D = BUILDING.DepthStuds
+
+-- How far the building sits from its place point. Applied once, in Build's toWorld, so every
+-- room anchor, every prop and the baked asset all move together -- an offset applied in more
+-- than one place is an offset that will disagree with itself.
+local OFFSET = Vector3.new(BUILDING.OffsetXStuds, BUILDING.OffsetYStuds, BUILDING.OffsetZStuds)
+local FLOOR_H = BUILDING.FloorHeightStuds
+local SLAB = BUILDING.SlabThicknessStuds
+local WALL_T = BUILDING.WallThicknessStuds
+local CORRIDOR_W = BUILDING.CorridorWidthStuds
+local BAND_D = BUILDING.BackBandDepthStuds
+local LABEL_DIST = BUILDING.LabelMaxDistanceStuds
+
+-- The palette. Inline rather than in Config for the reason Studio gives about its furniture
+-- colours: a colour is not a tunable with a safe range, it is a decision, and a building
+-- whose palette lived in a settings file would be a building nobody could look at and change.
+--
+-- White, cool grey and one blue, which is what the reference is: a modern school reads as
+-- bright and low-contrast, and every accent in it is the same blue doing different jobs.
+local WHITE = Color3.fromRGB(242, 243, 246)
+local OFF_WHITE = Color3.fromRGB(228, 230, 235)
+local TILE = Color3.fromRGB(232, 232, 234)
+local CONCRETE = Color3.fromRGB(176, 178, 182)
+local BLUE = Color3.fromRGB(58, 122, 206)
+local DEEP_BLUE = Color3.fromRGB(36, 84, 158)
+local PALE_BLUE = Color3.fromRGB(146, 190, 236)
+local GLASS_TINT = Color3.fromRGB(196, 220, 240)
+local WOOD = Color3.fromRGB(158, 118, 78)
+local DARK = Color3.fromRGB(64, 68, 78)
+
+-- Stair treads, taken off the reference photograph rather than invented: charcoal against a
+-- pale building. The contrast is doing the work, not the shape. The balustrade is posts rather
+-- than glass now -- a curved flight cannot take a flat panel, and a fanned run of posts is what
+-- makes the turn legible from across the lobby.
+local STAIR_TREAD = Color3.fromRGB(78, 82, 92)
+
+-- Library timber. The reference shelves are dark walnut, not the mid pine the rest of the
+-- building uses -- a library reads as a library partly because its furniture is heavier than
+-- everything around it.
+local WALNUT = Color3.fromRGB(96, 66, 46)
+local WATER = Color3.fromRGB(64, 156, 214)
+local TRACK_RED = Color3.fromRGB(168, 76, 66)
+local GRASS = Color3.fromRGB(102, 148, 84)
+
+-- One named room, in local coordinates. Rectangles rather than polygons because every room
+-- in a school is a rectangle, and the moment one is not, the fit-out loops that walk them
+-- all stop working.
+type Rect = {
+	id: string,
+	label: string,
+	-- Which storey, 1-based. 1 is the ground floor.
+	floor: number,
+	-- Corners, in local x/z.
+	x1: number,
+	z1: number,
+	x2: number,
+	z2: number,
+	-- What to put in it. "class" gets desks, "common" gets rugs and planters, "none" gets
+	-- lights and a sign and nothing else -- which is right for rooms whose furniture is laid
+	-- by whichever verb owns them.
+	kind: string,
+}
+
+export type Plan = {
+	center: Vector3,
+	-- The middle of each named room, in world coordinates, at its own floor level. What the
+	-- verb modules position against.
+	rooms: { [string]: Vector3 },
+	-- The front door, the middle of the atrium, and the middle of the track infield -- named
+	-- separately because they are destinations rather than rooms.
+	entrance: Vector3,
+	atrium: Vector3,
+	field: Vector3,
+}
+
+local plan: Plan? = nil
+local folder: Folder? = nil
+
+local function schoolFolder(): Folder
+	local existing = folder
+	if existing ~= nil and existing.Parent ~= nil then
+		return existing
+	end
+	local made = Instance.new("Folder")
+	made.Name = "SchoolBuilding"
+	-- Not parented into the world when the building is baked: the parts are only being laid
+	-- to work out where the rooms are, and are destroyed as soon as that is known. A folder
+	-- that reached workspace first would replicate a second school for one frame.
+	if not BUILDING.Baked then
+		made.Parent = workspace
+	end
+	folder = made
+	return made
+end
+
+-- The height of a storey\'s walking surface. Floor 1 is the ground the place point sits on.
+local function floorY(floor: number): number
+	return (floor - 1) * FLOOR_H
+end
+
+-- The plan of the whole school, in local coordinates.
+--
+-- Written out as data rather than laid by hand, because everything downstream -- the walls,
+-- the lights, the signs, the desks and the anchors the verbs hang off -- is a loop over this
+-- list. Moving a room is one line here and the fit-out follows it.
+--
+-- The layout, front to back: the plaza and the doors, then the atrium cut through all three
+-- storeys, then open circulation, then the corridor spine across the building, then a band
+-- of rooms along the back wall. Four rooms per floor, cut out of that band in equal widths.
+--
+-- Two things about it are load bearing rather than arbitrary. The band sits **entirely
+-- behind** the corridor -- an earlier version had the ground floor rooms starting in front
+-- of it, so the cafeteria tables and the corridor lockers occupied the same studs. And the
+-- band is 99 deep because the art room lays its study wall and its paint cupboard 81 apart;
+-- at the 32 it used to be, the cupboard stood outside the building.
+--
+-- The ground floor gives its whole band to the cafeteria and the library, because those are
+-- the two rooms a school actually gathers in. The teaching rooms are upstairs, which is also
+-- what puts a flight of stairs between a player and their lesson.
+local function planRooms(): { Rect }
+	local half = W / 2
+	local backZ = D - WALL_T
+	local bandFront = backZ - BAND_D
+	local usable = W - WALL_T * 2
+	local gaps = BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)
+	local roomW = (usable - gaps) / BUILDING.RoomsPerFloor
+
+	-- The left edge of the nth slot in the band, 0-based. One expression rather than six
+	-- hand-written pairs of corners, so a change to the room count cannot leave a gap or an
+	-- overlap behind.
+	local function slotX(index: number): (number, number)
+		local x1 = -half + WALL_T + index * (roomW + BUILDING.RoomGapStuds)
+		return x1, x1 + roomW
+	end
+
+	local a1, a2 = slotX(0)
+	local b1, b2 = slotX(1)
+	local c1, c2 = slotX(2)
+	local d1, d2 = slotX(3)
+	local e1, e2 = slotX(4)
+	local f1, f2 = slotX(5)
+
+	-- **Ground floor is where you go; first floor is where you are sent.**
+	--
+	-- That is the whole organising idea, and it is why this is worth writing down rather than
+	-- being an arbitrary list. Everything on the ground is somewhere a player *chooses* to be
+	-- between lessons -- eat, read, sit, cook -- and it is all reachable from the lobby without
+	-- a stair. Everything upstairs is a subject with a timetable slot. A player who has learned
+	-- that never has to think about which floor anything is on again.
+	--
+	-- Only five of these anchors are actually required by code: science, art, reading, music
+	-- and library. The rest exist because a school with five rooms in it is a set.
+	return {
+		-- Ground. The cafeteria and the library take two slots each: one is the room the whole
+		-- school is in at once, the other needs the run for its stacks, and a third of the
+		-- frontage each is what stops them reading as classrooms with odd furniture.
+		{ id = "cafeteria", label = "Cafeteria", floor = 1, x1 = a1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "cafeteria" },
+		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "library" },
+		{ id = "computers", label = "Computer Lab", floor = 1, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
+		-- The one room in the building nobody sends you to. Every other space here is somewhere
+		-- you are told to be; this is the one you choose, and it is what makes the school
+		-- somewhere a player hangs around rather than somewhere they visit twice a year.
+		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "lounge" },
+		{ id = "cooking", label = "Cooking Lab", floor = 1, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "cooking" },
+		-- Computers. This was lost when the third floor went, which was a mistake: the brief was to
+		-- even three floors of rooms into two, not to delete a floor's worth of school. It shares
+		-- the library's two slots rather than taking one of its own -- a computer room and a
+		-- library are the same kind of room to a player, and putting them together is what a real
+		-- school does with its resource centre.
+
+		-- First floor: the subjects. Science, Art and Reading are named here and left empty on
+		-- purpose -- Lab.luau, Studio.luau and ReadingRoom.luau lay their own benches inside
+		-- them, and this file must never learn what a bench is.
+		--
+		-- Art needs depth rather than width: its wall and its paint cupboard sit 81 studs apart,
+		-- which is the number the whole 99-stud band is sized around.
+		{ id = "science", label = "Science Lab", floor = 2, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "science" },
+		{ id = "art", label = "Art Studio", floor = 2, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "art" },
+		{ id = "reading", label = "Reading Room", floor = 2, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "reading" },
+		{ id = "music", label = "Music Room", floor = 2, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
+		{ id = "english", label = "English", floor = 2, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "class" },
+		{ id = "staff", label = "Staff Room", floor = 2, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "common" },
+	}
+end
+
+local ROOMS = planRooms()
+
+local function rectCenter(rect: Rect): (number, number)
+	return (rect.x1 + rect.x2) / 2, (rect.z1 + rect.z2) / 2
+end
+
+-- Where the atrium void sits, in local coordinates. Set back from the glass so the front
+-- elevation has two floors of real rooms behind it rather than a hole you can see into from
+-- the road, and centred on x so the entrance walks straight into it.
+local ATRIUM_X1 = -BUILDING.AtriumWidthStuds / 2
+local ATRIUM_X2 = BUILDING.AtriumWidthStuds / 2
+local ATRIUM_Z1 = 8
+local ATRIUM_Z2 = 14 + BUILDING.AtriumDepthStuds
+-- Where the *hole* in the upper floor stops, as opposed to where the atrium stops. The strip
+-- between the two is the gallery: real floor on the first floor, across the back of the void,
+-- which is what the stairs arrive on. See Config.School.Building.GalleryDepthStuds.
+local VOID_Z2 = ATRIUM_Z2 - BUILDING.GalleryDepthStuds
+
+-- **Where the two stairs stand, and therefore where the holes in the upper floor are.**
+--
+-- These are derived rather than chosen, and it matters that they are, because the openings in
+-- the first floor have to be exactly the flights' footprint -- any smaller and a tread ends up
+-- under the slab with no headroom over it, any larger and the floor is missing for no reason.
+--
+-- A quarter-turn flight sweeps from pointing at its own side wall to pointing at the corridor.
+-- That puts its arc inside a box reaching `radius + width/2` back from the turn centre and the
+-- same distance out to the side, so placing the centre that far in from the atrium wall lands
+-- the flight exactly against it. The two boxes then leave a bridge down the middle of the
+-- atrium, which is the piece of first floor that used to be missing entirely.
+local STAIR_R = BUILDING.StairRadiusStuds
+local STAIR_W = BUILDING.StairWidthStuds
+local STAIR_CX = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
+-- The turn centre sits a radius short of the void's back edge, so the head of the arc finishes
+-- exactly where the gallery slab begins and you step straight off it onto solid floor.
+local STAIR_CZ = VOID_Z2 - STAIR_R
+-- The stairwell openings: outer edge flush with the atrium wall, inner edge leaving the bridge.
+local WELL_Z1 = STAIR_CZ - STAIR_W / 2
+local WELL_X_OUT = STAIR_CX + STAIR_R + STAIR_W / 2
+local WELL_X_IN = STAIR_CX - STAIR_W / 2
+
+-- ---------------------------------------------------------------------------------------
+-- The site: ground, plaza, approach.
+-- ---------------------------------------------------------------------------------------
+
+local function buildSite(parent: Instance, at: (number, number, number) -> Vector3)
+	-- **Everything on the approach is placed outboard of the wings.**
+	--
+	-- It used to be placed from PlazaWidthStuds while the wings were placed from the pediment
+	-- and their own width -- two different numbers that were never going to agree. The wings
+	-- reach 74 studs from the centreline and the trees were at 43, the hedges at 53, the
+	-- flagpoles and bins nearer still, so every one of them stood inside a wing. That is the
+	-- clutter at the front of the building: not too much furniture, furniture in the wall.
+	--
+	-- wingOuter is the same expression buildShell lays the wings from, so the two cannot drift
+	-- apart again. Anything that has to stand clear of the building measures from here.
+	local wingOuter = ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4
+
+	local half = W / 2
+	local plazaD = ENTRANCE.PlazaDepthStuds
+
+	-- A hardstanding under the whole campus, a little proud of the terrain so the building
+	-- never sits half-buried when the street it is on is regenerated at a different height.
+	-- Top a hair *below* the anchor rather than a hair above it.
+	--
+	-- Kit.Slab positions by its top surface, so at +0.1 the campus closed over the place point
+	-- standing at the anchor's own height -- the marker was inside the slab, and check_town
+	-- reports that as "nothing at all under it". It never showed while the school stood on the
+	-- town's own ground, because that ground was underneath at the right height; moving the
+	-- school onto empty land made this slab the only thing beneath the marker.
+	Kit.Slab(parent, "Campus", at(0, -0.05, D / 2 - plazaD / 2), W + POOL.HallWidthStuds * 2 + 40, D + plazaD + 40, 0.6, {
+		color = CONCRETE,
+		material = Enum.Material.Concrete,
+	})
+
+	-- The plaza in front of the doors, in a lighter tone so the approach reads as a route
+	-- rather than as more of the same surface.
+	Kit.Slab(parent, "Plaza", at(0, 0.25, -plazaD / 2), ENTRANCE.PlazaWidthStuds, plazaD, 0.4, {
+		color = OFF_WHITE,
+	})
+
+	-- **No terrace, and no steps.** There was a four-stud platform here with a flight up to it
+	-- and cheek walls down the sides, and it was a mistake: it put a step across the single
+	-- route into the building and narrowed what was left of the doorway between two walls. A
+	-- school entrance is somewhere a crowd walks through at once, and anything standing in the
+	-- middle of it is wrong however good it looks from the road.
+	--
+	-- The threshold it was reaching for is a shallow apron instead: one stud, the full width of
+	-- the frontage, nothing to climb and nothing to walk round.
+	Kit.Slab(parent, "EntranceApron", at(0, 1.25, -ENTRANCE.ApronDepthStuds / 2), ENTRANCE.PlazaWidthStuds, ENTRANCE.ApronDepthStuds, 1, {
+		color = OFF_WHITE,
+		material = Enum.Material.Concrete,
+	})
+
+
+	-- Bins along the approach, by the benches and the crossing.
+	for index = 1, BUILDING.BinsOutside do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		-- Along the edge of the plaza rather than 4 studs inside a wing, and pushed forward so
+		-- the row runs down the approach instead of starting under the building.
+		local x = side * (ENTRANCE.PlazaWidthStuds / 2 + 2)
+		local z = -ENTRANCE.ApronDepthStuds - 8 - row * 18
+		Kit.Block(parent, `OutdoorBin{index}`, at(x, 2.6, z), Vector3.new(4.2, 5, 4.2), {
+			color = Color3.fromRGB(58, 72, 88),
+			material = Enum.Material.Metal,
+			collide = true,
+		})
+		Kit.Block(parent, `OutdoorBinLid{index}`, at(x, 5.3, z), Vector3.new(4.8, 0.6, 4.8), {
+			color = Color3.fromRGB(40, 52, 66),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+
+	-- No flagpoles here. The building already raises a pair either side of the doors further
+	-- down this function, and I added a second set without checking first -- two sets on one
+	-- forecourt, the outer pair standing inside a wing.
+
+	-- Black railings along the front boundary, broken either side of the crossing.
+	--
+	-- The reference fences its whole frontage, and that is what makes the forecourt a
+	-- forecourt rather than the building simply stopping where the pavement starts. Broken at
+	-- the middle rather than run straight through, because a fence across your own entrance is
+	-- the one place it must not be.
+	local fenceZ = -plazaD - 4
+	local gap = ENTRANCE.PlazaWidthStuds / 2 + 6
+	for side = -1, 1, 2 do
+		local inner = side * gap
+		local outer = side * (wingOuter + 34)
+		Kit.Block(parent, `FenceRail{side}Top`, at((inner + outer) / 2, ENTRANCE.RailingHeightStuds, fenceZ), Vector3.new(math.abs(outer - inner), 0.5, 0.5), {
+			color = Color3.fromRGB(30, 32, 38),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `FenceRail{side}Mid`, at((inner + outer) / 2, ENTRANCE.RailingHeightStuds * 0.45, fenceZ), Vector3.new(math.abs(outer - inner), 0.4, 0.4), {
+			color = Color3.fromRGB(30, 32, 38),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		local span = math.abs(outer - inner)
+		local posts = math.max(2, math.floor(span / ENTRANCE.RailingSpacingStuds))
+		for index = 0, posts do
+			local x = inner + (outer - inner) * (index / posts)
+			Kit.Block(parent, `FencePost{side}_{index}`, at(x, ENTRANCE.RailingHeightStuds / 2, fenceZ), Vector3.new(0.5, ENTRANCE.RailingHeightStuds, 0.5), {
+				color = Color3.fromRGB(30, 32, 38),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+
+	-- The crossing outside, which is the one piece of the approach that says "there is a road
+	-- here and children cross it" without a single sign.
+	for stripe = 1, 7 do
+		local x = -18 + (stripe - 1) * 6
+		Kit.Slab(parent, `Crossing{stripe}`, at(x, 0.3, -plazaD - 10), 3.4, 20, 0.3, { color = WHITE })
+	end
+
+	-- Clipped conical topiary down both sides of the approach, not round park trees. See
+	-- Kit.Topiary: a row of these is what makes the frontage read as landscaping somebody
+	-- maintains, which is the single most recognisable thing about the reference's forecourt.
+	for side = -1, 1, 2 do
+		for index = 1, ENTRANCE.TreesPerSide do
+			local z = -plazaD * (index / (ENTRANCE.TreesPerSide + 1))
+			Kit.Topiary(
+				parent,
+				`ApproachTopiary{side}_{index}`,
+				at(side * (wingOuter + 10), 0.4, z),
+				ENTRANCE.TopiaryHeightStuds,
+				ENTRANCE.TopiaryTiers
+			)
+		end
+		Kit.Block(parent, `ApproachHedge{side}`, at(side * (wingOuter + 22), 3, -plazaD / 2), Vector3.new(10, 6, plazaD), {
+			color = GRASS,
+			material = Enum.Material.Grass,
+		})
+	end
+
+	-- The welcome sign over the doors, and the school\'s name on the plaza. Two pieces because
+	-- they are read from different distances: the name from the road, the welcome at the door.
+	local nameBoard = Kit.Block(parent, "NameBoard", at(0, 0.5, -plazaD + 6), Vector3.new(46, 0.6, 8), { color = OFF_WHITE })
+	Kit.Sign(nameBoard, "AGES HIGH SCHOOL", 46, LABEL_DIST * 3, DEEP_BLUE)
+
+	-- Above the door head, not across it. This sat at canopy height minus three, which put a
+	-- 26-stud white board straight over the top third of a 17-stud doorway -- the single thing
+	-- most responsible for the entrance being unreadable from the plaza. A sign belongs on the
+	-- wall above an opening; the moment it overlaps the opening it is not a sign, it is a lintel.
+	local welcome = Kit.Block(parent, "WelcomeBoard", at(0, ENTRANCE.DoorHeightStuds + 3.4, -2), Vector3.new(26, 3.2, 0.5), { color = WHITE })
+	Kit.Sign(welcome, "WELCOME", 26, LABEL_DIST * 2, BLUE)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The shell: slabs, walls, glass, columns, roof.
+-- ---------------------------------------------------------------------------------------
+
+-- One storey\'s floor slab, with the atrium cut out of it as four rectangles around the void.
+--
+-- Four pieces rather than a slab with a hole, because Roblox has no hole: a floor is solid
+-- or it is not there, and the only way to have a void in one is to lay the ring around it.
+-- One storey's floor slab.
+--
+-- **The upper floor is solid except for the two stairwells.** It used to be cut to the whole
+-- footprint of the atrium -- ninety studs by thirty-six of nothing -- on the theory that this
+-- made the lobby a double-height space. What it actually made was a first floor with its
+-- middle missing: you came up a flight and arrived at the edge of a hole, and the fix for that
+-- was a landing slab hanging in mid-air at the head of each stair.
+--
+-- Now the only holes are the flights themselves. The lobby keeps its height as two tall shafts
+-- with a staircase in each, which is a better version of the same idea -- daylight comes down
+-- them, you can see between floors, and the bridge between them is somewhere to stand and look
+-- over. Everything else up there is floor you can walk on.
+--
+-- Five pieces, and the shape is worth reading off the names: a band across the front of the
+-- building, a band across the back, and between them the two outer edges plus the bridge down
+-- the middle. The stairwells are what is left over.
+local function buildSlabWithVoid(parent: Instance, at: (number, number, number) -> Vector3, name: string, y: number, cut: boolean)
+	local half = W / 2
+	if not cut then
+		Kit.Slab(parent, name, at(0, y, D / 2), W, D, SLAB, { color = TILE })
+		return
+	end
+
+	-- In front of the stairwells: the whole width of the building, from the front wall to where
+	-- the flights begin. This band did not exist before and is most of what was missing.
+	Kit.Slab(parent, `{name}Front`, at(0, y, WELL_Z1 / 2), W, WELL_Z1, SLAB, { color = TILE })
+	-- Behind them: the gallery and everything back to the rear wall.
+	Kit.Slab(parent, `{name}Back`, at(0, y, (VOID_Z2 + D) / 2), W, D - VOID_Z2, SLAB, { color = TILE })
+
+	-- The band the stairwells are cut out of, in three pieces.
+	local bandZ = (WELL_Z1 + VOID_Z2) / 2
+	local bandD = VOID_Z2 - WELL_Z1
+	local edgeW = half - WELL_X_OUT
+	Kit.Slab(parent, `{name}Left`, at((-half - WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
+	Kit.Slab(parent, `{name}Right`, at((half + WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
+	-- The bridge between the two stairwells, over the middle of the lobby.
+	Kit.Slab(parent, `{name}Bridge`, at(0, y, bandZ), WELL_X_IN * 2, bandD, SLAB, { color = TILE })
+
+	-- A rail round each stairwell, or the first person to walk the bridge in the dark goes over
+	-- the side. This is the one piece of the building that is safety rather than decoration.
+	for side = -1, 1, 2 do
+		local outer = side * WELL_X_OUT
+		local inner = side * WELL_X_IN
+		local tag = if side < 0 then "L" else "R"
+		-- The inner edge, along the bridge.
+		Kit.Railing(parent, `{name}Well{tag}Inner`, at(inner, y, WELL_Z1), at(inner, y, VOID_Z2), 4, PALE_BLUE)
+		-- The front edge, along the new front band.
+		Kit.Railing(parent, `{name}Well{tag}Front`, at(inner, y, WELL_Z1), at(outer, y, WELL_Z1), 4, PALE_BLUE)
+		-- And the outer edge against the atrium wall. It is a drop like the other two; the only
+		-- side left open is the one the stairs arrive on, which is the point of the whole thing.
+		Kit.Railing(parent, `{name}Well{tag}Outer`, at(outer, y, WELL_Z1), at(outer, y, VOID_Z2), 4, PALE_BLUE)
+	end
+end
+
+
+-- The front of the building: pediment, crest, welcome board, pilasters, hedges and lamps.
+--
+-- Split out of buildShell rather than folded into it, because everything here is *elevation*
+-- rather than structure -- none of it holds a floor up, and all of it exists so the school
+-- reads as a school from the road. buildShell is about where the walls are; this is about
+-- what the walls look like when you arrive.
+local function buildFrontage(parent: Instance, at: (number, number, number) -> Vector3)
+	local half = W / 2
+	local roofY = 0.4 + FLOOR_H * BUILDING.Floors
+
+	-- The pediment, stepped rather than a true triangle: Roblox has no wedge in this kit and a
+	-- staircase of five slabs reads as a gable from the ground, which is the only place anyone
+	-- looks at it from.
+	for step = 1, ENTRANCE.PedimentSteps do
+		local share = (step - 1) / ENTRANCE.PedimentSteps
+		local width = ENTRANCE.PedimentWidthStuds * (1 - share)
+		local y = roofY + (ENTRANCE.PedimentRiseStuds / ENTRANCE.PedimentSteps) * (step - 0.5)
+		Kit.Block(parent, `Pediment{step}`, at(0, y, -1.2), Vector3.new(width, ENTRANCE.PedimentRiseStuds / ENTRANCE.PedimentSteps + 0.2, 3), {
+			color = WHITE,
+		})
+	end
+
+	-- The crest. A disc with the school's initials on it, which is the detail the reference
+	-- puts dead centre above the doors and the one that makes the building feel named.
+	local crest = Instance.new("Part")
+	crest.Name = "Crest"
+	crest.Shape = Enum.PartType.Cylinder
+	crest.Size = Vector3.new(1.2, ENTRANCE.CrestRadiusStuds * 2, ENTRANCE.CrestRadiusStuds * 2)
+	-- Turned to face the road: a Roblox cylinder runs along X, so it needs a quarter turn about
+	-- Y to present its face forward rather than its edge.
+	crest.CFrame = CFrame.new(at(0, roofY - 6, -2)) * CFrame.Angles(0, math.rad(90), 0)
+	crest.Anchored = true
+	crest.CanCollide = false
+	crest.Color = PALE_BLUE
+	crest.Material = Enum.Material.SmoothPlastic
+	crest.Parent = parent
+
+	local crestFace = Kit.Block(parent, "CrestFace", at(0, roofY - 6, -2.7), Vector3.new(ENTRANCE.CrestRadiusStuds * 1.3, ENTRANCE.CrestRadiusStuds * 1.3, 0.3), {
+		color = WHITE,
+	})
+	crestFace.CastShadow = false
+	Kit.Sign(crestFace, "AGES\nHIGH", ENTRANCE.CrestRadiusStuds * 1.2, LABEL_DIST * 2, Color3.fromRGB(46, 96, 168))
+
+	-- The welcome board over the doors.
+	local welcome = Kit.Block(parent, "WelcomeBoard", at(0, ENTRANCE.CanopyHeightStuds + 3.5, -1.4), Vector3.new(30, 5, 0.5), {
+		color = PALE_BLUE,
+	})
+	welcome.CastShadow = false
+	Kit.Sign(welcome, "WELCOME", 26, LABEL_DIST * 2, Color3.fromRGB(255, 255, 255))
+
+	-- Blue pilasters up the elevation. Full height, so they read as structure rather than as
+	-- paint, and skipped across the entrance bay so they never cross the doors or the crest.
+	for index = 1, ENTRANCE.PilasterCount do
+		local share = (index - 0.5) / ENTRANCE.PilasterCount
+		local x = -half + W * share
+		-- Clear of the pediment, and clear of the wings either side of it. It skipped the first
+		-- and not the second, so four pilasters were striping the front of a wing from inside it.
+		local wingIn = ENTRANCE.PedimentWidthStuds / 2 + 4
+		local wingOut = ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4
+		if math.abs(x) > wingIn and math.abs(x) > wingOut then
+			Kit.Block(parent, `Pilaster{index}`, at(x, roofY / 2, -0.9), Vector3.new(ENTRANCE.PilasterWidthStuds, roofY, 1.6), {
+				color = PALE_BLUE,
+			}).CastShadow = false
+		end
+	end
+
+	-- The wings, brought forward either side of the entrance. Laid before the planting so the
+	-- hedges and cones sit in the courtyard they make rather than in open ground.
+	local wingOffset = ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds / 2 + 4
+	for side = -1, 1, 2 do
+		local wx = side * wingOffset
+		local wz = -ENTRANCE.WingProjectionStuds / 2
+		local wingH = FLOOR_H * 2
+
+		-- The body of the wing, glazed on the front the way the reference's are.
+		Kit.Block(parent, `Wing{side}`, at(wx, wingH / 2, wz), Vector3.new(ENTRANCE.WingWidthStuds, wingH, ENTRANCE.WingDepthStuds), {
+			color = WHITE,
+		})
+		Kit.GlassWall(
+			parent,
+			`WingGlass{side}`,
+			at(wx - ENTRANCE.WingWidthStuds / 2 + 2, 0.4, wz - ENTRANCE.WingDepthStuds / 2 - 0.6),
+			at(wx + ENTRANCE.WingWidthStuds / 2 - 2, 0.4, wz - ENTRANCE.WingDepthStuds / 2 - 0.6),
+			wingH - 2,
+			1,
+			0.7,
+			PALE_BLUE,
+			GLASS_TINT
+		)
+
+		-- The pitched roof, stepped for the reason the pediment is: no wedge in the kit, and a
+		-- staircase of four slabs reads as a pitch from the ground.
+		for step = 1, ENTRANCE.WingRoofSteps do
+			local share = (step - 1) / ENTRANCE.WingRoofSteps
+			local depth = ENTRANCE.WingDepthStuds * (1 - share * 0.82)
+			local y = wingH + (ENTRANCE.WingRoofRiseStuds / ENTRANCE.WingRoofSteps) * (step - 0.5)
+			Kit.Block(parent, `WingRoof{side}_{step}`, at(wx, y, wz), Vector3.new(ENTRANCE.WingWidthStuds + 2 - share * 4, ENTRANCE.WingRoofRiseStuds / ENTRANCE.WingRoofSteps + 0.2, depth), {
+				color = Color3.fromRGB(122, 158, 206),
+			})
+		end
+	end
+
+	-- Tall clipped cones down the forecourt, and the railings along the road. Both are pure
+	-- silhouette and both are what the reference's approach is made of.
+	for side = -1, 1, 2 do
+		for index = 1, ENTRANCE.TopiaryPerSide do
+			local z = -14 - (index / (ENTRANCE.TopiaryPerSide + 1)) * ENTRANCE.PlazaDepthStuds
+			local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 10)
+			for tier = 1, ENTRANCE.TopiaryTiers do
+				local share = (tier - 1) / ENTRANCE.TopiaryTiers
+				local w = 7 * (1 - share * 0.86)
+				local y = 1 + (ENTRANCE.TopiaryHeightStuds / ENTRANCE.TopiaryTiers) * (tier - 0.5)
+				Kit.Block(parent, `Topiary{side}_{index}_{tier}`, at(x, y, z), Vector3.new(w, ENTRANCE.TopiaryHeightStuds / ENTRANCE.TopiaryTiers + 0.2, w), {
+					color = Color3.fromRGB(78, 138, 84),
+					material = Enum.Material.Grass,
+					collide = false,
+				}).CastShadow = false
+			end
+		end
+	end
+
+	-- The railings. A gap is left dead centre for the way in -- a fence with no gate reads as a
+	-- compound, and the entrance is the whole point of this elevation.
+	local railZ = -ENTRANCE.PlazaDepthStuds - 12
+	local railSpan = ENTRANCE.PlazaWidthStuds + ENTRANCE.WingWidthStuds * 2
+	for index = 1, ENTRANCE.RailingPosts do
+		local share = (index - 0.5) / ENTRANCE.RailingPosts
+		local x = -railSpan / 2 + railSpan * share
+		if math.abs(x) > ENTRANCE.GateWidthStuds / 2 then
+			Kit.Column(parent, `Railing{index}`, at(x, 0.4, railZ), 7, 0.5, Color3.fromRGB(38, 40, 48))
+		end
+	end
+	for side = -1, 1, 2 do
+		-- The two gate piers, taller than the run so the opening reads as deliberate.
+		Kit.Column(parent, `GatePier{side}`, at(side * ENTRANCE.GateWidthStuds / 2, 0.4, railZ), 10, 2, WHITE)
+	end
+
+	-- Flagpoles either side of the doors.
+	for side = -1, 1, 2 do
+		for index = 1, ENTRANCE.FlagpolesPerSide do
+			-- Outboard of the wings. At pediment/2 + 8 these stood inside one.
+			local x = side * (ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 10 + index * 6)
+			Kit.Column(parent, `Flagpole{side}_{index}`, at(x, 0.4, -10), ENTRANCE.FlagpoleHeightStuds, 0.7, WHITE)
+			Kit.Block(parent, `Flag{side}_{index}`, at(x + side * 3.4, ENTRANCE.FlagpoleHeightStuds - 3, -10), Vector3.new(6.4, 4, 0.2), {
+				color = PALE_BLUE,
+			}).CastShadow = false
+		end
+	end
+
+	-- Clipped hedges and lamp standards down the approach. The reference lines its forecourt
+	-- with both, and a bare slab of concrete in front of a school is the one thing that makes
+	-- an otherwise finished building look unfinished.
+	local plazaD = ENTRANCE.PlazaDepthStuds
+	for side = -1, 1, 2 do
+		for index = 1, ENTRANCE.HedgesPerSide do
+			local z = -6 - (index / (ENTRANCE.HedgesPerSide + 1)) * plazaD
+			Kit.Block(parent, `Hedge{side}_{index}`, at(side * (ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 14), 2.4, z), Vector3.new(9, 4.4, 9), {
+				color = Color3.fromRGB(96, 150, 96),
+				material = Enum.Material.Grass,
+			})
+		end
+		for index = 1, ENTRANCE.LampsPerSide do
+			local z = -10 - (index / (ENTRANCE.LampsPerSide + 1)) * plazaD
+			local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 3)
+			Kit.Column(parent, `LampPost{side}_{index}`, at(x, 0.4, z), 16, 1, CONCRETE)
+			Kit.Block(parent, `LampHead{side}_{index}`, at(x, 16.6, z), Vector3.new(3.4, 1.2, 3.4), {
+				color = Color3.fromRGB(255, 246, 214),
+				material = Enum.Material.Neon,
+			}).CastShadow = false
+		end
+	end
+end
+
+local function buildShell(parent: Instance, at: (number, number, number) -> Vector3)
+	local half = W / 2
+
+	for floor = 1, BUILDING.Floors do
+		local y = floorY(floor)
+		-- The ground floor is solid; the ones above it are cut, which is what makes the atrium
+		-- a three-storey space rather than a tall ground-floor room.
+		buildSlabWithVoid(parent, at, `Floor{floor}`, y, floor > 1)
+
+		-- The front elevation is glass, because that is what the reference is and because it is
+		-- what lets the building be read from the road at all.
+		--
+		-- **It no longer follows the slabs.** The glazing is laid in ExteriorBands rows over the
+		-- whole wall rather than one row per floor, so the street sees three storeys while the
+		-- inside has two. An elevation is a pattern of windows and floor bands; nothing requires
+		-- it to agree with where the slabs are, and double-height rooms behind a three-band
+		-- facade is a thing real buildings do.
+		--
+		-- Laid on the first pass only, since it spans the whole height rather than one storey.
+		if floor == 1 then
+			local wallTop = FLOOR_H * BUILDING.Floors
+			local bandH = wallTop / BUILDING.ExteriorBands
+			for band = 1, BUILDING.ExteriorBands do
+				local bandY = (band - 1) * bandH
+				-- The glazing stops short of the spandrel rather than running up behind it. A
+				-- glass wall draws its own head band at the top, and that head was landing inside
+				-- the concrete spandrel -- two solid parts in the same 3 studs of wall.
+				Kit.GlassWall(parent, `FrontGlass{band}`, at(-half, bandY, 0), at(half, bandY, 0), bandH - 4.2, WALL_T, BUILDING.GlassShare, WHITE, GLASS_TINT)
+				-- The floor band on the face, and a spandrel behind it. Three of these is what
+				-- makes the building read as three storeys.
+				Kit.Block(parent, `Spandrel{band}`, at(0, bandY + bandH - 2, -0.5), Vector3.new(W, 3, 1.4), {
+					color = OFF_WHITE,
+					material = Enum.Material.Concrete,
+				})
+				Kit.Block(parent, `Band{band}`, at(0, bandY + bandH - 0.6, -0.4), Vector3.new(W, 1.4, 1.2), { color = BLUE })
+			end
+		end
+
+		-- The back and the two ends are solid, with a blue band at each floor line -- one
+		-- accent doing the job of saying where the storeys are from outside.
+		-- The three solid elevations, in render rather than flat plastic.
+		--
+		-- The research is blunt about this: one material everywhere reads as a greybox however
+		-- good the geometry is, and material variety carries more than colour variety does. These
+		-- were SmoothPlastic white -- the default -- which is why the building looked unfinished
+		-- in every screenshot regardless of what was added to it.
+		Kit.Wall(parent, `BackWall{floor}`, at(-half, y, D), at(half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+		Kit.Wall(parent, `LeftWall{floor}`, at(-half, y, 0), at(-half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+		Kit.Wall(parent, `RightWall{floor}`, at(half, y, 0), at(half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+
+
+		-- Columns down the front, on the grid the canopy sits on.
+		for index = 1, ENTRANCE.ColumnCount do
+			local share = (index - 0.5) / ENTRANCE.ColumnCount
+			local x = -half + W * share
+			-- Not where a wing already stands. These ran the full width of the elevation and the
+			-- wings were added later in front of them, so four columns were buried in solid
+			-- masonry -- invisible from outside and standing in the way inside.
+			if math.abs(x) > ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4 or math.abs(x) < ENTRANCE.PedimentWidthStuds / 2 then
+				Kit.Column(parent, `Column{floor}_{index}`, at(x, y, 3), FLOOR_H - SLAB, 3.4, CONCRETE)
+			end
+		end
+	end
+
+	-- The roof, and a glazed lantern over the atrium so the three-storey space is daylit from
+	-- above rather than being a dark shaft.
+	local roofY = floorY(BUILDING.Floors + 1)
+	Kit.Slab(parent, "RoofFront", at(0, roofY, ATRIUM_Z1 / 2), W, ATRIUM_Z1, SLAB * 2, { color = OFF_WHITE })
+	Kit.Slab(parent, "RoofBack", at(0, roofY, (ATRIUM_Z2 + D) / 2), W, D - ATRIUM_Z2, SLAB * 2, { color = OFF_WHITE })
+	local sideW = half + ATRIUM_X1
+	Kit.Slab(parent, "RoofLeft", at((-half + ATRIUM_X1) / 2, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), sideW, ATRIUM_Z2 - ATRIUM_Z1, SLAB * 2, { color = OFF_WHITE })
+	Kit.Slab(parent, "RoofRight", at((half + ATRIUM_X2) / 2, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), sideW, ATRIUM_Z2 - ATRIUM_Z1, SLAB * 2, { color = OFF_WHITE })
+
+	-- The crown: a cornice at the roofline and a parapet standing above it.
+	--
+	-- Laid as four runs round the perimeter rather than as one box, because the front of the
+	-- building is glass and a parapet that crossed the glazing head would read as a beam
+	-- floating in front of the windows.
+	local proud = BUILDING.CorniceProudStuds
+	local corniceRuns = {
+		{ name = "CorniceFront", a = at(-half - proud, roofY, -proud), b = at(half + proud, roofY, -proud) },
+		{ name = "CorniceBack", a = at(-half - proud, roofY, D + proud), b = at(half + proud, roofY, D + proud) },
+		{ name = "CorniceLeft", a = at(-half - proud, roofY, -proud), b = at(-half - proud, roofY, D + proud) },
+		{ name = "CorniceRight", a = at(half + proud, roofY, -proud), b = at(half + proud, roofY, D + proud) },
+	}
+	for _, run in corniceRuns do
+		-- The cornice oversails, so it throws a shadow line along the top of the wall. That
+		-- shadow is the whole point: it is what separates the building from the sky.
+		local band = Kit.Wall(parent, run.name, run.a, run.b, 2.2, WALL_T + proud * 2, { color = OFF_WHITE })
+		if band ~= nil then
+			band.CastShadow = false
+		end
+		-- And the parapet above it, set back to the wall line.
+		Kit.Wall(
+			parent,
+			run.name:gsub("Cornice", "Parapet"),
+			run.a + Vector3.new(0, 2.2, 0),
+			run.b + Vector3.new(0, 2.2, 0),
+			BUILDING.ParapetHeightStuds,
+			WALL_T,
+			{ color = WHITE }
+		)
+	end
+
+	-- A blue coping capping the parapet, which is the school's own accent finishing the
+	-- building rather than an extra colour introduced at the top.
+	for _, run in corniceRuns do
+		local cap = Kit.Wall(
+			parent,
+			run.name:gsub("Cornice", "Coping"),
+			run.a + Vector3.new(0, 2.2 + BUILDING.ParapetHeightStuds, 0),
+			run.b + Vector3.new(0, 2.2 + BUILDING.ParapetHeightStuds, 0),
+			0.9,
+			WALL_T + 1.2,
+			{ color = BLUE }
+		)
+		if cap ~= nil then
+			cap.CastShadow = false
+		end
+	end
+
+	-- The base course. A wall that meets the ground with nothing at the bottom looks dropped
+	-- rather than built, and this is four parts.
+	local doorGap = ENTRANCE.DoorWidthStuds / 2 + 4
+	local plinthRuns = {
+		-- **Broken at the doorway.** The base course ran unbroken across the front, which put a
+		-- 4-stud kerb 1.2 studs outside the doors: a step up at the exact spot the building
+		-- wants you to walk through. A plinth is meant to look like the wall is founded on
+		-- something, not to be a threshold you climb, so the opening gets a gap.
+		{ name = "PlinthFrontL", a = at(-half, 0.3, -BUILDING.PlinthProudStuds), b = at(-doorGap, 0.3, -BUILDING.PlinthProudStuds) },
+		{ name = "PlinthFrontR", a = at(doorGap, 0.3, -BUILDING.PlinthProudStuds), b = at(half, 0.3, -BUILDING.PlinthProudStuds) },
+		{ name = "PlinthBack", a = at(-half, 0.3, D + BUILDING.PlinthProudStuds), b = at(half, 0.3, D + BUILDING.PlinthProudStuds) },
+		{ name = "PlinthLeft", a = at(-half - BUILDING.PlinthProudStuds, 0.3, 0), b = at(-half - BUILDING.PlinthProudStuds, 0.3, D) },
+		{ name = "PlinthRight", a = at(half + BUILDING.PlinthProudStuds, 0.3, 0), b = at(half + BUILDING.PlinthProudStuds, 0.3, D) },
+	}
+	for _, run in plinthRuns do
+		Kit.Wall(parent, run.name, run.a, run.b, BUILDING.PlinthHeightStuds, WALL_T + BUILDING.PlinthProudStuds, {
+			color = CONCRETE,
+			material = Enum.Material.Concrete,
+		})
+	end
+
+	local lantern = Kit.Slab(parent, "Lantern", at(0, roofY, (ATRIUM_Z1 + ATRIUM_Z2) / 2), BUILDING.AtriumWidthStuds, BUILDING.AtriumDepthStuds, 0.5, {
+		color = GLASS_TINT,
+		material = Enum.Material.Glass,
+		transparency = 0.6,
+		collide = true,
+	})
+	lantern.CastShadow = false
+
+	-- The entrance canopy, and the doors under it.
+	-- The canopy clears the door head rather than cutting across it. Its soffit was at 15.5
+	-- against a 17-stud door, so from the plaza the roof crossed the top of the opening and the
+	-- way in read as a dark slot under a shelf. A canopy has to be higher than the thing it
+	-- shelters or it hides it.
+	Kit.Slab(parent, "Canopy", at(0, ENTRANCE.CanopyHeightStuds, -ENTRANCE.CanopyDepthStuds / 2), ENTRANCE.PlazaWidthStuds, ENTRANCE.CanopyDepthStuds, 1.4, {
+		color = WHITE,
+	})
+	-- **The columns stand clear of the doorway.**
+	--
+	-- They were spaced -21, -7, +7, +21 across a door that runs -10 to +10, so the two inner
+	-- ones stood directly in front of it -- a pair of posts planted across the way in, which is
+	-- what made the entrance unreadable from the plaza however big the doors got.
+	--
+	-- A canopy's columns belong at its ends. Splitting them either side of the opening leaves
+	-- the middle clear, which is the whole job of an entrance: you should be able to see the
+	-- door from the road and walk at it in a straight line.
+	-- The gap they have to live in is narrow and both walls of it are hard: the door runs to
+	-- +/-10 and the entrance wings start at +/-26, so a column belongs between about 12 and 24.
+	-- Spread wider than that and it stands inside the wing.
+	-- One each side, and one is all that fits. The door is DoorWidthStuds wide -- 40, so it runs
+	-- to +/-20 -- and the entrance wings begin at +/-26. That leaves a six-stud slot on each
+	-- flank and nothing anywhere else, which is why four columns could not be arranged without
+	-- either standing in the doorway or standing inside a wing. Two columns, hard against the
+	-- wings, and the whole opening between them is clear.
+	local clear = ENTRANCE.DoorWidthStuds / 2 + 3
+	for index = 1, 2 do
+		local x = (if index == 1 then -1 else 1) * clear
+		Kit.Column(parent, `CanopyColumn{index}`, at(x, 0.4, -ENTRANCE.CanopyDepthStuds + 2), ENTRANCE.CanopyHeightStuds, 2.2, WHITE)
+	end
+	-- One wide opening with two leaves in it, rather than the four separate panels that used
+	-- to be here. Four panels with gaps between them read from the plaza as a row of windows,
+	-- and the way in is the one thing an entrance elevation has to say clearly.
+	--
+	-- The leaves are named EntranceDoorLeaf so FixtureService can find them: they are the only
+	-- moving part of the building, and pressing E on them swings them open.
+	local doorW = ENTRANCE.DoorWidthStuds
+	local doorH = ENTRANCE.DoorHeightStuds
+
+	-- The frame: jambs and a head, in the school's blue so the opening is legible from the road.
+	for side = -1, 1, 2 do
+		Kit.Block(parent, `DoorJamb{side}`, at(side * (doorW / 2 + 1.2), doorH / 2, 0), Vector3.new(2.4, doorH + 2, 2.4), {
+			color = BLUE,
+		})
+	end
+	Kit.Block(parent, "DoorHead", at(0, doorH + 1.2, 0), Vector3.new(doorW + 7, 2.4, 2.4), { color = BLUE })
+
+	-- The two leaves. Non-collidable, because a door you have to open before you can walk
+	-- through is a door that will strand somebody the first time the prompt is out of reach --
+	-- the swing is a flourish, not a gate.
+	for side = -1, 1, 2 do
+		-- **Wood, and solid.** These were tinted glass, which at this size read as two more
+		-- panes in a fully glazed elevation -- you could not tell where the way in was. A timber
+		-- door in a glass wall is the oldest trick there is for making an entrance legible, and
+		-- it is the one thing on this facade that should not look like the rest of it.
+		--
+		-- Collidable, because a door that opens has to have been shut.
+		Kit.Block(parent, `EntranceDoorLeaf{side}`, at(side * doorW / 4, doorH / 2, 0), Vector3.new(doorW / 2 - 0.4, doorH, 0.7), {
+			color = WALNUT,
+			material = Enum.Material.WoodPlanks,
+			collide = true,
+		})
+		-- Rails and stiles, so the leaf reads as a made door rather than a plank.
+		for panel = 1, 2 do
+			Kit.Block(parent, `EntranceDoorPanel{side}_{panel}`, at(side * doorW / 4, doorH * (if panel == 1 then 0.28 else 0.68), -0.45), Vector3.new(doorW / 2 - 4.5, doorH * 0.3, 0.25), {
+				color = Color3.fromRGB(78, 54, 38),
+				material = Enum.Material.Wood,
+			}).CastShadow = false
+		end
+		-- A glazed light at head height: a solid door with no window is a door you walk into
+		-- somebody through.
+		Kit.Block(parent, `EntranceDoorLight{side}`, at(side * doorW / 4, doorH * 0.86, 0), Vector3.new(doorW / 2 - 5, doorH * 0.16, 0.3), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.4,
+		}).CastShadow = false
+		-- A push bar, which is what makes a glass panel read as a door rather than as a window.
+		Kit.Block(parent, `DoorBar{side}`, at(side * doorW / 4, doorH * 0.45, -0.5), Vector3.new(doorW / 2 - 4, 0.6, 0.6), {
+			color = Color3.fromRGB(206, 212, 222),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The lobby: what is in the atrium.
+-- ---------------------------------------------------------------------------------------
+
+-- The atrium was circulation and nothing else -- three storeys of air, a stair at each end, a
+-- rail round the hole and not one object in it. It is the first room anybody walks into and it
+-- was the emptiest space in the building.
+--
+-- The banners do the load-bearing work. The atrium's whole reason for existing is that it is
+-- three storeys tall, and *nothing in it used that height* -- so the space read as a tall room
+-- rather than as a volume. A banner hanging the full drop is the cheapest thing that makes the
+-- height legible: you read the building's scale off the banner, because you are not looking at
+-- the ceiling.
+local function buildLobby(parent: Instance, at: (number, number, number) -> Vector3)
+	local cz = (ATRIUM_Z1 + ATRIUM_Z2) / 2
+	local roofY = floorY(BUILDING.Floors + 1)
+
+	-- A feature wall behind the reception, full height of the two-storey lobby.
+	--
+	-- The back of the lobby was blank above head height, which in a room now 54 studs tall is a
+	-- lot of nothing directly in front of anyone walking in. The reference puts the school crest
+	-- on exactly that wall.
+	-- The feature wall is now behind the gallery rather than facing a full-height void, so it
+	-- is a one-storey wall. Left at two storeys it would have run straight through the gallery
+	-- slab -- the same mistake as the lockers in the logo, one floor up.
+	local featureZ = ATRIUM_Z2 - 1.2
+	local featureH = FLOOR_H - 2
+	Kit.Block(parent, "LobbyFeature", at(0, featureH / 2, featureZ), Vector3.new(BUILDING.AtriumWidthStuds * 0.5, featureH, 0.5), {
+		color = Color3.fromRGB(206, 212, 222),
+		material = Enum.Material.Concrete,
+	})
+	for ring = 1, 3 do
+		local radius = 9 * (1 - (ring - 1) * 0.3)
+		local disc = Kit.Block(parent, `LobbyCrest{ring}`, at(0, featureH * 0.62, featureZ - 0.4 - ring * 0.1), Vector3.new(0.3, radius * 2, radius * 2), {
+			color = if ring % 2 == 1 then BLUE else WHITE,
+		})
+		disc.Shape = Enum.PartType.Cylinder
+		disc.CFrame = CFrame.new(at(0, featureH * 0.62, featureZ - 0.4 - ring * 0.1)) * CFrame.Angles(0, math.rad(90), 0)
+		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
+		disc.CastShadow = false
+	end
+
+	-- **The gallery fascia, and the fins that carry the height.**
+	--
+	-- Two things a 54-stud atrium needs that a 27-stud one does not.
+	--
+	-- The fascia first: standing in the lobby you look up at the cut edge of the upper floor
+	-- slab, and a raw slab edge reads as a hole in the floor rather than as a balcony. A band
+	-- on that edge, in the school's blue, is what turns the void into a gallery -- and it is
+	-- the line that tells you from the ground floor that there is a floor above you.
+	-- **It traces the two stairwells, and it does not cross the head of a flight.**
+	--
+	-- This used to trace the old full-width void as a single rectangle: Front, Back, Left,
+	-- Right. When the first floor was filled in and the openings became the two stairwells, the
+	-- rectangle stopped describing anything real -- and its Back band, 92 studs wide at
+	-- z = VOID_Z2, ran straight across the point where *both* staircases arrive. A 2.8-stud lip
+	-- at the top of a flight is a thing you walk into at head height on your way out of it.
+	--
+	-- So: three edges per well, not four. Inner (along the bridge), Front, and Outer against the
+	-- atrium wall -- each of those is a genuine cut edge of the slab and wants trimming. The
+	-- fourth side is where you step off the stairs and gets nothing at all, which is the same
+	-- rule the study counter above already follows.
+	local edges = {}
+	for side = -1, 1, 2 do
+		local tag = if side < 0 then "L" else "R"
+		local inner = side * WELL_X_IN
+		local outer = side * WELL_X_OUT
+		local midZ = (WELL_Z1 + VOID_Z2) / 2
+		local depth = VOID_Z2 - WELL_Z1
+		table.insert(edges, { n = `{tag}Inner`, cx = inner, cz = midZ, sx = 1.4, sz = depth })
+		table.insert(edges, { n = `{tag}Outer`, cx = outer, cz = midZ, sx = 1.4, sz = depth })
+		table.insert(edges, { n = `{tag}Front`, cx = (inner + outer) / 2, cz = WELL_Z1, sx = math.abs(outer - inner) + 1.4, sz = 1.4 })
+	end
+	for _, edge in edges do
+		local slabY = floorY(2)
+		Kit.Block(parent, `GalleryFascia{edge.n}`, at(edge.cx, slabY - 1.4, edge.cz), Vector3.new(edge.sx, 2.8, edge.sz), {
+			color = DEEP_BLUE,
+		}).CastShadow = false
+		Kit.Block(parent, `GallerySoffit{edge.n}`, at(edge.cx, slabY - 3, edge.cz), Vector3.new(edge.sx - 0.6, 0.6, edge.sz - 0.6), {
+			color = OFF_WHITE,
+		}).CastShadow = false
+	end
+
+	-- The fins that used to run down both flanks of the void are gone. They were added to give
+	-- a 54-stud wall a countable rhythm, and in a space this size they read as a row of pillars
+	-- standing in the middle of the room for no reason -- which is what they were. The gallery
+	-- fascia and the glazing already give the atrium its horizontal lines; it did not need
+	-- vertical ones as well.
+
+	-- **A plain landing platform at the head of each flight.**
+	--
+	-- There was a study counter along this gallery -- desk, fascia, stools and lamps -- on the
+	-- reasoning that a balcony over an atrium is the best seat in a school. The reasoning was
+	-- fine and the arithmetic was not. It was set to start 26 studs off the centreline to keep
+	-- clear of the stairs, but a flight's top tread reaches 29 studs out (STAIR_CX plus half the
+	-- stair width), so the counter overlapped **both** stair arrivals by 3.6 studs. A counter
+	-- across the head of a flight is the same mistake as a column across a door, which is exactly
+	-- what the comment here used to claim it was avoiding.
+	--
+	-- What goes there instead is nothing but floor: a plain platform spanning each stairwell's
+	-- width, flush with the gallery, so you come up the stairs and step onto a clear landing.
+	-- Somewhere to arrive is worth more than somewhere to sit, and this is the one spot in the
+	-- building where the two cannot both fit.
+	local galleryY = floorY(2)
+	for side = -1, 1, 2 do
+		local tag = if side < 0 then "L" else "R"
+		local platformW = STAIR_W + 8
+		local platformD = BUILDING.GalleryDepthStuds - 2
+		Kit.Slab(
+			parent,
+			`StairLanding{tag}`,
+			at(side * STAIR_CX, galleryY, VOID_Z2 + platformD / 2),
+			platformW,
+			platformD,
+			SLAB,
+			{ color = TILE }
+		)
+		-- A nosing strip along the edge the stairs meet, so the join reads as a threshold rather
+		-- than as two slabs that happen to touch.
+		Kit.Block(parent, `StairLanding{tag}Nosing`, at(side * STAIR_CX, galleryY + 0.4, VOID_Z2 + 0.3), Vector3.new(platformW, 0.25, 0.8), {
+			color = Color3.fromRGB(214, 218, 226),
+		}).CastShadow = false
+	end
+
+	-- **The lobby's back corners.**
+	--
+	-- The middle of the lobby is the route from the doors to the stairs and stays clear, but the
+	-- two back corners either side of that route were bare floor. A school entrance hall uses
+	-- those for waiting -- somebody is always waiting outside the office -- so they get a bench,
+	-- a planter and a case of whatever the school is proud of this year.
+	for side = -1, 1, 2 do
+		-- Pulled in against the bridge rather than out at the atrium's edge.
+		--
+		-- These corners sat under what is now a stairwell -- a planter, a shrub and a bench leg
+		-- were standing inside the footprint of each flight, at the bottom where you start
+		-- climbing. Moving them inboard puts them under the bridge instead, which is a
+		-- sheltered spot to wait and is not in anybody's way.
+		local wx = side * (WELL_X_IN - 5)
+		local wz = ATRIUM_Z1 + 12
+
+		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		for leg = -1, 1, 2 do
+			Kit.Block(parent, `WaitBenchLeg{side}_{leg}`, at(wx, 1.15, wz + leg * 7), Vector3.new(5, 2.3, 0.8), {
+				color = Color3.fromRGB(96, 102, 114),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+		Kit.Block(parent, `WaitBenchBack{side}`, at(wx - side * 2.6, 4.4, wz), Vector3.new(0.8, 4.4, 20), {
+			color = Color3.fromRGB(104, 118, 176),
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+
+		Kit.Block(parent, `LobbyPlanter{side}`, at(wx, 1.8, wz + 15), Vector3.new(6, 3.6, 6), {
+			color = Color3.fromRGB(196, 202, 214),
+			material = Enum.Material.Concrete,
+			collide = true,
+		})
+		Kit.Block(parent, `LobbyPlanterSoil{side}`, at(wx, 3.7, wz + 15), Vector3.new(5.2, 0.4, 5.2), {
+			color = Color3.fromRGB(72, 56, 42),
+		}).CastShadow = false
+		for leaf = 1, 3 do
+			Kit.Block(parent, `LobbyShrub{side}_{leaf}`, at(wx + (leaf - 2) * 1.6, 6.2 + leaf * 0.6, wz + 15 + (leaf - 2) * 0.8), Vector3.new(1.4, 5.6, 1.4), {
+				color = Color3.fromRGB(74, 126, 74),
+				material = Enum.Material.Grass,
+			}).CastShadow = false
+		end
+	end
+
+	-- The banners are gone.
+	--
+	-- Four fabric drops 9 studs wide and 39 tall, hung across the atrium on the old full-width
+	-- void. When the first floor was cut back to just the two stairwells they stopped hanging in
+	-- open space and started hanging *through* them: banner 1 at x -570 fell straight down the
+	-- left flight and banner 4 down the right one. From the gallery they read as two enormous
+	-- blue slabs standing in front of the stairs, which is exactly what they were.
+	--
+	-- Nothing replaces them. The atrium's height now comes from the two shafts themselves, and
+	-- hanging anything in a shaft a staircase is already using is how this happened.
+
+
+	-- The desk, facing whoever comes through the doors.
+	-- The desk faces the doors, at the back of the lobby, not just inside them.
+	--
+	-- It sat 8 studs from the front, which put it between the doors and the room -- you walked
+	-- into the back of it. A reception faces the way people arrive from and stands at the far
+	-- side of the space they arrive into, with the stairs to either side of it. The reference
+	-- puts the Director's office in exactly that position: straight ahead as you come in.
+	local deskZ = ATRIUM_Z2 - 8
+	Kit.Block(parent, "LobbyDesk", at(0, 2.4, deskZ), Vector3.new(BUILDING.LobbyDeskWidthStuds, 4.8, 6), {
+		color = WOOD,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	Kit.Block(parent, "LobbyDeskTop", at(0, 5, deskZ), Vector3.new(BUILDING.LobbyDeskWidthStuds + 2, 0.5, 7.4), {
+		color = OFF_WHITE,
+	})
+	local deskFront = Kit.Block(parent, "LobbyDeskFace", at(0, 2.6, deskZ - 3.2), Vector3.new(BUILDING.LobbyDeskWidthStuds, 3.4, 0.3), {
+		color = BLUE,
+	})
+	deskFront.CastShadow = false
+	Kit.Sign(deskFront, "RECEPTION", 20, LABEL_DIST, Color3.fromRGB(246, 250, 255))
+
+	-- Benches in two facing ranks down the *middle* of the lobby, between the doors and the
+	-- desk. They used to sit out at the sides, which is where the stairs now sweep -- a scan of
+	-- the stair found forty-seven parts within twenty studs of a tread, most of them these and
+	-- the trophy cases. A stair needs air around its foot or arriving at it is an obstacle
+	-- course.
+	for index = 1, BUILDING.LobbyBenches do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		local x = side * 7
+		local z = ATRIUM_Z1 + 10 + row * 9
+		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
+			color = WOOD,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		for end_ = -1, 1, 2 do
+			Kit.Block(parent, `LobbyBenchLeg{index}_{end_}`, at(x, 1.1, z + end_ * 5), Vector3.new(3.6, 2.2, 1), {
+				color = Color3.fromRGB(78, 82, 94),
+				material = Enum.Material.Metal,
+			})
+		end
+	end
+
+	-- Planting, because every lobby in the reference has a tree in it and a hard-surfaced room
+	-- three storeys tall needs one thing in it that is not a rectangle.
+	for index = 1, BUILDING.LobbyTrees do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		Kit.Planter(
+			parent,
+			`LobbyPlanter{index}`,
+			at(side * (BUILDING.AtriumWidthStuds / 2 - 8), 0.4, ATRIUM_Z1 + 4 + row * 7),
+			5,
+			14
+		)
+	end
+
+	-- The trophy case. One object that says the building has a past, which is a thing no amount
+	-- of clean geometry can say on its own.
+	for index = 1, BUILDING.LobbyCases do
+		local side = if index % 2 == 1 then -1 else 1
+		-- Against the back wall beside the reception, not out at the sides where the stairs are.
+		-- On the side walls at the *front* of the lobby, in the strip the stairs do not reach.
+		-- The sweep occupies z 16-48; this sits at 13, which is the entrance zone.
+		local x = side * (BUILDING.AtriumWidthStuds / 2 - 3)
+		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, ATRIUM_Z1 + 5), Vector3.new(1.5, 12, 16), {
+			color = WOOD,
+			material = Enum.Material.Wood,
+		})
+		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, ATRIUM_Z1 + 5), Vector3.new(0.2, 10, 14), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.45,
+		})
+		glass.CastShadow = false
+		for shelf = 1, 3 do
+			for cup = 1, 3 do
+				Kit.Block(
+					parent,
+					`Trophy{index}_{shelf}_{cup}`,
+					at(x, 2.6 + shelf * 3, ATRIUM_Z1 + cup * 3.4),
+					Vector3.new(1, 2.2, 1),
+					{ color = Color3.fromRGB(226, 188, 92), material = Enum.Material.Metal }
+				).CastShadow = false
+			end
+		end
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Stairs: the reason three storeys are three storeys.
+-- ---------------------------------------------------------------------------------------
+
+local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
+	-- Two curved flights, one each side of the lobby, sweeping a quarter turn as they climb.
+	--
+	-- Straight flights were the wrong shape for this room twice over. A straight run presents
+	-- its *end* to somebody walking in -- you see a wedge of treads edge-on and it reads as a
+	-- ramp -- and it delivers you facing the way you were already going, which in a lobby is
+	-- back out of the front doors. A flight that sweeps round shows its whole side from the
+	-- entrance, and turns you toward the corridor as you arrive. The building tells you where
+	-- to go next without a sign, which is the thing a good stair does.
+	--
+	-- Each starts near the front of the lobby facing inward and turns 80 degrees toward the
+	-- back, landing on the first floor pointing at the corridor. See Kit.CurvedStairs for why a
+	-- box tread on an arc is close enough to a winder.
+	local rise = floorY(2) - floorY(1)
+	local radius = BUILDING.StairRadiusStuds
+	local width = BUILDING.StairWidthStuds
+	local sweep = math.rad(BUILDING.StairSweepDegrees)
+
+	for side = -1, 1, 2 do
+		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
+		-- other around the middle of the lobby rather than into it.
+		local cx = side * STAIR_CX
+		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
+		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
+		-- in front, which reach z 12 and had seven treads of each flight inside them.
+		-- The turn centre sits a radius short of the back wall, so the arc finishes there and
+		-- the landing meets the corridor. Everything in front of it -- 22 studs of lobby -- is
+		-- the entrance zone, and stays clear.
+		-- Both of these now come from the same constants the floor openings are cut from, so a
+		-- flight and its stairwell cannot drift apart -- which is how the stairs ended up
+		-- arriving over a hole in the first place.
+		local cz = STAIR_CZ
+
+		-- **A true quarter turn: from facing the side wall to facing the corridor.**
+		--
+		-- The first attempt swept -140 to -60 degrees, which looks like a curve written down and
+		-- is nearly a straight line on the ground: across that range sine barely changes, so the
+		-- arc moved 74 studs in x and 5 in z. A flight has to turn through a quadrant to read as
+		-- turning at all.
+		--
+		-- Left stair runs 180 -> 90, right runs 0 -> 90. Both start pointing at their own side
+		-- wall and finish pointing at +z, which is the corridor -- so whichever one you take,
+		-- you arrive facing where you are going.
+		local startAngle = if side < 0 then math.rad(180) else 0
+		local turn = if side < 0 then -sweep else sweep
+
+		local laid = Kit.CurvedStairs(
+			parent,
+			`Stair{side}`,
+			at(cx, floorY(1), cz),
+			radius,
+			startAngle,
+			turn,
+			rise,
+			BUILDING.StairSteps,
+			width,
+			STAIR_TREAD
+		)
+		if not laid then
+			error(
+				`[AGES world] the school stair is too steep: {rise} studs over {BUILDING.StairSteps} steps.`
+					.. ` A Roblox humanoid manages 2 studs a step. Raise Config.School.Building.StairSteps`
+					.. ` or lower FloorHeightStuds.`
+			)
+		end
+
+		-- No landing slab any more. There used to be a 20x20 tile at the head of each flight,
+		-- because the void was cut to the full depth of the atrium and the top tread genuinely
+		-- did deliver you over a hole. Two isolated squares hanging in a double-height space is
+		-- what that looked like from the lobby, and it is the wrong fix: the floor was the thing
+		-- that was missing, not a platform. The gallery is the floor -- see VOID_Z2 -- and the
+		-- flight now tops out on it.
+	end
+end
+
+-- A vending machine. Two kinds off one function, because they are the same cabinet with a
+-- different face -- and building them separately would mean two places to fix the plinth.
+--
+-- The numbered slots are the detail that does the work. A glass box with coloured blocks in
+-- it is a fridge; the same box with 001 through 016 under the shelves is unmistakably a
+-- vending machine, and it costs sixteen labels.
+local function buildVendingMachine(parent: Instance, name: string, base: Vector3, snacks: boolean, facing: number)
+	local w, h, d = VEND.WidthStuds, VEND.HeightStuds, VEND.DepthStuds
+
+	local body = Kit.Block(parent, `{name}Body`, base + Vector3.new(0, h / 2, 0), Vector3.new(w, h, d), {
+		color = if snacks then Color3.fromRGB(226, 228, 236) else Color3.fromRGB(44, 52, 96),
+		yawDegrees = facing,
+		collide = true,
+	})
+
+	-- The window, and the shelves behind it.
+	local glassW = w * 0.62
+	local glassX = -w * 0.14
+	Kit.Block(parent, `{name}Glass`, base + Vector3.new(glassX, h * 0.58, -d * 0.52), Vector3.new(glassW, h * 0.6, 0.25), {
+		color = Color3.fromRGB(180, 208, 232),
+		material = Enum.Material.Glass,
+		transparency = 0.5,
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	if snacks then
+		local itemColors = {
+			Color3.fromRGB(214, 76, 68),
+			Color3.fromRGB(72, 122, 206),
+			Color3.fromRGB(96, 176, 108),
+			Color3.fromRGB(232, 176, 72),
+			Color3.fromRGB(238, 238, 240),
+			Color3.fromRGB(104, 72, 54),
+		}
+		for row = 1, VEND.Rows do
+			local shelfY = h * 0.84 - (row - 1) * (h * 0.15)
+			Kit.Block(parent, `{name}Shelf{row}`, base + Vector3.new(glassX, shelfY - 1.4, -d * 0.4), Vector3.new(glassW, 0.2, d * 0.5), {
+				color = Color3.fromRGB(198, 202, 210),
+				yawDegrees = facing,
+			}).CastShadow = false
+			for column = 1, VEND.Columns do
+				local index = (row - 1) * VEND.Columns + column
+				local x = glassX - glassW / 2 + glassW * ((column - 0.5) / VEND.Columns)
+				Kit.Block(parent, `{name}Item{index}`, base + Vector3.new(x, shelfY, -d * 0.4), Vector3.new(1.1, 1.7, 0.9), {
+					color = itemColors[((index - 1) % #itemColors) + 1],
+					yawDegrees = facing,
+				}).CastShadow = false
+			end
+			-- The slot numbers, one label per row rather than per item: sixteen billboards on
+			-- one machine is sixteen draw calls for something read once.
+			local strip = Kit.Block(parent, `{name}Strip{row}`, base + Vector3.new(glassX, shelfY - 1.9, -d * 0.55), Vector3.new(glassW, 0.7, 0.15), {
+				color = Color3.fromRGB(246, 246, 248),
+				yawDegrees = facing,
+			})
+			strip.CastShadow = false
+			local first = (row - 1) * VEND.Columns + 1
+			Kit.Sign(strip, string.format("%03d", first) .. "  -  " .. string.format("%03d", first + VEND.Columns - 1), 8, LABEL_DIST * 0.5, Color3.fromRGB(52, 58, 70))
+		end
+	else
+		-- The coffee machine: a cup in a recess, and the drinks list.
+		Kit.Block(parent, `{name}Recess`, base + Vector3.new(glassX, h * 0.3, -d * 0.4), Vector3.new(glassW * 0.7, h * 0.22, d * 0.5), {
+			color = Color3.fromRGB(232, 232, 238),
+			yawDegrees = facing,
+		}).CastShadow = false
+		Kit.Block(parent, `{name}Cup`, base + Vector3.new(glassX, h * 0.28, -d * 0.45), Vector3.new(1.5, 2, 1.5), {
+			color = Color3.fromRGB(238, 232, 224),
+			yawDegrees = facing,
+		}).CastShadow = false
+		local menu = Kit.Block(parent, `{name}Menu`, base + Vector3.new(glassX, h * 0.62, -d * 0.55), Vector3.new(glassW, h * 0.24, 0.2), {
+			color = Color3.fromRGB(28, 30, 40),
+			yawDegrees = facing,
+		})
+		menu.CastShadow = false
+		Kit.Sign(menu, "LATTE  ·  CAPPUCCINO  ·  AMERICANO", 10, LABEL_DIST * 0.6, Color3.fromRGB(150, 196, 240))
+	end
+
+	-- The keypad and the reader, which every machine in the reference has and which are what
+	-- make the right-hand third of the cabinet read as controls rather than as blank panel.
+	Kit.Block(parent, `{name}Pad`, base + Vector3.new(w * 0.32, h * 0.55, -d * 0.52), Vector3.new(w * 0.24, h * 0.3, 0.2), {
+		color = Color3.fromRGB(24, 26, 36),
+		yawDegrees = facing,
+	}).CastShadow = false
+	Kit.Block(parent, `{name}Reader`, base + Vector3.new(w * 0.32, h * 0.8, -d * 0.52), Vector3.new(w * 0.22, 2, 0.2), {
+		color = Color3.fromRGB(46, 92, 178),
+		material = Enum.Material.Neon,
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	-- The delivery tray at the bottom.
+	Kit.Block(parent, `{name}Tray`, base + Vector3.new(glassX, h * 0.12, -d * 0.5), Vector3.new(glassW * 0.8, 1.8, 0.25), {
+		color = Color3.fromRGB(38, 40, 50),
+		yawDegrees = facing,
+	}).CastShadow = false
+
+	return body
+end
+
+-- A pair of them, side by side, the way the reference always has them.
+local function buildVendingPair(parent: Instance, name: string, at: (number, number, number) -> Vector3, x: number, y: number, z: number, facing: number)
+	buildVendingMachine(parent, `{name}Coffee`, at(x - VEND.WidthStuds * 0.6, y, z), false, facing)
+	buildVendingMachine(parent, `{name}Snacks`, at(x + VEND.WidthStuds * 0.6, y, z), true, facing)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Corridors, and the lockers down them.
+-- ---------------------------------------------------------------------------------------
+
+local function buildCorridors(parent: Instance, at: (number, number, number) -> Vector3)
+	local half = W / 2
+	local backZ = D - WALL_T
+	local corridorZ = backZ - BAND_D - CORRIDOR_W / 2
+
+	for floor = 1, BUILDING.Floors do
+		local y = floorY(floor)
+
+		-- The corridor floor, in a different tone so the route through the building is legible
+		-- from the moment you step onto it.
+		-- Tile, not plastic. The largest surface a player looks at in this building should not be
+		-- the one material that says "nobody finished this".
+		Kit.Slab(parent, `CorridorFloor{floor}`, at(0, y + 0.05, corridorZ), W - WALL_T * 2, CORRIDOR_W, 0.3, {
+			color = OFF_WHITE,
+			material = Enum.Material.Pebble,
+		})
+
+		-- Lockers down the front wall of the corridor, both sides of the atrium so the run is
+		-- not broken by the void.
+		-- **A continuous bank, not a row of separate slabs.**
+		--
+		-- These used to be individual blocks with air between them, standing at the open edge of
+		-- the corridor with no wall behind -- so instead of lockers you got a row of blue panels
+		-- floating in space, which is what the screenshots show and it is the single most
+		-- confusing thing in the building.
+		--
+		-- A locker bank is one solid run. The doors are *lines in* that run, not gaps between
+		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
+		-- door-width. That reads as lockers from any angle and never floats, because the body
+		-- is its own wall.
+		-- **One continuous run of lockers down the corridor wall. Nothing else, nowhere else.**
+		--
+		-- This has been round three times and the reference photo settled it, so the reasoning is
+		-- worth writing down properly.
+		--
+		-- First attempt: a bank wall-to-wall on every floor. Too much -- from the atrium it was a
+		-- wall of blue on every level. Second: one 46-stud bay in the middle of a 226-stud
+		-- corridor, which fixed that by overcorrecting into a quarter-mile of empty tunnel with one
+		-- object in it. Third: banks on the two end walls, which put an 11-stud blue box across the
+		-- far end of the corridor -- and because you look *down* a corridor, that box sits in the
+		-- middle of your view with a grey wall behind it and reads as something dumped there.
+		--
+		-- What the reference actually shows is none of those: a single unbroken run along one long
+		-- wall, floor-standing, with a bench at the end. The run reads as architecture because it
+		-- is continuous -- a corridor wall that *is* lockers, rather than a corridor with lockers
+		-- placed in it. Continuity is the whole effect, so nothing is allowed to interrupt it:
+		-- the noticeboards and planters that used to break this wall into four are gone with it.
+		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
+		local runEnd = W / 2 - WALL_T - 10
+		local runW = runEnd * 2
+		local bankH = 11
+		local doors = math.max(8, math.floor(runW / 5))
+		local doorW = runW / doors
+		local x0 = -runEnd
+
+		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 1 + bankH / 2, wallZ), Vector3.new(runW, bankH, 2.4), {
+			color = BLUE,
+			material = Enum.Material.Metal,
+			collide = true,
+		})
+		Kit.Block(parent, `LockerPlinth{floor}`, at(0, y + 0.5, wallZ), Vector3.new(runW, 1, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `LockerCap{floor}`, at(0, y + 1.3 + bankH, wallZ), Vector3.new(runW, 0.6, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+
+		for index = 1, doors do
+			local dx = x0 + doorW * (index - 0.5)
+			Kit.Block(parent, `LockerHandle{floor}_{index}`, at(dx + doorW * 0.3, y + 1 + bankH * 0.5, wallZ + 1.3), Vector3.new(0.5, 1.8, 0.3), {
+				color = Color3.fromRGB(232, 236, 244),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `LockerVent{floor}_{index}`, at(dx, y + 1 + bankH * 0.86, wallZ + 1.3), Vector3.new(doorW * 0.42, 0.9, 0.25), {
+				color = Color3.fromRGB(58, 92, 158),
+			}).CastShadow = false
+			if index < doors then
+				Kit.Block(parent, `LockerSeam{floor}_{index}`, at(x0 + doorW * index, y + 1 + bankH / 2, wallZ + 1.25), Vector3.new(0.3, bankH - 0.4, 0.3), {
+					color = DEEP_BLUE,
+				}).CastShadow = false
+			end
+		end
+
+		-- A bench at each end of the run, as in the reference. At the ends rather than the middle,
+		-- because a bench in front of the lockers is a bench in front of somebody's locker.
+		for side = -1, 1, 2 do
+			local bx = side * (runEnd - 12)
+			Kit.Block(parent, `LockerBench{floor}_{side}`, at(bx, y + 2.3, wallZ + 5), Vector3.new(18, 0.7, 3.4), {
+				color = WALNUT,
+				material = Enum.Material.Wood,
+				collide = true,
+			})
+			for leg = -1, 1, 2 do
+				Kit.Block(parent, `LockerBenchLeg{floor}_{side}_{leg}`, at(bx + leg * 6.5, y + 1.15, wallZ + 5), Vector3.new(0.7, 2.3, 3), {
+					color = Color3.fromRGB(96, 102, 114),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+			end
+		end
+
+		-- The hexagon panel that used to sit on the corridor's end wall is gone: that wall is
+		-- where the locker alcove now is, and the two were occupying the same square studs. The
+		-- lockers are the better use of an end wall -- a decorative disc there was filling a space
+		-- that had nothing in it, which is a problem the corridor no longer has.
+
+		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line
+		-- the eye can follow; a row of squares is only lighting.
+		for index = 1, BUILDING.CeilingStrips do
+			local share = (index - 0.5) / BUILDING.CeilingStrips
+			Kit.Block(
+				parent,
+				`CeilStrip{floor}_{index}`,
+				at(-half + W * share, y + FLOOR_H - SLAB - 0.5, corridorZ),
+				Vector3.new(W / BUILDING.CeilingStrips - 6, 0.3, 3.2),
+				{ color = Color3.fromRGB(255, 252, 242), material = Enum.Material.Neon }
+			).CastShadow = false
+		end
+
+		-- Bins along the corridor. The most ordinary object a school has, and there were none.
+		for index = 1, BUILDING.BinsPerFloor do
+			local share = (index - 0.5) / BUILDING.BinsPerFloor
+			local x = -half + W * share + 14
+			local z = corridorZ + CORRIDOR_W / 2 - 3
+			Kit.Block(parent, `Bin{floor}_{index}`, at(x, y + 2.2, z), Vector3.new(4, 4.4, 4), {
+				color = Color3.fromRGB(64, 78, 96),
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `BinLid{floor}_{index}`, at(x, y + 4.6, z), Vector3.new(4.6, 0.5, 4.6), {
+				color = Color3.fromRGB(46, 58, 74),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+
+		-- Water fountains against the locker wall, which is where a school puts them: on the
+		-- circulation route, not tucked in a corner. Two per floor so there is one near either
+		-- stair rather than a single one everybody walks the length of the building for.
+		for index = 1, BUILDING.FountainsPerFloor do
+			local share = (index - 0.5) / BUILDING.FountainsPerFloor
+			local x = -half + W * share
+			-- The *far* side of the corridor. These used to share the near edge with the lockers,
+			-- and once the lockers became one continuous bank rather than spaced slabs there was no
+			-- longer a gap to stand in -- six fountains ended up inside it.
+			local z = corridorZ + CORRIDOR_W / 2 - 2.4
+
+			-- The back panel, the basin, and the spout. Three parts, and the basin is the one that
+			-- has to read as a basin from standing height -- it is wider than it is deep and sits
+			-- at hip height, which is the whole silhouette of a drinking fountain.
+			Kit.Block(parent, `FountainBack{floor}_{index}`, at(x, y + 5, z), Vector3.new(5, 8, 0.8), {
+				color = Color3.fromRGB(206, 212, 222),
+				material = Enum.Material.Metal,
+			})
+			Kit.Block(parent, `Fountain{floor}_{index}`, at(x, y + 3.6, z + 1.2), Vector3.new(6, 1.2, 3), {
+				color = Color3.fromRGB(226, 230, 238),
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `FountainBasin{floor}_{index}`, at(x, y + 3.9, z + 1.2), Vector3.new(4.4, 0.5, 2), {
+				color = Color3.fromRGB(150, 190, 216),
+				material = Enum.Material.Glass,
+				transparency = 0.3,
+			}).CastShadow = false
+			Kit.Block(parent, `FountainSpout{floor}_{index}`, at(x, y + 4.6, z + 0.5), Vector3.new(0.5, 0.9, 0.5), {
+				color = Color3.fromRGB(186, 192, 202),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+
+		-- A pair of machines against the back wall of the corridor on every floor. Against the
+		-- *back* rather than the locker wall on purpose: the lockers are where the corridor
+		-- system stands people, and a cabinet in that run would be somewhere to be cornered
+		-- against rather than somewhere to buy a drink.
+		buildVendingPair(parent, `CorridorVending{floor}`, at, half - 34, y + 0.2, corridorZ + CORRIDOR_W / 2 - 2, 180)
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The rooms themselves: partitions, glazing onto the corridor, signs, lights, fit-out.
+-- ---------------------------------------------------------------------------------------
+
+local function fitClassroom(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx, cz = rectCenter(rect)
+	local width = rect.x2 - rect.x1
+	local perRow = math.ceil(FIT.DesksPerClassroom / FIT.DeskRows)
+
+	-- The desk field is inset from the left wall, because that wall now carries the storage run.
+	-- At six rows the field reaches the middle of the room, which is exactly where the cupboards
+	-- are -- three desk legs per classroom were standing inside them.
+	local deskLeft = rect.x1 + 10
+	local deskWidth = width - 14
+
+	-- **The rows divide the space that is free, rather than marching at a fixed pitch until
+	-- they hit something.**
+	--
+	-- They used to step 8 studs back from the front wall however deep the room was. That was
+	-- survivable when a room was 99 studs deep and is not at 46: row five landed on top of the
+	-- teacher's desk and row six stood outside the back wall. A room's furniture has to be a
+	-- function of the room, or every change to the plan breaks it silently.
+	local teacherZ = rect.z2 - 8
+	local fieldZ1 = rect.z1 + 6
+	local rowPitch = (teacherZ - 6 - fieldZ1) / FIT.DeskRows
+
+	for row = 1, FIT.DeskRows do
+		for seat = 1, perRow do
+			local x = deskLeft + deskWidth * ((seat - 0.5) / perRow)
+			local z = fieldZ1 + rowPitch * (row - 0.5)
+			Kit.Block(parent, `Desk{rect.id}{row}_{seat}`, at(x, y + 2.6, z), Vector3.new(5, 0.4, 3), { color = WOOD })
+			Kit.Block(parent, `DeskLeg{rect.id}{row}_{seat}`, at(x, y + 1.3, z), Vector3.new(4.4, 2.6, 2.4), { color = DARK, transparency = 0.15 })
+			Kit.Block(parent, `Chair{rect.id}{row}_{seat}`, at(x, y + 1.6, z + rowPitch * 0.36), Vector3.new(2.6, 0.35, 2.6), { color = BLUE })
+		end
+	end
+
+	-- The board, framed and with a pen tray. A dark rectangle on a wall is a rectangle; a
+	-- frame and a tray are what make it a whiteboard, and they are two parts.
+	Kit.Block(parent, `BoardFrame{rect.id}`, at(cx, y + 8, rect.z2 - 1.4), Vector3.new(width * 0.5 + 1.4, 9.4, 0.3), {
+		color = Color3.fromRGB(198, 202, 210),
+	}).CastShadow = false
+	Kit.Block(parent, `Board{rect.id}`, at(cx, y + 8, rect.z2 - 1.2), Vector3.new(width * 0.5, 8, 0.4), { color = Color3.fromRGB(238, 240, 244) })
+	Kit.Block(parent, `BoardTray{rect.id}`, at(cx, y + 3.7, rect.z2 - 1.7), Vector3.new(width * 0.5, 0.4, 1), {
+		color = Color3.fromRGB(176, 180, 190),
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	-- The teacher desk, with a screen and a chair behind it. Same reasoning as the library
+	-- counter: a bare slab is a plinth, a screen on it is a desk somebody works at.
+	Kit.Block(parent, `TeacherDesk{rect.id}`, at(cx, y + 2.2, teacherZ), Vector3.new(9, 4.4, 3.4), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	Kit.Block(parent, `TeacherTop{rect.id}`, at(cx, y + 4.6, teacherZ), Vector3.new(10, 0.4, 4), { color = OFF_WHITE })
+	Kit.Block(parent, `TeacherScreen{rect.id}`, at(cx - 2, y + 6.2, teacherZ + 0.6), Vector3.new(4.2, 2.8, 0.3), {
+		color = Color3.fromRGB(30, 32, 40),
+	}).CastShadow = false
+	Kit.Block(parent, `TeacherChair{rect.id}`, at(cx, y + 1.7, rect.z2 - 10), Vector3.new(2.8, 0.4, 2.8), { color = DARK })
+
+	-- A run of low storage down one side, and something green in the corner. Every reference
+	-- classroom has cupboards under the window and a plant; an empty perimeter is what makes a
+	-- room read as a box with desks in it.
+	Kit.Block(parent, `Storage{rect.id}`, at(rect.x1 + 4, y + 2.4, cz), Vector3.new(4, 4.8, (rect.z2 - rect.z1) * 0.45), {
+		color = OFF_WHITE,
+		collide = true,
+	})
+	Kit.Block(parent, `StorageTop{rect.id}`, at(rect.x1 + 4, y + 5, cz), Vector3.new(4.6, 0.4, (rect.z2 - rect.z1) * 0.45 + 0.6), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+	}).CastShadow = false
+	Kit.Planter(parent, `ClassPlant{rect.id}`, at(rect.x2 - 5, y + 0.2, rect.z2 - 6), 3, 9)
+end
+
+local function fitCafeteria(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	local depth = rect.z2 - rect.z1
+
+	-- The servery down the back wall: a long counter with a warm shelf over it.
+	local cx = (rect.x1 + rect.x2) / 2
+	Kit.Block(parent, "Servery", at(cx, y + 2.6, rect.z2 - 6), Vector3.new(width * 0.62, 5.2, 5), { color = CONCRETE, material = Enum.Material.Metal })
+	Kit.Block(parent, "ServeryGuard", at(cx, y + 7.2, rect.z2 - 6), Vector3.new(width * 0.62, 0.3, 5), {
+		color = GLASS_TINT,
+		material = Enum.Material.Glass,
+		transparency = 0.5,
+	})
+	for tray = 1, 8 do
+		local x = cx - width * 0.28 + (width * 0.56) * ((tray - 0.5) / 8)
+		Kit.Block(parent, `Tray{tray}`, at(x, y + 5.4, rect.z2 - 6), Vector3.new(4, 0.4, 3), { color = Color3.fromRGB(226, 96, 84) })
+	end
+
+	-- Tables, in two ranks so the room has a route through the middle of it.
+	for index = 1, FIT.CafeteriaTables do
+		local column = (index - 1) % 4
+		local row = math.floor((index - 1) / 4)
+		local x = rect.x1 + width * ((column + 0.5) / 4)
+		local z = rect.z1 + 10 + row * 14
+		Kit.Block(parent, `CafeTable{index}`, at(x, y + 3, z), Vector3.new(9, 0.4, 6), { color = WHITE })
+		Kit.Block(parent, `CafeTableLeg{index}`, at(x, y + 1.5, z), Vector3.new(1.2, 3, 1.2), { color = DARK })
+		for seat = -1, 1, 2 do
+			Kit.Block(parent, `CafeStool{index}_{seat}`, at(x + seat * 3, y + 1.8, z + seat * 4.6), Vector3.new(2.4, 0.35, 2.4), { color = BLUE })
+		end
+	end
+
+	-- The bunting the reference is full of, strung across the room.
+	--
+	-- Hung off the ceiling rather than at a fixed 14 studs. Absolute heights in here were all
+	-- chosen when a storey was 27 studs tall and every one of them was left up in the roof when
+	-- it became 15; anything that belongs to the ceiling should be measured from the ceiling.
+	local ceilY = y + FLOOR_H - 1.6
+	Kit.Bunting(parent, "CafeBunting", at(rect.x1 + 6, ceilY, rect.z1 + 8), at(rect.x2 - 6, ceilY, rect.z1 + 8), 18, { BLUE, WHITE, PALE_BLUE })
+
+	-- The crest on the back wall, over the servery.
+	--
+	-- Concentric discs rather than a decal, because this codebase draws with parts and a ring
+	-- costs one each. Built back to front so the outer ring is behind the inner one and the
+	-- whole thing reads as layered rather than as three circles fighting for the same plane.
+	local crestZ = rect.z2 - 1.6
+	local crestY = y + FLOOR_H * 0.62
+	for ring = 1, BUILDING.CafeCrestRings do
+		local share = 1 - (ring - 1) / BUILDING.CafeCrestRings
+		local radius = BUILDING.CafeCrestRadiusStuds * share
+		local tone = if ring % 2 == 1 then BLUE else WHITE
+		local disc = Kit.Block(
+			parent,
+			`CafeCrest{ring}`,
+			at(cx, crestY, crestZ - ring * 0.12),
+			Vector3.new(radius * 2, radius * 2, 0.3),
+			{ color = tone }
+		)
+		disc.Shape = Enum.PartType.Cylinder
+		-- A cylinder's length runs along X, so facing it at a wall is a quarter turn about Y --
+		-- the same trick Kit.Rug uses about Z to lay one flat on the floor.
+		disc.CFrame = CFrame.new(at(cx, crestY, crestZ - ring * 0.12)) * CFrame.Angles(0, math.rad(90), 0)
+		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
+		disc.CastShadow = false
+	end
+	local crestPlate = Kit.Block(parent, "CafeCrestPlate", at(cx, crestY, crestZ - 1), Vector3.new(BUILDING.CafeCrestRadiusStuds, 6, 0.2), {
+		color = BLUE,
+	})
+	crestPlate.CastShadow = false
+	Kit.Sign(crestPlate, "AGES HIGH", BUILDING.CafeCrestRadiusStuds * 0.9, LABEL_DIST, Color3.fromRGB(248, 251, 255))
+
+	-- The bar along the glazed front, with high stools.
+	--
+	-- A canteen has two kinds of seat: tables for groups, and a counter for one person with
+	-- twenty minutes. Only having tables is what makes a dining room read as a set rather than
+	-- as somewhere people actually eat.
+	local barZ = rect.z1 + 4
+	Kit.Block(parent, "CafeBar", at(cx, y + 5.4, barZ), Vector3.new(width * 0.8, 0.6, 4), {
+		color = WOOD,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	for index = 1, BUILDING.CafeBarStools do
+		local share = (index - 0.5) / BUILDING.CafeBarStools
+		local x = cx - width * 0.4 + width * 0.8 * share
+		Kit.Block(parent, `CafeBarLeg{index}`, at(x, y + 2.6, barZ), Vector3.new(0.8, 5.6, 0.8), {
+			color = Color3.fromRGB(96, 102, 116),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		-- The stools face the glass, which is the whole reason a bar goes on this wall.
+		Kit.Block(parent, `CafeBarStool{index}`, at(x, y + 4.2, barZ + 5), Vector3.new(2.6, 0.4, 2.6), {
+			color = BLUE,
+			collide = true,
+		})
+		Kit.Block(parent, `CafeBarStoolLeg{index}`, at(x, y + 2.1, barZ + 5), Vector3.new(0.7, 4.2, 0.7), {
+			color = Color3.fromRGB(96, 102, 116),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+end
+
+local function fitLibrary(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	local depth = rect.z2 - rect.z1
+
+	-- Stacks, in ranks with aisles between them.
+	for index = 1, FIT.LibraryShelves do
+		local column = (index - 1) % 5
+		local row = math.floor((index - 1) / 5)
+		local x = rect.x1 + width * ((column + 0.5) / 5)
+		local z = rect.z1 + 14 + row * 20
+		-- Taller, darker, and with a shelf line between every band. The reference stacks are
+		-- walnut, nearly ceiling height, and *densely* full -- the colour of the spines is the
+		-- brightest thing in the room and the wood is the darkest, and the room lives on that.
+		Kit.Block(parent, `Stack{index}`, at(x, y + 7.5, z), Vector3.new(4, 15, 16), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		-- Five bands rather than three, each a different mix, with a shelf board under it. A
+		-- band of flat colour reads as a painted stripe; a band with a board beneath it reads as
+		-- books standing on a shelf, and the board is one part.
+		local spines = {
+			Color3.fromRGB(198, 92, 84),
+			Color3.fromRGB(86, 132, 194),
+			Color3.fromRGB(216, 184, 104),
+			Color3.fromRGB(122, 158, 108),
+			Color3.fromRGB(158, 108, 172),
+		}
+		for band = 1, 5 do
+			local by = y + 1.6 + band * 2.7
+			Kit.Block(parent, `Books{index}_{band}`, at(x, by, z), Vector3.new(4.3, 2.1, 15), {
+				color = spines[((index + band) % #spines) + 1],
+			}).CastShadow = false
+			Kit.Block(parent, `Shelf{index}_{band}`, at(x, by - 1.2, z), Vector3.new(4.5, 0.3, 15.4), {
+				color = Color3.fromRGB(72, 50, 34),
+			}).CastShadow = false
+		end
+	end
+
+	-- The desk you are sent to. Counter, worktop, and two monitors -- the reference desk has
+	-- screens on it, and a bare slab reads as a plinth rather than as somewhere staffed.
+	local cx = (rect.x1 + rect.x2) / 2
+	Kit.Block(parent, "LibraryDesk", at(cx, y + 2.4, rect.z1 + 5), Vector3.new(22, 4.8, 4), { color = WHITE })
+	Kit.Block(parent, "LibraryDeskTop", at(cx, y + 5, rect.z1 + 5), Vector3.new(23.5, 0.5, 5.2), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+	})
+	for index = -1, 1, 2 do
+		Kit.Block(parent, `LibraryMonitor{index}`, at(cx + index * 5, y + 6.8, rect.z1 + 5.6), Vector3.new(4.4, 3, 0.3), {
+			color = Color3.fromRGB(30, 32, 40),
+		}).CastShadow = false
+		Kit.Block(parent, `LibraryMonitorStand{index}`, at(cx + index * 5, y + 5.4, rect.z1 + 5.6), Vector3.new(0.6, 1.4, 0.6), {
+			color = Color3.fromRGB(120, 126, 138),
+		}).CastShadow = false
+	end
+
+	-- Rectangular rugs down the aisles, not discs. The reference lays long blue mats between
+	-- the stacks, which is a different shape doing a different job: a disc decorates a spot, a
+	-- runner tells you which way the room is walked.
+	for index = 1, FIT.RugsPerCommonRoom do
+		Kit.Slab(
+			parent,
+			`LibraryRug{index}`,
+			at(rect.x1 + width * (index / (FIT.RugsPerCommonRoom + 1)), y + 0.35, rect.z1 + depth * 0.45),
+			14,
+			depth * 0.5,
+			0.25,
+			{ color = Color3.fromRGB(74, 128, 200), material = Enum.Material.Fabric, collide = false }
+		)
+	end
+
+	-- Low benches between the stacks to read on, and a planter at each end of the run.
+	for index = 1, 4 do
+		local bx = rect.x1 + width * ((index - 0.5) / 4)
+		Kit.Block(parent, `LibraryBench{index}`, at(bx, y + 2.2, rect.z1 + depth * 0.72), Vector3.new(11, 0.7, 3.4), {
+			color = Color3.fromRGB(206, 210, 218),
+			collide = true,
+		})
+		for leg = -1, 1, 2 do
+			Kit.Block(parent, `LibraryBenchLeg{index}_{leg}`, at(bx + leg * 4.4, y + 1.1, rect.z1 + depth * 0.72), Vector3.new(0.5, 2.2, 3), {
+				color = Color3.fromRGB(96, 102, 114),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+	-- Beside the desk, not in the aisles. The stacks are 16 deep and centred 14 studs in, so
+	-- anything past z1 + 6 is inside a bookshelf -- which is where these first landed.
+	for side = -1, 1, 2 do
+		Kit.Planter(parent, `LibraryPlanter{side}`, at(cx + side * 15, y + 0.2, rect.z1 + 3.5), 3.4, 10)
+	end
+end
+
+local function fitCooking(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	-- Island benches with a sink and a mixer on each, which is the whole read of the room in
+	-- the reference: a grid of islands rather than rows of desks.
+	for index = 1, FIT.CookingBenches do
+		local column = (index - 1) % 3
+		local row = math.floor((index - 1) / 3)
+		local x = rect.x1 + width * ((column + 0.5) / 3)
+		local z = rect.z1 + 10 + row * 12
+		local tone = if column == 0 then Color3.fromRGB(150, 186, 178) elseif column == 1 then Color3.fromRGB(186, 166, 196) else Color3.fromRGB(146, 170, 200)
+		Kit.Block(parent, `Bench{index}`, at(x, y + 2.6, z), Vector3.new(14, 5.2, 6), { color = tone })
+		Kit.Block(parent, `BenchTop{index}`, at(x, y + 5.4, z), Vector3.new(14.4, 0.5, 6.4), { color = WOOD })
+		Kit.Block(parent, `Sink{index}`, at(x - 3, y + 5.6, z), Vector3.new(4, 0.4, 3), { color = Color3.fromRGB(206, 212, 216), material = Enum.Material.Metal })
+		Kit.Block(parent, `Mixer{index}`, at(x + 4, y + 6.6, z), Vector3.new(2, 2.6, 2), { color = WHITE })
+	end
+	-- Fridges down the wall.
+	for index = 1, 3 do
+		Kit.Block(parent, `Fridge{index}`, at(rect.x1 + 6 + (index - 1) * 8, y + 5, rect.z2 - 4), Vector3.new(6, 10, 4), { color = Color3.fromRGB(158, 198, 214) })
+	end
+end
+
+local function fitLounge(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	local depth = rect.z2 - rect.z1
+	local cx, cz = rectCenter(rect)
+
+	-- Warm floor, because this is the one room in the school that is not tiled. It is the
+	-- fastest way to say "you are allowed to relax here" and it costs one part.
+	Kit.Slab(parent, "LoungeFloor", at(cx, y + 0.08, cz), width - 2, depth - 2, 0.3, {
+		color = Color3.fromRGB(216, 186, 162),
+		material = Enum.Material.WoodPlanks,
+	})
+
+	-- The pool table: the thing the reference room is built around. Bed, rails, pockets, cues
+	-- and a rack of balls -- worth the parts, because it is the single object that says this
+	-- is somewhere people spend a free period.
+	for table_ = 1, LOUNGE.PoolTables do
+		local px = cx
+		local pz = rect.z1 + depth * 0.34
+		Kit.Block(parent, `PoolBed{table_}`, at(px, y + 2.6, pz), Vector3.new(20, 0.6, 11), {
+			color = Color3.fromRGB(58, 132, 82),
+			material = Enum.Material.Fabric,
+		})
+		Kit.Block(parent, `PoolFrame{table_}`, at(px, y + 2.1, pz), Vector3.new(22, 1.6, 13), {
+			color = Color3.fromRGB(122, 78, 54),
+			material = Enum.Material.Wood,
+		})
+		for side = -1, 1, 2 do
+			Kit.Block(parent, `PoolLeg{table_}_{side}`, at(px + side * 7, y + 1.1, pz), Vector3.new(3.4, 2.2, 9), {
+				color = Color3.fromRGB(104, 66, 46),
+			})
+		end
+		-- The rack, and the cue ball apart from it.
+		local ballColors = {
+			Color3.fromRGB(226, 196, 74), Color3.fromRGB(62, 96, 186), Color3.fromRGB(206, 70, 62),
+			Color3.fromRGB(126, 82, 176), Color3.fromRGB(232, 138, 62), Color3.fromRGB(86, 160, 96),
+		}
+		for ball = 1, 6 do
+			local row = math.floor((ball - 1) / 3)
+			local column = (ball - 1) % 3
+			Kit.Block(parent, `PoolBall{ball}`, at(px + 5 + row * 1.1, y + 3.2, pz - 1.2 + column * 1.2), Vector3.new(0.9, 0.9, 0.9), {
+				color = ballColors[ball],
+			}).CastShadow = false
+		end
+		Kit.Block(parent, `PoolCue{table_}`, at(px - 3, y + 3.1, pz), Vector3.new(13, 0.24, 0.24), {
+			color = Color3.fromRGB(196, 156, 108),
+		}).CastShadow = false
+	end
+
+	-- The screen on the wall.
+	local screen = Kit.Block(parent, "LoungeScreen", at(rect.x2 - 3, y + 11, cz), Vector3.new(0.5, LOUNGE.ScreenHeightStuds, LOUNGE.ScreenWidthStuds), {
+		color = Color3.fromRGB(20, 22, 28),
+	})
+	screen.CastShadow = false
+	Kit.Block(parent, "LoungeScreenFrame", at(rect.x2 - 3.3, y + 11, cz), Vector3.new(0.3, LOUNGE.ScreenHeightStuds + 1.2, LOUNGE.ScreenWidthStuds + 1.2), {
+		color = Color3.fromRGB(52, 56, 66),
+	}).CastShadow = false
+
+	-- **The room splits front to back, at a line rather than by luck.**
+	--
+	-- Soft seating at the back facing the screen, dining at the front by the door. These were
+	-- two independent runs -- sofas walking forward from the back wall, tables walking back from
+	-- the front -- which met in the middle the moment the room stopped being 99 studs deep, and
+	-- left a coffee table standing inside a sofa. A split line makes that impossible instead of
+	-- unlikely.
+	local depth = rect.z2 - rect.z1
+	local splitZ = rect.z1 + depth * 0.46
+
+	local sofaRows = math.ceil(LOUNGE.Sofas / 2)
+	local sofaPitch = (rect.z2 - 8 - (splitZ + 4)) / math.max(1, sofaRows)
+	for index = 1, LOUNGE.Sofas do
+		local x = rect.x1 + width * (((index - 1) % 2 + 0.5) / 2)
+		local z = rect.z2 - 8 - sofaPitch * (math.floor((index - 1) / 2) + 0.5)
+		Kit.Block(parent, `LoungeSofa{index}`, at(x, y + 1.9, z), Vector3.new(11, 3.8, 5), {
+			color = Color3.fromRGB(118, 132, 190),
+			material = Enum.Material.Fabric,
+		})
+		Kit.Block(parent, `LoungeSofaBack{index}`, at(x, y + 4.2, z + 2.2), Vector3.new(11, 4.6, 1.2), {
+			color = Color3.fromRGB(104, 118, 176),
+			material = Enum.Material.Fabric,
+		})
+	end
+
+	local diningRows = math.ceil(LOUNGE.DiningTables / 3)
+	local diningPitch = (splitZ - 3 - (rect.z1 + 6)) / math.max(1, diningRows)
+	for index = 1, LOUNGE.DiningTables do
+		local x = rect.x1 + width * (((index - 1) % 3 + 0.5) / 3)
+		local z = rect.z1 + 6 + diningPitch * (math.floor((index - 1) / 3) + 0.5)
+		Kit.Block(parent, `LoungeTable{index}`, at(x, y + 3, z), Vector3.new(8, 0.4, 5), { color = Color3.fromRGB(150, 110, 72) })
+		Kit.Block(parent, `LoungeTableLeg{index}`, at(x, y + 1.5, z), Vector3.new(1, 3, 1), { color = Color3.fromRGB(96, 72, 52) })
+		for seat = -1, 1, 2 do
+			Kit.Block(parent, `LoungeChair{index}_{seat}`, at(x + seat * 5, y + 1.8, z), Vector3.new(2.6, 0.4, 2.6), {
+				color = Color3.fromRGB(96, 124, 186),
+			})
+		end
+	end
+
+	for index = 1, LOUNGE.Rugs do
+		Kit.Rug(parent, `LoungeRug{index}`, at(rect.x1 + width * (index / (LOUNGE.Rugs + 1)), y + 0.4, cz + 6), 7, Color3.fromRGB(150, 178, 220))
+	end
+	-- Planters along the back wall, but skipping the middle third -- that is where the vending
+	-- pair stands, and two of these were landing inside the machines.
+	for index = 1, LOUNGE.Planters do
+		local share = index / (LOUNGE.Planters + 1)
+		if share > 0.34 and share < 0.66 then
+			continue
+		end
+		Kit.Planter(parent, `LoungePlanter{index}`, at(rect.x1 + width * share, y + 0.2, rect.z2 - 3), 3, 9)
+	end
+
+	-- And the machines, against the back wall where the reference has them.
+	buildVendingPair(parent, "LoungeVending", at, cx, y + 0.2, rect.z2 - 4, 180)
+end
+
+local function fitCommon(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local width = rect.x2 - rect.x1
+	for index = 1, FIT.RugsPerCommonRoom do
+		Kit.Rug(parent, `{rect.id}Rug{index}`, at(rect.x1 + width * (index / (FIT.RugsPerCommonRoom + 1)), y + 0.35, (rect.z1 + rect.z2) / 2), 7, PALE_BLUE)
+	end
+	for index = 1, FIT.PlantersPerCommonRoom do
+		Kit.Planter(parent, `{rect.id}Planter{index}`, at(rect.x1 + width * (index / (FIT.PlantersPerCommonRoom + 1)), y + 0.2, rect.z2 - 4), 3, 9)
+	end
+	for index = 1, 4 do
+		Kit.Block(parent, `{rect.id}Sofa{index}`, at(rect.x1 + width * (index / 5), y + 1.8, rect.z1 + 8), Vector3.new(10, 3.6, 5), { color = Color3.fromRGB(92, 98, 116) })
+	end
+end
+
+-- ============================================================ the three taught rooms
+--
+-- Science, Art and Reading were left bare at bake time because Lab.luau, Studio.luau and
+-- ReadingRoom.luau build their stations into them. What that missed is that those modules run
+-- at *play* time and build non-collidable placeholders into a Folder -- so in Studio, and for
+-- the whole time anyone is looking at the school rather than playing it, the three rooms are
+-- empty boxes with trim on the walls.
+--
+-- The split these fitters keep: **the perimeter is architecture and is baked, the middle is
+-- mechanics and stays clear.** Every room anchor sits at the room centre, so nothing here goes
+-- within about nine studs of it; the benches, cupboards and boards run round the walls where a
+-- real room puts them anyway.
+
+local function labBenchRun(parent, at, id: string, x: number, z1: number, z2: number, y: number, sinks: boolean)
+	local len = z2 - z1
+	Kit.Block(parent, `{id}Bench`, at(x, y + 2.6, (z1 + z2) / 2), Vector3.new(5, 0.5, len), {
+		color = Color3.fromRGB(58, 62, 72),
+		collide = true,
+	})
+	Kit.Block(parent, `{id}Cup`, at(x, y + 1.3, (z1 + z2) / 2), Vector3.new(4.6, 2.6, len - 1), {
+		color = OFF_WHITE,
+	})
+	local units = math.max(2, math.floor(len / 9))
+	for i = 1, units - 1 do
+		Kit.Block(parent, `{id}Seam{i}`, at(x - 2.4, y + 1.3, z1 + len * (i / units)), Vector3.new(0.2, 2.4, 0.25), {
+			color = Color3.fromRGB(176, 182, 194),
+		}).CastShadow = false
+	end
+	-- Stools facing the bench. A bench nobody can sit at is a counter, and the difference
+	-- between a lab and a storeroom is entirely whether the room looks like people work in it.
+	-- `face` is which way the room is from the bench, so the stools stand in front of it.
+	local face = if x < 0 then 1 else -1
+	for i = 1, units do
+		local sz = z1 + len * ((i - 0.5) / units)
+		Kit.Block(parent, `{id}Stool{i}`, at(x + face * 4.6, y + 2.1, sz), Vector3.new(2.6, 0.4, 2.6), {
+			color = DEEP_BLUE,
+			collide = true,
+		}).CastShadow = false
+		Kit.Block(parent, `{id}StoolLeg{i}`, at(x + face * 4.6, y + 1, sz), Vector3.new(0.5, 2.2, 0.5), {
+			color = Color3.fromRGB(96, 102, 114),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+
+	if sinks then
+		local bowls = math.max(1, math.floor(units / 2))
+		for i = 1, bowls do
+			local sz = z1 + len * ((i - 0.5) / bowls)
+			Kit.Block(parent, `{id}Sink{i}`, at(x, y + 2.75, sz), Vector3.new(3.4, 0.5, 3), {
+				color = Color3.fromRGB(214, 220, 230),
+			}).CastShadow = false
+			Kit.Block(parent, `{id}Tap{i}`, at(x + 1.4, y + 3.6, sz), Vector3.new(0.35, 1.7, 0.35), {
+				color = Color3.fromRGB(198, 204, 214),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+end
+
+local function fitScience(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	labBenchRun(parent, at, "SciL", rect.x1 + 3.2, rect.z1 + 10, rect.z2 - 12, y, true)
+	labBenchRun(parent, at, "SciR", rect.x2 - 3.2, rect.z1 + 10, rect.z2 - 12, y, true)
+
+	-- The fume cupboard: the one tall object in the room, which is what stops a lab reading as
+	-- a room full of waist-high slabs.
+	Kit.Block(parent, "SciFume", at(rect.x1 + 6, y + 6, rect.z2 - 5), Vector3.new(9, 12, 4), {
+		color = Color3.fromRGB(212, 218, 228),
+		collide = true,
+	})
+	Kit.Block(parent, "SciFumeGlass", at(rect.x1 + 6, y + 7.5, rect.z2 - 7.1), Vector3.new(8, 6, 0.3), {
+		color = GLASS_TINT,
+		material = Enum.Material.Glass,
+		transparency = 0.5,
+	}).CastShadow = false
+	Kit.Block(parent, "SciFumeDuct", at(rect.x1 + 6, y + 16, rect.z2 - 5), Vector3.new(2.4, 8, 2.4), {
+		color = Color3.fromRGB(176, 182, 194),
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	-- Charts and safety kit on the back wall. A lab with nothing on its walls reads as a room
+	-- that happens to have tables in it.
+	for i = 1, 3 do
+		Kit.Block(parent, `SciChart{i}`, at(rect.x2 - 5 - (i - 1) * 8, y + 13, rect.z2 - 1.5), Vector3.new(7, 9, 0.3), {
+			color = if i == 2 then PALE_BLUE else Color3.fromRGB(236, 240, 248),
+		}).CastShadow = false
+	end
+	Kit.Block(parent, "SciEyewash", at(rect.x2 - 3.4, y + 7.5, rect.z1 + 7), Vector3.new(2.6, 3, 2.6), {
+		color = Color3.fromRGB(64, 176, 92),
+	}).CastShadow = false
+	Kit.Block(parent, "SciSafety", at(cx, y + 19, rect.z2 - 1.5), Vector3.new(6, 4, 0.3), {
+		color = Color3.fromRGB(214, 64, 58),
+	}).CastShadow = false
+end
+
+local function fitArt(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	local cz = (rect.z1 + rect.z2) / 2
+	labBenchRun(parent, at, "ArtL", rect.x1 + 3.2, rect.z1 + 10, rect.z2 - 10, y, true)
+
+	-- The drying rack down the other side, with work on it. Paint on a rack is the detail that
+	-- says the room gets used, and it costs one part per shelf.
+	Kit.Block(parent, "ArtRack", at(rect.x2 - 3.4, y + 7, cz), Vector3.new(5, 14, 34), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	local SWATCH = {
+		Color3.fromRGB(212, 96, 84),
+		PALE_BLUE,
+		Color3.fromRGB(238, 198, 92),
+		Color3.fromRGB(120, 176, 118),
+		Color3.fromRGB(196, 140, 200),
+		OFF_WHITE,
+	}
+	for i = 1, 6 do
+		Kit.Block(parent, `ArtRackShelf{i}`, at(rect.x2 - 3.4, y + 1.6 + i * 2, cz), Vector3.new(5.3, 0.3, 32), {
+			color = Color3.fromRGB(206, 212, 222),
+		}).CastShadow = false
+		Kit.Block(parent, `ArtWork{i}`, at(rect.x2 - 3.6, y + 2.3 + i * 2, cz - 13 + i * 4.4), Vector3.new(4, 0.15, 3.4), {
+			color = SWATCH[i],
+		}).CastShadow = false
+	end
+
+	-- A pinboard of finished work along the back.
+	Kit.Block(parent, "ArtBoard", at(cx, y + 12, rect.z2 - 1.5), Vector3.new(24, 13, 0.4), {
+		color = Color3.fromRGB(148, 116, 88),
+		material = Enum.Material.Fabric,
+	}).CastShadow = false
+	local PIN = { OFF_WHITE, PALE_BLUE, Color3.fromRGB(238, 214, 168), Color3.fromRGB(206, 216, 232) }
+	for i = 1, 8 do
+		local col = (i - 1) % 4
+		local row = math.floor((i - 1) / 4)
+		Kit.Block(parent, `ArtPinned{i}`, at(cx - 9 + col * 6, y + 15 - row * 5.4, rect.z2 - 1.75), Vector3.new(4.6, 4.2, 0.2), {
+			color = PIN[col + 1],
+		}).CastShadow = false
+	end
+end
+
+local function fitReading(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	local cz = (rect.z1 + rect.z2) / 2
+	local SPINE = {
+		DEEP_BLUE,
+		Color3.fromRGB(168, 88, 74),
+		Color3.fromRGB(96, 132, 96),
+		Color3.fromRGB(196, 158, 88),
+		Color3.fromRGB(112, 104, 148),
+	}
+
+	-- Low shelves down both sides. Low, because a room lined with tall stacks is a library --
+	-- the point of this one is that you can see across it from the door.
+	-- `face` is which way the shelf opens: the left run faces into the room (+x), the right run
+	-- faces back across it (-x). Without it the boards and the books are laid on the carcass
+	-- centreline, which puts them inside the shelf rather than on it.
+	for _, run in { { n = "L", x = rect.x1 + 2.8, face = 1 }, { n = "R", x = rect.x2 - 2.8, face = -1 } } do
+		local z1, z2 = rect.z1 + 10, rect.z2 - 10
+		local len = z2 - z1
+		-- A back panel and a top, not a solid box. A shelf modelled as one block has its boards
+		-- and its books buried inside it -- physically what a real carcass does, and useless
+		-- here, because everything that makes it read as a bookshelf ends up hidden in the wood.
+		Kit.Block(parent, `ReadShelfBack{run.n}`, at(run.x - run.face * 1.6, y + 4, (z1 + z2) / 2), Vector3.new(0.9, 8, len), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		Kit.Block(parent, `ReadShelfTop{run.n}`, at(run.x, y + 8.2, (z1 + z2) / 2), Vector3.new(4, 0.5, len), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+		}).CastShadow = false
+		for tier = 1, 3 do
+			Kit.Block(parent, `ReadTier{run.n}{tier}`, at(run.x, y + tier * 2.4, (z1 + z2) / 2), Vector3.new(3.2, 0.3, len - 0.6), {
+				color = Color3.fromRGB(212, 218, 228),
+			}).CastShadow = false
+		end
+		local bays = math.max(3, math.floor(len / 7))
+		for i = 1, bays do
+			for tier = 1, 3 do
+				Kit.Block(parent, `ReadBooks{run.n}{i}_{tier}`, at(run.x + run.face * 0.2, y + tier * 2.4 + 1.1, z1 + len * ((i - 0.5) / bays)), Vector3.new(2.4, 1.9, 5), {
+					color = SPINE[(i + tier) % 5 + 1],
+				}).CastShadow = false
+			end
+		end
+	end
+
+	-- Armchairs at the four corners with a lamp beside each. This room's whole reason to exist
+	-- is that it is somewhere a player would choose to sit, and four corners is what makes it
+	-- read as seating rather than as furniture in storage.
+	for _, corner in { { sx = -1, sz = -1 }, { sx = 1, sz = -1 }, { sx = -1, sz = 1 }, { sx = 1, sz = 1 } } do
+		local ax = cx + corner.sx * 10
+		local az = cz + corner.sz * 28
+		local tag = `{if corner.sx < 0 then "L" else "R"}{if corner.sz < 0 then "F" else "B"}`
+		Kit.Block(parent, `ReadChair{tag}`, at(ax, y + 1.8, az), Vector3.new(6, 3.6, 6), {
+			color = Color3.fromRGB(118, 132, 190),
+			material = Enum.Material.Fabric,
+			collide = true,
+		})
+		Kit.Block(parent, `ReadChairBack{tag}`, at(ax, y + 4.4, az + corner.sz * 2.6), Vector3.new(6, 5.2, 1.2), {
+			color = Color3.fromRGB(104, 118, 176),
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+		Kit.Block(parent, `ReadLamp{tag}`, at(ax + corner.sx * 4.6, y + 4, az), Vector3.new(0.4, 8, 0.4), {
+			color = Color3.fromRGB(72, 76, 86),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `ReadShade{tag}`, at(ax + corner.sx * 4.6, y + 8.4, az), Vector3.new(3, 2.2, 3), {
+			color = Color3.fromRGB(248, 240, 214),
+			material = Enum.Material.Neon,
+		}).CastShadow = false
+	end
+end
+
+-- Wall trim: skirting, a dado rail with a panelled band under it, a picture rail near the
+-- ceiling, and beams across it.
+--
+-- **This is the highest-value detail in the building per part spent, and the reason is scale
+-- rather than decoration.** A room 27 studs floor-to-ceiling has about 15 studs of wall above
+-- head height, and painted flat white that reads as a wall with nothing on it however much
+-- furniture is standing on the floor. The eye has nothing to measure the height against, so a
+-- tall room looks like a small room that has been stretched.
+--
+-- Three horizontal lines fix that, because each one is a known height: a skirting is ankle
+-- high, a dado is hip high, a picture rail is above a door. Give a wall those and it announces
+-- its own size. The panelled band between skirting and dado is the classic school corridor
+-- treatment and costs one part per wall.
+--
+-- Beams do the same job for the ceiling, which is the other surface a tall room has too much
+-- of, and they give the ceiling lights something to sit against.
+local function dressWalls(parent: Instance, at: (number, number, number) -> Vector3, id: string, x1: number, x2: number, z1: number, z2: number, y: number, height: number)
+	local width = x2 - x1
+	local depth = z2 - z1
+	local DADO = 4.6
+	local RAIL_Y = math.min(height - 4, DOOR_H + 12)
+	local TRIM = Color3.fromRGB(232, 236, 244)
+	local PANEL = Color3.fromRGB(206, 214, 228)
+	local BEAM = Color3.fromRGB(222, 226, 234)
+
+	-- The two long walls, and the back wall.
+	local runs = {
+		{ n = "L", cx = x1 + 0.5, cz = (z1 + z2) / 2, len = depth, along = true },
+		{ n = "R", cx = x2 - 0.5, cz = (z1 + z2) / 2, len = depth, along = true },
+		{ n = "B", cx = (x1 + x2) / 2, cz = z2 - 0.5, len = width, along = false },
+	}
+	for _, r in runs do
+		local sz = function(t: number, h: number)
+			return if r.along then Vector3.new(t, h, r.len) else Vector3.new(r.len, h, t)
+		end
+		-- Panelled band from floor to dado, slightly proud of the wall so it casts a line.
+		Kit.Block(parent, `{id}Panel{r.n}`, at(r.cx, y + DADO / 2, r.cz), sz(0.5, DADO), {
+			color = PANEL,
+		}).CastShadow = false
+		-- Skirting at the foot and the dado rail on top of the band. Both stand further out
+		-- than the panel, which is what actually draws the shadow line.
+		Kit.Block(parent, `{id}Skirt{r.n}`, at(r.cx, y + 0.45, r.cz), sz(0.9, 0.9), {
+			color = TRIM,
+		}).CastShadow = false
+		Kit.Block(parent, `{id}Dado{r.n}`, at(r.cx, y + DADO, r.cz), sz(1, 0.7), {
+			color = TRIM,
+		}).CastShadow = false
+		-- Picture rail, up where the blank wall was.
+		Kit.Block(parent, `{id}Rail{r.n}`, at(r.cx, y + RAIL_Y, r.cz), sz(0.8, 0.55), {
+			color = TRIM,
+		}).CastShadow = false
+	end
+
+	-- Ceiling beams across the short dimension, spaced so each reads as its own bay.
+	local bays = math.max(2, math.floor(depth / 18))
+	for bay = 1, bays - 1 do
+		Kit.Block(parent, `{id}Beam{bay}`, at((x1 + x2) / 2, y + height - 1, z1 + depth * (bay / bays)), Vector3.new(width - 1.5, 1.6, 1.6), {
+			color = BEAM,
+		}).CastShadow = false
+	end
+end
+
+local function buildRooms(parent: Instance, at: (number, number, number) -> Vector3): { [string]: Vector3 }
+	local anchors: { [string]: Vector3 } = {}
+
+	for _, rect in ROOMS do
+		local y = floorY(rect.floor)
+		local cx, cz = rectCenter(rect)
+		local width = rect.x2 - rect.x1
+		local depth = rect.z2 - rect.z1
+
+		-- The two partitions that make it a room. The wall onto the corridor is glazed, which
+		-- is the single thing that stops an upper floor being a row of closed doors -- you can
+		-- see the lesson you are late for.
+		Kit.Wall(parent, `{rect.id}Left`, at(rect.x1, y, rect.z1), at(rect.x1, y, rect.z2), FLOOR_H - SLAB, WALL_T, { color = WHITE })
+		Kit.Wall(parent, `{rect.id}Right`, at(rect.x2, y, rect.z1), at(rect.x2, y, rect.z2), FLOOR_H - SLAB, WALL_T, { color = WHITE })
+		Kit.GlassWall(parent, `{rect.id}Front`, at(rect.x1 + 14, y, rect.z1), at(rect.x2, y, rect.z1), FLOOR_H - SLAB, WALL_T, 0.7, WHITE, GLASS_TINT)
+
+		-- The doorway, and a door in it.
+		--
+		-- It was an open gap, on the reasoning that a swinging door in a corridor a class
+		-- empties into is a thing to get stuck on. That reasoning is still right about *swinging*
+		-- -- so this does not swing. It is a glazed leaf in a frame, non-collidable, which reads
+		-- as a door from both sides and cannot trap anybody. A room you enter through a hole in
+		-- a wall reads as unfinished however good the room is.
+		Kit.Block(parent, `{rect.id}DoorFrame`, at(rect.x1 + 14, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorJamb`, at(rect.x1, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorHead`, at(rect.x1 + 7, y + DOOR_H, rect.z1), Vector3.new(14, 1.2, 1.4), { color = BLUE })
+		-- **A door that shuts.**
+		--
+		-- This was a non-collidable glazed leaf, on the reasoning that a swinging door in a
+		-- corridor a class empties into is something to get stuck on. That was the right worry
+		-- and the wrong answer: a leaf you walk through is not a door, it is a picture of one,
+		-- and the building was full of rooms you entered through a hole.
+		--
+		-- So it is solid and it swings. The stuck-in-the-doorway problem is handled by the swing
+		-- direction instead -- every room door opens *into its room*, away from the corridor, so
+		-- an opening leaf never sweeps the circulation route. Named `{id}DoorLeaf` because
+		-- FixtureService finds doors by name; see the PATTERNS note there.
+		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 7, y + DOOR_H / 2, rect.z1), Vector3.new(13.2, DOOR_H, 0.5), {
+			color = WALNUT,
+			material = Enum.Material.WoodPlanks,
+			collide = true,
+		})
+		-- A vision panel. Every school door has one, and it is what stops a corridor of shut
+		-- doors reading as a corridor of walls.
+		Kit.Block(parent, `{rect.id}DoorVision`, at(rect.x1 + 7, y + DOOR_H * 0.68, rect.z1), Vector3.new(4.6, DOOR_H * 0.34, 0.3), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.4,
+		}).CastShadow = false
+		-- The push bar, which is what makes a glass panel read as a door rather than a window.
+		Kit.Block(parent, `{rect.id}DoorBar`, at(rect.x1 + 7, y + DOOR_H * 0.45, rect.z1 - 0.4), Vector3.new(7, 0.5, 0.5), {
+			color = Color3.fromRGB(206, 212, 222),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+
+		-- The sign over the door, which is how a player finds a subject at all.
+		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 7, y + DOOR_H + 2.4, rect.z1 - 1.2), Vector3.new(12, 2.8, 0.4), { color = WHITE })
+		Kit.Sign(plate, string.upper(rect.label), 12, LABEL_DIST, DEEP_BLUE)
+
+		dressWalls(parent, at, rect.id, rect.x1, rect.x2, rect.z1, rect.z2, y, FLOOR_H - SLAB)
+
+		-- Lights on a grid.
+		for ax = 1, FIT.LightsAcross do
+			for az = 1, FIT.LightsAlong do
+				Kit.LightPanel(
+					parent,
+					`{rect.id}Light{ax}_{az}`,
+					at(rect.x1 + width * ((ax - 0.5) / FIT.LightsAcross), y + FLOOR_H - SLAB - 0.6, rect.z1 + depth * ((az - 0.5) / FIT.LightsAlong)),
+					7,
+					2
+				)
+			end
+		end
+
+		if rect.kind == "science" then
+			fitScience(parent, at, rect, y)
+		elseif rect.kind == "art" then
+			fitArt(parent, at, rect, y)
+		elseif rect.kind == "reading" then
+			fitReading(parent, at, rect, y)
+		elseif rect.kind == "class" then
+			fitClassroom(parent, at, rect, y)
+		elseif rect.kind == "cafeteria" then
+			fitCafeteria(parent, at, rect, y)
+		elseif rect.kind == "library" then
+			fitLibrary(parent, at, rect, y)
+		elseif rect.kind == "cooking" then
+			fitCooking(parent, at, rect, y)
+		elseif rect.kind == "lounge" then
+			fitLounge(parent, at, rect, y)
+		elseif rect.kind == "common" then
+			fitCommon(parent, at, rect, y)
+		end
+
+		-- The anchor the verbs hang off. Set back from the door so a bench laid on it has the
+		-- room around it rather than the doorway.
+		anchors[rect.id] = at(cx, y, cz)
+	end
+
+	return anchors
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The aquatic centre, attached on the left.
+-- ---------------------------------------------------------------------------------------
+
+local function buildPool(parent: Instance, at: (number, number, number) -> Vector3): Vector3
+	local half = W / 2
+	-- Butted against the left elevation, so the two buildings share a wall line rather than
+	-- standing as separate sheds with a gap between them.
+	local x0 = -half - POOL.HallWidthStuds
+	local x1 = -half
+	local cx = (x0 + x1) / 2
+	local cz = POOL.HallDepthStuds / 2
+	local hallH = FLOOR_H * 2
+
+	Kit.Slab(parent, "PoolFloor", at(cx, 0.4, cz), POOL.HallWidthStuds, POOL.HallDepthStuds, 0.6, { color = TILE })
+	Kit.Wall(parent, "PoolBack", at(x0, 0.4, POOL.HallDepthStuds), at(x1, 0.4, POOL.HallDepthStuds), hallH, WALL_T, { color = WHITE })
+	Kit.Wall(parent, "PoolEnd", at(x0, 0.4, 0), at(x0, 0.4, POOL.HallDepthStuds), hallH, WALL_T, { color = WHITE })
+	Kit.GlassWall(parent, "PoolFront", at(x0, 0.4, 0), at(x1, 0.4, 0), hallH, WALL_T, 0.72, WHITE, GLASS_TINT)
+
+	-- The name across the front, which is what makes it an aquatic centre from the road.
+	local band = Kit.Block(parent, "PoolBand", at(cx, 6, -0.8), Vector3.new(POOL.HallWidthStuds, 5, 1), { color = BLUE })
+	Kit.Sign(band, "AGES AQUATIC CENTER", POOL.HallWidthStuds * 0.6, LABEL_DIST * 2.5, WHITE)
+
+	-- The barrel roof. Each rib is a flat panel turned a little further than the last, which
+	-- approximates an arch closely enough at this scale and costs one part per rib -- a real
+	-- curved mesh would be an asset dependency, and the kit deliberately has none.
+	local riseY = 0.4 + hallH
+	for rib = 1, POOL.RoofRibs do
+		local share = (rib - 0.5) / POOL.RoofRibs
+		local angle = math.pi * share
+		local ribX = cx + math.cos(angle) * (POOL.HallWidthStuds / 2)
+		local ribY = riseY + math.sin(angle) * POOL.RoofRiseStuds
+		local panel = Kit.Block(parent, `PoolRib{rib}`, at(ribX, ribY, cz), Vector3.new(POOL.HallWidthStuds / POOL.RoofRibs + 1.5, 0.5, POOL.HallDepthStuds), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.45,
+			collide = true,
+		})
+		panel.CastShadow = false
+		-- The steel between the panes.
+		Kit.Block(parent, `PoolRibArch{rib}`, at(ribX, ribY, cz), Vector3.new(0.7, 0.9, POOL.HallDepthStuds), {
+			color = OFF_WHITE,
+			material = Enum.Material.Metal,
+		})
+	end
+
+	-- The tank, sunk into the floor: a hole in the slab is not possible, so the water sits in
+	-- a box whose walls are the coping and whose bottom is the tiled floor of the pool.
+	local wx = cx
+	local wz = cz
+	local wHalfW = POOL.WaterWidthStuds / 2
+	local wHalfD = POOL.WaterDepthStuds / 2
+	local depthBelow = POOL.WaterDepthBelowStuds
+
+	Kit.Slab(parent, "PoolBottom", at(wx, 0.4 - depthBelow, wz), POOL.WaterWidthStuds, POOL.WaterDepthStuds, 0.5, { color = PALE_BLUE })
+	for side = -1, 1, 2 do
+		Kit.Wall(parent, `PoolWallX{side}`, at(wx + side * wHalfW, 0.4 - depthBelow, wz - wHalfD), at(wx + side * wHalfW, 0.4 - depthBelow, wz + wHalfD), depthBelow, 0.8, { color = WHITE })
+		Kit.Wall(parent, `PoolWallZ{side}`, at(wx - wHalfW, 0.4 - depthBelow, wz + side * wHalfD), at(wx + wHalfW, 0.4 - depthBelow, wz + side * wHalfD), depthBelow, 0.8, { color = WHITE })
+	end
+
+	-- Lane markings on the bottom, then the water over them.
+	for lane = 1, POOL.Lanes - 1 do
+		local z = wz - wHalfD + POOL.WaterDepthStuds * (lane / POOL.Lanes)
+		Kit.Slab(parent, `PoolLane{lane}`, at(wx, 0.4 - depthBelow + 0.5, z), POOL.WaterWidthStuds - 2, 0.8, 0.2, { color = DEEP_BLUE, collide = false })
+	end
+
+	local water = Kit.Block(parent, "PoolWater", at(wx, 0.4 - depthBelow / 2, wz), Vector3.new(POOL.WaterWidthStuds, depthBelow - 0.6, POOL.WaterDepthStuds), {
+		color = WATER,
+		material = Enum.Material.Glass,
+		transparency = 0.35,
+		reflectance = 0.1,
+	})
+	water.CastShadow = false
+
+	-- Coping round the tank, so the edge reads as a lip rather than as water meeting tile.
+	for side = -1, 1, 2 do
+		Kit.Slab(parent, `Coping{side}`, at(wx + side * (wHalfW + 1.5), 0.7, wz), 3, POOL.WaterDepthStuds + 6, 0.5, { color = WHITE })
+		Kit.Slab(parent, `CopingZ{side}`, at(wx, 0.7, wz + side * (wHalfD + 1.5)), POOL.WaterWidthStuds + 6, 3, 0.5, { color = WHITE })
+	end
+
+	-- Spectator benches, a lifeguard chair and a diving board -- the three things that make a
+	-- pool hall read as a pool hall rather than as a flooded room.
+	for row = 1, POOL.BenchRows do
+		Kit.Block(parent, `PoolBench{row}`, at(wx, 0.4 + row * 1.6, wz + wHalfD + 8 + row * 3), Vector3.new(POOL.WaterWidthStuds * 0.7, 1.4, 3), { color = OFF_WHITE })
+	end
+	Kit.Block(parent, "Lifeguard", at(wx + wHalfW + 6, 5, wz), Vector3.new(3.4, 10, 3.4), { color = WOOD })
+	Kit.Block(parent, "LifeguardSeat", at(wx + wHalfW + 6, 10.4, wz), Vector3.new(4.4, 0.6, 4.4), { color = WHITE })
+	Kit.Block(parent, "DivingBoard", at(wx - wHalfW + 6, 8, wz - wHalfD - 3), Vector3.new(12, 0.5, 3), { color = WHITE })
+	Kit.Block(parent, "DivingTower", at(wx - wHalfW - 1, 4, wz - wHalfD - 3), Vector3.new(4, 8, 4), { color = CONCRETE })
+
+	for index = 1, 8 do
+		Kit.LightPanel(parent, `PoolLight{index}`, at(x0 + POOL.HallWidthStuds * ((index - 0.5) / 8), 0.4 + hallH - 1, cz), 9, 3)
+	end
+
+	return at(wx, 0.4, wz + wHalfD + 10)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The gym, attached on the right.
+-- ---------------------------------------------------------------------------------------
+
+local function buildGym(parent: Instance, at: (number, number, number) -> Vector3): Vector3
+	local half = W / 2
+	local x0 = half
+	local x1 = half + GYM.WidthStuds
+	local cx = (x0 + x1) / 2
+	local cz = GYM.DepthStuds / 2
+
+	Kit.Slab(parent, "GymFloor", at(cx, 0.4, cz), GYM.WidthStuds, GYM.DepthStuds, 0.6, { color = WOOD })
+	Kit.Wall(parent, "GymBack", at(x0, 0.4, GYM.DepthStuds), at(x1, 0.4, GYM.DepthStuds), GYM.HeightStuds, WALL_T, { color = WHITE })
+	Kit.Wall(parent, "GymEnd", at(x1, 0.4, 0), at(x1, 0.4, GYM.DepthStuds), GYM.HeightStuds, WALL_T, { color = WHITE })
+	Kit.GlassWall(parent, "GymFront", at(x0, 0.4, 0), at(x1, 0.4, 0), GYM.HeightStuds, WALL_T, 0.55, WHITE, GLASS_TINT)
+	Kit.Slab(parent, "GymRoof", at(cx, 0.4 + GYM.HeightStuds, cz), GYM.WidthStuds, GYM.DepthStuds, 1.4, { color = OFF_WHITE })
+
+	local band = Kit.Block(parent, "GymBand", at(cx, 6, -0.8), Vector3.new(GYM.WidthStuds, 5, 1), { color = DEEP_BLUE })
+	Kit.Sign(band, "GYMNASIUM", GYM.WidthStuds * 0.55, LABEL_DIST * 2.5, WHITE)
+
+	-- Court markings. A centre circle drawn as a ring of short segments, because a torus is
+	-- not a part and a decal would be an asset id.
+	Kit.Slab(parent, "GymCourt", at(cx, 0.75, cz), GYM.WidthStuds - 14, GYM.DepthStuds - 14, 0.2, { color = Color3.fromRGB(206, 168, 116), collide = false })
+	for seg = 1, 24 do
+		local angle = (seg / 24) * math.pi * 2
+		Kit.Block(parent, `GymCircle{seg}`, at(cx + math.cos(angle) * 12, 0.85, cz + math.sin(angle) * 12), Vector3.new(3.4, 0.2, 0.6), {
+			color = WHITE,
+			yawDegrees = -math.deg(angle),
+		})
+	end
+
+	-- Hoops at each end.
+	for index = 1, GYM.HoopCount do
+		local side = if index == 1 then -1 else 1
+		local z = cz + side * (GYM.DepthStuds / 2 - 8)
+		Kit.Column(parent, `HoopPost{index}`, at(cx, 0.4, z), 16, 1.4, DARK)
+		Kit.Block(parent, `Backboard{index}`, at(cx, 15, z - side * 1.6), Vector3.new(11, 6.5, 0.4), { color = WHITE, transparency = 0.25 })
+		Kit.Block(parent, `Rim{index}`, at(cx, 12.6, z - side * 4), Vector3.new(5.4, 0.4, 5.4), { color = Color3.fromRGB(226, 116, 62) })
+	end
+
+	-- Bleachers down one side.
+	for row = 1, 5 do
+		Kit.Block(parent, `Bleacher{row}`, at(x1 - 6 - row * 3, 0.4 + row * 2, cz), Vector3.new(3, 2, GYM.DepthStuds - 20), { color = OFF_WHITE })
+	end
+
+	-- Wall bars down the back and climbing ropes from the roof. Both are here because the
+	-- room got smaller: a compact gym has to be *denser* to still read as a gym, and these are
+	-- the two things that say "school gymnasium" rather than "sports hall" for almost no
+	-- parts. A bare box at 72 studs would read as emptier than the 88-stud one it replaced.
+	for index = 1, GYM.WallBars do
+		local share = (index - 0.5) / GYM.WallBars
+		local x = x0 + GYM.WidthStuds * share
+		for rung = 1, 9 do
+			Kit.Block(parent, `WallBar{index}_{rung}`, at(x, 2 + rung * 1.6, GYM.DepthStuds - 2), Vector3.new(5, 0.4, 0.4), {
+				color = WOOD,
+				material = Enum.Material.Wood,
+			}).CastShadow = false
+		end
+	end
+
+	for index = 1, GYM.RopeCount do
+		local x = x0 + GYM.WidthStuds * (index / (GYM.RopeCount + 1))
+		Kit.Block(parent, `Rope{index}`, at(x, GYM.HeightStuds / 2 + 2, cz - 12), Vector3.new(0.35, GYM.HeightStuds - 4, 0.35), {
+			color = Color3.fromRGB(184, 156, 108),
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+	end
+
+	for index = 1, 10 do
+		Kit.LightPanel(parent, `GymLight{index}`, at(x0 + GYM.WidthStuds * (((index - 1) % 5 + 0.5) / 5), 0.4 + GYM.HeightStuds - 1.5, cz + (if index > 5 then 16 else -16)), 10, 3)
+	end
+
+	return at(cx, 0.4, cz)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- The track and field, behind the building.
+-- ---------------------------------------------------------------------------------------
+
+local function buildTrack(parent: Instance, at: (number, number, number) -> Vector3): Vector3
+	local centreZ = D + 40 + TRACK.TurnRadiusStuds
+	local halfStraight = TRACK.StraightStuds / 2
+
+	-- The infield first, so the lanes are laid over its edge rather than under it.
+	Kit.Slab(parent, "Infield", at(0, 0.5, centreZ), TRACK.StraightStuds + 10, TRACK.TurnRadiusStuds * 2 - 8, 0.5, {
+		color = GRASS,
+		material = Enum.Material.Grass,
+	})
+
+	for lane = 1, TRACK.Lanes do
+		local radius = TRACK.TurnRadiusStuds + (lane - 1) * TRACK.LaneWidthStuds
+		local width = TRACK.LaneWidthStuds
+
+		-- The two straights.
+		for side = -1, 1, 2 do
+			Kit.Slab(parent, `TrackStraight{lane}_{side}`, at(0, 0.55, centreZ + side * radius), TRACK.StraightStuds, width, 0.3, {
+				color = TRACK_RED,
+				collide = false,
+			})
+		end
+
+		-- The two turns, stepped round in segments. Each segment is a short slab turned to the
+		-- tangent, which is how you draw a curve out of rectangles without a mesh.
+		for side = -1, 1, 2 do
+			for seg = 1, TRACK.CurveSegments do
+				local share = (seg - 0.5) / TRACK.CurveSegments
+				local angle = -math.pi / 2 + math.pi * share
+				local px = side * (halfStraight + math.cos(angle) * radius)
+				local pz = centreZ + math.sin(angle) * radius
+				-- Segment length from the arc it has to cover, plus a hair so neighbours overlap
+				-- rather than leaving a hairline of ground showing between them.
+				local segLength = (math.pi * radius / TRACK.CurveSegments) + 0.6
+				Kit.Block(parent, `TrackTurn{lane}_{side}_{seg}`, at(px, 0.55, pz), Vector3.new(width, 0.3, segLength), {
+					color = TRACK_RED,
+					yawDegrees = -math.deg(angle) * side,
+				})
+			end
+		end
+	end
+
+	-- The pitch markings inside, and a goal at each end.
+	Kit.Slab(parent, "PitchLineHalf", at(0, 0.75, centreZ), 0.8, TRACK.TurnRadiusStuds * 2 - 16, 0.2, { color = WHITE, collide = false })
+	for side = -1, 1, 2 do
+		local gz = centreZ + side * (TRACK.TurnRadiusStuds - 14)
+		Kit.Block(parent, `GoalBar{side}`, at(0, TRACK.GoalHeightStuds, gz), Vector3.new(TRACK.GoalWidthStuds, 0.7, 0.7), { color = WHITE })
+		for post = -1, 1, 2 do
+			Kit.Column(parent, `GoalPost{side}_{post}`, at(post * TRACK.GoalWidthStuds / 2, 0.6, gz), TRACK.GoalHeightStuds, 0.7, WHITE)
+		end
+	end
+
+	-- Floodlights at the corners, so the track reads at night.
+	for sx = -1, 1, 2 do
+		for sz = -1, 1, 2 do
+			local base = at(sx * (halfStraight + 20), 0.5, centreZ + sz * (TRACK.TurnRadiusStuds + 30))
+			Kit.Column(parent, `Flood{sx}_{sz}`, base, 34, 2, CONCRETE)
+			Kit.LightPanel(parent, `FloodHead{sx}_{sz}`, base + Vector3.new(0, 35, 0), 8, 4)
+		end
+	end
+	return at(0, 0.5, centreZ)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Standing down the map's own school.
+-- ---------------------------------------------------------------------------------------
+
+-- Everything the map builds for a school, which this one replaces.
+--
+-- Five models across two assets, and the list was measured rather than guessed: every one of
+-- them carries **no attributes at all**, so standing them down removes geometry and nothing
+-- else. The street's place points are a sibling model and are never touched, which is why
+-- `school` still resolves afterwards and every service that looks it up still works.
+--
+-- Deliberately absent, and they must stay absent: `City.RunningTrack` (FacilityKind=track),
+-- `City.SoccerField` and `City.BoxingGym` (SportsDrillKind). Those carry attributes other
+-- systems read, so hiding them would break a capability rather than replace one.
+local OLD_SCHOOL: { StandDown.Target } = {
+	{ parent = "Street", model = "School" },
+	{ parent = "Street", model = "SchoolFittings" },
+	{ parent = "City", model = "SchoolFields" },
+	{ parent = "City", model = "SchoolFieldsTrees" },
+	{ parent = "City", model = "SchoolFieldsFittings" },
+}
+
+local STAND_DOWN_KEY = "School"
+
+local function standDownOldSchool(): number
+	return StandDown.Hide(STAND_DOWN_KEY, OLD_SCHOOL)
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Build.
+-- ---------------------------------------------------------------------------------------
+
+-- Lays the whole school around a centre point, once.
+--
+-- Nil means it did not lay, which every caller must treat as "the building is not there" --
+-- the pad, the sign and the verb rooms all still work without it, which is deliberate: a
+-- building that failed to appear should cost the player a nice-looking school and not their
+-- afternoon.
+function SchoolCopy.Build(center: Vector3): Plan?
+	local existing = plan
+	if existing ~= nil then
+		return existing
+	end
+	if not BUILDING.Enabled then
+		return nil
+	end
+
+	local parent = schoolFolder()
+	-- The only place the centre is added in. Everything above this line is local coordinates,
+	-- which is what lets the whole building move with its place point.
+	--
+	-- Named `toWorld` rather than `at` even though every builder receives it as `at`, because
+	-- a file-level local sharing a name with a parameter used two hundred lines above it
+	-- reads to the gate's declaration-order check as a use before declaration. CLAUDE.md
+	-- names that false positive and says the checks that produced them were dropped rather
+	-- than tuned, so the fix belongs here.
+	local function toWorld(x: number, y: number, z: number): Vector3
+		-- OFFSET is applied here and nowhere else: the place point marks the door, and the
+		-- building sits back from it. Both this and SetEvent's copy must agree, or prom would
+		-- be laid where the gym used to be.
+		return center + OFFSET + Vector3.new(x, y, z)
+	end
+
+	-- The map's own school comes down first, or the player walks through two buildings
+	-- standing in one plot. See standDownOldSchool for why this hides rather than destroys.
+	standDownOldSchool()
+
+	buildSite(parent, toWorld)
+	buildShell(parent, toWorld)
+	buildFrontage(parent, toWorld)
+	buildStairs(parent, toWorld)
+	buildLobby(parent, toWorld)
+	buildCorridors(parent, toWorld)
+	local anchors = buildRooms(parent, toWorld)
+
+	-- The corridor line, so the bully system can stand people along the hallway this file
+	-- laid rather than laying a second one beside it. The left-hand end rather than the
+	-- middle, because Corridor measures its run forward from the point it is handed.
+	anchors.corridor = toWorld(-W / 2 + WALL_T, 0, D - WALL_T - BAND_D - CORRIDOR_W / 2)
+
+	anchors.pool = buildPool(parent, toWorld)
+	anchors.gym = buildGym(parent, toWorld)
+	-- The track is off by default: the map already has one, and ours added 176 studs of depth
+	-- to a building that had nowhere to stand. See Config.School.Track.Enabled.
+	--
+	-- The anchor still has to exist, because PE and the sports drills look it up. When the track
+	-- is not built it falls back to the place point, which is what every other room in this file
+	-- does when its geometry is missing -- the verb keeps working, it just happens on open
+	-- ground rather than on a marked lane.
+	local field = if TRACK.Enabled then buildTrack(parent, toWorld) else toWorld(0, 0.4, D + 40)
+	anchors.track = field
+
+	-- With the building already baked into the map, the parts just laid are a duplicate
+	-- standing inside it. The *anchors* are what this run was for -- they are computed by
+	-- laying the rooms, not stored anywhere -- so the geometry is thrown away and the plan is
+	-- kept. Nothing was ever parented into the world; see schoolFolder.
+	if BUILDING.Baked then
+		local existing = folder
+		if existing ~= nil then
+			existing:Destroy()
+		end
+		folder = nil
+	end
+
+	local built: Plan = {
+		center = center,
+		rooms = anchors,
+		entrance = toWorld(0, 0, -4),
+		atrium = toWorld(0, 0, (ATRIUM_Z1 + ATRIUM_Z2) / 2),
+		field = field,
+	}
+	plan = built
+	return built
+end
+
+-- ---------------------------------------------------------------------------------------
+-- Events: the nights the gymnasium is dressed for something.
+-- ---------------------------------------------------------------------------------------
+
+-- Everything an event puts up lives in its own folder, so taking it down is one Destroy and
+-- the gym underneath is never touched. That separation is the whole design: the gym is a gym
+-- three hundred days a year and a ballroom on the other five, and neither version has to
+-- know the other exists.
+local eventFolder: Folder? = nil
+local currentEvent: string? = nil
+
+local function eventParent(): Folder
+	local existing = eventFolder
+	if existing ~= nil and existing.Parent ~= nil then
+		return existing
+	end
+	local made = Instance.new("Folder")
+	made.Name = "SchoolEvent"
+	made.Parent = workspace
+	eventFolder = made
+	return made
+end
+
+-- Dresses the gymnasium for prom, or clears it.
+--
+-- The gym is the venue on purpose, and it is worth saying why rather than treating it as
+-- obvious. A school has exactly one room big enough to hold everybody, and every real school
+-- therefore holds its dances in it. Building a separate ballroom would mean adding a space
+-- that is dead for all but one night a year -- which is the opposite of what a map this size
+-- needs, and which the reference photographs confirm: that is a basketball court under the
+-- streamers, and you can see the wall bars behind the stage.
+--
+-- Passing nil takes it all down. Returns whether anything changed, so a caller can tell the
+-- difference between "prom started" and "prom was already on".
+function SchoolCopy.SetEvent(id: string?): boolean
+	if currentEvent == id then
+		return false
+	end
+
+	local existing = eventFolder
+	if existing ~= nil then
+		existing:Destroy()
+	end
+	eventFolder = nil
+	currentEvent = id
+
+	if id == nil then
+		return true
+	end
+
+	local current = plan
+	if current == nil then
+		-- No building, so no gym to dress. Recorded as the current event anyway: the caller
+		-- asked for prom and prom is what is on, it simply has nowhere to be yet.
+		return true
+	end
+
+	local center = current.center
+	local function toWorld(x: number, y: number, z: number): Vector3
+		-- OFFSET is applied here and nowhere else: the place point marks the door, and the
+		-- building sits back from it. Both this and SetEvent's copy must agree, or prom would
+		-- be laid where the gym used to be.
+		return center + OFFSET + Vector3.new(x, y, z)
+	end
+
+	local parent = eventParent()
+	local half = W / 2
+	local x0 = half
+	local cx = x0 + GYM.WidthStuds / 2
+	local cz = GYM.DepthStuds / 2
+
+	local partyColors = {
+		Color3.fromRGB(236, 118, 176),
+		Color3.fromRGB(146, 106, 214),
+		Color3.fromRGB(98, 168, 236),
+		Color3.fromRGB(246, 196, 96),
+		Color3.fromRGB(240, 240, 246),
+	}
+
+	-- The dance floor: a parquet square in the middle, lit from above. Everything else in the
+	-- room arranges itself around this, which is why it is laid first.
+	Kit.Slab(parent, "DanceFloor", toWorld(cx, 0.9, cz), EVENTS.FloorStuds, EVENTS.FloorStuds, 0.4, {
+		color = Color3.fromRGB(196, 150, 104),
+		material = Enum.Material.WoodPlanks,
+	})
+
+	-- Coloured washes over it. Neon discs rather than real lights for the reason the ceiling
+	-- panels are: a dozen PointLights in one room costs more than the building.
+	for index = 1, EVENTS.Spotlights do
+		local angle = (index / EVENTS.Spotlights) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.3
+		Kit.Spotlight(
+			parent,
+			`PromSpot{index}`,
+			toWorld(cx + math.cos(angle) * r, 1.2, cz + math.sin(angle) * r),
+			7,
+			partyColors[((index - 1) % #partyColors) + 1]
+		)
+	end
+
+	-- The stage at the far end, with the throne on it.
+	local stageZ = cz + GYM.DepthStuds / 2 - EVENTS.StageDepthStuds - 4
+	Kit.Slab(parent, "PromStage", toWorld(cx, 0.4 + EVENTS.StageRiseStuds, stageZ), EVENTS.StageWidthStuds, EVENTS.StageDepthStuds, EVENTS.StageRiseStuds, {
+		color = Color3.fromRGB(196, 62, 78),
+		material = Enum.Material.Fabric,
+	})
+	Kit.Block(parent, "PromThrone", toWorld(cx, 0.4 + EVENTS.StageRiseStuds + 3, stageZ + 1), Vector3.new(6, 6, 4), {
+		color = Color3.fromRGB(226, 186, 84),
+		material = Enum.Material.Metal,
+	})
+	Kit.Block(parent, "PromThroneBack", toWorld(cx, 0.4 + EVENTS.StageRiseStuds + 8, stageZ + 2.6), Vector3.new(6, 10, 1), {
+		color = Color3.fromRGB(226, 186, 84),
+		material = Enum.Material.Metal,
+	})
+
+	-- The banner over the stage.
+	local banner = Kit.Block(parent, "PromBanner", toWorld(cx, 16, stageZ + 4), Vector3.new(EVENTS.StageWidthStuds + 8, 4, 0.4), {
+		color = Color3.fromRGB(236, 118, 176),
+	})
+	banner.CastShadow = false
+	Kit.Sign(banner, "AGES PROM", 24, LABEL_DIST * 2, Color3.fromRGB(255, 250, 252))
+
+	-- The DJ booth, off to one side of the stage.
+	Kit.Block(parent, "DjBooth", toWorld(cx - EVENTS.StageWidthStuds * 0.75, 2.4, stageZ - 2), Vector3.new(9, 4.8, 4), {
+		color = Color3.fromRGB(64, 46, 96),
+	})
+	Kit.Block(parent, "DjDeck", toWorld(cx - EVENTS.StageWidthStuds * 0.75, 5, stageZ - 2), Vector3.new(9.4, 0.4, 4.4), {
+		color = Color3.fromRGB(28, 30, 40),
+	})
+
+	-- The balloon arch at the way in, and clusters round the room.
+	Kit.BalloonArch(parent, "PromArch", toWorld(cx, 0.4, cz - GYM.DepthStuds / 2 + 6), 26, 16, EVENTS.ArchBalloons, partyColors)
+
+	for index = 1, EVENTS.BalloonClusters do
+		local angle = (index / EVENTS.BalloonClusters) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.78
+		Kit.BalloonCluster(
+			parent,
+			`PromBalloons{index}`,
+			toWorld(cx + math.cos(angle) * r, 0.4, cz + math.sin(angle) * r),
+			EVENTS.BalloonsPerCluster,
+			partyColors
+		)
+	end
+
+	-- Streamers across the ceiling, corner to corner.
+	for index = 1, EVENTS.Streamers do
+		local share = (index - 0.5) / EVENTS.Streamers
+		local z = cz - GYM.DepthStuds / 2 + GYM.DepthStuds * share
+		Kit.Streamer(
+			parent,
+			`PromStreamer{index}`,
+			toWorld(x0 + 3, GYM.HeightStuds - 3, z),
+			toWorld(x0 + GYM.WidthStuds - 3, GYM.HeightStuds - 3, z),
+			8,
+			partyColors[((index - 1) % #partyColors) + 1]
+		)
+	end
+
+	-- Folding chairs round the edge and a few round tables, so the room has somewhere to sit
+	-- out a song. Deliberately at the perimeter: chairs on the floor would be the one thing
+	-- that stops it being a dance floor.
+	for index = 1, EVENTS.Chairs do
+		local angle = (index / EVENTS.Chairs) * math.pi * 2
+		local r = EVENTS.FloorStuds * 0.92
+		Kit.Block(parent, `PromChair{index}`, toWorld(cx + math.cos(angle) * r, 2, cz + math.sin(angle) * r), Vector3.new(2.6, 0.4, 2.6), {
+			color = Color3.fromRGB(48, 52, 68),
+			yawDegrees = -math.deg(angle),
+		})
+	end
+	for index = 1, EVENTS.Tables do
+		local angle = ((index - 0.5) / EVENTS.Tables) * math.pi * 2
+		local r = EVENTS.FloorStuds * 1.12
+		local spot = toWorld(cx + math.cos(angle) * r, 0.4, cz + math.sin(angle) * r)
+		Kit.Block(parent, `PromTable{index}`, spot + Vector3.new(0, 3, 0), Vector3.new(7, 0.4, 7), { color = Color3.fromRGB(246, 240, 244) })
+		Kit.Block(parent, `PromTableLeg{index}`, spot + Vector3.new(0, 1.5, 0), Vector3.new(1.2, 3, 1.2), { color = Color3.fromRGB(120, 96, 108) })
+	end
+
+	return true
+end
+
+-- Which event is dressed, or nil. Read rather than built.
+function SchoolCopy.Event(): string?
+	return currentEvent
+end
+
+-- Puts the map's own school back and takes this one down. The undo, for deciding by eye
+-- which building the game should have.
+function SchoolCopy.RestoreOldSchool(): number
+	local put = StandDown.Restore(STAND_DOWN_KEY)
+	if put > 0 then
+		SchoolCopy.Clear()
+	end
+	return put
+end
+
+-- Whether the map's school is currently stood down.
+function SchoolCopy.OldSchoolStoodDown(): boolean
+	return StandDown.IsHidden(STAND_DOWN_KEY)
+end
+
+-- Which of the map's models are stood down, by name.
+function SchoolCopy.StoodDownNames(): { string }
+	return StandDown.Names(STAND_DOWN_KEY)
+end
+
+-- The building as it stands, or nil if it has not been laid. Read rather than built, so a
+-- debug command describing the school cannot be the thing that creates it.
+function SchoolCopy.Plan(): Plan?
+	return plan
+end
+
+-- Where a named room is, in world coordinates, or nil if there is no such room or the
+-- building is not up.
+--
+-- **This is the entire join between the building and the lessons.** ScienceService does not
+-- know where the lab is; it asks for "science" and lays its benches around whatever comes
+-- back. That is what lets a wall move without a subject breaking, and a subject be added
+-- without a wall moving.
+function SchoolCopy.RoomAt(id: string): Vector3?
+	local current = plan
+	if current == nil then
+		return nil
+	end
+	return current.rooms[id]
+end
+
+-- Takes the school down. The new-life path, and the same reason Corridor.Clear exists: the
+-- building is rebuilt around whichever place point the next life walks into.
+function SchoolCopy.Clear()
+	local existing = folder
+	if existing ~= nil then
+		existing:Destroy()
+	end
+	folder = nil
+	plan = nil
+	-- And whatever the gym was dressed for. A prom left standing over a school that no longer
+	-- exists is the kind of thing that survives a new life and cannot be explained.
+	SchoolCopy.SetEvent(nil)
+end
+
+return SchoolCopy
