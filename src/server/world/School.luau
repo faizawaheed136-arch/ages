@@ -1037,7 +1037,13 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	-- those for waiting -- somebody is always waiting outside the office -- so they get a bench,
 	-- a planter and a case of whatever the school is proud of this year.
 	for side = -1, 1, 2 do
-		local wx = side * (BUILDING.AtriumWidthStuds / 2 - 12)
+		-- Pulled in against the bridge rather than out at the atrium's edge.
+		--
+		-- These corners sat under what is now a stairwell -- a planter, a shrub and a bench leg
+		-- were standing inside the footprint of each flight, at the bottom where you start
+		-- climbing. Moving them inboard puts them under the bridge instead, which is a
+		-- sheltered spot to wait and is not in anybody's way.
+		local wx = side * (WELL_X_IN - 5)
 		local wz = ATRIUM_Z1 + 12
 
 		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
@@ -1072,23 +1078,17 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		end
 	end
 
-	-- Banners down the void, alternating the school's two colours.
-	local drop = roofY * BUILDING.LobbyBannerDropShare
-	for index = 1, BUILDING.LobbyBanners do
-		local share = (index - 0.5) / BUILDING.LobbyBanners
-		local x = ATRIUM_X1 + (ATRIUM_X2 - ATRIUM_X1) * share
-		local banner = Kit.Block(
-			parent,
-			`LobbyBanner{index}`,
-			at(x, roofY - drop / 2 - 2, VOID_Z2 - 3),
-			Vector3.new(BUILDING.LobbyBannerWidthStuds, drop, 0.3),
-			{
-				color = if index % 2 == 1 then BLUE else PALE_BLUE,
-				material = Enum.Material.Fabric,
-			}
-		)
-		banner.CastShadow = false
-	end
+	-- The banners are gone.
+	--
+	-- Four fabric drops 9 studs wide and 39 tall, hung across the atrium on the old full-width
+	-- void. When the first floor was cut back to just the two stairwells they stopped hanging in
+	-- open space and started hanging *through* them: banner 1 at x -570 fell straight down the
+	-- left flight and banner 4 down the right one. From the gallery they read as two enormous
+	-- blue slabs standing in front of the stairs, which is exactly what they were.
+	--
+	-- Nothing replaces them. The atrium's height now comes from the two shafts themselves, and
+	-- hanging anything in a shaft a staircase is already using is how this happened.
+
 
 	-- The desk, facing whoever comes through the doors.
 	-- The desk faces the doors, at the back of the lobby, not just inside them.
