@@ -235,6 +235,134 @@ local function perimeterCounter(parent: Instance, x1: number, x2: number, z1: nu
 end
 
 -- ---------------------------------------------------------------------------------------
+-- Stairs
+-- ---------------------------------------------------------------------------------------
+
+local STAIR_TREAD = Color3.fromRGB(96, 102, 114)
+local STAIR_NOSING = Color3.fromRGB(214, 218, 226)
+local STAIR_RAIL = Color3.fromRGB(52, 58, 68)
+
+-- One storey of stair inside a shaft: two flights and a half-landing between them.
+--
+-- **A dog-leg, because a straight run does not fit.** A storey here is 20 studs, and a flight
+-- climbing 20 studs at a walkable pitch needs roughly 26 studs of floor to do it in. The shaft
+-- is 24 across. So the climb is split: half a storey out to a landing at the far wall, a turn,
+-- and half a storey back. Two flights of ten studs each need thirteen studs of run apiece,
+-- which fits twice over in the same shaft -- and it is what a real school stairwell is, for
+-- exactly this reason.
+--
+-- The two flights sit side by side across the shaft's depth, so the second passes back over
+-- open air rather than over the first.
+local function buildStairs(parent: Instance, shaft, floor: number)
+	local y0 = Layout.FloorY(floor)
+	local halfRise = FH / 2
+	local steps = 12
+	local stepRise = halfRise / steps
+
+	-- Which wall carries the door, and which way the first flight climbs away from it.
+	local fromDoor = shaft.x1 <= -Layout.HalfW
+	local doorX = if fromDoor then shaft.x2 else shaft.x1
+	local farX = if fromDoor then shaft.x1 else shaft.x2
+	local dir = if fromDoor then -1 else 1
+
+	local landingDepth = 5
+	local landingFar = farX + dir * -(T + landingDepth / 2)
+	local flightStartX = doorX + dir * 1
+	local flightEndX = farX + dir * -(T + landingDepth)
+	local runLen = math.abs(flightEndX - flightStartX)
+	local going = runLen / steps
+
+	-- The shaft's depth, split between the two flights with the balustrade on the join.
+	local zMid = (shaft.z1 + shaft.z2) / 2
+	local flightW = (shaft.z2 - shaft.z1 - T * 2) / 2 - 0.5
+	local zUp = zMid - flightW / 2 - 0.5
+	local zDown = zMid + flightW / 2 + 0.5
+
+	-- Each tread is solid from the flight's own base to its top surface. On a straight flight
+	-- the boxes hide behind one another and the result reads as a cast concrete stair, which is
+	-- what a school has. (The curved stairs on the old school could not do this -- their boxes
+	-- fanned out and every one showed its full height to the room.)
+	local function flight(baseY: number, z: number, startX: number, direction: number, tag: string)
+		for index = 1, steps do
+			local topY = baseY + stepRise * index
+			local cx = startX + direction * going * (index - 0.5)
+			Engine.CreateWall(
+				place(cx, (baseY + topY) / 2, z),
+				Vector3.new(going, topY - baseY, flightW),
+				Vector3.new(0, 0, 0),
+				Enum.Material.Concrete,
+				STAIR_TREAD,
+				parent
+			).Name = `Stair{tag}Step{index}`
+			-- **The nosing lies on top of the tread, not in its front face.**
+			--
+			-- A real nosing overhangs the riser, and there is no riser to overhang here: each
+			-- tread is solid from the flight's base, so the face below one tread is the *next*
+			-- tread's box. Set flush it is two-thirds inside its own step; pushed forward to fix
+			-- that it goes inside the step in front, which is worse. Laid on the surface it is a
+			-- contrast line along the edge of each tread -- which is all it was ever for -- and
+			-- it is inside nothing.
+			Engine.CreateWall(
+				place(cx + direction * going * 0.3, topY + 0.1, z),
+				Vector3.new(0.6, 0.2, flightW + 0.4),
+				Vector3.new(0, 0, 0),
+				Enum.Material.SmoothPlastic,
+				STAIR_NOSING,
+				parent
+			).Name = `Stair{tag}Nosing{index}`
+		end
+	end
+
+	local tag = `{shaft.id}F{floor}`
+	flight(y0, zUp, flightStartX, dir, `{tag}Up`)
+	flight(y0 + halfRise, zDown, flightEndX, -dir, `{tag}Down`)
+
+	-- The half-landing the first flight arrives on and the second leaves from.
+	Engine.CreateFloor(
+		place(landingFar, y0 + halfRise - 0.5, zMid),
+		Vector3.new(landingDepth, 1, shaft.z2 - shaft.z1 - T * 2),
+		Enum.Material.Concrete,
+		STAIR_TREAD,
+		parent
+	).Name = `Stair{tag}HalfLanding`
+
+	-- The arrival landing at the top, level with the floor it delivers you to. It reaches to
+	-- the shaft's inner wall so you step off it straight through the doorway; without this the
+	-- last tread hands you to the edge of the hole in the floor plate.
+	Engine.CreateFloor(
+		place(doorX + dir * 3.5, y0 + FH - 0.5, zDown),
+		Vector3.new(7, 1, flightW),
+		Enum.Material.Concrete,
+		STAIR_TREAD,
+		parent
+	).Name = `Stair{tag}Arrival`
+
+	-- A balustrade down the open side of each flight, on the line between them.
+	for _, run in {
+		{ z = zUp + flightW / 2, y = y0, tag = "Up" },
+		{ z = zDown - flightW / 2, y = y0 + halfRise, tag = "Down" },
+	} do
+		-- The run is inset at both ends rather than spanning 0..1. At the extremes a post lands
+		-- in the exterior wall at the top and in the doorway at the bottom -- a balustrade
+		-- should stop where the flight does, not carry on into the building.
+		local posts = 6
+		for index = 0, posts do
+			local share = 0.08 + (index / posts) * 0.84
+			local px = flightStartX + dir * runLen * (if run.tag == "Up" then share else 1 - share)
+			local py = run.y + halfRise * share + 2.2
+			Engine.CreateWall(
+				place(px, py, run.z),
+				Vector3.new(0.4, 4.4, 0.4),
+				Vector3.new(0, 0, 0),
+				Enum.Material.Metal,
+				STAIR_RAIL,
+				parent
+			).Name = `Stair{tag}{run.tag}Post{index}`
+		end
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
 -- Build
 -- ---------------------------------------------------------------------------------------
 
@@ -245,11 +373,13 @@ local function buildFloor(parent: Instance, floor: number)
 	-- ---- the shaft walls, on every floor, so a stairwell is a shaft rather than a hole
 	for _, shaft in Layout.Stairwells do
 		local inner = if shaft.x1 <= -Layout.HalfW then shaft.x2 else shaft.x1
-		-- Stopped a wall-thickness short at each end. Run to the full corridor width and this
-		-- meets the corridor's own wall face-on, and the two interpenetrate at the junction --
-		-- invisible in a solid wall, but it puts glazing bars inside partitions where the
-		-- library's glass wall passes the shaft.
-		partition(parent, "z", inner, shaft.z1 + T, shaft.z2 - T, y, CORRIDOR_WALL)
+		-- **A doorway, not a wall.** This was solid on every floor, which made each shaft a
+		-- sealed box with a staircase in it and no way to reach the staircase. Worth stating
+		-- plainly because it is the kind of thing that looks completely finished from outside.
+		--
+		-- Stopped a wall-thickness short at each end too: run to the full corridor width and it
+		-- meets the corridor's own wall face-on and the two interpenetrate at the junction.
+		doorway(parent, "z", inner, shaft.z1 + T, shaft.z2 - T, y, 0, CORRIDOR_WALL)
 		partition(parent, "x", shaft.z1, shaft.x1, shaft.x2, y, CORRIDOR_WALL)
 		partition(parent, "x", shaft.z2, shaft.x1, shaft.x2, y, CORRIDOR_WALL)
 	end
@@ -308,6 +438,14 @@ local function buildFloor(parent: Instance, floor: number)
 					parent
 				).Name = `ComputerBench{row}`
 			end
+		end
+	end
+
+	-- ---- the flights. Floors 1 and 2 each carry a storey of stair up to the floor above;
+	-- the top floor has nothing above it to climb to.
+	if floor < Layout.Floors then
+		for _, shaft in Layout.Stairwells do
+			buildStairs(parent, shaft, floor)
 		end
 	end
 
