@@ -276,7 +276,30 @@ local VOID_Z2 = ATRIUM_Z2 - BUILDING.GalleryDepthStuds
 -- atrium, which is the piece of first floor that used to be missing entirely.
 local STAIR_R = BUILDING.StairRadiusStuds
 local STAIR_W = BUILDING.StairWidthStuds
-local STAIR_CX = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
+-- **How far the flights slide along the corridor, and why it is clamped.**
+--
+-- Asked for as "shift the stair flight left". Both flights sit flush to the atrium's outer
+-- edges by construction -- WELL_X_OUT works out to exactly AtriumWidthStuds / 2 -- so there is
+-- no room outboard of either. Sliding the pair left therefore moves the right-hand flight into
+-- open floor and would drive the left-hand one straight through the atrium wall.
+--
+-- So the shift is applied and then clamped per side: a flight moves as far as the atrium
+-- allows and no further. In practice that means the right flight moves the full amount and the
+-- left flight does not move at all, which is the honest result rather than a symmetric fudge.
+-- Raising this past the point where the right flight meets the bridge will start narrowing it.
+local STAIR_SHIFT = BUILDING.StairShiftStuds or 0
+
+local STAIR_CX_BASE = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
+
+-- The centre of one flight after the shift, clamped so its outer edge never crosses the atrium.
+local function stairCentre(side: number): number
+	local atriumHalf = BUILDING.AtriumWidthStuds / 2
+	local wanted = side * STAIR_CX_BASE + STAIR_SHIFT
+	local halfRun = STAIR_R + STAIR_W / 2
+	return math.clamp(wanted, -atriumHalf + halfRun, atriumHalf - halfRun)
+end
+
+local STAIR_CX = STAIR_CX_BASE
 -- The turn centre sits a radius short of the void's back edge, so the head of the arc finishes
 -- exactly where the gallery slab begins and you step straight off it onto solid floor.
 local STAIR_CZ = VOID_Z2 - STAIR_R
@@ -472,20 +495,47 @@ local function buildSlabWithVoid(parent: Instance, at: (number, number, number) 
 	-- The band the stairwells are cut out of, in three pieces.
 	local bandZ = (WELL_Z1 + VOID_Z2) / 2
 	local bandD = VOID_Z2 - WELL_Z1
-	local edgeW = half - WELL_X_OUT
-	Kit.Slab(parent, `{name}Left`, at((-half - WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
-	Kit.Slab(parent, `{name}Right`, at((half + WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
+	-- **Cut from the shifted flight centres, not the nominal ones.**
+	--
+	-- These read WELL_X_OUT and WELL_X_IN directly, which are the *unshifted* constants. The
+	-- railings were moved to follow StairShiftStuds and these were not, so the hole in the floor
+	-- stayed where it was while the stair slid out from under it -- three treads ended up buried
+	-- in the slab they were supposed to come up through. Exactly the bug the shift comment
+	-- warns about, made two functions away from the warning.
+	--
+	-- Both edges and the bridge are derived per side now, so a flight and its hole cannot part
+	-- company again.
+	local leftOuter = stairCentre(-1) - (STAIR_R + STAIR_W / 2)
+	local rightOuter = stairCentre(1) + (STAIR_R + STAIR_W / 2)
+	local leftInner = stairCentre(-1) + STAIR_W / 2
+	local rightInner = stairCentre(1) - STAIR_W / 2
+
+	Kit.Slab(parent, `{name}Left`, at((-half + leftOuter) / 2, y, bandZ), leftOuter + half, bandD, SLAB, { color = TILE })
+	Kit.Slab(parent, `{name}Right`, at((half + rightOuter) / 2, y, bandZ), half - rightOuter, bandD, SLAB, { color = TILE })
 	-- The bridge between the two stairwells, over the middle of the lobby.
-	Kit.Slab(parent, `{name}Bridge`, at(0, y, bandZ), WELL_X_IN * 2, bandD, SLAB, { color = TILE })
+	Kit.Slab(parent, `{name}Bridge`, at((leftInner + rightInner) / 2, y, bandZ), rightInner - leftInner, bandD, SLAB, { color = TILE })
 
 	-- A rail round each stairwell, or the first person to walk the bridge in the dark goes over
 	-- the side. This is the one piece of the building that is safety rather than decoration.
 	for side = -1, 1, 2 do
-		local outer = side * WELL_X_OUT
-		local inner = side * WELL_X_IN
+		-- The well follows its flight. Cut from the shifted centre rather than the nominal one,
+		-- or the hole in the floor and the stair coming up through it stop agreeing -- which is
+		-- the single most expensive class of bug on this building.
+		local centre = stairCentre(side)
+		local outer = centre + side * (STAIR_R + STAIR_W / 2)
+		local inner = centre - side * (STAIR_W / 2)
 		local tag = if side < 0 then "L" else "R"
-		-- The inner edge, along the bridge.
-		Kit.Railing(parent, `{name}Well{tag}Inner`, at(inner, y, WELL_Z1), at(inner, y, VOID_Z2), 4, PALE_BLUE)
+		-- **No railing on the inner edge.**
+		--
+		-- There used to be one here, running the full depth of the well along the bridge side,
+		-- and it is the thing you meet face-on as you come off the top tread -- a glazed panel
+		-- across the one route off the stair. The other three edges keep theirs.
+		--
+		-- What that costs, stated plainly rather than discovered later: the bridge between the
+		-- two wells is now unguarded on both flanks. A player walking the middle of the first
+		-- floor can step off it. That is a deliberate trade of safety for the stair being usable,
+		-- and if it turns out to matter the fix is a rail set back a few studs from the edge
+		-- rather than on it, not putting this one back.
 		-- The front edge, along the new front band.
 		Kit.Railing(parent, `{name}Well{tag}Front`, at(inner, y, WELL_Z1), at(outer, y, WELL_Z1), 4, PALE_BLUE)
 		-- And the outer edge against the atrium wall. It is a drop like the other two; the only
@@ -1211,7 +1261,7 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	for side = -1, 1, 2 do
 		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
 		-- other around the middle of the lobby rather than into it.
-		local cx = side * STAIR_CX
+		local cx = stairCentre(side)
 		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
 		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
 		-- in front, which reach z 12 and had seven treads of each flight inside them.

@@ -3693,6 +3693,14 @@ Config.School.Building = {
 	--
 	-- At 16 each sweep is 32 studs across, leaving an 18-stud clear route straight up the middle
 	-- from the doors to the reception desk. That route is the lobby.
+-- How far both staircases slide along the corridor, in studs. Negative is toward -X.
+	--
+	-- Clamped per flight against the atrium's edge -- see stairCentre in world/School.luau. The
+	-- flights sit flush to that edge already, so a negative shift moves the right-hand one into
+	-- open floor and leaves the left one where it is.
+	-- Safe range: -8 to 8. Past that the moving flight starts eating the bridge between the wells.
+	StairShiftStuds = -6,
+
 	StairRadiusStuds = 16,
 	StairWidthStuds = 12,
 	-- Ninety. A quarter is the amount that actually reads as a turn: less than that and the
