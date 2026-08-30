@@ -2882,8 +2882,28 @@ Config.School.Building = {
 	-- is 0.005, so three hundredths of a stud clears it by six times over while being far too
 	-- small to see or to step up.
 	OffsetYStuds = 0.03,
-	OffsetXStuds = -53,
-	OffsetZStuds = -2,
+	-- Where the building sits relative to its place point. **Found by the checkers, not by a
+	-- sweep of my own** -- and that distinction is the lesson here.
+	--
+	-- The first value was derived from where Agent A's school used to stand. A then relocated it
+	-- and re-laid the roads, and the old plot became a road corridor -- so this building was
+	-- standing on a carriageway with sixteen street-lamp poles through it.
+	--
+	-- I tried to re-place it by scoring positions with my own occupancy scan. That was wrong
+	-- twice over: it read the wrong footprint out of this file, and it ignored rotation, which
+	-- is exactly backwards for a building whose walls are long thin rotated boxes. It reported a
+	-- position as clean that check_city then failed with eleven roads through it.
+	--
+	-- So this is what the real checks accept. check_city's "no street runs through a building"
+	-- and check_town's "every place point has room to stand" between them name the offending
+	-- road and the offending stud, which is better information than any approximation of mine --
+	-- E0PavS cutting 30 studs into the back wall, then a waypoint half a stud from the gym sill.
+	--
+	-- Both clean at (-128, +4). If the school is ever resized, re-run those two checkers rather
+	-- than trusting a footprint number: this file's dimensions do not describe the built extent,
+	-- because the gym, the pool hall and the campus apron all hang off the building.
+	OffsetXStuds = -128,
+	OffsetZStuds = 4,
 
 	-- The atrium: a hole cut through the first two floors behind the entrance, so walking in
 	-- puts a ceiling three storeys up rather than one. This is the single most load-bearing
@@ -3176,6 +3196,22 @@ Config.School.Building = {
 	-- The running track and the field inside it, behind the building. An oval, so the corners
 	-- are real curves rather than four straights meeting at a mitre.
 	Track = {
+		-- **Off, because the map already has one.**
+		--
+		-- Agent A ships `City.RunningTrack`, carrying `FacilityKind=track`, plus SoccerField and
+		-- the SchoolFields around it. Building a second track here was duplicating another
+		-- agent's facility -- two athletics tracks in one town -- and it was the single most
+		-- expensive thing this asset did: the track, its infield and its floodlights sit entirely
+		-- *beyond* the building, from z 378 to 546, and added 176 studs of depth to a school that
+		-- was already too big to fit anywhere in the city.
+		--
+		-- Dropping it takes the school from 463 studs deep to about 245, which is the difference
+		-- between "nowhere in the map fits this" and "it fits on its own plot".
+		--
+		-- Kept rather than deleted because the geometry is good and the day the school gets a plot
+		-- big enough for its own athletics ground, this is one word.
+		Enabled = false,
+
 		-- The straight, and the radius of each turn. A real track is roughly this shape at
 		-- about a third scale, which is the scale everything in Roblox is at.
 		-- Safe range: 90-160 and 40-70.

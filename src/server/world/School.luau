@@ -1636,7 +1636,14 @@ function School.Build(center: Vector3): Plan?
 
 	anchors.pool = buildPool(parent, toWorld)
 	anchors.gym = buildGym(parent, toWorld)
-	local field = buildTrack(parent, toWorld)
+	-- The track is off by default: the map already has one, and ours added 176 studs of depth
+	-- to a building that had nowhere to stand. See Config.School.Track.Enabled.
+	--
+	-- The anchor still has to exist, because PE and the sports drills look it up. When the track
+	-- is not built it falls back to the place point, which is what every other room in this file
+	-- does when its geometry is missing -- the verb keeps working, it just happens on open
+	-- ground rather than on a marked lane.
+	local field = if TRACK.Enabled then buildTrack(parent, toWorld) else toWorld(0, 0.4, D + 40)
 	anchors.track = field
 
 	-- With the building already baked into the map, the parts just laid are a duplicate
