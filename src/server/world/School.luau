@@ -1000,55 +1000,39 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	-- fascia and the glazing already give the atrium its horizontal lines; it did not need
 	-- vertical ones as well.
 
-	-- **The gallery gets a study counter, because that is what a gallery is for.**
+	-- **A plain landing platform at the head of each flight.**
 	--
-	-- The strip of first floor across the back of the void was 90 studs of empty walkway. A
-	-- balcony over an atrium is the best seat in any school building -- you are out of the
-	-- corridor, you can see who is arriving, and there is a railing to put your elbows on -- so
-	-- the thing that belongs there is somewhere to sit and work, facing out.
+	-- There was a study counter along this gallery -- desk, fascia, stools and lamps -- on the
+	-- reasoning that a balcony over an atrium is the best seat in a school. The reasoning was
+	-- fine and the arithmetic was not. It was set to start 26 studs off the centreline to keep
+	-- clear of the stairs, but a flight's top tread reaches 29 studs out (STAIR_CX plus half the
+	-- stair width), so the counter overlapped **both** stair arrivals by 3.6 studs. A counter
+	-- across the head of a flight is the same mistake as a column across a door, which is exactly
+	-- what the comment here used to claim it was avoiding.
 	--
-	-- It stops short of the middle, because that is where both staircases arrive and a counter
-	-- across the head of a flight is the same mistake as a column across a door.
+	-- What goes there instead is nothing but floor: a plain platform spanning each stairwell's
+	-- width, flush with the gallery, so you come up the stairs and step onto a clear landing.
+	-- Somewhere to arrive is worth more than somewhere to sit, and this is the one spot in the
+	-- building where the two cannot both fit.
 	local galleryY = floorY(2)
-	local counterZ = VOID_Z2 + 3.6
 	for side = -1, 1, 2 do
-		local inner = 26
-		local outer = BUILDING.AtriumWidthStuds / 2 - 3
-		local runW = outer - inner
-		local runCx = side * (inner + runW / 2)
-
-		Kit.Block(parent, `GalleryDesk{side}`, at(runCx, galleryY + 3.9, counterZ), Vector3.new(runW, 0.6, 4), {
-			color = OFF_WHITE,
-			collide = true,
-		})
-		Kit.Block(parent, `GalleryDeskFascia{side}`, at(runCx, galleryY + 2.6, counterZ - 1.8), Vector3.new(runW, 3, 0.4), {
-			color = WALNUT,
-			material = Enum.Material.Wood,
+		local tag = if side < 0 then "L" else "R"
+		local platformW = STAIR_W + 8
+		local platformD = BUILDING.GalleryDepthStuds - 2
+		Kit.Slab(
+			parent,
+			`StairLanding{tag}`,
+			at(side * STAIR_CX, galleryY, VOID_Z2 + platformD / 2),
+			platformW,
+			platformD,
+			SLAB,
+			{ color = TILE }
+		)
+		-- A nosing strip along the edge the stairs meet, so the join reads as a threshold rather
+		-- than as two slabs that happen to touch.
+		Kit.Block(parent, `StairLanding{tag}Nosing`, at(side * STAIR_CX, galleryY + 0.4, VOID_Z2 + 0.3), Vector3.new(platformW, 0.25, 0.8), {
+			color = Color3.fromRGB(214, 218, 226),
 		}).CastShadow = false
-
-		local stools = math.max(2, math.floor(runW / 9))
-		for index = 1, stools do
-			local sx = runCx - runW / 2 + runW * ((index - 0.5) / stools)
-			Kit.Block(parent, `GalleryStool{side}_{index}`, at(sx, galleryY + 2.6, counterZ + 4.4), Vector3.new(2.8, 0.45, 2.8), {
-				color = DEEP_BLUE,
-				collide = true,
-			}).CastShadow = false
-			Kit.Block(parent, `GalleryStoolLeg{side}_{index}`, at(sx, galleryY + 1.3, counterZ + 4.4), Vector3.new(0.5, 2.6, 0.5), {
-				color = Color3.fromRGB(96, 102, 114),
-				material = Enum.Material.Metal,
-			}).CastShadow = false
-			-- A task lamp every other place, which is what stops a run of stools reading as a bar.
-			if index % 2 == 1 then
-				Kit.Block(parent, `GalleryLamp{side}_{index}`, at(sx, galleryY + 5.4, counterZ - 0.6), Vector3.new(0.3, 2.4, 0.3), {
-					color = Color3.fromRGB(72, 76, 86),
-					material = Enum.Material.Metal,
-				}).CastShadow = false
-				Kit.Block(parent, `GalleryShade{side}_{index}`, at(sx, galleryY + 6.7, counterZ - 0.6), Vector3.new(2.2, 0.8, 2.2), {
-					color = Color3.fromRGB(248, 240, 214),
-					material = Enum.Material.Neon,
-				}).CastShadow = false
-			end
-		end
 	end
 
 	-- **The lobby's back corners.**
