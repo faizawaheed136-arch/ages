@@ -193,4 +193,36 @@ function Layout.InStairwell(x: number): boolean
 	return false
 end
 
+-- **Where every doorway is, as one answer both the walls and the prompts read.**
+--
+-- Interior cuts its openings from this and Interactive hangs its door panels and prompts on it.
+-- Computed in two places instead, they would agree today and drift the first time a room moves
+-- -- which is the whole reason this file exists. See the header.
+export type Doorway = { id: string, x: number, z: number, axis: string, y: number, floor: number }
+
+function Layout.DoorwaysOn(floor: number): { Doorway }
+	local out: { Doorway } = {}
+	local y = Layout.FloorY(floor)
+
+	-- One per room, on the corridor wall of its band.
+	for _, room in Layout.RoomsOn(floor) do
+		local corridorLine = if room.band == "front" then Layout.CorridorZ1 else Layout.CorridorZ2
+		local wx1 = math.max(room.x1, Layout.CorridorX1)
+		local wx2 = math.min(room.x2, Layout.CorridorX2)
+		if wx2 - wx1 > Layout.DoorWidthStuds + 2 then
+			local centre = (room.x1 + room.x2) / 2
+			local at = math.clamp(centre, wx1 + Layout.DoorWidthStuds, wx2 - Layout.DoorWidthStuds)
+			table.insert(out, { id = room.id, x = at, z = corridorLine, axis = "x", y = y, floor = floor })
+		end
+	end
+
+	-- And one into each stairwell, in its inner wall.
+	for _, shaft in Layout.Stairwells do
+		local inner = if shaft.x1 <= -Layout.HalfW then shaft.x2 else shaft.x1
+		table.insert(out, { id = `stair{shaft.id}`, x = inner, z = 0, axis = "z", y = y, floor = floor })
+	end
+
+	return out
+end
+
 return Layout

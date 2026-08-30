@@ -403,9 +403,15 @@ local function buildFloor(parent: Instance, floor: number)
 		partition(parent, "x", corridorLine, wx2, room.x2, y, CORRIDOR_WALL)
 
 		if wx2 - wx1 > DOOR_W + 2 then
-			-- The door goes at the middle of the corridor-facing stretch, not the middle of the
-			-- room, so a room that is half behind a stairwell still has its door on the corridor.
-			local at = math.clamp(doorAt, wx1 + DOOR_W, wx2 - DOOR_W)
+			-- The door position comes from Layout.DoorwaysOn, which is also what hangs the door
+			-- panel and its prompt. Computed here as well they would agree today and drift the
+			-- first time a room moves.
+			local at = doorAt
+			for _, opening in Layout.DoorwaysOn(floor) do
+				if opening.id == room.id then
+					at = opening.x
+				end
+			end
 			if room.kind == "library" then
 				glazedPartition(parent, "x", corridorLine, wx1, wx2, y, at)
 			else
