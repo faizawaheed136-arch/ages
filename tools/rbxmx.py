@@ -222,7 +222,7 @@ def _attributes_blob(attrs):
 
 
 def _emit(name, x, y, z, sx, sy, sz, rot, color, material, transparency,
-          collide, shape, tags, attrs, children):
+          collide, shape, tags, attrs, children, reflectance=0):
     global _parts
     _parts += 1
     extra = ""
@@ -242,14 +242,14 @@ def _emit(name, x, y, z, sx, sy, sz, rot, color, material, transparency,
 <token name="shape">{shape}</token>
 <Color3uint8 name="Color3uint8">{_c3(color)}</Color3uint8>
 <float name="Transparency">{transparency}</float>
-<float name="Reflectance">0</float>
+<float name="Reflectance">{reflectance if reflectance else 0}</float>
 {extra}
 </Properties>
 {children}
 </Item>''')
 
 
-def part(name, offset, size, color, material=SMOOTH, transparency=0.0,
+def part(name, offset, size, color, material=SMOOTH, transparency=0.0, reflectance=0,
          collide=True, shape=1, upright_cylinder=False, tags=None, attrs=None,
          children=""):
     """offset is (dx, dy, dz) in the builder's own space: dx across, dz forward
@@ -272,10 +272,10 @@ def part(name, offset, size, color, material=SMOOTH, transparency=0.0,
         rot = _TURN_MATRIX[turns]
 
     _emit(name, x, y, z, sx, sy, sz, rot, color, material, transparency,
-          collide, shape, tags, attrs, children)
+          collide, shape, tags, attrs, children, reflectance)
 
 
-def box(name, bounds, color, material=SMOOTH, transparency=0.0, collide=True,
+def box(name, bounds, color, material=SMOOTH, transparency=0.0, reflectance=0, collide=True,
         tags=None, attrs=None, children=""):
     """A world-space axis-aligned box, given as (x0, x1, z0, z1, y0, y1).
 
@@ -289,10 +289,10 @@ def box(name, bounds, color, material=SMOOTH, transparency=0.0, collide=True,
     x0, x1, z0, z1, y0, y1 = bounds
     _emit(name, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2,
           abs(x1 - x0), abs(y1 - y0), abs(z1 - z0), _TURN_MATRIX[0],
-          color, material, transparency, collide, 1, tags, attrs, children)
+          color, material, transparency, collide, 1, tags, attrs, children, reflectance)
 
 
-def ball(name, center, size, color, material=SMOOTH, transparency=0.0, collide=True,
+def ball(name, center, size, color, material=SMOOTH, transparency=0.0, reflectance=0, collide=True,
          tags=None, attrs=None, children=""):
     """A world-space ellipsoid (`Part.Shape` = Ball), centre and full size --
     the same size convention as `spun_box`, diameters rather than radii, so a
@@ -310,10 +310,10 @@ def ball(name, center, size, color, material=SMOOTH, transparency=0.0, collide=T
     cx, cy, cz = center
     sx, sy, sz = size
     _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), _TURN_MATRIX[0],
-          color, material, transparency, collide, 0, tags, attrs, children)
+          color, material, transparency, collide, 0, tags, attrs, children, reflectance)
 
 
-def disc(name, center, size, yaw, roll, color, material=SMOOTH, transparency=0.0,
+def disc(name, center, size, yaw, roll, color, material=SMOOTH, transparency=0.0, reflectance=0,
          collide=True, tags=None, attrs=None, children=""):
     """A cylinder (`Part.Shape` = Cylinder), rolled `roll` degrees about Z.
 
@@ -341,10 +341,10 @@ def disc(name, center, size, yaw, roll, color, material=SMOOTH, transparency=0.0
            f"<R10>{sb}</R10><R11>{cb}</R11><R12>0</R12>"
            f"<R20>{-sa * cb}</R20><R21>{sa * sb}</R21><R22>{ca}</R22>")
     _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
-          color, material, transparency, collide, 2, tags, attrs, children)
+          color, material, transparency, collide, 2, tags, attrs, children, reflectance)
 
 
-def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
+def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0, reflectance=0,
              collide=True, tags=None, attrs=None, children=""):
     """A world-space box spun `yaw` degrees about Y, given centre-and-size.
 
@@ -373,11 +373,11 @@ def spun_box(name, center, size, yaw, color, material=SMOOTH, transparency=0.0,
            f"<R10>0</R10><R11>1</R11><R12>0</R12>"
            f"<R20>{-s}</R20><R21>0</R21><R22>{c}</R22>")
     _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
-          color, material, transparency, collide, 1, tags, attrs, children)
+          color, material, transparency, collide, 1, tags, attrs, children, reflectance)
 
 
 def tilted_box(name, center, size, yaw, pitch, color, material=SMOOTH,
-                transparency=0.0, collide=True, tags=None, attrs=None,
+                transparency=0.0, reflectance=0, collide=True, tags=None, attrs=None,
                 children=""):
     """A world-space box spun `yaw` degrees about Y like `spun_box`, and then
     banked `pitch` degrees so its own local X axis (depth/outward) climbs
@@ -407,7 +407,7 @@ def tilted_box(name, center, size, yaw, pitch, color, material=SMOOTH,
            f"<R10>{r10}</R10><R11>{r11}</R11><R12>{r12}</R12>"
            f"<R20>{r20}</R20><R21>{r21}</R21><R22>{r22}</R22>")
     _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
-          color, material, transparency, collide, 1, tags, attrs, children)
+          color, material, transparency, collide, 1, tags, attrs, children, reflectance)
 
 
 def point_light(color, brightness, rng, name="Glow"):

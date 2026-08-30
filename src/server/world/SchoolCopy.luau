@@ -57,6 +57,18 @@ PLAN.Floors = 2
 -- on Z by the 8 studs the corridor gained, and the rooms keep the depth they had.
 PLAN.DepthStuds = Config.School.Building.DepthStuds + 8
 
+-- **A seventh room slot per floor, for the washrooms -- and the building grows to hold it.**
+--
+-- v1 has six slots a floor and no washrooms at all. The brief wants dedicated male and female
+-- rooms on both floors, and rule 4 says the space for anything new comes out of the footprint
+-- rather than a third storey. So: one more slot, and the frontage grows by exactly one slot's
+-- width plus its gap, which leaves every existing classroom the size it already was.
+--
+-- Taking it out of the current 228 instead would have shaved four studs off all six rooms to
+-- pay for the seventh, which is how a plan quietly gets worse everywhere to add one thing.
+PLAN.RoomsPerFloor = 7
+PLAN.WidthStuds = 266
+
 local BUILDING = PLAN
 local ENTRANCE = BUILDING.Entrance
 local POOL = BUILDING.Pool
@@ -216,6 +228,11 @@ local function planRooms(): { Rect }
 	local d1, d2 = slotX(3)
 	local e1, e2 = slotX(4)
 	local f1, f2 = slotX(5)
+	local g1, g2 = slotX(6)
+	-- The seventh slot carries two rooms rather than one: a washroom pair, split down the middle
+	-- with a shared spine wall. Two half-slots is about 18 studs each, which is a real room --
+	-- three stalls and a basin run -- rather than a cupboard with a sink in it.
+	local gMid = (g1 + g2) / 2
 
 	-- **Ground floor is where you go; first floor is where you are sent.**
 	--
@@ -239,6 +256,8 @@ local function planRooms(): { Rect }
 		-- somewhere a player hangs around rather than somewhere they visit twice a year.
 		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "lounge" },
 		{ id = "cooking", label = "Cooking Lab", floor = 1, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "cooking" },
+		{ id = "washroomM1", label = "Boys' Washroom", floor = 1, x1 = g1, z1 = bandFront, x2 = gMid, z2 = backZ, kind = "washroom" },
+		{ id = "washroomF1", label = "Girls' Washroom", floor = 1, x1 = gMid, z1 = bandFront, x2 = g2, z2 = backZ, kind = "washroom" },
 		-- Computers. This was lost when the third floor went, which was a mistake: the brief was to
 		-- even three floors of rooms into two, not to delete a floor's worth of school. It shares
 		-- the library's two slots rather than taking one of its own -- a computer room and a
@@ -257,6 +276,8 @@ local function planRooms(): { Rect }
 		{ id = "music", label = "Music Room", floor = 2, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
 		{ id = "english", label = "English", floor = 2, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "class" },
 		{ id = "staff", label = "Staff Room", floor = 2, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "common" },
+		{ id = "washroomM2", label = "Boys' Washroom", floor = 2, x1 = g1, z1 = bandFront, x2 = gMid, z2 = backZ, kind = "washroom" },
+		{ id = "washroomF2", label = "Girls' Washroom", floor = 2, x1 = gMid, z1 = bandFront, x2 = g2, z2 = backZ, kind = "washroom" },
 	}
 end
 
@@ -1205,6 +1226,45 @@ end
 -- Stairs: the reason three storeys are three storeys.
 -- ---------------------------------------------------------------------------------------
 
+-- **Where nothing is allowed to stand: within reach of a staircase.**
+--
+-- A flight that arrives into a bin, a locker bank or a light fitting is a flight players stop
+-- on, and a stair is the one place in a building where stopping is dangerous. So the landings
+-- get a keep-out radius and every fitting loop below asks this before it places anything.
+--
+-- Ten studs measured from the arc's arrival, which is two avatars' width of clear floor in
+-- every direction as you step off.
+local STAIR_CLEAR_STUDS = 10
+
+-- The two arrival points, in local coordinates. Derived from the same numbers buildStairs uses
+-- so they cannot drift apart -- if a flight moves, its keep-out zone moves with it.
+local function stairArrivals(): { { x: number, z: number } }
+	local out = {}
+	local sweep = math.rad(BUILDING.StairSweepDegrees)
+	for side = -1, 1, 2 do
+		local cx = side * STAIR_CX
+		local startAngle = if side < 0 then math.rad(180) else 0
+		local turn = if side < 0 then -sweep else sweep
+		local endAngle = startAngle + turn
+		table.insert(out, {
+			x = cx + math.cos(endAngle) * BUILDING.StairRadiusStuds,
+			z = STAIR_CZ + math.sin(endAngle) * BUILDING.StairRadiusStuds,
+		})
+	end
+	return out
+end
+
+-- True if a point is too close to either landing to build on.
+local function nearStairs(x: number, z: number, pad: number?): boolean
+	local limit = STAIR_CLEAR_STUDS + (pad or 0)
+	for _, landing in stairArrivals() do
+		if math.abs(x - landing.x) < limit and math.abs(z - landing.z) < limit then
+			return true
+		end
+	end
+	return false
+end
+
 local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
 	-- Two curved flights, one each side of the lobby, sweeping a quarter turn as they climb.
 	--
@@ -1442,6 +1502,15 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		local doorW = runW / doors
 		local x0 = -runEnd
 
+		-- **Both structural walls of the hallway carry lockers, and nothing stands in the middle.**
+		--
+		-- v1 ran one bank down the atrium-side wall and left the room-side wall bare. The brief
+		-- asks for long rows flush against the left and right walls, so the second run goes on
+		-- the room side -- broken around every classroom door, because a locker across a door is
+		-- the same mistake as a column across an entrance.
+		--
+		-- Nothing free-standing: every bank here is flush to a structural wall. A bank in the
+		-- middle of a 24-stud hallway would halve it, which is the opposite of the point.
 		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 1 + bankH / 2, wallZ), Vector3.new(runW, bankH, 2.4), {
 			color = BLUE,
 			material = Enum.Material.Metal,
@@ -1486,6 +1555,89 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 					color = Color3.fromRGB(96, 102, 114),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
+			end
+		end
+
+		-- **The second run: the room-side wall, in the stretches between classroom doors.**
+		--
+		-- Every room's door sits at `rect.x1 + 7` and is 13.2 wide, so each one blocks about 16
+		-- studs of this wall. The run is laid as the segments between those blocks rather than as
+		-- one bank with holes punched in it, which is why it reads as continuous rows either side
+		-- of each door instead of a bank that happens to be missing pieces.
+		local roomWallZ = corridorZ + CORRIDOR_W / 2 - 1.4
+		-- The room list comes from planRooms(), the same call the rooms themselves are built
+		-- from. There is no `rooms` in this scope, and inventing a second list here would be the
+		-- exact bug that keeps costing days on this project: two places computing the same
+		-- geometry and disagreeing about it.
+		local blocks: { { number } } = {}
+		for _, rect in planRooms() do
+			if rect.floor == floor then
+				local doorAt = rect.x1 + 7
+				-- Padded well past the leaf: rule 2's minimum clear space either side of a door.
+				table.insert(blocks, { doorAt - 12, doorAt + 12 })
+			end
+		end
+		table.sort(blocks, function(a, b)
+			return a[1] < b[1]
+		end)
+
+		local segStart = -runEnd
+		local segments: { { number } } = {}
+		for _, gap in blocks do
+			if gap[1] - segStart > 12 then
+				table.insert(segments, { segStart, math.min(gap[1], runEnd) })
+			end
+			segStart = math.max(segStart, gap[2])
+		end
+		if runEnd - segStart > 12 then
+			table.insert(segments, { segStart, runEnd })
+		end
+
+		local segIndex = 0
+		for _, seg in segments do
+			local segA, segB = seg[1], seg[2]
+			-- Rule 3: nothing within ten studs of a stair landing. A segment that would run
+			-- through the keep-out is trimmed rather than skipped, so the wall stays furnished
+			-- right up to where the stair needs the floor.
+			if nearStairs((segA + segB) / 2, roomWallZ, (segB - segA) / 2) then
+				continue
+			end
+			segIndex += 1
+			local segW = segB - segA
+			local segCx = (segA + segB) / 2
+			local segDoors = math.max(2, math.floor(segW / 5))
+			local segDoorW = segW / segDoors
+
+			Kit.Block(parent, `RoomSideLocker{floor}_{segIndex}`, at(segCx, y + 1 + bankH / 2, roomWallZ), Vector3.new(segW, bankH, 2.4), {
+				color = BLUE,
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `RoomSideLockerPlinth{floor}_{segIndex}`, at(segCx, y + 0.5, roomWallZ), Vector3.new(segW, 1, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `RoomSideLockerCap{floor}_{segIndex}`, at(segCx, y + 1.3 + bankH, roomWallZ), Vector3.new(segW, 0.6, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+
+			for index = 1, segDoors do
+				local dx = segA + segDoorW * (index - 0.5)
+				-- Handles and vents clear the bank's face by more than the build grid. Offsets
+				-- smaller than that get rounded back inside the door they sit on.
+				Kit.Block(parent, `RoomSideLockerHandle{floor}_{segIndex}_{index}`, at(dx + segDoorW * 0.3, y + 1 + bankH * 0.5, roomWallZ - 1.9), Vector3.new(0.5, 1.8, 0.3), {
+					color = Color3.fromRGB(232, 236, 244),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				Kit.Block(parent, `RoomSideLockerVent{floor}_{segIndex}_{index}`, at(dx, y + 1 + bankH * 0.86, roomWallZ - 1.9), Vector3.new(segDoorW * 0.42, 0.9, 0.25), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+				if index < segDoors then
+					Kit.Block(parent, `RoomSideLockerSeam{floor}_{segIndex}_{index}`, at(segA + segDoorW * index, y + 1 + bankH / 2, roomWallZ - 1.85), Vector3.new(0.3, bankH - 0.4, 0.3), {
+						color = DEEP_BLUE,
+					}).CastShadow = false
+				end
 			end
 		end
 
@@ -1568,6 +1720,94 @@ end
 -- ---------------------------------------------------------------------------------------
 -- The rooms themselves: partitions, glazing onto the corridor, signs, lights, fit-out.
 -- ---------------------------------------------------------------------------------------
+
+-- A washroom: a run of stalls down one side, basins and mirrors down the other.
+--
+-- **Open entryways, no stall doors.** A door on a 0.5-stud partition needs a hinge, a swing arc
+-- and somewhere for the arc to go, and in a room this size the arc is the room. Real school
+-- stalls in a Roblox build read perfectly well as three-sided bays -- the privacy comes from the
+-- partitions, and the missing fourth side is what stops a player getting wedged in one.
+--
+-- Every horizontal surface here has its own hardcoded height: partitions stand from 1 to 12,
+-- the basin deck is at 4.2, the counter under it at 3, the mirror starts at 7. Nothing is
+-- derived from anything else, so nothing can drift into anything else.
+local function fitWashroom(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	local width = rect.x2 - rect.x1
+	local id = rect.id
+
+	-- Stalls along the back half, partitions running across the room.
+	local stallDepth = 12
+	local stallZ = rect.z2 - 2 - stallDepth / 2
+	local stalls = math.max(2, math.floor(width / 7))
+	local stallW = (width - 6) / stalls
+
+	for index = 0, stalls do
+		local px = rect.x1 + 3 + stallW * index
+		Kit.Block(parent, `{id}StallWall{index}`, at(px, y + 6.5, stallZ), Vector3.new(0.5, 11, stallDepth), {
+			color = Color3.fromRGB(214, 220, 230),
+			material = Enum.Material.SmoothPlastic,
+			collide = true,
+		})
+	end
+	-- The back of the stall run, and a pan in each bay.
+	Kit.Block(parent, `{id}StallBack`, at(cx, y + 6.5, rect.z2 - 2.2), Vector3.new(width - 6, 11, 0.5), {
+		color = Color3.fromRGB(214, 220, 230),
+		material = Enum.Material.SmoothPlastic,
+	}).CastShadow = false
+	for index = 1, stalls do
+		local px = rect.x1 + 3 + stallW * (index - 0.5)
+		Kit.Block(parent, `{id}Pan{index}`, at(px, y + 1.6, rect.z2 - 5), Vector3.new(2.6, 3.2, 3), {
+			color = Color3.fromRGB(246, 248, 252),
+			collide = true,
+		})
+		Kit.Block(parent, `{id}Cistern{index}`, at(px, y + 4.6, rect.z2 - 3.4), Vector3.new(2.8, 2.8, 1.2), {
+			color = Color3.fromRGB(240, 243, 248),
+		}).CastShadow = false
+	end
+
+	-- Basins along the front wall, with a mirror over each. Four studs of clear floor between the
+	-- basin deck and the nearest stall partition, which is rule 2's minimum and also just enough
+	-- for somebody to stand at a sink while another walks behind them.
+	local basinZ = rect.z1 + 4
+	local basins = math.max(2, math.floor(width / 8))
+	local basinPitch = (width - 8) / basins
+
+	Kit.Block(parent, `{id}Counter`, at(cx, y + 3, basinZ), Vector3.new(width - 6, 2, 4), {
+		color = Color3.fromRGB(226, 230, 238),
+		material = Enum.Material.SmoothPlastic,
+		collide = true,
+	})
+	Kit.Block(parent, `{id}CounterTop`, at(cx, y + 4.2, basinZ), Vector3.new(width - 5.6, 0.4, 4.4), {
+		color = Color3.fromRGB(242, 245, 250),
+		material = Enum.Material.SmoothPlastic,
+	}).CastShadow = false
+
+	for index = 1, basins do
+		local px = rect.x1 + 4 + basinPitch * (index - 0.5)
+		Kit.Block(parent, `{id}Basin{index}`, at(px, y + 4.35, basinZ), Vector3.new(3.6, 0.5, 3), {
+			color = Color3.fromRGB(250, 251, 254),
+		}).CastShadow = false
+		Kit.Block(parent, `{id}Tap{index}`, at(px, y + 5.4, basinZ - 1.4), Vector3.new(0.4, 2, 0.4), {
+			color = Color3.fromRGB(198, 204, 214),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+
+		-- The mirror. Glass with reflectance rather than a grey panel -- reflectance is the whole
+		-- reason it reads as a mirror instead of a window into the wall.
+		local mirror = Kit.Block(parent, `{id}Mirror{index}`, at(px, y + 9, basinZ - 2), Vector3.new(4.4, 4.5, 0.3), {
+			color = Color3.fromRGB(226, 238, 248),
+			material = Enum.Material.Glass,
+		})
+		mirror.Reflectance = 0.55
+		mirror.Transparency = 0.05
+		mirror.CastShadow = false
+		Kit.Block(parent, `{id}MirrorFrame{index}`, at(px, y + 9, basinZ - 2.25), Vector3.new(5, 5.1, 0.25), {
+			color = Color3.fromRGB(150, 156, 168),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+end
 
 local function fitClassroom(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
 	local cx, cz = rectCenter(rect)
@@ -2325,7 +2565,9 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 			end
 		end
 
-		if rect.kind == "science" then
+		if rect.kind == "washroom" then
+			fitWashroom(parent, at, rect, y)
+		elseif rect.kind == "science" then
 			fitScience(parent, at, rect, y)
 		elseif rect.kind == "art" then
 			fitArt(parent, at, rect, y)

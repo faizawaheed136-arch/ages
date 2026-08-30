@@ -306,6 +306,7 @@ for _, props in ipairs(recorded) do
 			shape = shape,
 			material = material,
 			transparency = num(props.Transparency, 0),
+			reflectance = num(props.Reflectance, 0),
 			collide = props.CanCollide == true,
 		})
 	else
@@ -318,10 +319,10 @@ for _, row in ipairs(rows) do
 	table.insert(out, string.format(
 		'{"name":%q,"x":%.3f,"y":%.3f,"z":%.3f,"sx":%.3f,"sy":%.3f,"sz":%.3f,'
 			.. '"r":%d,"g":%d,"b":%d,"yaw":%.2f,"roll":%.2f,"shape":%q,"material":%q,'
-			.. '"transparency":%.3f,"collide":%s}',
+			.. '"transparency":%.3f,"reflectance":%.3f,"collide":%s}',
 		row.name, row.x, row.y, row.z, row.sx, row.sy, row.sz,
 		row.r, row.g, row.b, row.yaw, row.roll, row.shape, row.material,
-		row.transparency, tostring(row.collide)
+		row.transparency, row.reflectance, tostring(row.collide)
 	))
 end
 -- The room anchors, so the Python side can move the map's legacy school place points into
@@ -484,13 +485,13 @@ def emit(rows: list[dict]) -> None:
                     rbxmx.disc(
                         row["name"], center, size, row["yaw"], row.get("roll", 0),
                         color, material=material,
-                        transparency=row["transparency"], collide=row["collide"],
+                        transparency=row["transparency"], reflectance=row.get("reflectance", 0.0), collide=row["collide"],
                     )
                 elif row["shape"] == "Ball":
                     rbxmx.ball(
                         row["name"], center, size,
                         color, material=material,
-                        transparency=row["transparency"], collide=row["collide"],
+                        transparency=row["transparency"], reflectance=row.get("reflectance", 0.0), collide=row["collide"],
                     )
                 else:
                     # A real light on every Nth fitting. See LIGHTING in the module docstring
@@ -505,7 +506,7 @@ def emit(rows: list[dict]) -> None:
                     rbxmx.spun_box(
                         row["name"], center, size, row["yaw"],
                         color, material=material,
-                        transparency=row["transparency"], collide=row["collide"],
+                        transparency=row["transparency"], reflectance=row.get("reflectance", 0.0), collide=row["collide"],
                         children=children,
                     )
 
