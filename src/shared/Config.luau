@@ -2810,6 +2810,29 @@ Config.School.Building = {
 	-- The parapet does a second job. It hides the roof slab's cut edge from anyone standing on
 	-- the plaza, which is the angle the school is nearly always seen from.
 	-- Safe range: 2-6, 1-3, 3-9 and 0.6-2.
+	-- The lobby: what is actually in the atrium.
+	--
+	-- The atrium was circulation and nothing else -- three storeys of air, a stair at each end,
+	-- a rail round the hole, and not one object. It is the first room anybody walks into and it
+	-- was the emptiest space in the building, which is the wrong way round.
+	--
+	-- The banners are the piece that matters most and the reason this is a block rather than a
+	-- few props. The atrium exists to be three storeys tall; nothing in it used that height, so
+	-- the space read as a tall room rather than as a volume. A banner hanging the full drop is
+	-- the cheapest thing that makes the height *legible* -- you read the building's scale off
+	-- the banner, not off the ceiling you are not looking at.
+	-- Safe range: 2-8, 6-14 and 0.5-0.85.
+	LobbyBanners = 4,
+	LobbyBannerWidthStuds = 9,
+	LobbyBannerDropShare = 0.72,
+
+	-- The desk facing the doors, seating, planting and the trophy case.
+	-- Safe range: 16-40, 2-8, 2-8 and 0-3.
+	LobbyDeskWidthStuds = 26,
+	LobbyBenches = 6,
+	LobbyTrees = 4,
+	LobbyCases = 2,
+
 	PlinthHeightStuds = 3.5,
 	PlinthProudStuds = 1.2,
 	ParapetHeightStuds = 5,

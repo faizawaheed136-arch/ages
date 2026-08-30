@@ -658,6 +658,120 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 end
 
 -- ---------------------------------------------------------------------------------------
+-- The lobby: what is in the atrium.
+-- ---------------------------------------------------------------------------------------
+
+-- The atrium was circulation and nothing else -- three storeys of air, a stair at each end, a
+-- rail round the hole and not one object in it. It is the first room anybody walks into and it
+-- was the emptiest space in the building.
+--
+-- The banners do the load-bearing work. The atrium's whole reason for existing is that it is
+-- three storeys tall, and *nothing in it used that height* -- so the space read as a tall room
+-- rather than as a volume. A banner hanging the full drop is the cheapest thing that makes the
+-- height legible: you read the building's scale off the banner, because you are not looking at
+-- the ceiling.
+local function buildLobby(parent: Instance, at: (number, number, number) -> Vector3)
+	local cz = (ATRIUM_Z1 + ATRIUM_Z2) / 2
+	local roofY = floorY(BUILDING.Floors + 1)
+
+	-- Banners down the void, alternating the school's two colours.
+	local drop = roofY * BUILDING.LobbyBannerDropShare
+	for index = 1, BUILDING.LobbyBanners do
+		local share = (index - 0.5) / BUILDING.LobbyBanners
+		local x = ATRIUM_X1 + (ATRIUM_X2 - ATRIUM_X1) * share
+		local banner = Kit.Block(
+			parent,
+			`LobbyBanner{index}`,
+			at(x, roofY - drop / 2 - 2, ATRIUM_Z2 - 2),
+			Vector3.new(BUILDING.LobbyBannerWidthStuds, drop, 0.3),
+			{
+				color = if index % 2 == 1 then BLUE else PALE_BLUE,
+				material = Enum.Material.Fabric,
+			}
+		)
+		banner.CastShadow = false
+	end
+
+	-- The desk, facing whoever comes through the doors.
+	local deskZ = ATRIUM_Z1 + 8
+	Kit.Block(parent, "LobbyDesk", at(0, 2.4, deskZ), Vector3.new(BUILDING.LobbyDeskWidthStuds, 4.8, 6), {
+		color = WOOD,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	Kit.Block(parent, "LobbyDeskTop", at(0, 5, deskZ), Vector3.new(BUILDING.LobbyDeskWidthStuds + 2, 0.5, 7.4), {
+		color = OFF_WHITE,
+	})
+	local deskFront = Kit.Block(parent, "LobbyDeskFace", at(0, 2.6, deskZ - 3.2), Vector3.new(BUILDING.LobbyDeskWidthStuds, 3.4, 0.3), {
+		color = BLUE,
+	})
+	deskFront.CastShadow = false
+	Kit.Sign(deskFront, "RECEPTION", 20, LABEL_DIST, Color3.fromRGB(246, 250, 255))
+
+	-- Benches in two facing ranks, which is what a lobby does with the space between the door
+	-- and the desk: somewhere to wait that is not in the way of the stairs.
+	for index = 1, BUILDING.LobbyBenches do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		local x = side * (BUILDING.AtriumWidthStuds / 2 - 20)
+		local z = cz + 4 + row * 9
+		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
+			color = WOOD,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		for end_ = -1, 1, 2 do
+			Kit.Block(parent, `LobbyBenchLeg{index}_{end_}`, at(x, 1.1, z + end_ * 5), Vector3.new(3.6, 2.2, 1), {
+				color = Color3.fromRGB(78, 82, 94),
+				material = Enum.Material.Metal,
+			})
+		end
+	end
+
+	-- Planting, because every lobby in the reference has a tree in it and a hard-surfaced room
+	-- three storeys tall needs one thing in it that is not a rectangle.
+	for index = 1, BUILDING.LobbyTrees do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		Kit.Planter(
+			parent,
+			`LobbyPlanter{index}`,
+			at(side * (BUILDING.AtriumWidthStuds / 2 - 6), 0.4, cz - 6 + row * 16),
+			5,
+			14
+		)
+	end
+
+	-- The trophy case. One object that says the building has a past, which is a thing no amount
+	-- of clean geometry can say on its own.
+	for index = 1, BUILDING.LobbyCases do
+		local side = if index % 2 == 1 then -1 else 1
+		local x = side * (BUILDING.AtriumWidthStuds / 2 - 2)
+		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, ATRIUM_Z2 - 10), Vector3.new(1.5, 12, 16), {
+			color = WOOD,
+			material = Enum.Material.Wood,
+		})
+		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, ATRIUM_Z2 - 10), Vector3.new(0.2, 10, 14), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.45,
+		})
+		glass.CastShadow = false
+		for shelf = 1, 3 do
+			for cup = 1, 3 do
+				Kit.Block(
+					parent,
+					`Trophy{index}_{shelf}_{cup}`,
+					at(x, 2.6 + shelf * 3, ATRIUM_Z2 - 15 + cup * 3.4),
+					Vector3.new(1, 2.2, 1),
+					{ color = Color3.fromRGB(226, 188, 92), material = Enum.Material.Metal }
+				).CastShadow = false
+			end
+		end
+	end
+end
+
+-- ---------------------------------------------------------------------------------------
 -- Stairs: the reason three storeys are three storeys.
 -- ---------------------------------------------------------------------------------------
 
@@ -1428,6 +1542,7 @@ function School.Build(center: Vector3): Plan?
 	buildShell(parent, toWorld)
 	buildFrontage(parent, toWorld)
 	buildStairs(parent, toWorld)
+	buildLobby(parent, toWorld)
 	buildCorridors(parent, toWorld)
 	local anchors = buildRooms(parent, toWorld)
 
