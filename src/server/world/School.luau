@@ -841,6 +841,46 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		disc.CastShadow = false
 	end
 
+	-- **The gallery fascia, and the fins that carry the height.**
+	--
+	-- Two things a 54-stud atrium needs that a 27-stud one does not.
+	--
+	-- The fascia first: standing in the lobby you look up at the cut edge of the upper floor
+	-- slab, and a raw slab edge reads as a hole in the floor rather than as a balcony. A band
+	-- on that edge, in the school's blue, is what turns the void into a gallery -- and it is
+	-- the line that tells you from the ground floor that there is a floor above you.
+	for _, edge in {
+		{ n = "Front", cx = 0, cz = ATRIUM_Z1, sx = ATRIUM_X2 - ATRIUM_X1 + 2, sz = 1.4 },
+		{ n = "Back", cx = 0, cz = ATRIUM_Z2, sx = ATRIUM_X2 - ATRIUM_X1 + 2, sz = 1.4 },
+		{ n = "Left", cx = ATRIUM_X1, cz = (ATRIUM_Z1 + ATRIUM_Z2) / 2, sx = 1.4, sz = ATRIUM_Z2 - ATRIUM_Z1 },
+		{ n = "Right", cx = ATRIUM_X2, cz = (ATRIUM_Z1 + ATRIUM_Z2) / 2, sx = 1.4, sz = ATRIUM_Z2 - ATRIUM_Z1 },
+	} do
+		local slabY = floorY(2)
+		Kit.Block(parent, `GalleryFascia{edge.n}`, at(edge.cx, slabY - 1.4, edge.cz), Vector3.new(edge.sx, 2.8, edge.sz), {
+			color = DEEP_BLUE,
+		}).CastShadow = false
+		Kit.Block(parent, `GallerySoffit{edge.n}`, at(edge.cx, slabY - 3, edge.cz), Vector3.new(edge.sx - 0.6, 0.6, edge.sz - 0.6), {
+			color = OFF_WHITE,
+		}).CastShadow = false
+	end
+
+	-- Then the fins. A wall 54 studs tall with nothing on it has no height -- the eye needs
+	-- something repeating and vertical to count. These run the full two storeys down both flanks
+	-- of the void, which is the one place in the building where a full-height element is honest:
+	-- there is genuinely no floor in the way.
+	-- Indices run 1..n-1 rather than 0..n: a fin exactly on the void's corner sits inside the
+	-- wing structure that frames it, which is a solid part in a solid part.
+	for index = 1, BUILDING.AtriumFins - 1 do
+		local share = index / BUILDING.AtriumFins
+		local z = ATRIUM_Z1 + (ATRIUM_Z2 - ATRIUM_Z1) * share
+		for _, side in { ATRIUM_X1, ATRIUM_X2 } do
+			Kit.Block(parent, `AtriumFin{index}_{if side < 0 then "L" else "R"}`, at(side, roofY / 2, z), Vector3.new(1.6, roofY - 1, 1.2), {
+				color = OFF_WHITE,
+				material = Enum.Material.Concrete,
+			}).CastShadow = false
+		end
+	end
+
 	-- Banners down the void, alternating the school's two colours.
 	local drop = roofY * BUILDING.LobbyBannerDropShare
 	for index = 1, BUILDING.LobbyBanners do
@@ -1778,6 +1818,68 @@ local function fitCommon(parent: Instance, at: (number, number, number) -> Vecto
 	end
 end
 
+-- Wall trim: skirting, a dado rail with a panelled band under it, a picture rail near the
+-- ceiling, and beams across it.
+--
+-- **This is the highest-value detail in the building per part spent, and the reason is scale
+-- rather than decoration.** A room 27 studs floor-to-ceiling has about 15 studs of wall above
+-- head height, and painted flat white that reads as a wall with nothing on it however much
+-- furniture is standing on the floor. The eye has nothing to measure the height against, so a
+-- tall room looks like a small room that has been stretched.
+--
+-- Three horizontal lines fix that, because each one is a known height: a skirting is ankle
+-- high, a dado is hip high, a picture rail is above a door. Give a wall those and it announces
+-- its own size. The panelled band between skirting and dado is the classic school corridor
+-- treatment and costs one part per wall.
+--
+-- Beams do the same job for the ceiling, which is the other surface a tall room has too much
+-- of, and they give the ceiling lights something to sit against.
+local function dressWalls(parent: Instance, at: (number, number, number) -> Vector3, id: string, x1: number, x2: number, z1: number, z2: number, y: number, height: number)
+	local width = x2 - x1
+	local depth = z2 - z1
+	local DADO = 4.6
+	local RAIL_Y = math.min(height - 4, DOOR_H + 12)
+	local TRIM = Color3.fromRGB(232, 236, 244)
+	local PANEL = Color3.fromRGB(206, 214, 228)
+	local BEAM = Color3.fromRGB(222, 226, 234)
+
+	-- The two long walls, and the back wall.
+	local runs = {
+		{ n = "L", cx = x1 + 0.5, cz = (z1 + z2) / 2, len = depth, along = true },
+		{ n = "R", cx = x2 - 0.5, cz = (z1 + z2) / 2, len = depth, along = true },
+		{ n = "B", cx = (x1 + x2) / 2, cz = z2 - 0.5, len = width, along = false },
+	}
+	for _, r in runs do
+		local sz = function(t: number, h: number)
+			return if r.along then Vector3.new(t, h, r.len) else Vector3.new(r.len, h, t)
+		end
+		-- Panelled band from floor to dado, slightly proud of the wall so it casts a line.
+		Kit.Block(parent, `{id}Panel{r.n}`, at(r.cx, y + DADO / 2, r.cz), sz(0.5, DADO), {
+			color = PANEL,
+		}).CastShadow = false
+		-- Skirting at the foot and the dado rail on top of the band. Both stand further out
+		-- than the panel, which is what actually draws the shadow line.
+		Kit.Block(parent, `{id}Skirt{r.n}`, at(r.cx, y + 0.45, r.cz), sz(0.9, 0.9), {
+			color = TRIM,
+		}).CastShadow = false
+		Kit.Block(parent, `{id}Dado{r.n}`, at(r.cx, y + DADO, r.cz), sz(1, 0.7), {
+			color = TRIM,
+		}).CastShadow = false
+		-- Picture rail, up where the blank wall was.
+		Kit.Block(parent, `{id}Rail{r.n}`, at(r.cx, y + RAIL_Y, r.cz), sz(0.8, 0.55), {
+			color = TRIM,
+		}).CastShadow = false
+	end
+
+	-- Ceiling beams across the short dimension, spaced so each reads as its own bay.
+	local bays = math.max(2, math.floor(depth / 18))
+	for bay = 1, bays - 1 do
+		Kit.Block(parent, `{id}Beam{bay}`, at((x1 + x2) / 2, y + height - 1, z1 + depth * (bay / bays)), Vector3.new(width - 1.5, 1.6, 1.6), {
+			color = BEAM,
+		}).CastShadow = false
+	end
+end
+
 local function buildRooms(parent: Instance, at: (number, number, number) -> Vector3): { [string]: Vector3 }
 	local anchors: { [string]: Vector3 } = {}
 
@@ -1818,6 +1920,8 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		-- The sign over the door, which is how a player finds a subject at all.
 		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 5, y + DOOR_H + 2.2, rect.z1 - 1.2), Vector3.new(9, 2.6, 0.4), { color = WHITE })
 		Kit.Sign(plate, string.upper(rect.label), 12, LABEL_DIST, DEEP_BLUE)
+
+		dressWalls(parent, at, rect.id, rect.x1, rect.x2, rect.z1, rect.z2, y, FLOOR_H - SLAB)
 
 		-- Lights on a grid.
 		for ax = 1, FIT.LightsAcross do

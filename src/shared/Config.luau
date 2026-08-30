@@ -3207,6 +3207,11 @@ Config.School.Building = {
 	-- the cheapest thing that makes the height *legible* -- you read the building's scale off
 	-- the banner, not off the ceiling you are not looking at.
 	-- Safe range: 2-8, 6-14 and 0.5-0.85.
+	-- How many vertical fins run down each flank of the atrium void. They exist to give a
+	-- 54-stud wall a countable rhythm; too few and the wall is still blank, too many and the
+	-- lobby reads as a cage. Safe range: 4-10.
+	AtriumFins = 6,
+
 	LobbyBanners = 4,
 	LobbyBannerWidthStuds = 9,
 	LobbyBannerDropShare = 0.72,
