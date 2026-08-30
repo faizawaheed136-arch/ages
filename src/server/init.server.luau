@@ -258,4 +258,20 @@ ChildhoodService:Start()
 -- services and no-ops outside Studio.
 DebugService:Start()
 
+-- **The new school's interactive layer.**
+--
+-- Last, and outside the Init/Start pairs above, because it is not a service: it takes no
+-- players, holds no state and answers no remotes. It walks Workspace.ProperSchool once and
+-- hangs prompts, seats, lights and doors on what is already there.
+--
+-- Wrapped in a pcall on purpose. The whole of it depends on a baked asset being mounted, and
+-- an asset that has not synced yet is a missing-model warning rather than a reason the rest of
+-- the server should fail to boot. It says so and the game carries on.
+local okSchool, schoolErr = pcall(function()
+	require(script.world.ProperSchool.Interactive).Build()
+end)
+if not okSchool then
+	warn(`[ProperSchool] interactive layer did not build: {schoolErr}`)
+end
+
 print("[AGES] Server started")
