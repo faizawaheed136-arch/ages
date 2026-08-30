@@ -392,6 +392,36 @@ function Kit.Stairs(
 			Vector3.new(width, height, depthPerStep),
 			{ color = color, collide = true, yawDegrees = yaw }
 		)
+
+		-- The nosing: a thin lighter lip along the front edge of each tread.
+		--
+		-- This is the whole difference between a flight that reads as stairs and one that reads
+		-- as a stack of boxes. A real stair has a shadow line at every step, and without one a
+		-- white flight against a white wall is a smooth ramp with faint seams -- which is exactly
+		-- what it looked like. One thin part per step, and it is the cheapest detail in the kit.
+		local nose = Kit.Block(
+			parent,
+			`{name}Nose{index}`,
+			Vector3.new(centre.X, topY - 0.16, centre.Z) + direction * (depthPerStep * 0.42),
+			Vector3.new(width + 0.3, 0.32, 0.7),
+			{ color = Color3.fromRGB(214, 218, 226), yawDegrees = yaw }
+		)
+		nose.CastShadow = false
+	end
+
+	-- Stringers down both sides: the raked beams a real flight is carried on. They close the
+	-- open edge, so the staircase has a side rather than showing the end grain of every tread.
+	for side = -1, 1, 2 do
+		local across = Vector3.new(-direction.Z, 0, direction.X) * (width / 2 + 0.25)
+		local mid = base + direction * (runLength / 2) + across * side
+		local stringer = Kit.Block(
+			parent,
+			`{name}Stringer{side}`,
+			Vector3.new(mid.X, base.Y + rise / 2, mid.Z),
+			Vector3.new(0.5, rise + 1.5, runLength),
+			{ color = Color3.fromRGB(226, 230, 238), yawDegrees = yaw }
+		)
+		stringer.CastShadow = false
 	end
 	return true
 end

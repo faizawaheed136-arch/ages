@@ -866,7 +866,13 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	-- alternating is only half of it; the other half is that the return flight has to be
 	-- somewhere else in plan. So each floor's run is offset half a flight-width across the
 	-- stairwell, and the landing bridges the two.
-	local flightW = 13
+	-- Narrower and finer than before. It was 13 studs wide with 16 steps, which at this storey
+	-- height gives treads over three studs deep -- a flight built at the scale of a road. A school
+	-- stair is about as wide as two people passing, and its steps are shallow enough to read as
+	-- steps rather than as terraces. Ten and twenty-four gives a tread you can see the edge of,
+	-- and the nosings Kit.Stairs now draws are what make those edges visible at all.
+	local flightW = 10
+	local flightSteps = 24
 	local runLength = ATRIUM_Z2 - ATRIUM_Z1 - 8
 
 	for floor = 1, BUILDING.Floors - 1 do
@@ -888,14 +894,14 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 				at(x, fromY, startZ),
 				at(x, toY, endZ),
 				flightW,
-				16,
+				flightSteps,
 				OFF_WHITE
 			)
 			if not laid then
 				error(
 					`[AGES world] the school stairs from floor {floor} to {floor + 1} are too steep to climb.`
 						.. ` Config.School.Building.FloorHeightStuds is {FLOOR_H}; a Roblox humanoid manages`
-						.. ` 2 studs a step, so 16 steps caps a storey at 32. Lower the floor height or`
+						.. ` 2 studs a step, so {flightSteps} steps caps a storey at {flightSteps * 2}. Lower the floor height or`
 						.. ` raise the step count in School.buildStairs.`
 				)
 			end
@@ -1052,75 +1058,111 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 
 		-- Lockers down the front wall of the corridor, both sides of the atrium so the run is
 		-- not broken by the void.
+		-- **A continuous bank, not a row of separate slabs.**
+		--
+		-- These used to be individual blocks with air between them, standing at the open edge of
+		-- the corridor with no wall behind -- so instead of lockers you got a row of blue panels
+		-- floating in space, which is what the screenshots show and it is the single most
+		-- confusing thing in the building.
+		--
+		-- A locker bank is one solid run. The doors are *lines in* that run, not gaps between
+		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
+		-- door-width. That reads as lockers from any angle and never floats, because the body
+		-- is its own wall.
 		local lockerZ = corridorZ - CORRIDOR_W / 2 + 1
-		for index = 1, FIT.LockersPerCorridorWall do
-			local share = (index - 0.5) / FIT.LockersPerCorridorWall
-			local x = -half + WALL_T + (W - WALL_T * 2) * share
-			local locker = Kit.Block(parent, `Locker{floor}_{index}`, at(x, y + 4.5, lockerZ), Vector3.new(3.4, 9, 1.6), {
-				color = if index % 2 == 0 then BLUE else DEEP_BLUE,
+
+		-- **The bank runs in segments, broken at the stairwells.**
+		--
+		-- One continuous 226-stud run was right about being continuous and wrong about being
+		-- unbroken: the two stairwells stand on the same line, so the bank ran straight through
+		-- both of them. A locker you cannot reach because a staircase is inside it is worse than
+		-- no locker.
+		--
+		-- Segment ends are computed from the same stairwell centres buildStairs uses, so the two
+		-- cannot drift apart.
+		local wellX = BUILDING.AtriumWidthStuds / 2 - 11
+		local wellClear = 16
+		local edge = half - WALL_T
+		local segments = {
+			{ -edge, -wellX - wellClear },
+			{ -wellX + wellClear, wellX - wellClear },
+			{ wellX + wellClear, edge },
+		}
+
+		for segment, span in segments do
+			local x0, x1 = span[1], span[2]
+			local runW = x1 - x0
+			if runW < 12 then
+				continue
+			end
+			local cx = (x0 + x1) / 2
+			local doors = math.max(1, math.floor(runW / 4))
+			local doorW = runW / doors
+
+			Kit.Block(parent, `LockerBank{floor}_{segment}`, at(cx, y + 5, lockerZ), Vector3.new(runW, 10, 2.4), {
+				color = BLUE,
 				material = Enum.Material.Metal,
+				collide = true,
 			})
-			locker.CastShadow = false
+			Kit.Block(parent, `LockerBankPlinth{floor}_{segment}`, at(cx, y + 0.5, lockerZ), Vector3.new(runW, 1, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `LockerBankCap{floor}_{segment}`, at(cx, y + 10.3, lockerZ), Vector3.new(runW, 0.6, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+
+			for index = 1, doors - 1 do
+				Kit.Block(parent, `LockerSeam{floor}_{segment}_{index}`, at(x0 + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
+					color = DEEP_BLUE,
+				}).CastShadow = false
+			end
+			for index = 1, doors do
+				local dx = x0 + doorW * (index - 0.5)
+				Kit.Block(parent, `LockerHandle{floor}_{segment}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
+					color = Color3.fromRGB(214, 218, 226),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				Kit.Block(parent, `LockerVent{floor}_{segment}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+			end
 		end
 
-		-- The floor. Big overlapping discs in two sizes and two tones, wall to wall.
+		-- The hexagon panel, on the corridor's **end wall** -- a wall that exists.
 		--
-		-- This was three seven-stud rugs on bare tile, which is nothing on the largest surface in
-		-- the building. The corridor is the longest sightline in the school and the space a player
-		-- spends the most time in -- every lesson, every bully and every walk to the library goes
-		-- down it -- so it is the cheapest place to spend parts and the most expensive place to
-		-- leave empty.
+		-- These were floating. I put them at the corridor's open front edge, where there is no wall
+		-- at all, and left the cylinders unrotated -- a Roblox cylinder's axis runs along X, so
+		-- without a turn they face sideways. The result was a cloud of white ellipses hanging in
+		-- mid-air down the middle of the corridor, edge-on to anyone walking toward them.
 		--
-		-- The overlap is the point. Discs at one size on one spacing read as a pattern that was
-		-- generated; two sizes running into each other read as a floor somebody laid out.
-		for index = 1, BUILDING.FloorDiscs do
-			local share = (index - 0.5) / BUILDING.FloorDiscs
-			local x = -half + W * share
-			Kit.Rug(
-				parent,
-				`FloorDiscBig{floor}_{index}`,
-				at(x, y + 0.3, corridorZ + (if index % 2 == 0 then 5 else -3)),
-				BUILDING.FloorDiscLargeStuds,
-				if index % 2 == 0 then PALE_BLUE else Color3.fromRGB(238, 242, 248)
-			)
-			Kit.Rug(
-				parent,
-				`FloorDiscSmall{floor}_{index}`,
-				at(x + 16, y + 0.34, corridorZ + (if index % 2 == 0 then -6 else 6)),
-				BUILDING.FloorDiscSmallStuds,
-				if index % 2 == 0 then Color3.fromRGB(74, 132, 208) else PALE_BLUE
-			)
-		end
-
-		-- Planting, spaced off the discs rather than sitting on them.
-		for index = 1, 3 do
-			local x = -half + W * (index / 4)
-			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + CORRIDOR_W / 2 - 4), 3.2, 8)
-		end
-
-		-- The hexagon panel on the end wall. The one piece of pattern in the building: every
-		-- other surface here is a flat colour, and a wall of tiled hexes is what stops the end
-		-- of a long corridor being a blank rectangle you walk toward for twenty seconds.
-		--
-		-- Hexagons from cylinders: a Roblox cylinder is round, but at this size against a wall,
-		-- offset row by row into a honeycomb, it reads as the reference's tiling. Six-sided
-		-- geometry would be six parts each and this is one.
-		for row = 1, BUILDING.HexRows do
-			for col = 1, BUILDING.HexPerRow do
-				-- Every other row steps half a tile across, which is what makes a honeycomb
-				-- rather than a grid.
-				local stagger = if row % 2 == 0 then BUILDING.HexSizeStuds * 0.5 else 0
-				local hx = -half + 14 + stagger + (col - 1) * BUILDING.HexSizeStuds * 1.05
-				local hy = y + 5 + (row - 1) * BUILDING.HexSizeStuds * 0.92
-				local tile = Kit.Block(
-					parent,
-					`HexTile{floor}_{row}_{col}`,
-					at(hx, hy, corridorZ - CORRIDOR_W / 2 + 0.7),
-					Vector3.new(0.4, BUILDING.HexSizeStuds, BUILDING.HexSizeStuds),
-					{ color = if (row + col) % 3 == 0 then PALE_BLUE else Color3.fromRGB(226, 234, 244) }
-				)
-				tile.Shape = Enum.PartType.Cylinder
-				tile.CastShadow = false
+		-- The end walls (LeftWall/RightWall) run the full depth of the building and are solid. A
+		-- cylinder's axis already points along X, which is exactly the normal of those walls, so
+		-- against them it needs no rotation at all -- the same fact that made it wrong before makes
+		-- it right here.
+		for wall = -1, 1, 2 do
+			local wx = wall * (half - WALL_T - 0.4)
+			for row = 1, BUILDING.HexRows do
+				for col = 1, BUILDING.HexPerRow do
+					-- Every other row steps half a tile along, which is what makes a honeycomb rather
+					-- than a grid.
+					local stagger = if row % 2 == 0 then BUILDING.HexSizeStuds * 0.5 else 0
+					-- Centred in the corridor rather than measured from its edge, so the run cannot
+					-- walk out through the wall behind if the tile count changes.
+					local runW = (BUILDING.HexPerRow - 1) * BUILDING.HexSizeStuds * 1.02
+					local hz = corridorZ - runW / 2 + stagger + (col - 1) * BUILDING.HexSizeStuds * 1.02
+					local hy = y + 6 + (row - 1) * BUILDING.HexSizeStuds * 0.88
+					local tile = Kit.Block(
+						parent,
+						`HexTile{floor}_{wall}_{row}_{col}`,
+						at(wx, hy, hz),
+						Vector3.new(0.35, BUILDING.HexSizeStuds, BUILDING.HexSizeStuds),
+						{ color = if (row + col) % 3 == 0 then PALE_BLUE else Color3.fromRGB(228, 236, 246) }
+					)
+					tile.Shape = Enum.PartType.Cylinder
+					tile.CastShadow = false
+				end
 			end
 		end
 
@@ -1185,7 +1227,10 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		for index = 1, BUILDING.FountainsPerFloor do
 			local share = (index - 0.5) / BUILDING.FountainsPerFloor
 			local x = -half + W * share
-			local z = corridorZ - CORRIDOR_W / 2 + 1.4
+			-- The *far* side of the corridor. These used to share the near edge with the lockers,
+			-- and once the lockers became one continuous bank rather than spaced slabs there was no
+			-- longer a gap to stand in -- six fountains ended up inside it.
+			local z = corridorZ + CORRIDOR_W / 2 - 2.4
 
 			-- The back panel, the basin, and the spout. Three parts, and the basin is the one that
 			-- has to read as a basin from standing height -- it is wider than it is deep and sits

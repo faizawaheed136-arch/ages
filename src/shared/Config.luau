@@ -3208,9 +3208,16 @@ Config.School.Building = {
 	-- small rooms off the corridor with a row of basins and a tiled stripe, and their whole job
 	-- is to be somewhere ordinary that exists.
 	-- Safe range: 3-9, 3-7 and 4-9.
+	-- **These have to fit across a 16-stud corridor.** At 4 columns of 7 the panel needed 34
+	-- studs of depth and ran straight through the classroom walls behind it -- eight tiles buried
+	-- in the science room, eight more in cooking, and so on. Two columns of six is 12 studs and
+	-- sits inside the corridor with a margin either side.
+	--
+	-- If CorridorWidthStuds ever changes, these are the numbers that have to follow it.
+	-- Safe range: 3-9, 2-3 and 4-7.
 	HexRows = 5,
-	HexPerRow = 4,
-	HexSizeStuds = 7,
+	HexPerRow = 2,
+	HexSizeStuds = 6,
 
 	-- Safe range: 2-5 and 12-24.
 	BasinsPerWashroom = 3,
