@@ -3164,6 +3164,33 @@ Config.School.Building = {
 	--
 	-- Built rather than bought, like everything else in this file -- a machine that needed a
 	-- catalog mesh is a machine that does not appear on a fresh install.
+	-- The corridor floor, and the strips over it.
+	--
+	-- This is the largest single surface in the building and it was bare tile with three small
+	-- discs on it. The reference corridors are the opposite: enormous overlapping circles of
+	-- colour, wall to wall, so the floor is the thing you notice rather than the thing you walk
+	-- across without seeing.
+	--
+	-- It is worth the parts because of what a corridor *is* here. It is the longest sightline in
+	-- the school and the space a player spends the most time in -- every lesson, every bully,
+	-- every walk to the library goes down it. A dozen discs is the cheapest possible change to
+	-- the thing seen most.
+	--
+	-- Two sizes, overlapping, in two tones. One size at one spacing reads as a pattern somebody
+	-- generated; two sizes that run into each other read as a floor somebody designed.
+	-- Safe range: 3-8, 16-34 and 10-22.
+	FloorDiscs = 5,
+	FloorDiscLargeStuds = 26,
+	FloorDiscSmallStuds = 15,
+
+	-- Ceiling strips down the length of the corridor, replacing the square panels.
+	--
+	-- A strip is what a modern school actually has, and it does something a panel cannot: it
+	-- draws a line down the corridor and gives the eye somewhere to go. A row of squares is
+	-- lighting; a continuous line is architecture.
+	-- Safe range: 6-16.
+	CeilingStrips = 10,
+
 	-- Bins. Inside on every floor and outside along the approach.
 	--
 	-- The most ordinary object a school has, and the building had none. They are worth their

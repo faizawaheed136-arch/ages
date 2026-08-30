@@ -974,18 +974,52 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			locker.CastShadow = false
 		end
 
-		-- Lights down the middle of the run.
-		for index = 1, 10 do
-			local share = (index - 0.5) / 10
-			Kit.LightPanel(parent, `CorridorLight{floor}_{index}`, at(-half + W * share, y + FLOOR_H - SLAB - 0.6, corridorZ), 8, 2.2)
+		-- The floor. Big overlapping discs in two sizes and two tones, wall to wall.
+		--
+		-- This was three seven-stud rugs on bare tile, which is nothing on the largest surface in
+		-- the building. The corridor is the longest sightline in the school and the space a player
+		-- spends the most time in -- every lesson, every bully and every walk to the library goes
+		-- down it -- so it is the cheapest place to spend parts and the most expensive place to
+		-- leave empty.
+		--
+		-- The overlap is the point. Discs at one size on one spacing read as a pattern that was
+		-- generated; two sizes running into each other read as a floor somebody laid out.
+		for index = 1, BUILDING.FloorDiscs do
+			local share = (index - 0.5) / BUILDING.FloorDiscs
+			local x = -half + W * share
+			Kit.Rug(
+				parent,
+				`FloorDiscBig{floor}_{index}`,
+				at(x, y + 0.3, corridorZ + (if index % 2 == 0 then 5 else -3)),
+				BUILDING.FloorDiscLargeStuds,
+				if index % 2 == 0 then PALE_BLUE else Color3.fromRGB(238, 242, 248)
+			)
+			Kit.Rug(
+				parent,
+				`FloorDiscSmall{floor}_{index}`,
+				at(x + 16, y + 0.34, corridorZ + (if index % 2 == 0 then -6 else 6)),
+				BUILDING.FloorDiscSmallStuds,
+				if index % 2 == 0 then Color3.fromRGB(74, 132, 208) else PALE_BLUE
+			)
 		end
 
-		-- Seating and planting in the wide part of the corridor, which is what stops it reading
-		-- as a service passage.
+		-- Planting, spaced off the discs rather than sitting on them.
 		for index = 1, 3 do
 			local x = -half + W * (index / 4)
-			Kit.Rug(parent, `CorridorRug{floor}_{index}`, at(x, y + 0.35, corridorZ + 2), 7, PALE_BLUE)
-			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + 4), 3.2, 8)
+			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + CORRIDOR_W / 2 - 4), 3.2, 8)
+		end
+
+		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line
+		-- the eye can follow; a row of squares is only lighting.
+		for index = 1, BUILDING.CeilingStrips do
+			local share = (index - 0.5) / BUILDING.CeilingStrips
+			Kit.Block(
+				parent,
+				`CeilStrip{floor}_{index}`,
+				at(-half + W * share, y + FLOOR_H - SLAB - 0.5, corridorZ),
+				Vector3.new(W / BUILDING.CeilingStrips - 6, 0.3, 3.2),
+				{ color = Color3.fromRGB(255, 252, 242), material = Enum.Material.Neon }
+			).CastShadow = false
 		end
 
 		-- Bins along the corridor. The most ordinary object a school has, and there were none.
