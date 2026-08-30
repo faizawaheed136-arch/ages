@@ -488,6 +488,9 @@ local function buildSlabWithVoid(parent: Instance, at: (number, number, number) 
 		Kit.Railing(parent, `{name}Well{tag}Inner`, at(inner, y, WELL_Z1), at(inner, y, VOID_Z2), 4, PALE_BLUE)
 		-- The front edge, along the new front band.
 		Kit.Railing(parent, `{name}Well{tag}Front`, at(inner, y, WELL_Z1), at(outer, y, WELL_Z1), 4, PALE_BLUE)
+		-- And the outer edge against the atrium wall. It is a drop like the other two; the only
+		-- side left open is the one the stairs arrive on, which is the point of the whole thing.
+		Kit.Railing(parent, `{name}Well{tag}Outer`, at(outer, y, WELL_Z1), at(outer, y, VOID_Z2), 4, PALE_BLUE)
 	end
 end
 
@@ -958,12 +961,30 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	-- slab, and a raw slab edge reads as a hole in the floor rather than as a balcony. A band
 	-- on that edge, in the school's blue, is what turns the void into a gallery -- and it is
 	-- the line that tells you from the ground floor that there is a floor above you.
-	for _, edge in {
-		{ n = "Front", cx = 0, cz = ATRIUM_Z1, sx = ATRIUM_X2 - ATRIUM_X1 + 2, sz = 1.4 },
-		{ n = "Back", cx = 0, cz = VOID_Z2, sx = ATRIUM_X2 - ATRIUM_X1 + 2, sz = 1.4 },
-		{ n = "Left", cx = ATRIUM_X1, cz = (ATRIUM_Z1 + VOID_Z2) / 2, sx = 1.4, sz = VOID_Z2 - ATRIUM_Z1 },
-		{ n = "Right", cx = ATRIUM_X2, cz = (ATRIUM_Z1 + VOID_Z2) / 2, sx = 1.4, sz = VOID_Z2 - ATRIUM_Z1 },
-	} do
+	-- **It traces the two stairwells, and it does not cross the head of a flight.**
+	--
+	-- This used to trace the old full-width void as a single rectangle: Front, Back, Left,
+	-- Right. When the first floor was filled in and the openings became the two stairwells, the
+	-- rectangle stopped describing anything real -- and its Back band, 92 studs wide at
+	-- z = VOID_Z2, ran straight across the point where *both* staircases arrive. A 2.8-stud lip
+	-- at the top of a flight is a thing you walk into at head height on your way out of it.
+	--
+	-- So: three edges per well, not four. Inner (along the bridge), Front, and Outer against the
+	-- atrium wall -- each of those is a genuine cut edge of the slab and wants trimming. The
+	-- fourth side is where you step off the stairs and gets nothing at all, which is the same
+	-- rule the study counter above already follows.
+	local edges = {}
+	for side = -1, 1, 2 do
+		local tag = if side < 0 then "L" else "R"
+		local inner = side * WELL_X_IN
+		local outer = side * WELL_X_OUT
+		local midZ = (WELL_Z1 + VOID_Z2) / 2
+		local depth = VOID_Z2 - WELL_Z1
+		table.insert(edges, { n = `{tag}Inner`, cx = inner, cz = midZ, sx = 1.4, sz = depth })
+		table.insert(edges, { n = `{tag}Outer`, cx = outer, cz = midZ, sx = 1.4, sz = depth })
+		table.insert(edges, { n = `{tag}Front`, cx = (inner + outer) / 2, cz = WELL_Z1, sx = math.abs(outer - inner) + 1.4, sz = 1.4 })
+	end
+	for _, edge in edges do
 		local slabY = floorY(2)
 		Kit.Block(parent, `GalleryFascia{edge.n}`, at(edge.cx, slabY - 1.4, edge.cz), Vector3.new(edge.sx, 2.8, edge.sz), {
 			color = DEEP_BLUE,
