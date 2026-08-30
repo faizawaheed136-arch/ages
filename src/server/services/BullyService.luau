@@ -441,12 +441,20 @@ local function pickArchetype(player: Player, age: number): BullyArchetype?
 end
 
 -- Starts a stare-down. Returns whether one began, so the debug path can say why not.
-local function engage(player: Player, data: LifeData, archetype: BullyArchetype, station: Vector3): boolean
+-- `standing` is the loiterer already at this station, when there is one. Passing it rather
+-- than spawning is what removes the pop-in: the person you walk up to is the same body that
+-- turns to face you, so the encounter starts by somebody *reacting* rather than by somebody
+-- appearing. Nil falls back to spawning, which is what /bully forces and what happens if the
+-- loiterer was lost to a stream-out between ticks.
+local function engage(player: Player, data: LifeData, archetype: BullyArchetype, station: Vector3, standing: Visitor?): boolean
 	if encounters[player] ~= nil then
 		return false
 	end
 	local age = ageYearsOf(data)
-	local visitor = NPCService.Spawn(player, archetype.body, CFrame.new(station), age + (archetype.body.ageOffset or 0))
+	local visitor = standing
+	if visitor == nil or visitor.gone() then
+		visitor = NPCService.Spawn(player, archetype.body, CFrame.new(station), age + (archetype.body.ageOffset or 0))
+	end
 	if visitor == nil then
 		-- The rig could not be built, which every caller of Spawn has to treat as "this did
 		-- not happen". Silent on purpose: NPCService has already warned, and a second
@@ -558,6 +566,118 @@ local function tickRedo(player: Player, data: LifeData, position: Vector3, dt: n
 	push(player)
 end
 
+-- ---------------------------------------------------------------------------------------
+-- Loiterers: the people standing in the corridor before anything has happened.
+-- ---------------------------------------------------------------------------------------
+
+-- One body per live station, standing there for as long as the player is in the building.
+--
+-- Keyed by player and then by station index, because a station is only live for the tier the
+-- player has reached -- two players at different tiers are looking at different corridors, and
+-- a shared pool would have to pick one of them to be wrong.
+type Loiter = { visitor: Visitor, archetype: BullyArchetype }
+local loiterers: { [Player]: { [number]: Loiter } } = {}
+local loiterSpawning: { [Player]: { [number]: boolean } } = {}
+
+local function clearLoiterers(player: Player)
+	local mine = loiterers[player]
+	if mine ~= nil then
+		for _, entry in mine do
+			if not entry.visitor.gone() then
+				entry.visitor.destroy()
+			end
+		end
+	end
+	loiterers[player] = nil
+	loiterSpawning[player] = nil
+end
+
+-- Takes the loiterer off the pool without destroying it, because it is about to become the
+-- encounter. The encounter owns the body from here and clearEncounter is what ends it.
+local function takeLoiterer(player: Player, index: number): Loiter?
+	local mine = loiterers[player]
+	if mine == nil then
+		return nil
+	end
+	local entry = mine[index]
+	mine[index] = nil
+	return entry
+end
+
+local function tickLoiterers(player: Player, data: LifeData, position: Vector3)
+	-- Nobody loiters for a player who cannot be bullied -- too young, too old, already in an
+	-- encounter, or with the system off. The corridor being empty is then true rather than a
+	-- rendering decision.
+	if encounters[player] ~= nil or not eligible(player, data) then
+		clearLoiterers(player)
+		return
+	end
+
+	local room = Corridor.Room()
+	if room == nil then
+		clearLoiterers(player)
+		return
+	end
+
+	-- Out of range: torn down, for the reason the school crowd is. A cohort of rigs standing in
+	-- a corridor on the other side of the map is pure cost.
+	if (position - room.start).Magnitude > BULLY.LoiterNearStuds then
+		clearLoiterers(player)
+		return
+	end
+
+	local tier = tierFor(data)
+	local live = math.min(tier.stations, #room.stations)
+
+	local mine = loiterers[player]
+	if mine == nil then
+		mine = {}
+		loiterers[player] = mine
+	end
+	local spawning = loiterSpawning[player]
+	if spawning == nil then
+		spawning = {}
+		loiterSpawning[player] = spawning
+	end
+
+	-- Stations that have stopped being live -- the tier dropped on a new life -- give their
+	-- bodies back.
+	for index, entry in mine do
+		if index > live or entry.visitor.gone() then
+			if not entry.visitor.gone() then
+				entry.visitor.destroy()
+			end
+			mine[index] = nil
+		end
+	end
+
+	local age = ageYearsOf(data)
+	for index = 1, live do
+		if mine[index] == nil and not spawning[index] then
+			local archetype = pickArchetype(player, age)
+			if archetype ~= nil then
+				local station = room.stations[index]
+				spawning[index] = true
+				task.spawn(function()
+					local visitor = NPCService.Spawn(player, archetype.body, CFrame.new(station), age + (archetype.body.ageOffset or 0))
+					spawning[index] = false
+					if visitor == nil then
+						return
+					end
+					-- The pool may have been torn down while the web call was in flight -- the
+					-- player walked out, died, or an encounter started with somebody else.
+					local current = loiterers[player]
+					if current == nil or current[index] ~= nil or encounters[player] ~= nil then
+						visitor.destroy()
+						return
+					end
+					current[index] = { visitor = visitor, archetype = archetype }
+				end)
+			end
+		end
+	end
+end
+
 local function tickPlayer(player: Player, dt: number)
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
@@ -570,6 +690,7 @@ local function tickPlayer(player: Player, dt: number)
 	end
 
 	tickRedo(player, data, position, dt)
+	tickLoiterers(player, data, position)
 
 	local encounter = encounters[player]
 	if encounter ~= nil then
@@ -607,9 +728,18 @@ local function tickPlayer(player: Player, dt: number)
 	for index = 1, live do
 		local station = room.stations[index]
 		if (position - station).Magnitude <= BULLY.EngageRadiusStuds then
-			local archetype = pickArchetype(player, ageYearsOf(data))
+			-- The person already standing here, if there is one. Their archetype comes with them:
+			-- the player has been looking at this body from down the corridor, and re-rolling who
+			-- it is at the moment they arrive would make that look a lie.
+			local standing = takeLoiterer(player, index)
+			local archetype = if standing ~= nil then standing.archetype else pickArchetype(player, ageYearsOf(data))
 			if archetype ~= nil then
-				engage(player, data, archetype, station)
+				local body = if standing ~= nil then standing.visitor else nil
+				if not engage(player, data, archetype, station, body) and body ~= nil then
+					-- Refused -- already in an encounter. The body would otherwise be orphaned,
+					-- since it is off the pool and was never handed to one.
+					body.destroy()
+				end
 				break
 			end
 		end
@@ -618,6 +748,7 @@ local function tickPlayer(player: Player, dt: number)
 end
 
 local function forget(player: Player)
+	clearLoiterers(player)
 	clearEncounter(player)
 	cooldowns[player] = nil
 	notices[player] = nil
@@ -732,6 +863,12 @@ function BullyService.SetEnabled(value: boolean)
 		for player in encounters do
 			clearEncounter(player)
 			push(player)
+		end
+		-- And the people standing about waiting to start one. Without this, turning the system
+		-- off left the corridor full of bullies who could no longer do anything -- which reads
+		-- as broken rather than as disabled.
+		for player in loiterers do
+			clearLoiterers(player)
 		end
 	end
 end

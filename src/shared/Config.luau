@@ -3723,6 +3723,32 @@ Config.School.Bully = {
 	-- balanced on the edge of the radius you arrived through -- a single distance makes the
 	-- encounter re-trigger while you are walking away from it.
 	-- Safe range: 10-20 and 22-40, and Release must exceed Engage by at least 8.
+	-- How near the school a bully stands around waiting to be walked past.
+	--
+	-- **They used to not exist until you were on top of them.** A bully was spawned the instant
+	-- the player crossed EngageRadiusStuds, which meant a rig appeared out of nothing an arm's
+	-- length away -- and, worse, meant the corridor held no information. You could not see who
+	-- was down there, so you could not decide anything about it; the only way to find out a
+	-- station was occupied was to already be in the encounter.
+	--
+	-- Now they loiter. The stations their tier makes live are occupied for as long as you are in
+	-- the building, so the corridor is something you *read* from the far end: that is the second
+	-- queue the activity law asks for, and it costs nothing extra because the escalation already
+	-- decides which stations are live. Walking the long way round is now a real option, and an
+	-- option a player invents themselves is worth more than one the game offers.
+	--
+	-- Generously wider than the engage radius so they are already standing there as you come in
+	-- rather than popping in around you, which is the tell that a crowd is spawned rather than
+	-- alive. Matches the school crowd's own reasoning.
+	-- Safe range: 150-400.
+	LoiterNearStuds = 260,
+
+	-- How often the loiterers are topped up. Slower than the encounter tick because nothing
+	-- here is per-frame: a station that stands empty for two seconds after a life ends is not
+	-- something anybody can see.
+	-- Safe range: 1-5.
+	LoiterTickSeconds = 2,
+
 	EngageRadiusStuds = 14,
 	ReleaseRadiusStuds = 28,
 
