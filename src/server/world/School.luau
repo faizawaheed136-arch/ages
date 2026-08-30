@@ -48,8 +48,12 @@ local POOL = BUILDING.Pool
 local GYM = BUILDING.Gym
 local TRACK = BUILDING.Track
 local FIT = BUILDING.FitOut
--- How tall a room door stands. Short of the storey so there is a head over it.
-local DOOR_H = 13
+-- How tall a room door stands.
+--
+-- Eight, not thirteen. An R15 avatar is five studs; Roblox builders use seven for a door and
+-- eight where animations bob. Thirteen is two and a half avatars -- a door for a giant, and one
+-- more thing that made every room read as oversized.
+local DOOR_H = 8
 local EVENTS = BUILDING.Events
 local LOUNGE = BUILDING.Lounge
 local VEND = BUILDING.Vending
@@ -613,9 +617,34 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 		-- a three-storey space rather than a tall ground-floor room.
 		buildSlabWithVoid(parent, at, `Floor{floor}`, y, floor > 1)
 
-		-- The front elevation is glass, because that is what the reference is and because it
-		-- is what lets the building be read from the road at all.
-		Kit.GlassWall(parent, `FrontGlass{floor}`, at(-half, y, 0), at(half, y, 0), FLOOR_H - SLAB, WALL_T, BUILDING.GlassShare, WHITE, GLASS_TINT)
+		-- The front elevation is glass, because that is what the reference is and because it is
+		-- what lets the building be read from the road at all.
+		--
+		-- **It no longer follows the slabs.** The glazing is laid in ExteriorBands rows over the
+		-- whole wall rather than one row per floor, so the street sees three storeys while the
+		-- inside has two. An elevation is a pattern of windows and floor bands; nothing requires
+		-- it to agree with where the slabs are, and double-height rooms behind a three-band
+		-- facade is a thing real buildings do.
+		--
+		-- Laid on the first pass only, since it spans the whole height rather than one storey.
+		if floor == 1 then
+			local wallTop = FLOOR_H * BUILDING.Floors
+			local bandH = wallTop / BUILDING.ExteriorBands
+			for band = 1, BUILDING.ExteriorBands do
+				local bandY = (band - 1) * bandH
+				-- The glazing stops short of the spandrel rather than running up behind it. A
+				-- glass wall draws its own head band at the top, and that head was landing inside
+				-- the concrete spandrel -- two solid parts in the same 3 studs of wall.
+				Kit.GlassWall(parent, `FrontGlass{band}`, at(-half, bandY, 0), at(half, bandY, 0), bandH - 4.2, WALL_T, BUILDING.GlassShare, WHITE, GLASS_TINT)
+				-- The floor band on the face, and a spandrel behind it. Three of these is what
+				-- makes the building read as three storeys.
+				Kit.Block(parent, `Spandrel{band}`, at(0, bandY + bandH - 2, -0.5), Vector3.new(W, 3, 1.4), {
+					color = OFF_WHITE,
+					material = Enum.Material.Concrete,
+				})
+				Kit.Block(parent, `Band{band}`, at(0, bandY + bandH - 0.6, -0.4), Vector3.new(W, 1.4, 1.2), { color = BLUE })
+			end
+		end
 
 		-- The back and the two ends are solid, with a blue band at each floor line -- one
 		-- accent doing the job of saying where the storeys are from outside.
@@ -637,17 +666,7 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 			color = WHITE,
 			material = Enum.Material.Concrete,
 		})
-		-- The floor band, and a spandrel under it.
-		--
-		-- At 27 studs a storey there is room for the elevation to have three parts rather than one:
-		-- glass, a solid spandrel where the floor slab passes, and the accent band on its face. That
-		-- reading -- window, wall, window -- is what tells you a building has floors in it from the
-		-- outside, and it only became possible when the storey got taller.
-		Kit.Block(parent, `Spandrel{floor}`, at(0, y - 2.6, -0.5), Vector3.new(W, 4, 1.4), {
-			color = OFF_WHITE,
-			material = Enum.Material.Concrete,
-		})
-		Kit.Block(parent, `Band{floor}`, at(0, y - 0.6, -0.4), Vector3.new(W, 1.6, 1.2), { color = BLUE })
+
 
 		-- Columns down the front, on the grid the canopy sits on.
 		for index = 1, ENTRANCE.ColumnCount do
@@ -1254,7 +1273,7 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- puts it: off the circulation route rather than on it.
 		local washX = half - BUILDING.WashroomWidthStuds / 2 - 10
 		local washZ = corridorZ - CORRIDOR_W / 2 + 3
-		Kit.Block(parent, `WashSign{floor}`, at(washX, y + 13, washZ), Vector3.new(BUILDING.WashroomWidthStuds * 0.6, 2.6, 0.3), {
+		Kit.Block(parent, `WashSign{floor}`, at(washX, y + FLOOR_H - 2.6, washZ), Vector3.new(BUILDING.WashroomWidthStuds * 0.6, 2.6, 0.3), {
 			color = WHITE,
 		})
 		Kit.Block(parent, `WashBand{floor}`, at(washX, y + 6, washZ), Vector3.new(BUILDING.WashroomWidthStuds, 3, 0.3), {
@@ -1362,13 +1381,24 @@ local function fitClassroom(parent: Instance, at: (number, number, number) -> Ve
 	local deskLeft = rect.x1 + 10
 	local deskWidth = width - 14
 
+	-- **The rows divide the space that is free, rather than marching at a fixed pitch until
+	-- they hit something.**
+	--
+	-- They used to step 8 studs back from the front wall however deep the room was. That was
+	-- survivable when a room was 99 studs deep and is not at 46: row five landed on top of the
+	-- teacher's desk and row six stood outside the back wall. A room's furniture has to be a
+	-- function of the room, or every change to the plan breaks it silently.
+	local teacherZ = rect.z2 - 8
+	local fieldZ1 = rect.z1 + 6
+	local rowPitch = (teacherZ - 6 - fieldZ1) / FIT.DeskRows
+
 	for row = 1, FIT.DeskRows do
 		for seat = 1, perRow do
 			local x = deskLeft + deskWidth * ((seat - 0.5) / perRow)
-			local z = rect.z1 + 8 + (row - 1) * 8
+			local z = fieldZ1 + rowPitch * (row - 0.5)
 			Kit.Block(parent, `Desk{rect.id}{row}_{seat}`, at(x, y + 2.6, z), Vector3.new(5, 0.4, 3), { color = WOOD })
 			Kit.Block(parent, `DeskLeg{rect.id}{row}_{seat}`, at(x, y + 1.3, z), Vector3.new(4.4, 2.6, 2.4), { color = DARK, transparency = 0.15 })
-			Kit.Block(parent, `Chair{rect.id}{row}_{seat}`, at(x, y + 1.6, z + 3.4), Vector3.new(2.6, 0.35, 2.6), { color = BLUE })
+			Kit.Block(parent, `Chair{rect.id}{row}_{seat}`, at(x, y + 1.6, z + rowPitch * 0.36), Vector3.new(2.6, 0.35, 2.6), { color = BLUE })
 		end
 	end
 
@@ -1385,13 +1415,13 @@ local function fitClassroom(parent: Instance, at: (number, number, number) -> Ve
 
 	-- The teacher desk, with a screen and a chair behind it. Same reasoning as the library
 	-- counter: a bare slab is a plinth, a screen on it is a desk somebody works at.
-	Kit.Block(parent, `TeacherDesk{rect.id}`, at(cx, y + 2.2, rect.z2 - 7), Vector3.new(9, 4.4, 3.4), {
+	Kit.Block(parent, `TeacherDesk{rect.id}`, at(cx, y + 2.2, teacherZ), Vector3.new(9, 4.4, 3.4), {
 		color = WALNUT,
 		material = Enum.Material.Wood,
 		collide = true,
 	})
-	Kit.Block(parent, `TeacherTop{rect.id}`, at(cx, y + 4.6, rect.z2 - 7), Vector3.new(10, 0.4, 4), { color = OFF_WHITE })
-	Kit.Block(parent, `TeacherScreen{rect.id}`, at(cx - 2, y + 6.2, rect.z2 - 6.4), Vector3.new(4.2, 2.8, 0.3), {
+	Kit.Block(parent, `TeacherTop{rect.id}`, at(cx, y + 4.6, teacherZ), Vector3.new(10, 0.4, 4), { color = OFF_WHITE })
+	Kit.Block(parent, `TeacherScreen{rect.id}`, at(cx - 2, y + 6.2, teacherZ + 0.6), Vector3.new(4.2, 2.8, 0.3), {
 		color = Color3.fromRGB(30, 32, 40),
 	}).CastShadow = false
 	Kit.Block(parent, `TeacherChair{rect.id}`, at(cx, y + 1.7, rect.z2 - 10), Vector3.new(2.8, 0.4, 2.8), { color = DARK })
@@ -1441,7 +1471,12 @@ local function fitCafeteria(parent: Instance, at: (number, number, number) -> Ve
 	end
 
 	-- The bunting the reference is full of, strung across the room.
-	Kit.Bunting(parent, "CafeBunting", at(rect.x1 + 6, y + 14, rect.z1 + 8), at(rect.x2 - 6, y + 14, rect.z1 + 8), 18, { BLUE, WHITE, PALE_BLUE })
+	--
+	-- Hung off the ceiling rather than at a fixed 14 studs. Absolute heights in here were all
+	-- chosen when a storey was 27 studs tall and every one of them was left up in the roof when
+	-- it became 15; anything that belongs to the ceiling should be measured from the ceiling.
+	local ceilY = y + FLOOR_H - 1.6
+	Kit.Bunting(parent, "CafeBunting", at(rect.x1 + 6, ceilY, rect.z1 + 8), at(rect.x2 - 6, ceilY, rect.z1 + 8), 18, { BLUE, WHITE, PALE_BLUE })
 
 	-- The crest on the back wall, over the servery.
 	--
@@ -1449,6 +1484,7 @@ local function fitCafeteria(parent: Instance, at: (number, number, number) -> Ve
 	-- costs one each. Built back to front so the outer ring is behind the inner one and the
 	-- whole thing reads as layered rather than as three circles fighting for the same plane.
 	local crestZ = rect.z2 - 1.6
+	local crestY = y + FLOOR_H * 0.62
 	for ring = 1, BUILDING.CafeCrestRings do
 		local share = 1 - (ring - 1) / BUILDING.CafeCrestRings
 		local radius = BUILDING.CafeCrestRadiusStuds * share
@@ -1456,18 +1492,18 @@ local function fitCafeteria(parent: Instance, at: (number, number, number) -> Ve
 		local disc = Kit.Block(
 			parent,
 			`CafeCrest{ring}`,
-			at(cx, y + 22, crestZ - ring * 0.12),
+			at(cx, crestY, crestZ - ring * 0.12),
 			Vector3.new(radius * 2, radius * 2, 0.3),
 			{ color = tone }
 		)
 		disc.Shape = Enum.PartType.Cylinder
 		-- A cylinder's length runs along X, so facing it at a wall is a quarter turn about Y --
 		-- the same trick Kit.Rug uses about Z to lay one flat on the floor.
-		disc.CFrame = CFrame.new(at(cx, y + 22, crestZ - ring * 0.12)) * CFrame.Angles(0, math.rad(90), 0)
+		disc.CFrame = CFrame.new(at(cx, crestY, crestZ - ring * 0.12)) * CFrame.Angles(0, math.rad(90), 0)
 		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
 		disc.CastShadow = false
 	end
-	local crestPlate = Kit.Block(parent, "CafeCrestPlate", at(cx, y + 22, crestZ - 1), Vector3.new(BUILDING.CafeCrestRadiusStuds, 6, 0.2), {
+	local crestPlate = Kit.Block(parent, "CafeCrestPlate", at(cx, crestY, crestZ - 1), Vector3.new(BUILDING.CafeCrestRadiusStuds, 6, 0.2), {
 		color = BLUE,
 	})
 	crestPlate.CastShadow = false
@@ -1673,10 +1709,21 @@ local function fitLounge(parent: Instance, at: (number, number, number) -> Vecto
 		color = Color3.fromRGB(52, 56, 66),
 	}).CastShadow = false
 
-	-- Sofas and armchairs round the back, dining tables at the front.
+	-- **The room splits front to back, at a line rather than by luck.**
+	--
+	-- Soft seating at the back facing the screen, dining at the front by the door. These were
+	-- two independent runs -- sofas walking forward from the back wall, tables walking back from
+	-- the front -- which met in the middle the moment the room stopped being 99 studs deep, and
+	-- left a coffee table standing inside a sofa. A split line makes that impossible instead of
+	-- unlikely.
+	local depth = rect.z2 - rect.z1
+	local splitZ = rect.z1 + depth * 0.46
+
+	local sofaRows = math.ceil(LOUNGE.Sofas / 2)
+	local sofaPitch = (rect.z2 - 8 - (splitZ + 4)) / math.max(1, sofaRows)
 	for index = 1, LOUNGE.Sofas do
 		local x = rect.x1 + width * (((index - 1) % 2 + 0.5) / 2)
-		local z = rect.z2 - 10 - math.floor((index - 1) / 2) * 9
+		local z = rect.z2 - 8 - sofaPitch * (math.floor((index - 1) / 2) + 0.5)
 		Kit.Block(parent, `LoungeSofa{index}`, at(x, y + 1.9, z), Vector3.new(11, 3.8, 5), {
 			color = Color3.fromRGB(118, 132, 190),
 			material = Enum.Material.Fabric,
@@ -1687,9 +1734,11 @@ local function fitLounge(parent: Instance, at: (number, number, number) -> Vecto
 		})
 	end
 
+	local diningRows = math.ceil(LOUNGE.DiningTables / 3)
+	local diningPitch = (splitZ - 3 - (rect.z1 + 6)) / math.max(1, diningRows)
 	for index = 1, LOUNGE.DiningTables do
 		local x = rect.x1 + width * (((index - 1) % 3 + 0.5) / 3)
-		local z = rect.z1 + 8 + math.floor((index - 1) / 3) * 10
+		local z = rect.z1 + 6 + diningPitch * (math.floor((index - 1) / 3) + 0.5)
 		Kit.Block(parent, `LoungeTable{index}`, at(x, y + 3, z), Vector3.new(8, 0.4, 5), { color = Color3.fromRGB(150, 110, 72) })
 		Kit.Block(parent, `LoungeTableLeg{index}`, at(x, y + 1.5, z), Vector3.new(1, 3, 1), { color = Color3.fromRGB(96, 72, 52) })
 		for seat = -1, 1, 2 do
@@ -1767,7 +1816,7 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		}).CastShadow = false
 
 		-- The sign over the door, which is how a player finds a subject at all.
-		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 5, y + 12, rect.z1 - 1.2), Vector3.new(9, 2.6, 0.4), { color = WHITE })
+		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 5, y + DOOR_H + 2.2, rect.z1 - 1.2), Vector3.new(9, 2.6, 0.4), { color = WHITE })
 		Kit.Sign(plate, string.upper(rect.label), 12, LABEL_DIST, DEEP_BLUE)
 
 		-- Lights on a grid.

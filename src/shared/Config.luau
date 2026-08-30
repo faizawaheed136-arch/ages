@@ -2464,7 +2464,14 @@ Config.School.Science = {
 	BenchRadiusStuds = 5,
 	BoardRadiusStuds = 7,
 	CupboardRadiusStuds = 4,
-	RoomRadiusStuds = 40,
+	-- 20, down from 40. This is the number the whole school was sized around: at 40 the art
+	-- stations sit up to 40 studs from the centre, which forced a 99-stud room band on every
+	-- floor and made ten other rooms into corridors so that one could have its walk.
+	--
+	-- The walk still costs real seconds -- 20 studs at a school-age walkspeed is over a second
+	-- each way, and the point was always that fetching paint is a decision rather than free, not
+	-- that it is a hike. Safe range: 14-28.
+	RoomRadiusStuds = 20,
 
 	-- How often the server re-checks players against benches, stations and the cupboard.
 	-- Matches School.TickSeconds because it is the identical proximity job.
@@ -2806,21 +2813,22 @@ Config.School.Building = {
 	-- reference actually has.
 	Floors = 2,
 
-	-- **Two floors in the height three used to occupy.**
+	-- **Fifteen, because an R15 avatar is five studs tall.**
 	--
-	-- This is the whole point of dropping a storey and it is not the same as deleting one. The
-	-- building was 3 x 18 = 54 studs of interior; it is now 2 x 27 = 54. Same silhouette from
-	-- the street, same roofline against the town, and every room inside it is half again as
-	-- tall.
+	-- This was 18, then 27, and both were guesses. Measured against the character the way the
+	-- research says to, 27 studs is 5.4 avatars floor to ceiling -- a twenty-five foot classroom.
+	-- That is the reason every room in this school has looked empty however much furniture went
+	-- into it: the rooms were not underfurnished, they were oversized, and adding furniture to an
+	-- oversized room makes it worse rather than better.
 	--
-	-- Height is what these rooms were short of. They are 36 studs wide and 99 deep -- a long
-	-- plan -- and an 18-stud ceiling over that footprint reads as a corridor with furniture.
-	-- At 27 the proportion works, the glazing has somewhere to go, and the atrium becomes a
-	-- room rather than a slot.
+	-- Roblox's own guidance: a normal 9-foot ceiling is about 10 studs, a hall 14-16. Fifteen is
+	-- the hall end of that, which is right for a school with an atrium and clerestory glazing,
+	-- and it is three avatars rather than five and a half.
 	--
-	-- Safe range: 20-32. Below about 20 the light strips are in your hair; above 32 the stair
-	-- needs more steps than the atrium is long.
-	FloorHeightStuds = 27,
+	-- Two floors at 15 is 30 studs of interior. The elevation outside still reads as three
+	-- storeys -- see ExteriorBands -- which is what the building looked best as.
+	-- Safe range: 12-18. Below 12 the light strips are in your hair.
+	FloorHeightStuds = 15,
 
 	-- The three horizontal lines that turn a stack of boxes into a building: a base course at
 	-- the ground, a cornice at the roofline, and a parapet standing above it.
@@ -2856,6 +2864,18 @@ Config.School.Building = {
 	LobbyBenches = 6,
 	LobbyTrees = 4,
 	LobbyCases = 2,
+
+	-- **How many storeys the outside pretends to have.**
+	--
+	-- The building looked better as three from the street and works better as two inside, and
+	-- those are not in conflict: an elevation is a pattern of windows and floor bands, and it
+	-- does not have to agree with where the slabs actually are. Double-height rooms behind a
+	-- three-band facade is a thing real buildings do.
+	--
+	-- So the interior is two floors of 15 and the front carries three bands of 10. Same 30 studs
+	-- of wall, three rows of windows on it.
+	-- Safe range: 2-4.
+	ExteriorBands = 3,
 
 	PlinthHeightStuds = 3.5,
 	PlinthProudStuds = 1.2,
@@ -2963,7 +2983,16 @@ Config.School.Building = {
 	-- through the back of the building -- silently, because nothing in the tree measures a
 	-- room against the furniture another module lays in it.
 	-- Safe range: 90-130, 3-5 and 1-4.
-	BackBandDepthStuds = 99,
+	-- **46, not 99.** Ninety-nine studs is 28 metres -- a classroom the length of a bowling
+	-- alley, and the single worst number in this file. Roblox scale says a classroom is about 9
+	-- metres deep, which is 32 studs; 46 is generous for a school without being absurd, and with
+	-- the 36-stud slot width gives a room of 10m by 13m.
+	--
+	-- The old number existed to fit the art room's cupboard walk, which is why that walk is
+	-- being brought down to match rather than left to size the whole building. One room's
+	-- mechanic should not set the footprint of eleven.
+	-- Safe range: 36-60.
+	BackBandDepthStuds = 46,
 	-- Six slots a floor rather than four. Two floors times four was eight rooms for eleven, and
 	-- the rooms were 55 studs wide against a 99-stud band -- proportions that read as corridors
 	-- with furniture. Six gives about 36 studs each, which against that depth is a classroom.
@@ -3282,7 +3311,12 @@ Config.School.Building = {
 	-- arc is a straight line with a kink, which is what 80 degrees over the wrong angle range
 	-- produced -- 74 studs of travel in x and 5 in z.
 	StairSweepDegrees = 90,
-	StairSteps = 22,
+	-- Fourteen, down from 22. Twenty-two steps over a 15-stud storey is a 0.68-stud riser --
+	-- accurate to a real staircase and wrong for this one, because at that pitch the flight
+	-- reads as a ramp with lines drawn on it and costs 22 treads plus nosings to do it. Fourteen
+	-- gives a 1.07-stud riser against a 1.8-stud tread, which is the proportion a Roblox stair
+	-- wants and is still well inside the 2-stud step-up a humanoid climbs without jumping.
+	StairSteps = 14,
 
 	LockerBayStuds = 46,
 
@@ -3396,8 +3430,11 @@ Config.School.Building = {
 		--
 		-- Six rows of four is the same class laid down the room instead of across it.
 		-- Safe range: 8-30 and 3-8.
-		DesksPerClassroom = 24,
-		DeskRows = 6,
+		-- Sixteen, down from 24. Twenty-four desks in six rows fitted a 99-stud room; in a 46-stud
+	-- one the rows are 4 studs apart, which is a desk and no chair. Four rows of four is both a
+	-- believable class and a room a player can walk through.
+	DesksPerClassroom = 16,
+		DeskRows = 4,
 		-- Cafeteria tables, library shelves, cooking benches.
 		-- Safe range: 6-20 each.
 		CafeteriaTables = 12,
