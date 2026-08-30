@@ -48,6 +48,8 @@ local POOL = BUILDING.Pool
 local GYM = BUILDING.Gym
 local TRACK = BUILDING.Track
 local FIT = BUILDING.FitOut
+-- How tall a room door stands. Short of the storey so there is a head over it.
+local DOOR_H = 13
 local EVENTS = BUILDING.Events
 local LOUNGE = BUILDING.Lounge
 local VEND = BUILDING.Vending
@@ -850,42 +852,45 @@ end
 -- ---------------------------------------------------------------------------------------
 
 local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
-	-- Two flights, one at each end of the atrium, so a player coming in the front door can see
-	-- both and the second floor is never more than one turn away. Laid inside the void, which
-	-- is what a school atrium stair does and what makes the space read as circulation rather
-	-- than as a hole somebody forgot to floor.
-	-- **Every flight alternates direction.** They used to all run the same way at the same x,
-	-- which stacked the second-to-third flight directly on top of the first-to-second one -- so
-	-- arriving at the second floor put you face-first into the underside of the next flight and
-	-- the stair was unusable above floor one. That is what a switchback exists to solve, and it
-	-- is what every real building does: you go up, you turn, you go up again.
+	-- Two stairwells, one at each end of the atrium, so a player coming in the front door can
+	-- see both and the second floor is never more than one turn away.
 	--
-	-- Odd floors run back to front, even floors front to back. Arriving at a landing you are
-	-- facing the way the next flight leaves from, with the whole atrium in front of you rather
-	-- than a soffit.
+	-- **Each flight sits beside the one below it, not on top of it.** This is the second attempt
+	-- at the same bug and the first fix was wrong in an instructive way. Originally every flight
+	-- ran the same direction in the same footprint, so arriving at floor two put you into the
+	-- underside of the next flight. I "fixed" that by alternating the direction -- and left them
+	-- in the same footprint, which just turns two stacked flights into two *crossed* ones. From
+	-- the side it draws an X, which is exactly what it looked like.
+	--
+	-- A switchback is two parallel runs side by side with a landing between them. The direction
+	-- alternating is only half of it; the other half is that the return flight has to be
+	-- somewhere else in plan. So each floor's run is offset half a flight-width across the
+	-- stairwell, and the landing bridges the two.
+	local flightW = 13
+	local runLength = ATRIUM_Z2 - ATRIUM_Z1 - 8
+
 	for floor = 1, BUILDING.Floors - 1 do
 		local fromY = floorY(floor)
 		local toY = floorY(floor + 1)
 		local up = floor % 2 == 1
 		local startZ = if up then ATRIUM_Z1 + 4 else ATRIUM_Z2 - 4
 		local endZ = if up then ATRIUM_Z2 - 4 else ATRIUM_Z1 + 4
+
 		for side = -1, 1, 2 do
-			local x = side * (BUILDING.AtriumWidthStuds / 2 - 9)
+			-- The stairwell's centre, then the flight offset to one half of it. Odd floors take
+			-- the near half, even floors the far half; that is what stops them sharing a plan.
+			local well = side * (BUILDING.AtriumWidthStuds / 2 - 11)
+			local x = well + (if up then -flightW * 0.55 else flightW * 0.55)
+
 			local laid = Kit.Stairs(
 				parent,
 				`Stair{floor}_{side}`,
 				at(x, fromY, startZ),
 				at(x, toY, endZ),
-				14,
+				flightW,
 				16,
 				OFF_WHITE
 			)
-			-- The landing you arrive on. The void is cut out of every floor above the ground, so
-			-- without this the top step delivers you over the hole.
-			Kit.Slab(parent, `Landing{floor}_{side}`, at(x, toY, endZ + (if up then 5 else -5)), 18, 12, SLAB, {
-				color = TILE,
-			})
-
 			if not laid then
 				error(
 					`[AGES world] the school stairs from floor {floor} to {floor + 1} are too steep to climb.`
@@ -894,7 +899,35 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 						.. ` raise the step count in School.buildStairs.`
 				)
 			end
+
+			-- The landing at the head of the flight, spanning the full stairwell so it reaches
+			-- both the flight arriving and the one leaving. The void is cut out of every floor
+			-- above the ground, so without this the top step delivers you over the hole.
+			Kit.Slab(
+				parent,
+				`Landing{floor}_{side}`,
+				at(well, toY, endZ + (if up then 4 else -4)),
+				flightW * 2.4,
+				10,
+				SLAB,
+				{ color = TILE }
+			)
+
+			-- A rail down the open side of the flight, which is the difference between a stair
+			-- and a ramp with steps drawn on it.
+			Kit.Railing(
+				parent,
+				`StairRail{floor}_{side}`,
+				at(x + flightW / 2, fromY + 1, startZ),
+				at(x + flightW / 2, toY + 1, endZ),
+				4,
+				PALE_BLUE
+			)
 		end
+	end
+	-- Kept so a future edit that shortens the atrium is told what it broke.
+	if runLength < 20 then
+		error(`[AGES world] the atrium is too short for a stair: {runLength} studs of run.`)
 	end
 end
 
@@ -1479,10 +1512,26 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		Kit.Wall(parent, `{rect.id}Right`, at(rect.x2, y, rect.z1), at(rect.x2, y, rect.z2), FLOOR_H - SLAB, WALL_T, { color = WHITE })
 		Kit.GlassWall(parent, `{rect.id}Front`, at(rect.x1 + 10, y, rect.z1), at(rect.x2, y, rect.z1), FLOOR_H - SLAB, WALL_T, 0.7, WHITE, GLASS_TINT)
 
-		-- The doorway is the gap left at the left-hand end of that glazed wall. A gap rather
-		-- than a door part: a swinging door in a corridor a class empties into is a thing to get
-		-- stuck on, and the frame either side reads as a doorway on its own.
+		-- The doorway, and a door in it.
+		--
+		-- It was an open gap, on the reasoning that a swinging door in a corridor a class
+		-- empties into is a thing to get stuck on. That reasoning is still right about *swinging*
+		-- -- so this does not swing. It is a glazed leaf in a frame, non-collidable, which reads
+		-- as a door from both sides and cannot trap anybody. A room you enter through a hole in
+		-- a wall reads as unfinished however good the room is.
 		Kit.Block(parent, `{rect.id}DoorFrame`, at(rect.x1 + 10, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorJamb`, at(rect.x1, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorHead`, at(rect.x1 + 5, y + DOOR_H, rect.z1), Vector3.new(10, 1.2, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 5, y + DOOR_H / 2, rect.z1), Vector3.new(9.2, DOOR_H, 0.4), {
+			color = GLASS_TINT,
+			material = Enum.Material.Glass,
+			transparency = 0.45,
+		}).CastShadow = false
+		-- The push bar, which is what makes a glass panel read as a door rather than a window.
+		Kit.Block(parent, `{rect.id}DoorBar`, at(rect.x1 + 5, y + DOOR_H * 0.45, rect.z1 - 0.4), Vector3.new(5, 0.5, 0.5), {
+			color = Color3.fromRGB(206, 212, 222),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
 
 		-- The sign over the door, which is how a player finds a subject at all.
 		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 5, y + 12, rect.z1 - 1.2), Vector3.new(9, 2.6, 0.4), { color = WHITE })
