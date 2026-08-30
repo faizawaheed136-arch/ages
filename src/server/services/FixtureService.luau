@@ -177,6 +177,24 @@ local function use(player: Player, kind: string)
 		end
 	end
 	if nearest == nil then
+		-- Said out loud. Every silent `return` in this function presents to the player as a
+		-- prompt that does nothing, which is indistinguishable from a bug in the fixture.
+		warn(`[AGES] {player.Name} pressed a "{kind}" prompt with nothing of that kind inside {FIX.ReachStuds} studs`)
+		return
+	end
+
+	-- **Doors are answered here, before any of the checks below.**
+	--
+	-- The prompt was appearing and the keypress was doing nothing, and the reason is that a
+	-- door was being made to walk the whole fixture gauntlet -- profile loaded, cooldown, money
+	-- -- before it was allowed to swing. Two of those paths `return` without saying anything,
+	-- so any one of them failing looked identical to the door being broken.
+	--
+	-- A door is not an economy interaction. It has no cost, no cooldown and no stat, and the
+	-- reward for opening it is that it is open. It should not be able to fail because a profile
+	-- has not finished loading.
+	if kind == "door" then
+		swingDoors(nearest)
 		return
 	end
 
@@ -186,13 +204,14 @@ local function use(player: Player, kind: string)
 		mine = {}
 		nextUse[player] = mine
 	end
-	local ready = if kind == "door" then mine[`door:{nearest.Name}`] else mine[kind]
+	local ready = mine[kind]
 	if ready ~= nil and now < ready then
 		notice(player, FIX.TooSoon)
 		return
 	end
 
 	if DataService.GetProfile(player) == nil then
+		warn(`[AGES] {player.Name} used a "{kind}" with no profile loaded -- refused`)
 		return
 	end
 
@@ -204,17 +223,6 @@ local function use(player: Player, kind: string)
 			notice(player, spec.broke)
 			return
 		end
-	end
-
-	-- The doors are the one fixture with a moving part rather than a stat.
-	--
-	-- The cooldown is deliberately keyed per leaf rather than per kind here. Sharing one
-	-- "door" cooldown across the building meant opening the science lab locked you out of the
-	-- art room next to it for the same second, which reads as the building ignoring you.
-	if kind == "door" then
-		swingDoors(nearest)
-		mine[`door:{nearest.Name}`] = now + spec.cooldownSeconds
-		return
 	end
 
 	if spec.happiness ~= 0 then

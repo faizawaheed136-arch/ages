@@ -50,10 +50,11 @@ local TRACK = BUILDING.Track
 local FIT = BUILDING.FitOut
 -- How tall a room door stands.
 --
--- Eight, not thirteen. An R15 avatar is five studs; Roblox builders use seven for a door and
--- eight where animations bob. Thirteen is two and a half avatars -- a door for a giant, and one
--- more thing that made every room read as oversized.
-local DOOR_H = 8
+-- Twelve. Eight is the textbook number -- an R15 avatar is five studs and builders use seven
+-- to eight for a door -- and it was still wrong here, because those numbers are for a room with
+-- a 10-stud ceiling. In a 27-stud storey an 8-stud door is a hatch: correct against the avatar
+-- and far too small against the wall it is cut into. A door has to be read against the room.
+local DOOR_H = 12
 local EVENTS = BUILDING.Events
 local LOUNGE = BUILDING.Lounge
 local VEND = BUILDING.Vending
@@ -262,6 +263,28 @@ local ATRIUM_Z2 = 14 + BUILDING.AtriumDepthStuds
 -- which is what the stairs arrive on. See Config.School.Building.GalleryDepthStuds.
 local VOID_Z2 = ATRIUM_Z2 - BUILDING.GalleryDepthStuds
 
+-- **Where the two stairs stand, and therefore where the holes in the upper floor are.**
+--
+-- These are derived rather than chosen, and it matters that they are, because the openings in
+-- the first floor have to be exactly the flights' footprint -- any smaller and a tread ends up
+-- under the slab with no headroom over it, any larger and the floor is missing for no reason.
+--
+-- A quarter-turn flight sweeps from pointing at its own side wall to pointing at the corridor.
+-- That puts its arc inside a box reaching `radius + width/2` back from the turn centre and the
+-- same distance out to the side, so placing the centre that far in from the atrium wall lands
+-- the flight exactly against it. The two boxes then leave a bridge down the middle of the
+-- atrium, which is the piece of first floor that used to be missing entirely.
+local STAIR_R = BUILDING.StairRadiusStuds
+local STAIR_W = BUILDING.StairWidthStuds
+local STAIR_CX = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
+-- The turn centre sits a radius short of the void's back edge, so the head of the arc finishes
+-- exactly where the gallery slab begins and you step straight off it onto solid floor.
+local STAIR_CZ = VOID_Z2 - STAIR_R
+-- The stairwell openings: outer edge flush with the atrium wall, inner edge leaving the bridge.
+local WELL_Z1 = STAIR_CZ - STAIR_W / 2
+local WELL_X_OUT = STAIR_CX + STAIR_R + STAIR_W / 2
+local WELL_X_IN = STAIR_CX - STAIR_W / 2
+
 -- ---------------------------------------------------------------------------------------
 -- The site: ground, plaza, approach.
 -- ---------------------------------------------------------------------------------------
@@ -401,7 +424,11 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 	local nameBoard = Kit.Block(parent, "NameBoard", at(0, 0.5, -plazaD + 6), Vector3.new(46, 0.6, 8), { color = OFF_WHITE })
 	Kit.Sign(nameBoard, "AGES HIGH SCHOOL", 46, LABEL_DIST * 3, DEEP_BLUE)
 
-	local welcome = Kit.Block(parent, "WelcomeBoard", at(0, ENTRANCE.CanopyHeightStuds - 3, -2), Vector3.new(26, 3.2, 0.5), { color = WHITE })
+	-- Above the door head, not across it. This sat at canopy height minus three, which put a
+	-- 26-stud white board straight over the top third of a 17-stud doorway -- the single thing
+	-- most responsible for the entrance being unreadable from the plaza. A sign belongs on the
+	-- wall above an opening; the moment it overlaps the opening it is not a sign, it is a lintel.
+	local welcome = Kit.Block(parent, "WelcomeBoard", at(0, ENTRANCE.DoorHeightStuds + 3.4, -2), Vector3.new(26, 3.2, 0.5), { color = WHITE })
 	Kit.Sign(welcome, "WELCOME", 26, LABEL_DIST * 2, BLUE)
 end
 
@@ -413,6 +440,22 @@ end
 --
 -- Four pieces rather than a slab with a hole, because Roblox has no hole: a floor is solid
 -- or it is not there, and the only way to have a void in one is to lay the ring around it.
+-- One storey's floor slab.
+--
+-- **The upper floor is solid except for the two stairwells.** It used to be cut to the whole
+-- footprint of the atrium -- ninety studs by thirty-six of nothing -- on the theory that this
+-- made the lobby a double-height space. What it actually made was a first floor with its
+-- middle missing: you came up a flight and arrived at the edge of a hole, and the fix for that
+-- was a landing slab hanging in mid-air at the head of each stair.
+--
+-- Now the only holes are the flights themselves. The lobby keeps its height as two tall shafts
+-- with a staircase in each, which is a better version of the same idea -- daylight comes down
+-- them, you can see between floors, and the bridge between them is somewhere to stand and look
+-- over. Everything else up there is floor you can walk on.
+--
+-- Five pieces, and the shape is worth reading off the names: a band across the front of the
+-- building, a band across the back, and between them the two outer edges plus the bridge down
+-- the middle. The stairwells are what is left over.
 local function buildSlabWithVoid(parent: Instance, at: (number, number, number) -> Vector3, name: string, y: number, cut: boolean)
 	local half = W / 2
 	if not cut then
@@ -420,25 +463,34 @@ local function buildSlabWithVoid(parent: Instance, at: (number, number, number) 
 		return
 	end
 
-	-- In front of the void.
-	Kit.Slab(parent, `{name}Front`, at(0, y, ATRIUM_Z1 / 2), W, ATRIUM_Z1, SLAB, { color = TILE })
-	-- Behind it -- and this piece now reaches forward to VOID_Z2 rather than ATRIUM_Z2, which
-	-- is what makes the gallery. It is the same slab; it is simply bigger by GalleryDepthStuds.
+	-- In front of the stairwells: the whole width of the building, from the front wall to where
+	-- the flights begin. This band did not exist before and is most of what was missing.
+	Kit.Slab(parent, `{name}Front`, at(0, y, WELL_Z1 / 2), W, WELL_Z1, SLAB, { color = TILE })
+	-- Behind them: the gallery and everything back to the rear wall.
 	Kit.Slab(parent, `{name}Back`, at(0, y, (VOID_Z2 + D) / 2), W, D - VOID_Z2, SLAB, { color = TILE })
-	-- The two sides of it.
-	local sideW = half + ATRIUM_X1
-	Kit.Slab(parent, `{name}Left`, at((-half + ATRIUM_X1) / 2, y, (ATRIUM_Z1 + VOID_Z2) / 2), sideW, VOID_Z2 - ATRIUM_Z1, SLAB, { color = TILE })
-	Kit.Slab(parent, `{name}Right`, at((half + ATRIUM_X2) / 2, y, (ATRIUM_Z1 + VOID_Z2) / 2), sideW, VOID_Z2 - ATRIUM_Z1, SLAB, { color = TILE })
 
-	-- A rail round the void, or the first person to walk along the second floor in the dark
-	-- falls to the ground floor. This is the one piece of the building that is safety rather
-	-- than decoration.
-	local railY = y
-	Kit.Railing(parent, `{name}RailA`, at(ATRIUM_X1, railY, ATRIUM_Z1), at(ATRIUM_X2, railY, ATRIUM_Z1), 4, PALE_BLUE)
-	Kit.Railing(parent, `{name}RailB`, at(ATRIUM_X1, railY, VOID_Z2), at(ATRIUM_X2, railY, VOID_Z2), 4, PALE_BLUE)
-	Kit.Railing(parent, `{name}RailC`, at(ATRIUM_X1, railY, ATRIUM_Z1), at(ATRIUM_X1, railY, VOID_Z2), 4, PALE_BLUE)
-	Kit.Railing(parent, `{name}RailD`, at(ATRIUM_X2, railY, ATRIUM_Z1), at(ATRIUM_X2, railY, VOID_Z2), 4, PALE_BLUE)
+	-- The band the stairwells are cut out of, in three pieces.
+	local bandZ = (WELL_Z1 + VOID_Z2) / 2
+	local bandD = VOID_Z2 - WELL_Z1
+	local edgeW = half - WELL_X_OUT
+	Kit.Slab(parent, `{name}Left`, at((-half - WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
+	Kit.Slab(parent, `{name}Right`, at((half + WELL_X_OUT) / 2, y, bandZ), edgeW, bandD, SLAB, { color = TILE })
+	-- The bridge between the two stairwells, over the middle of the lobby.
+	Kit.Slab(parent, `{name}Bridge`, at(0, y, bandZ), WELL_X_IN * 2, bandD, SLAB, { color = TILE })
+
+	-- A rail round each stairwell, or the first person to walk the bridge in the dark goes over
+	-- the side. This is the one piece of the building that is safety rather than decoration.
+	for side = -1, 1, 2 do
+		local outer = side * WELL_X_OUT
+		local inner = side * WELL_X_IN
+		local tag = if side < 0 then "L" else "R"
+		-- The inner edge, along the bridge.
+		Kit.Railing(parent, `{name}Well{tag}Inner`, at(inner, y, WELL_Z1), at(inner, y, VOID_Z2), 4, PALE_BLUE)
+		-- The front edge, along the new front band.
+		Kit.Railing(parent, `{name}Well{tag}Front`, at(inner, y, WELL_Z1), at(outer, y, WELL_Z1), 4, PALE_BLUE)
+	end
 end
+
 
 -- The front of the building: pediment, crest, welcome board, pilasters, hedges and lamps.
 --
@@ -773,6 +825,10 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 	lantern.CastShadow = false
 
 	-- The entrance canopy, and the doors under it.
+	-- The canopy clears the door head rather than cutting across it. Its soffit was at 15.5
+	-- against a 17-stud door, so from the plaza the roof crossed the top of the opening and the
+	-- way in read as a dark slot under a shelf. A canopy has to be higher than the thing it
+	-- shelters or it hides it.
 	Kit.Slab(parent, "Canopy", at(0, ENTRANCE.CanopyHeightStuds, -ENTRANCE.CanopyDepthStuds / 2), ENTRANCE.PlazaWidthStuds, ENTRANCE.CanopyDepthStuds, 1.4, {
 		color = WHITE,
 	})
@@ -917,22 +973,11 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		}).CastShadow = false
 	end
 
-	-- Then the fins. A wall 54 studs tall with nothing on it has no height -- the eye needs
-	-- something repeating and vertical to count. These run the full two storeys down both flanks
-	-- of the void, which is the one place in the building where a full-height element is honest:
-	-- there is genuinely no floor in the way.
-	-- Indices run 1..n-1 rather than 0..n: a fin exactly on the void's corner sits inside the
-	-- wing structure that frames it, which is a solid part in a solid part.
-	for index = 1, BUILDING.AtriumFins - 1 do
-		local share = index / BUILDING.AtriumFins
-		local z = ATRIUM_Z1 + (VOID_Z2 - ATRIUM_Z1) * share
-		for _, side in { ATRIUM_X1, ATRIUM_X2 } do
-			Kit.Block(parent, `AtriumFin{index}_{if side < 0 then "L" else "R"}`, at(side, roofY / 2, z), Vector3.new(1.6, roofY - 1, 1.2), {
-				color = OFF_WHITE,
-				material = Enum.Material.Concrete,
-			}).CastShadow = false
-		end
-	end
+	-- The fins that used to run down both flanks of the void are gone. They were added to give
+	-- a 54-stud wall a countable rhythm, and in a space this size they read as a row of pillars
+	-- standing in the middle of the room for no reason -- which is what they were. The gallery
+	-- fascia and the glazing already give the atrium its horizontal lines; it did not need
+	-- vertical ones as well.
 
 	-- **The gallery gets a study counter, because that is what a gallery is for.**
 	--
@@ -1161,17 +1206,17 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	for side = -1, 1, 2 do
 		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
 		-- other around the middle of the lobby rather than into it.
-		local cx = side * (BUILDING.AtriumWidthStuds / 2 - radius - 4)
+		local cx = side * STAIR_CX
 		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
 		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
 		-- in front, which reach z 12 and had seven treads of each flight inside them.
 		-- The turn centre sits a radius short of the back wall, so the arc finishes there and
 		-- the landing meets the corridor. Everything in front of it -- 22 studs of lobby -- is
 		-- the entrance zone, and stays clear.
-		-- A radius short of the void's edge, so the head of the arc finishes exactly where the
-		-- gallery slab begins. Set against ATRIUM_Z2 instead, the top treads ran on past the edge
-		-- and ended up *underneath* the floor they were supposed to deliver you onto.
-		local cz = VOID_Z2 - radius
+		-- Both of these now come from the same constants the floor openings are cut from, so a
+		-- flight and its stairwell cannot drift apart -- which is how the stairs ended up
+		-- arriving over a hole in the first place.
+		local cz = STAIR_CZ
 
 		-- **A true quarter turn: from facing the side wall to facing the corridor.**
 		--
@@ -1352,97 +1397,89 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
 		-- door-width. That reads as lockers from any angle and never floats, because the body
 		-- is its own wall.
-		-- **Three locker bays a floor, evenly spaced, with everything else between them.**
+		-- **Lockers live on the side walls, never on the wall down the middle of the building.**
 		--
-		-- This was one bay in the middle of a 226-stud corridor, which fixed the previous problem
-		-- (a bank running wall to wall on every floor, which is what made the atrium a wall of blue
-		-- lockers) by overcorrecting into a different one: a quarter-mile of empty tunnel with a
-		-- single object in the centre of it.
+		-- They were on the corridor's front wall -- the one that faces the atrium -- which is a
+		-- wall in the middle of the plan. That is what put a bank of lockers against the lobby
+		-- feature wall and its logo, and what made them read from the gallery as clutter stuck to
+		-- the middle of the space rather than as part of a room.
 		--
-		-- Structured does not mean sparse. A real school corridor has a rhythm -- lockers, board,
-		-- bench, lockers -- repeating at a walkable interval, and it is the *repeat* that makes it
-		-- read as designed rather than as decorated. Three bays puts one about every 75 studs, which
-		-- is roughly fifteen seconds of walking between them.
-		local lockerZ = corridorZ - CORRIDOR_W / 2 + 1.4
-		local bayW = BUILDING.LockerBayStuds
-		local bays = BUILDING.LockerBays
-		local usableW = W - WALL_T * 2 - 24
+		-- The corridor's side walls are the building's own left and right ends. Putting the banks
+		-- there turns each end of the corridor into a locker alcove you walk into, which is what a
+		-- school actually has, and leaves the whole length of the middle wall clear.
+		local alcoveLen = CORRIDOR_W - 5
+		for side = -1, 1, 2 do
+			local bankX = side * (half - WALL_T - 1.4)
+			local tag = `{floor}_{if side < 0 then "L" else "R"}`
+			local doors = math.max(3, math.floor(alcoveLen / 4))
+			local doorW = alcoveLen / doors
+			local z0 = corridorZ - alcoveLen / 2
 
-		for bay = 1, bays do
-			local bayCx = -usableW / 2 + usableW * ((bay - 0.5) / bays)
-			local bayX = bayCx - bayW / 2
-			local doors = math.max(2, math.floor(bayW / 4.5))
-			local doorW = bayW / doors
-			local tag = `{floor}_{bay}`
-
-			Kit.Block(parent, `LockerBank{tag}`, at(bayCx, y + 5, lockerZ), Vector3.new(bayW, 10, 2.4), {
+			-- Yawed a quarter turn so the bank's length runs along the corridor's depth and its
+			-- face looks back down the corridor.
+			Kit.Block(parent, `LockerBank{tag}`, at(bankX, y + 6.5, corridorZ), Vector3.new(alcoveLen, 11, 2.4), {
 				color = BLUE,
 				material = Enum.Material.Metal,
 				collide = true,
+				yawDegrees = 90,
 			})
-			Kit.Block(parent, `LockerBankPlinth{tag}`, at(bayCx, y + 0.5, lockerZ), Vector3.new(bayW, 1, 2.8), {
+			Kit.Block(parent, `LockerBankPlinth{tag}`, at(bankX, y + 0.5, corridorZ), Vector3.new(alcoveLen, 1, 2.8), {
 				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
+				yawDegrees = 90,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerBankCap{tag}`, at(bayCx, y + 10.3, lockerZ), Vector3.new(bayW, 0.6, 2.8), {
+			Kit.Block(parent, `LockerBankCap{tag}`, at(bankX, y + 12.3, corridorZ), Vector3.new(alcoveLen, 0.6, 2.8), {
 				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
+				yawDegrees = 90,
 			}).CastShadow = false
 
-			for index = 1, doors - 1 do
-				Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bayX + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
-					color = DEEP_BLUE,
-				}).CastShadow = false
-			end
 			for index = 1, doors do
-				local dx = bayX + doorW * (index - 0.5)
-				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
+				local dz = z0 + doorW * (index - 0.5)
+				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(bankX - side * 1.3, y + 6.5, dz + doorW * 0.28), Vector3.new(0.3, 1.6, 0.4), {
 					color = Color3.fromRGB(214, 218, 226),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
-				Kit.Block(parent, `LockerVent{tag}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
+				Kit.Block(parent, `LockerVent{tag}_{index}`, at(bankX - side * 1.3, y + 10.4, dz), Vector3.new(0.25, 0.9, doorW * 0.45), {
 					color = Color3.fromRGB(58, 92, 158),
 				}).CastShadow = false
+				if index < doors then
+					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bankX - side * 1.25, y + 6.5, z0 + doorW * index), Vector3.new(0.3, 10.4, 0.25), {
+						color = DEEP_BLUE,
+					}).CastShadow = false
+				end
 			end
 
-			-- The bench facing the bay. This is what turns a wall of lockers into a place rather
-			-- than a surface -- the reference locker room is a bench down the middle and little else.
-			Kit.Block(parent, `LockerBench{tag}`, at(bayCx, y + 2.3, lockerZ + 6), Vector3.new(bayW * 0.7, 0.7, 3.4), {
+			-- The bench facing the bank, which is what makes the alcove somewhere you stop rather
+			-- than a surface you walk past.
+			Kit.Block(parent, `LockerBench{tag}`, at(bankX - side * 7, y + 2.3, corridorZ), Vector3.new(3.4, 0.7, alcoveLen * 0.7), {
 				color = WALNUT,
 				material = Enum.Material.Wood,
 				collide = true,
 			})
 			for leg = -1, 1, 2 do
-				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bayCx + leg * bayW * 0.28, y + 1.15, lockerZ + 6), Vector3.new(0.6, 2.3, 3), {
+				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bankX - side * 7, y + 1.15, corridorZ + leg * alcoveLen * 0.25), Vector3.new(3, 2.3, 0.6), {
 					color = Color3.fromRGB(96, 102, 114),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
 			end
 		end
 
-		-- **What goes between the bays.**
+		-- **What the middle wall carries instead.**
 		--
-		-- The gaps are the other two thirds of the corridor and they were bare wall. A school
-		-- corridor's furniture is almost entirely display -- noticeboards, cases, honours boards --
-		-- because that is what a corridor is *for* once you can walk down it: it is the one space
-		-- every student passes through, so it is where the school talks to them.
-		-- The gaps are the midpoints *between* bays, and the board is sized to what is actually
-		-- free there. Spacing them at 1/bays of the run instead put the two end boards straight
-		-- through the end bays -- the bays are 46 studs wide, so the gaps are not where evenly
-		-- dividing the corridor says they are.
-		local bayPitch = usableW / bays
-		local freeW = bayPitch - bayW
-		for gap = 1, bays - 1 do
-			local gx = -usableW / 2 + bayPitch * gap
-			local boardW = math.max(8, freeW - 3)
-			local tag = `{floor}_{gap}`
-
-			-- A noticeboard on the locker side, framed, with notices on it.
-			Kit.Block(parent, `Notice{tag}Frame`, at(gx, y + 7, lockerZ - 0.6), Vector3.new(boardW, 11, 0.5), {
+		-- With the lockers gone it is a long clean wall facing the atrium, which is the right place
+		-- for the things a corridor is actually for: notices, and somewhere to put a plant. These
+		-- are flat against the wall rather than standing off it, so the corridor stays a corridor.
+		local boardZ = corridorZ - CORRIDOR_W / 2 + 0.6
+		local usableW = W - WALL_T * 2 - 60
+		for board = 1, 3 do
+			local gx = -usableW / 2 + usableW * ((board - 0.5) / 3)
+			local tag = `{floor}_{board}`
+			Kit.Block(parent, `Notice{tag}Frame`, at(gx, y + 7, boardZ), Vector3.new(26, 11, 0.5), {
 				color = WALNUT,
 				material = Enum.Material.Wood,
 			}).CastShadow = false
-			Kit.Block(parent, `Notice{tag}Cork`, at(gx, y + 7, lockerZ - 0.9), Vector3.new(boardW - 1.6, 9.6, 0.25), {
+			Kit.Block(parent, `Notice{tag}Cork`, at(gx, y + 7, boardZ - 0.4), Vector3.new(24.4, 9.6, 0.25), {
 				color = Color3.fromRGB(158, 124, 92),
 				material = Enum.Material.Fabric,
 			}).CastShadow = false
@@ -1450,13 +1487,11 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			for sheet = 1, 6 do
 				local col = (sheet - 1) % 3
 				local row = math.floor((sheet - 1) / 3)
-				Kit.Block(parent, `Notice{tag}Sheet{sheet}`, at(gx + (col - 1) * (boardW / 3.4), y + 9.4 - row * 4.4, lockerZ - 1.1), Vector3.new(boardW / 4.6, 3.6, 0.15), {
+				Kit.Block(parent, `Notice{tag}Sheet{sheet}`, at(gx - 7 + col * 7, y + 9.4 - row * 4.4, boardZ - 0.7), Vector3.new(5.4, 3.6, 0.15), {
 					color = PAPER[(sheet % 4) + 1],
 				}).CastShadow = false
 			end
 
-			-- A planter on the room side, which is the cheapest thing that makes a corridor feel
-			-- occupied rather than issued.
 			local planterZ = corridorZ + CORRIDOR_W / 2 - 2.6
 			Kit.Block(parent, `Planter{tag}`, at(gx, y + 1.6, planterZ), Vector3.new(5, 3.2, 4), {
 				color = Color3.fromRGB(196, 202, 214),
@@ -1474,71 +1509,10 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			end
 		end
 
-		-- The hexagon panel, on the corridor's **end wall** -- a wall that exists.
-		--
-		-- These were floating. I put them at the corridor's open front edge, where there is no wall
-		-- at all, and left the cylinders unrotated -- a Roblox cylinder's axis runs along X, so
-		-- without a turn they face sideways. The result was a cloud of white ellipses hanging in
-		-- mid-air down the middle of the corridor, edge-on to anyone walking toward them.
-		--
-		-- The end walls (LeftWall/RightWall) run the full depth of the building and are solid. A
-		-- cylinder's axis already points along X, which is exactly the normal of those walls, so
-		-- against them it needs no rotation at all -- the same fact that made it wrong before makes
-		-- it right here.
-		for wall = -1, 1, 2 do
-			local wx = wall * (half - WALL_T - 0.4)
-			for row = 1, BUILDING.HexRows do
-				for col = 1, BUILDING.HexPerRow do
-					-- Every other row steps half a tile along, which is what makes a honeycomb rather
-					-- than a grid.
-					local stagger = if row % 2 == 0 then BUILDING.HexSizeStuds * 0.5 else 0
-					-- Centred in the corridor rather than measured from its edge, so the run cannot
-					-- walk out through the wall behind if the tile count changes.
-					local runW = (BUILDING.HexPerRow - 1) * BUILDING.HexSizeStuds * 1.02
-					local hz = corridorZ - runW / 2 + stagger + (col - 1) * BUILDING.HexSizeStuds * 1.02
-					local hy = y + 6 + (row - 1) * BUILDING.HexSizeStuds * 0.88
-					local tile = Kit.Block(
-						parent,
-						`HexTile{floor}_{wall}_{row}_{col}`,
-						at(wx, hy, hz),
-						Vector3.new(0.35, BUILDING.HexSizeStuds, BUILDING.HexSizeStuds),
-						{ color = if (row + col) % 3 == 0 then PALE_BLUE else Color3.fromRGB(228, 236, 246) }
-					)
-					tile.Shape = Enum.PartType.Cylinder
-					tile.CastShadow = false
-				end
-			end
-		end
-
-		-- **One washroom per floor, at one end of the corridor.**
-		--
-		-- There were two on every floor, one at each end, on all three storeys -- six of them,
-		-- which is more washrooms than classrooms and exactly the "lying around everywhere" the
-		-- lockers were guilty of. One, at the far end from the stairs, where a school actually
-		-- puts it: off the circulation route rather than on it.
-		local washX = half - BUILDING.WashroomWidthStuds / 2 - 10
-		local washZ = corridorZ - CORRIDOR_W / 2 + 3
-		Kit.Block(parent, `WashSign{floor}`, at(washX, y + FLOOR_H - 2.6, washZ), Vector3.new(BUILDING.WashroomWidthStuds * 0.6, 2.6, 0.3), {
-			color = WHITE,
-		})
-		Kit.Block(parent, `WashBand{floor}`, at(washX, y + 6, washZ), Vector3.new(BUILDING.WashroomWidthStuds, 3, 0.3), {
-			color = BLUE,
-		}).CastShadow = false
-		Kit.Block(parent, `WashTile{floor}`, at(washX, y + 11, washZ), Vector3.new(BUILDING.WashroomWidthStuds, 7, 0.25), {
-			color = Color3.fromRGB(236, 240, 248),
-		}).CastShadow = false
-		for index = 1, BUILDING.BasinsPerWashroom do
-			local share = (index - 0.5) / BUILDING.BasinsPerWashroom
-			local bx = washX - BUILDING.WashroomWidthStuds / 2 + BUILDING.WashroomWidthStuds * share
-			Kit.Block(parent, `Basin{floor}_{index}`, at(bx, y + 4.6, washZ + 1.4), Vector3.new(4, 1.2, 3), {
-				color = Color3.fromRGB(246, 248, 252),
-				collide = true,
-			})
-			Kit.Block(parent, `Tap{floor}_{index}`, at(bx, y + 5.8, washZ + 0.5), Vector3.new(0.4, 1.6, 0.4), {
-				color = Color3.fromRGB(198, 204, 214),
-				material = Enum.Material.Metal,
-			}).CastShadow = false
-		end
+		-- The hexagon panel that used to sit on the corridor's end wall is gone: that wall is
+		-- where the locker alcove now is, and the two were occupying the same square studs. The
+		-- lockers are the better use of an end wall -- a decorative disc there was filling a space
+		-- that had nothing in it, which is a problem the corridor no longer has.
 
 		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line
 		-- the eye can follow; a row of squares is only lighting.
@@ -2311,7 +2285,7 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		-- see the lesson you are late for.
 		Kit.Wall(parent, `{rect.id}Left`, at(rect.x1, y, rect.z1), at(rect.x1, y, rect.z2), FLOOR_H - SLAB, WALL_T, { color = WHITE })
 		Kit.Wall(parent, `{rect.id}Right`, at(rect.x2, y, rect.z1), at(rect.x2, y, rect.z2), FLOOR_H - SLAB, WALL_T, { color = WHITE })
-		Kit.GlassWall(parent, `{rect.id}Front`, at(rect.x1 + 10, y, rect.z1), at(rect.x2, y, rect.z1), FLOOR_H - SLAB, WALL_T, 0.7, WHITE, GLASS_TINT)
+		Kit.GlassWall(parent, `{rect.id}Front`, at(rect.x1 + 14, y, rect.z1), at(rect.x2, y, rect.z1), FLOOR_H - SLAB, WALL_T, 0.7, WHITE, GLASS_TINT)
 
 		-- The doorway, and a door in it.
 		--
@@ -2320,9 +2294,9 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		-- -- so this does not swing. It is a glazed leaf in a frame, non-collidable, which reads
 		-- as a door from both sides and cannot trap anybody. A room you enter through a hole in
 		-- a wall reads as unfinished however good the room is.
-		Kit.Block(parent, `{rect.id}DoorFrame`, at(rect.x1 + 10, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorFrame`, at(rect.x1 + 14, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
 		Kit.Block(parent, `{rect.id}DoorJamb`, at(rect.x1, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
-		Kit.Block(parent, `{rect.id}DoorHead`, at(rect.x1 + 5, y + DOOR_H, rect.z1), Vector3.new(10, 1.2, 1.4), { color = BLUE })
+		Kit.Block(parent, `{rect.id}DoorHead`, at(rect.x1 + 7, y + DOOR_H, rect.z1), Vector3.new(14, 1.2, 1.4), { color = BLUE })
 		-- **A door that shuts.**
 		--
 		-- This was a non-collidable glazed leaf, on the reasoning that a swinging door in a
@@ -2334,26 +2308,26 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		-- direction instead -- every room door opens *into its room*, away from the corridor, so
 		-- an opening leaf never sweeps the circulation route. Named `{id}DoorLeaf` because
 		-- FixtureService finds doors by name; see the PATTERNS note there.
-		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 5, y + DOOR_H / 2, rect.z1), Vector3.new(9.2, DOOR_H, 0.5), {
+		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 7, y + DOOR_H / 2, rect.z1), Vector3.new(13.2, DOOR_H, 0.5), {
 			color = WALNUT,
 			material = Enum.Material.WoodPlanks,
 			collide = true,
 		})
 		-- A vision panel. Every school door has one, and it is what stops a corridor of shut
 		-- doors reading as a corridor of walls.
-		Kit.Block(parent, `{rect.id}DoorVision`, at(rect.x1 + 5, y + DOOR_H * 0.68, rect.z1), Vector3.new(3.4, DOOR_H * 0.4, 0.3), {
+		Kit.Block(parent, `{rect.id}DoorVision`, at(rect.x1 + 7, y + DOOR_H * 0.68, rect.z1), Vector3.new(4.6, DOOR_H * 0.34, 0.3), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
 			transparency = 0.4,
 		}).CastShadow = false
 		-- The push bar, which is what makes a glass panel read as a door rather than a window.
-		Kit.Block(parent, `{rect.id}DoorBar`, at(rect.x1 + 5, y + DOOR_H * 0.45, rect.z1 - 0.4), Vector3.new(5, 0.5, 0.5), {
+		Kit.Block(parent, `{rect.id}DoorBar`, at(rect.x1 + 7, y + DOOR_H * 0.45, rect.z1 - 0.4), Vector3.new(7, 0.5, 0.5), {
 			color = Color3.fromRGB(206, 212, 222),
 			material = Enum.Material.Metal,
 		}).CastShadow = false
 
 		-- The sign over the door, which is how a player finds a subject at all.
-		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 5, y + DOOR_H + 2.2, rect.z1 - 1.2), Vector3.new(9, 2.6, 0.4), { color = WHITE })
+		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 7, y + DOOR_H + 2.4, rect.z1 - 1.2), Vector3.new(12, 2.8, 0.4), { color = WHITE })
 		Kit.Sign(plate, string.upper(rect.label), 12, LABEL_DIST, DEEP_BLUE)
 
 		dressWalls(parent, at, rect.id, rect.x1, rect.x2, rect.z1, rect.z2, y, FLOOR_H - SLAB)

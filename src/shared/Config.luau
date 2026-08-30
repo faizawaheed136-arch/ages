@@ -3391,8 +3391,17 @@ Config.School.Building = {
 		PlazaDepthStuds = 34,
 		-- How far the canopy projects over the doors, and how high it sits.
 		-- Safe range: 8-20 and 10-18.
-		CanopyDepthStuds = 14,
-		CanopyHeightStuds = 14,
+		-- Shallower and much higher, because both numbers were hiding the front door.
+		--
+		-- The canopy was 14 studs up over a door 17 studs tall: the roof crossed the *top of the
+		-- opening*, so from the plaza you saw a white shelf with a dark slot under it rather than a
+		-- way in. A canopy has to clear the thing it shelters. 23 puts the soffit six studs above
+		-- the door head, and 10 studs of projection shades the entrance without turning it into a
+		-- tunnel the daylight cannot reach.
+		--
+		-- Rule for anyone changing these: CanopyHeightStuds must stay well above DoorHeightStuds.
+		CanopyDepthStuds = 10,
+		CanopyHeightStuds = 23,
 		-- Columns across the front. Six reads as a school and not a temple.
 		-- Safe range: 4-10.
 		ColumnCount = 6,
