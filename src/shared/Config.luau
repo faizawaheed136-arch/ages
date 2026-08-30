@@ -2955,6 +2955,20 @@ Config.School.Building = {
 		-- Safe range: 3-8.
 		TreesPerSide = 5,
 
+		-- How many tiers each clipped topiary is built from, and how tall they stand.
+		-- The reference's forecourt is lined with these rather than with round park trees, and
+		-- the difference is most of why that frontage reads as maintained.
+		-- Safe range: 4-9 and 26-46.
+		TopiaryTiers = 6,
+		TopiaryHeightStuds = 34,
+
+		-- The black railings along the front boundary, and how far apart the uprights stand.
+		-- The reference fences its whole frontage, which is the thing that makes the forecourt a
+		-- *forecourt* rather than the building simply stopping at the pavement.
+		-- Safe range: 0-2 and 5-12.
+		RailingHeightStuds = 9,
+		RailingSpacingStuds = 7,
+
 		-- The front doors: one wide opening rather than four separate leaves.
 		--
 		-- There were four 8-stud panels with gaps between them, which read from the plaza as a
@@ -3182,6 +3196,25 @@ Config.School.Building = {
 	-- makes a dining room read as a set.
 	-- Safe range: 8-20.
 	CafeBarStools = 12,
+
+	-- The hexagon panel on the corridor's end wall, and the washrooms off it.
+	--
+	-- Both come straight from the reference photographs and both are things the building had no
+	-- version of. The hexagons are the one piece of *pattern* in the whole school -- every other
+	-- surface is a flat colour, and a wall of tiled hexes is what stops the end of a long
+	-- corridor being a blank rectangle you are walking toward.
+	--
+	-- The washrooms matter for a duller reason: a school without them is a set. They are two
+	-- small rooms off the corridor with a row of basins and a tiled stripe, and their whole job
+	-- is to be somewhere ordinary that exists.
+	-- Safe range: 3-9, 3-7 and 4-9.
+	HexRows = 5,
+	HexPerRow = 4,
+	HexSizeStuds = 7,
+
+	-- Safe range: 2-5 and 12-24.
+	BasinsPerWashroom = 3,
+	WashroomWidthStuds = 18,
 
 	-- The corridor floor, and the strips over it.
 	--

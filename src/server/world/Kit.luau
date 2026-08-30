@@ -290,6 +290,45 @@ end
 -- A tree: trunk and two canopy blobs. Not a mesh, because the kit must not depend on an
 -- asset id -- a building that needs the catalog to be reachable is a building that does not
 -- lay on a fresh machine.
+-- A clipped conical topiary: the tall dark-green cone that lines the reference's forecourt.
+--
+-- It is a different plant from Kit.Tree and it is worth having both. A round canopy on a
+-- visible trunk reads as a park tree; these read as *landscaping* -- something a groundsman
+-- shapes -- and a row of them down an approach is most of why that frontage looks like a
+-- school somebody maintains rather than a building dropped on grass.
+--
+-- Built as a stack of tapering balls rather than one cone, because there is no cone primitive
+-- and a stack reads softer than the wedge that would otherwise be reached for -- these are
+-- clipped shrubs, not spikes.
+function Kit.Topiary(parent: Instance, name: string, base: Vector3, height: number, tiers: number)
+	local trunkHeight = height * 0.12
+	Kit.Block(parent, `{name}Trunk`, Vector3.new(base.X, base.Y + trunkHeight / 2, base.Z), Vector3.new(1.2, trunkHeight, 1.2), {
+		color = Color3.fromRGB(104, 78, 58),
+		material = Enum.Material.Wood,
+	})
+
+	local green = Color3.fromRGB(78, 128, 70)
+	for tier = 1, tiers do
+		local share = (tier - 1) / tiers
+		-- Width falls away faster than height climbs, which is what makes a cone rather than a
+		-- column. The top tier is deliberately small enough to read as a point.
+		local width = height * 0.36 * (1 - share * 0.82)
+		local tall = height * 0.9 / tiers * 1.25
+		local y = base.Y + trunkHeight + (height * 0.9) * (share + 0.5 / tiers)
+		local blob = Instance.new("Part")
+		blob.Name = `{name}Tier{tier}`
+		blob.Shape = Enum.PartType.Ball
+		blob.Size = Vector3.new(width, tall, width)
+		blob.CFrame = CFrame.new(base.X, y, base.Z)
+		blob.Anchored = true
+		blob.CanCollide = false
+		blob.Color = green
+		blob.Material = Enum.Material.Grass
+		blob.CastShadow = tier == 1
+		blob.Parent = parent
+	end
+end
+
 function Kit.Tree(parent: Instance, name: string, base: Vector3, height: number)
 	local trunkHeight = height * 0.45
 	Kit.Block(parent, `{name}Trunk`, Vector3.new(base.X, base.Y + trunkHeight / 2, base.Z), Vector3.new(1.6, trunkHeight, 1.6), {

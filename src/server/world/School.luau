@@ -303,6 +303,36 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 	-- down this function, and I added a second set without checking first -- two sets on one
 	-- forecourt, the outer pair standing inside a wing.
 
+	-- Black railings along the front boundary, broken either side of the crossing.
+	--
+	-- The reference fences its whole frontage, and that is what makes the forecourt a
+	-- forecourt rather than the building simply stopping where the pavement starts. Broken at
+	-- the middle rather than run straight through, because a fence across your own entrance is
+	-- the one place it must not be.
+	local fenceZ = -plazaD - 4
+	local gap = ENTRANCE.PlazaWidthStuds / 2 + 6
+	for side = -1, 1, 2 do
+		local inner = side * gap
+		local outer = side * (wingOuter + 34)
+		Kit.Block(parent, `FenceRail{side}Top`, at((inner + outer) / 2, ENTRANCE.RailingHeightStuds, fenceZ), Vector3.new(math.abs(outer - inner), 0.5, 0.5), {
+			color = Color3.fromRGB(30, 32, 38),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `FenceRail{side}Mid`, at((inner + outer) / 2, ENTRANCE.RailingHeightStuds * 0.45, fenceZ), Vector3.new(math.abs(outer - inner), 0.4, 0.4), {
+			color = Color3.fromRGB(30, 32, 38),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		local span = math.abs(outer - inner)
+		local posts = math.max(2, math.floor(span / ENTRANCE.RailingSpacingStuds))
+		for index = 0, posts do
+			local x = inner + (outer - inner) * (index / posts)
+			Kit.Block(parent, `FencePost{side}_{index}`, at(x, ENTRANCE.RailingHeightStuds / 2, fenceZ), Vector3.new(0.5, ENTRANCE.RailingHeightStuds, 0.5), {
+				color = Color3.fromRGB(30, 32, 38),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+
 	-- The crossing outside, which is the one piece of the approach that says "there is a road
 	-- here and children cross it" without a single sign.
 	for stripe = 1, 7 do
@@ -310,11 +340,19 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 		Kit.Slab(parent, `Crossing{stripe}`, at(x, 0.3, -plazaD - 10), 3.4, 20, 0.3, { color = WHITE })
 	end
 
-	-- Trees down both sides of the approach, and a hedge behind each rank.
+	-- Clipped conical topiary down both sides of the approach, not round park trees. See
+	-- Kit.Topiary: a row of these is what makes the frontage read as landscaping somebody
+	-- maintains, which is the single most recognisable thing about the reference's forecourt.
 	for side = -1, 1, 2 do
 		for index = 1, ENTRANCE.TreesPerSide do
 			local z = -plazaD * (index / (ENTRANCE.TreesPerSide + 1))
-			Kit.Tree(parent, `ApproachTree{side}_{index}`, at(side * (wingOuter + 10), 0.4, z), 26)
+			Kit.Topiary(
+				parent,
+				`ApproachTopiary{side}_{index}`,
+				at(side * (wingOuter + 10), 0.4, z),
+				ENTRANCE.TopiaryHeightStuds,
+				ENTRANCE.TopiaryTiers
+			)
 		end
 		Kit.Block(parent, `ApproachHedge{side}`, at(side * (wingOuter + 22), 3, -plazaD / 2), Vector3.new(10, 6, plazaD), {
 			color = GRASS,
@@ -1025,6 +1063,58 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		for index = 1, 3 do
 			local x = -half + W * (index / 4)
 			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + CORRIDOR_W / 2 - 4), 3.2, 8)
+		end
+
+		-- The hexagon panel on the end wall. The one piece of pattern in the building: every
+		-- other surface here is a flat colour, and a wall of tiled hexes is what stops the end
+		-- of a long corridor being a blank rectangle you walk toward for twenty seconds.
+		--
+		-- Hexagons from cylinders: a Roblox cylinder is round, but at this size against a wall,
+		-- offset row by row into a honeycomb, it reads as the reference's tiling. Six-sided
+		-- geometry would be six parts each and this is one.
+		for row = 1, BUILDING.HexRows do
+			for col = 1, BUILDING.HexPerRow do
+				-- Every other row steps half a tile across, which is what makes a honeycomb
+				-- rather than a grid.
+				local stagger = if row % 2 == 0 then BUILDING.HexSizeStuds * 0.5 else 0
+				local hx = -half + 14 + stagger + (col - 1) * BUILDING.HexSizeStuds * 1.05
+				local hy = y + 5 + (row - 1) * BUILDING.HexSizeStuds * 0.92
+				local tile = Kit.Block(
+					parent,
+					`HexTile{floor}_{row}_{col}`,
+					at(hx, hy, corridorZ - CORRIDOR_W / 2 + 0.7),
+					Vector3.new(0.4, BUILDING.HexSizeStuds, BUILDING.HexSizeStuds),
+					{ color = if (row + col) % 3 == 0 then PALE_BLUE else Color3.fromRGB(226, 234, 244) }
+				)
+				tile.Shape = Enum.PartType.Cylinder
+				tile.CastShadow = false
+			end
+		end
+
+		-- Washrooms off the corridor: a tiled stripe and a row of basins. Not interesting, and
+		-- that is the point -- a school without them is a set rather than a building.
+		for side = -1, 1, 2 do
+			local wx = side * (W / 2 - BUILDING.WashroomWidthStuds - 12)
+			local wz = corridorZ - CORRIDOR_W / 2 + 3
+			-- The blue tiled band the reference runs at waist height.
+			Kit.Block(parent, `WashBand{floor}_{side}`, at(wx, y + 6, wz), Vector3.new(BUILDING.WashroomWidthStuds, 3, 0.3), {
+				color = BLUE,
+			}).CastShadow = false
+			Kit.Block(parent, `WashTile{floor}_{side}`, at(wx, y + 11, wz), Vector3.new(BUILDING.WashroomWidthStuds, 7, 0.25), {
+				color = Color3.fromRGB(236, 240, 248),
+			}).CastShadow = false
+			for index = 1, BUILDING.BasinsPerWashroom do
+				local share = (index - 0.5) / BUILDING.BasinsPerWashroom
+				local bx = wx - BUILDING.WashroomWidthStuds / 2 + BUILDING.WashroomWidthStuds * share
+				Kit.Block(parent, `Basin{floor}_{side}_{index}`, at(bx, y + 4.6, wz + 1.4), Vector3.new(4, 1.2, 3), {
+					color = Color3.fromRGB(246, 248, 252),
+					collide = true,
+				})
+				Kit.Block(parent, `Tap{floor}_{side}_{index}`, at(bx, y + 5.8, wz + 0.5), Vector3.new(0.4, 1.6, 0.4), {
+					color = Color3.fromRGB(198, 204, 214),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+			end
 		end
 
 		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line
