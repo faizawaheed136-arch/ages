@@ -41,20 +41,42 @@ local PLAN = {
 
 	ParapetHeightStuds = 2,
 	ParapetThicknessStuds = 1.5,
-	PlinthHeightStuds = 3,
+	-- Two, not three. The base course wraps the wall rather than standing in front of it, so it
+	-- and the ground-floor sill band share the same studs -- at three it swallowed two thirds of
+	-- that sill. A base course is meant to be read as the bottom edge of the wall, not as the
+	-- bottom storey of it.
+	PlinthHeightStuds = 2,
 }
 
--- Dual tone. The pale field is the building; the dark is everything that marks an edge -- base
--- course, the band at each floor line, the parapet, the entrance reveals. Doing it that way
--- rather than as stripes means the darker colour is always describing a piece of structure,
--- which is what stops a two-colour building looking like a painted one.
-local COOL_GRAY = Color3.fromRGB(196, 202, 210)
-local DARK_SLATE = Color3.fromRGB(58, 64, 76)
-local GLASS_TINT = Color3.fromRGB(198, 220, 236)
+-- **School v1's palette, because v1's exterior worked and this one did not.**
+--
+-- Cool gray and dark slate is a perfectly good scheme and it made a dull building, for a
+-- reason worth writing down: grey on grey has no figure. The eye needs one colour doing the
+-- describing, and the pale field has to be near-white for the accent to read as an accent
+-- rather than as the other half of a two-tone stripe.
+--
+-- So: white walls, and the school's blue on everything that marks a piece of structure -- base
+-- course, the band at every floor line, the parapet, the entrance frame. The blue is never
+-- decoration; it is always showing you where a floor is.
+local WHITE = Color3.fromRGB(242, 243, 246)
+local OFF_WHITE = Color3.fromRGB(228, 230, 235)
+local BLUE = Color3.fromRGB(58, 122, 206)
+local DEEP_BLUE = Color3.fromRGB(36, 84, 158)
+local GLASS_TINT = Color3.fromRGB(196, 220, 240)
 local DOOR_TIMBER = Color3.fromRGB(112, 78, 52)
 
-local WALL_MATERIAL = Enum.Material.Concrete
+-- Kept under their old names so the rest of the file did not need rewriting to change colour.
+local COOL_GRAY = WHITE
+local DARK_SLATE = BLUE
+
+local WALL_MATERIAL = Enum.Material.SmoothPlastic
 local TRIM_MATERIAL = Enum.Material.SmoothPlastic
+
+-- How much of a storey is glass, and how far apart the uprights that divide it go. Both lifted
+-- from v1: 18 studs is about a door and a half, which is the spacing at which a glazed wall
+-- stops reading as one enormous window and starts reading as a building with floors in it.
+local GLASS_SHARE = 0.55
+local MULLION_SPACING = 18
 
 -- ---------------------------------------------------------------------------------------
 -- Derived
@@ -93,43 +115,53 @@ end
 -- Wall runs
 -- ---------------------------------------------------------------------------------------
 
--- A straight run of wall divided into equal bays, each with a window in it.
+-- A storey's worth of ribbon glazing along one elevation.
 --
--- **The bays are equal and the windows are centred in them.** That is the whole trick to an
--- elevation reading as a real building: eyes are extremely good at spotting an irregular
--- rhythm and very bad at measuring one, so evenly divided bays look deliberate at any spacing
--- while a single odd gap looks like a mistake from across the map.
+-- **This replaces punched windows, and that single change is most of what made the old facade
+-- dull.** Separate 12x10 holes in a wall read as a warehouse: the wall is the subject and the
+-- windows are absences in it. A continuous band -- sill, glass, head, repeated at every floor
+-- -- makes the *glazing* the subject and the solid parts into structure between it. It is the
+-- difference between a shed with windows and a building.
 --
--- `axis` is "x" for a run along the frontage or "z" for one along a flank; the two differ only
--- in which component the bays step along and whether the wall is turned a quarter turn.
-local function windowedRun(
-	parent: Instance,
-	axis: string,
-	fixed: number, -- the coordinate the wall sits at, on the other horizontal axis
-	from: number,
-	to: number,
-	bays: number,
-	y: number
-)
+-- Four parts plus a mullion every 18 studs, against five parts per window before, so it is
+-- cheaper as well.
+--
+-- `axis` is "x" for a run along the frontage or "z" for one along a flank.
+local function ribbonRun(parent: Instance, axis: string, fixed: number, from: number, to: number, y: number)
 	local span = to - from
-	local bayWidth = span / bays
-	local orientation = if axis == "x" then Vector3.new(0, 0, 0) else Vector3.new(0, 90, 0)
+	if span <= 0.05 then
+		return
+	end
+	local mid = (from + to) / 2
+	local glassH = FH * GLASS_SHARE
+	local bandH = (FH - glassH) / 2
 
-	for bay = 1, bays do
-		local along = from + bayWidth * (bay - 0.5)
-		local position = if axis == "x"
-			then place(along, y + FH / 2, fixed)
-			else place(fixed, y + FH / 2, along)
+	local function slab(name: string, cy: number, h: number, thickness: number, colour: Color3, material: Enum.Material): Part
+		local position = if axis == "x" then place(mid, cy, fixed) else place(fixed, cy, mid)
+		local size = if axis == "x" then Vector3.new(span, h, thickness) else Vector3.new(thickness, h, span)
+		return Engine.CreateWall(position, size, Vector3.new(0, 0, 0), material, colour, parent)
+	end
 
-		Engine.CreateWindowCutout(
-			position,
-			Vector3.new(bayWidth, FH, T),
-			Vector3.new(PLAN.WindowWidthStuds, PLAN.WindowHeightStuds, T),
-			parent,
-			orientation,
-			WALL_MATERIAL,
-			COOL_GRAY
-		)
+	slab("RibbonSill", y + bandH / 2, bandH, T, WHITE, WALL_MATERIAL).Name = "RibbonSill"
+	local pane = slab("RibbonGlass", y + bandH + glassH / 2, glassH, T * 0.5, GLASS_TINT, Enum.Material.Glass)
+	pane.Name = "RibbonGlass"
+	pane.Transparency = 0.5
+	pane.Reflectance = 0.12
+	slab("RibbonHead", y + bandH + glassH + bandH / 2, bandH, T, OFF_WHITE, WALL_MATERIAL).Name = "RibbonHead"
+
+	-- The uprights. Without them a fifty-stud pane has nothing in it to measure the building
+	-- against, and the whole elevation loses its scale -- which is exactly why the old school
+	-- looked like a toy next to a town of small houses.
+	if span > MULLION_SPACING then
+		local bays = math.max(1, math.floor(span / MULLION_SPACING + 0.5))
+		for bay = 1, bays - 1 do
+			local along = from + span * (bay / bays)
+			local position = if axis == "x"
+				then place(along, y + bandH + glassH / 2, fixed - 0.4)
+				else place(fixed - 0.4, y + bandH + glassH / 2, along)
+			local size = if axis == "x" then Vector3.new(0.8, glassH, T) else Vector3.new(T, glassH, 0.8)
+			Engine.CreateWall(position, size, Vector3.new(0, 0, 0), TRIM_MATERIAL, WHITE, parent).Name = "Mullion"
+		end
 	end
 end
 
@@ -258,7 +290,43 @@ local function buildEntrance(parent: Instance)
 		parent
 	).Name = "EntranceTransom"
 
-	-- The bay is flanked full height by dark piers, so the composition has edges.
+	-- **A canopy over the way in.**
+	--
+	-- The thing v1's frontage had that this one did not. A recess alone gives you shadow; a
+	-- canopy gives you a horizontal line crossing the glazing at one storey, which is what
+	-- makes an entrance the biggest thing on an elevation rather than a gap in it. Set well
+	-- clear of the door head -- the mistake on v1 was a canopy at 14 over a 17-stud door, which
+	-- hid the thing it was sheltering.
+	local canopyY = PLAN.DoorHeightStuds + 6
+	local canopyOut = 12
+	Engine.CreateFloor(
+		place(0, canopyY, faceZ - canopyOut / 2),
+		Vector3.new(bay + 22, 1.4, canopyOut),
+		TRIM_MATERIAL,
+		WHITE,
+		parent
+	).Name = "EntranceCanopy"
+	Engine.CreateWall(
+		place(0, canopyY - 1.2, faceZ - canopyOut / 2),
+		Vector3.new(bay + 22, 1, canopyOut - 1),
+		Vector3.new(0, 0, 0),
+		TRIM_MATERIAL,
+		BLUE,
+		parent
+	).Name = "EntranceCanopyBand"
+	-- Two columns carrying its outer edge, clear of the doorway between them.
+	for side = -1, 1, 2 do
+		Engine.CreateWall(
+			place(side * (bay / 2 + 6), canopyY / 2, faceZ - canopyOut + 1.5),
+			Vector3.new(2.4, canopyY, 2.4),
+			Vector3.new(0, 0, 0),
+			TRIM_MATERIAL,
+			WHITE,
+			parent
+		).Name = `EntranceColumn{side}`
+	end
+
+	-- The bay is flanked full height by piers, so the composition has edges.
 	for side = -1, 1, 2 do
 		Engine.CreateWall(
 			place(side * (bay / 2 + 1.5), TOTAL_H / 2, faceZ - 0.6),
@@ -361,22 +429,21 @@ function Exterior.Build(origin: Vector3?, into: Instance?): Instance
 		end
 
 		-- ---- the three windowed elevations
-		windowedRun(staging, "z", -HALF_W, -HALF_D, HALF_D, PLAN.BaysShortWall, y)
-		windowedRun(staging, "z", HALF_W, -HALF_D, HALF_D, PLAN.BaysShortWall, y)
-		windowedRun(staging, "x", HALF_D, -HALF_W, HALF_W, PLAN.BaysLongWall, y)
+		ribbonRun(staging, "z", -HALF_W, -HALF_D, HALF_D, y)
+		ribbonRun(staging, "z", HALF_W, -HALF_D, HALF_D, y)
+		ribbonRun(staging, "x", HALF_D, -HALF_W, HALF_W, y)
 
 		-- ---- the front, which has the entrance bay in the middle of it
 		local bayHalf = PLAN.EntranceBayStuds / 2
 		if floor == 3 then
 			-- Above the entrance the frontage is continuous, so it takes the full rhythm.
-			windowedRun(staging, "x", -HALF_D, -HALF_W, HALF_W, PLAN.BaysLongWall, y)
+			ribbonRun(staging, "x", -HALF_D, -HALF_W, HALF_W, y)
 		else
-			-- Either side of the bay, in proportion, so the windows stay the same size as
-			-- everywhere else rather than being squeezed to fit what is left.
-			local sideSpan = HALF_W - bayHalf
-			local sideBays = math.max(1, math.round(PLAN.BaysLongWall * sideSpan / W))
-			windowedRun(staging, "x", -HALF_D, -HALF_W, -bayHalf, sideBays, y)
-			windowedRun(staging, "x", -HALF_D, bayHalf, HALF_W, sideBays, y)
+			-- Either side of the entrance bay. A ribbon needs no bay arithmetic -- it simply runs
+			-- the length it is given and puts a mullion every 18 studs, so the rhythm matches
+			-- the rest of the building without being told to.
+			ribbonRun(staging, "x", -HALF_D, -HALF_W, -bayHalf, y)
+			ribbonRun(staging, "x", -HALF_D, bayHalf, HALF_W, y)
 			if floor == 1 then
 				-- storey one of the bay is the recess, built below
 			else
@@ -417,7 +484,7 @@ function Exterior.Build(origin: Vector3?, into: Instance?): Instance
 		{ position = place(-HALF_W + pt / 2, TOTAL_H + ph / 2, 0), size = Vector3.new(pt, ph, D - pt * 2) },
 		{ position = place(HALF_W - pt / 2, TOTAL_H + ph / 2, 0), size = Vector3.new(pt, ph, D - pt * 2) },
 	} do
-		Engine.CreateWall(wall.position, wall.size, Vector3.new(0, 0, 0), TRIM_MATERIAL, DARK_SLATE, staging).Name = "Parapet"
+		Engine.CreateWall(wall.position, wall.size, Vector3.new(0, 0, 0), TRIM_MATERIAL, DEEP_BLUE, staging).Name = "Parapet"
 	end
 
 	return staging
