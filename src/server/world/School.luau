@@ -85,11 +85,11 @@ local GLASS_TINT = Color3.fromRGB(196, 220, 240)
 local WOOD = Color3.fromRGB(158, 118, 78)
 local DARK = Color3.fromRGB(64, 68, 78)
 
--- Stair treads and balustrade glass, taken off the reference photograph rather than invented.
--- The stair there is charcoal against a pale building with clear glass sides; the contrast is
--- doing the work, not the shape.
+-- Stair treads, taken off the reference photograph rather than invented: charcoal against a
+-- pale building. The contrast is doing the work, not the shape. The balustrade is posts rather
+-- than glass now -- a curved flight cannot take a flat panel, and a fanned run of posts is what
+-- makes the turn legible from across the lobby.
 local STAIR_TREAD = Color3.fromRGB(78, 82, 92)
-local GLASS_CLEAR = Color3.fromRGB(214, 226, 238)
 
 -- Library timber. The reference shelves are dark walnut, not the mid pine the rest of the
 -- building uses -- a library reads as a library partly because its furniture is heavier than
@@ -212,12 +212,18 @@ local function planRooms(): { Rect }
 		-- school is in at once, the other needs the run for its stacks, and a third of the
 		-- frontage each is what stops them reading as classrooms with odd furniture.
 		{ id = "cafeteria", label = "Cafeteria", floor = 1, x1 = a1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "cafeteria" },
-		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "library" },
+		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "library" },
+		{ id = "computers", label = "Computer Lab", floor = 1, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
 		-- The one room in the building nobody sends you to. Every other space here is somewhere
 		-- you are told to be; this is the one you choose, and it is what makes the school
 		-- somewhere a player hangs around rather than somewhere they visit twice a year.
 		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "lounge" },
 		{ id = "cooking", label = "Cooking Lab", floor = 1, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "cooking" },
+		-- Computers. This was lost when the third floor went, which was a mistake: the brief was to
+		-- even three floors of rooms into two, not to delete a floor's worth of school. It shares
+		-- the library's two slots rather than taking one of its own -- a computer room and a
+		-- library are the same kind of room to a player, and putting them together is what a real
+		-- school does with its resource centre.
 
 		-- First floor: the subjects. Science, Art and Reading are named here and left empty on
 		-- purpose -- Lab.luau, Studio.luau and ReadingRoom.luau lay their own benches inside
@@ -878,101 +884,70 @@ end
 -- ---------------------------------------------------------------------------------------
 
 local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
-	-- Two stairwells, one at each end of the atrium, so a player coming in the front door can
-	-- see both and the second floor is never more than one turn away.
+	-- Two curved flights, one each side of the lobby, sweeping a quarter turn as they climb.
 	--
-	-- **Each flight sits beside the one below it, not on top of it.** This is the second attempt
-	-- at the same bug and the first fix was wrong in an instructive way. Originally every flight
-	-- ran the same direction in the same footprint, so arriving at floor two put you into the
-	-- underside of the next flight. I "fixed" that by alternating the direction -- and left them
-	-- in the same footprint, which just turns two stacked flights into two *crossed* ones. From
-	-- the side it draws an X, which is exactly what it looked like.
+	-- Straight flights were the wrong shape for this room twice over. A straight run presents
+	-- its *end* to somebody walking in -- you see a wedge of treads edge-on and it reads as a
+	-- ramp -- and it delivers you facing the way you were already going, which in a lobby is
+	-- back out of the front doors. A flight that sweeps round shows its whole side from the
+	-- entrance, and turns you toward the corridor as you arrive. The building tells you where
+	-- to go next without a sign, which is the thing a good stair does.
 	--
-	-- A switchback is two parallel runs side by side with a landing between them. The direction
-	-- alternating is only half of it; the other half is that the return flight has to be
-	-- somewhere else in plan. So each floor's run is offset half a flight-width across the
-	-- stairwell, and the landing bridges the two.
-	-- Narrower and finer than before. It was 13 studs wide with 16 steps, which at this storey
-	-- height gives treads over three studs deep -- a flight built at the scale of a road. A school
-	-- stair is about as wide as two people passing, and its steps are shallow enough to read as
-	-- steps rather than as terraces. Ten and twenty-four gives a tread you can see the edge of,
-	-- and the nosings Kit.Stairs now draws are what make those edges visible at all.
-	local flightW = 11
-	local flightSteps = 22
-	local runLength = ATRIUM_Z2 - ATRIUM_Z1 - 10
+	-- Each starts near the front of the lobby facing inward and turns 80 degrees toward the
+	-- back, landing on the first floor pointing at the corridor. See Kit.CurvedStairs for why a
+	-- box tread on an arc is close enough to a winder.
+	local rise = floorY(2) - floorY(1)
+	local radius = BUILDING.StairRadiusStuds
+	local width = BUILDING.StairWidthStuds
+	local sweep = math.rad(BUILDING.StairSweepDegrees)
 
-	for floor = 1, BUILDING.Floors - 1 do
-		local fromY = floorY(floor)
-		local toY = floorY(floor + 1)
-		-- With two storeys there is one flight per stairwell, so it always runs the same way:
-		-- from the front of the lobby up toward the corridor, which is where you are going. The
-		-- alternating switchback only ever existed to stop flight two landing on flight one, and
-		-- with a single flight there is no flight two.
-		local up = true
-		local startZ = ATRIUM_Z1 + 5
-		local endZ = ATRIUM_Z2 - 5
+	for side = -1, 1, 2 do
+		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
+		-- other around the middle of the lobby rather than into it.
+		local cx = side * (BUILDING.AtriumWidthStuds / 2 - radius - 4)
+		-- Behind the wings, not level with them. Centred in the atrium the arc swung forward to
+		-- z 7 and the entrance wings reach z 12, so seven treads of each flight ended up inside
+		-- solid masonry. Biasing the centre toward the back of the lobby keeps the whole sweep
+		-- clear, and puts the foot of the stair where somebody walking in actually meets it.
+		local cz = ATRIUM_Z2 - radius * 0.55
 
-		for side = -1, 1, 2 do
-			-- The stairwell's centre, then the flight offset to one half of it. Odd floors take
-			-- the near half, even floors the far half; that is what stops them sharing a plan.
-			local well = side * (BUILDING.AtriumWidthStuds / 2 - 11)
-			local x = well
+		-- Start on the lobby side and sweep toward the corridor. Mirrored, so both stairs read
+		-- as a pair rather than as one stair and its copy.
+		local startAngle = if side < 0 then math.rad(-140) else math.rad(-40)
+		local turn = if side < 0 then sweep else -sweep
 
-			local laid = Kit.Stairs(
-				parent,
-				`Stair{floor}_{side}`,
-				at(x, fromY, startZ),
-				at(x, toY, endZ),
-				flightW,
-				flightSteps,
-				-- Dark treads. The reference stair is charcoal against a pale building, and that
-				-- value contrast is the whole reason it reads as a staircase from across the
-				-- atrium. White treads in a white room are a ramp with seams.
-				STAIR_TREAD
+		local laid = Kit.CurvedStairs(
+			parent,
+			`Stair{side}`,
+			at(cx, floorY(1), cz),
+			radius,
+			startAngle,
+			turn,
+			rise,
+			BUILDING.StairSteps,
+			width,
+			STAIR_TREAD
+		)
+		if not laid then
+			error(
+				`[AGES world] the school stair is too steep: {rise} studs over {BUILDING.StairSteps} steps.`
+					.. ` A Roblox humanoid manages 2 studs a step. Raise Config.School.Building.StairSteps`
+					.. ` or lower FloorHeightStuds.`
 			)
-			if not laid then
-				error(
-					`[AGES world] the school stairs from floor {floor} to {floor + 1} are too steep to climb.`
-						.. ` Config.School.Building.FloorHeightStuds is {FLOOR_H}; a Roblox humanoid manages`
-						.. ` 2 studs a step, so {flightSteps} steps caps a storey at {flightSteps * 2}. Lower the floor height or`
-						.. ` raise the step count in School.buildStairs.`
-				)
-			end
-
-			-- The landing at the head of the flight, spanning the full stairwell so it reaches
-			-- both the flight arriving and the one leaving. The void is cut out of every floor
-			-- above the ground, so without this the top step delivers you over the hole.
-			Kit.Slab(
-				parent,
-				`Landing{floor}_{side}`,
-				at(well, toY, endZ + (if up then 4 else -4)),
-				flightW * 2.4,
-				10,
-				SLAB,
-				{ color = TILE }
-			)
-
-			-- A rail down the open side of the flight, which is the difference between a stair
-			-- and a ramp with steps drawn on it.
-			-- Balustrades down *both* sides, in clear glass with a dark handrail -- Kit.Railing
-			-- already builds exactly that pair. It was one side only and tinted blue; the
-			-- reference is glass you can see the atrium through, which is what stops a stair in
-			-- the middle of a void feeling like a wall.
-			for edge = -1, 1, 2 do
-				Kit.Railing(
-					parent,
-					`StairRail{floor}_{side}_{edge}`,
-					at(x + edge * flightW / 2, fromY + 1, startZ),
-					at(x + edge * flightW / 2, toY + 1, endZ),
-					4,
-					GLASS_CLEAR
-				)
-			end
 		end
-	end
-	-- Kept so a future edit that shortens the atrium is told what it broke.
-	if runLength < 20 then
-		error(`[AGES world] the atrium is too short for a stair: {runLength} studs of run.`)
+
+		-- The landing it arrives on, at the head of the sweep. The void is cut out of the upper
+		-- floor, so without this the top tread delivers you over the hole.
+		local endAngle = startAngle + turn
+		Kit.Slab(
+			parent,
+			`Landing{side}`,
+			at(cx + math.cos(endAngle) * radius, floorY(2), cz + math.sin(endAngle) * radius),
+			width + 8,
+			width + 8,
+			SLAB,
+			{ color = TILE }
+		)
 	end
 end
 
@@ -1314,9 +1289,15 @@ local function fitClassroom(parent: Instance, at: (number, number, number) -> Ve
 	local width = rect.x2 - rect.x1
 	local perRow = math.ceil(FIT.DesksPerClassroom / FIT.DeskRows)
 
+	-- The desk field is inset from the left wall, because that wall now carries the storage run.
+	-- At six rows the field reaches the middle of the room, which is exactly where the cupboards
+	-- are -- three desk legs per classroom were standing inside them.
+	local deskLeft = rect.x1 + 10
+	local deskWidth = width - 14
+
 	for row = 1, FIT.DeskRows do
 		for seat = 1, perRow do
-			local x = rect.x1 + width * ((seat - 0.5) / perRow)
+			local x = deskLeft + deskWidth * ((seat - 0.5) / perRow)
 			local z = rect.z1 + 8 + (row - 1) * 8
 			Kit.Block(parent, `Desk{rect.id}{row}_{seat}`, at(x, y + 2.6, z), Vector3.new(5, 0.4, 3), { color = WOOD })
 			Kit.Block(parent, `DeskLeg{rect.id}{row}_{seat}`, at(x, y + 1.3, z), Vector3.new(4.4, 2.6, 2.4), { color = DARK, transparency = 0.15 })

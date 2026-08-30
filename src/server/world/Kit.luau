@@ -29,7 +29,18 @@ local Kit = {}
 -- becomes a legible count of bays. Wider than about twelve and the effect is lost; tighter
 -- than about six and a long elevation turns into a fence.
 -- Safe range: 6-12, 0.3-0.8, 8-16.
-local MULLION_SPACING_STUDS = 8
+-- **Bay width, and the reason it is not the real-world number.**
+--
+-- A real curtain wall mullion sits every 1.35-1.65m, which at 0.28m to the stud is about every
+-- five. At that spacing a 228-stud frontage carries 40-odd bars and reads as a barcode -- which
+-- is exactly what it did: 56 mullions across two floors, and the first thing anyone said about
+-- the building was that there were stripes everywhere.
+--
+-- Roblox is not built at real scale and the reference school is not either: its glazing is a
+-- few big panes with chunky frames, because that is what reads as a window from a distance you
+-- can actually see a whole building from. 18 studs gives about a dozen bays across the front,
+-- which is a curtain wall rather than a fence.
+local MULLION_SPACING_STUDS = 18
 local MULLION_WIDTH_STUDS = 0.5
 local MULLION_TRANSOM_MIN_HEIGHT = 11
 
@@ -354,6 +365,122 @@ end
 -- of up to 2 studs without help, so the rise per step is worked out from the count and
 -- checked against that -- a flight that is too steep is refused rather than laid, since the
 -- failure is a player who cannot reach the first floor and no error anywhere.
+-- A staircase that turns as it climbs: treads fanned around an arc rather than laid in a line.
+--
+-- Kit.Stairs makes a straight flight, and a straight flight in a lobby is a ramp with edges.
+-- The reference school's stair sweeps round as it rises, which does two things a straight run
+-- cannot: it presents its side to the room rather than its end, so you read the whole flight
+-- from the door; and it turns you toward the corridor as you arrive, so the building tells you
+-- where to go next without a sign.
+--
+-- **The tread is a wedge, approximated by a box.** A true winder tread is a sector -- narrow at
+-- the inside of the turn, wide at the outside -- and there is no sector primitive. A box set
+-- tangent to the arc at its own mid-radius is close enough at these sizes that the gap on the
+-- outside edge reads as the shadow line between treads, which is a thing real stairs have.
+--
+--   center      the point the stair turns around, at the foot's height
+--   radius      from that centre to the middle of the tread
+--   startAngle  radians; 0 is +X, increasing turns toward +Z
+--   sweep       radians of turn over the whole flight; negative turns the other way
+--   rise        total height climbed
+--
+-- Returns false if a step would be taller than a humanoid can climb, the same contract
+-- Kit.Stairs has, so a caller can fail loudly rather than build an unusable stair.
+function Kit.CurvedStairs(
+	parent: Instance,
+	name: string,
+	center: Vector3,
+	radius: number,
+	startAngle: number,
+	sweep: number,
+	rise: number,
+	steps: number,
+	width: number,
+	color: Color3
+): boolean
+	local perStep = rise / steps
+	if perStep > 2 then
+		return false
+	end
+
+	-- Arc length at the tread's mid-radius, divided by the step count, is how deep each tread
+	-- is. Measuring at mid-radius rather than at the inside edge is what keeps the going even
+	-- for somebody walking up the middle of the flight, which is where people walk.
+	local arc = math.abs(sweep) * radius
+	local depthPerStep = arc / steps
+
+	for index = 1, steps do
+		local share = (index - 0.5) / steps
+		local angle = startAngle + sweep * share
+		local topY = center.Y + perStep * index
+		local height = topY - center.Y
+		local px = center.X + math.cos(angle) * radius
+		local pz = center.Z + math.sin(angle) * radius
+
+		-- Tangent to the arc. The tread's depth runs along the direction of travel, so the box
+		-- is yawed to face along the tangent rather than along the radius.
+		local yaw = -math.deg(angle) - 90
+
+		-- Solid to the floor, like Kit.Stairs: a flight of floating treads is a flight you can
+		-- fall through the middle of.
+		Kit.Block(parent, `{name}Step{index}`, Vector3.new(px, center.Y + height / 2, pz), Vector3.new(depthPerStep * 1.15, height, width), {
+			color = color,
+			collide = true,
+			yawDegrees = yaw,
+		})
+
+		-- The nosing, which is what makes a step read as a step rather than as a terrace.
+		local nose = Kit.Block(parent, `{name}Nose{index}`, Vector3.new(px, topY - 0.16, pz), Vector3.new(0.7, 0.32, width + 0.3), {
+			color = Color3.fromRGB(214, 218, 226),
+			yawDegrees = yaw,
+		})
+		nose.CastShadow = false
+	end
+
+	-- The balustrade, as a run of short posts following the same arc with a rail on top. A
+	-- curved stair cannot take a straight glass panel, so this is the one place the building
+	-- uses posts -- and a fanned run of them is what makes the curve legible from across the
+	-- lobby, more than the treads do.
+	for side = -1, 1, 2 do
+		local railRadius = radius + side * (width / 2)
+		local posts = math.max(4, math.floor(steps / 2))
+		for index = 0, posts do
+			local share = index / posts
+			local angle = startAngle + sweep * share
+			local px = center.X + math.cos(angle) * railRadius
+			local pz = center.Z + math.sin(angle) * railRadius
+			local y = center.Y + rise * share
+			Kit.Block(parent, `{name}Post{side}_{index}`, Vector3.new(px, y + 2.2, pz), Vector3.new(0.35, 4.4, 0.35), {
+				color = Color3.fromRGB(72, 76, 86),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			-- A short rail segment bridging this post to the next, tilted to follow the climb.
+			if index < posts then
+				local nextShare = (index + 1) / posts
+				local nextAngle = startAngle + sweep * nextShare
+				local nx = center.X + math.cos(nextAngle) * railRadius
+				local nz = center.Z + math.sin(nextAngle) * railRadius
+				local ny = center.Y + rise * nextShare
+				local midY = (y + ny) / 2 + 4.4
+				local run = Vector3.new(nx - px, 0, nz - pz).Magnitude
+				local seg = Kit.Block(
+					parent,
+					`{name}Rail{side}_{index}`,
+					Vector3.new((px + nx) / 2, midY, (pz + nz) / 2),
+					Vector3.new(run + 0.4, 0.35, 0.35),
+					{
+						color = Color3.fromRGB(72, 76, 86),
+						material = Enum.Material.Metal,
+						yawDegrees = -math.deg(math.atan2(nz - pz, nx - px)),
+					}
+				)
+				seg.CastShadow = false
+			end
+		end
+	end
+	return true
+end
+
 function Kit.Stairs(
 	parent: Instance,
 	name: string,

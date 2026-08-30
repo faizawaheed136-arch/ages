@@ -3246,6 +3246,19 @@ Config.School.Building = {
 	-- room is a proper alcove you stand in -- and nowhere near the 226-stud wall-to-wall run
 	-- this replaced.
 	-- Safe range: 30-70.
+	-- The curved lobby stair. Radius is to the middle of the tread, sweep is how far it turns
+	-- while climbing.
+	--
+	-- A quarter turn is the useful amount: enough that the flight shows its side to the entrance
+	-- and hands you off facing the corridor, not so much that the inside treads pinch to nothing.
+	-- Radius and width together decide that pinch -- at 22 and 12 the inner edge is still 16
+	-- studs from the turn centre, which is a tread you can stand on.
+	-- Safe range: 16-30, 9-15, 60-100 and 18-30.
+	StairRadiusStuds = 22,
+	StairWidthStuds = 12,
+	StairSweepDegrees = 80,
+	StairSteps = 22,
+
 	LockerBayStuds = 46,
 
 	BasinsPerWashroom = 3,
@@ -3349,10 +3362,17 @@ Config.School.Building = {
 		-- Safe range: 8-24.
 		LockersPerCorridorWall = 16,
 		-- Desks per classroom, laid in rows.
-		-- Safe range: 8-24.
-		DesksPerClassroom = 15,
-		-- Safe range: 3-6.
-		DeskRows = 3,
+		--
+		-- **A room 99 studs deep needs rows down its length, not three at the front.** Fifteen
+		-- desks in three rows filled the first 24 studs and left seventy empty behind them --
+		-- cramped at the front and abandoned at the back, which is most of why these rooms read
+		-- as unfinished. The band is deep because the art room's cupboard walk needs 80 studs of
+		-- it, and every other room inherits that depth and has to use it.
+		--
+		-- Six rows of four is the same class laid down the room instead of across it.
+		-- Safe range: 8-30 and 3-8.
+		DesksPerClassroom = 24,
+		DeskRows = 6,
 		-- Cafeteria tables, library shelves, cooking benches.
 		-- Safe range: 6-20 each.
 		CafeteriaTables = 12,
