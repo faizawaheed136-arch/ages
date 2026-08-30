@@ -22,8 +22,9 @@ local Furniture = {}
 local WOOD = Color3.fromRGB(148, 104, 66)
 local DARK_WOOD = Color3.fromRGB(96, 66, 44)
 local METAL = Color3.fromRGB(126, 132, 142)
-local SLATE = Color3.fromRGB(44, 50, 60)
 local CHAIR = Color3.fromRGB(58, 92, 158)
+local SLATE = Color3.fromRGB(44, 50, 60)
+
 local BOOK = {
 	Color3.fromRGB(158, 52, 52),
 	Color3.fromRGB(44, 78, 148),
@@ -31,8 +32,6 @@ local BOOK = {
 	Color3.fromRGB(186, 148, 68),
 	Color3.fromRGB(104, 72, 132),
 }
-
-local SLATE = Color3.fromRGB(44, 50, 60)
 
 local SMOOTH = Enum.Material.SmoothPlastic
 local PLANKS = Enum.Material.WoodPlanks

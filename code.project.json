@@ -34,6 +34,9 @@
       },
       "ProperSchool": {
         "$path": "assets/ProperSchool.rbxmx"
+      },
+      "SchoolV1Copy": {
+        "$path": "assets/SchoolV1Copy.rbxmx"
       }
     }
   }
