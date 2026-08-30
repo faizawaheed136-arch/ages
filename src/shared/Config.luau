@@ -2912,6 +2912,30 @@ Config.School.Building = {
 		-- Safe range: 3-8.
 		TreesPerSide = 5,
 
+		-- The entrance terrace: a raised platform in front of the doors, with steps down to the
+		-- plaza and a balustrade along the drop.
+		--
+		-- The pediment gave the building a *front*; this gives it a *threshold*, and they do
+		-- different jobs. A civic entrance is raised -- you go up to it -- and the reference
+		-- photographs are unambiguous about that: there is a flight of steps between the road and
+		-- the doors of every school of this kind. Meeting the plaza dead flat is what made this
+		-- one read as a shopfront with a gable stuck on.
+		--
+		-- Kept low deliberately. Four studs is one comfortable flight and reads as ceremony; much
+		-- more becomes a podium the player has to navigate, and the doors are somewhere you walk
+		-- in, not a summit. Kit.Stairs refuses a rise over two studs per step, so the step count
+		-- has to keep pace with the rise -- at 4 and 5 each step is 0.8, which is comfortable.
+		-- Safe range: 2-7, 4-9 and 16-40.
+		TerraceRiseStuds = 4,
+		TerraceSteps = 5,
+		StairWidthStuds = 30,
+
+		-- Flagpoles either side of the approach. Two, because one is a mast and three is a
+		-- forecourt -- two is a pair of gateposts, which is what the entrance wants.
+		-- Safe range: 0-4 and 18-34.
+		Flagpoles = 2,
+		FlagpoleHeightStuds = 26,
+
 		-- The pediment: the shallow gable over the entrance bay.
 		--
 		-- This is the single most load-bearing shape in the reference photographs and it is worth

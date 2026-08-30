@@ -247,6 +247,61 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 		color = OFF_WHITE,
 	})
 
+	-- The terrace, and the flight down to the plaza.
+	--
+	-- Laid before the crossing so the steps sit on top of the plaza slab rather than being
+	-- buried by it -- order matters here in a way it does not elsewhere in this function.
+	local rise = ENTRANCE.TerraceRiseStuds
+	local terraceD = ENTRANCE.CanopyDepthStuds + 6
+	Kit.Slab(parent, "Terrace", at(0, 0.25 + rise, -terraceD / 2), ENTRANCE.PedimentWidthStuds + 22, terraceD, rise, {
+		color = OFF_WHITE,
+		material = Enum.Material.Concrete,
+	})
+
+	-- The flight itself, centred on the doors.
+	Kit.Stairs(
+		parent,
+		"EntranceSteps",
+		at(0, 0.25, -terraceD - ENTRANCE.TerraceSteps * 2),
+		at(0, 0.25 + rise, -terraceD),
+		ENTRANCE.StairWidthStuds,
+		ENTRANCE.TerraceSteps,
+		OFF_WHITE
+	)
+
+	-- A balustrade along the drop either side of the steps, which is the detail that stops the
+	-- terrace reading as a slab somebody raised and turns it into a threshold.
+	for side = -1, 1, 2 do
+		local inner = side * (ENTRANCE.StairWidthStuds / 2)
+		local outer = side * ((ENTRANCE.PedimentWidthStuds + 22) / 2)
+		Kit.Railing(parent, `TerraceRail{side}`, at(inner, 0.25 + rise, -terraceD), at(outer, 0.25 + rise, -terraceD), 4, WHITE)
+		-- And a cheek wall down the side of the flight, so the steps have edges.
+		-- The flight runs from -terraceD back by two studs per step, so the cheek that flanks it
+		-- is that long and centred on its middle. It was twice that, which put a wall sticking
+		-- ten studs out into the plaza.
+		Kit.Block(parent, `StepCheek{side}`, at(inner, 0.25 + rise / 2, -terraceD - ENTRANCE.TerraceSteps), Vector3.new(2, rise, ENTRANCE.TerraceSteps * 2), {
+			color = OFF_WHITE,
+			material = Enum.Material.Concrete,
+		})
+	end
+
+	-- Flagpoles flanking the approach.
+	for index = 1, ENTRANCE.Flagpoles do
+		local side = if index % 2 == 1 then -1 else 1
+		local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 6)
+		local z = -terraceD - 16
+		Kit.Block(parent, `FlagBase{index}`, at(x, 1.2, z), Vector3.new(5, 2, 5), {
+			color = CONCRETE,
+			material = Enum.Material.Concrete,
+		})
+		Kit.Column(parent, `Flagpole{index}`, at(x, 2.2, z), ENTRANCE.FlagpoleHeightStuds, 0.8, Color3.fromRGB(226, 228, 234))
+		-- The flag itself, in the school's blue, hanging from the top.
+		Kit.Block(parent, `Flag{index}`, at(x + 4.5, 2.2 + ENTRANCE.FlagpoleHeightStuds - 5, z), Vector3.new(9, 6, 0.2), {
+			color = BLUE,
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+	end
+
 	-- The crossing outside, which is the one piece of the approach that says "there is a road
 	-- here and children cross it" without a single sign.
 	for stripe = 1, 7 do
