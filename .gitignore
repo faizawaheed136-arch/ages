@@ -7,3 +7,6 @@ __pycache__/
 
 # Built by tools/gen_code_plugin.py; regenerate rather than commit (4MB, changes every build).
 build-code.rbxmx
+
+# backups written by tools/move_school_points.py
+*.rbxmx.bak
