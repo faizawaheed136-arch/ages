@@ -498,74 +498,31 @@ HALL_W_X0, HALL_W_X1 = -139.0, -138.0
 CLASS_SPLIT_1 = 32.0
 CLASS_SPLIT_2 = 53.0
 
-with group("School"):
-    with group("SchoolStructure"):
-        box("Slab", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
-                     FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
-        box("Roof", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
-                     CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
+# ---------------------------------------------------------------------------
+# The school -- removed
+# ---------------------------------------------------------------------------
+#
+# Greenfield School used to be built here: SchoolStructure, SchoolPartitions,
+# SchoolPortico, SchoolParapet and SchoolFittings, plus the nameplate reading
+# GREENFIELD SCHOOL over the entrance.
+#
+# It is gone from assets/Street.rbxmx already -- the downtown rebuild dropped
+# the building but left its place points behind, which is what
+# tools/move_school_points.py exists to shepherd. The generator code outlived
+# the building by about a week.
+#
+# The school is now built at runtime by src/server/world/School.luau and baked
+# to assets/School.rbxmx, laid around the `school` place point. Two schools in
+# one world is one too many, so this is deleted rather than commented out or
+# left behind a flag: a flag would be a promise that the old one still works,
+# and it does not -- world_plan's SCHOOL_* interior Places describe rooms that
+# no longer exist anywhere.
+#
+# **Do not regenerate Street.rbxmx from this file without checking with Agent A
+# first.** The asset on disk carries downtown work that is not in this script,
+# so a regen would silently roll that back -- which is a much worse problem
+# than the one this note is about.
 
-        wall("WallWest", (SCHOOL_X0, SCH_IN_X0, SCHOOL_Z0, SCHOOL_Z1, FLOOR_1, CEIL_1),
-             BRICK_PALE, along="z")
-        wall("WallEast", (SCH_IN_X1, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1, FLOOR_1, CEIL_1),
-             BRICK_PALE, along="z", doors=((SCH_DOOR_Z0, SCH_DOOR_Z1),))
-        wall("WallSouth", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCH_IN_Z0, FLOOR_1, CEIL_1),
-             BRICK_PALE, along="x")
-        wall("WallNorth", (SCHOOL_X0, SCHOOL_X1, SCH_IN_Z1, SCHOOL_Z1, FLOOR_1, CEIL_1),
-             BRICK_PALE, along="x")
-
-        # Windows. Classrooms look west, the lobby and gym look east, and the
-        # openings are cut through the wall above -- these panes only fill them.
-        for i, (z0, z1) in enumerate(((14.0, 30.0), (35.0, 51.0), (56.0, 72.0))):
-            glazing(f"WindowWest{i + 1}",
-                    (SCHOOL_X0 + 0.4, SCH_IN_X0 - 0.4, z0, z1, FLOOR_1 + 4.0, FLOOR_1 + 11.0),
-                    along="z", panes=4)
-        for i, (z0, z1) in enumerate(((14.0, 30.0), (56.0, 72.0))):
-            glazing(f"WindowEast{i + 1}",
-                    (SCH_IN_X1 + 0.4, SCHOOL_X1 - 0.4, z0, z1, FLOOR_1 + 4.0, FLOOR_1 + 11.0),
-                    along="z", panes=4)
-
-    with group("SchoolPartitions"):
-        wall("HallEast", (HALL_E_X0, HALL_E_X1, SCH_IN_Z0, SCH_IN_Z1, FLOOR_1, CEIL_1),
-             PARTITION_PALE, PLASTIC, along="z",
-             doors=((SCHOOL_DOOR - INNER_DOORWAY / 2, SCHOOL_DOOR + INNER_DOORWAY / 2),))
-        wall("HallWest", (HALL_W_X0, HALL_W_X1, SCH_IN_Z0, SCH_IN_Z1, FLOOR_1, CEIL_1),
-             PARTITION_PALE, PLASTIC, along="z",
-             doors=((20.0, 26.0), (40.0, 46.0), (62.0, 68.0)))
-
-        for i, z in enumerate((CLASS_SPLIT_1, CLASS_SPLIT_2)):
-            box(f"ClassSplit{i + 1}",
-                (SCH_IN_X0, HALL_W_X0, z, z + PARTITION, FLOOR_1, CEIL_1),
-                PARTITION_PALE, PLASTIC)
-            wall(f"EastSplit{i + 1}",
-                 (HALL_E_X1, SCH_IN_X1, z, z + PARTITION, FLOOR_1, CEIL_1),
-                 PARTITION_PALE, PLASTIC, along="x", doors=((-124.0, -118.0),))
-
-    with group("SchoolPortico"):
-        # Four columns and a canopy over the front door, with the middle pair
-        # standing clear of the opening. It is the only piece of the school that
-        # is purely for the look of the thing, and it earns its parts: a flat
-        # brick wall with a hole in it does not read as a door from the far
-        # sidewalk, and this is the door the player is supposed to find.
-        for i, z in enumerate((34.0, 38.0, 48.0, 52.0)):
-            box(f"Column{i + 1}", (-110.8, -109.2, z - 0.8, z + 0.8, PAVING, 11.0),
-                TRIM_WHITE, CONCRETE)
-        box("Canopy", (-113.5, -107.0, 33.0, 53.0, 11.0, 12.2), TRIM_WHITE, CONCRETE)
-
-    with group("SchoolParapet"):
-        for name, bounds in (
-            ("West", (SCHOOL_X0, SCHOOL_X0 + 1.0, SCHOOL_Z0, SCHOOL_Z1)),
-            ("East", (SCHOOL_X1 - 1.0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1)),
-            ("South", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z0 + 1.0)),
-            ("North", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z1 - 1.0, SCHOOL_Z1)),
-        ):
-            box(f"Parapet{name}", (*bounds, CEIL_1 + SLAB, CEIL_1 + SLAB + 3.0),
-                BRICK_PALE, BRICK)
-        # Raised over the entrance and carrying the name, facing the street.
-        box("Nameplate", (SCHOOL_X1 - 2.5, SCHOOL_X1, 34.0, 52.0,
-                          CEIL_1 + SLAB, 24.0),
-            BRICK_WARM, BRICK,
-            children=sign("GREENFIELD SCHOOL", "right", color=(250, 246, 234), size=72))
 
 # ---------------------------------------------------------------------------
 # The workplace
@@ -735,41 +692,6 @@ def classroom(room, index):
         ceiling_light((room.x0 + room.x1) / 2, z, CEIL_1)
 
 
-with group("SchoolFittings"):
-    for room, index in ((W.SCHOOL_ROOM_1, 1), (W.SCHOOL_ROOM_2, 2), (W.SCHOOL_ROOM_3, 3)):
-        classroom(room, index)
-
-    # Lobby: reception set back from the door, running across the room rather
-    # than facing it down. A desk squarely in front of the entrance is the first
-    # thing a player walks into on their first day at school.
-    desk(-122.0, 36.0, FLOOR_1, side="north", width=10.0, depth=3.0,
-         label="Reception")
-    chair(-122.0, 34.0, FLOOR_1, side="south")
-    for z in (38.0, 48.0):
-        ceiling_light(-122.0, z, CEIL_1)
-
-    # Gym: a painted court and a hoop at each end. No equipment a player could
-    # get stuck inside.
-    box("Court", (-128.0, -115.5, 56.0, 72.5, FLOOR_1, FLOOR_1 + 0.06),
-        (198, 148, 96), SMOOTH, collide=False)
-    box("CourtLine", (-128.0, -115.5, 64.0, 64.3, FLOOR_1 + 0.06, FLOOR_1 + 0.1),
-        TRIM_WHITE, SMOOTH, collide=False)
-    for i, z in enumerate((56.5, 72.0)):
-        box(f"Backboard{i + 1}", (-123.5, -120.0, z - 0.2, z + 0.2,
-                                  FLOOR_1 + 8.0, FLOOR_1 + 11.0), BOARD, SMOOTH)
-    for z in (60.0, 69.0):
-        ceiling_light(-122.0, z, CEIL_1)
-
-    # School office.
-    for i, z in enumerate((16.0, 22.0, 28.0)):
-        desk(-126.0, z, FLOOR_1, side="east", width=6.0, label="OfficeDesk")
-        chair(-123.4, z, FLOOR_1, side="east")
-    ceiling_light(-122.0, 22.0, CEIL_1)
-
-    for z in (16.0, 28.0, 40.0, 52.0, 64.0, 72.0):
-        ceiling_light(-134.5, z, CEIL_1)
-
-with group("WorkFittings"):
     # Shop floor. The whole southern third of the room is left empty and that is
     # the design, not an oversight: the door, the stockroom and the stair all
     # open onto it, so it is the one lane every walk in this building uses. The
