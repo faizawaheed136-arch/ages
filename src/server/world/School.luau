@@ -247,49 +247,43 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 		color = OFF_WHITE,
 	})
 
-	-- The terrace, and the flight down to the plaza.
+	-- **No terrace, and no steps.** There was a four-stud platform here with a flight up to it
+	-- and cheek walls down the sides, and it was a mistake: it put a step across the single
+	-- route into the building and narrowed what was left of the doorway between two walls. A
+	-- school entrance is somewhere a crowd walks through at once, and anything standing in the
+	-- middle of it is wrong however good it looks from the road.
 	--
-	-- Laid before the crossing so the steps sit on top of the plaza slab rather than being
-	-- buried by it -- order matters here in a way it does not elsewhere in this function.
-	local rise = ENTRANCE.TerraceRiseStuds
-	local terraceD = ENTRANCE.CanopyDepthStuds + 6
-	Kit.Slab(parent, "Terrace", at(0, 0.25 + rise, -terraceD / 2), ENTRANCE.PedimentWidthStuds + 22, terraceD, rise, {
+	-- The threshold it was reaching for is a shallow apron instead: one stud, the full width of
+	-- the frontage, nothing to climb and nothing to walk round.
+	Kit.Slab(parent, "EntranceApron", at(0, 1.25, -ENTRANCE.ApronDepthStuds / 2), ENTRANCE.PlazaWidthStuds, ENTRANCE.ApronDepthStuds, 1, {
 		color = OFF_WHITE,
 		material = Enum.Material.Concrete,
 	})
 
-	-- The flight itself, centred on the doors.
-	Kit.Stairs(
-		parent,
-		"EntranceSteps",
-		at(0, 0.25, -terraceD - ENTRANCE.TerraceSteps * 2),
-		at(0, 0.25 + rise, -terraceD),
-		ENTRANCE.StairWidthStuds,
-		ENTRANCE.TerraceSteps,
-		OFF_WHITE
-	)
 
-	-- A balustrade along the drop either side of the steps, which is the detail that stops the
-	-- terrace reading as a slab somebody raised and turns it into a threshold.
-	for side = -1, 1, 2 do
-		local inner = side * (ENTRANCE.StairWidthStuds / 2)
-		local outer = side * ((ENTRANCE.PedimentWidthStuds + 22) / 2)
-		Kit.Railing(parent, `TerraceRail{side}`, at(inner, 0.25 + rise, -terraceD), at(outer, 0.25 + rise, -terraceD), 4, WHITE)
-		-- And a cheek wall down the side of the flight, so the steps have edges.
-		-- The flight runs from -terraceD back by two studs per step, so the cheek that flanks it
-		-- is that long and centred on its middle. It was twice that, which put a wall sticking
-		-- ten studs out into the plaza.
-		Kit.Block(parent, `StepCheek{side}`, at(inner, 0.25 + rise / 2, -terraceD - ENTRANCE.TerraceSteps), Vector3.new(2, rise, ENTRANCE.TerraceSteps * 2), {
-			color = OFF_WHITE,
-			material = Enum.Material.Concrete,
+	-- Bins along the approach, by the benches and the crossing.
+	for index = 1, BUILDING.BinsOutside do
+		local side = if index % 2 == 1 then -1 else 1
+		local row = math.floor((index - 1) / 2)
+		local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 4)
+		local z = -14 - row * 18
+		Kit.Block(parent, `OutdoorBin{index}`, at(x, 2.6, z), Vector3.new(4.2, 5, 4.2), {
+			color = Color3.fromRGB(58, 72, 88),
+			material = Enum.Material.Metal,
+			collide = true,
 		})
+		Kit.Block(parent, `OutdoorBinLid{index}`, at(x, 5.3, z), Vector3.new(4.8, 0.6, 4.8), {
+			color = Color3.fromRGB(40, 52, 66),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
 	end
 
 	-- Flagpoles flanking the approach.
 	for index = 1, ENTRANCE.Flagpoles do
 		local side = if index % 2 == 1 then -1 else 1
 		local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 6)
-		local z = -terraceD - 16
+		-- Clear of the apron, which is what the terrace this used to measure from became.
+		local z = -ENTRANCE.ApronDepthStuds - 16
 		Kit.Block(parent, `FlagBase{index}`, at(x, 1.2, z), Vector3.new(5, 2, 5), {
 			color = CONCRETE,
 			material = Enum.Material.Concrete,
@@ -647,13 +641,37 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 		local x = -21 + (index - 1) * 14
 		Kit.Column(parent, `CanopyColumn{index}`, at(x, 0.4, -ENTRANCE.CanopyDepthStuds + 2), ENTRANCE.CanopyHeightStuds, 2.2, WHITE)
 	end
-	for index = 1, 4 do
-		local x = -13.5 + (index - 1) * 9
-		Kit.Block(parent, `Door{index}`, at(x, 6, 0), Vector3.new(8, 12, 0.4), {
+	-- One wide opening with two leaves in it, rather than the four separate panels that used
+	-- to be here. Four panels with gaps between them read from the plaza as a row of windows,
+	-- and the way in is the one thing an entrance elevation has to say clearly.
+	--
+	-- The leaves are named EntranceDoorLeaf so FixtureService can find them: they are the only
+	-- moving part of the building, and pressing E on them swings them open.
+	local doorW = ENTRANCE.DoorWidthStuds
+	local doorH = ENTRANCE.DoorHeightStuds
+
+	-- The frame: jambs and a head, in the school's blue so the opening is legible from the road.
+	for side = -1, 1, 2 do
+		Kit.Block(parent, `DoorJamb{side}`, at(side * (doorW / 2 + 1.2), doorH / 2, 0), Vector3.new(2.4, doorH + 2, 2.4), {
+			color = BLUE,
+		})
+	end
+	Kit.Block(parent, "DoorHead", at(0, doorH + 1.2, 0), Vector3.new(doorW + 7, 2.4, 2.4), { color = BLUE })
+
+	-- The two leaves. Non-collidable, because a door you have to open before you can walk
+	-- through is a door that will strand somebody the first time the prompt is out of reach --
+	-- the swing is a flourish, not a gate.
+	for side = -1, 1, 2 do
+		Kit.Block(parent, `EntranceDoorLeaf{side}`, at(side * doorW / 4, doorH / 2, 0), Vector3.new(doorW / 2 - 0.4, doorH, 0.5), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
-			transparency = 0.4,
+			transparency = 0.35,
 		})
+		-- A push bar, which is what makes a glass panel read as a door rather than as a window.
+		Kit.Block(parent, `DoorBar{side}`, at(side * doorW / 4, doorH * 0.45, -0.5), Vector3.new(doorW / 2 - 4, 0.6, 0.6), {
+			color = Color3.fromRGB(206, 212, 222),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
 	end
 end
 
@@ -780,20 +798,38 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	-- both and the second floor is never more than one turn away. Laid inside the void, which
 	-- is what a school atrium stair does and what makes the space read as circulation rather
 	-- than as a hole somebody forgot to floor.
+	-- **Every flight alternates direction.** They used to all run the same way at the same x,
+	-- which stacked the second-to-third flight directly on top of the first-to-second one -- so
+	-- arriving at the second floor put you face-first into the underside of the next flight and
+	-- the stair was unusable above floor one. That is what a switchback exists to solve, and it
+	-- is what every real building does: you go up, you turn, you go up again.
+	--
+	-- Odd floors run back to front, even floors front to back. Arriving at a landing you are
+	-- facing the way the next flight leaves from, with the whole atrium in front of you rather
+	-- than a soffit.
 	for floor = 1, BUILDING.Floors - 1 do
 		local fromY = floorY(floor)
 		local toY = floorY(floor + 1)
+		local up = floor % 2 == 1
+		local startZ = if up then ATRIUM_Z1 + 4 else ATRIUM_Z2 - 4
+		local endZ = if up then ATRIUM_Z2 - 4 else ATRIUM_Z1 + 4
 		for side = -1, 1, 2 do
 			local x = side * (BUILDING.AtriumWidthStuds / 2 - 9)
 			local laid = Kit.Stairs(
 				parent,
 				`Stair{floor}_{side}`,
-				at(x, fromY, ATRIUM_Z1 + 4),
-				at(x, toY, ATRIUM_Z2 - 4),
+				at(x, fromY, startZ),
+				at(x, toY, endZ),
 				14,
 				16,
 				OFF_WHITE
 			)
+			-- The landing you arrive on. The void is cut out of every floor above the ground, so
+			-- without this the top step delivers you over the hole.
+			Kit.Slab(parent, `Landing{floor}_{side}`, at(x, toY, endZ + (if up then 5 else -5)), 18, 12, SLAB, {
+				color = TILE,
+			})
+
 			if not laid then
 				error(
 					`[AGES world] the school stairs from floor {floor} to {floor + 1} are too steep to climb.`
@@ -950,6 +986,22 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			local x = -half + W * (index / 4)
 			Kit.Rug(parent, `CorridorRug{floor}_{index}`, at(x, y + 0.35, corridorZ + 2), 7, PALE_BLUE)
 			Kit.Planter(parent, `CorridorPlanter{floor}_{index}`, at(x + 12, y + 0.2, corridorZ + 4), 3.2, 8)
+		end
+
+		-- Bins along the corridor. The most ordinary object a school has, and there were none.
+		for index = 1, BUILDING.BinsPerFloor do
+			local share = (index - 0.5) / BUILDING.BinsPerFloor
+			local x = -half + W * share + 14
+			local z = corridorZ + CORRIDOR_W / 2 - 3
+			Kit.Block(parent, `Bin{floor}_{index}`, at(x, y + 2.2, z), Vector3.new(4, 4.4, 4), {
+				color = Color3.fromRGB(64, 78, 96),
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `BinLid{floor}_{index}`, at(x, y + 4.6, z), Vector3.new(4.6, 0.5, 4.6), {
+				color = Color3.fromRGB(46, 58, 74),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
 		end
 
 		-- Water fountains against the locker wall, which is where a school puts them: on the

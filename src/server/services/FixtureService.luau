@@ -18,6 +18,7 @@
 -- here. It is written down in both places for that reason.
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
@@ -46,6 +47,7 @@ local PATTERNS: { { needle: string, kind: string } } = {
 	-- over. `Fountain{floor}_{index}` is the basin's own name and the others all carry a
 	-- suffix, so an exact-prefix test would be wrong -- this matches the body specifically.
 	{ needle = "FountainBasin", kind = "fountain" },
+	{ needle = "EntranceDoorLeaf", kind = "door" },
 }
 
 local function kindOf(name: string): string?
@@ -75,6 +77,35 @@ end
 local function notice(player: Player, text: string)
 	if text ~= "" then
 		NoticeRemote:FireClient(player, text)
+	end
+end
+
+-- Swings both leaves, or shuts them.
+--
+-- Tweened rather than set, because a door that teleports open is a door that looks broken.
+-- Both leaves move together off one flag: they are one opening, and a pair that could
+-- disagree about whether it is open is a bug waiting for somebody to find it.
+local doorsOpen = false
+local doorRest: { [BasePart]: CFrame } = {}
+
+local function swingDoors()
+	doorsOpen = not doorsOpen
+	for part in attached do
+		if part.Parent ~= nil and kindOf(part.Name) == "door" then
+			local rest = doorRest[part]
+			if rest == nil then
+				rest = part.CFrame
+				doorRest[part] = rest
+			end
+			-- Which way it swings is read off the leaf's own X: the two leaves are placed
+			-- either side of the centreline, so the sign of that is which hand the door is.
+			local hand = if rest.Position.X >= 0 then -1 else 1
+			local hinge = rest * CFrame.new(hand * part.Size.X / 2, 0, 0)
+			local target = if doorsOpen
+				then hinge * CFrame.Angles(0, math.rad(hand * -FIX.DoorSwingDegrees), 0) * CFrame.new(-hand * part.Size.X / 2, 0, 0)
+				else rest
+			TweenService:Create(part, TweenInfo.new(FIX.DoorSwingSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = target }):Play()
+		end
 	end
 end
 
@@ -130,6 +161,13 @@ local function use(player: Player, kind: string)
 			notice(player, spec.broke)
 			return
 		end
+	end
+
+	-- The doors are the one fixture with a moving part rather than a stat.
+	if kind == "door" then
+		swingDoors()
+		mine[kind] = now + spec.cooldownSeconds
+		return
 	end
 
 	if spec.happiness ~= 0 then

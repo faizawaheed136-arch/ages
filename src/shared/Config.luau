@@ -2935,23 +2935,28 @@ Config.School.Building = {
 		-- Safe range: 3-8.
 		TreesPerSide = 5,
 
-		-- The entrance terrace: a raised platform in front of the doors, with steps down to the
-		-- plaza and a balustrade along the drop.
+		-- The front doors: one wide opening rather than four separate leaves.
 		--
-		-- The pediment gave the building a *front*; this gives it a *threshold*, and they do
-		-- different jobs. A civic entrance is raised -- you go up to it -- and the reference
-		-- photographs are unambiguous about that: there is a flight of steps between the road and
-		-- the doors of every school of this kind. Meeting the plaza dead flat is what made this
-		-- one read as a shopfront with a gable stuck on.
+		-- There were four 8-stud panels with gaps between them, which read from the plaza as a
+		-- row of windows rather than as a way in -- and the way in is the single most important
+		-- thing an entrance elevation has to communicate. One opening, two leaves, and a frame
+		-- heavy enough to be read as a frame.
+		-- Safe range: 26-50 and 14-22.
+		DoorWidthStuds = 38,
+		DoorHeightStuds = 17,
+
+		-- The apron: a shallow paved lip in front of the doors.
 		--
-		-- Kept low deliberately. Four studs is one comfortable flight and reads as ceremony; much
-		-- more becomes a podium the player has to navigate, and the doors are somewhere you walk
-		-- in, not a summit. Kit.Stairs refuses a rise over two studs per step, so the step count
-		-- has to keep pace with the rise -- at 4 and 5 each step is 0.8, which is comfortable.
-		-- Safe range: 2-7, 4-9 and 16-40.
-		TerraceRiseStuds = 4,
-		TerraceSteps = 5,
-		StairWidthStuds = 30,
+		-- This replaced a raised terrace with a flight of steps up to it, which was a mistake and
+		-- worth recording as one. A civic entrance *is* raised in the reference photographs, and
+		-- that reasoning was right -- but it stopped being right the moment it was built at the
+		-- scale of a doorway. Four studs of rise across the one route into the building meant a
+		-- step to climb to get in, and cheek walls either side meant a doorway with obstacles in
+		-- it. A school entrance is somewhere a crowd walks through at once.
+		--
+		-- One stud, full frontage width, nothing to climb and nothing to walk round.
+		-- Safe range: 14-30.
+		ApronDepthStuds = 22,
 
 		-- Flagpoles either side of the approach. Two, because one is a mast and three is a
 		-- forecourt -- two is a pair of gateposts, which is what the entrance wants.
@@ -3139,6 +3144,15 @@ Config.School.Building = {
 	--
 	-- Built rather than bought, like everything else in this file -- a machine that needed a
 	-- catalog mesh is a machine that does not appear on a fresh install.
+	-- Bins. Inside on every floor and outside along the approach.
+	--
+	-- The most ordinary object a school has, and the building had none. They are worth their
+	-- parts for the same reason the loose plates in the gym are: a floor with nothing on it
+	-- anywhere reads as a render rather than as a place people use.
+	-- Safe range: 2-8 and 3-10.
+	BinsPerFloor = 4,
+	BinsOutside = 6,
+
 	-- Water fountains along the corridor. The one fixture every school has and this one had
 	-- none of.
 	-- Safe range: 1-4 per floor.
@@ -4028,6 +4042,20 @@ Config.Fixtures = {
 			notice = "Hot, sweet, and mostly sugar. You feel great and slightly worse.",
 			broke = "The card reader blinks red at you.",
 		},
+		-- The front doors. No cost, no cooldown and no stat: this one is a door, and the reward
+		-- for opening a door is that it is open. Listed here anyway so it goes through the same
+		-- prompt, reach check and dispatch as everything else -- a second path for one fixture
+		-- would be two things to keep working.
+		door = {
+			label = "Front doors",
+			action = "Open",
+			cost = 0,
+			happiness = 0,
+			health = 0,
+			cooldownSeconds = 0,
+			notice = "",
+			broke = "",
+		},
 		fountain = {
 			label = "Water fountain",
 			action = "Drink",
@@ -4040,6 +4068,11 @@ Config.Fixtures = {
 			broke = "",
 		},
 	},
+
+	-- How far the front doors swing, and how long they take.
+	-- Safe range: 60-110 and 0.3-1.2.
+	DoorSwingDegrees = 85,
+	DoorSwingSeconds = 0.6,
 
 	-- What the cooldown says when you are early. One line, because a refusal that explains
 	-- itself once is information and a refusal that explains itself every time is nagging.
