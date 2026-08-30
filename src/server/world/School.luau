@@ -182,7 +182,7 @@ local function planRooms(): { Rect }
 	local gaps = BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)
 	local roomW = (usable - gaps) / BUILDING.RoomsPerFloor
 
-	-- The left edge of the nth room in the band, 0-based. One expression rather than four
+	-- The left edge of the nth slot in the band, 0-based. One expression rather than six
 	-- hand-written pairs of corners, so a change to the room count cannot leave a gap or an
 	-- overlap behind.
 	local function slotX(index: number): (number, number)
@@ -194,34 +194,43 @@ local function planRooms(): { Rect }
 	local b1, b2 = slotX(1)
 	local c1, c2 = slotX(2)
 	local d1, d2 = slotX(3)
+	local e1, e2 = slotX(4)
+	local f1, f2 = slotX(5)
 
+	-- **Ground floor is where you go; first floor is where you are sent.**
+	--
+	-- That is the whole organising idea, and it is why this is worth writing down rather than
+	-- being an arbitrary list. Everything on the ground is somewhere a player *chooses* to be
+	-- between lessons -- eat, read, sit, cook -- and it is all reachable from the lobby without
+	-- a stair. Everything upstairs is a subject with a timetable slot. A player who has learned
+	-- that never has to think about which floor anything is on again.
+	--
+	-- Only five of these anchors are actually required by code: science, art, reading, music
+	-- and library. The rest exist because a school with five rooms in it is a set.
 	return {
-		-- Ground floor. The cafeteria takes two slots because it is the one room the whole
-		-- school is in at once and a quarter of the frontage would make it read as a classroom
-		-- with the wrong furniture in it. The library and the lounge take one each.
+		-- Ground. The cafeteria and the library take two slots each: one is the room the whole
+		-- school is in at once, the other needs the run for its stacks, and a third of the
+		-- frontage each is what stops them reading as classrooms with odd furniture.
 		{ id = "cafeteria", label = "Cafeteria", floor = 1, x1 = a1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "cafeteria" },
-		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "library" },
+		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "library" },
 		-- The one room in the building nobody sends you to. Every other space here is somewhere
 		-- you are told to be; this is the one you choose, and it is what makes the school
 		-- somewhere a player hangs around rather than somewhere they visit twice a year.
-		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "lounge" },
+		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "lounge" },
+		{ id = "cooking", label = "Cooking Lab", floor = 1, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "cooking" },
 
-		-- Second floor: the subjects with a verb of their own. Science, Art and Reading are
-		-- named here and left empty on purpose -- ScienceService, ArtService and ReadingService
-		-- lay their own benches inside them, and this file must never learn what a bench is.
+		-- First floor: the subjects. Science, Art and Reading are named here and left empty on
+		-- purpose -- Lab.luau, Studio.luau and ReadingRoom.luau lay their own benches inside
+		-- them, and this file must never learn what a bench is.
 		--
-		-- Art takes the widest slot it can and still only needs about thirty studs across; what
-		-- it needs is the depth, which every room in the band has.
+		-- Art needs depth rather than width: its wall and its paint cupboard sit 81 studs apart,
+		-- which is the number the whole 99-stud band is sized around.
 		{ id = "science", label = "Science Lab", floor = 2, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "none" },
 		{ id = "art", label = "Art Studio", floor = 2, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "none" },
 		{ id = "reading", label = "Reading Room", floor = 2, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "none" },
 		{ id = "music", label = "Music Room", floor = 2, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
-
-		-- Third floor: the rooms with equipment in them, and the one place the staff sit.
-		{ id = "cooking", label = "Cooking Lab", floor = 3, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "cooking" },
-		{ id = "computers", label = "Computer Lab", floor = 3, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "class" },
-		{ id = "english", label = "English", floor = 3, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "class" },
-		{ id = "staff", label = "Staff Room", floor = 3, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "common" },
+		{ id = "english", label = "English", floor = 2, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "class" },
+		{ id = "staff", label = "Staff Room", floor = 2, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "common" },
 	}
 end
 
@@ -236,7 +245,7 @@ end
 -- the road, and centred on x so the entrance walks straight into it.
 local ATRIUM_X1 = -BUILDING.AtriumWidthStuds / 2
 local ATRIUM_X2 = BUILDING.AtriumWidthStuds / 2
-local ATRIUM_Z1 = 14
+local ATRIUM_Z1 = 8
 local ATRIUM_Z2 = 14 + BUILDING.AtriumDepthStuds
 
 -- ---------------------------------------------------------------------------------------
@@ -780,7 +789,13 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	end
 
 	-- The desk, facing whoever comes through the doors.
-	local deskZ = ATRIUM_Z1 + 8
+	-- The desk faces the doors, at the back of the lobby, not just inside them.
+	--
+	-- It sat 8 studs from the front, which put it between the doors and the room -- you walked
+	-- into the back of it. A reception faces the way people arrive from and stands at the far
+	-- side of the space they arrive into, with the stairs to either side of it. The reference
+	-- puts the Director's office in exactly that position: straight ahead as you come in.
+	local deskZ = ATRIUM_Z2 - 8
 	Kit.Block(parent, "LobbyDesk", at(0, 2.4, deskZ), Vector3.new(BUILDING.LobbyDeskWidthStuds, 4.8, 6), {
 		color = WOOD,
 		material = Enum.Material.Wood,
@@ -882,22 +897,26 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 	-- stair is about as wide as two people passing, and its steps are shallow enough to read as
 	-- steps rather than as terraces. Ten and twenty-four gives a tread you can see the edge of,
 	-- and the nosings Kit.Stairs now draws are what make those edges visible at all.
-	local flightW = 10
-	local flightSteps = 24
-	local runLength = ATRIUM_Z2 - ATRIUM_Z1 - 8
+	local flightW = 11
+	local flightSteps = 22
+	local runLength = ATRIUM_Z2 - ATRIUM_Z1 - 10
 
 	for floor = 1, BUILDING.Floors - 1 do
 		local fromY = floorY(floor)
 		local toY = floorY(floor + 1)
-		local up = floor % 2 == 1
-		local startZ = if up then ATRIUM_Z1 + 4 else ATRIUM_Z2 - 4
-		local endZ = if up then ATRIUM_Z2 - 4 else ATRIUM_Z1 + 4
+		-- With two storeys there is one flight per stairwell, so it always runs the same way:
+		-- from the front of the lobby up toward the corridor, which is where you are going. The
+		-- alternating switchback only ever existed to stop flight two landing on flight one, and
+		-- with a single flight there is no flight two.
+		local up = true
+		local startZ = ATRIUM_Z1 + 5
+		local endZ = ATRIUM_Z2 - 5
 
 		for side = -1, 1, 2 do
 			-- The stairwell's centre, then the flight offset to one half of it. Odd floors take
 			-- the near half, even floors the far half; that is what stops them sharing a plan.
 			local well = side * (BUILDING.AtriumWidthStuds / 2 - 11)
-			local x = well + (if up then -flightW * 0.55 else flightW * 0.55)
+			local x = well
 
 			local laid = Kit.Stairs(
 				parent,
@@ -1089,65 +1108,64 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
 		-- door-width. That reads as lockers from any angle and never floats, because the body
 		-- is its own wall.
-		local lockerZ = corridorZ - CORRIDOR_W / 2 + 1
-
-		-- **The bank runs in segments, broken at the stairwells.**
+		-- **One locker bay, in one place, with a bench in front of it.**
 		--
-		-- One continuous 226-stud run was right about being continuous and wrong about being
-		-- unbroken: the two stairwells stand on the same line, so the bank ran straight through
-		-- both of them. A locker you cannot reach because a staircase is inside it is worse than
-		-- no locker.
+		-- The bank used to run the entire 226-stud frontage of every floor, segmented only where
+		-- the stairs got in the way. Three storeys of that is what the atrium was full of: blue
+		-- lockers staring back from every level, wall to wall, which is the opposite of structured.
 		--
-		-- Segment ends are computed from the same stairwell centres buildStairs uses, so the two
-		-- cannot drift apart.
-		local wellX = BUILDING.AtriumWidthStuds / 2 - 11
-		local wellClear = 16
-		local edge = half - WALL_T
-		local segments = {
-			{ -edge, -wellX - wellClear },
-			{ -wellX + wellClear, wellX - wellClear },
-			{ wellX + wellClear, edge },
-		}
+		-- The reference does not do that. It puts lockers in a *bay* -- a defined alcove with a
+		-- bench down the middle that you go to, the way a real school has a locker room rather than
+		-- a locker corridor. One bay per floor, centred, and the rest of the corridor is left as
+		-- circulation.
+		local lockerZ = corridorZ - CORRIDOR_W / 2 + 1.4
+		local bayW = BUILDING.LockerBayStuds
+		local bayX = -bayW / 2
+		local doors = math.max(2, math.floor(bayW / 4.5))
+		local doorW = bayW / doors
 
-		for segment, span in segments do
-			local x0, x1 = span[1], span[2]
-			local runW = x1 - x0
-			if runW < 12 then
-				continue
-			end
-			local cx = (x0 + x1) / 2
-			local doors = math.max(1, math.floor(runW / 4))
-			local doorW = runW / doors
+		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 5, lockerZ), Vector3.new(bayW, 10, 2.4), {
+			color = BLUE,
+			material = Enum.Material.Metal,
+			collide = true,
+		})
+		Kit.Block(parent, `LockerBankPlinth{floor}`, at(0, y + 0.5, lockerZ), Vector3.new(bayW, 1, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `LockerBankCap{floor}`, at(0, y + 10.3, lockerZ), Vector3.new(bayW, 0.6, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
 
-			Kit.Block(parent, `LockerBank{floor}_{segment}`, at(cx, y + 5, lockerZ), Vector3.new(runW, 10, 2.4), {
-				color = BLUE,
-				material = Enum.Material.Metal,
-				collide = true,
-			})
-			Kit.Block(parent, `LockerBankPlinth{floor}_{segment}`, at(cx, y + 0.5, lockerZ), Vector3.new(runW, 1, 2.8), {
+		for index = 1, doors - 1 do
+			Kit.Block(parent, `LockerSeam{floor}_{index}`, at(bayX + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
 				color = DEEP_BLUE,
+			}).CastShadow = false
+		end
+		for index = 1, doors do
+			local dx = bayX + doorW * (index - 0.5)
+			Kit.Block(parent, `LockerHandle{floor}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
+				color = Color3.fromRGB(214, 218, 226),
 				material = Enum.Material.Metal,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerBankCap{floor}_{segment}`, at(cx, y + 10.3, lockerZ), Vector3.new(runW, 0.6, 2.8), {
-				color = DEEP_BLUE,
+			Kit.Block(parent, `LockerVent{floor}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
+				color = Color3.fromRGB(58, 92, 158),
+			}).CastShadow = false
+		end
+
+		-- The bench in front of it. This is what turns a wall of lockers into a place -- the
+		-- reference photograph of the locker room is a bench down the middle and nothing else.
+		Kit.Block(parent, `LockerBench{floor}`, at(0, y + 2.3, lockerZ + 6), Vector3.new(bayW * 0.7, 0.7, 3.4), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		for leg = -1, 1, 2 do
+			Kit.Block(parent, `LockerBenchLeg{floor}_{leg}`, at(leg * bayW * 0.28, y + 1.15, lockerZ + 6), Vector3.new(0.6, 2.3, 3), {
+				color = Color3.fromRGB(96, 102, 114),
 				material = Enum.Material.Metal,
 			}).CastShadow = false
-
-			for index = 1, doors - 1 do
-				Kit.Block(parent, `LockerSeam{floor}_{segment}_{index}`, at(x0 + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
-					color = DEEP_BLUE,
-				}).CastShadow = false
-			end
-			for index = 1, doors do
-				local dx = x0 + doorW * (index - 0.5)
-				Kit.Block(parent, `LockerHandle{floor}_{segment}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
-					color = Color3.fromRGB(214, 218, 226),
-					material = Enum.Material.Metal,
-				}).CastShadow = false
-				Kit.Block(parent, `LockerVent{floor}_{segment}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
-					color = Color3.fromRGB(58, 92, 158),
-				}).CastShadow = false
-			end
 		end
 
 		-- The hexagon panel, on the corridor's **end wall** -- a wall that exists.
@@ -1186,30 +1204,34 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 			end
 		end
 
-		-- Washrooms off the corridor: a tiled stripe and a row of basins. Not interesting, and
-		-- that is the point -- a school without them is a set rather than a building.
-		for side = -1, 1, 2 do
-			local wx = side * (W / 2 - BUILDING.WashroomWidthStuds - 12)
-			local wz = corridorZ - CORRIDOR_W / 2 + 3
-			-- The blue tiled band the reference runs at waist height.
-			Kit.Block(parent, `WashBand{floor}_{side}`, at(wx, y + 6, wz), Vector3.new(BUILDING.WashroomWidthStuds, 3, 0.3), {
-				color = BLUE,
+		-- **One washroom per floor, at one end of the corridor.**
+		--
+		-- There were two on every floor, one at each end, on all three storeys -- six of them,
+		-- which is more washrooms than classrooms and exactly the "lying around everywhere" the
+		-- lockers were guilty of. One, at the far end from the stairs, where a school actually
+		-- puts it: off the circulation route rather than on it.
+		local washX = half - BUILDING.WashroomWidthStuds / 2 - 10
+		local washZ = corridorZ - CORRIDOR_W / 2 + 3
+		Kit.Block(parent, `WashSign{floor}`, at(washX, y + 13, washZ), Vector3.new(BUILDING.WashroomWidthStuds * 0.6, 2.6, 0.3), {
+			color = WHITE,
+		})
+		Kit.Block(parent, `WashBand{floor}`, at(washX, y + 6, washZ), Vector3.new(BUILDING.WashroomWidthStuds, 3, 0.3), {
+			color = BLUE,
+		}).CastShadow = false
+		Kit.Block(parent, `WashTile{floor}`, at(washX, y + 11, washZ), Vector3.new(BUILDING.WashroomWidthStuds, 7, 0.25), {
+			color = Color3.fromRGB(236, 240, 248),
+		}).CastShadow = false
+		for index = 1, BUILDING.BasinsPerWashroom do
+			local share = (index - 0.5) / BUILDING.BasinsPerWashroom
+			local bx = washX - BUILDING.WashroomWidthStuds / 2 + BUILDING.WashroomWidthStuds * share
+			Kit.Block(parent, `Basin{floor}_{index}`, at(bx, y + 4.6, washZ + 1.4), Vector3.new(4, 1.2, 3), {
+				color = Color3.fromRGB(246, 248, 252),
+				collide = true,
+			})
+			Kit.Block(parent, `Tap{floor}_{index}`, at(bx, y + 5.8, washZ + 0.5), Vector3.new(0.4, 1.6, 0.4), {
+				color = Color3.fromRGB(198, 204, 214),
+				material = Enum.Material.Metal,
 			}).CastShadow = false
-			Kit.Block(parent, `WashTile{floor}_{side}`, at(wx, y + 11, wz), Vector3.new(BUILDING.WashroomWidthStuds, 7, 0.25), {
-				color = Color3.fromRGB(236, 240, 248),
-			}).CastShadow = false
-			for index = 1, BUILDING.BasinsPerWashroom do
-				local share = (index - 0.5) / BUILDING.BasinsPerWashroom
-				local bx = wx - BUILDING.WashroomWidthStuds / 2 + BUILDING.WashroomWidthStuds * share
-				Kit.Block(parent, `Basin{floor}_{side}_{index}`, at(bx, y + 4.6, wz + 1.4), Vector3.new(4, 1.2, 3), {
-					color = Color3.fromRGB(246, 248, 252),
-					collide = true,
-				})
-				Kit.Block(parent, `Tap{floor}_{side}_{index}`, at(bx, y + 5.8, wz + 0.5), Vector3.new(0.4, 1.6, 0.4), {
-					color = Color3.fromRGB(198, 204, 214),
-					material = Enum.Material.Metal,
-				}).CastShadow = false
-			end
 		end
 
 		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line

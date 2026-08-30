@@ -2795,7 +2795,16 @@ Config.School.Building = {
 	-- about five -- so that a floor reads as a room somebody could live on rather than as a
 	-- gap between slabs, and so the atrium cut through the first two has real height in it.
 	-- Safe range: 2-4 and 14-24. Below ~14 the light panels are in your hair.
-	Floors = 3,
+	-- **Two floors, not three.**
+	--
+	-- Three storeys gave the atrium the proportions of a lift shaft -- a tall narrow canyon with
+	-- a locker bank staring back at you from every level -- and it needed eleven rooms to fill,
+	-- which is more rooms than this school has reasons for. Two floors is a school you can read
+	-- from the door: everything social on the ground, everything taught above it.
+	--
+	-- It also makes the atrium a double-height *lobby* rather than a shaft, which is what the
+	-- reference actually has.
+	Floors = 2,
 	FloorHeightStuds = 18,
 
 	-- The three horizontal lines that turn a stack of boxes into a building: a base course at
@@ -2911,7 +2920,17 @@ Config.School.Building = {
 	-- are worth arguing about.
 	-- Safe range: 60-120 and 50-90, and both well inside Width/Depth.
 	AtriumWidthStuds = 90,
-	AtriumDepthStuds = 66,
+	-- **The void must stop short of the corridor.**
+	--
+	-- At 66, starting 14 studs in, the atrium ran to z 80 -- straight through the corridor at
+	-- 54-70 and into the room band that starts at 70. So on the upper floor the void was cutting
+	-- away the very floor the corridor stands on, and part of the rooms behind it. That is the
+	-- structural reason the interior read as incoherent: there was a hole where the first-floor
+	-- circulation should be.
+	--
+	-- 42 puts the far edge at z 50, four studs clear of the corridor. The lobby is the space in
+	-- front of the corridor, which is what a lobby is.
+	AtriumDepthStuds = 42,
 
 	-- Corridors. Wide enough that a class emptying into one is not a queue, and wide enough
 	-- for somebody to stand across you in it with room to walk round -- which the corridor
@@ -2930,7 +2949,10 @@ Config.School.Building = {
 	-- room against the furniture another module lays in it.
 	-- Safe range: 90-130, 3-5 and 1-4.
 	BackBandDepthStuds = 99,
-	RoomsPerFloor = 4,
+	-- Six slots a floor rather than four. Two floors times four was eight rooms for eleven, and
+	-- the rooms were 55 studs wide against a 99-stud band -- proportions that read as corridors
+	-- with furniture. Six gives about 36 studs each, which against that depth is a classroom.
+	RoomsPerFloor = 6,
 	RoomGapStuds = 2,
 
 	-- How far the glazing runs up each storey, as a share of the floor height. Not 1: a
@@ -3220,6 +3242,12 @@ Config.School.Building = {
 	HexSizeStuds = 6,
 
 	-- Safe range: 2-5 and 12-24.
+	-- How wide the single locker bay is. Wide enough to be somewhere -- the reference locker
+	-- room is a proper alcove you stand in -- and nowhere near the 226-stud wall-to-wall run
+	-- this replaced.
+	-- Safe range: 30-70.
+	LockerBayStuds = 46,
+
 	BasinsPerWashroom = 3,
 	WashroomWidthStuds = 18,
 
