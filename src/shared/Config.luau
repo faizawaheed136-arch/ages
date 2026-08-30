@@ -3210,6 +3210,22 @@ Config.School.Building = {
 	-- How many vertical fins run down each flank of the atrium void. They exist to give a
 	-- 54-stud wall a countable rhythm; too few and the wall is still blank, too many and the
 	-- lobby reads as a cage. Safe range: 4-10.
+	-- **How deep a walkable gallery runs across the back of the atrium on the upper floor.**
+	--
+	-- The void used to be cut to the full depth of the atrium, which meant the upper floor had
+	-- no floor anywhere over it -- and both staircases land at the back of the atrium. You could
+	-- climb a flight and arrive over a hole. The patch for that was a 20x20 landing slab floating
+	-- at the head of each flight, which is where those two platforms hanging in mid-air came from.
+	--
+	-- A gallery is the real fix and the normal way an atrium works: the hole stops short of the
+	-- back wall, and the strip that is left is continuous floor joining the two side slabs to the
+	-- corridor behind. The stairs land on it, you walk off in any direction, and the lobby keeps
+	-- its double height over the entrance where it is actually worth having.
+	--
+	-- Must be at least the stair radius plus a couple of studs, or the flight tops out under the
+	-- slab. Safe range: 10-20.
+	GalleryDepthStuds = 12,
+
 	AtriumFins = 6,
 
 	LobbyBanners = 4,
@@ -4621,8 +4637,19 @@ Config.Fixtures = {
 	-- press that was legal when it left the client is not refused for a step taken during the
 	-- round trip.
 	-- Safe range: 10-20 and 8-16, with Reach the larger.
-	ReachStuds = 16,
-	PromptDistanceStuds = 12,
+	-- 24, and it must stay above PromptDistanceStuds below. This is the server's own check that
+	-- the player is really next to the thing they claim to be using; the prompt distance is what
+	-- the client draws. If the prompt were the larger of the two, a player would get a keypress
+	-- offered to them that the server then silently refuses -- which reads as the fixture being
+	-- broken rather than as them being too far away.
+	ReachStuds = 24,
+	-- 18, up from 12. This has to be comfortably less than ReachStuds (the server's own check)
+	-- and comfortably more than the distance a player actually stands from a fixture. A door
+	-- leaf's centre is half the door's height off the ground -- about 11 studs up on the
+	-- entrance -- so somebody standing right at it is already 8 or 9 studs away in a straight
+	-- line before they have moved back at all, and 12 made the prompt flicker in and out at the
+	-- one fixture in the building people use most.
+	PromptDistanceStuds = 18,
 
 	Kinds = {
 		snack = {

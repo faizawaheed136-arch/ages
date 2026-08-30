@@ -30,7 +30,7 @@ export type Shape = {
 
 local MapShapes = {}
 
-MapShapes.SourceHash = "4963b854bdc48e53"
+MapShapes.SourceHash = "bc5ca39ba35faab5"
 
 -- The box the geometry actually occupies. Wider than the box the place points
 -- measure, because a coastline has no doorway on it.
@@ -41,7 +41,7 @@ MapShapes.Extent = {
 	maxZ = 1152.0,
 }
 
--- 1128 shapes.
+-- 1126 shapes.
 local All: { Shape } = {
 	{ x = -698.0, z = -234.0, widthStuds = 64.0, depthStuds = 34.0, rotationDegrees = -0.0, kind = "surface", color = Color3.fromRGB(146, 190, 236) },
 	{ x = 934.5, z = -316.0, widthStuds = 179.0, depthStuds = 368.0, rotationDegrees = 0.0, kind = "surface", color = Color3.fromRGB(214, 200, 166) },
@@ -931,20 +931,18 @@ local All: { Shape } = {
 	{ x = -185.0, z = 1126.0, widthStuds = 16.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 156, 84) },
 	{ x = -144.1, z = -452.7, widthStuds = 304.7, depthStuds = 95.2, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(78, 118, 62) },
 	{ x = -386.0, z = -242.0, widthStuds = 72.0, depthStuds = 52.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 230, 235) },
-	{ x = -572.2, z = -220.8, widthStuds = 22.2, depthStuds = 21.3, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(150, 156, 168) },
-	{ x = -499.8, z = -220.8, widthStuds = 22.2, depthStuds = 21.3, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(150, 156, 168) },
-	{ x = -569.0, z = -224.0, widthStuds = 15.3, depthStuds = 26.8, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 232, 240) },
-	{ x = -503.0, z = -224.0, widthStuds = 15.3, depthStuds = 26.8, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 232, 240) },
-	{ x = -569.3, z = -223.7, widthStuds = 16.1, depthStuds = 27.7, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(214, 218, 226) },
-	{ x = -502.7, z = -223.7, widthStuds = 16.1, depthStuds = 27.7, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(214, 218, 226) },
-	{ x = -536.0, z = -155.0, widthStuds = 228.0, depthStuds = 114.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
+	{ x = -572.2, z = -228.8, widthStuds = 22.2, depthStuds = 21.3, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(150, 156, 168) },
+	{ x = -499.8, z = -228.8, widthStuds = 22.2, depthStuds = 21.3, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(150, 156, 168) },
+	{ x = -569.0, z = -232.0, widthStuds = 15.3, depthStuds = 26.8, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 232, 240) },
+	{ x = -503.0, z = -232.0, widthStuds = 15.3, depthStuds = 26.8, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 232, 240) },
+	{ x = -569.3, z = -231.7, widthStuds = 16.1, depthStuds = 27.7, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(214, 218, 226) },
+	{ x = -502.7, z = -231.7, widthStuds = 16.1, depthStuds = 27.7, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(214, 218, 226) },
+	{ x = -536.0, z = -161.0, widthStuds = 228.0, depthStuds = 126.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
 	{ x = -536.0, z = -264.0, widthStuds = 228.0, depthStuds = 8.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
-	{ x = -615.5, z = -236.0, widthStuds = 69.0, depthStuds = 48.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
-	{ x = -456.5, z = -236.0, widthStuds = 69.0, depthStuds = 48.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
-	{ x = -511.0, z = -216.0, widthStuds = 20.0, depthStuds = 20.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
-	{ x = -561.0, z = -216.0, widthStuds = 20.0, depthStuds = 20.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
-	{ x = -569.3, z = -223.7, widthStuds = 16.8, depthStuds = 27.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(78, 82, 92) },
-	{ x = -502.7, z = -223.7, widthStuds = 16.8, depthStuds = 27.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(78, 82, 92) },
+	{ x = -615.5, z = -242.0, widthStuds = 69.0, depthStuds = 36.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
+	{ x = -456.5, z = -242.0, widthStuds = 69.0, depthStuds = 36.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(232, 232, 234) },
+	{ x = -569.3, z = -231.7, widthStuds = 16.8, depthStuds = 27.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(78, 82, 92) },
+	{ x = -502.7, z = -231.7, widthStuds = 16.8, depthStuds = 27.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(78, 82, 92) },
 	{ x = -536.0, z = -201.0, widthStuds = 226.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(228, 230, 235) },
 	{ x = -726.0, z = 612.0, widthStuds = 16.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 156, 84) },
 	{ x = -726.0, z = 883.0, widthStuds = 16.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 156, 84) },
@@ -980,8 +978,8 @@ local All: { Shape } = {
 	{ x = -299.0, z = 455.0, widthStuds = 14.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(166, 164, 158) },
 	{ x = -281.0, z = 455.0, widthStuds = 14.0, depthStuds = 16.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(166, 164, 158) },
 	{ x = -127.4, z = -48.0, widthStuds = 25.2, depthStuds = 48.9, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(238, 236, 228) },
-	{ x = -572.8, z = -220.2, widthStuds = 24.0, depthStuds = 20.5, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
-	{ x = -499.2, z = -220.2, widthStuds = 24.0, depthStuds = 20.5, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
+	{ x = -572.8, z = -228.2, widthStuds = 24.0, depthStuds = 20.5, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
+	{ x = -499.2, z = -228.2, widthStuds = 24.0, depthStuds = 20.5, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
 	{ x = -536.0, z = -195.6, widthStuds = 71.7, depthStuds = 3.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 56, 42) },
 	{ x = 603.0, z = -348.0, widthStuds = 144.0, depthStuds = 56.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 104, 112) },
 	{ x = -481.0, z = 397.0, widthStuds = 180.0, depthStuds = 56.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(96, 104, 112) },
@@ -1002,8 +1000,8 @@ local All: { Shape } = {
 	{ x = -179.0, z = -98.0, widthStuds = 25.0, depthStuds = 36.6, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(88, 88, 92) },
 	{ x = -179.0, z = -58.0, widthStuds = 25.0, depthStuds = 36.6, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(88, 88, 92) },
 	{ x = -522.0, z = -196.0, widthStuds = 175.0, depthStuds = 4.0, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(64, 78, 96) },
-	{ x = -572.0, z = -221.0, widthStuds = 22.3, depthStuds = 22.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
-	{ x = -500.0, z = -221.0, widthStuds = 22.4, depthStuds = 22.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
+	{ x = -572.0, z = -229.0, widthStuds = 22.3, depthStuds = 22.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
+	{ x = -500.0, z = -229.0, widthStuds = 22.4, depthStuds = 22.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(72, 76, 86) },
 	{ x = -11.7, z = 16.9, widthStuds = 88.4, depthStuds = 122.5, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(223, 223, 222) },
 	{ x = 609.0, z = -410.0, widthStuds = 34.0, depthStuds = 11.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(74, 128, 92) },
 	{ x = 563.0, z = -393.0, widthStuds = 34.0, depthStuds = 11.4, rotationDegrees = 0.0, kind = "building", color = Color3.fromRGB(196, 80, 64) },
