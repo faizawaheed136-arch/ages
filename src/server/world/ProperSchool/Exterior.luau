@@ -8,6 +8,7 @@
 -- somebody walked into it. If a dimension moves here, everything that depends on it moves.
 
 local Engine = require(script.Parent.SchoolBuilderEngine)
+local Layout = require(script.Parent.Layout)
 local Tree = require(script.Parent.Tree)
 
 local Exterior = {}
@@ -163,7 +164,7 @@ local function buildEntrance(parent: Instance)
 
 	-- The soffit over the recess, at the head of storey two.
 	Engine.CreateFloor(
-		place(0, FH * 2, faceZ + recess / 2),
+		place(0, FH * 2 - 2, faceZ + recess / 2),
 		Vector3.new(bay, T, recess),
 		TRIM_MATERIAL,
 		DARK_SLATE,
@@ -239,7 +240,7 @@ local function buildEntrance(parent: Instance)
 	-- door-width bays it is legibly two storeys tall, and not one dimension has changed.
 	for index = 1, 4 do
 		local mullion = Engine.CreateWall(
-			place(-curtainW / 2 + curtainW * (index / 5), floorY(2) + curtainH / 2, faceZ - 0.3),
+			place(-curtainW / 2 + curtainW * (index / 5), floorY(2) + curtainH / 2, faceZ - 1.1),
 			Vector3.new(0.6, curtainH, 0.6),
 			Vector3.new(0, 0, 0),
 			TRIM_MATERIAL,
@@ -249,7 +250,7 @@ local function buildEntrance(parent: Instance)
 		mullion.Name = `EntranceMullion{index}`
 	end
 	Engine.CreateWall(
-		place(0, floorY(2), faceZ - 0.3),
+		place(0, floorY(2), faceZ - 1.1),
 		Vector3.new(curtainW, 0.8, 0.8),
 		Vector3.new(0, 0, 0),
 		TRIM_MATERIAL,
@@ -309,14 +310,55 @@ function Exterior.Build(origin: Vector3?, into: Instance?): Instance
 	for floor = 1, PLAN.Floors do
 		local y = floorY(floor)
 
-		-- ---- floor plate
-		Engine.CreateFloor(
-			place(0, y, 0),
-			Vector3.new(W, T, D),
-			TRIM_MATERIAL,
-			COOL_GRAY,
-			staging
-		).Name = `FloorPlate{floor}`
+		-- ---- floor plate, with the stairwells cut out of every level above the ground
+		--
+		-- **The openings come from Layout, the same table Interior builds the shaft walls
+		-- from.** That is the whole reason Layout exists: on the last school the corridor and
+		-- the hole in the floor above it were computed independently, disagreed by three studs,
+		-- and produced a corridor with no floor under it that nothing detected.
+		--
+		-- Ground floor is solid -- there is nothing under it to fall into.
+		-- **The plate hangs below its level, so `floorY(n)` is the surface you stand on.**
+		--
+		-- Centred *on* the level instead, its top surface sits half a thickness higher than the
+		-- number every other module works from -- so every interior wall is built a stud low and
+		-- anything short, like a locker plinth, ends up buried in the slab. Found exactly that
+		-- way: 44 plinths inside FloorPlate2Corridor.
+		if floor == 1 then
+			Engine.CreateFloor(place(0, y - T / 2, 0), Vector3.new(W, T, D), TRIM_MATERIAL, COOL_GRAY, staging).Name =
+				`FloorPlate{floor}`
+		else
+			-- Laid as strips around the shafts. Roblox cannot put a hole in a Part, so a floor
+			-- with a void in it is a ring of slabs -- the same constraint the window frames work
+			-- around, one storey up.
+			local westX = Layout.Stairwells[1].x2
+			local eastX = Layout.Stairwells[2].x1
+			local wellZ1, wellZ2 = Layout.CorridorZ1, Layout.CorridorZ2
+
+			-- In front of and behind the shafts, full width.
+			Engine.CreateFloor(
+				place(0, y - T / 2, (-HALF_D + wellZ1) / 2),
+				Vector3.new(W, T, wellZ1 + HALF_D),
+				TRIM_MATERIAL,
+				COOL_GRAY,
+				staging
+			).Name = `FloorPlate{floor}Front`
+			Engine.CreateFloor(
+				place(0, y - T / 2, (wellZ2 + HALF_D) / 2),
+				Vector3.new(W, T, HALF_D - wellZ2),
+				TRIM_MATERIAL,
+				COOL_GRAY,
+				staging
+			).Name = `FloorPlate{floor}Back`
+			-- And the corridor band between them, which is where the two holes are.
+			Engine.CreateFloor(
+				place((westX + eastX) / 2, y - T / 2, 0),
+				Vector3.new(eastX - westX, T, wellZ2 - wellZ1),
+				TRIM_MATERIAL,
+				COOL_GRAY,
+				staging
+			).Name = `FloorPlate{floor}Corridor`
+		end
 
 		-- ---- the three windowed elevations
 		windowedRun(staging, "z", -HALF_W, -HALF_D, HALF_D, PLAN.BaysShortWall, y)
@@ -360,7 +402,7 @@ function Exterior.Build(origin: Vector3?, into: Instance?): Instance
 
 	-- ---- flat roof and its parapet
 	Engine.CreateFloor(
-		place(0, TOTAL_H, 0),
+		place(0, TOTAL_H - T / 2, 0),
 		Vector3.new(W, T, D),
 		TRIM_MATERIAL,
 		Color3.fromRGB(122, 128, 138),

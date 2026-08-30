@@ -144,6 +144,7 @@ end
 -- school yet, so it was never loaded and the lookup returned nil. `rootRequire` is the harness's
 -- own require, so this pulls the module in through exactly the path a real script would.
 local Exterior = rootRequire(ServerScriptService.Server.world.ProperSchool.Exterior)
+local Interior = rootRequire(ServerScriptService.Server.world.ProperSchool.Interior)
 local PlaceService = moduleNamed("services/PlaceService.luau")
 local V = baseEnv.Vector3.new
 
@@ -216,6 +217,9 @@ end
 -- explicit parent precisely so it does not need Tree.Build, FindFirstChild or a live Workspace
 -- when it runs headless like this.
 Exterior.Build(V(SCHOOL_X, SCHOOL_Y, SCHOOL_Z), {})
+-- The three storey folders, stood in for by plain tables. Everything lands in one flat asset
+-- anyway; the folders are a Studio convenience, and the bake has no Studio.
+Interior.Build(V(SCHOOL_X, SCHOOL_Y, SCHOOL_Z), { {}, {}, {} })
 
 local function num(v, fallback)
 	return if typeof(v) == "number" and v == v then v else fallback
