@@ -387,7 +387,7 @@ def emit(rows: list[dict]) -> None:
                     # turned every disc in the building into a square. The roll is what lays it
                     # flat; see Kit.Rug and rbxmx.disc.
                     rbxmx.disc(
-                        row["name"], center, size, row.get("roll", 0),
+                        row["name"], center, size, row["yaw"], row.get("roll", 0),
                         color, material=material,
                         transparency=row["transparency"], collide=row["collide"],
                     )

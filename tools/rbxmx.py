@@ -313,7 +313,7 @@ def ball(name, center, size, color, material=SMOOTH, transparency=0.0, collide=T
           color, material, transparency, collide, 0, tags, attrs, children)
 
 
-def disc(name, center, size, roll, color, material=SMOOTH, transparency=0.0,
+def disc(name, center, size, yaw, roll, color, material=SMOOTH, transparency=0.0,
          collide=True, tags=None, attrs=None, children=""):
     """A cylinder (`Part.Shape` = Cylinder), rolled `roll` degrees about Z.
 
@@ -329,13 +329,17 @@ def disc(name, center, size, roll, color, material=SMOOTH, transparency=0.0,
     """
     cx, cy, cz = center
     sx, sy, sz = size
-    rad = math.radians(roll)
-    c, s = math.cos(rad), math.sin(rad)
-    # Roll about Z: +X turns toward +Y. At 90 the cylinder's axis stands vertical,
-    # which is what lays it flat as a disc.
-    rot = (f"<R00>{c}</R00><R01>{-s}</R01><R02>0</R02>"
-           f"<R10>{s}</R10><R11>{c}</R11><R12>0</R12>"
-           f"<R20>0</R20><R21>0</R21><R22>1</R22>")
+    # Ry(yaw) . Rz(roll), composed in that order to match `CFrame.Angles(0, y, 0)` and
+    # `CFrame.Angles(0, 0, z)` as Kit applies them.
+    #
+    # Both are needed and they do different jobs. A cylinder's length runs along X, so a floor
+    # disc is a roll about Z (axis stands up) and a disc facing a wall is a yaw about Y (axis
+    # points along Z). Emitting only one of them puts the other flat on the floor.
+    a, b = math.radians(yaw), math.radians(roll)
+    ca, sa, cb, sb = math.cos(a), math.sin(a), math.cos(b), math.sin(b)
+    rot = (f"<R00>{ca * cb}</R00><R01>{-ca * sb}</R01><R02>{sa}</R02>"
+           f"<R10>{sb}</R10><R11>{cb}</R11><R12>0</R12>"
+           f"<R20>{-sa * cb}</R20><R21>{sa * sb}</R21><R22>{ca}</R22>")
     _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
           color, material, transparency, collide, 2, tags, attrs, children)
 

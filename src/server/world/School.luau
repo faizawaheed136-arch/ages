@@ -1133,6 +1133,65 @@ local function fitCafeteria(parent: Instance, at: (number, number, number) -> Ve
 
 	-- The bunting the reference is full of, strung across the room.
 	Kit.Bunting(parent, "CafeBunting", at(rect.x1 + 6, y + 14, rect.z1 + 8), at(rect.x2 - 6, y + 14, rect.z1 + 8), 18, { BLUE, WHITE, PALE_BLUE })
+
+	-- The crest on the back wall, over the servery.
+	--
+	-- Concentric discs rather than a decal, because this codebase draws with parts and a ring
+	-- costs one each. Built back to front so the outer ring is behind the inner one and the
+	-- whole thing reads as layered rather than as three circles fighting for the same plane.
+	local crestZ = rect.z2 - 1.6
+	for ring = 1, BUILDING.CafeCrestRings do
+		local share = 1 - (ring - 1) / BUILDING.CafeCrestRings
+		local radius = BUILDING.CafeCrestRadiusStuds * share
+		local tone = if ring % 2 == 1 then BLUE else WHITE
+		local disc = Kit.Block(
+			parent,
+			`CafeCrest{ring}`,
+			at(cx, y + 22, crestZ - ring * 0.12),
+			Vector3.new(radius * 2, radius * 2, 0.3),
+			{ color = tone }
+		)
+		disc.Shape = Enum.PartType.Cylinder
+		-- A cylinder's length runs along X, so facing it at a wall is a quarter turn about Y --
+		-- the same trick Kit.Rug uses about Z to lay one flat on the floor.
+		disc.CFrame = CFrame.new(at(cx, y + 22, crestZ - ring * 0.12)) * CFrame.Angles(0, math.rad(90), 0)
+		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
+		disc.CastShadow = false
+	end
+	local crestPlate = Kit.Block(parent, "CafeCrestPlate", at(cx, y + 22, crestZ - 1), Vector3.new(BUILDING.CafeCrestRadiusStuds, 6, 0.2), {
+		color = BLUE,
+	})
+	crestPlate.CastShadow = false
+	Kit.Sign(crestPlate, "AGES HIGH", BUILDING.CafeCrestRadiusStuds * 0.9, LABEL_DIST, Color3.fromRGB(248, 251, 255))
+
+	-- The bar along the glazed front, with high stools.
+	--
+	-- A canteen has two kinds of seat: tables for groups, and a counter for one person with
+	-- twenty minutes. Only having tables is what makes a dining room read as a set rather than
+	-- as somewhere people actually eat.
+	local barZ = rect.z1 + 4
+	Kit.Block(parent, "CafeBar", at(cx, y + 5.4, barZ), Vector3.new(width * 0.8, 0.6, 4), {
+		color = WOOD,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	for index = 1, BUILDING.CafeBarStools do
+		local share = (index - 0.5) / BUILDING.CafeBarStools
+		local x = cx - width * 0.4 + width * 0.8 * share
+		Kit.Block(parent, `CafeBarLeg{index}`, at(x, y + 2.6, barZ), Vector3.new(0.8, 5.6, 0.8), {
+			color = Color3.fromRGB(96, 102, 116),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		-- The stools face the glass, which is the whole reason a bar goes on this wall.
+		Kit.Block(parent, `CafeBarStool{index}`, at(x, y + 4.2, barZ + 5), Vector3.new(2.6, 0.4, 2.6), {
+			color = BLUE,
+			collide = true,
+		})
+		Kit.Block(parent, `CafeBarStoolLeg{index}`, at(x, y + 2.1, barZ + 5), Vector3.new(0.7, 4.2, 0.7), {
+			color = Color3.fromRGB(96, 102, 116),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
 end
 
 local function fitLibrary(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)

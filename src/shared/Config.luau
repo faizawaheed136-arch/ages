@@ -3164,6 +3164,25 @@ Config.School.Building = {
 	--
 	-- Built rather than bought, like everything else in this file -- a machine that needed a
 	-- catalog mesh is a machine that does not appear on a fresh install.
+	-- The cafeteria's back wall and its window bar.
+	--
+	-- The room already had a servery, tables, stools and bunting. What it did not have was
+	-- anything on the largest blank surface in the building -- a two-storey wall behind the
+	-- counter that every person in the room faces while they queue.
+	--
+	-- A crest on that wall is worth more than its parts for a reason the trophy case shares:
+	-- it is the only thing in the room that says the school is a *particular* school rather
+	-- than a generic one. The reference photographs put a roundel exactly there.
+	-- Safe range: 14-30 and 3-8.
+	CafeCrestRadiusStuds = 20,
+	CafeCrestRings = 4,
+
+	-- The bar along the glass, with high stools. A canteen has two kinds of seat -- tables for
+	-- groups and a counter for one person with twenty minutes -- and having only tables is what
+	-- makes a dining room read as a set.
+	-- Safe range: 8-20.
+	CafeBarStools = 12,
+
 	-- The corridor floor, and the strips over it.
 	--
 	-- This is the largest single surface in the building and it was bare tile with three small
