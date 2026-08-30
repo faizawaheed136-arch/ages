@@ -2464,6 +2464,360 @@ Config.School.Science = {
 	BenchRadiusStuds = 5,
 	BoardRadiusStuds = 7,
 	CupboardRadiusStuds = 4,
+	-- 40 again. The art room is one of the deep rooms and the walk to the paint cupboard is
+	-- meant to cost real seconds, which is the mechanic. With the band back at 99 there is room
+	-- for it.
+	RoomRadiusStuds = 40,
+
+	-- Whether a lesson's answers are discs on the classroom floor that you answer by
+	-- walking onto, rather than rows on a panel you click. The panel still opens -- it
+	-- carries the question and the answer text, for reading -- but with discs down the
+	-- rows are locked and the floor is the interface.
+	--
+	-- False, and deliberately: docs/interaction_grammar.md settled this months before
+	-- this switch was written, in the user's own words -- "instead of places on the
+	-- floor to walk on, make the mechanic more appealing like 3 dots over each
+	-- characters head and then the options come up" -- and named lesson answers as one
+	-- of the three examples in the same breath as person offers and event choices. A
+	-- lesson answered by walking onto a disc is the one place that grammar regressed;
+	-- this is what puts it back. Kept a switch rather than deleted because a lesson
+	-- sat in a doorway is exactly the case where the panel is the right answer, and
+	-- because the whole point of the room is a place discs *could* go if that
+	-- decision is ever revisited -- it is not a decision this file gets to make twice.
+	PhysicalLessons = false,
+
+	-- The fan the answer discs are placed in. Distance is how far from the player the
+	-- fan reaches; reach is how near a disc counts as standing on it, and it is also
+	-- the radius the disc is drawn at, so the disc the player sees is the disc that
+	-- counts. The two are kept apart so a question is never answered by the disc it
+	-- was placed under your feet, and the arc widens with the answer count so no two
+	-- discs sit within reach of each other.
+	-- Safe range: Distance 4-7, Reach 2-3, Reach below Distance - 2, Arc 100-200.
+	DiscDistanceStuds = 5.5,
+	DiscReachStuds = 2.5,
+	DiscArcDegrees = 150,
+
+	-- Teacher. A humanoid at the front of the room facing the student while the
+	-- lesson is in session, reacting to answers -- a bow on right, a step back
+	-- on wrong. Placed opposite the player from the room centre, walked in at
+	-- the start and despawned at the end. Gateable for testing the lesson loop
+	-- without the presence, and gracefully skipped if the floor refuses a spot.
+	TeacherEnabled = true,
+	TeacherFrontStuds = 13, -- distance of the teacher's standing spot from the room centre
+	TeacherWalkInStuds = 5, -- how far behind the front spot the teacher spawns
+	TeacherNodSeconds = 1.2, -- how long the teacher holds a bow for a right answer
+	TeacherBackStuds = 2, -- how far the teacher steps back on a wrong answer
+	TeacherBackHoldSeconds = 1.2, -- how long they hold there before re-centring
+
+	-- The share of a lesson's questions you have to get right for each verdict. The
+	-- same shape as Work.Tasks' shares, and a lower bar: a shift's tasks are a test of
+	-- attention and these are a test of knowing, so four in five is a good day.
+	-- Safe range: Good 0.7-0.95, Ok 0.3-0.6, Good above Ok.
+	GoodShare = 0.8,
+	OkShare = 0.4,
+
+	-- What a lesson is worth in smarts, by verdict.
+	--
+	-- Per lesson rather than per answer, for exactly the reason work pays standing per
+	-- shift rather than per task: smarts runs 0-100 and starts at 50, so there are
+	-- fifty points of headroom to spend across twelve years. At two a lesson, a child
+	-- who attends and pays attention arrives at sixteen near the ceiling, and one who
+	-- turns up and guesses arrives about halfway there. A point an answer would cap
+	-- them both out before they were ten and make the back half of childhood pointless.
+	-- Safe range: 1-4, 0-2 and 0-1, best first.
+	SmartsPerGoodLesson = 2,
+	SmartsPerOkLesson = 1,
+	SmartsPerPoorLesson = 0,
+
+	-- What a school year you never turned up to costs, applied on the birthday that
+	-- ends it. Only ever between StartAge and EndAge, and only when the year had zero
+	-- lessons in it -- one lesson is enough to prove you went.
+	--
+	-- This is the entire stake. Without it school is free upside and skipping it costs
+	-- nothing but the upside, which is not a decision -- and a game where the whole of
+	-- childhood is optional has spent twelve years saying nothing. Smaller than a good
+	-- lesson pays, so a year you half-attended still comes out ahead of one you did
+	-- not, and a childhood spent elsewhere ends around thirty smarts rather than at
+	-- zero: behind, not ruined.
+	-- Safe range: -4 to 0. At 0 school has no downside and the office job is the only
+	-- reason to attend.
+	SmartsPerYearMissed = -2,
+
+	-- The mastery ladder, and it is per subject rather than per school: being good at
+	-- Science says nothing about Music, and one number over the whole timetable would let
+	-- a player master the one subject with a real verb and skip the five they had never
+	-- touched.
+	--
+	-- This is the Bully rule, and it is the reason school has an end rather than just a
+	-- last year. Attending a subject you have already beaten is the purest version of the
+	-- unskilled-dead-time anti-pattern: the same lesson, the same clock, and nothing left
+	-- in it to learn. So passing enough of a subject buys the right to stop sitting it --
+	-- see School.Mastery.Levels for what "enough" is -- and the afternoon it hands back is
+	-- the reward. Not a number: an hour of childhood you get to spend somewhere else.
+	Mastery = {
+		-- Rungs on the ladder, shared by every subject. Five because it has to be reachable
+		-- inside a childhood and still cost something: at PassesPerLevel = 2 that is eight
+		-- good lessons to top a subject out, against thirty-six lessons in a whole school
+		-- career -- so a player can master two or three subjects by graduation and not all
+		-- six, which is the shape that makes it a choice about what you are good at.
+		--
+		-- Science's RevealedStepsByLevel must be exactly this long. It is the one verb that
+		-- currently gives a level a meaning of its own, and a ladder with a rung the verb
+		-- has no answer for is a promotion that visibly does nothing.
+		-- Safe range: 3-6. Above ~6 the top rung arrives after school has ended.
+		Levels = 5,
+
+		-- Lessons at or above GoodShare that buy a rung. Two so a single lucky lesson does
+		-- not promote and a single bad one does not feel like it undid anything.
+		-- Safe range: 2-4.
+		PassesPerLevel = 2,
+	},
+
+	-- Geography, which is the errand: you are told the *name* of somewhere and you go
+	-- there. No lit disc, no line on the floor.
+	--
+	-- That absence is the whole verb, and it only works because of how much the rest of
+	-- the game does the opposite. Every other destination in AGES arrives as a gold disc
+	-- with a beam pointing at it and the distance written on the waypoint -- the shift,
+	-- the lure, the job post. A child has spent ten years being led by the hand. This is
+	-- the one lesson that lets go, and the skill being tested is the only one a town can
+	-- honestly test: do you know where anything is.
+	--
+	-- Nothing here names a place. The destinations are drawn from the live place graph at
+	-- the moment the lesson starts, so a town that grows grows the subject with it and a
+	-- place renamed in Studio is never a lesson pointing at somewhere that no longer
+	-- exists. See GeographyService.
+	Hunt = {
+		-- Destinations in one lesson. Three, which at the leg lengths below is a lesson of
+		-- roughly the same ninety seconds a quiz is -- and, more to the point, three is
+		-- enough for a bad first guess to be recoverable and few enough that each one still
+		-- counts for a third of the grade.
+		-- Safe range: 2-5. Above ~5 the lesson outlasts the walk home.
+		Stops = 3,
+
+		-- How far apart consecutive destinations may be, in studs. The town is about 930
+		-- studs across and a schoolchild walks at 16, so the far end of this band is a
+		-- twenty-eight second leg and the near end about twelve.
+		--
+		-- A band rather than a maximum, and the minimum is the important half: without it
+		-- the draw happily picks the shop next door, and a lesson made of three ten-stud
+		-- hops is not a lesson about a town. With it, a hunt walks a loop around a district
+		-- rather than crossing the map twice.
+		-- Safe range: 120-300 and 350-650, low below high.
+		MinLegStuds = 200,
+		MaxLegStuds = 450,
+
+		-- How near a destination counts as arriving. Looser than a classroom's attend
+		-- radius on purpose: a place point sits behind a counter or inside a doorway, and
+		-- being made to find the exact tile after already finding the building is precision
+		-- for its own sake -- the walk was the lesson and it is already over.
+		-- Safe range: 8-25.
+		ArriveRadiusStuds = 14,
+
+		-- How far above or below the spot the lesson started from a destination may be
+		-- and still be drawable, in studs.
+		--
+		-- This is the upstairs test. The city's fifty-six first-floor apartments are
+		-- place points like any other, sixteen studs up, and every one of them is a
+		-- stranger's home behind a door with no sign on it. A verb that gives you a name
+		-- and no marker can only be played by a player who can *see* the destination from
+		-- the street, so a place you have to already know the way into is not a
+		-- destination -- it is a riddle. Ground-floor shop interiors are well inside this
+		-- and stay drawable, which is right: the mall is findable from outside.
+		-- Safe range: 5-12. Above ~16 the upstairs flats come back.
+		MaxRiseStuds = 8,
+
+		-- The most a stop the clock ran out on can still be worth, as a share of one
+		-- found, scaled by how much of the way there the player actually got.
+		--
+		-- Without this the lesson has four possible scores -- none, one, two or three of
+		-- three -- and a player who was thirty studs from the bookstore when time went
+		-- scores exactly what a player who never left the school scores. That is the
+		-- undifferentiated-outcome trap, and the fix has to be in the verb's own units,
+		-- which are distance: credit is the fraction of the original gap closed at the
+		-- player's nearest approach. It is not a speed bonus and must never become one --
+		-- getting there fast earns nothing extra, because wandering is what the subject
+		-- is for.
+		-- Safe range: 0.3-0.6. At 1 a near miss pays the same as arriving.
+		MissedCreditCap = 0.5,
+
+		-- How often a running hunt re-reads where the player is standing. Matches
+		-- School.TickSeconds because it is the identical proximity job.
+		-- Safe range: 0.1-0.5. Above ~0.5 arrival visibly lags the footstep.
+		TickSeconds = 0.25,
+
+		-- How long each destination may take before the lesson gives up on it and moves on.
+		-- Sixty seconds is nearly four times the longest leg, so this only ever fires on a
+		-- player who is genuinely lost -- which is the honest failure for this verb.
+		--
+		-- Moving on rather than ending, deliberately: a missed stop scores nothing and the
+		-- lesson continues. A verb whose failure state is "the activity stops" punishes by
+		-- waiting, which is the one consequence shape we have ruled out everywhere else.
+		-- Safe range: 30-120. Below ~30 a wrong first guess cannot be recovered from.
+		SecondsPerStop = 60,
+
+		-- How long the line about the stop you just reached holds before the next name is
+		-- given. The same beat a lesson's verdict gets and for the same reason: arriving is
+		-- the payoff and a payoff with no pause is one nobody registers.
+		-- Safe range: 1-4.
+		ArrivedSeconds = 2,
+
+		-- What each mastery rung tells you, on top of everything the rungs below it told
+		-- you. This is the entire reward of the subject and it is deliberately not a
+		-- number: a level does not make you walk faster or score more, it makes the town
+		-- legible. That is Bully's map markers, which is the best reward in that game, and
+		-- it is the one progression a player feels as the world changing rather than as a
+		-- statistic moving.
+		--
+		-- Must be exactly School.Mastery.Levels long, checked at require time in
+		-- GeographyService for the same reason Science's RevealedStepsByLevel is: a rung
+		-- the verb has no answer for is a promotion that visibly does nothing.
+		--
+		--   name    -- the place's own label, and nothing else. Level one is being told
+		--              "the pages & press" and having to know that is the bookstore.
+		--   area    -- roughly where in town it is, as a compass sector from the school.
+		--   bearing -- an arrow at the top of the screen pointing at it. Direction only.
+		--   range   -- how far away it is, which with the arrow is very nearly the guide
+		--              line the rest of the game gives away for free.
+		--
+		-- The fifth rung adds nothing to the list because the fifth rung is the exit: it
+		-- tops the subject out and buys the right to skip, which is what every subject's
+		-- top rung buys.
+		RevealedByLevel = { "name", "area", "bearing", "range", "range" },
+	},
+
+	-- Content limits, enforced at server start rather than found in play. The answer
+	-- count is Enact's, because these are Enact's pads and a fifth of them crowds the
+	-- fan the same way whoever is asking -- and the question length is longer than a
+	-- choice label because a question is read from a HUD row rather than off the floor.
+	-- Safe range: 60-160.
+	MaxAnswers = Config.Enact.MaxChoices,
+	MaxAskLength = 96,
+}
+
+-- Science. The first subject with a verb of its own rather than a question with the
+-- word "science" written above it.
+--
+-- The shape is Bully's: every subject is a different *thing you do*, not a different
+-- question set, and passing buys the right to skip rather than the right to do it
+-- again. What Science does is run a procedure -- a board names an ordered list of
+-- stations, you walk the room clicking them in order, and each click stacks a step on
+-- a bench. Nothing is scored until you commit the bench, so the whole stack is undoable
+-- right up to that moment; that is the commit-and-undo pair every activity here owes.
+--
+-- Two benches run at once against a shared set of stations, which is where the load
+-- comes from: the second procedure is not twice the work, it is the same work with the
+-- room contested. Reagents are the traversal forcer -- steps spend from a shared pool
+-- and the cupboard is across the room -- and mastery does not raise a number, it shows
+-- you more of the board at once, so a level is felt as fewer walks back to read it.
+--
+-- Nothing in here restates a verdict share or a smarts payout. A procedure's score is
+-- a 0-1 share like a lesson's, so it lands on Config.School's GoodShare/OkShare and
+-- SmartsPer*Lesson and there is deliberately no second ladder to keep in step.
+
+-- Passive bonuses a life earns when a subject reaches mastery level 5 (cleared).
+-- Applied as a reduction to `minSmarts` on jobs that have both `minSmarts` and a
+-- gate for that subject. A life with smarts 50 and science level 5 hires for a
+-- job that asks for smarts 50 and science = 3, even though the raw number is
+-- exactly at the line -- the perk pushed it just over.
+--
+-- C decides which subjects get perks and at what level; B consumes them.
+-- Map entry keyed by subject id; absent key means no perk for that subject.
+-- Empty until C fills it in, and empty means `{}`. This was written as
+-- `{ [undefined] = nil }` to say "nothing here yet", which is not what it says to Lua:
+-- `undefined` is an unbound global, so the key is nil, and a nil key in a table
+-- constructor is a hard "table index is nil" thrown while Config's own module body is
+-- running. Every service in both places requires this file, so nothing in the game --
+-- not one service, in the lobby or the game place -- ever loaded. The player still got a
+-- character, because Roblox spawns that itself, which is why the symptom was "I spawn
+-- normal size and cannot play" rather than an error naming Config.
+-- `WorkService` reads this with a keyed lookup, so zero entries is inert, not special.
+Config.SubjectPerks = {}
+
+Config.School.Science = {
+	-- Benches running at once. Two, because one is a queue and three is a spectacle you
+	-- watch rather than a room you work: with two, every trip to a station is a choice
+	-- about which procedure it serves, and that choice is the whole mechanic.
+	-- Safe range: 1-3. At 1 there is no contention and this is a fetch quest.
+	Benches = 2,
+
+	-- The second bench does not open until the first procedure is this far along, so the
+	-- opening seconds teach the verb before they test it.
+	-- Safe range: 0.2-0.5. Above ~0.5 the second bench cannot be finished in time.
+	SecondBenchAtShare = 0.3,
+
+	-- The shortest procedure worth authoring. Four is long enough that order matters --
+	-- below it there is no sequence to get wrong, only a list to tick off. The ceiling is
+	-- MaxSteps, further down, and there is deliberately only one of those: two separately
+	-- tunable maximums is how a content check ends up quietly enforcing the looser one.
+	-- Safe range: 3-6, and below MaxSteps.
+	StepsMin = 4,
+
+	-- How long a procedure stands before the bench spoils and scores itself where it is.
+	-- Sized so an unmastered player crossing the room to re-read the board can finish
+	-- one bench comfortably and two only by planning the order of their trips.
+	-- Safe range: 50-120. Below ~50 the cupboard trip alone eats the clock.
+	SecondsPerProcedure = 80,
+
+	-- Speed is a multiplier on the score, never the score itself, and it has a floor: a
+	-- correct procedure committed on the buzzer is still worth most of a correct
+	-- procedure. Full credit needs this share of the clock still unspent at commit.
+	-- Safe range: Floor 0.6-0.85, FullShare 0.25-0.5. A floor of 0 makes a slow-but-right
+	-- run worthless, which punishes the player who is learning the room.
+	SpeedFloorFactor = 0.7,
+	SpeedFullShare = 0.4,
+
+	-- Reagents. Every step spends from one shared pool, refilled at a cupboard that is
+	-- deliberately not next to either bench. Twelve charges against a 4-8 step procedure
+	-- means roughly one cupboard trip per procedure and about one every fifty seconds
+	-- with two benches running -- close enough to the forty-to-sixty window that the room
+	-- never goes quiet, without the trip becoming the activity.
+	--
+	-- Shared rather than per-bench on purpose: it is the second thing the two procedures
+	-- have to fight over, and it is the one that makes committing a bench early a real
+	-- decision rather than always the safe one.
+	-- Safe range: Charges 8-20, ChargesPerStep 1-2, Refill 1.5-4.
+	SupplyCharges = 12,
+	ChargesPerStep = 1,
+	CupboardRefillSeconds = 2,
+
+	-- How much of the board you can see at once, by mastery level. This is requirement
+	-- six and the only progression the verb has: the player does not get faster hands or
+	-- a bigger number, they get to hold more of the procedure in their head at a time,
+	-- and they feel it as trips to the board that stop being necessary. At level one
+	-- three steps is one comfortable walk; by level five the whole longest procedure is
+	-- on screen and the board is furniture.
+	--
+	-- The length of this list is also the level ceiling -- ScienceService reads
+	-- `#RevealedStepsByLevel` rather than holding a separate maximum -- so adding a sixth
+	-- number here adds a sixth level and nothing else has to be told.
+	-- Safe range: rising, first 2-4, last at or above the longest authored procedure.
+	RevealedStepsByLevel = { 3, 4, 5, 6, 8 },
+
+	-- Escalation is deliberately *not* a station count that grows with mastery, which is
+	-- what this block held first. The lab is one room built once and shared by everyone
+	-- standing in it -- two players at different levels cannot be in differently furnished
+	-- versions of the same place -- so every station stands from the start, and the space
+	-- escalates by which stations a *procedure* sends you to. A nine-year-old's four-step
+	-- errand walks past five machines it never touches, which is also what a school lab
+	-- actually looks like.
+
+	-- What a pass is and how many buy a level both live on School.Mastery now, because
+	-- every subject climbs the same ladder and two ladders drifting apart would mean a
+	-- procedure and a quiz disagreeing about what "mastered" is. What is still Science's
+	-- own is what a level *buys*, which is RevealedStepsByLevel above -- and the length of
+	-- that list must equal School.Mastery.Levels, which ScienceService asserts at require
+	-- time rather than trusting.
+
+	-- Room and reach. The board is read from further away than a station is clicked from,
+	-- because reading is not an interaction and standing in the doorway squinting is a
+	-- legitimate way to play. Station reach is tight enough that two stations can stand
+	-- near each other without either answering for the other.
+	-- Safe range: Station 3-5, Bench 4-6, Board 5-9, Cupboard 3-5, Room 30-60.
+	StationRadiusStuds = 4,
+	BenchRadiusStuds = 5,
+	BoardRadiusStuds = 7,
+	CupboardRadiusStuds = 4,
 	-- 20, down from 40. This is the number the whole school was sized around: at 40 the art
 	-- stations sit up to 40 studs from the centre, which forced a 99-stud room band on every
 	-- floor and made ten other rooms into corridors so that one could have its walk.
@@ -2813,22 +3167,21 @@ Config.School.Building = {
 	-- reference actually has.
 	Floors = 2,
 
-	-- **Fifteen, because an R15 avatar is five studs tall.**
+	-- **27, so the building is 54 studs tall -- exactly what it was as three storeys.**
 	--
-	-- This was 18, then 27, and both were guesses. Measured against the character the way the
-	-- research says to, 27 studs is 5.4 avatars floor to ceiling -- a twenty-five foot classroom.
-	-- That is the reason every room in this school has looked empty however much furniture went
-	-- into it: the rooms were not underfurnished, they were oversized, and adding furniture to an
-	-- oversized room makes it worse rather than better.
+	-- This is the whole point and it has been got wrong three times, so: the school is meant to
+	-- be as tall as a three-storey school and have two floors inside it. Three floors of 18 was
+	-- the original and looked right from the street. Two floors of 27 is the same 54 studs.
 	--
-	-- Roblox's own guidance: a normal 9-foot ceiling is about 10 studs, a hall 14-16. Fifteen is
-	-- the hall end of that, which is right for a school with an atrium and clerestory glazing,
-	-- and it is three avatars rather than five and a half.
+	-- It was briefly dropped to 15 on the reasoning that 27 studs floor-to-ceiling is 5.4 avatars
+	-- and too tall for a room. That reasoning is correct about rooms and wrong about this
+	-- building: 2 x 15 is 30 studs, which took 44% off the height of the thing and compressed the
+	-- exterior the design was built around. Tall interior volumes are the trade for a tall
+	-- building, and they are what the atrium and clerestory glazing want anyway.
 	--
-	-- Two floors at 15 is 30 studs of interior. The elevation outside still reads as three
-	-- storeys -- see ExteriorBands -- which is what the building looked best as.
-	-- Safe range: 12-18. Below 12 the light strips are in your hair.
-	FloorHeightStuds = 15,
+	-- Do not reduce this without also changing DepthStuds/WidthStuds, or the school stops
+	-- matching its own footprint. Floors x FloorHeightStuds must stay 54.
+	FloorHeightStuds = 27,
 
 	-- The three horizontal lines that turn a stack of boxes into a building: a base course at
 	-- the ground, a cornice at the roofline, and a parapet standing above it.
@@ -2983,16 +3336,19 @@ Config.School.Building = {
 	-- through the back of the building -- silently, because nothing in the tree measures a
 	-- room against the furniture another module lays in it.
 	-- Safe range: 90-130, 3-5 and 1-4.
-	-- **46, not 99.** Ninety-nine studs is 28 metres -- a classroom the length of a bowling
-	-- alley, and the single worst number in this file. Roblox scale says a classroom is about 9
-	-- metres deep, which is 32 studs; 46 is generous for a school without being absurd, and with
-	-- the 36-stud slot width gives a room of 10m by 13m.
+	-- **99. This is forced by the footprint, not chosen.**
 	--
-	-- The old number existed to fit the art room's cupboard walk, which is why that walk is
-	-- being brought down to match rather than left to size the whole building. One room's
-	-- mechanic should not set the footprint of eleven.
-	-- Safe range: 36-60.
-	BackBandDepthStuds = 46,
+	-- The rooms sit against the back wall and reach forward to the corridor. With a 170-stud
+	-- building, a 42-stud atrium and a 16-stud corridor in front of them, the band that closes
+	-- that plan is about 100 studs deep. Cutting it to 46 did not make the rooms better, it left
+	-- 30 studs of empty floor plate between the lobby and the corridor -- a hole in the middle of
+	-- the school that nothing was standing in.
+	--
+	-- Deep rooms were never the reason the school looked empty. The reason was that furniture was
+	-- laid at a fixed pitch from the front wall and stopped a third of the way in, leaving the
+	-- back two thirds bare. That is fixed at the fitters: rows now divide the room's actual depth,
+	-- so a 99-stud room is furnished across all 99.
+	BackBandDepthStuds = 99,
 	-- Six slots a floor rather than four. Two floors times four was eight rooms for eleven, and
 	-- the rooms were 55 studs wide against a 99-stud band -- proportions that read as corridors
 	-- with furniture. Six gives about 36 studs each, which against that depth is a classroom.
@@ -3311,12 +3667,9 @@ Config.School.Building = {
 	-- arc is a straight line with a kink, which is what 80 degrees over the wrong angle range
 	-- produced -- 74 studs of travel in x and 5 in z.
 	StairSweepDegrees = 90,
-	-- Fourteen, down from 22. Twenty-two steps over a 15-stud storey is a 0.68-stud riser --
-	-- accurate to a real staircase and wrong for this one, because at that pitch the flight
-	-- reads as a ramp with lines drawn on it and costs 22 treads plus nosings to do it. Fourteen
-	-- gives a 1.07-stud riser against a 1.8-stud tread, which is the proportion a Roblox stair
-	-- wants and is still well inside the 2-stud step-up a humanoid climbs without jumping.
-	StairSteps = 14,
+	-- 20 treads over a 27-stud storey is a 1.35-stud riser against a 1.26-stud tread -- a normal
+	-- flight, and comfortably inside the 2-stud step-up a humanoid climbs without jumping.
+	StairSteps = 20,
 
 	LockerBayStuds = 46,
 
@@ -3430,11 +3783,10 @@ Config.School.Building = {
 		--
 		-- Six rows of four is the same class laid down the room instead of across it.
 		-- Safe range: 8-30 and 3-8.
-		-- Sixteen, down from 24. Twenty-four desks in six rows fitted a 99-stud room; in a 46-stud
-	-- one the rows are 4 studs apart, which is a desk and no chair. Four rows of four is both a
-	-- believable class and a room a player can walk through.
-	DesksPerClassroom = 16,
-		DeskRows = 4,
+		-- 24 in six rows. The rows divide the room's depth rather than stepping at a fixed pitch,
+	-- so in a 99-stud room they spread across the whole of it instead of huddling by the door.
+	DesksPerClassroom = 24,
+		DeskRows = 6,
 		-- Cafeteria tables, library shelves, cooking benches.
 		-- Safe range: 6-20 each.
 		CafeteriaTables = 12,
