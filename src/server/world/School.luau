@@ -302,10 +302,27 @@ end
 local STAIR_CX = STAIR_CX_BASE
 -- The turn centre sits a radius short of the void's back edge, so the head of the arc finishes
 -- exactly where the gallery slab begins and you step straight off it onto solid floor.
-local STAIR_CZ = VOID_Z2 - STAIR_R
+-- **How much floor a straight flight needs.**
+--
+-- A curved flight fits in its own radius; a straight one needs its whole run laid out in front
+-- of it. Rise is a storey -- 27 studs -- and at a going of 1.25 that is 24 treads and 30 studs
+-- of floor. The old well was 22 deep because it only ever had to hold an arc.
+--
+-- 30 is also the most that fits: the entrance wings reach z 12 and the well's head is pinned at
+-- VOID_Z2, so anything longer starts inside them. That is why the going is 1.25 rather than the
+-- 1.4 a grander stair would use.
+local STAIR_RUN = 30
+local STAIR_STEPS = 24
+
+-- STAIR_CZ is gone with the curve: an arc needed a turn centre, a straight flight only
+-- needs its two ends, and those are VOID_Z2 and VOID_Z2 - STAIR_RUN.
+
 -- The stairwell openings: outer edge flush with the atrium wall, inner edge leaving the bridge.
-local WELL_Z1 = STAIR_CZ - STAIR_W / 2
-local WELL_X_OUT = STAIR_CX + STAIR_R + STAIR_W / 2
+-- The well now spans the flight's run rather than the arc's width.
+local WELL_Z1 = VOID_Z2 - STAIR_RUN
+-- A straight flight is as wide as the stair and no wider -- there is no arc sweeping sideways
+-- any more, so the well is a plain rectangle around the run.
+local WELL_X_OUT = STAIR_CX + STAIR_W / 2
 local WELL_X_IN = STAIR_CX - STAIR_W / 2
 
 -- ---------------------------------------------------------------------------------------
@@ -1241,77 +1258,93 @@ end
 -- ---------------------------------------------------------------------------------------
 
 local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
-	-- Two curved flights, one each side of the lobby, sweeping a quarter turn as they climb.
+	-- **Two straight flights, steel and glass, running back toward the corridor.**
 	--
-	-- Straight flights were the wrong shape for this room twice over. A straight run presents
-	-- its *end* to somebody walking in -- you see a wedge of treads edge-on and it reads as a
-	-- ramp -- and it delivers you facing the way you were already going, which in a lobby is
-	-- back out of the front doors. A flight that sweeps round shows its whole side from the
-	-- entrance, and turns you toward the corridor as you arrive. The building tells you where
-	-- to go next without a sign, which is the thing a good stair does.
+	-- These were curved, and the reasoning for that is worth keeping because it was not wrong:
+	-- a straight run presents its end to somebody walking in, and it delivers you facing the way
+	-- you were already going. A quarter turn shows its whole side from the door and points you
+	-- at the corridor when you arrive.
 	--
-	-- Each starts near the front of the lobby facing inward and turns 80 degrees toward the
-	-- back, landing on the first floor pointing at the corridor. See Kit.CurvedStairs for why a
-	-- box tread on an arc is close enough to a winder.
+	-- What overrode it is the reference photographs. Theirs are straight flights with open
+	-- risers and glass balustrades, and the thing that makes them read that way is precisely
+	-- what a curve cannot do -- you see daylight through the whole flight, and the underside is
+	-- a clean diagonal rather than a fan of boxes. The turn is bought back with the arrival
+	-- landing instead, which is set to one side so you still step off facing the corridor.
 	local rise = floorY(2) - floorY(1)
-	local radius = BUILDING.StairRadiusStuds
 	local width = BUILDING.StairWidthStuds
-	local sweep = math.rad(BUILDING.StairSweepDegrees)
 
 	for side = -1, 1, 2 do
-		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
-		-- other around the middle of the lobby rather than into it.
 		local cx = stairCentre(side)
-		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
-		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
-		-- in front, which reach z 12 and had seven treads of each flight inside them.
-		-- The turn centre sits a radius short of the back wall, so the arc finishes there and
-		-- the landing meets the corridor. Everything in front of it -- 22 studs of lobby -- is
-		-- the entrance zone, and stays clear.
-		-- Both of these now come from the same constants the floor openings are cut from, so a
-		-- flight and its stairwell cannot drift apart -- which is how the stairs ended up
-		-- arriving over a hole in the first place.
-		local cz = STAIR_CZ
+		local baseZ = VOID_Z2 - STAIR_RUN
+		local topZ = VOID_Z2
 
-		-- **A true quarter turn: from facing the side wall to facing the corridor.**
-		--
-		-- The first attempt swept -140 to -60 degrees, which looks like a curve written down and
-		-- is nearly a straight line on the ground: across that range sine barely changes, so the
-		-- arc moved 74 studs in x and 5 in z. A flight has to turn through a quadrant to read as
-		-- turning at all.
-		--
-		-- Left stair runs 180 -> 90, right runs 0 -> 90. Both start pointing at their own side
-		-- wall and finish pointing at +z, which is the corridor -- so whichever one you take,
-		-- you arrive facing where you are going.
-		local startAngle = if side < 0 then math.rad(180) else 0
-		local turn = if side < 0 then -sweep else sweep
-
-		local laid = Kit.CurvedStairs(
+		local laid = Kit.Stairs(
 			parent,
 			`Stair{side}`,
-			at(cx, floorY(1), cz),
-			radius,
-			startAngle,
-			turn,
-			rise,
-			BUILDING.StairSteps,
+			at(cx, floorY(1), baseZ),
+			at(cx, floorY(2), topZ),
 			width,
+			STAIR_STEPS,
 			STAIR_TREAD
 		)
 		if not laid then
 			error(
-				`[AGES world] the school stair is too steep: {rise} studs over {BUILDING.StairSteps} steps.`
-					.. ` A Roblox humanoid manages 2 studs a step. Raise Config.School.Building.StairSteps`
-					.. ` or lower FloorHeightStuds.`
+				`[AGES world] the school stair is too steep: {rise} studs over {STAIR_STEPS} steps.`
+					.. ` A Roblox humanoid manages 2 studs a step. Raise STAIR_STEPS or lower FloorHeightStuds.`
 			)
 		end
 
-		-- No landing slab any more. There used to be a 20x20 tile at the head of each flight,
-		-- because the void was cut to the full depth of the atrium and the top tread genuinely
-		-- did deliver you over a hole. Two isolated squares hanging in a double-height space is
-		-- what that looked like from the lobby, and it is the wrong fix: the floor was the thing
-		-- that was missing, not a platform. The gallery is the floor -- see VOID_Z2 -- and the
-		-- flight now tops out on it.
+		-- **Glass balustrades.** The one detail that separates the reference's stairs from a
+		-- concrete municipal flight: a panel you see the treads through, capped by a slim rail.
+		-- Posts would fight the open risers for attention and give the eye a picket fence to
+		-- read instead of a diagonal.
+		for edge = -1, 1, 2 do
+			local ex = cx + edge * (width / 2 - 0.2)
+			local panels = 8
+			for index = 1, panels do
+				local share = (index - 0.5) / panels
+				local pz = baseZ + STAIR_RUN * share
+				local py = floorY(1) + rise * share + 3
+				local pane = Kit.Block(parent, `StairGlass{side}_{edge}_{index}`, at(ex, py, pz), Vector3.new(0.3, 5.2, STAIR_RUN / panels + 0.3), {
+					color = Color3.fromRGB(198, 220, 236),
+					material = Enum.Material.Glass,
+					transparency = 0.55,
+					reflectance = 0.12,
+				})
+				pane.CastShadow = false
+			end
+			-- The rail, in slim segments following the pitch.
+			for index = 1, panels do
+				local share = (index - 0.5) / panels
+				local pz = baseZ + STAIR_RUN * share
+				local py = floorY(1) + rise * share + 5.9
+				Kit.Block(parent, `StairRail{side}_{edge}_{index}`, at(ex, py, pz), Vector3.new(0.5, 0.5, STAIR_RUN / panels + 0.3), {
+					color = Color3.fromRGB(96, 102, 114),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+			end
+		end
+
+		-- A stringer under the flight, so it reads as carried rather than floating.
+		for edge = -1, 1, 2 do
+			Kit.Block(parent, `StairStringer{side}_{edge}`, at(cx + edge * (width / 2 + 0.3), floorY(1) + rise / 2 - 1.2, baseZ + STAIR_RUN / 2), Vector3.new(0.6, 2.4, STAIR_RUN * 1.02), {
+				color = Color3.fromRGB(120, 126, 138),
+				material = Enum.Material.Metal,
+				pitchDegrees = -math.deg(math.atan2(rise, STAIR_RUN)),
+			}).CastShadow = false
+		end
+
+		-- The arrival landing, offset toward the corridor so you step off facing it rather than
+		-- facing the wall the flight was climbing at.
+		Kit.Slab(
+			parent,
+			`Landing{side}`,
+			at(cx, floorY(2), VOID_Z2 + 4),
+			width + 6,
+			8,
+			SLAB,
+			{ color = TILE }
+		)
 	end
 end
 

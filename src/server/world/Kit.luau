@@ -59,6 +59,10 @@ export type BlockOptions = {
 	-- an arbitrary CFrame parameter would be an invitation to lay something at an angle no
 	-- other piece can line up with.
 	yawDegrees: number?,
+	-- Rotation about X, for the one thing yaw cannot do: tilt something along its length. A
+	-- stair's stringer and a ramp's soffit are diagonals, and stepping them out of little boxes
+	-- reads as stairs made of stairs. Defaults to zero, so nothing that does not ask for it moves.
+	pitchDegrees: number?,
 	reflectance: number?,
 }
 
@@ -71,7 +75,9 @@ function Kit.Block(parent: Instance, name: string, center: Vector3, size: Vector
 	local part = Instance.new("Part")
 	part.Name = name
 	part.Size = size
-	part.CFrame = CFrame.new(center) * CFrame.Angles(0, math.rad(options.yawDegrees or 0), 0)
+	part.CFrame = CFrame.new(center)
+		* CFrame.Angles(0, math.rad(options.yawDegrees or 0), 0)
+		* CFrame.Angles(math.rad(options.pitchDegrees or 0), 0, 0)
 	part.Anchored = true
 	part.CanCollide = options.collide == true
 	part.Color = options.color

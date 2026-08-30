@@ -267,6 +267,9 @@ for _, props in ipairs(recorded) do
 			r = r, g = g, b = b,
 			yaw = math.deg(num(cf.ry, 0)),
 			roll = math.deg(num(cf.rz, 0)),
+			-- Pitch, for anything tilted along its length -- a stair stringer, a ramp soffit.
+			-- Zero for everything that does not ask, so no existing part moves.
+			pitch = math.deg(num(cf.rx, 0)),
 			shape = shape,
 			material = material,
 			transparency = num(props.Transparency, 0),
@@ -281,10 +284,10 @@ local out = {}
 for _, row in ipairs(rows) do
 	table.insert(out, string.format(
 		'{"name":%q,"x":%.3f,"y":%.3f,"z":%.3f,"sx":%.3f,"sy":%.3f,"sz":%.3f,'
-			.. '"r":%d,"g":%d,"b":%d,"yaw":%.2f,"roll":%.2f,"shape":%q,"material":%q,'
+			.. '"r":%d,"g":%d,"b":%d,"yaw":%.2f,"roll":%.2f,"pitch":%.2f,"shape":%q,"material":%q,'
 			.. '"transparency":%.3f,"collide":%s}',
 		row.name, row.x, row.y, row.z, row.sx, row.sy, row.sz,
-		row.r, row.g, row.b, row.yaw, row.roll, row.shape, row.material,
+		row.r, row.g, row.b, row.yaw, row.roll, row.pitch, row.shape, row.material,
 		row.transparency, tostring(row.collide)
 	))
 end
@@ -465,12 +468,23 @@ def emit(rows: list[dict]) -> None:
                                 LIGHT_COLOR, LIGHT_BRIGHTNESS, LIGHT_RANGE, name="Light"
                             )
                         lit += 1
-                    rbxmx.spun_box(
-                        row["name"], center, size, row["yaw"],
-                        color, material=material,
-                        transparency=row["transparency"], collide=row["collide"],
-                        children=children,
-                    )
+                    # pitched_box only when there is a tilt: spun_box writes a simpler matrix
+                    # and every part in the building that is not a stringer goes through it.
+                    pitch = row.get("pitch", 0)
+                    if abs(pitch) > 0.01:
+                        rbxmx.pitched_box(
+                            row["name"], center, size, row["yaw"], pitch,
+                            color, material=material,
+                            transparency=row["transparency"], collide=row["collide"],
+                            children=children,
+                        )
+                    else:
+                        rbxmx.spun_box(
+                            row["name"], center, size, row["yaw"],
+                            color, material=material,
+                            transparency=row["transparency"], collide=row["collide"],
+                            children=children,
+                        )
 
     print(rbxmx.write(OUT, "School"))
 

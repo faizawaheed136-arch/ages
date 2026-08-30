@@ -410,6 +410,36 @@ def tilted_box(name, center, size, yaw, pitch, color, material=SMOOTH,
           color, material, transparency, collide, 1, tags, attrs, children, reflectance)
 
 
+def pitched_box(name, center, size, yaw, pitch, color, material=SMOOTH,
+                transparency=0.0, reflectance=0, collide=True, tags=None, attrs=None,
+                children=""):
+    """A box yawed about world Y and then pitched about its own local X.
+
+    Distinct from `tilted_box`, which banks local *X* toward Y by rotating about local Z --
+    the move a dome panel makes. This one rotates about local X, which tips the box's local
+    **Z** (its length, for anything built long-ways) up or down. That is what a stair
+    stringer or a ramp soffit is: a diagonal along its own length.
+
+    Composed as Ry(yaw) . Rx(pitch), exactly matching `Kit.Block`'s
+    `CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)`, so a part looks the same baked
+    as it does built at runtime. Getting that pair out of step is how a building ends up
+    correct in Play and wrong in the editor.
+    """
+    cx, cy, cz = center
+    sx, sy, sz = size
+    yr, pr = math.radians(yaw), math.radians(pitch)
+    cyw, syw = math.cos(yr), math.sin(yr)
+    cp, sp = math.cos(pr), math.sin(pr)
+    r00, r01, r02 = cyw, syw * sp, syw * cp
+    r10, r11, r12 = 0.0, cp, -sp
+    r20, r21, r22 = -syw, cyw * sp, cyw * cp
+    rot = (f"<R00>{r00}</R00><R01>{r01}</R01><R02>{r02}</R02>"
+           f"<R10>{r10}</R10><R11>{r11}</R11><R12>{r12}</R12>"
+           f"<R20>{r20}</R20><R21>{r21}</R21><R22>{r22}</R22>")
+    _emit(name, cx, cy, cz, abs(sx), abs(sy), abs(sz), rot,
+          color, material, transparency, collide, 1, tags, attrs, children, reflectance)
+
+
 def point_light(color, brightness, rng, name="Glow"):
     r, g, b = [c / 255 for c in color]
     return f'''<Item class="PointLight" referent="{_next_ref()}">
