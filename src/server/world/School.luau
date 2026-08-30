@@ -1402,114 +1402,74 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
 		-- door-width. That reads as lockers from any angle and never floats, because the body
 		-- is its own wall.
-		-- **Lockers live on the side walls, never on the wall down the middle of the building.**
+		-- **One continuous run of lockers down the corridor wall. Nothing else, nowhere else.**
 		--
-		-- They were on the corridor's front wall -- the one that faces the atrium -- which is a
-		-- wall in the middle of the plan. That is what put a bank of lockers against the lobby
-		-- feature wall and its logo, and what made them read from the gallery as clutter stuck to
-		-- the middle of the space rather than as part of a room.
+		-- This has been round three times and the reference photo settled it, so the reasoning is
+		-- worth writing down properly.
 		--
-		-- The corridor's side walls are the building's own left and right ends. Putting the banks
-		-- there turns each end of the corridor into a locker alcove you walk into, which is what a
-		-- school actually has, and leaves the whole length of the middle wall clear.
-		local alcoveLen = CORRIDOR_W - 5
-		for side = -1, 1, 2 do
-			local bankX = side * (half - WALL_T - 1.4)
-			local tag = `{floor}_{if side < 0 then "L" else "R"}`
-			local doors = math.max(3, math.floor(alcoveLen / 4))
-			local doorW = alcoveLen / doors
-			local z0 = corridorZ - alcoveLen / 2
+		-- First attempt: a bank wall-to-wall on every floor. Too much -- from the atrium it was a
+		-- wall of blue on every level. Second: one 46-stud bay in the middle of a 226-stud
+		-- corridor, which fixed that by overcorrecting into a quarter-mile of empty tunnel with one
+		-- object in it. Third: banks on the two end walls, which put an 11-stud blue box across the
+		-- far end of the corridor -- and because you look *down* a corridor, that box sits in the
+		-- middle of your view with a grey wall behind it and reads as something dumped there.
+		--
+		-- What the reference actually shows is none of those: a single unbroken run along one long
+		-- wall, floor-standing, with a bench at the end. The run reads as architecture because it
+		-- is continuous -- a corridor wall that *is* lockers, rather than a corridor with lockers
+		-- placed in it. Continuity is the whole effect, so nothing is allowed to interrupt it:
+		-- the noticeboards and planters that used to break this wall into four are gone with it.
+		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
+		local runEnd = W / 2 - WALL_T - 10
+		local runW = runEnd * 2
+		local bankH = 11
+		local doors = math.max(8, math.floor(runW / 5))
+		local doorW = runW / doors
+		local x0 = -runEnd
 
-			-- Yawed a quarter turn so the bank's length runs along the corridor's depth and its
-			-- face looks back down the corridor.
-			Kit.Block(parent, `LockerBank{tag}`, at(bankX, y + 6.5, corridorZ), Vector3.new(alcoveLen, 11, 2.4), {
-				color = BLUE,
-				material = Enum.Material.Metal,
-				collide = true,
-				yawDegrees = 90,
-			})
-			Kit.Block(parent, `LockerBankPlinth{tag}`, at(bankX, y + 0.5, corridorZ), Vector3.new(alcoveLen, 1, 2.8), {
-				color = DEEP_BLUE,
-				material = Enum.Material.Metal,
-				yawDegrees = 90,
-			}).CastShadow = false
-			Kit.Block(parent, `LockerBankCap{tag}`, at(bankX, y + 12.3, corridorZ), Vector3.new(alcoveLen, 0.6, 2.8), {
-				color = DEEP_BLUE,
-				material = Enum.Material.Metal,
-				yawDegrees = 90,
-			}).CastShadow = false
+		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 1 + bankH / 2, wallZ), Vector3.new(runW, bankH, 2.4), {
+			color = BLUE,
+			material = Enum.Material.Metal,
+			collide = true,
+		})
+		Kit.Block(parent, `LockerPlinth{floor}`, at(0, y + 0.5, wallZ), Vector3.new(runW, 1, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `LockerCap{floor}`, at(0, y + 1.3 + bankH, wallZ), Vector3.new(runW, 0.6, 2.8), {
+			color = DEEP_BLUE,
+			material = Enum.Material.Metal,
+		}).CastShadow = false
 
-			for index = 1, doors do
-				local dz = z0 + doorW * (index - 0.5)
-				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(bankX - side * 1.3, y + 6.5, dz + doorW * 0.28), Vector3.new(0.3, 1.6, 0.4), {
-					color = Color3.fromRGB(214, 218, 226),
-					material = Enum.Material.Metal,
+		for index = 1, doors do
+			local dx = x0 + doorW * (index - 0.5)
+			Kit.Block(parent, `LockerHandle{floor}_{index}`, at(dx + doorW * 0.3, y + 1 + bankH * 0.5, wallZ + 1.3), Vector3.new(0.5, 1.8, 0.3), {
+				color = Color3.fromRGB(232, 236, 244),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `LockerVent{floor}_{index}`, at(dx, y + 1 + bankH * 0.86, wallZ + 1.3), Vector3.new(doorW * 0.42, 0.9, 0.25), {
+				color = Color3.fromRGB(58, 92, 158),
+			}).CastShadow = false
+			if index < doors then
+				Kit.Block(parent, `LockerSeam{floor}_{index}`, at(x0 + doorW * index, y + 1 + bankH / 2, wallZ + 1.25), Vector3.new(0.3, bankH - 0.4, 0.3), {
+					color = DEEP_BLUE,
 				}).CastShadow = false
-				Kit.Block(parent, `LockerVent{tag}_{index}`, at(bankX - side * 1.3, y + 10.4, dz), Vector3.new(0.25, 0.9, doorW * 0.45), {
-					color = Color3.fromRGB(58, 92, 158),
-				}).CastShadow = false
-				if index < doors then
-					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bankX - side * 1.25, y + 6.5, z0 + doorW * index), Vector3.new(0.3, 10.4, 0.25), {
-						color = DEEP_BLUE,
-					}).CastShadow = false
-				end
 			end
+		end
 
-			-- The bench facing the bank, which is what makes the alcove somewhere you stop rather
-			-- than a surface you walk past.
-			Kit.Block(parent, `LockerBench{tag}`, at(bankX - side * 7, y + 2.3, corridorZ), Vector3.new(3.4, 0.7, alcoveLen * 0.7), {
+		-- A bench at each end of the run, as in the reference. At the ends rather than the middle,
+		-- because a bench in front of the lockers is a bench in front of somebody's locker.
+		for side = -1, 1, 2 do
+			local bx = side * (runEnd - 12)
+			Kit.Block(parent, `LockerBench{floor}_{side}`, at(bx, y + 2.3, wallZ + 5), Vector3.new(18, 0.7, 3.4), {
 				color = WALNUT,
 				material = Enum.Material.Wood,
 				collide = true,
 			})
 			for leg = -1, 1, 2 do
-				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bankX - side * 7, y + 1.15, corridorZ + leg * alcoveLen * 0.25), Vector3.new(3, 2.3, 0.6), {
+				Kit.Block(parent, `LockerBenchLeg{floor}_{side}_{leg}`, at(bx + leg * 6.5, y + 1.15, wallZ + 5), Vector3.new(0.7, 2.3, 3), {
 					color = Color3.fromRGB(96, 102, 114),
 					material = Enum.Material.Metal,
-				}).CastShadow = false
-			end
-		end
-
-		-- **What the middle wall carries instead.**
-		--
-		-- With the lockers gone it is a long clean wall facing the atrium, which is the right place
-		-- for the things a corridor is actually for: notices, and somewhere to put a plant. These
-		-- are flat against the wall rather than standing off it, so the corridor stays a corridor.
-		local boardZ = corridorZ - CORRIDOR_W / 2 + 0.6
-		local usableW = W - WALL_T * 2 - 60
-		for board = 1, 3 do
-			local gx = -usableW / 2 + usableW * ((board - 0.5) / 3)
-			local tag = `{floor}_{board}`
-			Kit.Block(parent, `Notice{tag}Frame`, at(gx, y + 7, boardZ), Vector3.new(26, 11, 0.5), {
-				color = WALNUT,
-				material = Enum.Material.Wood,
-			}).CastShadow = false
-			Kit.Block(parent, `Notice{tag}Cork`, at(gx, y + 7, boardZ - 0.4), Vector3.new(24.4, 9.6, 0.25), {
-				color = Color3.fromRGB(158, 124, 92),
-				material = Enum.Material.Fabric,
-			}).CastShadow = false
-			local PAPER = { OFF_WHITE, PALE_BLUE, Color3.fromRGB(240, 224, 176), Color3.fromRGB(222, 232, 244) }
-			for sheet = 1, 6 do
-				local col = (sheet - 1) % 3
-				local row = math.floor((sheet - 1) / 3)
-				Kit.Block(parent, `Notice{tag}Sheet{sheet}`, at(gx - 7 + col * 7, y + 9.4 - row * 4.4, boardZ - 0.7), Vector3.new(5.4, 3.6, 0.15), {
-					color = PAPER[(sheet % 4) + 1],
-				}).CastShadow = false
-			end
-
-			local planterZ = corridorZ + CORRIDOR_W / 2 - 2.6
-			Kit.Block(parent, `Planter{tag}`, at(gx, y + 1.6, planterZ), Vector3.new(5, 3.2, 4), {
-				color = Color3.fromRGB(196, 202, 214),
-				material = Enum.Material.Concrete,
-				collide = true,
-			})
-			Kit.Block(parent, `Planter{tag}Soil`, at(gx, y + 3.3, planterZ), Vector3.new(4.4, 0.4, 3.4), {
-				color = Color3.fromRGB(72, 56, 42),
-			}).CastShadow = false
-			for leaf = 1, 3 do
-				Kit.Block(parent, `Planter{tag}Leaf{leaf}`, at(gx + (leaf - 2) * 1.3, y + 5.4 + leaf * 0.5, planterZ + (leaf - 2) * 0.6), Vector3.new(1.1, 4.6, 1.1), {
-					color = Color3.fromRGB(74, 126, 74),
-					material = Enum.Material.Grass,
 				}).CastShadow = false
 			end
 		end
