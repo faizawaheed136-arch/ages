@@ -3311,6 +3311,14 @@ Config.School.Crowd = {
 	-- Safe range: 3-12.
 	ScatterStuds = 7,
 
+	-- How far away a student's name tag can still be read.
+	--
+	-- Short on purpose. A label readable across the atrium turns the building into a wall of
+	-- floating text, and the point of these is that you find out who somebody is by walking over
+	-- to them -- which is also what makes the clique rooms worth the trip.
+	-- Safe range: 30-90.
+	LabelDistanceStuds = 55,
+
 	-- Roamers, walking the building between rooms.
 	-- Safe range: 8-16, and 2-10 seconds.
 	WalkSpeed = 11,

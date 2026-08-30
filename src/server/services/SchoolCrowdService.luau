@@ -34,6 +34,7 @@ local DataService = require(script.Parent.DataService)
 local NPCService = require(script.Parent.NPCService)
 local Townsfolk = require(script.Parent.Parent.content.Townsfolk)
 local School = require(script.Parent.Parent.world.School)
+local Students = require(script.Parent.Parent.content.Students)
 
 type Visitor = NPCService.Visitor
 
@@ -174,6 +175,72 @@ local function walkRoamer(slot: Slot, visitor: Visitor)
 	end)
 end
 
+-- The name, clique and line over a student's head.
+--
+-- One billboard with three lines rather than three billboards: a BillboardGui is a draw call
+-- and there can be fourteen of these in one corridor.
+--
+-- Distances are deliberately short. A label readable across the whole atrium would turn the
+-- building into a wall of floating text, and the point of these is that you learn who somebody
+-- is by *going over to them* -- which is also what makes the clique rooms worth walking to.
+local function labelStudent(visitor: Visitor, identity: { name: string, clique: Students.Clique, bio: string })
+	local model = visitor.model
+	if model == nil then
+		return
+	end
+	-- Head if it is there, root if it is not. A rig arrives from a web call and its parts
+	-- assemble over a frame or two, so a label that insisted on the Head would silently fail
+	-- on whichever students happened to be slowest -- the kind of bug that shows up as "some
+	-- of them have names" and is never reported as anything.
+	local anchor = (model:FindFirstChild("Head") :: BasePart?) or visitor.root
+	local lift = if anchor == visitor.root then 4.2 else 2.6
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "StudentTag"
+	gui.Adornee = anchor
+	gui.Size = UDim2.new(0, 190, 0, 52)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, lift, 0)
+	gui.MaxDistance = CROWD.LabelDistanceStuds
+	gui.AlwaysOnTop = false
+	gui.Parent = anchor
+
+	local clique = Instance.new("TextLabel")
+	clique.Size = UDim2.new(1, 0, 0, 15)
+	clique.BackgroundTransparency = 1
+	clique.Font = Enum.Font.GothamBold
+	clique.TextSize = 13
+	clique.TextColor3 = Color3.fromRGB(126, 190, 246)
+	clique.TextStrokeTransparency = 0.5
+	clique.Text = identity.clique.label
+	clique.Parent = gui
+
+	local name = Instance.new("TextLabel")
+	name.Position = UDim2.new(0, 0, 0, 15)
+	name.Size = UDim2.new(1, 0, 0, 18)
+	name.BackgroundTransparency = 1
+	name.Font = Enum.Font.GothamBold
+	name.TextSize = 15
+	name.TextColor3 = Color3.fromRGB(245, 246, 250)
+	name.TextStrokeTransparency = 0.4
+	name.Text = identity.name
+	name.Parent = gui
+
+	-- The bio is the half that does the work. A name and a clique is a database row; a line in
+	-- the student's own words is a person. It fades out closer than the name, so a corridor at
+	-- a distance is names and only the person in front of you is a person.
+	local bio = Instance.new("TextLabel")
+	bio.Position = UDim2.new(0, 0, 0, 33)
+	bio.Size = UDim2.new(1, 0, 0, 15)
+	bio.BackgroundTransparency = 1
+	bio.Font = Enum.Font.Gotham
+	bio.TextSize = 11
+	bio.TextColor3 = Color3.fromRGB(206, 212, 226)
+	bio.TextStrokeTransparency = 0.6
+	bio.TextTruncate = Enum.TextTruncate.AtEnd
+	bio.Text = identity.bio
+	bio.Parent = gui
+end
+
 local function spawnInto(slot: Slot, player: Player, age: number)
 	if slot.visitor ~= nil or slot.spawning then
 		return
@@ -182,8 +249,22 @@ local function spawnInto(slot: Slot, player: Player, age: number)
 	if member == nil then
 		return
 	end
-	local rooms = if slot.kind == "roam" then ROAMING_ROOMS else STANDING_ROOMS
+	-- Who this is, decided before where they stand -- because the clique is what chooses the
+	-- room. This is the whole point of the identity: athletes by the gym, the art club in the
+	-- art room, bookworms in the library, so the building sorts itself the way a school does
+	-- and finding somebody is knowledge rather than luck.
+	--
+	-- Roamers keep the shared route list. Somebody walking between lessons is not standing
+	-- anywhere, so a clique's rooms say nothing useful about where they should be headed.
+	local identity = Students.Roll()
+	local rooms = if slot.kind == "roam" then ROAMING_ROOMS else identity.clique.rooms
 	local at = spotIn(rooms)
+	if at == nil then
+		-- The clique's rooms are not in this build. Fall back to the rooms every student shares
+		-- rather than losing the slot: a missing art room should cost the art room, not the
+		-- student.
+		at = spotIn(STANDING_ROOMS)
+	end
 	if at == nil then
 		return
 	end
@@ -203,6 +284,7 @@ local function spawnInto(slot: Slot, player: Player, age: number)
 			return
 		end
 		slot.visitor = visitor
+		labelStudent(visitor, identity)
 		if slot.kind == "roam" then
 			visitor.setSpeed(CROWD.WalkSpeed)
 			walkRoamer(slot, visitor)
