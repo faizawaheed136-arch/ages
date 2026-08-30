@@ -619,9 +619,34 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 
 		-- The back and the two ends are solid, with a blue band at each floor line -- one
 		-- accent doing the job of saying where the storeys are from outside.
-		Kit.Wall(parent, `BackWall{floor}`, at(-half, y, D), at(half, y, D), FLOOR_H - SLAB, WALL_T, { color = WHITE })
-		Kit.Wall(parent, `LeftWall{floor}`, at(-half, y, 0), at(-half, y, D), FLOOR_H - SLAB, WALL_T, { color = WHITE })
-		Kit.Wall(parent, `RightWall{floor}`, at(half, y, 0), at(half, y, D), FLOOR_H - SLAB, WALL_T, { color = WHITE })
+		-- The three solid elevations, in render rather than flat plastic.
+		--
+		-- The research is blunt about this: one material everywhere reads as a greybox however
+		-- good the geometry is, and material variety carries more than colour variety does. These
+		-- were SmoothPlastic white -- the default -- which is why the building looked unfinished
+		-- in every screenshot regardless of what was added to it.
+		Kit.Wall(parent, `BackWall{floor}`, at(-half, y, D), at(half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+		Kit.Wall(parent, `LeftWall{floor}`, at(-half, y, 0), at(-half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+		Kit.Wall(parent, `RightWall{floor}`, at(half, y, 0), at(half, y, D), FLOOR_H - SLAB, WALL_T, {
+			color = WHITE,
+			material = Enum.Material.Concrete,
+		})
+		-- The floor band, and a spandrel under it.
+		--
+		-- At 27 studs a storey there is room for the elevation to have three parts rather than one:
+		-- glass, a solid spandrel where the floor slab passes, and the accent band on its face. That
+		-- reading -- window, wall, window -- is what tells you a building has floors in it from the
+		-- outside, and it only became possible when the storey got taller.
+		Kit.Block(parent, `Spandrel{floor}`, at(0, y - 2.6, -0.5), Vector3.new(W, 4, 1.4), {
+			color = OFF_WHITE,
+			material = Enum.Material.Concrete,
+		})
 		Kit.Block(parent, `Band{floor}`, at(0, y - 0.6, -0.4), Vector3.new(W, 1.6, 1.2), { color = BLUE })
 
 		-- Columns down the front, on the grid the canopy sits on.
@@ -776,6 +801,27 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	local cz = (ATRIUM_Z1 + ATRIUM_Z2) / 2
 	local roofY = floorY(BUILDING.Floors + 1)
 
+	-- A feature wall behind the reception, full height of the two-storey lobby.
+	--
+	-- The back of the lobby was blank above head height, which in a room now 54 studs tall is a
+	-- lot of nothing directly in front of anyone walking in. The reference puts the school crest
+	-- on exactly that wall.
+	local featureZ = ATRIUM_Z2 - 1.2
+	Kit.Block(parent, "LobbyFeature", at(0, roofY * 0.5, featureZ), Vector3.new(BUILDING.AtriumWidthStuds * 0.5, roofY * 0.92, 0.5), {
+		color = Color3.fromRGB(206, 212, 222),
+		material = Enum.Material.Concrete,
+	})
+	for ring = 1, 3 do
+		local radius = 15 * (1 - (ring - 1) * 0.3)
+		local disc = Kit.Block(parent, `LobbyCrest{ring}`, at(0, roofY * 0.62, featureZ - 0.4 - ring * 0.1), Vector3.new(0.3, radius * 2, radius * 2), {
+			color = if ring % 2 == 1 then BLUE else WHITE,
+		})
+		disc.Shape = Enum.PartType.Cylinder
+		disc.CFrame = CFrame.new(at(0, roofY * 0.62, featureZ - 0.4 - ring * 0.1)) * CFrame.Angles(0, math.rad(90), 0)
+		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
+		disc.CastShadow = false
+	end
+
 	-- Banners down the void, alternating the school's two colours.
 	local drop = roofY * BUILDING.LobbyBannerDropShare
 	for index = 1, BUILDING.LobbyBanners do
@@ -816,13 +862,16 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	deskFront.CastShadow = false
 	Kit.Sign(deskFront, "RECEPTION", 20, LABEL_DIST, Color3.fromRGB(246, 250, 255))
 
-	-- Benches in two facing ranks, which is what a lobby does with the space between the door
-	-- and the desk: somewhere to wait that is not in the way of the stairs.
+	-- Benches in two facing ranks down the *middle* of the lobby, between the doors and the
+	-- desk. They used to sit out at the sides, which is where the stairs now sweep -- a scan of
+	-- the stair found forty-seven parts within twenty studs of a tread, most of them these and
+	-- the trophy cases. A stair needs air around its foot or arriving at it is an obstacle
+	-- course.
 	for index = 1, BUILDING.LobbyBenches do
 		local side = if index % 2 == 1 then -1 else 1
 		local row = math.floor((index - 1) / 2)
-		local x = side * (BUILDING.AtriumWidthStuds / 2 - 20)
-		local z = cz + 4 + row * 9
+		local x = side * 7
+		local z = ATRIUM_Z1 + 10 + row * 9
 		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
 			color = WOOD,
 			material = Enum.Material.Wood,
@@ -844,7 +893,7 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		Kit.Planter(
 			parent,
 			`LobbyPlanter{index}`,
-			at(side * (BUILDING.AtriumWidthStuds / 2 - 6), 0.4, cz - 6 + row * 16),
+			at(side * (BUILDING.AtriumWidthStuds / 2 - 8), 0.4, ATRIUM_Z1 + 4 + row * 7),
 			5,
 			14
 		)
@@ -854,12 +903,15 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	-- of clean geometry can say on its own.
 	for index = 1, BUILDING.LobbyCases do
 		local side = if index % 2 == 1 then -1 else 1
-		local x = side * (BUILDING.AtriumWidthStuds / 2 - 2)
-		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, ATRIUM_Z2 - 10), Vector3.new(1.5, 12, 16), {
+		-- Against the back wall beside the reception, not out at the sides where the stairs are.
+		-- On the side walls at the *front* of the lobby, in the strip the stairs do not reach.
+		-- The sweep occupies z 16-48; this sits at 13, which is the entrance zone.
+		local x = side * (BUILDING.AtriumWidthStuds / 2 - 3)
+		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, ATRIUM_Z1 + 5), Vector3.new(1.5, 12, 16), {
 			color = WOOD,
 			material = Enum.Material.Wood,
 		})
-		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, ATRIUM_Z2 - 10), Vector3.new(0.2, 10, 14), {
+		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, ATRIUM_Z1 + 5), Vector3.new(0.2, 10, 14), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
 			transparency = 0.45,
@@ -870,7 +922,7 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 				Kit.Block(
 					parent,
 					`Trophy{index}_{shelf}_{cup}`,
-					at(x, 2.6 + shelf * 3, ATRIUM_Z2 - 15 + cup * 3.4),
+					at(x, 2.6 + shelf * 3, ATRIUM_Z1 + cup * 3.4),
 					Vector3.new(1, 2.2, 1),
 					{ color = Color3.fromRGB(226, 188, 92), material = Enum.Material.Metal }
 				).CastShadow = false
@@ -905,16 +957,26 @@ local function buildStairs(parent: Instance, at: (number, number, number) -> Vec
 		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
 		-- other around the middle of the lobby rather than into it.
 		local cx = side * (BUILDING.AtriumWidthStuds / 2 - radius - 4)
-		-- Behind the wings, not level with them. Centred in the atrium the arc swung forward to
-		-- z 7 and the entrance wings reach z 12, so seven treads of each flight ended up inside
-		-- solid masonry. Biasing the centre toward the back of the lobby keeps the whole sweep
-		-- clear, and puts the foot of the stair where somebody walking in actually meets it.
-		local cz = ATRIUM_Z2 - radius * 0.55
+		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
+		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
+		-- in front, which reach z 12 and had seven treads of each flight inside them.
+		-- The turn centre sits a radius short of the back wall, so the arc finishes there and
+		-- the landing meets the corridor. Everything in front of it -- 22 studs of lobby -- is
+		-- the entrance zone, and stays clear.
+		local cz = ATRIUM_Z2 - radius - 4
 
-		-- Start on the lobby side and sweep toward the corridor. Mirrored, so both stairs read
-		-- as a pair rather than as one stair and its copy.
-		local startAngle = if side < 0 then math.rad(-140) else math.rad(-40)
-		local turn = if side < 0 then sweep else -sweep
+		-- **A true quarter turn: from facing the side wall to facing the corridor.**
+		--
+		-- The first attempt swept -140 to -60 degrees, which looks like a curve written down and
+		-- is nearly a straight line on the ground: across that range sine barely changes, so the
+		-- arc moved 74 studs in x and 5 in z. A flight has to turn through a quadrant to read as
+		-- turning at all.
+		--
+		-- Left stair runs 180 -> 90, right runs 0 -> 90. Both start pointing at their own side
+		-- wall and finish pointing at +z, which is the corridor -- so whichever one you take,
+		-- you arrive facing where you are going.
+		local startAngle = if side < 0 then math.rad(180) else 0
+		local turn = if side < 0 then -sweep else sweep
 
 		local laid = Kit.CurvedStairs(
 			parent,
@@ -1068,7 +1130,12 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 
 		-- The corridor floor, in a different tone so the route through the building is legible
 		-- from the moment you step onto it.
-		Kit.Slab(parent, `CorridorFloor{floor}`, at(0, y + 0.05, corridorZ), W - WALL_T * 2, CORRIDOR_W, 0.3, { color = OFF_WHITE })
+		-- Tile, not plastic. The largest surface a player looks at in this building should not be
+		-- the one material that says "nobody finished this".
+		Kit.Slab(parent, `CorridorFloor{floor}`, at(0, y + 0.05, corridorZ), W - WALL_T * 2, CORRIDOR_W, 0.3, {
+			color = OFF_WHITE,
+			material = Enum.Material.Pebble,
+		})
 
 		-- Lockers down the front wall of the corridor, both sides of the atrium so the run is
 		-- not broken by the void.

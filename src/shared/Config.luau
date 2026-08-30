@@ -2805,7 +2805,22 @@ Config.School.Building = {
 	-- It also makes the atrium a double-height *lobby* rather than a shaft, which is what the
 	-- reference actually has.
 	Floors = 2,
-	FloorHeightStuds = 18,
+
+	-- **Two floors in the height three used to occupy.**
+	--
+	-- This is the whole point of dropping a storey and it is not the same as deleting one. The
+	-- building was 3 x 18 = 54 studs of interior; it is now 2 x 27 = 54. Same silhouette from
+	-- the street, same roofline against the town, and every room inside it is half again as
+	-- tall.
+	--
+	-- Height is what these rooms were short of. They are 36 studs wide and 99 deep -- a long
+	-- plan -- and an 18-stud ceiling over that footprint reads as a corridor with furniture.
+	-- At 27 the proportion works, the glazing has somewhere to go, and the atrium becomes a
+	-- room rather than a slot.
+	--
+	-- Safe range: 20-32. Below about 20 the light strips are in your hair; above 32 the stair
+	-- needs more steps than the atrium is long.
+	FloorHeightStuds = 27,
 
 	-- The three horizontal lines that turn a stack of boxes into a building: a base course at
 	-- the ground, a cornice at the roofline, and a parapet standing above it.
@@ -3254,9 +3269,19 @@ Config.School.Building = {
 	-- Radius and width together decide that pinch -- at 22 and 12 the inner edge is still 16
 	-- studs from the turn centre, which is a tread you can stand on.
 	-- Safe range: 16-30, 9-15, 60-100 and 18-30.
-	StairRadiusStuds = 22,
+	-- 16, not 22. At 22 the two flights swept x 9 to 41 each and z 25 to 57 in a lobby that is
+	-- only 90 by 42 -- they filled it, and a scan found forty-seven parts standing inside twenty
+	-- studs of a tread. A stair wants air around its foot; arriving at one through a slalom of
+	-- benches and trophy cases is worse than having no stair.
+	--
+	-- At 16 each sweep is 32 studs across, leaving an 18-stud clear route straight up the middle
+	-- from the doors to the reception desk. That route is the lobby.
+	StairRadiusStuds = 16,
 	StairWidthStuds = 12,
-	StairSweepDegrees = 80,
+	-- Ninety. A quarter is the amount that actually reads as a turn: less than that and the
+	-- arc is a straight line with a kink, which is what 80 degrees over the wrong angle range
+	-- produced -- 74 studs of travel in x and 5 in z.
+	StairSweepDegrees = 90,
 	StairSteps = 22,
 
 	LockerBayStuds = 46,

@@ -106,6 +106,15 @@ RECORDER = r"""
 -- a translation multiplied by a pure rotation. A general CFrame would be a matrix library
 -- nobody needs and one more thing that could be subtly wrong.
 
+-- Every material name this building uses, longest first so a short name cannot swallow a long
+-- one. Kept beside the recorder rather than derived, because the Python side maps these exact
+-- strings to numeric tokens and the two lists have to agree.
+local MATERIAL_NAMES = {
+	"SmoothPlastic", "CorrodedMetal", "DiamondPlate", "Cobblestone", "WoodPlanks",
+	"Concrete", "Granite", "Pebble", "Marble", "Fabric", "Plastic",
+	"Brick", "Glass", "Grass", "Metal", "Slate", "Sand", "Rock", "Neon", "Wood", "Foil", "Ice",
+}
+
 local function moduleNamed(needle)
 	for _, entry in ipairs(order) do
 		if string.find(entry.rel, needle, 1, true) ~= nil then
@@ -230,12 +239,25 @@ for _, props in ipairs(recorded) do
 		elseif props.Shape ~= nil and string.find(tostring(props.Shape), "Cylinder", 1, true) then
 			shape = "Cylinder"
 		end
+		-- **Substring search, not an anchored match.**
+		--
+		-- This read `string.match(m, "([%w]+)$")` -- the last run of word characters at the *end*
+		-- of the string. The harness stringifies its enum stubs with punctuation after the name,
+		-- so nothing ever matched and every part in the building baked as SmoothPlastic. Every
+		-- concrete wall, wood bench, metal rail, glass pane and fabric banner has been plastic
+		-- this whole time, which is most of why it looked unfinished no matter what was added.
+		--
+		-- Shape never had the bug because it searches for a substring, which is what this does
+		-- now. Longest names first, so WoodPlanks is not swallowed by Wood and SmoothPlastic is
+		-- not swallowed by Plastic.
 		local material = "SmoothPlastic"
 		if props.Material ~= nil then
 			local m = tostring(props.Material)
-			local tail = string.match(m, "([%w]+)$")
-			if tail ~= nil and tail ~= "" and tail ~= "nil" then
-				material = tail
+			for _, name in ipairs(MATERIAL_NAMES) do
+				if string.find(m, name, 1, true) ~= nil then
+					material = name
+					break
+				end
 			end
 		end
 		table.insert(rows, {
