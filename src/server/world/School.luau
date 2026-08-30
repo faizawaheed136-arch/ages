@@ -235,9 +235,9 @@ local function planRooms(): { Rect }
 		--
 		-- Art needs depth rather than width: its wall and its paint cupboard sit 81 studs apart,
 		-- which is the number the whole 99-stud band is sized around.
-		{ id = "science", label = "Science Lab", floor = 2, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "none" },
-		{ id = "art", label = "Art Studio", floor = 2, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "none" },
-		{ id = "reading", label = "Reading Room", floor = 2, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "none" },
+		{ id = "science", label = "Science Lab", floor = 2, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "science" },
+		{ id = "art", label = "Art Studio", floor = 2, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "art" },
+		{ id = "reading", label = "Reading Room", floor = 2, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "reading" },
 		{ id = "music", label = "Music Room", floor = 2, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
 		{ id = "english", label = "English", floor = 2, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "class" },
 		{ id = "staff", label = "Staff Room", floor = 2, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "common" },
@@ -790,11 +790,31 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 	-- through is a door that will strand somebody the first time the prompt is out of reach --
 	-- the swing is a flourish, not a gate.
 	for side = -1, 1, 2 do
-		Kit.Block(parent, `EntranceDoorLeaf{side}`, at(side * doorW / 4, doorH / 2, 0), Vector3.new(doorW / 2 - 0.4, doorH, 0.5), {
+		-- **Wood, and solid.** These were tinted glass, which at this size read as two more
+		-- panes in a fully glazed elevation -- you could not tell where the way in was. A timber
+		-- door in a glass wall is the oldest trick there is for making an entrance legible, and
+		-- it is the one thing on this facade that should not look like the rest of it.
+		--
+		-- Collidable, because a door that opens has to have been shut.
+		Kit.Block(parent, `EntranceDoorLeaf{side}`, at(side * doorW / 4, doorH / 2, 0), Vector3.new(doorW / 2 - 0.4, doorH, 0.7), {
+			color = WALNUT,
+			material = Enum.Material.WoodPlanks,
+			collide = true,
+		})
+		-- Rails and stiles, so the leaf reads as a made door rather than a plank.
+		for panel = 1, 2 do
+			Kit.Block(parent, `EntranceDoorPanel{side}_{panel}`, at(side * doorW / 4, doorH * (if panel == 1 then 0.28 else 0.68), -0.45), Vector3.new(doorW / 2 - 4.5, doorH * 0.3, 0.25), {
+				color = Color3.fromRGB(78, 54, 38),
+				material = Enum.Material.Wood,
+			}).CastShadow = false
+		end
+		-- A glazed light at head height: a solid door with no window is a door you walk into
+		-- somebody through.
+		Kit.Block(parent, `EntranceDoorLight{side}`, at(side * doorW / 4, doorH * 0.86, 0), Vector3.new(doorW / 2 - 5, doorH * 0.16, 0.3), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
-			transparency = 0.35,
-		})
+			transparency = 0.4,
+		}).CastShadow = false
 		-- A push bar, which is what makes a glass panel read as a door rather than as a window.
 		Kit.Block(parent, `DoorBar{side}`, at(side * doorW / 4, doorH * 0.45, -0.5), Vector3.new(doorW / 2 - 4, 0.6, 0.6), {
 			color = Color3.fromRGB(206, 212, 222),
@@ -1209,64 +1229,126 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
 		-- door-width. That reads as lockers from any angle and never floats, because the body
 		-- is its own wall.
-		-- **One locker bay, in one place, with a bench in front of it.**
+		-- **Three locker bays a floor, evenly spaced, with everything else between them.**
 		--
-		-- The bank used to run the entire 226-stud frontage of every floor, segmented only where
-		-- the stairs got in the way. Three storeys of that is what the atrium was full of: blue
-		-- lockers staring back from every level, wall to wall, which is the opposite of structured.
+		-- This was one bay in the middle of a 226-stud corridor, which fixed the previous problem
+		-- (a bank running wall to wall on every floor, which is what made the atrium a wall of blue
+		-- lockers) by overcorrecting into a different one: a quarter-mile of empty tunnel with a
+		-- single object in the centre of it.
 		--
-		-- The reference does not do that. It puts lockers in a *bay* -- a defined alcove with a
-		-- bench down the middle that you go to, the way a real school has a locker room rather than
-		-- a locker corridor. One bay per floor, centred, and the rest of the corridor is left as
-		-- circulation.
+		-- Structured does not mean sparse. A real school corridor has a rhythm -- lockers, board,
+		-- bench, lockers -- repeating at a walkable interval, and it is the *repeat* that makes it
+		-- read as designed rather than as decorated. Three bays puts one about every 75 studs, which
+		-- is roughly fifteen seconds of walking between them.
 		local lockerZ = corridorZ - CORRIDOR_W / 2 + 1.4
 		local bayW = BUILDING.LockerBayStuds
-		local bayX = -bayW / 2
-		local doors = math.max(2, math.floor(bayW / 4.5))
-		local doorW = bayW / doors
+		local bays = BUILDING.LockerBays
+		local usableW = W - WALL_T * 2 - 24
 
-		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 5, lockerZ), Vector3.new(bayW, 10, 2.4), {
-			color = BLUE,
-			material = Enum.Material.Metal,
-			collide = true,
-		})
-		Kit.Block(parent, `LockerBankPlinth{floor}`, at(0, y + 0.5, lockerZ), Vector3.new(bayW, 1, 2.8), {
-			color = DEEP_BLUE,
-			material = Enum.Material.Metal,
-		}).CastShadow = false
-		Kit.Block(parent, `LockerBankCap{floor}`, at(0, y + 10.3, lockerZ), Vector3.new(bayW, 0.6, 2.8), {
-			color = DEEP_BLUE,
-			material = Enum.Material.Metal,
-		}).CastShadow = false
+		for bay = 1, bays do
+			local bayCx = -usableW / 2 + usableW * ((bay - 0.5) / bays)
+			local bayX = bayCx - bayW / 2
+			local doors = math.max(2, math.floor(bayW / 4.5))
+			local doorW = bayW / doors
+			local tag = `{floor}_{bay}`
 
-		for index = 1, doors - 1 do
-			Kit.Block(parent, `LockerSeam{floor}_{index}`, at(bayX + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
+			Kit.Block(parent, `LockerBank{tag}`, at(bayCx, y + 5, lockerZ), Vector3.new(bayW, 10, 2.4), {
+				color = BLUE,
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `LockerBankPlinth{tag}`, at(bayCx, y + 0.5, lockerZ), Vector3.new(bayW, 1, 2.8), {
 				color = DEEP_BLUE,
-			}).CastShadow = false
-		end
-		for index = 1, doors do
-			local dx = bayX + doorW * (index - 0.5)
-			Kit.Block(parent, `LockerHandle{floor}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
-				color = Color3.fromRGB(214, 218, 226),
 				material = Enum.Material.Metal,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerVent{floor}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
-				color = Color3.fromRGB(58, 92, 158),
+			Kit.Block(parent, `LockerBankCap{tag}`, at(bayCx, y + 10.3, lockerZ), Vector3.new(bayW, 0.6, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
 			}).CastShadow = false
+
+			for index = 1, doors - 1 do
+				Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bayX + doorW * index, y + 5, lockerZ - 1.25), Vector3.new(0.25, 9.4, 0.3), {
+					color = DEEP_BLUE,
+				}).CastShadow = false
+			end
+			for index = 1, doors do
+				local dx = bayX + doorW * (index - 0.5)
+				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(dx + doorW * 0.28, y + 5, lockerZ - 1.3), Vector3.new(0.4, 1.6, 0.3), {
+					color = Color3.fromRGB(214, 218, 226),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				Kit.Block(parent, `LockerVent{tag}_{index}`, at(dx, y + 8.6, lockerZ - 1.3), Vector3.new(doorW * 0.45, 0.9, 0.25), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+			end
+
+			-- The bench facing the bay. This is what turns a wall of lockers into a place rather
+			-- than a surface -- the reference locker room is a bench down the middle and little else.
+			Kit.Block(parent, `LockerBench{tag}`, at(bayCx, y + 2.3, lockerZ + 6), Vector3.new(bayW * 0.7, 0.7, 3.4), {
+				color = WALNUT,
+				material = Enum.Material.Wood,
+				collide = true,
+			})
+			for leg = -1, 1, 2 do
+				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bayCx + leg * bayW * 0.28, y + 1.15, lockerZ + 6), Vector3.new(0.6, 2.3, 3), {
+					color = Color3.fromRGB(96, 102, 114),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+			end
 		end
 
-		-- The bench in front of it. This is what turns a wall of lockers into a place -- the
-		-- reference photograph of the locker room is a bench down the middle and nothing else.
-		Kit.Block(parent, `LockerBench{floor}`, at(0, y + 2.3, lockerZ + 6), Vector3.new(bayW * 0.7, 0.7, 3.4), {
-			color = WALNUT,
-			material = Enum.Material.Wood,
-			collide = true,
-		})
-		for leg = -1, 1, 2 do
-			Kit.Block(parent, `LockerBenchLeg{floor}_{leg}`, at(leg * bayW * 0.28, y + 1.15, lockerZ + 6), Vector3.new(0.6, 2.3, 3), {
-				color = Color3.fromRGB(96, 102, 114),
-				material = Enum.Material.Metal,
+		-- **What goes between the bays.**
+		--
+		-- The gaps are the other two thirds of the corridor and they were bare wall. A school
+		-- corridor's furniture is almost entirely display -- noticeboards, cases, honours boards --
+		-- because that is what a corridor is *for* once you can walk down it: it is the one space
+		-- every student passes through, so it is where the school talks to them.
+		-- The gaps are the midpoints *between* bays, and the board is sized to what is actually
+		-- free there. Spacing them at 1/bays of the run instead put the two end boards straight
+		-- through the end bays -- the bays are 46 studs wide, so the gaps are not where evenly
+		-- dividing the corridor says they are.
+		local bayPitch = usableW / bays
+		local freeW = bayPitch - bayW
+		for gap = 1, bays - 1 do
+			local gx = -usableW / 2 + bayPitch * gap
+			local boardW = math.max(8, freeW - 3)
+			local tag = `{floor}_{gap}`
+
+			-- A noticeboard on the locker side, framed, with notices on it.
+			Kit.Block(parent, `Notice{tag}Frame`, at(gx, y + 7, lockerZ - 0.6), Vector3.new(boardW, 11, 0.5), {
+				color = WALNUT,
+				material = Enum.Material.Wood,
 			}).CastShadow = false
+			Kit.Block(parent, `Notice{tag}Cork`, at(gx, y + 7, lockerZ - 0.9), Vector3.new(boardW - 1.6, 9.6, 0.25), {
+				color = Color3.fromRGB(158, 124, 92),
+				material = Enum.Material.Fabric,
+			}).CastShadow = false
+			local PAPER = { OFF_WHITE, PALE_BLUE, Color3.fromRGB(240, 224, 176), Color3.fromRGB(222, 232, 244) }
+			for sheet = 1, 6 do
+				local col = (sheet - 1) % 3
+				local row = math.floor((sheet - 1) / 3)
+				Kit.Block(parent, `Notice{tag}Sheet{sheet}`, at(gx + (col - 1) * (boardW / 3.4), y + 9.4 - row * 4.4, lockerZ - 1.1), Vector3.new(boardW / 4.6, 3.6, 0.15), {
+					color = PAPER[(sheet % 4) + 1],
+				}).CastShadow = false
+			end
+
+			-- A planter on the room side, which is the cheapest thing that makes a corridor feel
+			-- occupied rather than issued.
+			local planterZ = corridorZ + CORRIDOR_W / 2 - 2.6
+			Kit.Block(parent, `Planter{tag}`, at(gx, y + 1.6, planterZ), Vector3.new(5, 3.2, 4), {
+				color = Color3.fromRGB(196, 202, 214),
+				material = Enum.Material.Concrete,
+				collide = true,
+			})
+			Kit.Block(parent, `Planter{tag}Soil`, at(gx, y + 3.3, planterZ), Vector3.new(4.4, 0.4, 3.4), {
+				color = Color3.fromRGB(72, 56, 42),
+			}).CastShadow = false
+			for leaf = 1, 3 do
+				Kit.Block(parent, `Planter{tag}Leaf{leaf}`, at(gx + (leaf - 2) * 1.3, y + 5.4 + leaf * 0.5, planterZ + (leaf - 2) * 0.6), Vector3.new(1.1, 4.6, 1.1), {
+					color = Color3.fromRGB(74, 126, 74),
+					material = Enum.Material.Grass,
+				}).CastShadow = false
+			end
 		end
 
 		-- The hexagon panel, on the corridor's **end wall** -- a wall that exists.
@@ -1818,6 +1900,218 @@ local function fitCommon(parent: Instance, at: (number, number, number) -> Vecto
 	end
 end
 
+-- ============================================================ the three taught rooms
+--
+-- Science, Art and Reading were left bare at bake time because Lab.luau, Studio.luau and
+-- ReadingRoom.luau build their stations into them. What that missed is that those modules run
+-- at *play* time and build non-collidable placeholders into a Folder -- so in Studio, and for
+-- the whole time anyone is looking at the school rather than playing it, the three rooms are
+-- empty boxes with trim on the walls.
+--
+-- The split these fitters keep: **the perimeter is architecture and is baked, the middle is
+-- mechanics and stays clear.** Every room anchor sits at the room centre, so nothing here goes
+-- within about nine studs of it; the benches, cupboards and boards run round the walls where a
+-- real room puts them anyway.
+
+local function labBenchRun(parent, at, id: string, x: number, z1: number, z2: number, y: number, sinks: boolean)
+	local len = z2 - z1
+	Kit.Block(parent, `{id}Bench`, at(x, y + 2.6, (z1 + z2) / 2), Vector3.new(5, 0.5, len), {
+		color = Color3.fromRGB(58, 62, 72),
+		collide = true,
+	})
+	Kit.Block(parent, `{id}Cup`, at(x, y + 1.3, (z1 + z2) / 2), Vector3.new(4.6, 2.6, len - 1), {
+		color = OFF_WHITE,
+	})
+	local units = math.max(2, math.floor(len / 9))
+	for i = 1, units - 1 do
+		Kit.Block(parent, `{id}Seam{i}`, at(x - 2.4, y + 1.3, z1 + len * (i / units)), Vector3.new(0.2, 2.4, 0.25), {
+			color = Color3.fromRGB(176, 182, 194),
+		}).CastShadow = false
+	end
+	-- Stools facing the bench. A bench nobody can sit at is a counter, and the difference
+	-- between a lab and a storeroom is entirely whether the room looks like people work in it.
+	-- `face` is which way the room is from the bench, so the stools stand in front of it.
+	local face = if x < 0 then 1 else -1
+	for i = 1, units do
+		local sz = z1 + len * ((i - 0.5) / units)
+		Kit.Block(parent, `{id}Stool{i}`, at(x + face * 4.6, y + 2.1, sz), Vector3.new(2.6, 0.4, 2.6), {
+			color = DEEP_BLUE,
+			collide = true,
+		}).CastShadow = false
+		Kit.Block(parent, `{id}StoolLeg{i}`, at(x + face * 4.6, y + 1, sz), Vector3.new(0.5, 2.2, 0.5), {
+			color = Color3.fromRGB(96, 102, 114),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+	end
+
+	if sinks then
+		local bowls = math.max(1, math.floor(units / 2))
+		for i = 1, bowls do
+			local sz = z1 + len * ((i - 0.5) / bowls)
+			Kit.Block(parent, `{id}Sink{i}`, at(x, y + 2.75, sz), Vector3.new(3.4, 0.5, 3), {
+				color = Color3.fromRGB(214, 220, 230),
+			}).CastShadow = false
+			Kit.Block(parent, `{id}Tap{i}`, at(x + 1.4, y + 3.6, sz), Vector3.new(0.35, 1.7, 0.35), {
+				color = Color3.fromRGB(198, 204, 214),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+end
+
+local function fitScience(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	labBenchRun(parent, at, "SciL", rect.x1 + 3.2, rect.z1 + 10, rect.z2 - 12, y, true)
+	labBenchRun(parent, at, "SciR", rect.x2 - 3.2, rect.z1 + 10, rect.z2 - 12, y, true)
+
+	-- The fume cupboard: the one tall object in the room, which is what stops a lab reading as
+	-- a room full of waist-high slabs.
+	Kit.Block(parent, "SciFume", at(rect.x1 + 6, y + 6, rect.z2 - 5), Vector3.new(9, 12, 4), {
+		color = Color3.fromRGB(212, 218, 228),
+		collide = true,
+	})
+	Kit.Block(parent, "SciFumeGlass", at(rect.x1 + 6, y + 7.5, rect.z2 - 7.1), Vector3.new(8, 6, 0.3), {
+		color = GLASS_TINT,
+		material = Enum.Material.Glass,
+		transparency = 0.5,
+	}).CastShadow = false
+	Kit.Block(parent, "SciFumeDuct", at(rect.x1 + 6, y + 16, rect.z2 - 5), Vector3.new(2.4, 8, 2.4), {
+		color = Color3.fromRGB(176, 182, 194),
+		material = Enum.Material.Metal,
+	}).CastShadow = false
+
+	-- Charts and safety kit on the back wall. A lab with nothing on its walls reads as a room
+	-- that happens to have tables in it.
+	for i = 1, 3 do
+		Kit.Block(parent, `SciChart{i}`, at(rect.x2 - 5 - (i - 1) * 8, y + 13, rect.z2 - 1.5), Vector3.new(7, 9, 0.3), {
+			color = if i == 2 then PALE_BLUE else Color3.fromRGB(236, 240, 248),
+		}).CastShadow = false
+	end
+	Kit.Block(parent, "SciEyewash", at(rect.x2 - 3.4, y + 7.5, rect.z1 + 7), Vector3.new(2.6, 3, 2.6), {
+		color = Color3.fromRGB(64, 176, 92),
+	}).CastShadow = false
+	Kit.Block(parent, "SciSafety", at(cx, y + 19, rect.z2 - 1.5), Vector3.new(6, 4, 0.3), {
+		color = Color3.fromRGB(214, 64, 58),
+	}).CastShadow = false
+end
+
+local function fitArt(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	local cz = (rect.z1 + rect.z2) / 2
+	labBenchRun(parent, at, "ArtL", rect.x1 + 3.2, rect.z1 + 10, rect.z2 - 10, y, true)
+
+	-- The drying rack down the other side, with work on it. Paint on a rack is the detail that
+	-- says the room gets used, and it costs one part per shelf.
+	Kit.Block(parent, "ArtRack", at(rect.x2 - 3.4, y + 7, cz), Vector3.new(5, 14, 34), {
+		color = WALNUT,
+		material = Enum.Material.Wood,
+		collide = true,
+	})
+	local SWATCH = {
+		Color3.fromRGB(212, 96, 84),
+		PALE_BLUE,
+		Color3.fromRGB(238, 198, 92),
+		Color3.fromRGB(120, 176, 118),
+		Color3.fromRGB(196, 140, 200),
+		OFF_WHITE,
+	}
+	for i = 1, 6 do
+		Kit.Block(parent, `ArtRackShelf{i}`, at(rect.x2 - 3.4, y + 1.6 + i * 2, cz), Vector3.new(5.3, 0.3, 32), {
+			color = Color3.fromRGB(206, 212, 222),
+		}).CastShadow = false
+		Kit.Block(parent, `ArtWork{i}`, at(rect.x2 - 3.6, y + 2.3 + i * 2, cz - 13 + i * 4.4), Vector3.new(4, 0.15, 3.4), {
+			color = SWATCH[i],
+		}).CastShadow = false
+	end
+
+	-- A pinboard of finished work along the back.
+	Kit.Block(parent, "ArtBoard", at(cx, y + 12, rect.z2 - 1.5), Vector3.new(24, 13, 0.4), {
+		color = Color3.fromRGB(148, 116, 88),
+		material = Enum.Material.Fabric,
+	}).CastShadow = false
+	local PIN = { OFF_WHITE, PALE_BLUE, Color3.fromRGB(238, 214, 168), Color3.fromRGB(206, 216, 232) }
+	for i = 1, 8 do
+		local col = (i - 1) % 4
+		local row = math.floor((i - 1) / 4)
+		Kit.Block(parent, `ArtPinned{i}`, at(cx - 9 + col * 6, y + 15 - row * 5.4, rect.z2 - 1.75), Vector3.new(4.6, 4.2, 0.2), {
+			color = PIN[col + 1],
+		}).CastShadow = false
+	end
+end
+
+local function fitReading(parent: Instance, at: (number, number, number) -> Vector3, rect: Rect, y: number)
+	local cx = (rect.x1 + rect.x2) / 2
+	local cz = (rect.z1 + rect.z2) / 2
+	local SPINE = {
+		DEEP_BLUE,
+		Color3.fromRGB(168, 88, 74),
+		Color3.fromRGB(96, 132, 96),
+		Color3.fromRGB(196, 158, 88),
+		Color3.fromRGB(112, 104, 148),
+	}
+
+	-- Low shelves down both sides. Low, because a room lined with tall stacks is a library --
+	-- the point of this one is that you can see across it from the door.
+	-- `face` is which way the shelf opens: the left run faces into the room (+x), the right run
+	-- faces back across it (-x). Without it the boards and the books are laid on the carcass
+	-- centreline, which puts them inside the shelf rather than on it.
+	for _, run in { { n = "L", x = rect.x1 + 2.8, face = 1 }, { n = "R", x = rect.x2 - 2.8, face = -1 } } do
+		local z1, z2 = rect.z1 + 10, rect.z2 - 10
+		local len = z2 - z1
+		-- A back panel and a top, not a solid box. A shelf modelled as one block has its boards
+		-- and its books buried inside it -- physically what a real carcass does, and useless
+		-- here, because everything that makes it read as a bookshelf ends up hidden in the wood.
+		Kit.Block(parent, `ReadShelfBack{run.n}`, at(run.x - run.face * 1.6, y + 4, (z1 + z2) / 2), Vector3.new(0.9, 8, len), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+			collide = true,
+		})
+		Kit.Block(parent, `ReadShelfTop{run.n}`, at(run.x, y + 8.2, (z1 + z2) / 2), Vector3.new(4, 0.5, len), {
+			color = WALNUT,
+			material = Enum.Material.Wood,
+		}).CastShadow = false
+		for tier = 1, 3 do
+			Kit.Block(parent, `ReadTier{run.n}{tier}`, at(run.x, y + tier * 2.4, (z1 + z2) / 2), Vector3.new(3.2, 0.3, len - 0.6), {
+				color = Color3.fromRGB(212, 218, 228),
+			}).CastShadow = false
+		end
+		local bays = math.max(3, math.floor(len / 7))
+		for i = 1, bays do
+			for tier = 1, 3 do
+				Kit.Block(parent, `ReadBooks{run.n}{i}_{tier}`, at(run.x + run.face * 0.2, y + tier * 2.4 + 1.1, z1 + len * ((i - 0.5) / bays)), Vector3.new(2.4, 1.9, 5), {
+					color = SPINE[(i + tier) % 5 + 1],
+				}).CastShadow = false
+			end
+		end
+	end
+
+	-- Armchairs at the four corners with a lamp beside each. This room's whole reason to exist
+	-- is that it is somewhere a player would choose to sit, and four corners is what makes it
+	-- read as seating rather than as furniture in storage.
+	for _, corner in { { sx = -1, sz = -1 }, { sx = 1, sz = -1 }, { sx = -1, sz = 1 }, { sx = 1, sz = 1 } } do
+		local ax = cx + corner.sx * 10
+		local az = cz + corner.sz * 28
+		local tag = `{if corner.sx < 0 then "L" else "R"}{if corner.sz < 0 then "F" else "B"}`
+		Kit.Block(parent, `ReadChair{tag}`, at(ax, y + 1.8, az), Vector3.new(6, 3.6, 6), {
+			color = Color3.fromRGB(118, 132, 190),
+			material = Enum.Material.Fabric,
+			collide = true,
+		})
+		Kit.Block(parent, `ReadChairBack{tag}`, at(ax, y + 4.4, az + corner.sz * 2.6), Vector3.new(6, 5.2, 1.2), {
+			color = Color3.fromRGB(104, 118, 176),
+			material = Enum.Material.Fabric,
+		}).CastShadow = false
+		Kit.Block(parent, `ReadLamp{tag}`, at(ax + corner.sx * 4.6, y + 4, az), Vector3.new(0.4, 8, 0.4), {
+			color = Color3.fromRGB(72, 76, 86),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		Kit.Block(parent, `ReadShade{tag}`, at(ax + corner.sx * 4.6, y + 8.4, az), Vector3.new(3, 2.2, 3), {
+			color = Color3.fromRGB(248, 240, 214),
+			material = Enum.Material.Neon,
+		}).CastShadow = false
+	end
+end
+
 -- Wall trim: skirting, a dado rail with a panelled band under it, a picture rail near the
 -- ceiling, and beams across it.
 --
@@ -1906,10 +2200,28 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		Kit.Block(parent, `{rect.id}DoorFrame`, at(rect.x1 + 10, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
 		Kit.Block(parent, `{rect.id}DoorJamb`, at(rect.x1, y + (FLOOR_H - SLAB) / 2, rect.z1), Vector3.new(0.8, FLOOR_H - SLAB, 1.4), { color = BLUE })
 		Kit.Block(parent, `{rect.id}DoorHead`, at(rect.x1 + 5, y + DOOR_H, rect.z1), Vector3.new(10, 1.2, 1.4), { color = BLUE })
-		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 5, y + DOOR_H / 2, rect.z1), Vector3.new(9.2, DOOR_H, 0.4), {
+		-- **A door that shuts.**
+		--
+		-- This was a non-collidable glazed leaf, on the reasoning that a swinging door in a
+		-- corridor a class empties into is something to get stuck on. That was the right worry
+		-- and the wrong answer: a leaf you walk through is not a door, it is a picture of one,
+		-- and the building was full of rooms you entered through a hole.
+		--
+		-- So it is solid and it swings. The stuck-in-the-doorway problem is handled by the swing
+		-- direction instead -- every room door opens *into its room*, away from the corridor, so
+		-- an opening leaf never sweeps the circulation route. Named `{id}DoorLeaf` because
+		-- FixtureService finds doors by name; see the PATTERNS note there.
+		Kit.Block(parent, `{rect.id}DoorLeaf`, at(rect.x1 + 5, y + DOOR_H / 2, rect.z1), Vector3.new(9.2, DOOR_H, 0.5), {
+			color = WALNUT,
+			material = Enum.Material.WoodPlanks,
+			collide = true,
+		})
+		-- A vision panel. Every school door has one, and it is what stops a corridor of shut
+		-- doors reading as a corridor of walls.
+		Kit.Block(parent, `{rect.id}DoorVision`, at(rect.x1 + 5, y + DOOR_H * 0.68, rect.z1), Vector3.new(3.4, DOOR_H * 0.4, 0.3), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
-			transparency = 0.45,
+			transparency = 0.4,
 		}).CastShadow = false
 		-- The push bar, which is what makes a glass panel read as a door rather than a window.
 		Kit.Block(parent, `{rect.id}DoorBar`, at(rect.x1 + 5, y + DOOR_H * 0.45, rect.z1 - 0.4), Vector3.new(5, 0.5, 0.5), {
@@ -1936,7 +2248,13 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 			end
 		end
 
-		if rect.kind == "class" then
+		if rect.kind == "science" then
+			fitScience(parent, at, rect, y)
+		elseif rect.kind == "art" then
+			fitArt(parent, at, rect, y)
+		elseif rect.kind == "reading" then
+			fitReading(parent, at, rect, y)
+		elseif rect.kind == "class" then
 			fitClassroom(parent, at, rect, y)
 		elseif rect.kind == "cafeteria" then
 			fitCafeteria(parent, at, rect, y)

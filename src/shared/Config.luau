@@ -3341,19 +3341,21 @@ Config.School.Building = {
 	-- through the back of the building -- silently, because nothing in the tree measures a
 	-- room against the furniture another module lays in it.
 	-- Safe range: 90-130, 3-5 and 1-4.
-	-- **99. This is forced by the footprint, not chosen.**
+	-- **94, and this number is load-bearing: it is what keeps the corridor off the atrium void.**
 	--
-	-- The rooms sit against the back wall and reach forward to the corridor. With a 170-stud
-	-- building, a 42-stud atrium and a 16-stud corridor in front of them, the band that closes
-	-- that plan is about 100 studs deep. Cutting it to 46 did not make the rooms better, it left
-	-- 30 studs of empty floor plate between the lobby and the corridor -- a hole in the middle of
-	-- the school that nothing was standing in.
+	-- The corridor sits between the void and the room band, and its position is derived --
+	-- `corridorZ = backZ - BAND_D - CORRIDOR_W / 2`. At 99 that put the corridor's front edge at
+	-- z 53 while the void runs to z 56, so the corridor overlapped the void by three studs. Three
+	-- studs does not sound like much and it broke two visible things at once:
 	--
-	-- Deep rooms were never the reason the school looked empty. The reason was that furniture was
-	-- laid at a fixed pitch from the front wall and stopped a third of the way in, leaving the
-	-- back two thirds bare. That is fixed at the fitters: rows now divide the room's actual depth,
-	-- so a 99-stud room is furnished across all 99.
-	BackBandDepthStuds = 99,
+	--   * on the upper floor there is no slab over a void, so the corridor had no floor under it
+	--   * the locker bank, which is set 1.4 studs off the corridor's front wall, ended up inside
+	--     the void pressed against the lobby feature wall -- lockers embedded in the logo
+	--
+	-- At 94 the band front is 74, the corridor runs 58..74, and the void ends at 56. Two studs of
+	-- daylight. If AtriumDepthStuds or CorridorWidthStuds change, this must be rechecked:
+	-- BackBandDepthStuds <= DepthStuds - 2 - (ATRIUM_Z2 + CorridorWidthStuds + 2).
+	BackBandDepthStuds = 94,
 	-- Six slots a floor rather than four. Two floors times four was eight rooms for eleven, and
 	-- the rooms were 55 studs wide against a 99-stud band -- proportions that read as corridors
 	-- with furniture. Six gives about 36 studs each, which against that depth is a classroom.
@@ -3675,6 +3677,12 @@ Config.School.Building = {
 	-- 20 treads over a 27-stud storey is a 1.35-stud riser against a 1.26-stud tread -- a normal
 	-- flight, and comfortably inside the 2-stud step-up a humanoid climbs without jumping.
 	StairSteps = 20,
+
+	-- How many locker bays each floor's corridor gets, evenly spaced along it. One bay in a
+	-- 226-stud corridor is not "structured", it is empty; three gives the corridor a rhythm at
+	-- about a bay every 75 studs. Safe range: 2-4 -- above that they merge back into the
+	-- wall-to-wall bank this was meant to get away from.
+	LockerBays = 3,
 
 	LockerBayStuds = 46,
 

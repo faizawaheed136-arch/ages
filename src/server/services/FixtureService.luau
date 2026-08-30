@@ -48,6 +48,10 @@ local PATTERNS: { { needle: string, kind: string } } = {
 	-- suffix, so an exact-prefix test would be wrong -- this matches the body specifically.
 	{ needle = "FountainBasin", kind = "fountain" },
 	{ needle = "EntranceDoorLeaf", kind = "door" },
+	-- Every room door, named `{roomId}DoorLeaf` in world/School.luau. This is the other half of
+	-- the naming contract in the header: rename it there and every classroom in the school
+	-- silently stops opening.
+	{ needle = "DoorLeaf", kind = "door" },
 }
 
 local function kindOf(name: string): string?
@@ -83,30 +87,65 @@ end
 -- Swings both leaves, or shuts them.
 --
 -- Tweened rather than set, because a door that teleports open is a door that looks broken.
--- Both leaves move together off one flag: they are one opening, and a pair that could
--- disagree about whether it is open is a bug waiting for somebody to find it.
-local doorsOpen = false
+--
+-- **State is per door, not global.** There used to be one `doorsOpen` flag for the whole
+-- building, which was defensible when the only doors were the two entrance leaves -- they are
+-- one opening and a pair that could disagree about being open is a bug. It stopped being
+-- defensible the moment every classroom got a door: pressing E at the science lab swung all
+-- twelve doors in the school, including the ones on the floor above.
+--
+-- The entrance keeps the paired behaviour by being asked for as a group. Everything else is
+-- keyed on the leaf itself.
+local doorOpen: { [BasePart]: boolean } = {}
 local doorRest: { [BasePart]: CFrame } = {}
 
-local function swingDoors()
-	doorsOpen = not doorsOpen
-	for part in attached do
-		if part.Parent ~= nil and kindOf(part.Name) == "door" then
-			local rest = doorRest[part]
-			if rest == nil then
-				rest = part.CFrame
-				doorRest[part] = rest
-			end
-			-- Which way it swings is read off the leaf's own X: the two leaves are placed
-			-- either side of the centreline, so the sign of that is which hand the door is.
-			local hand = if rest.Position.X >= 0 then -1 else 1
-			local hinge = rest * CFrame.new(hand * part.Size.X / 2, 0, 0)
-			local target = if doorsOpen
-				then hinge * CFrame.Angles(0, math.rad(hand * -FIX.DoorSwingDegrees), 0) * CFrame.new(-hand * part.Size.X / 2, 0, 0)
-				else rest
-			TweenService:Create(part, TweenInfo.new(FIX.DoorSwingSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = target }):Play()
-		end
+-- Which edge a leaf is hinged on, and therefore which way it swings.
+--
+-- The entrance is a pair either side of the building centreline, so the sign of the leaf's own
+-- X is which hand it is and the two open outward like gates. A room door is a single leaf and
+-- the rule is different and more important: **it swings into its room, never into the
+-- corridor.** A door that opens into circulation is one people get pinned by, which was the
+-- original reason these were left as holes in the wall.
+local function handOf(part: BasePart, rest: CFrame): number
+	if string.find(part.Name, "EntranceDoorLeaf", 1, true) ~= nil then
+		return if rest.Position.X >= 0 then -1 else 1
 	end
+	return 1
+end
+
+local function swingOne(part: BasePart, open: boolean)
+	local rest = doorRest[part]
+	if rest == nil then
+		rest = part.CFrame
+		doorRest[part] = rest
+	end
+	local hand = handOf(part, rest)
+	local hinge = rest * CFrame.new(hand * part.Size.X / 2, 0, 0)
+	local target = if open
+		then hinge * CFrame.Angles(0, math.rad(hand * -FIX.DoorSwingDegrees), 0) * CFrame.new(-hand * part.Size.X / 2, 0, 0)
+		else rest
+	doorOpen[part] = open
+	TweenService:Create(part, TweenInfo.new(FIX.DoorSwingSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = target }):Play()
+end
+
+-- Swings the door the player is actually standing at. The entrance is the one exception: both
+-- of its leaves move together, because it is one opening.
+local function swingDoors(part: BasePart?)
+	if part == nil then
+		return
+	end
+	local leaf = part :: BasePart
+	local open = not (doorOpen[leaf] == true)
+
+	if string.find(leaf.Name, "EntranceDoorLeaf", 1, true) ~= nil then
+		for other in attached do
+			if other.Parent ~= nil and string.find(other.Name, "EntranceDoorLeaf", 1, true) ~= nil then
+				swingOne(other, open)
+			end
+		end
+		return
+	end
+	swingOne(leaf, open)
 end
 
 -- Uses a fixture. The id is the kind; the part is found by proximity rather than trusted from
@@ -124,16 +163,20 @@ local function use(player: Player, kind: string)
 
 	-- Standing near one of this kind. The client says which kind it clicked; the server checks
 	-- there is actually one of those within reach, so a forged message buys nothing.
-	local near = false
+	-- Keeps the closest rather than the first: with a door on every room, "one of this kind is
+	-- within reach" is no longer the same question as "which one did they mean".
+	local nearest: BasePart? = nil
+	local nearestDistance = math.huge
 	for part in attached do
 		if part.Parent ~= nil and kindOf(part.Name) == kind then
-			if (part.Position - position).Magnitude <= FIX.ReachStuds then
-				near = true
-				break
+			local distance = (part.Position - position).Magnitude
+			if distance <= FIX.ReachStuds and distance < nearestDistance then
+				nearest = part
+				nearestDistance = distance
 			end
 		end
 	end
-	if not near then
+	if nearest == nil then
 		return
 	end
 
@@ -143,7 +186,7 @@ local function use(player: Player, kind: string)
 		mine = {}
 		nextUse[player] = mine
 	end
-	local ready = mine[kind]
+	local ready = if kind == "door" then mine[`door:{nearest.Name}`] else mine[kind]
 	if ready ~= nil and now < ready then
 		notice(player, FIX.TooSoon)
 		return
@@ -164,9 +207,13 @@ local function use(player: Player, kind: string)
 	end
 
 	-- The doors are the one fixture with a moving part rather than a stat.
+	--
+	-- The cooldown is deliberately keyed per leaf rather than per kind here. Sharing one
+	-- "door" cooldown across the building meant opening the science lab locked you out of the
+	-- art room next to it for the same second, which reads as the building ignoring you.
 	if kind == "door" then
-		swingDoors()
-		mine[kind] = now + spec.cooldownSeconds
+		swingDoors(nearest)
+		mine[`door:{nearest.Name}`] = now + spec.cooldownSeconds
 		return
 	end
 

@@ -421,13 +421,26 @@ function Kit.CurvedStairs(
 		-- is yawed to face along the tangent rather than along the radius.
 		local yaw = -math.deg(angle) - 90
 
-		-- Solid to the floor, like Kit.Stairs: a flight of floating treads is a flight you can
-		-- fall through the middle of.
-		Kit.Block(parent, `{name}Step{index}`, Vector3.new(px, center.Y + height / 2, pz), Vector3.new(depthPerStep * 1.15, height, width), {
+		-- **A tread and a riser, not a block down to the floor.**
+		--
+		-- Each step used to be a box running from the ground up to its own top surface, on the
+		-- reasoning that a flight of floating treads is one you can fall through. On a straight
+		-- flight those boxes hide behind each other and it reads fine. On a curved one they fan
+		-- out, and every step shows its full-height side to the room -- twenty solid slabs of
+		-- increasing height, which is what a platform under each stair looks like.
+		--
+		-- A tread with a riser board closes the flight just as completely: there is no gap to
+		-- fall through, and the stair reads as a stair from underneath as well as from the side.
+		Kit.Block(parent, `{name}Step{index}`, Vector3.new(px, topY - 0.35, pz), Vector3.new(depthPerStep * 1.15, 0.7, width), {
 			color = color,
 			collide = true,
 			yawDegrees = yaw,
 		})
+		Kit.Block(parent, `{name}Riser{index}`, Vector3.new(px - math.cos(angle) * depthPerStep * 0.5, topY - perStep / 2 - 0.2, pz - math.sin(angle) * depthPerStep * 0.5), Vector3.new(0.5, perStep, width), {
+			color = Color3.fromRGB(228, 232, 240),
+			collide = true,
+			yawDegrees = yaw,
+		}).CastShadow = false
 
 		-- The nosing, which is what makes a step read as a step rather than as a terrace.
 		local nose = Kit.Block(parent, `{name}Nose{index}`, Vector3.new(px, topY - 0.16, pz), Vector3.new(0.7, 0.32, width + 0.3), {
@@ -435,6 +448,22 @@ function Kit.CurvedStairs(
 			yawDegrees = yaw,
 		})
 		nose.CastShadow = false
+	end
+
+	-- A stringer under the treads, following the same arc as it climbs. With the solid wedges
+	-- gone the flight needs something carrying it, or it reads as steps hanging in the air.
+	for side = -1, 1, 2 do
+		local edge = radius + side * (width / 2 - 0.4)
+		for index = 1, steps do
+			local share = (index - 0.5) / steps
+			local angle = startAngle + sweep * share
+			local px = center.X + math.cos(angle) * edge
+			local pz = center.Z + math.sin(angle) * edge
+			Kit.Block(parent, `{name}Stringer{side}_{index}`, Vector3.new(px, center.Y + perStep * index - 1.5, pz), Vector3.new(depthPerStep * 1.2, 2.2, 0.6), {
+				color = Color3.fromRGB(150, 156, 168),
+				yawDegrees = -math.deg(angle) - 90,
+			}).CastShadow = false
+		end
 	end
 
 	-- The balustrade, as a run of short posts following the same arc with a rail on top. A
