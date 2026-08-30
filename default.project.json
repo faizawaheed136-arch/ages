@@ -153,6 +153,9 @@
       },
       "Versailles": {
         "$path": "assets/Versailles.rbxmx"
+      },
+      "ProperSchool": {
+        "$path": "assets/ProperSchool.rbxmx"
       }
     }
   }

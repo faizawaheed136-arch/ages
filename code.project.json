@@ -31,6 +31,9 @@
       "$className": "Workspace",
       "School": {
         "$path": "assets/School.rbxmx"
+      },
+      "ProperSchool": {
+        "$path": "assets/ProperSchool.rbxmx"
       }
     }
   }
