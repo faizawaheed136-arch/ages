@@ -1428,17 +1428,28 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- The corridor's side walls are the building's own left and right ends. Putting the banks
 		-- there turns each end of the corridor into a locker alcove you walk into, which is what a
 		-- school actually has, and leaves the whole length of the middle wall clear.
-		local alcoveLen = CORRIDOR_W - 5
+		-- **The bank fills the wall, top to bottom, in two tiers.**
+		--
+		-- It was 11 studs long and 11 tall on a wall 16 by 27: 28% covered, with five studs of bare
+		-- concrete beside it and sixteen above. A short bank floating in the middle of a big wall
+		-- reads as one piece of furniture that happened to be left there, which is the opposite of
+		-- what a locker alcove should read as.
+		--
+		-- Real school lockers are stacked -- a tall half and a short half sharing a frame -- so the
+		-- wall gets a full-height carcass with a mid rail across it, tall doors below and short ones
+		-- above. Same idea, four times the wall covered.
+		local alcoveLen = CORRIDOR_W - 2
+		local bankH = FLOOR_H - 6
+		local midY = bankH * 0.62
 		for side = -1, 1, 2 do
 			local bankX = side * (half - WALL_T - 1.4)
 			local tag = `{floor}_{if side < 0 then "L" else "R"}`
-			local doors = math.max(3, math.floor(alcoveLen / 4))
+			local doors = math.max(4, math.floor(alcoveLen / 3.5))
 			local doorW = alcoveLen / doors
 			local z0 = corridorZ - alcoveLen / 2
 
-			-- Yawed a quarter turn so the bank's length runs along the corridor's depth and its
-			-- face looks back down the corridor.
-			Kit.Block(parent, `LockerBank{tag}`, at(bankX, y + 6.5, corridorZ), Vector3.new(alcoveLen, 11, 2.4), {
+			-- The carcass, yawed a quarter turn so its length runs along the corridor's depth.
+			Kit.Block(parent, `LockerBank{tag}`, at(bankX, y + 1 + bankH / 2, corridorZ), Vector3.new(alcoveLen, bankH, 2.4), {
 				color = BLUE,
 				material = Enum.Material.Metal,
 				collide = true,
@@ -1449,40 +1460,135 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 				material = Enum.Material.Metal,
 				yawDegrees = 90,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerBankCap{tag}`, at(bankX, y + 12.3, corridorZ), Vector3.new(alcoveLen, 0.6, 2.8), {
+			Kit.Block(parent, `LockerBankCap{tag}`, at(bankX, y + 1.3 + bankH, corridorZ), Vector3.new(alcoveLen, 0.6, 2.8), {
 				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
 				yawDegrees = 90,
 			}).CastShadow = false
+			-- The rail between the two tiers. This one line is what makes it read as lockers rather
+			-- than as a blue wall with handles on it.
+			Kit.Block(parent, `LockerBankRail{tag}`, at(bankX - side * 1.25, y + 1 + midY, corridorZ), Vector3.new(0.3, 0.7, alcoveLen), {
+				color = DEEP_BLUE,
+			}).CastShadow = false
 
 			for index = 1, doors do
 				local dz = z0 + doorW * (index - 0.5)
-				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(bankX - side * 1.3, y + 6.5, dz + doorW * 0.28), Vector3.new(0.3, 1.6, 0.4), {
+				-- Lower tier: the tall door, hinged with its handle high.
+				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(bankX - side * 1.3, y + 1 + midY * 0.72, dz + doorW * 0.28), Vector3.new(0.3, 1.6, 0.4), {
 					color = Color3.fromRGB(214, 218, 226),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
-				Kit.Block(parent, `LockerVent{tag}_{index}`, at(bankX - side * 1.3, y + 10.4, dz), Vector3.new(0.25, 0.9, doorW * 0.45), {
+				Kit.Block(parent, `LockerVent{tag}_{index}`, at(bankX - side * 1.3, y + 1 + midY * 0.93, dz), Vector3.new(0.25, 0.8, doorW * 0.5), {
 					color = Color3.fromRGB(58, 92, 158),
 				}).CastShadow = false
+				-- Upper tier: the short door over it.
+				Kit.Block(parent, `LockerHandleU{tag}_{index}`, at(bankX - side * 1.3, y + 1 + midY + (bankH - midY) * 0.42, dz + doorW * 0.28), Vector3.new(0.3, 1.3, 0.4), {
+					color = Color3.fromRGB(214, 218, 226),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				Kit.Block(parent, `LockerVentU{tag}_{index}`, at(bankX - side * 1.3, y + 1 + midY + (bankH - midY) * 0.82, dz), Vector3.new(0.25, 0.7, doorW * 0.5), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+				-- The seam between this door and the next, running the whole height.
 				if index < doors then
-					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bankX - side * 1.25, y + 6.5, z0 + doorW * index), Vector3.new(0.3, 10.4, 0.25), {
+					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bankX - side * 1.25, y + 1 + bankH / 2, z0 + doorW * index), Vector3.new(0.3, bankH - 0.6, 0.25), {
 						color = DEEP_BLUE,
 					}).CastShadow = false
 				end
 			end
 
-			-- The bench facing the bank, which is what makes the alcove somewhere you stop rather
-			-- than a surface you walk past.
-			Kit.Block(parent, `LockerBench{tag}`, at(bankX - side * 7, y + 2.3, corridorZ), Vector3.new(3.4, 0.7, alcoveLen * 0.7), {
+			-- A number strip along the top, because a locker room is somewhere you are looking for
+			-- *your* locker, and a bank with no numbering is a wall of identical doors.
+			Kit.Block(parent, `LockerNumbers{tag}`, at(bankX - side * 1.3, y + 1 + bankH - 1.4, corridorZ), Vector3.new(0.25, 1.6, alcoveLen - 1), {
+				color = Color3.fromRGB(236, 240, 248),
+			}).CastShadow = false
+
+			-- The bench facing the bank.
+			Kit.Block(parent, `LockerBench{tag}`, at(bankX - side * 7, y + 2.3, corridorZ), Vector3.new(3.4, 0.7, alcoveLen * 0.72), {
 				color = WALNUT,
 				material = Enum.Material.Wood,
 				collide = true,
 			})
 			for leg = -1, 1, 2 do
-				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bankX - side * 7, y + 1.15, corridorZ + leg * alcoveLen * 0.25), Vector3.new(3, 2.3, 0.6), {
+				Kit.Block(parent, `LockerBenchLeg{tag}_{leg}`, at(bankX - side * 7, y + 1.15, corridorZ + leg * alcoveLen * 0.26), Vector3.new(3, 2.3, 0.6), {
 					color = Color3.fromRGB(96, 102, 114),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
+			end
+		end
+
+		-- **Locker runs down the long wall, in the gaps between the noticeboards.**
+		--
+		-- The end walls were not the only bare ones. This wall is 224 studs long and was carrying
+		-- three noticeboards and three planters -- about a fifth of it -- so the other four fifths
+		-- read as an enormous grey concrete field, which is what it looked like from anywhere in
+		-- the corridor.
+		--
+		-- The reason lockers came *off* this wall earlier was that they were sitting inside the
+		-- lobby feature wall and its logo. That is a position problem, not a wall problem: the logo
+		-- wall stands three studs in front of this one and these run the other way, into the
+		-- corridor, so they cannot reach it. check_school is what proves that rather than this note.
+		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
+		local boardSpan = W - WALL_T * 2 - 60
+		local wallEnd = W / 2 - WALL_T - 16
+		local runH = FLOOR_H - 8
+		local runMid = runH * 0.62
+
+		-- The four stretches the boards leave: outside the first, between each pair, outside the
+		-- last. Derived from the board positions so moving a board moves the lockers with it.
+		local gaps = {}
+		for board = 0, 3 do
+			local leftEdge = if board == 0 then -wallEnd else -boardSpan / 2 + boardSpan * ((board - 0.5) / 3) + 14
+			local rightEdge = if board == 3 then wallEnd else -boardSpan / 2 + boardSpan * ((board + 0.5) / 3) - 14
+			if rightEdge - leftEdge > 12 then
+				table.insert(gaps, { cx = (leftEdge + rightEdge) / 2, w = rightEdge - leftEdge - 3 })
+			end
+		end
+
+		for run, gap in gaps do
+			local tag = `{floor}_{run}`
+			local doors = math.max(3, math.floor(gap.w / 4))
+			local doorW = gap.w / doors
+			local x0 = gap.cx - gap.w / 2
+
+			Kit.Block(parent, `WallLocker{tag}`, at(gap.cx, y + 1 + runH / 2, wallZ), Vector3.new(gap.w, runH, 2.4), {
+				color = BLUE,
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `WallLockerPlinth{tag}`, at(gap.cx, y + 0.5, wallZ), Vector3.new(gap.w, 1, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `WallLockerCap{tag}`, at(gap.cx, y + 1.3 + runH, wallZ), Vector3.new(gap.w, 0.6, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+			Kit.Block(parent, `WallLockerRail{tag}`, at(gap.cx, y + 1 + runMid, wallZ + 1.25), Vector3.new(gap.w, 0.7, 0.3), {
+				color = DEEP_BLUE,
+			}).CastShadow = false
+			Kit.Block(parent, `WallLockerNumbers{tag}`, at(gap.cx, y + 1 + runH - 1.3, wallZ + 1.3), Vector3.new(gap.w - 1, 1.5, 0.25), {
+				color = Color3.fromRGB(236, 240, 248),
+			}).CastShadow = false
+
+			for index = 1, doors do
+				local dx = x0 + doorW * (index - 0.5)
+				Kit.Block(parent, `WallLockerHandle{tag}_{index}`, at(dx + doorW * 0.28, y + 1 + runMid * 0.72, wallZ + 1.3), Vector3.new(0.4, 1.6, 0.3), {
+					color = Color3.fromRGB(214, 218, 226),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				Kit.Block(parent, `WallLockerVent{tag}_{index}`, at(dx, y + 1 + runMid * 0.93, wallZ + 1.3), Vector3.new(doorW * 0.5, 0.8, 0.25), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+				Kit.Block(parent, `WallLockerHandleU{tag}_{index}`, at(dx + doorW * 0.28, y + 1 + runMid + (runH - runMid) * 0.42, wallZ + 1.3), Vector3.new(0.4, 1.3, 0.3), {
+					color = Color3.fromRGB(214, 218, 226),
+					material = Enum.Material.Metal,
+				}).CastShadow = false
+				if index < doors then
+					Kit.Block(parent, `WallLockerSeam{tag}_{index}`, at(x0 + doorW * index, y + 1 + runH / 2, wallZ + 1.25), Vector3.new(0.25, runH - 0.6, 0.3), {
+						color = DEEP_BLUE,
+					}).CastShadow = false
+				end
 			end
 		end
 
