@@ -24,6 +24,7 @@ depends on a machine this script cannot reach.
 
 import html
 import shutil
+import time
 import sys
 from pathlib import Path
 
@@ -35,37 +36,57 @@ OUT = PLUGINS / "AgesSchoolInsert.rbxmx"
 SOURCE = """--!nocheck
 -- Puts the AGES school into the place, in edit mode, with nobody clicking anything.
 --
--- The building is baked geometry (tools/gen_school.py) and is carried inside this plugin as
--- a child of this script. All this does is clone it into Workspace.
+-- The building is baked geometry (tools/gen_school.py) and is carried inside this plugin as a
+-- child of this script. All this does is clone it into Workspace.
 --
--- Idempotent on purpose: Studio runs plugins on every startup, and a plugin that inserted
--- unconditionally would leave a stack of schools inside each other after three launches.
+-- **It replaces its own previous insert rather than skipping.** The first version of this
+-- refused to do anything if a School already existed, which was the right instinct and the
+-- wrong rule: the plugin inserts once, the asset is rebuilt a dozen times over an evening, and
+-- from then on every restart looked at the stale copy it had inserted itself and decided there
+-- was nothing to do. Hours of changes never reached the place, and the symptom is simply that
+-- nothing changes -- which reads as a broken sync rather than as a stale insert.
+--
+-- So the model it lays is stamped, and a stamped model is one it may replace. An unstamped
+-- School is somebody else's and is never touched: this refuses rather than guessing, because
+-- the one thing worse than not inserting is deleting work that was not ours.
 
 local MODEL_NAME = "School"
-
-local existing = workspace:FindFirstChild(MODEL_NAME)
-if existing ~= nil then
-\twarn("[AGES] a School is already in this place -- plugin did nothing")
-\treturn
-end
+local STAMP = "AgesSchoolBake"
 
 local carried = script:FindFirstChild(MODEL_NAME)
 if carried == nil then
-\twarn("[AGES] the school plugin is missing its model; re-run tools/gen_school_plugin.py")
-\treturn
+	warn("[AGES] the school plugin is missing its model; re-run tools/gen_school_plugin.py")
+	return
+end
+
+-- One part name that only this bake produces. It is how an *unstamped* School left behind by
+-- the first version of this plugin is recognised as ours and adopted, rather than being
+-- treated as somebody else's work and left to go stale forever.
+local FINGERPRINT = "LobbyBanner1"
+
+local existing = workspace:FindFirstChild(MODEL_NAME)
+if existing ~= nil then
+	local ours = existing:GetAttribute(STAMP) ~= nil or existing:FindFirstChild(FINGERPRINT, true) ~= nil
+	if not ours then
+		warn("[AGES] a School is already here that this plugin did not insert -- leaving it alone.")
+		return
+	end
+	existing:Destroy()
 end
 
 local copy = carried:Clone()
+copy:SetAttribute(STAMP, BAKE_STAMP)
 copy.Parent = workspace
 
 local parts = 0
 for _, d in copy:GetDescendants() do
-\tif d:IsA("BasePart") then
-\t\tparts += 1
-\tend
+	if d:IsA("BasePart") then
+		parts += 1
+	end
 end
-print(string.format("[AGES] school inserted: %d parts. Delete the School model to remove it.", parts))
+print(string.format("[AGES] school inserted: %d parts, bake %s.", parts, BAKE_STAMP))
 """
+
 
 
 def main() -> None:
@@ -73,6 +94,10 @@ def main() -> None:
         raise SystemExit(f"{ASSET} missing -- run tools/gen_school.py first")
 
     body = ASSET.read_text(encoding="utf-8")
+    # A stamp the plugin prints, so "is this the current school?" is answerable from the
+    # output window instead of by counting parts.
+    stamp = time.strftime('%Y-%m-%d %H:%M', time.localtime(ASSET.stat().st_mtime))
+    source = SOURCE.replace('BAKE_STAMP', repr(stamp).replace("'", '"'))
     # The asset is a full <roblox> document. Lift its single root <Item> out and re-parent it
     # under the plugin script; nesting one <roblox> inside another is not a valid file.
     start = body.index("<Item ")
@@ -88,7 +113,7 @@ def main() -> None:
 <Item class="Script" referent="AGESSCHOOLPLUGIN">
 <Properties>
 <string name="Name">AgesSchoolInsert</string>
-<ProtectedString name="Source">{html.escape(SOURCE)}</ProtectedString>
+<ProtectedString name="Source">{html.escape(source)}</ProtectedString>
 </Properties>
 {model}
 </Item>
