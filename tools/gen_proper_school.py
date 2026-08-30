@@ -145,6 +145,7 @@ end
 -- own require, so this pulls the module in through exactly the path a real script would.
 local Exterior = rootRequire(ServerScriptService.Server.world.ProperSchool.Exterior)
 local Interior = rootRequire(ServerScriptService.Server.world.ProperSchool.Interior)
+local Furniture = rootRequire(ServerScriptService.Server.world.ProperSchool.Furniture)
 local PlaceService = moduleNamed("services/PlaceService.luau")
 local V = baseEnv.Vector3.new
 
@@ -220,6 +221,7 @@ Exterior.Build(V(SCHOOL_X, SCHOOL_Y, SCHOOL_Z), {})
 -- The three storey folders, stood in for by plain tables. Everything lands in one flat asset
 -- anyway; the folders are a Studio convenience, and the bake has no Studio.
 Interior.Build(V(SCHOOL_X, SCHOOL_Y, SCHOOL_Z), { {}, {}, {} })
+Furniture.Build(V(SCHOOL_X, SCHOOL_Y, SCHOOL_Z), {})
 
 local function num(v, fallback)
 	return if typeof(v) == "number" and v == v then v else fallback
