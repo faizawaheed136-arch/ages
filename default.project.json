@@ -22,24 +22,24 @@
     "Lighting": {
       "$className": "Lighting",
       "$properties": {
-        "Technology": "ShadowMap",
+        "Technology": "Future",
         "GlobalShadows": true,
         "ClockTime": 15.5,
         "GeographicLatitude": 41.7,
         "Brightness": 2.4,
-        "ExposureCompensation": 0.15,
+        "ExposureCompensation": 0.42,
         "Ambient": [
-          0.16862,
-          0.17254,
-          0.19607
+          0.243,
+          0.247,
+          0.267
         ],
         "OutdoorAmbient": [
           0.42352,
           0.43921,
           0.47843
         ],
-        "EnvironmentDiffuseScale": 0.55,
-        "EnvironmentSpecularScale": 0.4,
+        "EnvironmentDiffuseScale": 1,
+        "EnvironmentSpecularScale": 0.85,
         "FogEnd": 4000
       },
       "Atmosphere": {

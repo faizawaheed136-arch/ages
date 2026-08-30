@@ -29,6 +29,7 @@ having both is two sources of truth. Delete the plugin once the sync is reliable
 """
 
 import html
+import json
 import shutil
 import sys
 import time
@@ -111,7 +112,41 @@ if shared ~= nil then
 \tend
 end
 
-print(string.format("[AGES] code installed: %d trees, bake %s.", done, BAKE_STAMP))
+-- Lighting.
+--
+-- This lives in default.project.json, which is the right home for it -- but neither plugin
+-- delivers a project file, so a Lighting change made there reaches nobody until a full Rojo
+-- sync or a fresh build. Applied here as well so it can actually be looked at, with the values
+-- substituted from that same file at generation time: one source of truth, two delivery routes.
+--
+-- The one that matters is Technology. ShadowMap shadows the sun and ignores local lights
+-- entirely, so the twelve real lights baked into the school were doing nothing and every
+-- interior went black after dark. Future gives them per-pixel shadows. It costs more and
+-- degrades rather than breaks: Roblox falls back to voxel on graphics quality 3 and below.
+local Lighting = game:GetService("Lighting")
+local applied = 0
+for name, value in LIGHTING_VALUES do
+	local ok = pcall(function()
+		(Lighting :: any)[name] = value
+	end)
+	if ok then
+		applied += 1
+	else
+		if name == "Technology" then
+			-- Expected, and not a bug to chase. Lighting.Technology is read-only to scripts:
+			-- Roblox only accepts it from the place file or the Properties panel. It is set
+			-- correctly in default.project.json, so a real Rojo sync or a fresh build gets it --
+			-- and in a live Studio session it is one field, by hand.
+			warn("[AGES] Lighting.Technology cannot be set by a script. Set it to Future by hand: "
+				.. "select Lighting in the Explorer, find Technology, choose Future. Without it the "
+				.. "school's twelve lights cast nothing and interiors stay dark after sunset.")
+		else
+			warn(string.format("[AGES] could not set Lighting.%s", name))
+		end
+	end
+end
+
+print(string.format("[AGES] code installed: %d trees, %d lighting settings, bake %s.", done, applied, BAKE_STAMP))
 """
 
 
@@ -125,6 +160,25 @@ def main() -> None:
     body = MODEL.read_text(encoding="utf-8")
     stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(MODEL.stat().st_mtime))
     source = SOURCE.replace("BAKE_STAMP", '"' + stamp + '"')
+
+    # Lighting, read out of default.project.json so the two never disagree. Colour triples
+    # become Color3.fromRGB; plain numbers and strings pass through. Technology is a string in
+    # the project file and an Enum at runtime, so it is mapped explicitly.
+    props = json.loads((ROOT / "default.project.json").read_text(encoding="utf-8"))
+    props = props["tree"]["Lighting"]["$properties"]
+    rows = []
+    for key, value in props.items():
+        if key == "Technology":
+            rows.append(f'	["{key}"] = Enum.Technology.{value},')
+        elif isinstance(value, list) and len(value) == 3:
+            r, g, b = (round(c * 255) for c in value)
+            rows.append(f'	["{key}"] = Color3.fromRGB({r}, {g}, {b}),')
+        elif isinstance(value, bool):
+            rows.append(f'	["{key}"] = {"true" if value else "false"},')
+        elif isinstance(value, (int, float)):
+            rows.append(f'	["{key}"] = {value},')
+    table = "{\n" + "\n".join(rows) + "\n}"
+    source = source.replace("LIGHTING_VALUES", table)
 
     # Lift the model's root Item out of its <roblox> wrapper and rename it, so the plugin
     # script has exactly one child called Code.
