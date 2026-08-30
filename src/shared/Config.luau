@@ -3280,7 +3280,12 @@ Config.School.Building = {
 	-- that clear with room to spare; below about 175 it starts to bite again.
 	-- Safe range: 240-360 and 170-260.
 	WidthStuds = 228,
-	DepthStuds = 170,
+	-- 194, up from 170. The hall took 28 studs and the classrooms kept every one of theirs.
+	--
+	-- The alternative was taking it out of BackBandDepthStuds, which would have made all eleven
+	-- rooms shallower to widen one space -- the trade that quietly makes a plan worse everywhere
+	-- to improve it in one place.
+	DepthStuds = 194,
 
 	-- Where the building sits relative to its place point.
 	--
@@ -3345,7 +3350,16 @@ Config.School.Building = {
 	-- for somebody to stand across you in it with room to walk round -- which the corridor
 	-- system depends on.
 	-- Safe range: 12-20.
-	CorridorWidthStuds = 16,
+	-- **A hall, not a corridor.**
+	--
+	-- Sixteen studs is a service passage: two people abreast and a wall either side, which is
+	-- what the reference photographs are not. Theirs is a room you walk through -- columns down
+	-- it, planting in the middle, sightlines to the far end -- and the single change that gets
+	-- most of the way there is width. Forty-four is wide enough for a planting bed down the
+	-- centre with a walking route each side of it.
+	--
+	-- Paid for out of the footprint, not out of the rooms: see DepthStuds.
+	CorridorWidthStuds = 44,
 
 	-- The band of rooms along the back of each floor: how deep it is, how many rooms are cut
 	-- out of it, and the wall thickness between them.

@@ -1531,22 +1531,114 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 
 		-- Ceiling strips down the length, instead of a row of square panels. A strip draws a line
 		-- the eye can follow; a row of squares is only lighting.
-		for index = 1, BUILDING.CeilingStrips do
-			local share = (index - 0.5) / BUILDING.CeilingStrips
-			Kit.Block(
-				parent,
-				`CeilStrip{floor}_{index}`,
-				at(-half + W * share, y + FLOOR_H - SLAB - 0.5, corridorZ),
-				Vector3.new(W / BUILDING.CeilingStrips - 6, 0.3, 3.2),
-				{ color = Color3.fromRGB(255, 252, 242), material = Enum.Material.Neon }
-			).CastShadow = false
+		-- **A grid of recessed panels, not a line of strips.**
+		--
+		-- The reference ceiling is the brightest thing in the photograph: rows of flush rectangular
+		-- panels running the whole hall, close enough together that the ceiling reads as lit rather
+		-- than as a dark plane with some lights on it. Ours was one row of long strips down the
+		-- centre, which lights the floor but leaves the ceiling itself dark -- and in a hall this
+		-- wide that is most of what made it feel like a corridor at night.
+		--
+		-- Two rows across the 44-stud hall, because one row down the middle of a wide space throws
+		-- the edges into shadow and the edges are where the doors are.
+		local panels = BUILDING.CeilingStrips * 2
+		for index = 1, panels do
+			for row = -1, 1, 2 do
+				Kit.Block(
+					parent,
+					`CeilPanel{floor}_{index}_{row}`,
+					at(-half + W * ((index - 0.5) / panels), y + FLOOR_H - SLAB - 0.4, corridorZ + row * CORRIDOR_W * 0.22),
+					Vector3.new(W / panels - 3, 0.3, 4.5),
+					{ color = Color3.fromRGB(255, 253, 246), material = Enum.Material.Neon }
+				).CastShadow = false
+			end
+		end
+
+		-- **A planting bed down the centre of the hall, and columns flanking it.**
+		--
+		-- This is what the reference has and what forty-four studs of width is *for*. A wide empty
+		-- hall is not better than a narrow one, it is just emptier -- what makes theirs read as a
+		-- room is that the middle is occupied and you walk around it, which gives the space a near
+		-- edge and a far edge instead of one flat plane.
+		--
+		-- Ground floor only. Upstairs the same strip is the gallery edge and wants to stay clear.
+		if floor == 1 then
+			local bedLen = W * 0.42
+			Kit.Block(parent, "HallBed", at(0, y + 0.6, corridorZ), Vector3.new(bedLen, 1.2, 14), {
+				color = Color3.fromRGB(150, 200, 236),
+				material = Enum.Material.SmoothPlastic,
+				collide = true,
+			})
+			Kit.Block(parent, "HallBedSoil", at(0, y + 1.3, corridorZ), Vector3.new(bedLen - 3, 0.4, 11), {
+				color = Color3.fromRGB(72, 56, 42),
+			}).CastShadow = false
+
+			local trees = 4
+			for index = 1, trees do
+				local tx = -bedLen / 2 + bedLen * ((index - 0.5) / trees)
+				Kit.Block(parent, `HallTrunk{index}`, at(tx, y + 4, corridorZ), Vector3.new(2, 6, 2), {
+					color = Color3.fromRGB(122, 84, 56),
+					material = Enum.Material.Wood,
+					collide = true,
+				})
+				-- Three stacked blocks rather than one: a tree is read by its silhouette, and a
+				-- single box reads as a box however green it is.
+				for tier = 1, 3 do
+					local spread = 9 - tier * 1.8
+					Kit.Block(parent, `HallCanopy{index}_{tier}`, at(tx, y + 8 + tier * 3.4, corridorZ), Vector3.new(spread, 4.2, spread), {
+						color = Color3.fromRGB(86, 142, 82),
+						material = Enum.Material.Grass,
+					}).CastShadow = false
+				end
+			end
+
+			-- Benches facing the bed, on both sides, so the middle of the hall is somewhere to be.
+			for side = -1, 1, 2 do
+				for index = 1, 2 do
+					local bx = -bedLen / 4 + (bedLen / 2) * (index - 1)
+					Kit.Block(parent, `HallBench{side}_{index}`, at(bx, y + 2.2, corridorZ + side * 10), Vector3.new(16, 0.7, 3.2), {
+						color = WALNUT,
+						material = Enum.Material.Wood,
+						collide = true,
+					})
+					for leg = -1, 1, 2 do
+						Kit.Block(parent, `HallBenchLeg{side}_{index}_{leg}`, at(bx + leg * 6, y + 1.1, corridorZ + side * 10), Vector3.new(0.8, 2.2, 2.8), {
+							color = Color3.fromRGB(96, 102, 114),
+							material = Enum.Material.Metal,
+						}).CastShadow = false
+					end
+				end
+			end
+		end
+
+		-- Columns down both flanks of the hall. The reference is full of them and they are doing
+		-- real work: a row of uprights at a regular pitch is what gives a long space a measurable
+		-- rhythm, so the far end reads as far away rather than as a wall of unknown distance.
+		for index = 1, 8 do
+			for side = -1, 1, 2 do
+				Kit.Block(
+					parent,
+					`HallColumn{floor}_{index}_{side}`,
+					-- Seven studs off the wall, not three and a half. Standing them almost against it
+					-- put them through the bin line, and a column touching a wall is a pilaster --
+					-- the reference's are free-standing, with room to walk behind them.
+					at(-half + W * ((index - 0.5) / 8), y + (FLOOR_H - SLAB) / 2, corridorZ + side * (CORRIDOR_W / 2 - 7)),
+					Vector3.new(3.5, FLOOR_H - SLAB, 3.5),
+					{ color = OFF_WHITE, material = Enum.Material.Concrete, collide = true }
+				)
+			end
 		end
 
 		-- Bins along the corridor. The most ordinary object a school has, and there were none.
 		for index = 1, BUILDING.BinsPerFloor do
 			local share = (index - 0.5) / BUILDING.BinsPerFloor
-			local x = -half + W * share + 14
-			local z = corridorZ + CORRIDOR_W / 2 - 3
+			-- Between the columns, not on them: the columns sit at the midpoint of each eighth of
+			-- the frontage, so the bins take the boundaries instead.
+			-- Offset along the wall so a bin lands neither on a column nor on a vending machine.
+			-- Both of those are placed off their own even divisions of the frontage, so an
+			-- unshifted bin line is guaranteed to collide with one or the other somewhere.
+			local x = -half + W * share + 9
+			local z = corridorZ + CORRIDOR_W / 2 - 2.5
 			Kit.Block(parent, `Bin{floor}_{index}`, at(x, y + 2.2, z), Vector3.new(4, 4.4, 4), {
 				color = Color3.fromRGB(64, 78, 96),
 				material = Enum.Material.Metal,
@@ -2342,7 +2434,16 @@ local function buildRooms(parent: Instance, at: (number, number, number) -> Vect
 		}).CastShadow = false
 
 		-- The sign over the door, which is how a player finds a subject at all.
-		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 7, y + DOOR_H + 2.4, rect.z1 - 1.2), Vector3.new(12, 2.8, 0.4), { color = WHITE })
+		-- The sign over each door, on a coloured band.
+		--
+		-- The reference names every room over its doorway -- TEACHER'S LOUNGE, PRINCIPAL'S OFFICE --
+		-- and that is most of why the hall reads as a school rather than as a corridor of identical
+		-- glass fronts. Ours had a plain white plate two thirds the width; on a band, wider, and
+		-- with the school's blue behind it, it can be read from the far end.
+		Kit.Block(parent, `{rect.id}SignBand`, at(rect.x1 + 7, y + DOOR_H + 2.4, rect.z1 - 1), Vector3.new(20, 4.4, 0.3), {
+			color = BLUE,
+		}).CastShadow = false
+		local plate = Kit.Block(parent, `{rect.id}Plate`, at(rect.x1 + 7, y + DOOR_H + 2.4, rect.z1 - 1.2), Vector3.new(18, 3, 0.4), { color = WHITE })
 		Kit.Sign(plate, string.upper(rect.label), 12, LABEL_DIST, DEEP_BLUE)
 
 		dressWalls(parent, at, rect.id, rect.x1, rect.x2, rect.z1, rect.z2, y, FLOOR_H - SLAB)
