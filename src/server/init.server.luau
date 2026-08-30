@@ -274,4 +274,13 @@ if not okSchool then
 	warn(`[ProperSchool] interactive layer did not build: {schoolErr}`)
 end
 
+-- The same for the editable copy of v1, in its own pcall. Two sandboxes that must not be able
+-- to break each other or the game: whichever model is missing, the other still wires up.
+local okCopy, copyErr = pcall(function()
+	require(script.world.SchoolCopyInteractive).Build()
+end)
+if not okCopy then
+	warn(`[SchoolV1Copy] interactive layer did not build: {copyErr}`)
+end
+
 print("[AGES] Server started")
