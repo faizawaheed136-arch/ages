@@ -231,12 +231,31 @@ local ATRIUM_Z2 = 14 + BUILDING.AtriumDepthStuds
 -- ---------------------------------------------------------------------------------------
 
 local function buildSite(parent: Instance, at: (number, number, number) -> Vector3)
+	-- **Everything on the approach is placed outboard of the wings.**
+	--
+	-- It used to be placed from PlazaWidthStuds while the wings were placed from the pediment
+	-- and their own width -- two different numbers that were never going to agree. The wings
+	-- reach 74 studs from the centreline and the trees were at 43, the hedges at 53, the
+	-- flagpoles and bins nearer still, so every one of them stood inside a wing. That is the
+	-- clutter at the front of the building: not too much furniture, furniture in the wall.
+	--
+	-- wingOuter is the same expression buildShell lays the wings from, so the two cannot drift
+	-- apart again. Anything that has to stand clear of the building measures from here.
+	local wingOuter = ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4
+
 	local half = W / 2
 	local plazaD = ENTRANCE.PlazaDepthStuds
 
 	-- A hardstanding under the whole campus, a little proud of the terrain so the building
 	-- never sits half-buried when the street it is on is regenerated at a different height.
-	Kit.Slab(parent, "Campus", at(0, 0.1, D / 2 - plazaD / 2), W + POOL.HallWidthStuds * 2 + 40, D + plazaD + 40, 0.6, {
+	-- Top a hair *below* the anchor rather than a hair above it.
+	--
+	-- Kit.Slab positions by its top surface, so at +0.1 the campus closed over the place point
+	-- standing at the anchor's own height -- the marker was inside the slab, and check_town
+	-- reports that as "nothing at all under it". It never showed while the school stood on the
+	-- town's own ground, because that ground was underneath at the right height; moving the
+	-- school onto empty land made this slab the only thing beneath the marker.
+	Kit.Slab(parent, "Campus", at(0, -0.05, D / 2 - plazaD / 2), W + POOL.HallWidthStuds * 2 + 40, D + plazaD + 40, 0.6, {
 		color = CONCRETE,
 		material = Enum.Material.Concrete,
 	})
@@ -265,8 +284,10 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 	for index = 1, BUILDING.BinsOutside do
 		local side = if index % 2 == 1 then -1 else 1
 		local row = math.floor((index - 1) / 2)
-		local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 4)
-		local z = -14 - row * 18
+		-- Along the edge of the plaza rather than 4 studs inside a wing, and pushed forward so
+		-- the row runs down the approach instead of starting under the building.
+		local x = side * (ENTRANCE.PlazaWidthStuds / 2 + 2)
+		local z = -ENTRANCE.ApronDepthStuds - 8 - row * 18
 		Kit.Block(parent, `OutdoorBin{index}`, at(x, 2.6, z), Vector3.new(4.2, 5, 4.2), {
 			color = Color3.fromRGB(58, 72, 88),
 			material = Enum.Material.Metal,
@@ -278,23 +299,9 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 		}).CastShadow = false
 	end
 
-	-- Flagpoles flanking the approach.
-	for index = 1, ENTRANCE.Flagpoles do
-		local side = if index % 2 == 1 then -1 else 1
-		local x = side * (ENTRANCE.PlazaWidthStuds / 2 - 6)
-		-- Clear of the apron, which is what the terrace this used to measure from became.
-		local z = -ENTRANCE.ApronDepthStuds - 16
-		Kit.Block(parent, `FlagBase{index}`, at(x, 1.2, z), Vector3.new(5, 2, 5), {
-			color = CONCRETE,
-			material = Enum.Material.Concrete,
-		})
-		Kit.Column(parent, `Flagpole{index}`, at(x, 2.2, z), ENTRANCE.FlagpoleHeightStuds, 0.8, Color3.fromRGB(226, 228, 234))
-		-- The flag itself, in the school's blue, hanging from the top.
-		Kit.Block(parent, `Flag{index}`, at(x + 4.5, 2.2 + ENTRANCE.FlagpoleHeightStuds - 5, z), Vector3.new(9, 6, 0.2), {
-			color = BLUE,
-			material = Enum.Material.Fabric,
-		}).CastShadow = false
-	end
+	-- No flagpoles here. The building already raises a pair either side of the doors further
+	-- down this function, and I added a second set without checking first -- two sets on one
+	-- forecourt, the outer pair standing inside a wing.
 
 	-- The crossing outside, which is the one piece of the approach that says "there is a road
 	-- here and children cross it" without a single sign.
@@ -307,9 +314,9 @@ local function buildSite(parent: Instance, at: (number, number, number) -> Vecto
 	for side = -1, 1, 2 do
 		for index = 1, ENTRANCE.TreesPerSide do
 			local z = -plazaD * (index / (ENTRANCE.TreesPerSide + 1))
-			Kit.Tree(parent, `ApproachTree{side}_{index}`, at(side * (ENTRANCE.PlazaWidthStuds / 2 + 8), 0.4, z), 26)
+			Kit.Tree(parent, `ApproachTree{side}_{index}`, at(side * (wingOuter + 10), 0.4, z), 26)
 		end
-		Kit.Block(parent, `ApproachHedge{side}`, at(side * (ENTRANCE.PlazaWidthStuds / 2 + 18), 3, -plazaD / 2), Vector3.new(10, 6, plazaD), {
+		Kit.Block(parent, `ApproachHedge{side}`, at(side * (wingOuter + 22), 3, -plazaD / 2), Vector3.new(10, 6, plazaD), {
 			color = GRASS,
 			material = Enum.Material.Grass,
 		})
@@ -413,7 +420,11 @@ local function buildFrontage(parent: Instance, at: (number, number, number) -> V
 	for index = 1, ENTRANCE.PilasterCount do
 		local share = (index - 0.5) / ENTRANCE.PilasterCount
 		local x = -half + W * share
-		if math.abs(x) > ENTRANCE.PedimentWidthStuds / 2 + 4 then
+		-- Clear of the pediment, and clear of the wings either side of it. It skipped the first
+		-- and not the second, so four pilasters were striping the front of a wing from inside it.
+		local wingIn = ENTRANCE.PedimentWidthStuds / 2 + 4
+		local wingOut = ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4
+		if math.abs(x) > wingIn and math.abs(x) > wingOut then
 			Kit.Block(parent, `Pilaster{index}`, at(x, roofY / 2, -0.9), Vector3.new(ENTRANCE.PilasterWidthStuds, roofY, 1.6), {
 				color = PALE_BLUE,
 			}).CastShadow = false
@@ -494,7 +505,8 @@ local function buildFrontage(parent: Instance, at: (number, number, number) -> V
 	-- Flagpoles either side of the doors.
 	for side = -1, 1, 2 do
 		for index = 1, ENTRANCE.FlagpolesPerSide do
-			local x = side * (ENTRANCE.PedimentWidthStuds / 2 + 8 + index * 6)
+			-- Outboard of the wings. At pediment/2 + 8 these stood inside one.
+			local x = side * (ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 10 + index * 6)
 			Kit.Column(parent, `Flagpole{side}_{index}`, at(x, 0.4, -10), ENTRANCE.FlagpoleHeightStuds, 0.7, WHITE)
 			Kit.Block(parent, `Flag{side}_{index}`, at(x + side * 3.4, ENTRANCE.FlagpoleHeightStuds - 3, -10), Vector3.new(6.4, 4, 0.2), {
 				color = PALE_BLUE,
@@ -509,7 +521,7 @@ local function buildFrontage(parent: Instance, at: (number, number, number) -> V
 	for side = -1, 1, 2 do
 		for index = 1, ENTRANCE.HedgesPerSide do
 			local z = -6 - (index / (ENTRANCE.HedgesPerSide + 1)) * plazaD
-			Kit.Block(parent, `Hedge{side}_{index}`, at(side * (ENTRANCE.PlazaWidthStuds / 2 + 5), 2.4, z), Vector3.new(9, 4.4, 9), {
+			Kit.Block(parent, `Hedge{side}_{index}`, at(side * (ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 14), 2.4, z), Vector3.new(9, 4.4, 9), {
 				color = Color3.fromRGB(96, 150, 96),
 				material = Enum.Material.Grass,
 			})
@@ -549,7 +561,13 @@ local function buildShell(parent: Instance, at: (number, number, number) -> Vect
 		-- Columns down the front, on the grid the canopy sits on.
 		for index = 1, ENTRANCE.ColumnCount do
 			local share = (index - 0.5) / ENTRANCE.ColumnCount
-			Kit.Column(parent, `Column{floor}_{index}`, at(-half + W * share, y, 3), FLOOR_H - SLAB, 3.4, CONCRETE)
+			local x = -half + W * share
+			-- Not where a wing already stands. These ran the full width of the elevation and the
+			-- wings were added later in front of them, so four columns were buried in solid
+			-- masonry -- invisible from outside and standing in the way inside.
+			if math.abs(x) > ENTRANCE.PedimentWidthStuds / 2 + ENTRANCE.WingWidthStuds + 4 or math.abs(x) < ENTRANCE.PedimentWidthStuds / 2 then
+				Kit.Column(parent, `Column{floor}_{index}`, at(x, y, 3), FLOOR_H - SLAB, 3.4, CONCRETE)
+			end
 		end
 	end
 
@@ -1328,8 +1346,14 @@ local function fitLounge(parent: Instance, at: (number, number, number) -> Vecto
 	for index = 1, LOUNGE.Rugs do
 		Kit.Rug(parent, `LoungeRug{index}`, at(rect.x1 + width * (index / (LOUNGE.Rugs + 1)), y + 0.4, cz + 6), 7, Color3.fromRGB(150, 178, 220))
 	end
+	-- Planters along the back wall, but skipping the middle third -- that is where the vending
+	-- pair stands, and two of these were landing inside the machines.
 	for index = 1, LOUNGE.Planters do
-		Kit.Planter(parent, `LoungePlanter{index}`, at(rect.x1 + width * (index / (LOUNGE.Planters + 1)), y + 0.2, rect.z2 - 3), 3, 9)
+		local share = index / (LOUNGE.Planters + 1)
+		if share > 0.34 and share < 0.66 then
+			continue
+		end
+		Kit.Planter(parent, `LoungePlanter{index}`, at(rect.x1 + width * share, y + 0.2, rect.z2 - 3), 3, 9)
 	end
 
 	-- And the machines, against the back wall where the reference has them.

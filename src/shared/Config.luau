@@ -4093,14 +4093,21 @@ Config.School.Bully = {
 -- clears them, and farming two points of happiness across a rejoin is not a thing anybody
 -- will do twice.
 Config.Fixtures = {
-	-- How near you must be. Slightly tighter than a conversation, because a machine is a thing
-	-- you stand at.
-	-- Safe range: 6-14.
-	ReachStuds = 10,
-
-	-- The label distance for the prompt itself.
-	-- Safe range: 20-60.
-	PromptDistanceStuds = 30,
+	-- How near you must be for the server to accept the press, and how near the prompt lights
+	-- up. **The first must be larger than the second, and getting that backwards is a bug with
+	-- no error message.**
+	--
+	-- It was: prompt at 30, reach at 10. So the E appeared from three machine-lengths away, you
+	-- pressed it, and the server silently refused because you were outside its own radius --
+	-- which from the player's side is a prompt that does nothing, the worst possible failure
+	-- because it teaches them the whole system is broken.
+	--
+	-- Now the prompt is the tighter of the two. The server stays a little more generous so a
+	-- press that was legal when it left the client is not refused for a step taken during the
+	-- round trip.
+	-- Safe range: 10-20 and 8-16, with Reach the larger.
+	ReachStuds = 16,
+	PromptDistanceStuds = 12,
 
 	Kinds = {
 		snack = {

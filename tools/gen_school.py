@@ -24,6 +24,29 @@ Re-run it after any change to School.luau, Kit.luau or the school's Config, or t
 asset goes stale against the thing that generates it. `tools/check.py` cannot catch that --
 it reads source, and a stale asset is perfectly valid XML.
 
+LIGHTING
+--------
+
+**The school has 180 light fittings and none of them were lights.** Kit.LightPanel and the
+ceiling strips are Neon: they glow, which looks lit in a screenshot taken at noon, and they
+emit nothing at all. The building has a day/night cycle over it, so after dark every room went
+black -- which is exactly what the reference photographs are not.
+
+Kit's comment explains why, and it is a fair argument: "a dozen PointLights in one room costs
+more than the building." One real light per fitting would be 180 of them and would be
+unplayable.
+
+So the fittings stay Neon and a *subset* is given a real light -- every Nth one, with a range
+wide enough that the gaps do not read as gaps. Fourteen or so lights covers the corridors and
+the atrium, which is where a player actually is, at a fraction of the cost of lighting every
+panel. The rooms keep their glow and borrow the corridor's spill through their glass fronts,
+which is how the reference rooms are lit too.
+
+Baked rather than added at runtime, and that is forced: Config.School.Building.Baked is true,
+so the parts School.luau lays are destroyed after the room anchors are read. A light parented
+to one of those would be destroyed with it. The asset is the thing that survives, so the light
+has to be in the asset.
+
 **What it deliberately drops.** Signs (BillboardGui/TextLabel) are laid at runtime by
 `Kit.Sign` and are not baked: they are readouts rather than geometry, several of them say
 things that are only true while a game is running, and a billboard baked into the map cannot
@@ -42,6 +65,18 @@ import rbxmx  # noqa: E402
 
 LUAU = Path.home() / ".aftman/tool-storage/luau" / ("luau.exe" if sys.platform == "win32" else "luau")
 OUT = ROOT / "assets" / "School.rbxmx"
+
+# Which fittings get a real light, and how strong. One in LIGHT_EVERY of the parts whose name
+# matches LIT_NAMES, which works out at roughly a dozen for the whole building.
+#
+# Range is deliberately large and brightness modest: a few wide, soft lights read as a lit room,
+# where the same budget spent on many small bright ones reads as a row of spotlights and shows
+# every gap between them.
+LIT_NAMES = ("CeilStrip", "CorridorLight", "LobbyBanner", "Lantern")
+LIGHT_EVERY = 3
+LIGHT_RANGE = 62
+LIGHT_BRIGHTNESS = 1.4
+LIGHT_COLOR = (255, 250, 235)
 SCRATCH = ROOT / "build"
 
 
@@ -373,6 +408,7 @@ def emit(rows: list[dict]) -> None:
     for row in rows:
         families.setdefault(family(row["name"]), []).append(row)
 
+    lit = 0
     for label in sorted(families):
         with rbxmx.group(label):
             for row in families[label]:
@@ -398,10 +434,20 @@ def emit(rows: list[dict]) -> None:
                         transparency=row["transparency"], collide=row["collide"],
                     )
                 else:
+                    # A real light on every Nth fitting. See LIGHTING in the module docstring
+                    # for why it is a subset and not one per panel.
+                    children = ""
+                    if any(k in row["name"] for k in LIT_NAMES):
+                        if lit % LIGHT_EVERY == 0:
+                            children = rbxmx.point_light(
+                                LIGHT_COLOR, LIGHT_BRIGHTNESS, LIGHT_RANGE, name="Light"
+                            )
+                        lit += 1
                     rbxmx.spun_box(
                         row["name"], center, size, row["yaw"],
                         color, material=material,
                         transparency=row["transparency"], collide=row["collide"],
+                        children=children,
                     )
 
     print(rbxmx.write(OUT, "School"))
