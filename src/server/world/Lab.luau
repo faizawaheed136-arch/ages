@@ -160,6 +160,24 @@ local function stationSpot(center: Vector3, bearing: number, ignore: { Instance 
 	return nil
 end
 
+-- A lab is an indoor room. The floor probe has no ceiling check, so a lab laid on the
+-- forecourt would put its stations on the road where anybody walking past can see them.
+-- Raycast upward from the centre: if there is no ceiling within a storey's worth, the
+-- spot is outdoors and the lab refuses to build rather than cluttering the street.
+local function ceilingAbove(center: Vector3, ignore: { Instance }): boolean
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = ignore
+	params.IgnoreWater = true
+	params.RespectCanCollide = true
+	local result = workspace:Raycast(
+		center + Vector3.new(0, 2, 0),
+		Vector3.new(0, 14, 0),
+		params
+	)
+	return result ~= nil
+end
+
 -- Builds the room around a centre point, once. Returns nil if the lab could not be
 -- laid at all, which is a different failure from a station or two going missing and is
 -- reported differently: no room means no Science anywhere, and the caller refuses at
@@ -171,6 +189,11 @@ function Lab.Build(center: Vector3): LabRoom?
 	end
 
 	local ignore = Ground.IgnoreList()
+
+	-- Must be indoors: a lab on the forecourt would spill its stations onto the road.
+	if not ceilingAbove(center, ignore) then
+		return nil
+	end
 
 	local board = onCircle(center, BUILD.BoardBearing, BUILD.BoardDistanceShare)
 	local cupboard = onCircle(center, BUILD.CupboardBearing, BUILD.CupboardDistanceShare)

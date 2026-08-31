@@ -61,9 +61,15 @@ end
 
 -- Check age milestones on birthday.
 function MilestoneService.OnAgeUp(player: Player, ageYears: number)
-	checkAndFire(player, "Age30", "Thirty", MILESTONES.Age30.bonus)
-	checkAndFire(player, "Age50", "Fifty", MILESTONES.Age50.bonus)
-	checkAndFire(player, "Age80", "Long Life", MILESTONES.Age80.bonus)
+	if ageYears == 30 then
+		checkAndFire(player, "Age30", "Thirty", MILESTONES.Age30.bonus)
+	end
+	if ageYears == 50 then
+		checkAndFire(player, "Age50", "Fifty", MILESTONES.Age50.bonus)
+	end
+	if ageYears == 80 then
+		checkAndFire(player, "Age80", "Long Life", MILESTONES.Age80.bonus)
+	end
 end
 
 -- Check first-job milestone.

@@ -39,6 +39,11 @@ export type RemoteName =
 	| "PersonUpdated"
 	| "RequestPersonOffer"
 	| "RequestLessonAnswer"
+	-- "I sat down." The L key, or a click on a desk in the classroom -- see
+	-- Classroom.TrySit. No payload beyond the fact of the press, on the same precedent
+	-- as `RequestRep`: which desk is this room's business, resolved server-side from
+	-- where the player is already standing, not the client's to name.
+	| "RequestSit"
 	-- The two roster remotes. Their prose lives down in `REMOTE_NAMES` rather than being
 	-- repeated here, the same as most of the names above them; what matters at this end is
 	-- only that they are here at all. They were not, for a while, and the gap is worth a
@@ -97,6 +102,19 @@ export type RemoteName =
 	-- from the sweep position it is already tracking, so a client that fires this
 	-- twice gains nothing.
 	| "RequestRep"
+	-- The sports drill in progress, pushed as a whole snapshot. Its own remote rather
+	-- than a reuse of `WorkoutUpdated`, on the same precedent that split it from
+	-- `StatsUpdated`: the drill session changes four times a second during the sweep,
+	-- and the gym and the sports campus are separate rooms a player can never be in
+	-- both of at once, so there is nothing for one shared field to disambiguate.
+	| "SportsDrillUpdated"
+	-- "Start a drill at this station." Carries a station kind string from the
+	-- attribute on the part the player is standing next to; the server bounds-checks
+	-- it against Config.SportsDrill.Kinds. Mirrors `RequestStartWorkout` exactly.
+	| "RequestStartDrill"
+	-- "I pushed." Mirrors `RequestRep` exactly, for the drill session instead of
+	-- the workout.
+	| "RequestDrillRep"
 	-- The Science lab in progress, pushed as a whole snapshot. Its own remote rather
 	-- than a field on LessonUpdated, because the two are different activities that
 	-- happen to share a building: a lesson is one question and a clock, and a lab is two
@@ -147,6 +165,16 @@ export type RemoteName =
 	-- screen an inch from the copy, and a comparison you can make without turning your head
 	-- is not the comparison this lesson is about.
 	| "ArtUpdated"
+	-- The rhythm lesson in progress, pushed as a whole snapshot: the count-in, the sweep,
+	-- which note this is and how many are left. Own remote for the reason SportsDrillUpdated
+	-- has one instead of riding WorkoutUpdated: the sweep moves several times a second and
+	-- school's own quiz channel (LessonUpdated) already carries a question, a verdict and a
+	-- skip offer told apart by zeroes -- a moving needle is not a fifth thing to tell apart
+	-- that way.
+	| "MusicUpdated"
+	-- "I pushed." Mirrors `RequestRep`/`RequestDrillRep` exactly: no payload beyond the
+	-- click, the server grades it from the sweep position it already tracks.
+	| "RequestMusicNote"
 	-- Heat, pushed as a whole snapshot: what tier you are at, how many officers are out,
 	-- whether anybody can see you this second, and where the police believe you are.
 	--
@@ -437,6 +465,12 @@ export type RemoteName =
 	-- happens. A press for a task that has finished, expired, or was never issued to
 	-- this player is a no-op.
 	| "RequestTaskPickup"
+	-- "Point me at this place." Carries a location id off the Locations pane, checked
+	-- against Config.Locations.List and PlaceService the same as RequestGuideToJob --
+	-- an unknown id is refused rather than pointing a line at nothing. This is a plain
+	-- point-and-walk, the same arrow a job destination gets, never a teleport: see the
+	-- header on PlaceService.Send for why that distinction is load-bearing here.
+	| "RequestGuideToLocation"
 	-- "You just walked through the stadium's own gate." Carries no payload --
 	-- StadiumEntranceService already decided this player earns the moment
 	-- (once per session) before firing it, so there is nothing on the wire for
@@ -445,6 +479,31 @@ export type RemoteName =
 	-- server-spawned visitor, not part of this payload, the same separation
 	-- NPCService.Arrive already keeps between "play a moment" and "who is in it".
 	| "StadiumEntranceCue"
+	-- The soccer pitch, pushed as a whole snapshot to every client standing near enough
+	-- to watch -- not only the six on the roster, on the same reasoning MapData pushes
+	-- to everyone rather than only whoever is standing on it: a match with a scoreboard
+	-- nobody outside it can read is not a match a crowd can gather for. Ticks at
+	-- Config.Sports.Soccer.TickSeconds, same shape as WorkoutUpdated/SportsDrillUpdated
+	-- rather than a field on any of them -- this is a different room with a different
+	-- roster and a ball none of those activities have.
+	| "SoccerUpdated"
+	-- "Give me a bot's slot on the pitch." No payload -- the server already knows who is
+	-- watching from WatchRadiusStuds and decides which team and which bot to bump from
+	-- the roster it is already running. A press that lands with no free slot, or from
+	-- someone already on the roster, is a no-op rather than a queue entry: the match
+	-- never stops running long enough to need one.
+	| "RequestSoccerJoin"
+	-- "I am holding the shoot button" / "I let go." Carries a boolean for the held edge,
+	-- exactly the shape RequestFightAction already proved for a charge-and-release
+	-- strike. What it does not carry is a charge value -- the server owns the clock the
+	-- meter is drawn from, so the strongest thing a forged packet can claim is that the
+	-- button went down, same guarantee RequestFightAction gives a bout.
+	| "RequestSoccerShoot"
+	-- "Find me a teammate." No payload -- a tap, not a second charge meter, see the
+	-- design note on Config.Sports.Soccer's passing section. The server reads the
+	-- carrier's own facing and picks the nearest teammate inside PassConeDegrees; a
+	-- press with nobody in the cone is a no-op.
+	| "RequestSoccerPass"
 
 local REMOTE_NAMES: { RemoteName } = {
 	"StatsUpdated",
@@ -541,6 +600,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	-- and one handler doing both would be one handler that could confuse them.
 	"RequestPersonOffer",
 	"RequestLessonAnswer",
+	"RequestSit",
 	-- The people the player has met, as a whole list for the HUD's people section.
 	--
 	-- Distinct from PersonUpdated in the way a whole list is always distinct from a
@@ -633,6 +693,9 @@ local REMOTE_NAMES: { RemoteName } = {
 	"WorkoutUpdated",
 	"RequestStartWorkout",
 	"RequestRep",
+	"SportsDrillUpdated",
+	"RequestStartDrill",
+	"RequestDrillRep",
 	"LabUpdated",
 	"RequestLabStep",
 	"RequestLabUndo",
@@ -643,6 +706,8 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestReportCardRead",
 	"HuntUpdated",
 	"ArtUpdated",
+	"MusicUpdated",
+	"RequestMusicNote",
 	"BountyUpdated",
 	"TheftUpdated",
 	"RequestArtPaint",
@@ -704,7 +769,12 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestQuitJob",
 	"RequestGuideToJob",
 	"RequestTaskPickup",
+	"RequestGuideToLocation",
 	"StadiumEntranceCue",
+	"SoccerUpdated",
+	"RequestSoccerJoin",
+	"RequestSoccerShoot",
+	"RequestSoccerPass",
 }
 
 local FOLDER_NAME = "RemoteEvents"

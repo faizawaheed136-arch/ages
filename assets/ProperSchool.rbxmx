@@ -22748,7 +22748,7 @@
 <Properties>
 <string name="Name">Plinth</string>
 <CoordinateFrame name="CFrame"><X>-890.0</X><Y>1.0</Y><Z>-630.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
-<Vector3 name="size"><X>3.0</X><Y>2.0</Y><Z>122.0</Z></Vector3>
+<Vector3 name="size"><X>3.0</X><Y>2.0</Y><Z>117.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>
@@ -22763,7 +22763,7 @@
 <Properties>
 <string name="Name">Plinth</string>
 <CoordinateFrame name="CFrame"><X>-690.0</X><Y>1.0</Y><Z>-630.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
-<Vector3 name="size"><X>3.0</X><Y>2.0</Y><Z>122.0</Z></Vector3>
+<Vector3 name="size"><X>3.0</X><Y>2.0</Y><Z>117.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
 <token name="Material">272</token>

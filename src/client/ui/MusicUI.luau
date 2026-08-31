@@ -1,438 +1,427 @@
 --!strict
--- The four lanes, drawn and judged.
+-- The rhythm lesson, drawn.
 --
--- Centre-bottom rather than the corner every other school panel lives in, and this is the
--- one placement in the school that has to break that rule: notes fall for two seconds before
--- they are hit, so the lanes need vertical room and the eye has to sit on them the whole
--- time. A corner panel would be a rhythm game played out of the side of your eye.
+-- Bottom left, the same corner LabUI and HuntUI take, and for the same reason: this is
+-- the surface of the activity the player is currently doing, and the timetable runs one
+-- subject at a time, so none of the three are ever on screen together.
 --
--- **This module judges. It is the only client file in the school that does.**
+-- This is not routed through StatsUI.applySweep even though the mechanic is the same
+-- needle-and-window sweep the gym and the sports drill draw. That shared row is typed
+-- `"gym" | "drill"` on purpose (see StatsUI.SweepSource) -- a third source would widen a
+-- type meant to stay closed at two rooms that are always mutually exclusive by
+-- construction (one gym, one sports campus). School is a third room a life can be
+-- standing in at the same time as neither of those, so this panel owns its own track,
+-- its own needle and its own PUSH button rather than reaching into a row built for two
+-- other rooms to share.
 --
--- Everywhere else the server decides and the panel draws the answer. Here it cannot: the
--- windows are 25 to 124 milliseconds and a Roblox round trip is longer than the widest of
--- them, so a server-judged rhythm lesson is not a stricter game, it is an unplayable one.
--- What is sent is a *claim* -- this note, this many milliseconds off -- and the server
--- checks the note exists, is unjudged, is inside the window it granted, and was actually due
--- around now. See MusicService for the honest accounting of what that does and does not buy.
---
--- The clock is the client\'s own, started when the first active push arrives. It is never
--- reconciled against the server\'s, deliberately: the player is judged against the notes
--- *they saw fall*, and a correction mid-piece would move the beat under their hands. The
--- count-in exists partly to absorb the latency between the server starting the piece and
--- this file learning about it.
+-- The count-in is the one phase none of the gym's or the drill's sweep states have: a
+-- number counting down before the needle moves at all. That is the ladder for this
+-- subject (see Config.School.Music.CountInSecondsByLevel and MusicService's header) --
+-- mastery buys warning, not an easier window -- so it gets its own line rather than
+-- being folded into the bar.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
-local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
+local Sweep = require(ReplicatedStorage:WaitForChild("Sweep"))
 
 type MusicState = Types.MusicState
-type MusicNote = Types.MusicNote
 
-local MUSIC = Config.School.Music
-
--- How far ahead of the judgement line a note appears, in seconds. This is the read-ahead,
--- and it is the number that decides whether the lesson is music or reaction: at 2 seconds a
--- player sees four beats at 120bpm, which is a bar, which is the unit music is actually read
--- in. Shorter and the chart stops having shape; much longer and the notes crowd.
-local LEAD_SECONDS = 2
-
+-- The panel's own palette, matching LabUI's and HuntUI's rather than StatsUI's, for the
+-- same reason they give: this is a place the player is in, not a readout they glance at.
 local PANEL_COLOR = Color3.fromRGB(18, 19, 24)
 local TITLE_COLOR = Color3.fromRGB(236, 238, 245)
 local CAPTION_COLOR = Color3.fromRGB(146, 150, 162)
-local LANE_COLOR = Color3.fromRGB(30, 31, 38)
-local LINE_COLOR = Color3.fromRGB(236, 238, 245)
+local TRACK_COLOR = Color3.fromRGB(34, 34, 40)
+local SWEET_COLOR = Color3.fromRGB(180, 150, 50)
+local PERFECT_COLOR = Color3.fromRGB(230, 195, 60)
+local NEEDLE_COLOR = Color3.fromRGB(245, 240, 230)
 
--- One colour per lane, in the same order MusicRoom paints its posts. The two must agree:
--- the posts exist so a player can look up from the panel and still know which lane is which,
--- and two different orderings would make that actively misleading.
-local LANE_COLORS = {
-	Color3.fromRGB(232, 106, 118),
-	Color3.fromRGB(238, 190, 96),
-	Color3.fromRGB(108, 196, 142),
-	Color3.fromRGB(104, 158, 232),
-}
+local COUNT_IN_COLOR = Color3.fromRGB(150, 196, 214)
 
--- Keys, left to right. D F J K rather than 1 2 3 4 because they are where two hands already
--- rest, which is the layout every rhythm game converged on for four lanes.
-local LANE_KEYS = { Enum.KeyCode.D, Enum.KeyCode.F, Enum.KeyCode.J, Enum.KeyCode.K }
+local PERFECT_GRADE_COLOR = Color3.fromRGB(230, 195, 60)
+local GOOD_GRADE_COLOR = Color3.fromRGB(150, 196, 214)
+local MISS_GRADE_COLOR = Color3.fromRGB(228, 140, 80)
 
-export type MusicUIHandle = {
-	gui: ScreenGui,
-	frame: Frame,
-	header: TextLabel,
-	line: TextLabel,
-	board: Frame,
-	lanes: { Frame },
-	buttons: { TextButton },
-	footer: TextLabel,
-	-- The chart, and which of it this panel has already claimed. Held here rather than read
-	-- off the state each frame because the state is pushed on change and the notes fall every
-	-- frame.
-	notes: { MusicNote },
-	claimed: { [number]: boolean },
-	startedAt: number,
-	active: boolean,
-	perfectMs: number,
-	greatMs: number,
-	goodMs: number,
-	atStand: boolean,
-	-- One pooled frame per note, created when the chart arrives and moved every frame. Pooled
-	-- rather than created and destroyed as notes scroll, because a hundred instances a lesson
-	-- churning through Instance.new is the one thing in this panel that could actually cost
-	-- frames -- and dropped frames in a rhythm game are dropped notes.
-	dots: { Frame },
-	connection: RBXScriptConnection?,
-	onHit: ((index: number, offsetMs: number) -> ())?,
-}
+local PUSH_ACTIVE_COLOR = Color3.fromRGB(235, 190, 90)
+local PUSH_INACTIVE_COLOR = Color3.fromRGB(70, 70, 82)
+
+local PANEL_WIDTH = 300
 
 local MusicUI = {}
 MusicUI.__index = MusicUI
 
-function MusicUI.new(): MusicUIHandle
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "MusicUI"
-	gui.ResetOnSpawn = false
-	gui.IgnoreGuiInset = true
-	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+export type MusicUIHandle = typeof(setmetatable(
+	{} :: {
+		screenGui: ScreenGui,
+		panel: Frame,
+		titleLabel: TextLabel,
+		songLabel: TextLabel,
+		noteLabel: TextLabel,
+		countInLabel: TextLabel,
+		track: Frame,
+		sweetBand: Frame,
+		perfectBand: Frame,
+		needle: Frame,
+		gradeLabel: TextLabel,
+		masteryLabel: TextLabel,
+		summaryLabel: TextLabel,
+		pushButton: TextButton,
+		-- Live between server pushes, the same interpolation StatsUI's sweep row does and
+		-- for the same reason: the server ticks a handful of times a second, and a needle
+		-- that only moved on a tick would stutter instead of sweep.
+		sweepConnection: RBXScriptConnection?,
+		sweepBaseProgress: number,
+		sweepElapsed: number,
+		-- Nil unless a song is actually sweeping. Read by init.client.luau so the one PUSH
+		-- key this panel owns never fires into a session that has already ended.
+		running: boolean,
+	},
+	MusicUI
+))
 
-	local frame = Instance.new("Frame")
-	frame.Name = "Panel"
-	frame.AnchorPoint = Vector2.new(0.5, 1)
-	frame.Position = UDim2.new(0.5, 0, 1, -14)
-	frame.Size = UDim2.new(0, 340, 0, 420)
-	frame.BackgroundColor3 = PANEL_COLOR
-	frame.BackgroundTransparency = 0.12
-	frame.BorderSizePixel = 0
-	frame.Visible = false
-	frame.Parent = gui
+local function formatSeconds(seconds: number): string
+	return string.format("%.1f", math.max(0, seconds))
+end
+
+function MusicUI.new(): MusicUIHandle
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "AgesMusic"
+	screenGui.ResetOnSpawn = false
+	screenGui.IgnoreGuiInset = true
+	screenGui.DisplayOrder = 2
+
+	local panel = Instance.new("Frame")
+	panel.Name = "MusicPanel"
+	panel.Size = UDim2.new(0, PANEL_WIDTH, 0, 0)
+	panel.AutomaticSize = Enum.AutomaticSize.Y
+	panel.AnchorPoint = Vector2.new(0, 1)
+	panel.Position = UDim2.new(0, 16, 1, -16)
+	panel.BackgroundColor3 = PANEL_COLOR
+	panel.BackgroundTransparency = 0.1
+	panel.BorderSizePixel = 0
+	panel.Visible = false
+	panel.Parent = screenGui
 
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = frame
+	corner.Parent = panel
 
-	local header = Instance.new("TextLabel")
-	header.Name = "Header"
-	header.Position = UDim2.new(0, 12, 0, 8)
-	header.Size = UDim2.new(1, -24, 0, 18)
-	header.BackgroundTransparency = 1
-	header.Font = Enum.Font.GothamBold
-	header.TextSize = 15
-	header.TextXAlignment = Enum.TextXAlignment.Left
-	header.TextColor3 = TITLE_COLOR
-	header.Text = "Music"
-	header.Parent = frame
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, 10)
+	padding.PaddingBottom = UDim.new(0, 10)
+	padding.PaddingLeft = UDim.new(0, 12)
+	padding.PaddingRight = UDim.new(0, 12)
+	padding.Parent = panel
 
-	local line = Instance.new("TextLabel")
-	line.Name = "Line"
-	line.Position = UDim2.new(0, 12, 0, 26)
-	line.Size = UDim2.new(1, -24, 0, 16)
-	line.BackgroundTransparency = 1
-	line.Font = Enum.Font.GothamMedium
-	line.TextSize = 12
-	line.TextXAlignment = Enum.TextXAlignment.Left
-	line.TextColor3 = CAPTION_COLOR
-	line.Text = ""
-	line.Parent = frame
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 6)
+	layout.Parent = panel
 
-	-- The board: the falling area, with the judgement line at its foot.
-	local board = Instance.new("Frame")
-	board.Name = "Board"
-	board.Position = UDim2.new(0, 12, 0, 48)
-	board.Size = UDim2.new(1, -24, 0, 300)
-	board.BackgroundTransparency = 1
-	board.ClipsDescendants = true
-	board.Parent = frame
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "Title"
+	titleLabel.Size = UDim2.new(1, 0, 0, 20)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextSize = 16
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextColor3 = TITLE_COLOR
+	titleLabel.Text = "Music"
+	titleLabel.LayoutOrder = 0
+	titleLabel.Parent = panel
 
-	local lanes: { Frame } = {}
-	local buttons: { TextButton } = {}
-	local laneWidth = 1 / MUSIC.Lanes
+	local songLabel = Instance.new("TextLabel")
+	songLabel.Name = "Song"
+	songLabel.Size = UDim2.new(1, 0, 0, 0)
+	songLabel.AutomaticSize = Enum.AutomaticSize.Y
+	songLabel.BackgroundTransparency = 1
+	songLabel.Font = Enum.Font.GothamBold
+	songLabel.TextSize = 18
+	songLabel.TextXAlignment = Enum.TextXAlignment.Left
+	songLabel.TextWrapped = true
+	songLabel.TextColor3 = TITLE_COLOR
+	songLabel.Text = ""
+	songLabel.LayoutOrder = 1
+	songLabel.Parent = panel
 
-	for lane = 1, MUSIC.Lanes do
-		local column = Instance.new("Frame")
-		column.Name = `Lane{lane}`
-		column.Position = UDim2.new(laneWidth * (lane - 1), 3, 0, 0)
-		column.Size = UDim2.new(laneWidth, -6, 1, 0)
-		column.BackgroundColor3 = LANE_COLOR
-		column.BorderSizePixel = 0
-		column.Parent = board
-		table.insert(lanes, column)
+	local noteLabel = Instance.new("TextLabel")
+	noteLabel.Name = "Note"
+	noteLabel.Size = UDim2.new(1, 0, 0, 0)
+	noteLabel.AutomaticSize = Enum.AutomaticSize.Y
+	noteLabel.BackgroundTransparency = 1
+	noteLabel.Font = Enum.Font.Gotham
+	noteLabel.TextSize = 13
+	noteLabel.TextXAlignment = Enum.TextXAlignment.Left
+	noteLabel.TextColor3 = CAPTION_COLOR
+	noteLabel.Text = ""
+	noteLabel.LayoutOrder = 2
+	noteLabel.Parent = panel
 
-		local columnCorner = Instance.new("UICorner")
-		columnCorner.CornerRadius = UDim.new(0, 5)
-		columnCorner.Parent = column
+	-- The count-in. Its own line, front and centre while it runs, because the ladder in
+	-- this subject is entirely warning -- see the header -- and a reward that shares a
+	-- line with something else reads as half the reward.
+	local countInLabel = Instance.new("TextLabel")
+	countInLabel.Name = "CountIn"
+	countInLabel.Size = UDim2.new(1, 0, 0, 22)
+	countInLabel.BackgroundTransparency = 1
+	countInLabel.Font = Enum.Font.GothamBold
+	countInLabel.TextSize = 18
+	countInLabel.TextXAlignment = Enum.TextXAlignment.Left
+	countInLabel.TextColor3 = COUNT_IN_COLOR
+	countInLabel.Text = ""
+	countInLabel.Visible = false
+	countInLabel.LayoutOrder = 3
+	countInLabel.Parent = panel
 
-		-- The judgement line, per lane rather than one bar across, so it reads as the place
-		-- each note is going rather than as a divider.
-		local hitLine = Instance.new("Frame")
-		hitLine.Name = "HitLine"
-		hitLine.AnchorPoint = Vector2.new(0, 1)
-		hitLine.Position = UDim2.new(0, 0, 1, -22)
-		hitLine.Size = UDim2.new(1, 0, 0, 3)
-		hitLine.BackgroundColor3 = LINE_COLOR
-		hitLine.BorderSizePixel = 0
-		hitLine.Parent = column
+	local track = Instance.new("Frame")
+	track.Name = "Track"
+	track.Size = UDim2.new(1, 0, 0, 14)
+	track.BackgroundColor3 = TRACK_COLOR
+	track.BorderSizePixel = 0
+	track.Visible = false
+	track.LayoutOrder = 4
+	track.Parent = panel
 
-		-- The key, and the touch target. Same control for both, sized past the 44px minimum so
-		-- a thumb can find it -- this is the only input in the lesson and on a phone it is the
-		-- whole of it.
-		local button = Instance.new("TextButton")
-		button.Name = `Key{lane}`
-		button.Position = UDim2.new(laneWidth * (lane - 1), 3, 1, -60)
-		button.Size = UDim2.new(laneWidth, -6, 0, 48)
-		button.BackgroundColor3 = LANE_COLORS[((lane - 1) % #LANE_COLORS) + 1]
-		button.BackgroundTransparency = 0.55
-		button.BorderSizePixel = 0
-		button.AutoButtonColor = false
-		button.Font = Enum.Font.GothamBold
-		button.TextSize = 15
-		button.TextColor3 = TITLE_COLOR
-		button.Text = LANE_KEYS[lane] ~= nil and LANE_KEYS[lane].Name or tostring(lane)
-		button.Parent = frame
-		table.insert(buttons, button)
+	local sweetBand = Instance.new("Frame")
+	sweetBand.Name = "SweetBand"
+	sweetBand.Size = UDim2.new(0, 0, 1, 0)
+	sweetBand.BackgroundColor3 = SWEET_COLOR
+	sweetBand.BorderSizePixel = 0
+	sweetBand.Parent = track
 
-		local buttonCorner = Instance.new("UICorner")
-		buttonCorner.CornerRadius = UDim.new(0, 6)
-		buttonCorner.Parent = button
-	end
+	local perfectBand = Instance.new("Frame")
+	perfectBand.Name = "PerfectBand"
+	perfectBand.Size = UDim2.new(0, 0, 1, 0)
+	perfectBand.BackgroundColor3 = PERFECT_COLOR
+	perfectBand.BorderSizePixel = 0
+	perfectBand.Parent = track
 
-	local footer = Instance.new("TextLabel")
-	footer.Name = "Footer"
-	footer.Position = UDim2.new(0, 12, 1, -10)
-	footer.AnchorPoint = Vector2.new(0, 1)
-	footer.Size = UDim2.new(1, -24, 0, 14)
-	footer.BackgroundTransparency = 1
-	footer.Font = Enum.Font.GothamMedium
-	footer.TextSize = 11
-	footer.TextXAlignment = Enum.TextXAlignment.Left
-	footer.TextColor3 = CAPTION_COLOR
-	footer.Text = ""
-	footer.Parent = frame
+	local needle = Instance.new("Frame")
+	needle.Name = "Needle"
+	needle.Size = UDim2.new(0, 2, 1, 0)
+	needle.AnchorPoint = Vector2.new(0.5, 0)
+	needle.Position = UDim2.new(0, 0, 0, 0)
+	needle.BackgroundColor3 = NEEDLE_COLOR
+	needle.BorderSizePixel = 0
+	needle.Parent = track
 
-	local self: MusicUIHandle = setmetatable({
-		gui = gui,
-		frame = frame,
-		header = header,
-		line = line,
-		board = board,
-		lanes = lanes,
-		buttons = buttons,
-		footer = footer,
-		notes = {},
-		claimed = {},
-		startedAt = 0,
-		active = false,
-		perfectMs = 0,
-		greatMs = 0,
-		goodMs = 0,
-		atStand = false,
-		dots = {},
-		connection = nil,
-		onHit = nil,
-	}, MusicUI) :: any
+	local gradeLabel = Instance.new("TextLabel")
+	gradeLabel.Name = "Grade"
+	gradeLabel.Size = UDim2.new(1, 0, 0, 18)
+	gradeLabel.BackgroundTransparency = 1
+	gradeLabel.Font = Enum.Font.GothamBold
+	gradeLabel.TextSize = 15
+	gradeLabel.TextXAlignment = Enum.TextXAlignment.Left
+	gradeLabel.TextColor3 = TITLE_COLOR
+	gradeLabel.Text = ""
+	gradeLabel.Visible = false
+	gradeLabel.LayoutOrder = 5
+	gradeLabel.Parent = panel
 
-	for lane = 1, MUSIC.Lanes do
-		buttons[lane].MouseButton1Down:Connect(function()
-			MusicUI._strike(self, lane)
-		end)
-	end
+	local masteryLabel = Instance.new("TextLabel")
+	masteryLabel.Name = "Mastery"
+	masteryLabel.Size = UDim2.new(1, 0, 0, 0)
+	masteryLabel.AutomaticSize = Enum.AutomaticSize.Y
+	masteryLabel.BackgroundTransparency = 1
+	masteryLabel.Font = Enum.Font.Gotham
+	masteryLabel.TextSize = 12
+	masteryLabel.TextXAlignment = Enum.TextXAlignment.Left
+	masteryLabel.TextWrapped = true
+	masteryLabel.TextColor3 = CAPTION_COLOR
+	masteryLabel.Text = ""
+	masteryLabel.LayoutOrder = 6
+	masteryLabel.Parent = panel
 
-	UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
-		if processed or not self.active then
-			return
-		end
-		for lane, key in LANE_KEYS do
-			if input.KeyCode == key then
-				MusicUI._strike(self, lane)
-				return
-			end
-		end
-	end)
+	local summaryLabel = Instance.new("TextLabel")
+	summaryLabel.Name = "Summary"
+	summaryLabel.Size = UDim2.new(1, 0, 0, 0)
+	summaryLabel.AutomaticSize = Enum.AutomaticSize.Y
+	summaryLabel.BackgroundTransparency = 1
+	summaryLabel.Font = Enum.Font.GothamMedium
+	summaryLabel.TextSize = 14
+	summaryLabel.TextXAlignment = Enum.TextXAlignment.Left
+	summaryLabel.TextWrapped = true
+	summaryLabel.TextColor3 = TITLE_COLOR
+	summaryLabel.Text = ""
+	summaryLabel.Visible = false
+	summaryLabel.LayoutOrder = 7
+	summaryLabel.Parent = panel
 
-	return self
+	-- Its own PUSH button rather than StatsUI's shared one -- see the header. Same look
+	-- as the shared one so the press reads as the same verb everywhere it appears.
+	local pushButton = Instance.new("TextButton")
+	pushButton.Name = "PushButton"
+	pushButton.Size = UDim2.new(0, 220, 0, 56)
+	pushButton.AnchorPoint = Vector2.new(0.5, 1)
+	pushButton.Position = UDim2.new(0.5, 0, 1, -24)
+	pushButton.BackgroundColor3 = PUSH_INACTIVE_COLOR
+	pushButton.AutoButtonColor = false
+	pushButton.Font = Enum.Font.GothamBold
+	pushButton.TextSize = 20
+	pushButton.TextColor3 = Color3.fromRGB(120, 120, 130)
+	pushButton.Text = "PUSH"
+	pushButton.Visible = false
+	pushButton.Parent = screenGui
+
+	local pushCorner = Instance.new("UICorner")
+	pushCorner.CornerRadius = UDim.new(0, 10)
+	pushCorner.Parent = pushButton
+
+	screenGui.Parent = playerGui
+
+	return setmetatable({
+		screenGui = screenGui,
+		panel = panel,
+		titleLabel = titleLabel,
+		songLabel = songLabel,
+		noteLabel = noteLabel,
+		countInLabel = countInLabel,
+		track = track,
+		sweetBand = sweetBand,
+		perfectBand = perfectBand,
+		needle = needle,
+		gradeLabel = gradeLabel,
+		masteryLabel = masteryLabel,
+		summaryLabel = summaryLabel,
+		pushButton = pushButton,
+		sweepConnection = nil,
+		sweepBaseProgress = 0,
+		sweepElapsed = 0,
+		running = false,
+	}, MusicUI) :: MusicUIHandle
 end
 
-function MusicUI.OnHit(self: MusicUIHandle, handler: (index: number, offsetMs: number) -> ())
-	self.onHit = handler
-end
-
--- A lane was struck. Finds the nearest unclaimed note in that lane and judges it.
---
--- Nearest rather than first: on a chord or a fast run the next note in a lane may already be
--- behind the line while the one after it is closer, and taking the first would score the
--- wrong one and then miss the one the player actually hit.
-function MusicUI._strike(self: MusicUIHandle, lane: number)
-	if not self.active or not self.atStand then
-		return
-	end
-	local now = (os.clock() - self.startedAt) * 1000
-
-	local bestIndex: number? = nil
-	local bestOffset = math.huge
-	for index, note in self.notes do
-		if note.lane == lane and not self.claimed[index] then
-			local offset = now - note.atMs
-			if math.abs(offset) < math.abs(bestOffset) then
-				bestIndex = index
-				bestOffset = offset
-			end
-		end
-	end
-
-	if bestIndex == nil or math.abs(bestOffset) > self.goodMs then
-		-- A strike into empty air. Costs nothing at all, which is deliberate: penalising a
-		-- stray tap would make the safe play "do not press unless certain", and hesitation is
-		-- the opposite of what a rhythm lesson is teaching.
-		return
-	end
-
-	self.claimed[bestIndex] = true
-	local handler = self.onHit
-	if handler ~= nil then
-		handler(bestIndex, bestOffset)
-	end
-
-	-- The flash. The whole feedback layer, and deliberately the whole of it: the research
-	-- constraint in the activity law is that both no juice and extreme juice make an
-	-- experience worse, and a lane lighting under the hand is enough to say "that one
-	-- counted" without competing with the notes still falling.
-	local button = self.buttons[lane]
-	if button ~= nil then
-		button.BackgroundTransparency = 0.05
-	end
-end
-
--- Moves every note. One connection for the whole panel rather than one per note.
-function MusicUI._frame(self: MusicUIHandle)
-	if not self.active then
-		return
-	end
-	local now = (os.clock() - self.startedAt) * 1000
-	local boardHeight = self.board.AbsoluteSize.Y
-	local hitY = boardHeight - 22
-
-	for index, note in self.notes do
-		local dot = self.dots[index]
-		if dot == nil then
-			continue
-		end
-		local ahead = (note.atMs - now) / 1000
-		if ahead > LEAD_SECONDS or ahead < -0.4 or self.claimed[index] then
-			dot.Visible = false
-		else
-			dot.Visible = true
-			-- 0 at the top of the lead window, 1 at the judgement line.
-			local share = 1 - (ahead / LEAD_SECONDS)
-			dot.Position = UDim2.new(0, 0, 0, math.floor(share * hitY) - dot.AbsoluteSize.Y)
-		end
-	end
-
-	-- Let the key flashes decay. Cheap, and it keeps the flash out of the strike path.
-	for _, button in self.buttons do
-		if button.BackgroundTransparency < 0.55 then
-			button.BackgroundTransparency = math.min(button.BackgroundTransparency + 0.06, 0.55)
-		end
+local function stopSweep(self: MusicUIHandle)
+	if self.sweepConnection ~= nil then
+		self.sweepConnection:Disconnect()
+		self.sweepConnection = nil
 	end
 end
 
--- Builds one frame per note in the chart. Called once, when a chart arrives.
-function MusicUI._buildDots(self: MusicUIHandle)
-	for _, dot in self.dots do
-		dot:Destroy()
+-- The mastery line: what the next rung buys, in the player's words rather than a level
+-- number -- the same call HuntUI's masterySentence makes and for the same reason.
+local function masterySentence(state: MusicState): string
+	if state.level >= state.levelMax then
+		return "You can keep this beat. Music can be skipped."
 	end
-	self.dots = {}
-
-	for index, note in self.notes do
-		local column = self.lanes[note.lane]
-		if column == nil then
-			continue
-		end
-		local dot = Instance.new("Frame")
-		dot.Name = `Note{index}`
-		dot.Size = UDim2.new(1, 0, 0, if note.holdMs > 0 then 34 else 14)
-		dot.BackgroundColor3 = LANE_COLORS[((note.lane - 1) % #LANE_COLORS) + 1]
-		dot.BorderSizePixel = 0
-		dot.Visible = false
-		dot.Parent = column
-		self.dots[index] = dot
-
-		local dotCorner = Instance.new("UICorner")
-		dotCorner.CornerRadius = UDim.new(0, 4)
-		dotCorner.Parent = dot
-	end
+	local left = state.passesPerLevel - state.passes
+	local word = if left == 1 then "song" else "songs"
+	return `{left} good {word} until the count-in runs a little longer.`
 end
 
+local function gradeColor(grade: string): Color3
+	if grade == "Perfect" then
+		return PERFECT_GRADE_COLOR
+	elseif grade == "Good" then
+		return GOOD_GRADE_COLOR
+	end
+	return MISS_GRADE_COLOR
+end
+
+-- The whole panel, from one snapshot. Nil is the usual state and takes it down.
 function MusicUI.Set(self: MusicUIHandle, state: MusicState?)
-	if state == nil or not state.active then
-		self.active = false
-		local connection = self.connection
-		if connection ~= nil then
-			connection:Disconnect()
-			self.connection = nil
-		end
-		if state ~= nil and state.line ~= "" then
-			self.frame.Visible = true
-			self.board.Visible = false
-			for _, button in self.buttons do
-				button.Visible = false
-			end
-			self.header.Text = "Music"
-			self.line.Text = state.line
-			self.footer.Text = ""
-		else
-			self.frame.Visible = false
-		end
+	if state == nil then
+		self.panel.Visible = false
+		self.pushButton.Visible = false
+		self.running = false
+		stopSweep(self)
 		return
 	end
 
-	-- A new chart. Recognised by the note count changing rather than by a lesson id, because
-	-- the chart is the only thing that identifies a piece and it is fixed for its whole life.
-	if #state.notes ~= #self.notes then
-		self.notes = state.notes
-		self.claimed = {}
-		-- The clock starts when the chart lands here, not when the server started it. See the
-		-- note at the top: the player is judged against the notes they saw fall, and the
-		-- count-in absorbs the difference.
-		self.startedAt = os.clock()
-		MusicUI._buildDots(self)
+	self.panel.Visible = true
+	self.running = true
+
+	-- The closing line replaces the working panel for a beat, exactly as HuntUI's
+	-- summary does: everything else about a song already over is a thing arguing with
+	-- the sentence that just landed.
+	local summary = state.summary
+	if summary ~= nil then
+		stopSweep(self)
+		self.pushButton.Visible = false
+		self.summaryLabel.Visible = true
+		self.summaryLabel.Text = summary
+		self.songLabel.Visible = false
+		self.noteLabel.Visible = false
+		self.countInLabel.Visible = false
+		self.track.Visible = false
+		self.gradeLabel.Visible = false
+		self.masteryLabel.Visible = false
+		return
 	end
 
-	self.active = true
-	self.perfectMs = state.perfectMs
-	self.greatMs = state.greatMs
-	self.goodMs = state.goodMs
-	self.atStand = state.atStand
+	self.summaryLabel.Visible = false
+	self.songLabel.Visible = true
+	self.noteLabel.Visible = true
+	self.masteryLabel.Visible = true
+	self.songLabel.Text = state.songLabel
+	self.noteLabel.Text = `Note {state.note} of {state.notes} -- {state.hits} on the beat`
+	self.masteryLabel.Text = masterySentence(state)
 
-	self.frame.Visible = true
-	self.board.Visible = true
-	for _, button in self.buttons do
-		button.Visible = true
-		button.Active = state.atStand
+	self.sweetBand.Size = UDim2.new(state.sweetHalf * 2, 0, 1, 0)
+	self.sweetBand.Position = UDim2.new(state.sweetCenter - state.sweetHalf, 0, 0, 0)
+	self.perfectBand.Size = UDim2.new(state.perfectHalf * 2, 0, 1, 0)
+	self.perfectBand.Position = UDim2.new(state.sweetCenter - state.perfectHalf, 0, 0, 0)
+
+	if state.phase == "leadIn" then
+		stopSweep(self)
+		self.countInLabel.Visible = true
+		self.countInLabel.Text = `Count-in -- {formatSeconds(state.countInSecondsLeft)}s`
+		self.track.Visible = false
+		self.gradeLabel.Visible = false
+		self.pushButton.Visible = false
+		return
 	end
 
-	self.header.Text = `Music — {state.perfect + state.great + state.good}/{state.notesTotal}`
-	self.line.Text = if state.atStand then state.line else "Go to the stand."
-	self.footer.Text = `perfect {state.perfect}  great {state.great}  good {state.good}  missed {state.missed}`
-		.. `  ·  streak {state.streak}  ·  window {math.floor(state.goodMs)}ms`
-		.. `  ·  level {state.masteryLevel}`
+	self.countInLabel.Visible = false
+	self.track.Visible = true
 
-	if self.connection == nil then
-		self.connection = RunService.RenderStepped:Connect(function()
-			MusicUI._frame(self)
-		end)
+	if state.phase == "verdict" then
+		stopSweep(self)
+		self.needle.Position = UDim2.new(state.progress, 0, 0, 0)
+		local grade = state.grade
+		self.gradeLabel.Visible = grade ~= nil
+		if grade ~= nil then
+			self.gradeLabel.Text = grade
+			self.gradeLabel.TextColor3 = gradeColor(grade)
+		end
+		self.pushButton.Visible = true
+		self.pushButton.BackgroundColor3 = PUSH_INACTIVE_COLOR
+		self.pushButton.TextColor3 = Color3.fromRGB(120, 120, 130)
+		return
 	end
+
+	-- Sweeping. Interpolated client-side between pushes for the same reason StatsUI's
+	-- gym and drill rows are: the server ticks a handful of times a second, and a needle
+	-- that only moved on a tick would stagger instead of sweep.
+	self.gradeLabel.Visible = false
+	self.pushButton.Visible = true
+	self.pushButton.BackgroundColor3 = PUSH_ACTIVE_COLOR
+	self.pushButton.TextColor3 = Color3.fromRGB(30, 25, 10)
+
+	stopSweep(self)
+	self.sweepBaseProgress = state.elapsedShare
+	self.sweepElapsed = 0
+	local sweepSeconds = state.sweepSeconds
+	local curve = state.curve
+	self.sweepConnection = RunService.RenderStepped:Connect(function(dt: number)
+		self.sweepElapsed += dt
+		local share = math.min(1, self.sweepBaseProgress + self.sweepElapsed / sweepSeconds)
+		self.needle.Position = UDim2.new(Sweep.At(curve, share), 0, 0, 0)
+	end)
 end
 
-function MusicUI.Destroy(self: MusicUIHandle)
-	local connection = self.connection
-	if connection ~= nil then
-		connection:Disconnect()
-	end
-	self.gui:Destroy()
+function MusicUI.IsRunning(self: MusicUIHandle): boolean
+	return self.running
+end
+
+function MusicUI.OnPushActivated(self: MusicUIHandle, callback: () -> ())
+	self.pushButton.Activated:Connect(callback)
 end
 
 return MusicUI

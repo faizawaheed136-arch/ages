@@ -60,20 +60,21 @@ local BADGE_NAME = "Badge"
 -- a badge is not a number anybody balances a life simulator with, and putting it
 -- next to the numbers that are makes both harder to find.
 local BADGE_SIZE = 0.7
--- The same gold ChoiceMarkers paints a choice pad and Interact's own panel style
--- paints its accent -- see PAD_COLOR in ChoiceMarkers.luau and DELIVERY_STYLES.Interact
--- in ChoicePanel.luau. Three different surfaces agreeing on one color is what makes it
--- read as "you can act on this" rather than as a badge that happens to be gold; a plain
--- off-white plate carried none of that meaning.
-local BADGE_COLOR = Color3.fromRGB(245, 205, 120)
--- The gradient's lighter and darker ends, either side of BADGE_COLOR. Turns a flat
--- gold square into a struck coin -- light catching the top, the bottom falling into
--- its own shadow -- which is the cheapest read of "this is a raised, physical thing"
--- a Frame can give without a real light source.
-local BADGE_COLOR_LIGHT = Color3.fromRGB(255, 234, 186)
-local BADGE_COLOR_SHADOW = Color3.fromRGB(210, 164, 84)
-local BADGE_STROKE = Color3.fromRGB(20, 18, 14)
-local BADGE_TEXT_COLOR = Color3.fromRGB(20, 18, 14)
+-- Deliberately off the gold ChoiceMarkers still paints a choice pad with. Gold on
+-- this badge used to agree with PAD_COLOR in ChoiceMarkers.luau and
+-- DELIVERY_STYLES.Interact in ChoicePanel.luau, but the E badge asked for its own
+-- read: a dark glass chip rather than a struck coin, so a player never confuses "a
+-- person to talk to" with "a floor mark to walk onto" at a glance. Those other two
+-- surfaces were left alone on purpose -- this is the one place gold stopped meaning
+-- "go here" and started meaning "press E", and only this file's badge needed to say
+-- that.
+local BADGE_COLOR = Color3.fromRGB(22, 24, 28)
+-- A near-white sheen rather than a second solid color: the gradient below fades
+-- from this at the badge's top edge down into plain BADGE_COLOR, so the panel reads
+-- as backlit glass catching a highlight rather than as a painted, opaque plate.
+local BADGE_SHEEN_COLOR = Color3.fromRGB(255, 255, 255)
+local BADGE_STROKE = Color3.fromRGB(232, 238, 245)
+local BADGE_TEXT_COLOR = Color3.fromRGB(240, 244, 250)
 
 -- Asleep until you are near it. Dimmed rather than hidden, because a world where
 -- interactable things are invisible until you are already touching them is a world
@@ -294,33 +295,39 @@ local function buildBadge(parent: Instance): Frame
 	badge.BorderSizePixel = 0
 	badge.Parent = parent
 
-	-- A full circle rather than a rounded square. A coin reads as a single, deliberate
-	-- shape from across a room; a rounded square reads as "a label that got corners
-	-- filed off" the moment you are close enough to see the difference.
+	-- A rounded square rather than a struck coin -- the modern HUD-chip shape most
+	-- players already read as "a key goes here" from other games, and a shape a
+	-- gold pickup disc on the floor is never drawn in, so the two never get read as
+	-- the same kind of thing.
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.5, 0)
+	corner.CornerRadius = UDim.new(0.28, 0)
 	corner.Parent = badge
 
-	-- Light at the top, the base gold in the middle, shadow at the bottom -- see
-	-- BADGE_COLOR_LIGHT/BADGE_COLOR_SHADOW for why. Rotated 90 so the light comes from
-	-- above rather than from the side, which is the direction every other lit surface
-	-- in this game's rooms agrees a light source lives.
+	-- A glass sheen rather than a lit coin: near-white at the top edge, fading to
+	-- plain BADGE_COLOR by a third of the way down and staying there. Both the color
+	-- and the transparency ramp move together, so the highlight reads as light
+	-- glancing off a dark pane rather than as a second flat color band.
 	local gradient = Instance.new("UIGradient")
 	gradient.Rotation = 90
 	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, BADGE_COLOR_LIGHT),
-		ColorSequenceKeypoint.new(0.55, BADGE_COLOR),
-		ColorSequenceKeypoint.new(1, BADGE_COLOR_SHADOW),
+		ColorSequenceKeypoint.new(0, BADGE_SHEEN_COLOR),
+		ColorSequenceKeypoint.new(0.35, BADGE_COLOR),
+		ColorSequenceKeypoint.new(1, BADGE_COLOR),
+	})
+	gradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.55),
+		NumberSequenceKeypoint.new(0.35, 0.92),
+		NumberSequenceKeypoint.new(1, 1),
 	})
 	gradient.Parent = badge
 
-	-- Readable against a white wall and a night sky alike. Without it the badge
-	-- disappears entirely in a bright room, which is most rooms. Thicker than the
-	-- square plate wore, because a circle's edge has nothing else -- no corner, no
-	-- flat side -- to catch the eye and say "this is a distinct object" for it.
+	-- A crisp, near-white hairline rather than a heavy dark ring: the dark glass
+	-- fill already carries the contrast against a bright wall or a night sky, so
+	-- the stroke's job here is just to draw a clean edge on the square, not to
+	-- fight for legibility the way the gold coin's darker-than-gold ring had to.
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = BADGE_STROKE
-	stroke.Thickness = 2
+	stroke.Thickness = 1.25
 	stroke.Transparency = BADGE_STROKE_FAR_TRANSPARENCY
 	stroke.Parent = badge
 

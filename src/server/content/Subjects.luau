@@ -105,6 +105,52 @@ local list: { SceneSubject } = {
 		accentColor = Color3.fromRGB(170, 82, 78),
 		biped = true,
 	},
+	-- Three classmates standing near the school door -- world dressing rather than
+	-- lesson content, built once in SchoolService.buildRoom the same way the sign
+	-- and the pad are, so the door reads as a school with other children at it
+	-- rather than a building the player alone ever stands outside of.
+	--
+	-- Sized against Config.Growth rather than guessed: a ten-year-old (the middle
+	-- of School.StartAge..EndAge) is body 0.81 of an adult's, so a shoulderHeight
+	-- of 3.6 against the teacher's 4.5 puts a classmate visibly shorter than the
+	-- teacher and taller than a toddler, which is the whole of what "a child" has
+	-- to read as here. Three separate ids rather than one reused three times so
+	-- the group is not three copies of the same kid -- the same reason customer,
+	-- coworker and manager are three ids at one body rather than one id recolored
+	-- on the fly.
+	{
+		id = "classmate1",
+		name = "classmate",
+		shoulderHeight = 3.6,
+		bodyLength = 0.9,
+		bodyWidth = 0.85,
+		walkSpeed = 9,
+		color = Color3.fromRGB(196, 120, 84),
+		accentColor = Color3.fromRGB(90, 64, 48),
+		biped = true,
+	},
+	{
+		id = "classmate2",
+		name = "classmate",
+		shoulderHeight = 3.6,
+		bodyLength = 0.9,
+		bodyWidth = 0.85,
+		walkSpeed = 9,
+		color = Color3.fromRGB(94, 150, 176),
+		accentColor = Color3.fromRGB(48, 74, 90),
+		biped = true,
+	},
+	{
+		id = "classmate3",
+		name = "classmate",
+		shoulderHeight = 3.6,
+		bodyLength = 0.9,
+		bodyWidth = 0.85,
+		walkSpeed = 9,
+		color = Color3.fromRGB(150, 176, 94),
+		accentColor = Color3.fromRGB(74, 90, 48),
+		biped = true,
+	},
 }
 
 local byId: { [string]: SceneSubject } = {}

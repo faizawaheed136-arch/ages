@@ -369,9 +369,14 @@ function Exterior.Build(origin: Vector3?, into: Instance?): Instance
 		local position = if run.axis == "x"
 			then place(mid, PLAN.PlinthHeightStuds / 2, run.fixed)
 			else place(run.fixed, PLAN.PlinthHeightStuds / 2, mid)
+		-- **The four runs butt; they do not all overrun.** Every run used to be `span + T` long,
+		-- so at each corner an x-run and a z-run occupied the same 2.5 studs and shared a top face
+		-- at y = 2 -- four coplanar pairs of solid geometry, which is z-fighting waiting to happen
+		-- and which Agent A's new coplanar check in check_city.py caught. The x-runs stay full
+		-- length and the z-runs are shortened by one wall thickness so they land between them.
 		local size = if run.axis == "x"
 			then Vector3.new(span + T, PLAN.PlinthHeightStuds, T + 1)
-			else Vector3.new(T + 1, PLAN.PlinthHeightStuds, span + T)
+			else Vector3.new(T + 1, PLAN.PlinthHeightStuds, span - (T + 1))
 		Engine.CreateWall(position, size, Vector3.new(0, 0, 0), TRIM_MATERIAL, DARK_SLATE, staging).Name = "Plinth"
 	end
 

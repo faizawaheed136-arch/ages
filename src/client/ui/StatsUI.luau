@@ -39,6 +39,7 @@ type TaskState = Types.TaskState
 type LessonState = Types.LessonState
 type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
+type SportsDrillState = Types.SportsDrillState
 type Ribbon = Types.Ribbon
 type RibbonMoment = Types.RibbonMoment
 
@@ -178,6 +179,14 @@ export type StatsUIHandle = typeof(setmetatable(
 		sweepPhase: string?,
 		sweepBaseProgress: number,
 		sweepElapsed: number,
+		-- Which of the two rooms currently owns the shared sweep row -- the gym or the
+		-- sports campus. The two are mutually exclusive by construction (a player is
+		-- never standing in both at once), so one row and one PUSH button serve both
+		-- rather than duplicating an entire HUD row for a second machine hall. Read by
+		-- OnPushActivated's callback to decide which remote a press reports to, and by
+		-- SetWorkout/SetDrill so a stale nil push from the room the player just left
+		-- cannot blank a row the other room just raised.
+		sweepSource: ("gym" | "drill")?,
 		dealerRow: Frame,
 		dealerLabel: TextLabel,
 	},
@@ -943,6 +952,7 @@ function StatsUI.new(): StatsUIHandle
 		sweepPhase = nil,
 		sweepBaseProgress = 0,
 		sweepElapsed = 0,
+		sweepSource = nil,
 		dealerRow = dealerRow,
 		dealerLabel = dealerLabel,
 	}, StatsUI)
@@ -1263,66 +1273,101 @@ function StatsUI.SetPerson(self: StatsUIHandle, state: PersonState?)
 	self.personCaption.TextColor3 = TASK_CAPTION_COLOR
 end
 
--- The workout, or the lack of one.
+-- The normalized shape both the workout row and the drill row reduce to. The two
+-- source states (WorkoutState, SportsDrillState) differ only in field names and in
+-- which stat they gained -- neither of which the row itself draws -- so one shared
+-- shape and one shared renderer replace what would otherwise be two copies of the
+-- same 60 lines of UDim2 math.
+type SweepDisplay = {
+	label: string,
+	phase: "rep" | "verdict",
+	rep: number,
+	reps: number,
+	sweetCenter: number,
+	sweetHalf: number,
+	perfectHalf: number,
+	progress: number,
+	elapsedShare: number,
+	sweepSeconds: number,
+	curve: string,
+	stamina: number,
+	maxStamina: number,
+	grade: string?,
+}
+
+-- Draws the shared sweep row for whichever of the gym or the sports campus just
+-- pushed. `display == nil` is "offer" or "nothing running" collapsed into one --
+-- both hide the row, because an offer is a panel and a row about a session that has
+-- not started would be a row about nothing.
 --
--- Nil and "offer" are the two ways nothing is being asked of the player right
--- now; both hide the row, because an offer is a panel and a row about a workout
--- that has not started would be a row about nothing. Rep and verdict are the two
--- ways something is: the row appears, the PUSH button appears, and the sweep
--- needle runs.
+-- A nil push guards against clobbering the other room: the gym and the sports campus
+-- push independently, and a player who just walked into the sports campus still has
+-- a *stale* nil-or-offer WorkoutUpdated sitting unfired from whenever they last stood
+-- near a gym machine. Without the `sweepSource` check, that stale gym state arriving
+-- a tick after the drill row goes up would blank it. See the field comment on
+-- `sweepSource` on the handle type.
 --
--- The needle is animated client-side between the server's pushes, which arrive
--- about five times a second -- a sweep that only moved in server ticks would be
--- a stagger, not a bar. Each push re-anchors the base so the client's guess is
--- corrected before it can drift by more than a tick.
-function StatsUI.SetWorkout(self: StatsUIHandle, state: WorkoutState?)
+-- The needle is animated client-side between the server's pushes, which arrive about
+-- five times a second -- a sweep that only moved in server ticks would be a stagger,
+-- not a bar. Each push re-anchors the base so the client's guess is corrected before
+-- it can drift by more than a tick.
+local function applySweep(self: StatsUIHandle, source: "gym" | "drill", display: SweepDisplay?)
+	if display == nil then
+		if self.sweepSource ~= nil and self.sweepSource ~= source then
+			return
+		end
+		if self.sweepConnection ~= nil then
+			self.sweepConnection:Disconnect()
+			self.sweepConnection = nil
+		end
+		self.workoutRow.Visible = false
+		self.pushButton.Visible = false
+		self.sweepPhase = nil
+		self.sweepSource = nil
+		return
+	end
+
 	if self.sweepConnection ~= nil then
 		self.sweepConnection:Disconnect()
 		self.sweepConnection = nil
 	end
 
-	if state == nil or state.phase == "offer" then
-		self.workoutRow.Visible = false
-		self.pushButton.Visible = false
-		self.sweepPhase = nil
-		return
-	end
-
+	self.sweepSource = source
 	self.workoutRow.Visible = true
-	self.sweepPhase = state.phase
-	self.workoutLabel.Text = `{state.machineLabel} — rep {state.rep} of {state.reps}`
+	self.sweepPhase = display.phase
+	self.workoutLabel.Text = `{display.label} — rep {display.rep} of {display.reps}`
 
 	-- The bands are redrawn from the state every time rather than set once at build.
-	-- Two things move them: which machine this is, and how fit the character is. The
-	-- second is the point -- health widens the window, and a widening the player
-	-- cannot see is progression that may as well not exist.
-	self.sweepBand.Size = UDim2.new(state.sweetHalf * 2, 0, 1, 0)
-	self.sweepBand.Position = UDim2.new(state.sweetCenter - state.sweetHalf, 0, 0, 0)
-	self.sweepPerfect.Size = UDim2.new(state.perfectHalf * 2, 0, 1, 0)
-	self.sweepPerfect.Position = UDim2.new(state.sweetCenter - state.perfectHalf, 0, 0, 0)
+	-- Two things move them: which machine or station this is, and how fit the
+	-- character is. The second is the point -- health widens the window, and a
+	-- widening the player cannot see is progression that may as well not exist.
+	self.sweepBand.Size = UDim2.new(display.sweetHalf * 2, 0, 1, 0)
+	self.sweepBand.Position = UDim2.new(display.sweetCenter - display.sweetHalf, 0, 0, 0)
+	self.sweepPerfect.Size = UDim2.new(display.perfectHalf * 2, 0, 1, 0)
+	self.sweepPerfect.Position = UDim2.new(display.sweetCenter - display.perfectHalf, 0, 0, 0)
 
-	local staminaLine = `{state.stamina} of {state.maxStamina} stamina`
-	if state.phase == "verdict" then
+	local staminaLine = `{display.stamina} of {display.maxStamina} stamina`
+	if display.phase == "verdict" then
 		-- Frozen at the position the hit landed. The bar is still, the grade
 		-- is spoken, and there is nothing to time until the next rep starts.
-		self.sweepNeedle.Position = UDim2.new(state.progress, 0, 0, 0)
-		self.workoutCaption.Text = `{state.grade or "..."} · {staminaLine}`
+		self.sweepNeedle.Position = UDim2.new(display.progress, 0, 0, 0)
+		self.workoutCaption.Text = `{display.grade or "..."} · {staminaLine}`
 		self.pushButton.BackgroundColor3 = PUSH_INACTIVE_COLOR
 		self.pushButton.TextColor3 = Color3.fromRGB(120, 120, 130)
 	else
-		-- Interpolated forward in the machine's own curve, from the share of the
+		-- Interpolated forward in the station's own curve, from the share of the
 		-- sweep the server says has run. Accumulating share and re-curving it -- as
 		-- opposed to advancing the needle position directly -- is what keeps a
 		-- quickening bar quickening between ticks instead of sliding linearly and
 		-- then jumping when the next state lands.
-		self.sweepBaseProgress = state.elapsedShare
+		self.sweepBaseProgress = display.elapsedShare
 		self.sweepElapsed = 0
 		self.workoutCaption.Text = staminaLine
 		self.pushButton.BackgroundColor3 = PUSH_ACTIVE_COLOR
 		self.pushButton.TextColor3 = Color3.fromRGB(30, 25, 10)
 
-		local sweepSeconds = state.sweepSeconds
-		local curve = state.curve
+		local sweepSeconds = display.sweepSeconds
+		local curve = display.curve
 		self.sweepConnection = RunService.RenderStepped:Connect(function(dt: number)
 			self.sweepElapsed += dt
 			local share = math.min(1, self.sweepBaseProgress + self.sweepElapsed / sweepSeconds)
@@ -1333,8 +1378,65 @@ function StatsUI.SetWorkout(self: StatsUIHandle, state: WorkoutState?)
 	self.pushButton.Visible = true
 end
 
+-- The workout, or the lack of one. See `applySweep` for the shared row this and
+-- `SetDrill` both draw.
+function StatsUI.SetWorkout(self: StatsUIHandle, state: WorkoutState?)
+	if state == nil or state.phase == "offer" then
+		applySweep(self, "gym", nil)
+		return
+	end
+	applySweep(self, "gym", {
+		label = state.machineLabel,
+		phase = state.phase :: ("rep" | "verdict"),
+		rep = state.rep,
+		reps = state.reps,
+		sweetCenter = state.sweetCenter,
+		sweetHalf = state.sweetHalf,
+		perfectHalf = state.perfectHalf,
+		progress = state.progress,
+		elapsedShare = state.elapsedShare,
+		sweepSeconds = state.sweepSeconds,
+		curve = state.curve,
+		stamina = state.stamina,
+		maxStamina = state.maxStamina,
+		grade = state.grade,
+	})
+end
+
+-- The sports drill, or the lack of one. Same row, same button, the sports campus's
+-- four stations in place of the gym's four machines -- see `applySweep`.
+function StatsUI.SetDrill(self: StatsUIHandle, state: SportsDrillState?)
+	if state == nil or state.phase == "offer" then
+		applySweep(self, "drill", nil)
+		return
+	end
+	applySweep(self, "drill", {
+		label = state.stationLabel,
+		phase = state.phase :: ("rep" | "verdict"),
+		rep = state.rep,
+		reps = state.reps,
+		sweetCenter = state.sweetCenter,
+		sweetHalf = state.sweetHalf,
+		perfectHalf = state.perfectHalf,
+		progress = state.progress,
+		elapsedShare = state.elapsedShare,
+		sweepSeconds = state.sweepSeconds,
+		curve = state.curve,
+		stamina = state.stamina,
+		maxStamina = state.maxStamina,
+		grade = state.grade,
+	})
+end
+
 -- Pressed while the needle is sweeping. The server decides the quality of the
--- hit; this button only reports that a hit was attempted.
+-- hit; this button only reports that a hit was attempted. Which server: whichever
+-- room currently owns the row, read off `sweepSource` by the caller in
+-- init.client.luau rather than decided here, since firing the remote is the one
+-- part of this that has to live where the two remotes themselves are in scope.
+function StatsUI.ActiveSweepSource(self: StatsUIHandle): ("gym" | "drill")?
+	return self.sweepSource
+end
+
 function StatsUI.OnPushActivated(self: StatsUIHandle, callback: () -> ())
 	self.pushButton.Activated:Connect(callback)
 end

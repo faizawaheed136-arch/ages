@@ -312,6 +312,21 @@ export type JobVouch = {
 	worthSmarts: number,
 }
 
+-- A skill floor a job asks for, read off SkillService.LevelOf rather than off any
+-- stat. Its own type rather than a second shift of `minSmarts`, because it is asking a
+-- different question -- not "were you taught something", but "have you practiced
+-- something until you were good at it" -- and the two must never be interchangeable or
+-- a smarts grind would quietly buy a place on the athlete ladder.
+export type JobSkillGate = {
+	-- One of Config.Skills.Definitions' ids. Checked against that table at content
+	-- load, the same way a vouch's personId is checked against People.
+	skillId: string,
+	-- A rung on Config.Skills.Levels, 1 through 8. Not XP -- the ladder is shared by
+	-- every discipline precisely so a job can name a level and mean the same thing
+	-- whichever skill it is gating on.
+	level: number,
+}
+
 export type Job = {
 	id: string,
 	title: string,
@@ -344,6 +359,11 @@ export type Job = {
 	-- Who could put in a word for you here, if anyone would. Only ever read alongside
 	-- `minSmarts`, because lowering a bar that does not exist is not a favour.
 	vouch: JobVouch?,
+	-- A discipline you have to have practiced, not been taught. Nil for every job that
+	-- does not care what a player has drilled with their hands -- which today is every
+	-- job except the athlete ladder, the one career this game gates on a skill rather
+	-- than an age, a record, or a classroom.
+	minSkill: JobSkillGate?,
 	-- Job-specific shift events. Picked from first, falling back to the global pool.
 	-- Nil means the job uses only the generic event pool.
 	shiftEvents: { JobShiftEvent }?,
@@ -759,7 +779,7 @@ export type LessonState = {
 -- Not the same word as content/Subjects.luau, which holds SceneSubject -- the animals
 -- and people an event can be *about*. Unrelated, and the collision is unfortunate; this
 -- is the one on a timetable.
-export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" | "geography"
+export type SchoolSubjectId = "science" | "math" | "reading" | "art" | "music" | "geography" | "pe"
 
 -- How a subject is played. The whole content of the Bully model in one union: a
 -- subject is a verb, and two subjects sharing a verb are the same activity in
@@ -1000,7 +1020,11 @@ export type MusicState = {
 	masteryLevel: number,
 }
 
-export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep" | "drill"
+-- **Both agents added to this union, so it is the union.** C added build/keep/drill for the
+-- reading, music and sports verbs; A added rhythm for the Music minigame and match for the
+-- 3v3 PE soccer. Taking either side alone silently drops the other agent's subjects, and
+-- Curriculum now declares nine entries across exactly these nine verbs.
+export type SchoolVerb = "quiz" | "procedure" | "hunt" | "copy" | "build" | "keep" | "drill" | "rhythm" | "match"
 
 -- One school subject as content declares it.
 -- One period on the timetable, as the player sees it.
@@ -1556,6 +1580,215 @@ export type WorkoutState = {
 	looksGained: number,
 }
 
+-- A sports drill in progress, pushed as a whole snapshot. The same three phases as
+-- WorkoutState, aimed at the sports campus's four stations instead of the gym's four
+-- machines -- see Config.SportsDrill's header for why this is the same verb rather
+-- than a second one. Kept as its own type instead of reusing WorkoutState because the
+-- two systems' stat gains differ (health/happiness here, health/looks there) and a
+-- shared type would either carry a field neither one graded, or ask a payout in one
+-- system to lie about which stat it moved.
+export type SportsDrillState = {
+	phase: "offer" | "rep" | "verdict",
+	-- Station kind string ("boxing", "basketball", "volleyball", "soccer").
+	station: string,
+	stationLabel: string,
+	rep: number,
+	reps: number,
+	progress: number,
+	sweetCenter: number,
+	sweetHalf: number,
+	perfectHalf: number,
+	sweepSeconds: number,
+	curve: string,
+	elapsedShare: number,
+	stamina: number,
+	maxStamina: number,
+	grade: string?,
+	healthGained: number,
+	happinessGained: number,
+}
+
+-- A life's whole soccer record: every match event that is not a drill rep, kept across
+-- the life rather than the year -- see LifeData.soccerCareer. What the menu's Soccer
+-- Skills section reads to show something sturdier than "athletics went up."
+export type SoccerCareer = {
+	matchesPlayed: number,
+	goals: number,
+	assists: number,
+	tackles: number,
+	shotsTaken: number,
+	shotsOnTarget: number,
+}
+
+-- One body on the pitch, as the HUD draws the scoreboard row for it. `isYou` rather
+-- than the client comparing a userId, on the same rule every other roster in this game
+-- follows: the server already knows who is asking and says so directly, instead of
+-- handing back a raw id for the client to compare against Players.LocalPlayer and
+-- possibly get wrong.
+export type SoccerRosterEntry = {
+	name: string,
+	team: "home" | "away",
+	isBot: boolean,
+	isYou: boolean,
+	isCarrier: boolean,
+}
+
+-- The soccer pitch, pushed to every client standing near enough to watch -- not only
+-- the six on the roster. See SoccerService's header for why this is a scoreboard
+-- broadcast rather than a per-player session state the way every other verb in the
+-- school is: a match has an audience a solo drill never does.
+export type SoccerMatchState = {
+	-- False for the one push before the match loop's first tick has run, and never
+	-- again -- the roster is bot-filled at boot, see Config.Sports.Soccer's header, so
+	-- there is always a live match once this is true.
+	running: boolean,
+	homeScore: number,
+	awayScore: number,
+	secondsLeft: number,
+	roster: { SoccerRosterEntry },
+	-- Yours, or nil while you are only close enough to watch.
+	yourTeam: ("home" | "away")?,
+	onRoster: boolean,
+	isCarrier: boolean,
+	-- The charge-and-release shot meter -- server-driven, the same shape
+	-- FightService's strike charge already proves, held against Config.Sports.Soccer's
+	-- own ShotChargeSeconds instead of Fight's.
+	charging: boolean,
+	chargeShare: number,
+	-- A short verdict line -- "Goal!", "Tackled", "Wide" -- held on screen for a beat
+	-- after it happens rather than only implied by the score moving.
+	verdict: string?,
+	-- True when you are near enough to take over a bot's slot but are not on the
+	-- roster yet -- what draws the join prompt instead of the scoreboard controls.
+	canJoin: boolean,
+	-- True while this session is also grading a PE lesson for you -- see
+	-- SoccerService.Begin and Curriculum's "pe" entry. Drawn as a small tag on the
+	-- HUD so a student can tell this particular match counts for school.
+	gradingPe: boolean,
+	career: SoccerCareer,
+}
+
+-- A life's whole basketball record, same shape as SoccerCareer -- see
+-- Config.Sports.Basketball's header for why basketball is soccer's own skeleton with
+-- a hoop instead of a goal.
+export type BasketballCareer = {
+	matchesPlayed: number,
+	points: number,
+	assists: number,
+	rebounds: number,
+	steals: number,
+	shotsTaken: number,
+	shotsMade: number,
+}
+
+export type BasketballRosterEntry = {
+	name: string,
+	team: "home" | "away",
+	isBot: boolean,
+	isYou: boolean,
+	isCarrier: boolean,
+}
+
+export type BasketballMatchState = {
+	running: boolean,
+	homeScore: number,
+	awayScore: number,
+	secondsLeft: number,
+	roster: { BasketballRosterEntry },
+	yourTeam: ("home" | "away")?,
+	onRoster: boolean,
+	isCarrier: boolean,
+	charging: boolean,
+	chargeShare: number,
+	verdict: string?,
+	canJoin: boolean,
+	gradingPe: boolean,
+	career: BasketballCareer,
+}
+
+-- A life's whole volleyball record. Kills and digs stand in for SoccerCareer's goals
+-- and tackles -- the two events that show up in the box score of the real sport --
+-- and `touches` is the volume stat underneath both, the same job SoccerCareer's
+-- shotsTaken plays for shotsOnTarget.
+export type VolleyballCareer = {
+	matchesPlayed: number,
+	kills: number,
+	assists: number,
+	digs: number,
+	touches: number,
+}
+
+-- No isCarrier -- volleyball has no carrier, the ball is never held. See
+-- Config.Sports.Volleyball's header.
+export type VolleyballRosterEntry = {
+	name: string,
+	team: "home" | "away",
+	isBot: boolean,
+	isYou: boolean,
+}
+
+export type VolleyballMatchState = {
+	running: boolean,
+	homeScore: number,
+	awayScore: number,
+	secondsLeft: number,
+	roster: { VolleyballRosterEntry },
+	yourTeam: ("home" | "away")?,
+	onRoster: boolean,
+	-- Which touch the ball is asking of you right now, or nil while it is not
+	-- yours to play -- a bump, a set or a spike, in that rally order. The HUD reads
+	-- this instead of a single isCarrier flag because, unlike soccer or basketball,
+	-- what you may do to the ball changes touch to touch rather than staying the
+	-- same verb the whole time you have it.
+	touchPhase: ("bump" | "set" | "spike")?,
+	-- The spike's own charge-and-release meter, same shape as Soccer/Basketball's
+	-- shot -- only live while touchPhase is "spike".
+	charging: boolean,
+	chargeShare: number,
+	verdict: string?,
+	canJoin: boolean,
+	gradingPe: boolean,
+	career: VolleyballCareer,
+}
+
+-- A rhythm lesson in progress -- Music's verb, and the same sweep primitive as the
+-- gym and the sports drill (see shared/Sweep.luau) held against a note instead of a
+-- rep. One field this state has that neither of those does: `countInSecondsLeft`, the
+-- lead-in warning before the sweep starts moving. That is the lever mastery pulls
+-- here -- see Config.School.Music -- and it follows the rule every other subject's
+-- ladder already keeps: a higher level buys the player more to read, not an easier
+-- target, so nobody is ever handed a win they did not earn a beat.
+export type MusicState = {
+	phase: "leadIn" | "note" | "verdict",
+	songLabel: string,
+	-- Which note of how many, both 1-based -- "3 of 8", the same shape HuntState's
+	-- stop/stops gives a lesson with a fixed length rather than a clock running down.
+	note: number,
+	notes: number,
+	-- Seconds still to count in before the sweep for this note starts, so the panel
+	-- can show a beat landing rather than the target simply appearing already moving.
+	countInSecondsLeft: number,
+	progress: number,
+	sweetCenter: number,
+	sweetHalf: number,
+	perfectHalf: number,
+	sweepSeconds: number,
+	curve: string,
+	elapsedShare: number,
+	-- Notes hit well enough to count, which is what the lesson is graded on -- the
+	-- same "reached so far" figure HuntState.found gives a hunt.
+	hits: number,
+	level: number,
+	levelMax: number,
+	passes: number,
+	passesPerLevel: number,
+	-- Non-nil only during verdict, per note: "Perfect", "Good", or "Miss".
+	grade: string?,
+	-- Set for the beat after the whole song ends. Same slot every other lesson's
+	-- summary uses and read the same way: the closing line, held, then gone.
+	summary: string?,
+}
+
 -- A fight in progress, as the client needs to draw it.
 --
 -- Everything here is server-owned. The client renders bars and sends button presses;
@@ -1938,8 +2171,18 @@ export type SkillState = {
 
 -- Every discipline, in Config order, pushed whole. Small enough that a delta would
 -- cost more to reason about than it saves: six rows of six numbers.
+--
+-- `soccerCareer` rides along on the same push rather than its own remote, on the same
+-- reasoning the rest of this file already applies elsewhere: it is a life-long record,
+-- not a session, so it belongs beside the skill ladder in the same pane rather than
+-- behind SoccerUpdated, which only reaches a player standing near the pitch. See
+-- SoccerService.recordCareer, the one place on the server that changes it and the one
+-- place that asks SkillService to push again.
 export type SkillsState = {
 	skills: { SkillState },
+	soccerCareer: SoccerCareer,
+	basketballCareer: BasketballCareer,
+	volleyballCareer: VolleyballCareer,
 }
 
 -- One preference, as the settings pane draws it. The label and both captions come down
@@ -2878,6 +3121,11 @@ export type LifeData = {
 	-- Per life, like lessonsThisYear and for the same reason: a new body has not
 	-- worked out anywhere yet.
 	workoutsThisYear: { [string]: number },
+	-- Sports drills completed per station kind in the current year, against
+	-- Config.SportsDrill.DrillsPerYear. Same shape as workoutsThisYear, one field
+	-- over: a session at the heavy bag does not spend the free-throw rim's slot.
+	-- Nil-safe: absent keys read as zero. Per life, for the same reason.
+	drillsThisYear: { [string]: number },
 	-- Cumulative XP per skill id, keyed by `Config.Skills.Definitions[n].id`. Absent
 	-- keys read as zero, so a discipline never practised and one that exists but has
 	-- not been touched are the same thing -- which they are.
@@ -2913,6 +3161,14 @@ export type LifeData = {
 	-- job: being good at running a procedure says nothing about reading a passage, and
 	-- one number would let a term of Science pay for a term of Reading.
 	--
+	-- The soccer match's own record, separate from subjectMastery/subjectPasses because
+	-- it is not a mastery ladder -- there is no "topped out" for a live match against
+	-- five other bodies, and PE keeps grading every window regardless of how many good
+	-- ones came before. Per life, like everything else here.
+	soccerCareer: SoccerCareer,
+	-- Same reasoning as soccerCareer, one per match sport.
+	basketballCareer: BasketballCareer,
+	volleyballCareer: VolleyballCareer,
 	-- Per life, like everything else here. Nobody inherits an education.
 	subjectMastery: { [string]: number },
 	-- Passes banked toward the *next* mastery level in each subject, keyed the same way.

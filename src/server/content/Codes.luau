@@ -45,13 +45,13 @@ local Codes = {}
 -- play this game is to go and read a list of codes, and the work in it stops being the
 -- point. `AGESLAUNCH` is the largest and it is roughly one shift.
 local ENTRIES: { CodeEntry } = {
-	{
-		id = "launch",
-		code = "AGESLAUNCH",
-		label = "Launch",
-		money = 8000,
-		active = true,
-	},
+	-- {
+	-- 	id = "launch",
+	-- 	code = "AGESLAUNCH",
+	-- 	label = "Launch",
+	-- 	money = 0,
+	-- 	active = true,
+	-- },
 	{
 		id = "welcome",
 		code = "WELCOME",

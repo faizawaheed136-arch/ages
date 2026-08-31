@@ -62,6 +62,7 @@ local MusicService = require(services.MusicService)
 local PEService = require(services.PEService)
 local SchoolCrowdService = require(services.SchoolCrowdService)
 local FixtureService = require(services.FixtureService)
+local SoccerService = require(services.SoccerService)
 local BountyService = require(services.BountyService)
 local PoliceService = require(services.PoliceService)
 local TheftService = require(services.TheftService)
@@ -74,6 +75,7 @@ local CodeService = require(services.CodeService)
 local WitnessService = require(services.WitnessService)
 local DisguiseService = require(services.DisguiseService)
 local GymService = require(services.GymService)
+local SportsDrillService = require(services.SportsDrillService)
 local FightService = require(services.FightService)
 local PeopleService = require(services.PeopleService)
 local ChildhoodService = require(services.ChildhoodService)
@@ -177,16 +179,19 @@ SavingsService:Start()
 MilestoneService:Start()
 GossipService:Start()
 CrimeService:Start()
--- Before SchoolService, which hands a Science, Geography, Art, Reading or Music lesson
+-- Before SchoolService, which hands a Science, Geography, Art, Reading, Music or PE lesson
 -- straight to whichever of these owns the verb. Cosmetic like every other line in this list
--- -- all six are running before the first player finishes loading -- but reading it in this
--- order is the truth about which owns which.
+-- -- all of them are running before the first player finishes loading -- but reading it in
+-- this order is the truth about which owns which. SoccerService also runs the 3v3 match
+-- itself, which is not gated on PE at all -- see its own header -- so it has to be live
+-- before SchoolService regardless of whether anyone is being graded on the pitch.
 ScienceService:Start()
 GeographyService:Start()
 ArtService:Start()
 ReadingService:Start()
 MusicService:Start()
 PEService:Start()
+SoccerService:Start()
 SchoolCrowdService:Start()
 FixtureService:Start()
 SchoolService:Start()
@@ -229,12 +234,23 @@ GangService:Start()
 -- an empty map for the life of the server.
 TerritoryService:Start()
 SkillService:Start()
+-- The athlete ladder's scout, wired the same way FightService.SetWitnessedHandler is a
+-- few lines below rather than a require: SkillService cannot require WorkService back
+-- without a cycle, since WorkService already requires SkillService to read a job's
+-- minSkill gate. Both are up well above this line, so the callback is live before any
+-- player could possibly land a rep that crosses a rung.
+SkillService.SetLevelUpHandler(function(player: Player, skillId: string, beforeLevel: number, afterLevel: number)
+	WorkService.OnSkillLevelUp(player, skillId, beforeLevel, afterLevel)
+end)
 SettingsService:Start()
 CodeService:Start()
 -- The escape, after the heat it undoes. Standing up a mark reads the place index, and the
 -- first thing a completed change does is delete a belief BountyService owns.
 DisguiseService:Start()
 GymService:Start()
+-- Same room, same reasoning: the sports campus's four stations are tagged parts
+-- found the way the gym's four machines are, so it starts right beside it.
+SportsDrillService:Start()
 -- The fight, after NPCService because squaring somebody up spawns a rig, and after
 -- StatService because the pool a player has to spend is read off their health the moment a
 -- bout opens. Both are up well above this, and so is BountyService: FightService cannot

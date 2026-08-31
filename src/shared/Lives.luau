@@ -83,6 +83,38 @@ function Lives.New(): LifeData
 		-- true of the newborn, and the right thing to hand a save written before the gym
 		-- existed: that life has not worked out this year, which is exactly true.
 		workoutsThisYear = {},
+		-- Empty, for the same reason workoutsThisYear is: true of the newborn, and
+		-- true of a save written before the sports campus existed.
+		drillsThisYear = {},
+		-- Zeroed, which is exactly true of the newborn this describes and the right thing
+		-- to hand a save written before the pitch existed: that life has never touched a
+		-- match ball.
+		soccerCareer = {
+			matchesPlayed = 0,
+			goals = 0,
+			assists = 0,
+			tackles = 0,
+			shotsTaken = 0,
+			shotsOnTarget = 0,
+		},
+		-- Same reasoning as soccerCareer, one per match sport -- see Types.luau's
+		-- BasketballCareer/VolleyballCareer.
+		basketballCareer = {
+			matchesPlayed = 0,
+			points = 0,
+			assists = 0,
+			rebounds = 0,
+			steals = 0,
+			shotsTaken = 0,
+			shotsMade = 0,
+		},
+		volleyballCareer = {
+			matchesPlayed = 0,
+			kills = 0,
+			assists = 0,
+			digs = 0,
+			touches = 0,
+		},
 		-- Right for the newborn this describes, and right for a save written before school
 		-- existed: that life has sat no lessons this year, which is exactly true -- there was
 		-- nothing to sit.

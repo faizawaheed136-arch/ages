@@ -51,20 +51,24 @@ from rbxmx import at, box, group, part, point_light, sign
 
 from world_plan import (
     ALLEYS, ALLEY_MARGIN, ALLEY_MIN, ALLEY_WIDTH, alley_slug, clear_of_paving,
+    BACK_WALK_X0, BACK_WALK_X1,
     BAKERY_DOOR, BAKERY_X0, BAKERY_X1, BAKERY_Z0, BAKERY_Z1,
     CAFE_DOOR, CAFE_X0, CAFE_X1, CAFE_Z0, CAFE_Z1,
-    CEIL_1, CLINIC_DOOR, CLINIC_X0, CLINIC_X1, CLINIC_Z0, CLINIC_Z1,
-    DOORWAY, DOOR_LINE, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1,
+    CEIL_1, CEIL_2, CLINIC_DOOR, CLINIC_X0, CLINIC_X1, CLINIC_Z0, CLINIC_Z1,
+    DOORWAY, DOOR_LINE, FAR_WALK_X0, FAR_WALK_X1, FLOOR_1, FLOOR_2, STOREY,
     FORECOURT_X0,
     FRONT_X, GARAGE_DOOR, GARAGE_X0, GARAGE_X1, GARAGE_Z0, GARAGE_Z1,
-    GATE_CLEAR, GROUND, GYM_DOOR, GYM_X0, GYM_X1, GYM_Z0, GYM_Z1,
+    GATE_CLEAR, GROUND, GROUND_STEP, GYM_DOOR, GYM_X0, GYM_X1, GYM_Z0, GYM_Z1,
     HALL_DOOR, HALL_X0, HALL_X1, HALL_Z0, HALL_Z1,
     BUILDING_DEPTH, LIB_FRONT, LIB_DOOR, LIB_X0, LIB_X1, LIB_Z0, LIB_Z1,
     NEAR_WALK_X0, NEAR_WALK_X1, PAVING,
     PLACE_ID_ATTRIBUTE, PLACE_LABEL_ATTRIBUTE, PLACE_TAG, PROPERTY_X,
     MAP_SOUTH_EDGE,
     NORTHGATE_CLEAR, NORTHGATE_MID, NORTHGATE_WALK, NORTHGATE_Z0, NORTHGATE_Z1,
-    ROAD_MID, ROAD_X0, ROAD_X1, SLAB, SOUTHGATE_CLEAR, STORE_FRONT,
+    RETURN_MID, RETURN_X0, RETURN_X1,
+    ROAD_MID, ROAD_X0, ROAD_X1, SCHOOL_DOOR, SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
+    FIELDS_WAY_Z0, FIELDS_WAY_Z1, FIELDS_WAY_MID, FIELDS_WAY_PAVE, TOWN_WEST_EDGE,
+    SIDEWALK, SLAB, SOUTHGATE_CLEAR, STORE_FRONT,
     STREET_Z0, STREET_Z1, TRUNK_WIDTH, WEST_FRONTAGE, WEST_GAP,
     WALL,
 )
@@ -117,19 +121,18 @@ WEST_X0 = -176.0                                # the west edge of the grass ban
 CURL_Z = -290.0              # where the east leg turns west
 ROAD_DEPTH = ROAD_X1 - ROAD_X0  # 23; the road is square in section, so the
                                 # bottom band is as deep as the road is wide
-RETURN_X0, RETURN_X1 = -225.0, -202.0   # the return leg, west of the stores
 RETURN_Z0 = CURL_Z - ROAD_DEPTH         # -313, the south edge of the bottom band
 RETURN_Z1 = STREET_Z0                   # -132, where the return leg runs out
 ROAD_BOTTOM_MID = (CURL_Z + RETURN_Z0) / 2
-RETURN_MID = (RETURN_X0 + RETURN_X1) / 2
+# RETURN_X0, RETURN_X1 and RETURN_MID are imported from world_plan.py, which
+# also needs them to site the school on the back street.
 # The grass west of the street widens to hold the return leg and a row of
 # buildings on its far side. Where it runs out is WEST_EDGE, in "the back
 # street" below -- it used to be a typed -280 chosen to look wide enough, and it
 # is now the far side of the row that stands on it.
 # How far south the far sidewalk runs before it hands the kerb back to the road.
 FAR_END_Z = -280.0
-# The width of a sidewalk band, used to size the return leg's own sidewalk.
-SIDEWALK = FAR_WALK_X1 - FAR_WALK_X0
+# SIDEWALK is imported from world_plan.py for the same reason as RETURN_X0/X1.
 
 # The nine buildings of the west frontage -- the seven this file draws and the
 # school and workplace that build_street.py does -- are declared together in
@@ -202,7 +205,7 @@ HOUSE_MODEL_Z0, HOUSE_MODEL_Z1 = -44.3, 56.8
 # Safe range 6-12: under 6 the yards read as one plot, over 12 the street opens
 # a hole in itself.
 HOUSE_MODEL_CLEAR = 8.0
-HOUSE_X0, HOUSE_X1 = -42.0, 2.0
+HOUSE_X0, HOUSE_X1 = -48.0, 2.0
 # (z0, z1, door_z, door number)
 HOUSES = [
     (88.0, 122.0, 105.0, "14"),
@@ -249,11 +252,11 @@ assert HOUSES[1][0] - HOUSES[0][0] == HOUSE_DEPTH + NEIGHBOUR_GAP, (
 # house is the same 44 by 34. The only thing that had to be decided is which
 # side of the road they stand on, and that follows from the stores being on the
 # other one.
-BACK_FRONT_YARD = HOUSE_X0 - NEAR_WALK_X1      # 10.6
+BACK_FRONT_YARD = HOUSE_X0 - NEAR_WALK_X1      # 4.4
 BACK_GARDEN = EAST_X1 - HOUSE_X1               # 6.0
-# The return road's west pavement, mirroring the east one it already has.
-BACK_WALK_X1 = RETURN_X0
-BACK_WALK_X0 = BACK_WALK_X1 - SIDEWALK
+# BACK_WALK_X0/X1 -- the return road's west pavement, mirroring the east one it
+# already has -- are imported from world_plan.py, which also needs them to site
+# the school on the back street.
 BACK_HOUSE_X1 = BACK_WALK_X0 - BACK_FRONT_YARD
 BACK_HOUSE_X0 = BACK_HOUSE_X1 - HOUSE_WIDTH
 # Where the map stops on this side. The row is what decides it: a garden's depth
@@ -466,6 +469,46 @@ assert 12 <= len(BACK_ROW) <= 18, (
     f"the back row came out at {len(BACK_ROW)} houses over the "
     f"{BACK_ROW_Z1 - BACK_ROW_Z0:.0f} studs between the tip fence and the "
     f"library. Check TIP_Z1, LIB_Z1, HOUSE_DEPTH and NEIGHBOUR_GAP.")
+
+# The school (world_plan.py, SCHOOL_X0 above) was sited directly on top of
+# houses "1", "3" and "5" -- the owner's "or remove houses to compensate",
+# already spent rather than re-asked for. House "7", one plot further south, is
+# gone for the school's playing fields: see FIELDS_WAY_Z0 in world_plan.py for
+# why a park behind the school needs a whole plot's frontage to get into rather
+# than the six-stud gap between two buildings.
+#
+# Filtered here rather than left out of the generation loop above so the loop's
+# own numbering (odd, north to south) stays the one true count and this is
+# legibly a subtraction from it, not a second row with its own start point to
+# keep in step by hand.
+BACK_ROW = [house for house in BACK_ROW
+            if not (house[0] >= SCHOOL_Z0 and house[1] <= SCHOOL_Z1)
+            and not (house[0] >= FIELDS_WAY_Z0 and house[1] <= FIELDS_WAY_Z1)]
+assert len(BACK_ROW) == 11, (
+    f"filtering the back row against the school's frontage (z {SCHOOL_Z0}.."
+    f"{SCHOOL_Z1}) and the fields way (z {FIELDS_WAY_Z0}..{FIELDS_WAY_Z1}) left "
+    f"{len(BACK_ROW)} houses, not 11. The school was sited to land exactly on "
+    f"houses \"1\", \"3\" and \"5\" and the way on \"7\", and nothing else -- if "
+    f"the school's footprint or the row's pitch has changed, this filter is "
+    f"now cutting the wrong houses.")
+# The way's band *is* a plot of this row, not a band that happens to fall near
+# one. world_plan.py has to state it as a literal (it cannot see HOUSE_DEPTH or
+# NEIGHBOUR_GAP), so this is the gate on that transcription: if the row's pitch
+# moves, the way stops lining up with a frontage and this fires rather than the
+# park quietly acquiring a corner of somebody's garden.
+assert (FIELDS_WAY_Z1 == SCHOOL_Z0 - NEIGHBOUR_GAP
+        and FIELDS_WAY_Z1 - FIELDS_WAY_Z0 == HOUSE_DEPTH), (
+    f"the fields way is set to z {FIELDS_WAY_Z0}..{FIELDS_WAY_Z1} and house "
+    f"\"7\"'s plot is z {SCHOOL_Z0 - NEIGHBOUR_GAP - HOUSE_DEPTH}.."
+    f"{SCHOOL_Z0 - NEIGHBOUR_GAP}. The way is meant to be exactly that plot. "
+    f"Fix FIELDS_WAY_Z0/Z1 in world_plan.py.")
+# And the same gate on the other transcription: gen_city lays the fields' east
+# edge on TOWN_WEST_EDGE and has no way to see this row's back gardens.
+assert WEST_EDGE == TOWN_WEST_EDGE, (
+    f"the town's west edge is {WEST_EDGE} and world_plan.py tells gen_city.py "
+    f"it is {TOWN_WEST_EDGE}. The playing fields are laid against that number "
+    f"from a file that cannot see this one, so the two grounds now either lap "
+    f"or leave a gap. Fix TOWN_WEST_EDGE.")
 
 # ---------------------------------------------------------------------------
 # The parade at the tip end
@@ -881,8 +924,8 @@ PLACE_POINTS = [
     # the far walk through the inner grass so the south of town is one connected
     # place rather than two dead ends. Spaced so every hop is inside the route
     # link radius, down the long return road and back.
-    ("wp_inner", -155.0, -160.0, GROUND, "the grass by the return road"),
-    ("wp_inner_n", -170.0, -145.0, GROUND, "the grass between the stores and the return road"),
+    ("wp_inner", -190.0, -160.0, GROUND, "the alley west of the apartments"),
+    ("wp_inner_n", -190.0, -145.0, GROUND, "the alley west of the apartments, north"),
     # All four of these stand at RETURN_MID, in the middle of the return road's
     # carriageway, which tops at GROUND. Three of them said PAVING, half a stud
     # up, and floated -- and wp_loop_s said GROUND and was right, which is what
@@ -893,11 +936,11 @@ PLACE_POINTS = [
     # check 2, the town's half of a question check_city had only ever asked of
     # the city.
     ("wp_loop_n", RETURN_MID, -145.0, GROUND, "the return road, north end"),
-    ("wp_loop_m_grass", -187.0, -195.0, GROUND, "the grass behind the garage"),
+    ("wp_loop_m_grass", -190.0, -195.0, GROUND, "the grass behind the garage"),
     ("wp_loop_m", RETURN_MID, -195.0, GROUND, "the return road, by the garage"),
     ("wp_loop_m2", RETURN_MID, -255.0, GROUND, "the return road, mid-town"),
-    ("wp_inner_m", -172.0, -250.0, GROUND, "the grass between the roads, south"),
-    ("wp_inner_s", -150.0, -262.0, GROUND, "the grass between the roads"),
+    ("wp_inner_m", -185.0, -250.0, GROUND, "the alley west of the apartments, south"),
+    ("wp_inner_s", -185.0, -262.0, GROUND, "the alley west of the apartments, far south"),
     ("wp_loop_s", RETURN_MID, -300.0, GROUND, "the south turn of the road"),
     # East sidewalk: the new houses and the park, off the crossing.
     ("wp_east_n1", -58.0, 40.0, PAVING, "outside number 14"),
@@ -1180,6 +1223,36 @@ for _blurb, _az0, _az1 in ALLEYS:
     _check_joins(_ids[0], _back_walk + _back,
                  f"the west end of the alley between {_blurb}, off the back street")
 
+# The sidewalk point outside the school's own forecourt. Houses "1"/"3"/"5" used
+# to carry the back-street sidewalk chain (`_back_walk`) this far north; the
+# school displaced them (see BACK_ROW's filter above) and left this stretch of
+# paving without a waypoint on it at all, which is a point the game can name
+# ("school", declared with the site in world_plan.py) that the route graph
+# could not actually get a body to. `wp_school_walk` is the local end of that
+# join -- the far end, the "school" point itself, lives in Street.rbxmx, a
+# different asset this file cannot see, so it is checked only against this
+# file's own chains here, the same split the alleys above are checked by, and
+# checked in full by check_city's cross-asset reachability sweep.
+PLACE_POINTS.append(
+    ("wp_school_walk", BACK_WALK_MID, SCHOOL_DOOR, PAVING,
+     "the back street, outside the school"))
+_check_joins("wp_school_walk", _back_walk + _back,
+             "the back street's sidewalk outside the school")
+
+# The way west into the playing fields, on the plot house "7" gave up. Two
+# points, because the run is 61 studs and one point at either end of it is what
+# joins the back street to a park in a different asset: the east one is checked
+# against the back street here, and the west one is the far end gen_city.py
+# picks the chain up from at TOWN_WEST_EDGE. Same split as the alleys above --
+# what this file can see, it checks; the cross-asset half is check_city's.
+PLACE_POINTS.extend(
+    (f"wp_fields_way_{_i}", _x, FIELDS_WAY_MID, PAVING,
+     "the way into the playing fields")
+    for _i, _x in enumerate((BACK_WALK_X0 - 8.0, WEST_EDGE + 6.0)))
+_check_chain(["wp_fields_way_0", "wp_fields_way_1"], 0, "the way into the fields")
+_check_joins("wp_fields_way_0", _back_walk + _back,
+             "the east end of the way into the playing fields")
+
 # ---------------------------------------------------------------------------
 # Palette
 # ---------------------------------------------------------------------------
@@ -1205,6 +1278,7 @@ AWNING_CREAM = (240, 228, 198)
 
 FLOOR_INDOOR = (198, 192, 180)
 PARTITION_PALE = (216, 212, 204)
+PARTITION_DARK = (86, 78, 68)
 
 BARK = (94, 74, 58)
 LEAF = (78, 118, 62)
@@ -1832,8 +1906,25 @@ with group("Ground"):
     # and it was the largest single thing in the town by area. The return road
     # now runs up the middle of it, so it is grass, road, grass: the same three
     # bands as every other street here, for the same reason.
-    box("GrassBackWest", (WEST_EDGE, RETURN_X0, STREET_Z0, NORTH_Z1,
-                          GROUND_BOTTOM, GROUND), LAWN, GRASS)
+    #
+    # The west band is cut in three around the school (world_plan.py,
+    # SCHOOL_X0) rather than left as one box, because the school's own footprint
+    # -- x SCHOOL_X0..SCHOOL_X1 -- crosses WEST_EDGE and build_street.py's Slab
+    # will pave SCHOOL_X1 back to SCHOOL_X0 at the same ground height this box
+    # already claims out to WEST_EDGE. A grass box and a floor slab occupying
+    # the same square is exactly what "no two assets pave the same ground"
+    # exists to catch, so the window matches the school's z-band exactly and
+    # stops at SCHOOL_X1, its east wall -- nothing west of that line is this
+    # box's to draw any more. East of SCHOOL_X1, in the school's own z-band, the
+    # strip out to RETURN_X0 stays grass: it is the forecourt and sidewalk
+    # margin BackPaving already lays over it, the same layering every other
+    # stretch of this street uses.
+    box("GrassBackWestS", (WEST_EDGE, RETURN_X0, STREET_Z0, SCHOOL_Z0,
+                           GROUND_BOTTOM, GROUND), LAWN, GRASS)
+    box("GrassBackWestN", (WEST_EDGE, RETURN_X0, SCHOOL_Z1, NORTH_Z1,
+                           GROUND_BOTTOM, GROUND), LAWN, GRASS)
+    box("GrassBackWestSchool", (SCHOOL_X1, RETURN_X0, SCHOOL_Z0, SCHOOL_Z1,
+                                GROUND_BOTTOM, GROUND), LAWN, GRASS)
     box("GrassBackEast", (RETURN_X1, WEST_X0, STREET_Z0, NORTHGATE_Z0,
                           GROUND_BOTTOM, GROUND), LAWN, GRASS)
 
@@ -2019,6 +2110,21 @@ with group("Sidewalks"):
             (ALLEY_X0, ALLEY_X1, _az0, _az1,
              GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
 
+    # The way into the school's playing fields, on the plot house "7" gave up
+    # for it. It runs from the back street's own pavement to the town's west
+    # edge and gen_city.py carries it on from there -- the fields are in
+    # City.rbxmx, which this file cannot see, so the two halves meet on
+    # TOWN_WEST_EDGE and nowhere else.
+    #
+    # Set back one neighbour's gap from each side of the plot rather than paved
+    # kerb to kerb, so the way reads as a gap between two houses that has been
+    # given a surface, which is what it is. That also leaves the strip either
+    # side as grass for the trees below.
+    box("FieldsWay", (WEST_EDGE, BACK_WALK_X0,
+                      FIELDS_WAY_MID - FIELDS_WAY_PAVE / 2,
+                      FIELDS_WAY_MID + FIELDS_WAY_PAVE / 2,
+                      GROUND - SLAB_SINK, PAVING), PAVING_GREY, PEBBLE)
+
     box("TopKerbN", (BACK_WALK_X0, NEAR_WALK_X1, NORTHGATE_Z1, NORTHGATE_Z1 + KERB_WIDTH,
                      GROUND - SLAB_SINK, PAVING), KERB_GREY, CONCRETE)
     box("TopPavingN", (BACK_WALK_X0, NEAR_WALK_X1, NORTHGATE_Z1 + KERB_WIDTH,
@@ -2033,8 +2139,8 @@ with group("Sidewalks"):
 
 with group("Forecourts"):
     # A flat apron in front of each new west-side building, running from its
-    # front wall out to the far sidewalk -- the walk from the road to a desk is
-    # flat the whole way, the same as the school's.
+    # front wall out to the far sidewalk -- the walk from the road to a desk
+    # is flat the whole way.
     for name, z0, z1 in (
         ("Gym", GYM_Z0, GYM_Z1),
         ("Library", LIB_Z0, LIB_Z1),
@@ -2047,6 +2153,17 @@ with group("Forecourts"):
         box(f"{name}Forecourt",
             (FORECOURT_X0, FAR_WALK_X0, z0, z1, GROUND - SLAB_SINK, PAVING),
             PAVING_GREY, PEBBLE)
+
+    # The school's own apron is not part of that loop: it sits on the *back*
+    # street (world_plan.SCHOOL_X0/X1), not the main one, so it needs the
+    # back street's own x-band rather than FORECOURT_X0..FAR_WALK_X0. This is
+    # SCHOOL_YARD -- the gap world_plan.py left between the school's east wall
+    # and the sidewalk -- and until it is paved here the "school" place point
+    # (floor=PAVING) stands on bare grass, half a stud below where it thinks
+    # it is standing.
+    box("SchoolForecourt",
+        (SCHOOL_X1, BACK_WALK_X0, SCHOOL_Z0, SCHOOL_Z1, GROUND - SLAB_SINK, PAVING),
+        PAVING_GREY, PEBBLE)
 
 # ---------------------------------------------------------------------------
 # Gym equipment
@@ -2214,6 +2331,327 @@ with group("Garage"):
         box("ToolChest", (GARAGE_X0 + 8.0, GARAGE_X0 + 10.0, GARAGE_DOOR - 5.0, GARAGE_DOOR - 1.0,
                           FLOOR_1, FLOOR_1 + 3.4), STEEL, METAL)
         ceiling_light(GARAGE_X0 + 24.0, GARAGE_DOOR, CEIL_1)
+
+# ---------------------------------------------------------------------------
+# The apartment complex (run-down, behind clinic/bakery/garage)
+# ---------------------------------------------------------------------------
+#
+# Three walk-ups squeezed between the west frontage (x -152) and the alley
+# paving (x -191.5), facing west so their doors open onto the alley road the
+# player walks when cutting through from the main street. Each block is 20
+# studs deep (half a store) and sits directly behind its counterpart on the
+# frontage, matching its z-span exactly.
+#
+# They look poor because they are: cracked render, exposed brick patches,
+# corrugated iron roof sections, mismatched window frames, graffiti, laundry
+# lines between buildings, overflowing bins. The middle block (behind the
+# bakery) is abandoned -- door sealed, most windows boarded, roof sagged.
+#
+# Nothing here is tagged. The verb (rent, landlord, boiler breaking down) is
+# not agreed, and a tag no service reads is orphaned code by this tree's own
+# rules. What is here is geometry that verb will want: a stairwell, a lobby,
+# a door on the west face with a step onto the alley paving, and place points
+# at each entrance.
+APT_DEPTH = 20.0
+# Bare ground between the return road's pavement and the front wall. The front
+# path is laid across this and stops at APT_SETBACK_X0: the pavement east of
+# that line is ReturnPaving's, and a second slab finishing at the same PAVING
+# height would flicker against it the length of every doorway.
+APT_SETBACK = 5.0
+APT_SETBACK_X0 = RETURN_X1 + SIDEWALK                  # -191.5, outer pavement edge
+APT_X0 = APT_SETBACK_X0 + APT_SETBACK                  # -186.5, front wall set back from road edge
+APT_X1 = APT_X0 + APT_DEPTH                 # -166.5, back wall (adjusted after moving front wall)
+
+# Z spans match the three service buildings exactly.
+APT_SOUTH_Z0, APT_SOUTH_Z1 = GARAGE_Z0, GARAGE_Z1    # -204.0 .. -168.0
+APT_MID_Z0, APT_MID_Z1 = BAKERY_Z0, BAKERY_Z1        # -160.0 .. -124.0
+APT_NORTH_Z0, APT_NORTH_Z1 = CLINIC_Z0, CLINIC_Z1    # -116.0 .. -80.0
+
+# Doors centred on the WEST face (facing the alley road).
+APT_SOUTH_DOOR = (APT_SOUTH_Z0 + APT_SOUTH_Z1) / 2   # -186.0
+APT_MID_DOOR = (APT_MID_Z0 + APT_MID_Z1) / 2         # -142.0
+APT_NORTH_DOOR = (APT_NORTH_Z0 + APT_NORTH_Z1) / 2   # -98.0
+
+# Worn colours: each block's palette is shifted toward mud / rust / damp.
+APT_SOUTH_COLOR = (168, 152, 132)      # damp-stained render, garage-adjacent
+APT_MID_COLOR = (148, 128, 108)        # peeling cream, bakery-adjacent
+APT_NORTH_COLOR = (178, 180, 172)      # chalky mould, clinic-adjacent
+ROOF_PATCH = (58, 56, 58)              # felt / sagging iron
+BOARD_PLY = (140, 112, 72)             # plywood over a boarded window
+BRICK_EXPOSED = (148, 92, 72)          # missing render showing brick beneath
+GRAFFITI_COLOR = (60, 60, 68)          # spray-painted tags
+BIN_GREEN = (62, 84, 58)               # municipal wheelie bin
+CURTAIN_TATTY = (140, 120, 100)        # faded curtains
+CURTAIN_DARK = (60, 50, 45)            # heavy dark curtains
+CURTAIN_LACE = (210, 200, 190)         # lace/net curtains
+
+def apt_shell(name, x0, x1, z0, z1, door_z, wall_color, abandoned=False):
+    """A two-storey walk-up. Ground floor is a shared lobby; upper floor has
+    four small units behind the west-facing entrance door. `abandoned` boards
+    the door, caps most windows, and sags the roof."""
+    ix0, ix1 = x0 + WALL, x1 - WALL
+    iz0, iz1 = z0 + WALL, z1 - WALL
+    d0, d1 = door_z - DOORWAY / 2, door_z + DOORWAY / 2
+    roof_drop = 1.8 if abandoned else 0.0
+    roof_top = CEIL_2 - roof_drop
+
+    with group(name):
+        with group(f"{name}Structure"):
+            # Foundation: slab with a slight depression for pooling water.
+            box("Path", (APT_SETBACK_X0, x0 - WALL, door_z - 2.2, door_z + 2.2, PAVING - 0.5, PAVING), PATH_STONE, PEBBLE)
+            box("Slab", (x0, x1, z0, z1, FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
+            # Floor line between storeys.
+            box("MidSlab", (ix0, ix1, iz0, iz1, FLOOR_2 - SLAB, FLOOR_2), FLOOR_INDOOR, MARBLE)
+            # Roof: sagging if abandoned, patched with corrugated iron.
+            box("Roof", (x0, x1, z0, z1, roof_top, roof_top + SLAB), ROOF_GREY, SLATE)
+            # Partial roof collapse for abandoned buildings (missing section)
+            if abandoned:
+                # Patch on top of roof (raised slightly)
+                box("RoofPatch", (x0 + 4.0, x0 + 12.0, z1 - 6.0, z1 - 1.0,
+                                  roof_top + SLAB, roof_top + SLAB + 0.3),
+                    ROOF_PATCH, CORRODED_METAL)
+            # ---- East face (backs onto the shop frontage) ----
+            wall("WallEast", (ix1, x1, z0, z1, FLOOR_1, roof_top),
+                 wall_color, BRICK, along="z")
+            # Small high windows facing the shop forecourt (inside wall thickness).
+            for i, wz in enumerate((z0 + 4.0, z1 - 7.0)):
+                box(f"EastWindow{i + 1}",
+                    (ix1 + 0.05, x1 - 0.05, wz - 1.5, wz + 1.5,
+                     FLOOR_2 + 3.0, FLOOR_2 + 8.0), PARTITION_PALE, GLASS,
+                    transparency=0.5, collide=False)
+            # ---- West face (front, facing the alley road) ----
+            if abandoned:
+                wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, roof_top),
+                     wall_color, BRICK, along="z")
+                # Boarded door - inside the wall thickness
+                box("BoardedDoor", (x0 + 0.05, ix0 - 0.05, d0, d1,
+                                    FLOOR_1, FLOOR_1 + DOOR_HEIGHT),
+                    BOARD_PLY, WOOD)
+                # Boarded windows: most of them, on both storeys - inside wall thickness
+                for wz in (z0 + 5.0, z0 + 12.0, z1 - 10.0, z1 - 4.0):
+                    box(f"BoardWin{wz:.0f}",
+                        (x0 + 0.05, ix0 - 0.05, wz - 1.8, wz + 1.8,
+                         FLOOR_1 + 2.0, FLOOR_1 + 7.0), BOARD_PLY, WOOD)
+                    box(f"BoardWinU{wz:.0f}",
+                        (x0 + 0.05, ix0 - 0.05, wz - 1.8, wz + 1.8,
+                         FLOOR_2 + 2.0, FLOOR_2 + 7.0), BOARD_PLY, WOOD)
+            else:
+                wall("WallWest", (x0, ix0, z0, z1, FLOOR_1, roof_top),
+                     wall_color, BRICK, along="z",
+                     doors=((d0, d1),))
+                # Door step down to alley paving (matches house path logic).
+                box("DoorStep",
+                    (x0 - 1.0, x0, d0, d1,
+                     GROUND, FLOOR_1), PATH_STONE, CONCRETE)
+                # Functioning door
+                box("Door", (x0 + 0.05, ix0 - 0.05, d0, d1, FLOOR_1, FLOOR_1 + DOOR_HEIGHT),
+                    DESK_TOP, WOOD, tags=["ApartmentDoor"],
+                    attrs={"ApartmentBlock": name})
+                # Ground-floor windows on either side of the door (inside wall thickness).
+                for i, wz in enumerate(((z0 + 3.0, d0 - 1.0), (d1 + 1.0, z1 - 3.0))):
+                    if wz[1] - wz[0] > 4.0:
+                        glazing(f"FrontWin{i + 1}",
+                                (x0 + 0.05, ix0 - 0.05, wz[0], wz[1],
+                                 FLOOR_1 + 1.5, FLOOR_1 + 6.0),
+                                along="z", panes=2)
+                # Upper-floor windows -- varied per room (inside wall thickness).
+                # Top of window capped at roof_top so nothing floats above the roofline.
+                UPPER_WIN_Y1 = min(roof_top, FLOOR_2 + STOREY)
+                # Room 1 (south): lace curtains, lived-in
+                box("UpWin1Glass",
+                    (x0 + 0.05, ix0 - 0.05, z0 + 3.5, z0 + 6.5,
+                     FLOOR_2 + 2.0, UPPER_WIN_Y1), PARTITION_PALE, GLASS,
+                    transparency=0.3, collide=False)
+                # Room 2: tatty curtains, occupied
+                box("UpWin2Glass",
+                    (x0 + 0.05, ix0 - 0.05, z0 + 8.0, z0 + 11.0,
+                     FLOOR_2 + 2.0, UPPER_WIN_Y1), PARTITION_PALE, GLASS,
+                    transparency=0.3, collide=False)
+                # Room 3: dark curtains, occupied
+                box("UpWin3Glass",
+                    (x0 + 0.05, ix0 - 0.05, z1 - 11.0, z1 - 8.0,
+                     FLOOR_2 + 2.0, UPPER_WIN_Y1), PARTITION_PALE, GLASS,
+                    transparency=0.3, collide=False)
+                # Room 4 (north): bare window, possibly vacant
+                box("UpWin4Glass",
+                    (x0 + 0.05, ix0 - 0.05, z1 - 6.5, z1 - 3.5,
+                     FLOOR_2 + 2.0, UPPER_WIN_Y1), PARTITION_PALE, GLASS,
+                    transparency=0.4, collide=False)
+                # Stairwell window (centre of west face, upper floor).
+                box("StairWin",
+                    (x0 + 0.05, ix0 - 0.05, door_z - 1.5, door_z + 1.5,
+                     FLOOR_2 + 2.0, UPPER_WIN_Y1), PARTITION_PALE, GLASS,
+                    transparency=0.5, collide=False)
+            # ---- South and north faces ----
+            # Lower half walls (ground floor)
+            wall("WallSouth", (x0, x1, z0, iz0, FLOOR_1, FLOOR_2),
+                 wall_color, BRICK, along="x")
+            wall("WallNorth", (x0, x1, iz1, z1, FLOOR_1, FLOOR_2),
+                 wall_color, BRICK, along="x")
+            # Upper half broken walls (partial) - exposed brick material with gaps
+            # Doors are on the x-axis (along="x") so they use x-coordinates,
+            # not z-coordinates. Two gaps, one near each end of the 20-stud
+            # building depth, leaving a 4-stud wall section in the middle.
+            wall("WallSouth", (x0, x1, z0, iz0, FLOOR_2, roof_top),
+                 BRICK_EXPOSED, BRICK, along="x",
+                 doors=((x0 + 4.0, x0 + 8.0), (x1 - 8.0, x1 - 4.0)))
+            wall("WallNorth", (x0, x1, iz1, z1, FLOOR_2, roof_top),
+                 BRICK_EXPOSED, BRICK, along="x",
+                 doors=((x0 + 4.0, x0 + 8.0), (x1 - 8.0, x1 - 4.0)))
+            # Laundry line poles between this block and its neighbour.
+            if not abandoned:
+                box("LaundryPoleS", (x0 - 0.3, x0 + 0.3, z0 - 0.3, z0 + 0.3,
+                                     FLOOR_1, FLOOR_1 + 8.0), STEEL, METAL)
+                box("LaundryPoleN", (x0 - 0.3, x0 + 0.3, z1 - 0.3, z1 + 0.3,
+                                     FLOOR_1, FLOOR_1 + 8.0), STEEL, METAL)
+                box("LaundryLine",
+                    (x0 - 0.1, x0 + 0.1, z0 - 0.1, z0 + 0.1,
+                     FLOOR_1 + 7.5, FLOOR_1 + 7.7), (220, 210, 190), PLASTIC)
+
+            # Graffiti on the side walls (abandoned blocks get more).
+            graffiti_count = 4 if abandoned else 2
+            for i in range(graffiti_count):
+                wz = z0 + 6.0 + (z1 - z0 - 12.0) * i / (graffiti_count - 1 if graffiti_count > 1 else 1)
+                box(f"Graffiti{i + 1}",
+                    (x0 - 0.1, x0 + 0.1, wz - 2.0, wz + 2.0,
+                     FLOOR_1 + 2.0, FLOOR_1 + 4.5), GRAFFITI_COLOR, PLASTIC)
+
+        # ---- Interior ----
+        with group(f"{name}Interior"):
+            if abandoned:
+                # Gutted: bare floor, water stain on ceiling, no furniture.
+                box("WaterStain", (ix0 + 3.0, ix0 + 8.0, iz1 - 6.0, iz1 - 2.0,
+                                   FLOOR_1 + 7.0, FLOOR_1 + 7.5),
+                    (90, 80, 70), PLASTIC)
+                box("GraffitiFloor", (ix0 + 5.0, ix0 + 12.0, iz0 + 3.0, iz0 + 7.0,
+                                      FLOOR_1, FLOOR_1 + 0.1),
+                    (60, 60, 68), PLASTIC)
+                # Upper floor also gutted.
+                box("UpWaterStain", (ix0 + 2.0, ix0 + 7.0, iz0 + 2.0, iz0 + 6.0,
+                                      FLOOR_2 + 2.5, FLOOR_2 + 3.0),
+                    (80, 70, 60), PLASTIC)
+                # Debris on upper floor.
+                box("UpDebris", (ix1 - 3.0, ix1 - 0.5, iz1 - 4.0, iz1 - 1.0,
+                                  FLOOR_2, FLOOR_2 + 1.2),
+                    RUBBLE, PEBBLE, collide=False)
+            else:
+                # Ground floor lobby: bench, mail boxes, shared items.
+                box("LobbyBench", (ix0 + 2.0, ix0 + 6.0, door_z - 2.0, door_z + 2.0,
+                                   FLOOR_1, FLOOR_1 + 1.8), SEAT, FABRIC)
+                # Mail boxes on the east wall.
+                for i in range(4):
+                    bz = iz0 + 2.0 + i * 3.5
+                    box(f"MailBox{i + 1}",
+                        (ix1 - 1.0, ix1 - 0.1, bz, bz + 2.8,
+                         FLOOR_1 + 1.0, FLOOR_1 + 3.0), STEEL, METAL)
+                # Stair to upper floor (in the south-west corner).
+                for step_i in range(16):
+                    step_z = iz0 + 1.0 + step_i
+                    box(f"StairStep{step_i + 1}",
+                        (ix0, ix0 + 1.0, step_z, step_z + 1.0,
+                         FLOOR_1 + step_i * 0.55, FLOOR_1 + (step_i + 1) * 0.55),
+                        PARTITION_PALE, CONCRETE)
+                box("StairRailing",
+                    (ix0 - 0.3, ix0 + 0.3, iz0 + 1.0, iz0 + 17.0,
+                     FLOOR_1 + 3.0, FLOOR_2 + 2.0), STEEL, METAL, collide=False)
+                # Upper floor: four small rooms with VARIED occupancy.
+                room_w = (ix1 - ix0 - 2.0) / 4
+                # Room 1 (south): lived-in, single occupant
+                rx0 = ix0 + 1.0
+                rx1 = rx0 + room_w - 1.0
+                rz0 = iz0 + 2.0
+                rz1 = iz1 - 2.0
+                box("Bed1",
+                    (rx0 + 0.5, rx0 + 2.3, rz0 + 1.0, rz0 + 6.0,
+                     FLOOR_2 + 0.6, FLOOR_2 + 1.8), PARTITION_PALE, FABRIC)
+                box("Nightstand1",
+                    (rx0 + 0.5, rx0 + 1.5, rz0 + 6.5, rz0 + 7.5,
+                     FLOOR_2 + 0.6, FLOOR_2 + 1.6), PALLET_TIMBER, WOOD)
+                box("Chair1",
+                    (rx0 + 2.5, rx0 + 3.5, rz0 + 1.5, rz0 + 2.5,
+                     FLOOR_2, FLOOR_2 + 2.8), SEAT, FABRIC)
+                box("Crate1",
+                    (rx1 - 1.5, rx1, rz0 + 1.0, rz0 + 2.5,
+                     FLOOR_2, FLOOR_2 + 1.4), PALLET_TIMBER, WOOD)
+                # Room 2: couple, more furniture
+                rx0 = ix0 + 1.0 + 1 * room_w
+                rx1 = rx0 + room_w - 1.0
+                box("Bed2",
+                    (rx0 + 0.3, rx0 + 2.1, rz0 + 1.0, rz0 + 6.0,
+                     FLOOR_2 + 0.6, FLOOR_2 + 1.8), PARTITION_PALE, FABRIC)
+                box("Wardrobe2",
+                    (rx1 - 2.5, rx1 - 0.5, rz0 + 1.0, rz0 + 3.0,
+                     FLOOR_2, FLOOR_2 + 5.5), PALLET_TIMBER, WOOD)
+                box("Chair2",
+                    (rx0 + 2.5, rx0 + 3.5, rz0 + 1.5, rz0 + 2.5,
+                     FLOOR_2, FLOOR_2 + 2.8), SEAT, FABRIC)
+                box("Stool2",
+                    (rx0 + 0.5, rx0 + 1.5, rz1 - 2.5, rz1 - 1.5,
+                     FLOOR_2, FLOOR_2 + 1.8), PALLET_TIMBER, WOOD)
+                # Room 3: elderly tenant, sparse but cared for
+                rx0 = ix0 + 1.0 + 2 * room_w
+                rx1 = rx0 + room_w - 1.0
+                box("Bed3",
+                    (rx0 + 0.5, rx0 + 2.3, rz0 + 1.0, rz0 + 6.0,
+                     FLOOR_2 + 0.6, FLOOR_2 + 1.8), PARTITION_PALE, FABRIC)
+                box("Cabinet3",
+                    (rx1 - 2.0, rx1 - 0.5, rz0 + 1.0, rz0 + 2.5,
+                     FLOOR_2, FLOOR_2 + 4.0), PALLET_TIMBER, WOOD)
+                box("Armchair3",
+                    (rx0 + 0.5, rx0 + 2.5, rz1 - 3.0, rz1 - 1.0,
+                     FLOOR_2, FLOOR_2 + 2.5), SEAT, FABRIC)
+                # Room 4 (north): VACANT -- bare, dusty, "to let" feel
+                rx0 = ix0 + 1.0 + 3 * room_w
+                rx1 = rx0 + room_w - 1.0
+                # Just dust on floor, bare mattress frame
+                box("VacantFrame4",
+                    (rx0 + 0.5, rx0 + 2.0, rz0 + 1.0, rz0 + 5.5,
+                     FLOOR_2 + 0.3, FLOOR_2 + 0.6), PALLET_TIMBER, WOOD)
+                box("VacantDust4",
+                    (rx0, rx1, rz0, rz1,
+                     FLOOR_2, FLOOR_2 + 0.05),
+                    (180, 175, 165), PLASTIC, collide=False)
+                ceiling_light(ix0 + 5.0, door_z, CEIL_1)
+                ceiling_light(ix0 + 5.0, door_z, CEIL_2)  # upper floor light
+
+    # Place point at the west-side entrance (facing the alley road).
+    place_point(f"apt_{name.lower()}_entrance",
+                x0 - WALL, door_z, FLOOR_1,
+                f"apartment block {name} entrance")
+
+
+# Three blocks, each behind its corresponding frontage building.
+# South block (behind garage) -- occupied, damp-stained render.
+with group("ApartmentSouth"):
+    apt_shell("APT_SOUTH", APT_X0, APT_X1, APT_SOUTH_Z0, APT_SOUTH_Z1,
+              APT_SOUTH_DOOR, APT_SOUTH_COLOR, abandoned=False)
+
+# Middle block (behind bakery) -- abandoned, peeling stucco, roof sagged.
+with group("ApartmentMid"):
+    apt_shell("APT_MID", APT_X0, APT_X1, APT_MID_Z0, APT_MID_Z1,
+              APT_MID_DOOR, APT_MID_COLOR, abandoned=True)
+
+# North block (behind clinic) -- occupied, chalky mould.
+with group("ApartmentNorth"):
+    apt_shell("APT_NORTH", APT_X0, APT_X1, APT_NORTH_Z0, APT_NORTH_Z1,
+              APT_NORTH_DOOR, APT_NORTH_COLOR, abandoned=False)
+
+# Additional apartment blocks extending south and north
+# South extension (beyond garage) -- more run-down
+APT_EXT_SOUTH_Z0, APT_EXT_SOUTH_Z1 = APT_SOUTH_Z0 - 40.0, APT_SOUTH_Z0 - 4.0  # -244.0 .. -208.0
+APT_EXT_SOUTH_DOOR = (APT_EXT_SOUTH_Z0 + APT_EXT_SOUTH_Z1) / 2  # -226.0
+
+# North extension (beyond clinic) -- partially abandoned
+APT_EXT_NORTH_Z0, APT_EXT_NORTH_Z1 = APT_NORTH_Z1 + 4.0, APT_NORTH_Z1 + 40.0  # -76.0 .. -40.0
+APT_EXT_NORTH_DOOR = (APT_EXT_NORTH_Z0 + APT_EXT_NORTH_Z1) / 2  # -58.0
+
+with group("ApartmentExtSouth"):
+    apt_shell("APT_EXT_S", APT_X0, APT_X1, APT_EXT_SOUTH_Z0, APT_EXT_SOUTH_Z1,
+              APT_EXT_SOUTH_DOOR, (142, 126, 106), abandoned=True)  # darker, more weathered
+
+with group("ApartmentExtNorth"):
+    apt_shell("APT_EXT_N", APT_X0, APT_X1, APT_EXT_NORTH_Z0, APT_EXT_NORTH_Z1,
+              APT_EXT_NORTH_DOOR, (162, 164, 156), abandoned=False)  # similar to north block
 
 # ---------------------------------------------------------------------------
 # The cafe
@@ -2682,8 +3120,9 @@ with group("Park"):
     # A pond with a stone rim, two crossing paths, benches and a picnic table,
     # and trees ringing the edges. Open on purpose: nothing here is fenced, so
     # the player can cut across the grass to the road whenever they want.
+    # A step under the lawn, not level with it -- see the south park's pond.
     box("Pond", (PARK_X0 + 6.0, PARK_X0 + 22.0, PARK_Z0 + 6.0, PARK_Z0 + 18.0,
-                 GROUND - 0.6, GROUND), (92, 128, 152), SMOOTH)
+                 GROUND - 0.6, GROUND - GROUND_STEP), (92, 128, 152), SMOOTH)
     box("PondRim", (PARK_X0 + 5.2, PARK_X0 + 22.8, PARK_Z0 + 5.2, PARK_Z0 + 18.8,
                     GROUND, GROUND + 0.3), (150, 150, 150), CONCRETE, collide=False)
     box("PathA", (PARK_X0 + 18.0, PARK_X1 - 8.0, PARK_Z0 + 12.0, PARK_Z0 + 17.0,
@@ -2730,8 +3169,11 @@ _FOUNT_Z = PARK2_Z0 + 46.0                   # south of the gazebo
 
 with group("SouthPark"):
     # --- Pond ---
+    # Water finishes a step under the lawn it is sunk into, not level with it:
+    # the grass runs on beneath the pond and two surfaces in the same plane is
+    # the one thing the depth buffer cannot settle.
     box("Pond", (PARK2_X0 + 6.0, PARK2_X0 + 22.0, PARK2_Z0 + 6.0, PARK2_Z0 + 18.0,
-                 GROUND - 0.6, GROUND), (92, 128, 152), SMOOTH)
+                 GROUND - 0.6, GROUND - GROUND_STEP), (92, 128, 152), SMOOTH)
     box("PondRim", (PARK2_X0 + 5.2, PARK2_X0 + 22.8, PARK2_Z0 + 5.2, PARK2_Z0 + 18.8,
                     GROUND, GROUND + 0.3), (150, 150, 150), CONCRETE, collide=False)
 
@@ -2741,25 +3183,38 @@ with group("SouthPark"):
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
     box("PathRingS", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, PARK2_Z1 - 17.0, PARK2_Z1 - 12.0,
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    box("PathRingW", (PARK2_X0 + 12.0, PARK2_X0 + 17.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
+    # Cross path east-west through the middle, and the centre line running south
+    # off it to the fountain. Named before the ring legs because the legs are
+    # carved at them: the two of them together occupy one continuous band of z
+    # that the north-south legs would otherwise pave a second time.
+    _CROSS_Z0, _CROSS_Z1 = PARK2_Z0 + 24.0, PARK2_Z0 + 36.0
+    _CENTRE_Z0, _CENTRE_Z1 = _GAZE_Z + _GAZE_R + 1.0, _FOUNT_Z - _GAZE_R - 1.0
+    box("PathCross", (PARK2_X0 + 8.0, PARK2_X1 - 8.0, _CROSS_Z0, _CROSS_Z1,
                       GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    box("PathRingE", (PARK2_X1 - 17.0, PARK2_X1 - 12.0, PARK2_Z0 + 17.0, PARK2_Z1 - 17.0,
-                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    # Centre line from gazebo to fountain
-    box("PathCentre", (PARK2_X0 + 14.0, PARK2_X1 - 14.0,
-                       _GAZE_Z + _GAZE_R + 1.0, _FOUNT_Z - _GAZE_R - 1.0,
+    box("PathCentre", (PARK2_X0 + 14.0, PARK2_X1 - 14.0, _CENTRE_Z0, _CENTRE_Z1,
                        GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
-    # Cross path east-west through the middle
-    box("PathCross", (PARK2_X0 + 8.0, PARK2_X1 - 8.0,
-                      PARK2_Z0 + 24.0, PARK2_Z0 + 36.0,
-                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
+    assert _CENTRE_Z0 == _CROSS_Z1, (
+        f"the centre path starts at z {_CENTRE_Z0} and the cross path ends at "
+        f"{_CROSS_Z1}. They must meet exactly, or the ring legs' single carve "
+        f"band leaves either a gap in the paving or a second overlap.")
+    # The two north-south legs, each carved where that band crosses them. A leg
+    # laid whole would finish in the same plane as the paths it runs through,
+    # which flickers; the crossing paving belongs to the path that is wider there.
+    for _leg, _lx0, _lx1 in (("PathRingW", PARK2_X0 + 12.0, PARK2_X0 + 17.0),
+                             ("PathRingE", PARK2_X1 - 17.0, PARK2_X1 - 12.0)):
+        for _lz0, _lz1 in ((PARK2_Z0 + 17.0, _CROSS_Z0), (_CENTRE_Z1, PARK2_Z1 - 17.0)):
+            box(f"{_leg}{_lz0:.0f}", (_lx0, _lx1, _lz0, _lz1,
+                                      GROUND, GROUND + 0.5), PAVING_GREY, PEBBLE)
 
     # --- Gazebo ---
     with group("Gazebo"):
-        # Octagonal floor
+        # Octagonal floor. It tops one step proud of the path it stands on rather
+        # than flush with it -- the cross path runs under this deck, and level is
+        # the one relationship two stacked surfaces may not have.
+        _GAZE_TOP = GROUND + 0.5 + GROUND_STEP
         box("Floor", (_GAZE_X - _GAZE_R, _GAZE_X + _GAZE_R,
                       _GAZE_Z - _GAZE_R, _GAZE_Z + _GAZE_R,
-                      GROUND + 0.15, GROUND + 0.5), PATH_STONE, CONCRETE)
+                      GROUND + 0.15, _GAZE_TOP), PATH_STONE, CONCRETE)
         # Six pillars around the perimeter
         _pillar_angles = (0, 60, 120, 180, 240, 300)
         for _a in _pillar_angles:
@@ -2781,7 +3236,7 @@ with group("SouthPark"):
         # Floor detail: painted circles under the gazebo
         box("FloorPaint", (_GAZE_X - 5.0, _GAZE_X + 5.0,
                            _GAZE_Z - 5.0, _GAZE_Z + 5.0,
-                           GROUND + 0.5, GROUND + 0.55), (160, 140, 110), CONCRETE, collide=False)
+                           _GAZE_TOP, _GAZE_TOP + 0.05), (160, 140, 110), CONCRETE, collide=False)
 
     # --- Tiered fountain ---
     with group("Fountain"):
@@ -2789,10 +3244,14 @@ with group("SouthPark"):
         box("BasinBase", (_FOUNT_X - 4.5, _FOUNT_X + 4.5,
                           _FOUNT_Z - 4.5, _FOUNT_Z + 4.5,
                           GROUND + 0.3, GROUND + 1.0), STEEL, METAL)
-        # Water in basin
+        # Water in basin, filled to just under the rim rather than to it. The
+        # basin is a solid block, so water level with its top is two surfaces in
+        # one plane; a step of shadow under the rim is also how a full basin
+        # actually reads.
         box("BasinWater", (_FOUNT_X - 4.0, _FOUNT_X + 4.0,
                            _FOUNT_Z - 4.0, _FOUNT_Z + 4.0,
-                           GROUND + 0.85, GROUND + 1.0), (92, 128, 152), SMOOTH, collide=False)
+                           GROUND + 0.85, GROUND + 1.0 - GROUND_STEP),
+            (92, 128, 152), SMOOTH, collide=False)
         # Middle column
         box("Column", (_FOUNT_X - 1.2, _FOUNT_X + 1.2,
                        _FOUNT_Z - 1.2, _FOUNT_Z + 1.2,

@@ -22,6 +22,7 @@ local MusicUI = require(script.ui.MusicUI)
 local Sit = require(script.world.Sit)
 local TimetableUI = require(script.ui.TimetableUI)
 local DrillUI = require(script.ui.DrillUI)
+local SoccerHUD = require(script.ui.SoccerHUD)
 local CommandsLegend = require(script.ui.CommandsLegend)
 local HeatUI = require(script.ui.HeatUI)
 local TillUI = require(script.ui.TillUI)
@@ -61,6 +62,7 @@ type TaskState = Types.TaskState
 type LessonState = Types.LessonState
 type PersonState = Types.PersonState
 type WorkoutState = Types.WorkoutState
+type SportsDrillState = Types.SportsDrillState
 type PersonRosterEntry = Types.PersonRosterEntry
 type LabState = Types.LabState
 type HuntState = Types.HuntState
@@ -69,6 +71,7 @@ type NerveState = Types.NerveState
 type ReadingState = Types.ReadingState
 type MusicState = Types.MusicState
 type PEState = Types.PEState
+type SoccerMatchState = Types.SoccerMatchState
 type BountyState = Types.BountyState
 type TheftState = Types.TheftState
 type BankState = Types.BankState
@@ -114,6 +117,7 @@ local nerve = NerveUI.new()
 local words = WordUI.new()
 local music = MusicUI.new()
 local drill = DrillUI.new()
+local soccer = SoccerHUD.new()
 -- One key, no remote: see world/Sit for why this is client-side.
 Sit.Start()
 -- J opens the year's timetable. Pushed from the server, never recomputed here.
@@ -158,10 +162,13 @@ local RequestEventChoiceRemote = Remotes.Get("RequestEventChoice")
 local RequestPersonOfferRemote = Remotes.Get("RequestPersonOffer")
 local RequestPersonContactRemote = Remotes.Get("RequestPersonContact")
 local RequestLessonAnswerRemote = Remotes.Get("RequestLessonAnswer")
+local RequestSitRemote = Remotes.Get("RequestSit")
 local RequestReportCardReadRemote = Remotes.Get("RequestReportCardRead")
 local RequestReturnToLobbyRemote = Remotes.Get("RequestReturnToLobby")
 local RequestStartWorkoutRemote = Remotes.Get("RequestStartWorkout")
 local RequestRepRemote = Remotes.Get("RequestRep")
+local RequestStartDrillRemote = Remotes.Get("RequestStartDrill")
+local RequestDrillRepRemote = Remotes.Get("RequestDrillRep")
 local RequestLabStepRemote = Remotes.Get("RequestLabStep")
 local RequestLabUndoRemote = Remotes.Get("RequestLabUndo")
 local RequestLabCommitRemote = Remotes.Get("RequestLabCommit")
@@ -170,8 +177,11 @@ local RequestArtSignRemote = Remotes.Get("RequestArtSign")
 local RequestNerveHoldRemote = Remotes.Get("RequestNerveHold")
 local RequestReadingPlaceRemote = Remotes.Get("RequestReadingPlace")
 local RequestReadingSubmitRemote = Remotes.Get("RequestReadingSubmit")
-local RequestMusicHitRemote = Remotes.Get("RequestMusicHit")
 local RequestPEClickRemote = Remotes.Get("RequestPEClick")
+local RequestMusicNoteRemote = Remotes.Get("RequestMusicNote")
+local RequestSoccerJoinRemote = Remotes.Get("RequestSoccerJoin")
+local RequestSoccerShootRemote = Remotes.Get("RequestSoccerShoot")
+local RequestSoccerPassRemote = Remotes.Get("RequestSoccerPass")
 local RequestTillOpenRemote = Remotes.Get("RequestTillOpen")
 local RequestTillHoldRemote = Remotes.Get("RequestTillHold")
 local RequestTillCallCrewRemote = Remotes.Get("RequestTillCallCrew")
@@ -194,6 +204,7 @@ local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
 local RequestSellVehicleRemote = Remotes.Get("RequestSellVehicle")
 local RequestSpawnVehicleRemote = Remotes.Get("RequestSpawnVehicle")
 local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
+local RequestGuideToLocationRemote = Remotes.Get("RequestGuideToLocation")
 
 -- The last thing the server said about the person in front of the player. Held
 -- because the panel is opened by clicking three dots in the world, and that click
@@ -286,8 +297,24 @@ ui:OnAgeUpActivated(function()
 	})
 end)
 
+-- One button, two rooms: the gym and the sports campus share the same HUD row (see
+-- StatsUI.applySweep), so the press has to be routed to whichever session actually put
+-- the row up. `ActiveSweepSource` is the same field the row's own display logic reads,
+-- which is what keeps this from ever firing the wrong remote into an empty session.
 ui:OnPushActivated(function()
-	RequestRepRemote:FireServer()
+	local source = ui:ActiveSweepSource()
+	if source == "drill" then
+		RequestDrillRepRemote:FireServer()
+	elseif source == "gym" then
+		RequestRepRemote:FireServer()
+	end
+end)
+
+-- Music's own PUSH button, wired straight to its own remote rather than through
+-- ActiveSweepSource -- see the header on MusicUI for why this session cannot share the
+-- gym/drill row at all, let alone its key.
+music:OnPushActivated(function()
+	RequestMusicNoteRemote:FireServer()
 end)
 
 panel:OnChoice(function(eventId: string, choiceId: string)
@@ -441,6 +468,24 @@ end)
 
 fight:OnSidestep(function()
 	RequestFightActionRemote:FireServer("sidestep")
+end)
+
+-- The pitch. Join is a bare tap -- see SoccerHUD's header for why a press with no free
+-- slot or from someone already rostered is a no-op on the server rather than a queue
+-- entry. Shoot follows the exact shape RequestFightAction's strike does: a held edge,
+-- no charge value, because what a release is worth is the server's clock, not the
+-- client's claim. Pass carries nothing at all -- the server reads the carrier's own
+-- facing and range, same as SoccerHUD's own header explains.
+soccer:OnJoin(function()
+	RequestSoccerJoinRemote:FireServer()
+end)
+
+soccer:OnShoot(function(held: boolean)
+	RequestSoccerShootRemote:FireServer(held)
+end)
+
+soccer:OnPass(function()
+	RequestSoccerPassRemote:FireServer()
 end)
 
 -- One boolean for both of the room's controls, and which one it means is never named here.
@@ -598,11 +643,13 @@ words:OnSubmit(function(targetIndex: number)
 	RequestReadingSubmitRemote:FireServer(targetIndex)
 end)
 
--- A note claimed. The panel judged it, because the window is shorter than the round trip and
--- there is no honest alternative -- see MusicUI and MusicService for what the server does
--- with the claim and what that does and does not buy.
-music:OnHit(function(index: number, offsetMs: number)
-	RequestMusicHitRemote:FireServer(index, offsetMs)
+-- The sweep, pressed. Agent A's MusicUI judges nothing and sends no offset: the panel says
+-- only *that* the player pressed, and MusicService reads the sweep's own position on the
+-- server. My version fired an index and a client-measured offsetMs, which is a judgement the
+-- client is not entitled to make -- and MusicUI has no OnHit to hang it on any more, so the
+-- old wiring was a nil index waiting to happen rather than a working alternative.
+music:OnPushActivated(function()
+	RequestMusicNoteRemote:FireServer()
 end)
 
 -- One click of the PE meter, carrying the marker position it was taken at. Unlike the note
@@ -790,6 +837,52 @@ local function drawWorkoutPanel(state: WorkoutState?)
 	end
 end
 
+-- The sports drill offer panel, which opens when the player stands near a station that
+-- is not capped for the year. Same shape as the workout panel above, right down to the
+-- key handling -- the two are mutually exclusive by construction (a player can only be
+-- standing at one physical station at a time) but each gets its own key because the
+-- server can push one nil and the other a fresh offer in either order.
+--
+-- Held for the same reason every panel key here is held: closing has to name what it is
+-- closing, and a birthday or an event landing in between must not be swallowed by a key
+-- that happens to match.
+local drillPanelKey: string? = nil
+
+local function drawDrillPanel(state: SportsDrillState?)
+	local wanted = if state ~= nil and state.phase == "offer" then "drill:offer" else nil
+
+	local open = drillPanelKey
+	if open ~= nil and open ~= wanted then
+		panel:CloseOptions(open)
+		drillPanelKey = nil
+	end
+
+	if state == nil or wanted == nil or drillPanelKey == wanted then
+		return
+	end
+
+	if panel:ShowOptions({
+		key = wanted,
+		prompt = state.stationLabel,
+		options = {
+			{ id = "start", label = "Start a drill", locked = false },
+			{ id = "leave", label = "Leave", locked = false },
+		},
+		choose = function(choiceId: string)
+			-- Close first so the panel never lingers while the server
+			-- validates. Refused starts return a notice instead of a
+			-- state change; the panel stays down and the player reads why.
+			panel:CloseOptions(wanted)
+			drillPanelKey = nil
+			if choiceId == "start" then
+				RequestStartDrillRemote:FireServer(state.station)
+			end
+		end,
+	}) then
+		drillPanelKey = wanted
+	end
+end
+
 -- The person who runs a gang, talking. Raised and taken down entirely by the server: it
 -- goes up when the player clicks the dots and standing in front of them is what keeps it
 -- there, so walking off closes it without this client sending anything.
@@ -858,6 +951,9 @@ panel:OnHidden(function(key: string)
 	end
 	if workoutPanelKey ~= nil and workoutPanelKey == key then
 		workoutPanelKey = nil
+	end
+	if drillPanelKey ~= nil and drillPanelKey == key then
+		drillPanelKey = nil
 	end
 	if reportPanelKey ~= nil and reportPanelKey == key then
 		reportPanelKey = nil
@@ -946,6 +1042,13 @@ menu:OnJobTapped(function(jobId: string)
 	RequestGuideToJobRemote:FireServer(jobId)
 end)
 
+-- A row pressed on the Locations pane. Points the chevron guide at it, the same
+-- server-resolves-the-place-point arrow a job tap gets -- nothing about where the
+-- place actually is has to travel with the click.
+menu:OnLocationTapped(function(id: string)
+	RequestGuideToLocationRemote:FireServer(id)
+end)
+
 -- The things you are doing right now, inside the shift you are already on. Two
 -- displays of one fact: a row on the HUD per task saying what it is and how long is
 -- left, and a lit mark on the floor per task saying where.
@@ -1007,6 +1110,14 @@ Remotes.Get("WorkoutUpdated").OnClientEvent:Connect(function(state: WorkoutState
 	drawWorkoutPanel(state)
 end)
 
+-- The sports drill in progress, or an offer to start one. Same two halves as a
+-- workout push, and the same reason for it: the HUD row and the offer panel must
+-- never disagree about which of the two rooms (if either) the player is currently in.
+Remotes.Get("SportsDrillUpdated").OnClientEvent:Connect(function(state: SportsDrillState?)
+	ui:SetDrill(state)
+	drawDrillPanel(state)
+end)
+
 -- The Science lab in progress. Two halves of one fact, and they are driven from the same
 -- push precisely so they cannot disagree: the panel says what the procedure is, and the
 -- dots on the stations say whether the room is currently something you can act on. A lit
@@ -1060,6 +1171,20 @@ end)
 
 Remotes.Get("ArtUpdated").OnClientEvent:Connect(function(state: ArtState?)
 	easel:Set(state)
+end)
+
+-- The rhythm lesson in progress. One half of one fact, the same shape the hunt's push
+-- is: the panel is the whole interface, and there is nothing in the world to light --
+-- see the header on MusicUI for why this does not reuse the gym/drill sweep row.
+Remotes.Get("MusicUpdated").OnClientEvent:Connect(function(state: MusicState?)
+	music:Set(state)
+end)
+
+-- The pitch, whether or not this player is on it -- see SoccerUpdated's own header for
+-- why this is a broadcast to everyone watching rather than a per-player session state the
+-- way every other push on this list is.
+Remotes.Get("SoccerUpdated").OnClientEvent:Connect(function(state: SoccerMatchState?)
+	soccer:Set(state)
 end)
 
 -- How much of the town is looking for you. Two halves of one fact, driven from the one
@@ -1154,10 +1279,13 @@ menu:OnColorsToggled(function(want: boolean)
 	RequestGangColorsRemote:FireServer(want)
 end)
 
--- M, and Escape to close. Safe to claim: nothing else in this client binds a key at all --
--- every other interaction in the game is a tap on a three-dot marker or a button -- so there
--- is no rebinding to do and nothing to collide with. GameProcessedEvent is honoured so that
--- typing an M into the chat bar does not throw the map over the conversation.
+-- M, Tab, Escape, and now L. Every other interaction in the game is a tap on a
+-- three-dot marker or a button; L is the one deliberate exception, on the same
+-- precedent as Config.Interact.PickupKeyboardKey -- a second dedicated key for a
+-- distinct verb, sitting down, rather than folding it into the badge grammar. See
+-- Config.School.Classroom for why sitting is a key press at all. GameProcessedEvent
+-- is honoured so that typing any of these letters into the chat bar does not also
+-- fire the game behind it.
 UserInputService.InputBegan:Connect(function(input: InputObject, processed: boolean)
 	if processed then
 		return
@@ -1166,6 +1294,12 @@ UserInputService.InputBegan:Connect(function(input: InputObject, processed: bool
 		mapSheet:Toggle()
 	elseif input.KeyCode == Enum.KeyCode.Tab then
 		menu:Toggle()
+	elseif input.KeyCode == Enum.KeyCode.L then
+		-- No local guard for "is a lesson actually pending" -- the server already
+		-- refuses a press with nothing to sit down to (see onSitRequested), and a
+		-- refusal the player never notices is the correct outcome of pressing L
+		-- with nothing in front of them.
+		RequestSitRemote:FireServer()
 	elseif input.KeyCode == Enum.KeyCode.Escape then
 		-- One at a time, map first, because the map draws over the menu and closing the
 		-- thing underneath the thing you are looking at is not what Escape means. The

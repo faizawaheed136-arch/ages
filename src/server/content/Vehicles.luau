@@ -10,14 +10,19 @@
 -- model dropped into the Studio folder under a matching name takes over -- see
 -- world/VehicleChassis.luau -- and nothing here changes when it does.
 --
--- Five cars, priced as a ladder against the same jobs a life is actually earning
--- from -- see content/Jobs.luau for the salaries this is read against. A beater a
--- sixteen-year-old can save toward from a first job's wage, up through a car that
--- means the manager's desk paid off, to one that is a statement rather than a
--- commute. Performance climbs with price, and it is the only thing that does:
--- there is no car here that is simply worse for the same money than another one
--- on the lot, because a strictly-dominated row is a row nobody would ever choose
--- and a showroom is not supposed to have those.
+-- Four cars, priced as a ladder against the same jobs a life is actually earning
+-- from -- see content/Jobs.luau for the salaries this is read against. Up through
+-- a car that means the manager's desk paid off, to one that is a statement rather
+-- than a commute. Performance climbs with price, and it is the only thing that
+-- does: there is no car here that is simply worse for the same money than another
+-- one on the lot, because a strictly-dominated row is a row nobody would ever
+-- choose and a showroom is not supposed to have those.
+--
+-- The cheapest rung -- a $2200 "Corner Runabout" a first job's wage could open --
+-- used to sit below the sedan here and was cut on owner instruction ("i have no
+-- clue what its for"): a starter car a player cannot tell apart from the one
+-- above it in the showroom list is not doing its job as the bottom of a ladder,
+-- and a confusing rung is worse than no rung.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -27,19 +32,6 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 type VehicleKind = Types.VehicleKind
 
 local SOURCE: { VehicleKind } = {
-	{
-		id = "runabout",
-		name = "Corner Runabout",
-		-- Priced against a first job's wage the way Jobs.luau prices itself: a
-		-- season of shifts at the shop floor, not a single paycheque.
-		price = 2200,
-		size = Vector3.new(6.4, 2.6, 14.5),
-		color = Color3.fromRGB(212, 96, 70),
-		accentColor = Color3.fromRGB(40, 38, 36),
-		topSpeedStuds = 66,
-		acceleration = 9,
-		steerDegrees = 34,
-	},
 	{
 		id = "sedan",
 		name = "Fairline Sedan",

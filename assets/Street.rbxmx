@@ -2820,6 +2820,987 @@
 </Item>
 </Item>
 </Item>
+<Item class="Model" referent="RBXSTREET0282">
+<Properties>
+<string name="Name">School</string>
+</Properties>
+<Item class="Model" referent="RBXSTREET0248">
+<Properties>
+<string name="Name">SchoolStructure</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0214">
+<Properties>
+<string name="Name">Slab</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>1.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>1.0</Y><Z>114.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">784</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291215540</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0215">
+<Properties>
+<string name="Name">Roof</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>17.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>1.0</Y><Z>114.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">800</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283979868</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0216">
+<Properties>
+<string name="Name">WallWest1</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>114.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0217">
+<Properties>
+<string name="Name">WallEast1</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>120.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>53.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0218">
+<Properties>
+<string name="Name">WallEast2</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>181.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>15.0</Y><Z>53.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0219">
+<Properties>
+<string name="Name">WallEastHead1</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>13.52</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.5</X><Y>6.0</Y><Z>8.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0220">
+<Properties>
+<string name="Name">WallSouth1</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>9.02</Y><Z>94.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0221">
+<Properties>
+<string name="Name">WallNorth1</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>9.02</Y><Z>207.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>15.0</Y><Z>1.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0222">
+<Properties>
+<string name="Name">WindowWest11</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>101.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.400000000000006</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0223">
+<Properties>
+<string name="Name">WindowWest12</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>108.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.400000000000006</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0224">
+<Properties>
+<string name="Name">WindowWest13</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>115.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.400000000000006</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0225">
+<Properties>
+<string name="Name">WindowWest21</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>126.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.3999999999999915</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0226">
+<Properties>
+<string name="Name">WindowWest22</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>133.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0227">
+<Properties>
+<string name="Name">WindowWest23</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>140.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0228">
+<Properties>
+<string name="Name">WindowWest24</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>147.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0229">
+<Properties>
+<string name="Name">WindowWest25</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>154.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0230">
+<Properties>
+<string name="Name">WindowWest26</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>161.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0231">
+<Properties>
+<string name="Name">WindowWest27</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>168.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0232">
+<Properties>
+<string name="Name">WindowWest28</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>175.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>6.399999999999977</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0233">
+<Properties>
+<string name="Name">WindowWest31</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>188.66666666666669</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0234">
+<Properties>
+<string name="Name">WindowWest32</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>195.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>5.733333333333292</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0235">
+<Properties>
+<string name="Name">WindowWest33</string>
+<CoordinateFrame name="CFrame"><X>-362.75</X><Y>9.02</Y><Z>201.33333333333331</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.7000000000000455</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0236">
+<Properties>
+<string name="Name">WindowEast11</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>9.041666666666666</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.48333333333333</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0237">
+<Properties>
+<string name="Name">WindowEast12</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>32.125</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.483333333333334</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0238">
+<Properties>
+<string name="Name">WindowEast13</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>55.20833333333333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.48333333333334</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0239">
+<Properties>
+<string name="Name">WindowEast14</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>78.29166666666666</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.483333333333334</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0240">
+<Properties>
+<string name="Name">WindowEast15</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>101.375</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.483333333333334</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0241">
+<Properties>
+<string name="Name">WindowEast16</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>124.45833333333331</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>22.483333333333334</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0242">
+<Properties>
+<string name="Name">WindowEast21</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>169.16666666666669</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0243">
+<Properties>
+<string name="Name">WindowEast22</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>175.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.733333333333292</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0244">
+<Properties>
+<string name="Name">WindowEast23</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>181.83333333333331</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0245">
+<Properties>
+<string name="Name">WindowEast24</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>188.16666666666669</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0246">
+<Properties>
+<string name="Name">WindowEast25</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.733333333333292</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0247">
+<Properties>
+<string name="Name">WindowEast26</string>
+<CoordinateFrame name="CFrame"><X>-242.25</X><Y>9.02</Y><Z>200.83333333333331</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.6999999999999886</X><Y>7.0</Y><Z>5.73333333333332</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">1568</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287541438</Color3uint8>
+<float name="Transparency">0.55</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0267">
+<Properties>
+<string name="Name">SchoolPartitions</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0249">
+<Properties>
+<string name="Name">HallEast1</string>
+<CoordinateFrame name="CFrame"><X>-282.5</X><Y>9.02</Y><Z>121.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>52.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0250">
+<Properties>
+<string name="Name">HallEast2</string>
+<CoordinateFrame name="CFrame"><X>-282.5</X><Y>9.02</Y><Z>180.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>52.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0251">
+<Properties>
+<string name="Name">HallEastHead1</string>
+<CoordinateFrame name="CFrame"><X>-282.5</X><Y>13.52</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0252">
+<Properties>
+<string name="Name">HallWest1</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>9.02</Y><Z>100.25</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>9.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0253">
+<Properties>
+<string name="Name">HallWest2</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>9.02</Y><Z>129.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>37.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0254">
+<Properties>
+<string name="Name">HallWest3</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>9.02</Y><Z>173.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>37.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0255">
+<Properties>
+<string name="Name">HallWest4</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>9.02</Y><Z>202.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>15.0</Y><Z>9.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0256">
+<Properties>
+<string name="Name">HallWestHead1</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>13.52</Y><Z>108.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0257">
+<Properties>
+<string name="Name">HallWestHead2</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>13.52</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0258">
+<Properties>
+<string name="Name">HallWestHead3</string>
+<CoordinateFrame name="CFrame"><X>-291.5</X><Y>13.52</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0259">
+<Properties>
+<string name="Name">ClassSplit1</string>
+<CoordinateFrame name="CFrame"><X>-327.0</X><Y>9.02</Y><Z>121.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>70.0</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0260">
+<Properties>
+<string name="Name">ClassSplit2</string>
+<CoordinateFrame name="CFrame"><X>-327.0</X><Y>9.02</Y><Z>182.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>70.0</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0261">
+<Properties>
+<string name="Name">EastSplit11</string>
+<CoordinateFrame name="CFrame"><X>-273.75</X><Y>9.02</Y><Z>139.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>16.5</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0262">
+<Properties>
+<string name="Name">EastSplit12</string>
+<CoordinateFrame name="CFrame"><X>-251.25</X><Y>9.02</Y><Z>139.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>16.5</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0263">
+<Properties>
+<string name="Name">EastSplit1Head1</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>13.52</Y><Z>139.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0264">
+<Properties>
+<string name="Name">EastSplit21</string>
+<CoordinateFrame name="CFrame"><X>-273.75</X><Y>9.02</Y><Z>164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>16.5</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0265">
+<Properties>
+<string name="Name">EastSplit22</string>
+<CoordinateFrame name="CFrame"><X>-251.25</X><Y>9.02</Y><Z>164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>16.5</X><Y>15.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0266">
+<Properties>
+<string name="Name">EastSplit2Head1</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>13.52</Y><Z>164.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">256</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4292400332</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0273">
+<Properties>
+<string name="Name">SchoolPortico</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0268">
+<Properties>
+<string name="Name">Column1</string>
+<CoordinateFrame name="CFrame"><X>-239.5</X><Y>6.26</Y><Z>140.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.6000000000000227</X><Y>9.48</Y><Z>1.6000000000000227</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0269">
+<Properties>
+<string name="Name">Column2</string>
+<CoordinateFrame name="CFrame"><X>-239.5</X><Y>6.26</Y><Z>144.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.6000000000000227</X><Y>9.48</Y><Z>1.6000000000000227</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0270">
+<Properties>
+<string name="Name">Column3</string>
+<CoordinateFrame name="CFrame"><X>-239.5</X><Y>6.26</Y><Z>158.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.6000000000000227</X><Y>9.48</Y><Z>1.6000000000000227</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0271">
+<Properties>
+<string name="Name">Column4</string>
+<CoordinateFrame name="CFrame"><X>-239.5</X><Y>6.26</Y><Z>162.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.6000000000000227</X><Y>9.48</Y><Z>1.6000000000000227</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0272">
+<Properties>
+<string name="Name">Canopy</string>
+<CoordinateFrame name="CFrame"><X>-239.75</X><Y>11.6</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.5</X><Y>1.1999999999999993</Y><Z>24.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0281">
+<Properties>
+<string name="Name">SchoolParapet</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0274">
+<Properties>
+<string name="Name">ParapetWest</string>
+<CoordinateFrame name="CFrame"><X>-363.0</X><Y>19.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>3.0</Y><Z>114.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0275">
+<Properties>
+<string name="Name">ParapetEast</string>
+<CoordinateFrame name="CFrame"><X>-242.0</X><Y>19.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>3.0</Y><Z>114.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0276">
+<Properties>
+<string name="Name">ParapetSouth</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>19.02</Y><Z>94.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>3.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0277">
+<Properties>
+<string name="Name">ParapetNorth</string>
+<CoordinateFrame name="CFrame"><X>-302.5</X><Y>19.02</Y><Z>207.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>122.0</X><Y>3.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4290555032</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0280">
+<Properties>
+<string name="Name">Nameplate</string>
+<CoordinateFrame name="CFrame"><X>-242.75</X><Y>20.759999999999998</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>2.5</X><Y>6.48</Y><Z>22.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">848</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4288441432</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="SurfaceGui" referent="RBXSTREET0278">
+<Properties>
+<string name="Name">Sign</string>
+<token name="Face">0</token>
+<bool name="AlwaysOnTop">false</bool>
+<token name="SizingMode">0</token>
+<Vector2 name="CanvasSize"><X>800</X><Y>200</Y></Vector2>
+<float name="LightInfluence">0</float>
+<bool name="Enabled">true</bool>
+</Properties>
+<Item class="TextLabel" referent="RBXSTREET0279">
+<Properties>
+<string name="Name">Text</string>
+<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+<UDim2 name="Position"><XS>0</XS><XO>0</XO><YS>0</YS><YO>0</YO></UDim2>
+<float name="BackgroundTransparency">1</float>
+<string name="Text">GREENFIELD SCHOOL</string>
+<token name="Font">4</token>
+<bool name="TextScaled">false</bool>
+<float name="TextSize">72</float>
+<Color3 name="TextColor3"><R>0.9803921568627451</R><G>0.9647058823529412</G><B>0.9176470588235294</B></Color3>
+<token name="TextXAlignment">2</token>
+<token name="TextYAlignment">1</token>
+</Properties>
+</Item>
+</Item>
+</Item>
+</Item>
+</Item>
 <Item class="Model" referent="RBXSTREET0352">
 <Properties>
 <string name="Name">Workplace</string>
@@ -3792,6 +4773,2662 @@
 <token name="TextYAlignment">1</token>
 </Properties>
 </Item>
+</Item>
+</Item>
+</Item>
+</Item>
+<Item class="Model" referent="RBXSTREET0585">
+<Properties>
+<string name="Name">SchoolFittings</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0353">
+<Properties>
+<string name="Name">MathBoard</string>
+<CoordinateFrame name="CFrame"><X>-361.85</X><Y>8.02</Y><Z>108.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.30000000000001137</X><Y>5.0</Y><Z>12.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293454566</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0357">
+<Properties>
+<string name="Name">TeacherDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0354">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-358.8</X><Y>4.07</Y><Z>108.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.3</Y><Z>2.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0355">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-358.8</X><Y>2.7199999999999998</Y><Z>105.4</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0356">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-358.8</X><Y>2.7199999999999998</Y><Z>110.6</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0361">
+<Properties>
+<string name="Name">PupilDesk1</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0358">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>4.07</Y><Z>102.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0359">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>100.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0360">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>103.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0365">
+<Properties>
+<string name="Name">PupilDesk1</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0362">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>4.07</Y><Z>106.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0363">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>104.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0364">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>107.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0369">
+<Properties>
+<string name="Name">PupilDesk1</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0366">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>4.07</Y><Z>110.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0367">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>108.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0368">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>111.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0373">
+<Properties>
+<string name="Name">PupilDesk1</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0370">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>4.07</Y><Z>114.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0371">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>112.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0372">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-355.1</X><Y>2.7199999999999998</Y><Z>115.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0377">
+<Properties>
+<string name="Name">PupilDesk2</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0374">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>4.07</Y><Z>102.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0375">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>100.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0376">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>103.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0381">
+<Properties>
+<string name="Name">PupilDesk2</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0378">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>4.07</Y><Z>106.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0379">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>104.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0380">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>107.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0385">
+<Properties>
+<string name="Name">PupilDesk2</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0382">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>4.07</Y><Z>110.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0383">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>108.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0384">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>111.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0389">
+<Properties>
+<string name="Name">PupilDesk2</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0386">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>4.07</Y><Z>114.0</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>0.3</Y><Z>2.2</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0387">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>112.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0388">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-349.1</X><Y>2.7199999999999998</Y><Z>115.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0392">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0391">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>102.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0390">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0395">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0394">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>114.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0393">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0398">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0397">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>16.22</Y><Z>102.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0396">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0401">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0400">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>16.22</Y><Z>114.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0399">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0404">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0403">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-312.0</X><Y>16.22</Y><Z>102.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0402">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0407">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0406">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-312.0</X><Y>16.22</Y><Z>114.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0405">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0410">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0409">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>135.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0408">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0413">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0412">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0411">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0416">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0415">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>167.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0414">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0419">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0418">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-328.0</X><Y>16.22</Y><Z>135.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0417">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0422">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0421">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-328.0</X><Y>16.22</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0420">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0425">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0424">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-328.0</X><Y>16.22</Y><Z>167.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0423">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0428">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0427">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-304.0</X><Y>16.22</Y><Z>135.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0426">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0431">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0430">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-304.0</X><Y>16.22</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0429">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0434">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0433">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-304.0</X><Y>16.22</Y><Z>167.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0432">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0435">
+<Properties>
+<string name="Name">ServingCounter</string>
+<CoordinateFrame name="CFrame"><X>-297.0</X><Y>3.2199999999999998</Y><Z>201.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>3.4</Y><Z>7.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0436">
+<Properties>
+<string name="Name">ServingBack</string>
+<CoordinateFrame name="CFrame"><X>-300.5</X><Y>4.52</Y><Z>201.75</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.0</X><Y>6.0</Y><Z>7.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4287796376</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0437">
+<Properties>
+<string name="Name">Table1</string>
+<CoordinateFrame name="CFrame"><X>-350.0</X><Y>3.92</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>8.0</X><Y>0.3999999999999999</Y><Z>2.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0442">
+<Properties>
+<string name="Name">TableBench1A</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0438">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-350.0</X><Y>3.195</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0439">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-350.0</X><Y>4.2700000000000005</Y><Z>190.9</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0440">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-347.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0441">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-352.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0447">
+<Properties>
+<string name="Name">TableBench1B</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0443">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-350.0</X><Y>3.195</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0444">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-350.0</X><Y>4.2700000000000005</Y><Z>198.1</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0445">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-352.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0446">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-347.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0448">
+<Properties>
+<string name="Name">Table2</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>3.92</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>8.0</X><Y>0.3999999999999999</Y><Z>2.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0453">
+<Properties>
+<string name="Name">TableBench2A</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0449">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>3.195</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0450">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>4.2700000000000005</Y><Z>190.9</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0451">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-329.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0452">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-334.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0458">
+<Properties>
+<string name="Name">TableBench2B</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0454">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>3.195</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0455">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>4.2700000000000005</Y><Z>198.1</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0456">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-334.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0457">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-329.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0459">
+<Properties>
+<string name="Name">Table3</string>
+<CoordinateFrame name="CFrame"><X>-314.0</X><Y>3.92</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>8.0</X><Y>0.3999999999999999</Y><Z>2.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0464">
+<Properties>
+<string name="Name">TableBench3A</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0460">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-314.0</X><Y>3.195</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0461">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-314.0</X><Y>4.2700000000000005</Y><Z>190.9</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0462">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-311.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0463">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-316.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0469">
+<Properties>
+<string name="Name">TableBench3B</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0465">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-314.0</X><Y>3.195</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0466">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-314.0</X><Y>4.2700000000000005</Y><Z>198.1</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0467">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-316.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0468">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-311.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0470">
+<Properties>
+<string name="Name">Table4</string>
+<CoordinateFrame name="CFrame"><X>-296.0</X><Y>3.92</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>8.0</X><Y>0.3999999999999999</Y><Z>2.3999999999999773</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0475">
+<Properties>
+<string name="Name">TableBench4A</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0471">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-296.0</X><Y>3.195</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0472">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-296.0</X><Y>4.2700000000000005</Y><Z>190.9</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0473">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-293.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0474">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-298.5</X><Y>2.27</Y><Z>190.1</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0480">
+<Properties>
+<string name="Name">TableBench4B</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0476">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-296.0</X><Y>3.195</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.35</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0477">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-296.0</X><Y>4.2700000000000005</Y><Z>198.1</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>1.8</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0478">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-298.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0479">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-293.5</X><Y>2.27</Y><Z>198.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.35</X><Y>1.5</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286612102</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0483">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0482">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>189.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0481">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0486">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0485">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-352.0</X><Y>16.22</Y><Z>199.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0484">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0489">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0488">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>16.22</Y><Z>189.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0487">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0492">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0491">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-332.0</X><Y>16.22</Y><Z>199.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0490">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0495">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0494">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-312.0</X><Y>16.22</Y><Z>189.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0493">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0498">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0497">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-312.0</X><Y>16.22</Y><Z>199.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0496">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0502">
+<Properties>
+<string name="Name">Reception</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0499">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-270.0</X><Y>4.07</Y><Z>155.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>10.0</X><Y>0.3</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0500">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-274.6</X><Y>2.7199999999999998</Y><Z>155.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0501">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-265.4</X><Y>2.7199999999999998</Y><Z>155.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0506">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0503">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-270.0</X><Y>3.27</Y><Z>151.5</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0504">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-270.0</X><Y>4.42</Y><Z>152.25</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0505">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-270.0</X><Y>2.3200000000000003</Y><Z>151.5</Z><R00>-1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>-1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0509">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0508">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>145.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0507">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0512">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0511">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>157.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0510">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Part" referent="RBXSTREET0513">
+<Properties>
+<string name="Name">Court</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>1.55</Y><Z>185.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.0</X><Y>0.06000000000000005</Y><Z>34.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291204192</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0514">
+<Properties>
+<string name="Name">CourtLine</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>1.6</Y><Z>185.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>27.0</X><Y>0.040000000000000036</Y><Z>0.30000000000001137</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293453536</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0515">
+<Properties>
+<string name="Name">Backboard1</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>11.02</Y><Z>169.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.5</X><Y>3.0</Y><Z>0.39999999999997726</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293454566</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0516">
+<Properties>
+<string name="Name">Backboard2</string>
+<CoordinateFrame name="CFrame"><X>-262.5</X><Y>11.02</Y><Z>202.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.5</X><Y>3.0</Y><Z>0.39999999999997726</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">272</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293454566</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Model" referent="RBXSTREET0519">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0518">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>172.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0517">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0522">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0521">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>185.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0520">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0525">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0524">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>198.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0523">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0529">
+<Properties>
+<string name="Name">OfficeDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0526">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>4.07</Y><Z>101.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.3</Y><Z>2.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0527">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>98.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0528">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>104.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0533">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0530">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>3.27</Y><Z>101.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0531">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-274.65</X><Y>4.42</Y><Z>101.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0532">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>2.3200000000000003</Y><Z>101.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0537">
+<Properties>
+<string name="Name">OfficeDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0534">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>4.07</Y><Z>111.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.3</Y><Z>2.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0535">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>108.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0536">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>114.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0541">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0538">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>3.27</Y><Z>111.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0539">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-274.65</X><Y>4.42</Y><Z>111.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0540">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>2.3200000000000003</Y><Z>111.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0545">
+<Properties>
+<string name="Name">OfficeDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0542">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>4.07</Y><Z>121.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.3</Y><Z>2.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0543">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>118.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0544">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>124.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0549">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0546">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>3.27</Y><Z>121.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0547">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-274.65</X><Y>4.42</Y><Z>121.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0548">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>2.3200000000000003</Y><Z>121.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0553">
+<Properties>
+<string name="Name">OfficeDesk</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0550">
+<Properties>
+<string name="Name">Top</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>4.07</Y><Z>131.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>0.3</Y><Z>2.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">512</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4291077758</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0551">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>128.9</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0552">
+<Properties>
+<string name="Name">Leg</string>
+<CoordinateFrame name="CFrame"><X>-279.3</X><Y>2.7199999999999998</Y><Z>134.1</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.3</X><Y>2.4</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0557">
+<Properties>
+<string name="Name">Chair</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0554">
+<Properties>
+<string name="Name">Seat</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>3.27</Y><Z>131.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>0.3</Y><Z>1.8</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0555">
+<Properties>
+<string name="Name">Back</string>
+<CoordinateFrame name="CFrame"><X>-274.65</X><Y>4.42</Y><Z>131.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>1.8</X><Y>2.0</Y><Z>0.3</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1312</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282933380</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item><Item class="Part" referent="RBXSTREET0556">
+<Properties>
+<string name="Name">Stem</string>
+<CoordinateFrame name="CFrame"><X>-275.4</X><Y>2.3200000000000003</Y><Z>131.5</Z><R00>0</R00><R01>0</R01><R02>-1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.4</X><Y>1.6</Y><Z>0.4</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">1088</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4285427828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0560">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0559">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>105.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0558">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0563">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0562">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-272.0</X><Y>16.22</Y><Z>128.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0561">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0566">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0565">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>103.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0564">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0569">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0568">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>117.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0567">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0572">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0571">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>131.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0570">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0575">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0574">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>145.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0573">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0578">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0577">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>159.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0576">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0581">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0580">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>173.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0579">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
+</Item>
+</Item>
+</Item><Item class="Model" referent="RBXSTREET0584">
+<Properties>
+<string name="Name">CeilingLight</string>
+</Properties>
+<Item class="Part" referent="RBXSTREET0583">
+<Properties>
+<string name="Name">Panel</string>
+<CoordinateFrame name="CFrame"><X>-287.0</X><Y>16.22</Y><Z>187.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.0</X><Y>0.4</Y><Z>1.6</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">false</bool>
+<token name="Material">288</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4293848292</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+<Item class="PointLight" referent="RBXSTREET0582">
+<Properties>
+<string name="Name">Glow</string>
+<Color3 name="Color"><R>1.0</R><G>0.9725490196078431</G><B>0.9098039215686274</B></Color3>
+<float name="Brightness">1.1</float>
+<float name="Range">22.0</float>
+<bool name="Shadows">true</bool>
+<bool name="Enabled">true</bool>
+</Properties>
 </Item>
 </Item>
 </Item>
@@ -5685,7 +9322,7 @@
 </Item><Item class="Part" referent="RBXSTREET0743">
 <Properties>
 <string name="Name">Place_school</string>
-<CoordinateFrame name="CFrame"><X>-38.0000</X><Y>2.1700</Y><Z>-1138.0000</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-238.5</X><Y>2.02</Y><Z>151.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -5700,7 +9337,7 @@
 </Item><Item class="Part" referent="RBXSTREET0744">
 <Properties>
 <string name="Name">Place_classroom</string>
-<CoordinateFrame name="CFrame"><X>-109.0000</X><Y>29.3000</Y><Z>-964.0000</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-327.0</X><Y>2.02</Y><Z>108.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -5715,7 +9352,7 @@
 </Item><Item class="Part" referent="RBXSTREET0745">
 <Properties>
 <string name="Name">Place_science_lab</string>
-<CoordinateFrame name="CFrame"><X>-261.0000</X><Y>29.3000</Y><Z>-964.0000</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-327.0</X><Y>2.02</Y><Z>151.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -5730,7 +9367,7 @@
 </Item><Item class="Part" referent="RBXSTREET0746">
 <Properties>
 <string name="Name">Place_cafeteria</string>
-<CoordinateFrame name="CFrame"><X>-242.0000</X><Y>2.3000</Y><Z>-964.0000</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-327.0</X><Y>2.02</Y><Z>194.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.0</X><Y>1.0</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>

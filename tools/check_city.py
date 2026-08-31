@@ -201,6 +201,15 @@ def decode_attrs(blob: str) -> dict[str, str]:
     return attrs
 
 
+def item_name(item):
+    """An Item's Name property, or "?". Works for any class, not just Part."""
+    props = item.find("Properties")
+    if props is None:
+        return "?"
+    el = props.find("string[@name='Name']")
+    return el.text if el is not None and el.text else "?"
+
+
 def part_box(props):
     """(name, x0, x1, z0, z1, y0, y1) for a Part's Properties, or None.
 
@@ -1187,6 +1196,67 @@ def main():
                   file=sys.stderr)
         check(f"no place is more than {MAX_DETOUR}x its straight line away",
               worst_ratio <= MAX_DETOUR, f"worst is {worst_ratio:.2f}")
+
+    # --- 13. An asset against itself ---
+    print("13. An asset against itself")
+    # Check 10 catches two *files* paving the same square. It has never once
+    # looked inside a file, and the same defect is far more common there: one
+    # generator lays a block's paving and then lays a building's floor slab on
+    # top of it finishing at the identical height, or paints a crossing across a
+    # lane line, or runs a park path over the path it crosses. Seventy of those
+    # shipped. They flicker exactly as hard as the cross-asset kind -- the
+    # graphics card does not know or care which file a surface came from.
+    #
+    # The predicate is check 10's, with one narrowing: only parts whose *top*
+    # lands in the ground band count, not every part that crosses it. Check 10
+    # can afford the looser test because two different files rarely put a wall in
+    # the same place; inside one file, every building corner is two walls lapping
+    # by design and finishing at the same height by definition, and reporting
+    # those would be a hundred false positives on correct geometry. A top in the
+    # ground band is a surface a player stands on, which is the only class of
+    # part where a shared plane is never intentional.
+    plates = {}
+    for path in sorted(ASSETS.glob("*.rbxmx")):
+        found = []
+
+        def walk(node, trail):
+            for item in node.findall("Item"):
+                cls = item.get("class")
+                if cls == "Part":
+                    props = item.find("Properties")
+                    if props is None:
+                        continue
+                    b = part_box(props)
+                    if b is not None and SURFACE_LO <= b[6] <= SURFACE_HI:
+                        found.append((f"{trail}/{b[0]}", part_footprint(props), b[6]))
+                elif cls in ("Model", "Folder"):
+                    walk(item, f"{trail}/{item_name(item)}")
+                else:
+                    walk(item, trail)
+
+        walk(ET.parse(path).getroot(), path.stem)
+        plates[path.name] = found
+    self_laps = {}
+    for aname, found in plates.items():
+        print(f"  {aname}: {len(found)} ground plates")
+        for i, (an, afoot, atop) in enumerate(found):
+            for bn, bfoot, btop in found[i + 1:]:
+                if abs(atop - btop) > COPLANAR:
+                    continue
+                lap = plan_overlap(afoot, bfoot)
+                if lap > ASSET_LAP:
+                    key = (aname, an, bn)
+                    if key not in self_laps or lap > self_laps[key][0]:
+                        self_laps[key] = (lap, atop)
+    for (aname, a, b), (lap, top) in sorted(self_laps.items(),
+                                            key=lambda kv: -kv[1][0])[:20]:
+        print(f"    {aname}: {a} and {b} share {lap:.1f} studs of surface, "
+              f"both topping at y={top:.3f}", file=sys.stderr)
+    if len(self_laps) > 20:
+        print(f"    ...and {len(self_laps) - 20} more", file=sys.stderr)
+    check("no asset shares a surface plane with itself", not self_laps,
+          f"{len(self_laps)} coplanar pair(s)")
+    print()
 
     # --- Summary ---
     print()

@@ -183,7 +183,10 @@ def glazing(name, bounds, along="z", panes=1):
 # than one slab, with the road filling the gap between them: a grass box and a
 # road box that shared a top height would z-fight down the whole length of the
 # street, and the cheapest fix is to not overlap them.
-GROUND_X0 = SCHOOL_X0 - 24.0
+# The school moved off this street onto the back street (world_plan.py) to get
+# room to grow; the workplace is the only building left fronting the west side
+# here, so the ground band is sized off it instead.
+GROUND_X0 = WORK_X0 - 24.0
 GROUND_BOTTOM = -1.0
 
 with group("Ground"):
@@ -247,9 +250,9 @@ with group("Forecourts"):
     # The apron each building stands on, running from its front wall out to the
     # far sidewalk. Same height as the paving and the ground floors, so the walk
     # from the crossing to a desk inside is flat the whole way.
-    box("SchoolForecourt",
-        (FORECOURT_X0, FAR_WALK_X0, SCHOOL_Z0, SCHOOL_Z1, GROUND - SLAB_SINK, PAVING),
-        PAVING_GREY, PEBBLE)
+    # The school no longer fronts this street (see GROUND_X0 above) -- its
+    # forecourt is now the "school" place point over on the back street,
+    # paved by gen_town.py, not here.
     box("WorkForecourt",
         (FORECOURT_X0, FAR_WALK_X0, WORK_Z0, WORK_Z1, GROUND - SLAB_SINK, PAVING),
         PAVING_GREY, PEBBLE)
@@ -486,43 +489,131 @@ with group("StreetSign"):
 # The school
 # ---------------------------------------------------------------------------
 
-# Everything below is read straight off world_plan's rooms. Inner faces first, so
-# a wall that moves in the plan moves here and nowhere else.
-SCH_IN_X0, SCH_IN_X1 = SCHOOL_X0 + WALL, SCHOOL_X1 - WALL   # -150.5 .. -113.5
-SCH_IN_Z0, SCH_IN_Z1 = SCHOOL_Z0 + WALL, SCHOOL_Z1 - WALL   # 11.5 .. 74.5
+# Everything below is read straight off world_plan's rooms -- imported, not
+# re-derived, per the one-measurement-two-files rule stated there. A wall that
+# moves in the plan moves here and nowhere else.
+SCH_IN_X0, SCH_IN_X1 = W.SCH_IN_X0, W.SCH_IN_X1
+SCH_IN_Z0, SCH_IN_Z1 = W.SCH_IN_Z0, W.SCH_IN_Z1
 SCH_DOOR_Z0, SCH_DOOR_Z1 = SCHOOL_DOOR - DOORWAY / 2, SCHOOL_DOOR + DOORWAY / 2
 
-# The corridor's two walls, and the classroom cross-walls behind the west one.
-HALL_E_X0, HALL_E_X1 = -131.0, -130.0
-HALL_W_X0, HALL_W_X1 = -139.0, -138.0
-CLASS_SPLIT_1 = 32.0
-CLASS_SPLIT_2 = 53.0
+# The corridor's two walls, and the classroom cross-walls behind each one.
+#
+# The two rows no longer split at the same z: the west row (Math/Science/
+# Cafeteria) was cut to give Science the room `Lab.Build` needs, and that cut
+# does not line up with the east row (Office/Lobby/Gym), which kept its
+# original three-way split when only its frontage grew. One pair of numbers
+# used to serve both rows because both used to be three equal rooms; now each
+# row needs its own, read straight from world_plan rather than re-measured
+# here.
+HALL_E_X0, HALL_E_X1 = W.HALL_E_X0, W.HALL_E_X1
+HALL_W_X0, HALL_W_X1 = W.HALL_W_X0, W.HALL_W_X1
+WEST_SPLIT_1, WEST_SPLIT_2 = W.MATH_Z1, W.SCIENCE_Z1
+EAST_SPLIT_1, EAST_SPLIT_2 = W.EAST_SPLIT_1, W.EAST_SPLIT_2
 
-# ---------------------------------------------------------------------------
-# The school -- removed
-# ---------------------------------------------------------------------------
-#
-# Greenfield School used to be built here: SchoolStructure, SchoolPartitions,
-# SchoolPortico, SchoolParapet and SchoolFittings, plus the nameplate reading
-# GREENFIELD SCHOOL over the entrance.
-#
-# It is gone from assets/Street.rbxmx already -- the downtown rebuild dropped
-# the building but left its place points behind, which is what
-# tools/move_school_points.py exists to shepherd. The generator code outlived
-# the building by about a week.
-#
-# The school is now built at runtime by src/server/world/School.luau and baked
-# to assets/School.rbxmx, laid around the `school` place point. Two schools in
-# one world is one too many, so this is deleted rather than commented out or
-# left behind a flag: a flag would be a promise that the old one still works,
-# and it does not -- world_plan's SCHOOL_* interior Places describe rooms that
-# no longer exist anywhere.
-#
-# **Do not regenerate Street.rbxmx from this file without checking with Agent A
-# first.** The asset on disk carries downtown work that is not in this script,
-# so a regen would silently roll that back -- which is a much worse problem
-# than the one this note is about.
+with group("School"):
+    with group("SchoolStructure"):
+        box("Slab", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
+                     FLOOR_1 - SLAB, FLOOR_1), FLOOR_INDOOR, MARBLE)
+        box("Roof", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1,
+                     CEIL_1, CEIL_1 + SLAB), ROOF_GREY, SLATE)
 
+        wall("WallWest", (SCHOOL_X0, SCH_IN_X0, SCHOOL_Z0, SCHOOL_Z1, FLOOR_1, CEIL_1),
+             BRICK_PALE, along="z")
+        wall("WallEast", (SCH_IN_X1, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1, FLOOR_1, CEIL_1),
+             BRICK_PALE, along="z", doors=((SCH_DOOR_Z0, SCH_DOOR_Z1),))
+        wall("WallSouth", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCH_IN_Z0, FLOOR_1, CEIL_1),
+             BRICK_PALE, along="x")
+        wall("WallNorth", (SCHOOL_X0, SCHOOL_X1, SCH_IN_Z1, SCHOOL_Z1, FLOOR_1, CEIL_1),
+             BRICK_PALE, along="x")
+
+        # Windows. Classrooms look west, the lobby and gym look east, and the
+        # openings are cut through the wall above -- these panes only fill them.
+        # One run per room, inset from that room's own walls (including the
+        # cross-walls below) rather than from the old equal three-way split.
+        for i, (z0, z1, panes) in enumerate((
+            (W.MATH_Z0 + 2.0, W.MATH_Z1 - 2.0, 3),
+            (WEST_SPLIT_1 + 2.5, WEST_SPLIT_2 - 2.5, 8),
+            (W.CAFETERIA_Z0 + 3.0, W.CAFETERIA_Z1 - 2.0, 3),
+        )):
+            glazing(f"WindowWest{i + 1}",
+                    (SCHOOL_X0 + 0.4, SCH_IN_X0 - 0.4, z0, z1, FLOOR_1 + 4.0, FLOOR_1 + 11.0),
+                    along="z", panes=panes)
+        # Lobby is skipped -- it faces the portico and canopy instead. Office
+        # and Gym both grew when the building's frontage did, so their window
+        # runs are measured off their own new bands rather than reused.
+        for i, (z0, z1, panes) in enumerate((
+            (-2.5, EAST_SPLIT_1 - 2.5, 6),
+            (EAST_SPLIT_2 + 2.5, SCHOOL_Z1 - 4.0, 6),
+        )):
+            glazing(f"WindowEast{i + 1}",
+                    (SCH_IN_X1 + 0.4, SCHOOL_X1 - 0.4, z0, z1, FLOOR_1 + 4.0, FLOOR_1 + 11.0),
+                    along="z", panes=panes)
+
+    with group("SchoolPartitions"):
+        wall("HallEast", (HALL_E_X0, HALL_E_X1, SCH_IN_Z0, SCH_IN_Z1, FLOOR_1, CEIL_1),
+             PARTITION_PALE, PLASTIC, along="z",
+             doors=((SCHOOL_DOOR - INNER_DOORWAY / 2, SCHOOL_DOOR + INNER_DOORWAY / 2),))
+        # One door per west room, centred on its own band rather than on the
+        # old equal thirds.
+        math_mid = (W.MATH_Z0 + W.MATH_Z1) / 2
+        science_mid = W.SCIENCE_CENTER_Z
+        cafeteria_mid = (W.CAFETERIA_Z0 + W.CAFETERIA_Z1) / 2
+        wall("HallWest", (HALL_W_X0, HALL_W_X1, SCH_IN_Z0, SCH_IN_Z1, FLOOR_1, CEIL_1),
+             PARTITION_PALE, PLASTIC, along="z",
+             doors=(
+                 (math_mid - INNER_DOORWAY / 2, math_mid + INNER_DOORWAY / 2),
+                 (science_mid - INNER_DOORWAY / 2, science_mid + INNER_DOORWAY / 2),
+                 (cafeteria_mid - INNER_DOORWAY / 2, cafeteria_mid + INNER_DOORWAY / 2),
+             ))
+
+        # West cross-walls (Math/Science, Science/Cafeteria) and east
+        # cross-walls (Office/Lobby, Lobby/Gym) sit at different z now -- see
+        # the note on WEST_SPLIT_1/2 and EAST_SPLIT_1/2 above -- so they are
+        # two loops over two different sets of numbers rather than one.
+        for i, z in enumerate((WEST_SPLIT_1, WEST_SPLIT_2)):
+            box(f"ClassSplit{i + 1}",
+                (SCH_IN_X0, HALL_W_X0, z, z + PARTITION, FLOOR_1, CEIL_1),
+                PARTITION_PALE, PLASTIC)
+        # Door centred on the east row's own depth (HALL_E_X1..SCH_IN_X1),
+        # not the west row's -- the two corridors don't line up (see above).
+        east_row_mid = (HALL_E_X1 + SCH_IN_X1) / 2
+        east_door = (east_row_mid - INNER_DOORWAY / 2, east_row_mid + INNER_DOORWAY / 2)
+        for i, z in enumerate((EAST_SPLIT_1, EAST_SPLIT_2)):
+            wall(f"EastSplit{i + 1}",
+                 (HALL_E_X1, SCH_IN_X1, z, z + PARTITION, FLOOR_1, CEIL_1),
+                 PARTITION_PALE, PLASTIC, along="x", doors=(east_door,))
+
+    with group("SchoolPortico"):
+        # Four columns and a canopy over the front door, with the middle pair
+        # standing clear of the opening. It is the only piece of the school that
+        # is purely for the look of the thing, and it earns its parts: a flat
+        # brick wall with a hole in it does not read as a door from the far
+        # sidewalk, and this is the door the player is supposed to find.
+        # Centred on the lobby's own band (world_plan.LOBBY_Z0/Z1), the room
+        # the portico actually fronts, at the same offsets from its edges
+        # that the old site used: 1 stud and 5 studs in from each end.
+        portico_x0, portico_x1 = SCH_IN_X1 + 2.7, SCH_IN_X1 + 4.3
+        for i, z in enumerate((W.LOBBY_Z0 + 1.0, W.LOBBY_Z0 + 5.0,
+                                W.LOBBY_Z1 - 5.0, W.LOBBY_Z1 - 1.0)):
+            box(f"Column{i + 1}", (portico_x0, portico_x1, z - 0.8, z + 0.8, PAVING, 11.0),
+                TRIM_WHITE, CONCRETE)
+        box("Canopy", (SCH_IN_X1, SCH_IN_X1 + 6.5, W.LOBBY_Z0, W.LOBBY_Z1, 11.0, 12.2),
+            TRIM_WHITE, CONCRETE)
+
+    with group("SchoolParapet"):
+        for name, bounds in (
+            ("West", (SCHOOL_X0, SCHOOL_X0 + 1.0, SCHOOL_Z0, SCHOOL_Z1)),
+            ("East", (SCHOOL_X1 - 1.0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z1)),
+            ("South", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z0, SCHOOL_Z0 + 1.0)),
+            ("North", (SCHOOL_X0, SCHOOL_X1, SCHOOL_Z1 - 1.0, SCHOOL_Z1)),
+        ):
+            box(f"Parapet{name}", (*bounds, CEIL_1 + SLAB, CEIL_1 + SLAB + 3.0),
+                BRICK_PALE, BRICK)
+        # Raised over the entrance and carrying the name, facing the street.
+        box("Nameplate", (SCHOOL_X1 - 2.5, SCHOOL_X1, W.LOBBY_Z0 + 1.0, W.LOBBY_Z1 - 1.0,
+                          CEIL_1 + SLAB, 24.0),
+            BRICK_WARM, BRICK,
+            children=sign("GREENFIELD SCHOOL", "right", color=(250, 246, 234), size=72))
 
 # ---------------------------------------------------------------------------
 # The workplace
@@ -670,28 +761,139 @@ def shelf_run(x, z0, z1, floor, label="Shelving"):
                                       floor + dy + 1.8), STOCK, PLANKS, collide=False)
 
 
-def classroom(room, index):
-    """A board on the west wall, the teacher's desk in front of it, one row of
+def room_lighting(room, z_positions, x_step=20.0, inset=10.0):
+    """Even ceiling coverage across a room's full depth.
+
+    The west rooms are now up to 91.5 studs deep -- see the note on
+    SCIENCE_Z0/Z1 in world_plan.py -- and a room lit only where its furniture
+    happens to stand leaves most of that depth dark. This walks the room's own
+    x-span at a fixed stride instead, so lighting scales with the room rather
+    than with whatever is sitting in it.
+    """
+    x = room.x0 + inset
+    while x < room.x1 - inset + 0.1:
+        for z in z_positions:
+            ceiling_light(x, z, CEIL_1)
+        x += x_step
+
+
+def classroom(room, offsets=(-6.0, -2.0, 2.0, 6.0), rows=2, row_step=6.0):
+    """A board on the west wall, the teacher's desk in front of it, rows of
     desks facing them, and a clear lane down the middle to the door.
 
-    Every dimension is measured off the room and the whole arrangement stops
-    seven studs short of the east wall, because the door is in that wall and the
-    first pass at this put four desks and four chairs out in the corridor. The
-    gap left at the room's midline is not decoration either: it is the line the
-    player walks in on, and it is the reason there is an even number of desks.
+    Offsets are tuned to Math's own band (18 studs, world_plan.MATH_Z0/Z1) --
+    narrower than the old equal-thirds classrooms this replaces -- so a desk
+    never reaches the north or south wall. Multiple rows use the depth the
+    room actually has rather than stopping at the first one, the way the old
+    single-row layout did in a room a fifth this size; the floor beyond the
+    last row is left clear on purpose, the same call WORK_SHOP's south third
+    makes, rather than filled just because there is space to fill.
     """
     mid_z = (room.z0 + room.z1) / 2
-    box(f"Board{index}", (room.x0, room.x0 + 0.3, mid_z - 6.0, mid_z + 6.0,
-                          FLOOR_1 + 4.0, FLOOR_1 + 9.0), BOARD, SMOOTH, collide=False)
+    box("MathBoard", (room.x0, room.x0 + 0.3, mid_z - 6.0, mid_z + 6.0,
+                      FLOOR_1 + 4.0, FLOOR_1 + 9.0), BOARD, SMOOTH, collide=False)
     desk(room.x0 + 4.5, mid_z, FLOOR_1, side="east", width=6.0, depth=2.6,
          label="TeacherDesk")
-    for offset in (-8.0, -3.0, 3.0, 8.0):
-        desk(room.x0 + 8.0, mid_z + offset, FLOOR_1, side="east",
-             width=3.0, depth=2.2, label="PupilDesk")
-    for z in (mid_z - 6.0, mid_z + 6.0):
-        ceiling_light((room.x0 + room.x1) / 2, z, CEIL_1)
+    for r in range(rows):
+        row_x = room.x0 + 8.0 + r * row_step
+        for offset in offsets:
+            desk(row_x, mid_z + offset, FLOOR_1, side="east",
+                 width=3.0, depth=2.2, label=f"PupilDesk{r + 1}")
+    room_lighting(room, (mid_z - 6.0, mid_z + 6.0))
 
 
+def cafeteria(room):
+    """A serving counter by the corridor door and a run of long tables with
+    benches either side, the way Bloxburg's 2025 school update and Robloxian
+    High School both stage a cafeteria: shared tables you sit down at, not
+    desks. Reuses `bench()`, already built for the street, rather than
+    inventing a second bench.
+    """
+    mid_z = (room.z0 + room.z1) / 2
+    # Counter against the corridor wall (east end of the room), pushed north
+    # of the doorway rather than centred on it -- the door is cut through this
+    # same wall at mid_z +/- INNER_DOORWAY/2 (see HallWest in the School group
+    # above), and a counter astride its own doorway is a counter nobody can
+    # walk past to sit down.
+    counter_z0, counter_z1 = mid_z + INNER_DOORWAY / 2 + 0.5, room.z1 - 1.0
+    box("ServingCounter", (room.x1 - 8.0, room.x1 - 2.0, counter_z0, counter_z1,
+                           FLOOR_1, FLOOR_1 + 3.4), DESK_TOP, WOOD)
+    box("ServingBack", (room.x1 - 9.0, room.x1 - 8.0, counter_z0, counter_z1,
+                        FLOOR_1, FLOOR_1 + 6.0), SHELF, METAL)
+    table_xs = [room.x0 + 12.0 + i * 18.0 for i in range(4)]
+    for i, x in enumerate(table_xs):
+        box(f"Table{i + 1}", (x - 4.0, x + 4.0, mid_z - 1.2, mid_z + 1.2,
+                              FLOOR_1 + 2.2, FLOOR_1 + 2.6), DESK_TOP, WOOD)
+        bench(x, mid_z - 3.5, FLOOR_1, side="south", label=f"TableBench{i + 1}A")
+        bench(x, mid_z + 3.5, FLOOR_1, side="north", label=f"TableBench{i + 1}B")
+    room_lighting(room, (mid_z - 5.0, mid_z + 5.0))
+
+
+with group("SchoolFittings"):
+    classroom(W.SCHOOL_MATH)
+
+    # Science: left clear. ScienceService's Lab.Build furnishes this room
+    # itself at runtime -- board, cupboard, benches and stations scattered
+    # from the "science_lab" place point (see world_plan.py) -- so anything
+    # placed here ahead of time would either double up on that furniture or
+    # sit in the way of it. Lighting is the one thing that is this file's job
+    # regardless: Lab.Build's own ceilingAbove check only asks whether there is
+    # a roof, not whether the room is lit.
+    room_lighting(W.SCHOOL_SCIENCE,
+                  (W.SCIENCE_CENTER_Z - 16.0, W.SCIENCE_CENTER_Z, W.SCIENCE_CENTER_Z + 16.0),
+                  x_step=24.0)
+
+    cafeteria(W.SCHOOL_CAFETERIA)
+
+    # Lobby: reception set back from the door, running across the room rather
+    # than facing it down. A desk squarely in front of the entrance is the first
+    # thing a player walks into on their first day at school. Positions read
+    # off SCHOOL_LOBBY (world_plan.py) rather than the old fixed site.
+    lobby = W.SCHOOL_LOBBY
+    lobby_x = lobby.x0 + 12.0
+    lobby_mid_z = (lobby.z0 + lobby.z1) / 2
+    desk(lobby_x, lobby_mid_z + 2.0, FLOOR_1, side="north", width=10.0, depth=3.0,
+         label="Reception")
+    chair(lobby_x, lobby_mid_z, FLOOR_1, side="south")
+    room_lighting(lobby, (lobby.z0 + 6.0, lobby.z1 - 6.0))
+
+    # Gym: a painted court and a hoop at each end, stretched to use the extra
+    # frontage the building picked up on its north end -- see SCHOOL_GYM in
+    # world_plan.py. No equipment a player could get stuck inside.
+    gym = W.SCHOOL_GYM
+    gym_mid_x = (gym.x0 + gym.x1) / 2
+    court_x0, court_x1 = gym.x0 + 6.0, gym.x1 - 6.0
+    court_z0, court_z1 = gym.z0 + 4.0, gym.z1 - 4.0
+    court_mid_z = (court_z0 + court_z1) / 2
+    box("Court", (court_x0, court_x1, court_z0, court_z1, FLOOR_1, FLOOR_1 + 0.06),
+        (198, 148, 96), SMOOTH, collide=False)
+    box("CourtLine", (court_x0, court_x1, court_mid_z - 0.15, court_mid_z + 0.15,
+                      FLOOR_1 + 0.06, FLOOR_1 + 0.1), TRIM_WHITE, SMOOTH, collide=False)
+    for i, z in enumerate((court_z0 + 0.5, court_z1 - 0.5)):
+        box(f"Backboard{i + 1}", (gym_mid_x - 1.75, gym_mid_x + 1.75, z - 0.2, z + 0.2,
+                                  FLOOR_1 + 8.0, FLOOR_1 + 11.0), BOARD, SMOOTH)
+    room_lighting(gym, (court_z0 + 4.0, court_mid_z, court_z1 - 4.0))
+
+    # School office, stretched south into the room's extra depth with a
+    # fourth desk rather than three spread thinner across it.
+    office = W.SCHOOL_OFFICE
+    for i, z in enumerate((office.z0 + 6.0, office.z0 + 16.0,
+                            office.z0 + 26.0, office.z0 + 36.0)):
+        desk(office.x0 + 4.0, z, FLOOR_1, side="east", width=6.0, label="OfficeDesk")
+        chair(office.x0 + 6.6, z, FLOOR_1, side="east")
+    room_lighting(office, (office.z0 + 10.0, office.z1 - 10.0))
+
+    # Corridor lights, centred between its two partition walls and walking
+    # its full length -- the corridor is now one straight run past every
+    # room on both rows (world_plan.HALL_E/W_X0/X1, SCH_IN_Z0/Z1), not the
+    # short stub it was at the old site.
+    corridor_x = (HALL_W_X1 + HALL_E_X0) / 2
+    z = SCH_IN_Z0 + 8.0
+    while z < SCH_IN_Z1 - 8.0 + 0.1:
+        ceiling_light(corridor_x, z, CEIL_1)
+        z += 14.0
+
+with group("WorkFittings"):
     # Shop floor. The whole southern third of the room is left empty and that is
     # the design, not an oversight: the door, the stockroom and the stair all
     # open onto it, so it is the one lane every walk in this building uses. The

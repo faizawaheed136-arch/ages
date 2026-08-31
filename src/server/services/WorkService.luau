@@ -47,6 +47,7 @@ local Customers = require(script.Parent.Parent.world.Customers)
 local MoneyPop = require(script.Parent.Parent.world.MoneyPop)
 local MilestoneService = require(script.Parent.MilestoneService)
 local StatService = require(script.Parent.StatService)
+local SkillService = require(script.Parent.SkillService)
 local Curriculum = require(script.Parent.Parent.content.Curriculum)
 
 type Job = Types.Job
@@ -67,6 +68,7 @@ local TaskUpdatedRemote = Remotes.Get("TaskUpdated")
 local NoticeRemote = Remotes.Get("Notice")
 local RequestQuitJobRemote = Remotes.Get("RequestQuitJob")
 local RequestGuideToJobRemote = Remotes.Get("RequestGuideToJob")
+local RequestGuideToLocationRemote = Remotes.Get("RequestGuideToLocation")
 local RequestTaskPickupRemote = Remotes.Get("RequestTaskPickup")
 
 local WorkService = {}
@@ -259,6 +261,14 @@ local guided: { [Player]: string } = {}
 -- pick back to whatever pays best within the quarter second it takes to land.
 local manualGuide: { [Player]: string } = {}
 
+-- A place the player picked off the Locations pane, the same kind of override as
+-- `manualGuide` but for a destination that is not a job at all -- there is no
+-- "took it" event to clear this one automatically, so it stands until the player
+-- picks a job or a different place. Kept as {id, label} rather than an id alone so
+-- the arrow's caption is the pane's own friendly wording (Config.Locations.List)
+-- and never PlaceService's fallback label, which is only ever the raw tag id.
+local manualPlace: { [Player]: { id: string, label: string } } = {}
+
 -- Debug switch for the Studio harness. Never touched in a live server.
 local enabled = true
 
@@ -433,6 +443,23 @@ local function personName(personId: string): string
 	end
 	local member = Cast.ById[person.castId]
 	return if member ~= nil then member.name else personId
+end
+
+-- What a `minSkill` gate reads out loud, on the door and on the sign both: the ladder
+-- rung's name against the discipline's label, e.g. "Practiced Athletics" -- the same
+-- words the skills pane already uses, so a gate never invents a second vocabulary for
+-- a number the player has already seen once.
+local function skillGateLabel(gate: Types.JobSkillGate): string
+	local skillLabel = gate.skillId
+	for _, definition in Config.Skills.Definitions do
+		if definition.id == gate.skillId then
+			skillLabel = definition.label
+			break
+		end
+	end
+	local levelEntry = Config.Skills.Levels[gate.level]
+	local levelLabel = if levelEntry ~= nil then levelEntry.name else tostring(gate.level)
+	return `{levelLabel} {skillLabel}`
 end
 
 -- What the job thinks of you, as the band you fall in. Total, because the table is
@@ -722,6 +749,15 @@ local function hireRefusalFor(data: LifeData, job: Job): string?
 		return `This desk wants experience in {table.concat(needed, ", ")}.`
 	end
 
+	-- The athlete ladder's own gate, read last because it is the one bar here that
+	-- cannot be talked, waited or vouched around -- see `Types.JobSkillGate`. Read off
+	-- the data directly rather than through `SkillService.LevelOf`, which wants a
+	-- `Player` this function was never handed.
+	local minSkill = job.minSkill
+	if minSkill ~= nil and SkillService.LevelOfData(data, minSkill.skillId) < minSkill.level then
+		return `This one wants {skillGateLabel(minSkill)}. Get there at the gym or the sports campus first.`
+	end
+
 	return nil
 end
 
@@ -778,11 +814,26 @@ local function guideTargetFor(data: LifeData): Job?
 	return best
 end
 
--- What the tick actually points the player at: a menu pick if there is a live one,
--- the automatic best job otherwise. The manual pick is cleared here rather than only
--- at request time, for the one case a request cannot see -- the player took the job
--- some other way (walked onto a different mark first) while this one was still set.
-local function guideTarget(player: Player, data: LifeData): Job?
+-- The shape setGuide actually needs, from either source it can come from: a job's
+-- own id and place, or a plain location pick off the Locations pane. `key` is what
+-- `guided` dedupes on -- a job's id for a job, so this can never collide with the
+-- place ids a location target keys off of below.
+type GuideTarget = { key: string, placeId: string, title: string }
+
+-- What the tick actually points the player at: a place pinned off the Locations
+-- pane if there is one, a job pinned off the menu otherwise, the automatic best job
+-- failing both. The job pick is cleared here rather than only at request time, for
+-- the one case a request cannot see -- the player took the job some other way
+-- (walked onto a different mark first) while this one was still set. The place pick
+-- has no equivalent "done" signal -- visiting it consumes nothing -- so it is only
+-- ever cleared by picking a job or a different place; see RequestGuideToLocation's
+-- own handler and RequestGuideToJob's manualPlace clear.
+local function guideTarget(player: Player, data: LifeData): GuideTarget?
+	local place = manualPlace[player]
+	if place ~= nil then
+		return { key = `location:{place.id}`, placeId = place.id, title = place.label }
+	end
+
 	local manualId = manualGuide[player]
 	if manualId ~= nil then
 		if data.jobId == manualId then
@@ -790,39 +841,44 @@ local function guideTarget(player: Player, data: LifeData): Job?
 		else
 			local manualJob = Jobs.ById[manualId]
 			if manualJob ~= nil then
-				return manualJob
+				return { key = manualJob.id, placeId = manualJob.placeId, title = manualJob.title }
 			end
 			-- Content changed under a live pick. Nothing left to point at.
 			manualGuide[player] = nil
 		end
 	end
-	return guideTargetFor(data)
+
+	local best = guideTargetFor(data)
+	if best == nil then
+		return nil
+	end
+	return { key = best.id, placeId = best.placeId, title = best.title }
 end
 
--- Points the player at a job, or at nothing. Only ever sends when the answer has
+-- Points the player at a place, or at nothing. Only ever sends when the answer has
 -- changed -- see `guided`.
-local function setGuide(player: Player, job: Job?)
-	local jobId = if job ~= nil then job.id else nil
-	if guided[player] == jobId then
+local function setGuide(player: Player, target: GuideTarget?)
+	local key = if target ~= nil then target.key else nil
+	if guided[player] == key then
 		return
 	end
-	guided[player] = jobId
+	guided[player] = key
 
-	if job == nil then
+	if target == nil then
 		GuideUpdatedRemote:FireClient(player, { target = nil, label = nil })
 		return
 	end
 
-	local place = PlaceService.Find(job.placeId)
+	local place = PlaceService.Find(target.placeId)
 	if place == nil then
 		-- Already warned by PlaceService. Pointing at nothing is the honest answer:
-		-- the job exists in content but nowhere in the world, and a line into the
+		-- the target exists in content but nowhere in the world, and a line into the
 		-- middle of a field would be worse than no line.
 		GuideUpdatedRemote:FireClient(player, { target = nil, label = nil })
 		return
 	end
 
-	GuideUpdatedRemote:FireClient(player, { target = place.part.Position, label = job.title })
+	GuideUpdatedRemote:FireClient(player, { target = place.part.Position, label = target.title })
 end
 
 -- What the sign in the window says, under the job title. The job's terms, in the
@@ -867,6 +923,15 @@ local function signTermsFor(job: Job): { string }
 		else
 			table.insert(terms, `{minSmarts} smarts`)
 		end
+	end
+
+	-- The same reason the smarts line is on the window: a nine-year-old who cannot be
+	-- hired here yet can still read that the club wants "Capable Athletics" on the
+	-- sign, years before there is a shift to clock into, which is exactly when the
+	-- decision to go and drill for it actually gets made.
+	local minSkill = job.minSkill
+	if minSkill ~= nil then
+		table.insert(terms, skillGateLabel(minSkill))
 	end
 
 	return terms
@@ -2591,6 +2656,49 @@ function WorkService.OnAgeUp(player: Player)
 	push(player)
 end
 
+-- A skill just crossed a rung -- see `SkillService.SetLevelUpHandler` for why this
+-- arrives as a callback rather than a require. The only thing done with it is noticing
+-- when the crossing opens a locked door: somewhere in Jobs.All a job gates on this
+-- exact skill at this exact level, the player did not clear it a moment ago, and they
+-- do too now.
+--
+-- This is the whole of the athlete ladder's "scout" -- there is deliberately no NPC
+-- standing at the touchline with a clipboard. The game already has a face-to-face
+-- conferral pattern for a ladder rung (see GangService's ranks, handed over in
+-- conversation) and this is not that: nobody has to go and find a person to be told
+-- they are ready, because a scout's whole job is watching from a distance. The news
+-- arrives the way every other piece of news this client could not have drawn off its
+-- own state does -- a line on the banner, see `Remotes.Get("Notice")`'s handler in
+-- init.client.luau -- naming the door that just opened and where it is.
+function WorkService.OnSkillLevelUp(player: Player, skillId: string, beforeLevel: number, afterLevel: number)
+	local profile = DataService.GetProfile(player)
+	if profile == nil then
+		return
+	end
+	local data = Lives.Active(profile.Data)
+	if not data.alive then
+		return
+	end
+
+	for _, job in Jobs.All do
+		local gate = job.minSkill
+		if
+			gate ~= nil
+			and gate.skillId == skillId
+			and beforeLevel < gate.level
+			and afterLevel >= gate.level
+			and data.jobId ~= job.id
+		then
+			local place = PlaceService.Find(job.placeId)
+			local where = if place ~= nil then place.label else job.title
+			NoticeRemote:FireClient(
+				player,
+				`A scout has been watching your sessions. You're ready to try out for {job.title} -- check the board at {where}.`
+			)
+		end
+	end
+end
+
 -- A new life. The job goes with the person who had it, and so does everything
 -- anyone thought of them.
 function WorkService.ResetForNewLife(player: Player)
@@ -3118,6 +3226,7 @@ function WorkService:Start()
 		lastMoment[player] = nil
 		guided[player] = nil
 		manualGuide[player] = nil
+		manualPlace[player] = nil
 		postedSignature[player] = nil
 		pushedTask[player] = nil
 	end)
@@ -3139,9 +3248,54 @@ function WorkService:Start()
 			return
 		end
 		manualGuide[player] = jobId
+		-- A job pick wins over a standing location pin -- see guideTarget's own
+		-- priority order -- so the pin is dropped here rather than left to be
+		-- silently outranked forever.
+		manualPlace[player] = nil
 		-- Recomputed on the spot rather than waiting for the next tick, so the
 		-- arrow turns the instant the menu is closed rather than up to a quarter
 		-- second later.
+		local profile = DataService.GetProfile(player)
+		if profile == nil then
+			return
+		end
+		local data = Lives.Active(profile.Data)
+		if shifts[player] == nil and enabled then
+			setGuide(player, guideTarget(player, data))
+		end
+	end)
+
+	-- A row pressed on the Locations pane. The same shape as RequestGuideToJob just
+	-- above, checked against Config.Locations.List and PlaceService instead of
+	-- Jobs.ById -- an unknown id is refused rather than pointing a line at nothing.
+	RequestGuideToLocationRemote.OnServerEvent:Connect(function(player: Player, id: unknown)
+		if typeof(id) ~= "string" then
+			return
+		end
+
+		local entry: { id: string, label: string }? = nil
+		for _, candidate in Config.Locations.List do
+			if candidate.id == id then
+				entry = candidate
+				break
+			end
+		end
+		if entry == nil then
+			return
+		end
+		if PlaceService.Find(entry.id) == nil then
+			-- Listed in content but not tagged anywhere in this build of the world.
+			-- Already warned by PlaceService; refused here the same as a job whose
+			-- own place point went missing.
+			return
+		end
+
+		manualPlace[player] = { id = entry.id, label = entry.label }
+		-- A location pick wins over a standing job pin, the mirror of the clear
+		-- above -- whichever pane the player pressed last is the one that gets to
+		-- decide where the arrow points.
+		manualGuide[player] = nil
+
 		local profile = DataService.GetProfile(player)
 		if profile == nil then
 			return

@@ -189,6 +189,10 @@ export type MenuUIHandle = typeof(setmetatable(
 		currentJob: ShiftState?,
 		onQuitJob: (() -> ())?,
 		onJobTapped: ((jobId: string) -> ())?,
+		-- A row pressed on the Locations pane. Static content -- Config.Locations.List
+		-- rather than anything pushed -- so there is no LocationsState to hold here, only
+		-- the one callback the row's press needs.
+		onLocationTapped: ((id: string) -> ())?,
 		roster: { PersonRosterEntry },
 		gang: GangState?,
 		skills: SkillsState?,
@@ -912,6 +916,7 @@ function MenuUI.new(): MenuUIHandle
 		currentJob = nil,
 		onQuitJob = nil,
 		onJobTapped = nil,
+		onLocationTapped = nil,
 		roster = {},
 		gang = nil,
 		skills = nil,
@@ -1152,6 +1157,33 @@ local function drawCurrentJob(self: MenuUIHandle)
 			callback()
 		end
 	end)
+end
+
+-- Every destination in Config.Locations.List, as one pressable row apiece. The pane leads
+-- the rail (see Config.UI.Menu.Tabs) precisely because this is the fastest way to any of
+-- the other rows this menu, or a job post in the world, already points the guide arrows
+-- at -- pressing one fires RequestGuideToLocation and the player still walks there, the
+-- same arrow a job destination gets.
+local function drawLocations(self: MenuUIHandle): string?
+	local places = Config.Locations.List
+	if #places == 0 then
+		return "Nowhere is mapped yet."
+	end
+
+	for _, place in places do
+		local card, title, _, caption = makeRow(self)
+		title.Text = place.label
+		caption.Text = "Point the guide arrows here."
+
+		local id = place.id
+		pressable(self, card, function()
+			local callback = self.onLocationTapped
+			if callback ~= nil then
+				callback(id)
+			end
+		end)
+	end
+	return nil
 end
 
 local function drawJobs(self: MenuUIHandle): string?
@@ -1409,12 +1441,47 @@ local function drawGangs(self: MenuUIHandle): string?
 	return nil
 end
 
+-- Soccer's own record, under the ladder rather than folded into the Athletics row: a
+-- level and an XP bar say how good the discipline has gotten, but they cannot say what
+-- any of it was *for* -- whether the practice went into goals, into the tackles that won
+-- the ball back, or into shots that never found the target. Career totals answer that,
+-- and they answer it for a life rather than a year, on the same reasoning
+-- LifeData.soccerCareer's own header gives -- see SoccerService's header for why a match
+-- is always running and never gated behind PE.
+local function drawSoccerCareer(self: MenuUIHandle, athleticsColor: Color3)
+	local skills = self.skills
+	if skills == nil then
+		return
+	end
+	local career = skills.soccerCareer
+
+	local card, title, figure, caption = makeRow(self)
+	title.Text = "Soccer"
+	title.TextColor3 = athleticsColor
+	figure.Text = `{career.goals} goals`
+
+	local spine = card:FindFirstChild("Spine")
+	if spine ~= nil and spine:IsA("Frame") then
+		spine.BackgroundColor3 = athleticsColor
+	end
+
+	if career.matchesPlayed == 0 then
+		caption.Text =
+			"No matches yet. The 3v3 pitch runs all the time, bot-filled -- walk on and take a bot's spot."
+	else
+		local accuracy = if career.shotsTaken > 0 then `{career.shotsOnTarget}/{career.shotsTaken} on target` else "no shots taken"
+		caption.Text =
+			`{career.matchesPlayed} matches  ·  {career.assists} assists  ·  {career.tackles} tackles  ·  {accuracy}`
+	end
+end
+
 local function drawSkills(self: MenuUIHandle): string?
 	local skills = self.skills
 	if skills == nil or #skills.skills == 0 then
 		return "Nothing yet. Skills come out of things you have been graded on -- a shift worked, a lesson sat, a set finished -- and never out of time spent standing near them."
 	end
 
+	local athleticsColor = self.accent
 	for _, skill in skills.skills do
 		local card, title, figure, caption = makeRow(self)
 		title.Text = skill.label
@@ -1424,6 +1491,10 @@ local function drawSkills(self: MenuUIHandle): string?
 		local spine = card:FindFirstChild("Spine")
 		if spine ~= nil and spine:IsA("Frame") then
 			spine.BackgroundColor3 = skill.color
+		end
+
+		if skill.id == "athletics" then
+			athleticsColor = skill.color
 		end
 
 		if skill.nextLevelXp ~= nil then
@@ -1440,14 +1511,21 @@ local function drawSkills(self: MenuUIHandle): string?
 			addBar(card, 1, skill.color)
 		end
 	end
+
+	-- Under the ladder rather than beside "Athletics" specifically -- see this
+	-- function's own header -- so it reads as this discipline's detail rather than a
+	-- seventh row competing with the six the ladder is deliberately kept short at.
+	drawSoccerCareer(self, athleticsColor)
 	return nil
 end
 
 -- The redeem box, whatever the server last said about an attempt, and a receipt for every
--- code this account has already used.
+-- code this account has already used. Folded into the settings pane below rather than
+-- given a tab of its own -- Config.UI.Menu.Tabs explains why -- so it is a void helper
+-- rather than a pane function: drawSettings decides whether the whole pane is empty.
 --
--- The box is drawn first and always, including for an account that has redeemed nothing.
--- It is the only thing on this pane the player came here to do, and a pane that led with an
+-- The box is drawn always, including for an account that has redeemed nothing. It is the
+-- one thing here the player might actually come to do, and a section that led with an
 -- empty history would have buried its own verb under a sentence saying there is nothing to
 -- see.
 --
@@ -1455,7 +1533,7 @@ end
 -- and does not know what any of them pay -- it sends a string and draws the sentence that
 -- comes back. That is not tidiness: a client that could recognise a valid code is a client
 -- somebody can read the list of valid codes out of.
-local function drawCodes(self: MenuUIHandle): string?
+local function drawCodeRedemption(self: MenuUIHandle)
 	local _, box = makeSlot(self, 88)
 	addSpine(box, self.accent)
 
@@ -1575,42 +1653,41 @@ local function drawCodes(self: MenuUIHandle): string?
 			caption.Text = `{redeemed.code} — already redeemed on this account.`
 		end
 	end
-
-	return nil
 end
 
--- The switches. Every row is the whole row, clickable end to end, the same shape the gang
--- colours toggle already uses -- one gesture for "flip a thing", learned once.
+-- The switches, then the redeem box below them. Draws what the server pushed and nothing
+-- else for the switches: clicking sends and then waits, the switch does not slide itself,
+-- so a preference that failed to save never spends a moment looking like it did. The cost
+-- is one round trip of latency, and it is paid for by the row flashing under the cursor on
+-- the press -- the player is told they were heard immediately and told the answer when
+-- there is one, which are two different things and should look it.
 --
--- Draws what the server pushed and nothing else. Clicking sends and then waits: the switch
--- does not slide itself, so a preference that failed to save never spends a moment looking
--- like it did. The cost is one round trip of latency, and it is paid for by the row
--- flashing under the cursor on the press -- the player is told they were heard immediately
--- and told the answer when there is one, which are two different things and should look it.
+-- Never empty. drawCodeRedemption's box draws unconditionally, so a settings pane that
+-- has not loaded yet still has something in it worth pressing rather than a bare sentence.
 local function drawSettings(self: MenuUIHandle): string?
 	local settings = self.settings
-	if settings == nil or #settings.settings == 0 then
-		return "Your settings have not loaded yet."
-	end
-
-	for _, option in settings.settings do
-		local card, title, _, caption = makeRow(self)
-		title.Text = option.label
-		caption.Text = option.caption
-		if not option.on then
-			title.TextColor3 = PALETTE.Muted
-		end
-		makeSwitch(card, option.on, self.accent)
-
-		local id = option.id
-		local on = option.on
-		pressable(self, card, function()
-			local callback = self.onSettingToggled
-			if callback ~= nil then
-				callback(id, not on)
+	if settings ~= nil then
+		for _, option in settings.settings do
+			local card, title, _, caption = makeRow(self)
+			title.Text = option.label
+			caption.Text = option.caption
+			if not option.on then
+				title.TextColor3 = PALETTE.Muted
 			end
-		end)
+			makeSwitch(card, option.on, self.accent)
+
+			local id = option.id
+			local on = option.on
+			pressable(self, card, function()
+				local callback = self.onSettingToggled
+				if callback ~= nil then
+					callback(id, not on)
+				end
+			end)
+		end
 	end
+
+	drawCodeRedemption(self)
 	return nil
 end
 
@@ -1680,7 +1757,9 @@ local function redraw(self: MenuUIHandle, animate: boolean)
 	self.animate = animate
 
 	local empty: string?
-	if self.selected == "jobs" then
+	if self.selected == "locations" then
+		empty = drawLocations(self)
+	elseif self.selected == "jobs" then
 		empty = drawJobs(self)
 	elseif self.selected == "money" then
 		empty = drawMoney(self)
@@ -1690,8 +1769,6 @@ local function redraw(self: MenuUIHandle, animate: boolean)
 		empty = drawGangs(self)
 	elseif self.selected == "skills" then
 		empty = drawSkills(self)
-	elseif self.selected == "codes" then
-		empty = drawCodes(self)
 	elseif self.selected == "settings" then
 		empty = drawSettings(self)
 	else
@@ -1789,6 +1866,12 @@ function MenuUI.OnJobTapped(self: MenuUIHandle, callback: (jobId: string) -> ())
 	self.onJobTapped = callback
 end
 
+-- A row pressed on the Locations pane. Carries the place id straight off
+-- Config.Locations.List, the same as OnJobTapped carries one off a job post.
+function MenuUI.OnLocationTapped(self: MenuUIHandle, callback: (id: string) -> ())
+	self.onLocationTapped = callback
+end
+
 function MenuUI.SetRoster(self: MenuUIHandle, entries: { PersonRosterEntry })
 	self.roster = entries
 	redrawPane(self, "relationships")
@@ -1839,9 +1922,11 @@ function MenuUI.SetSettings(self: MenuUIHandle, state: SettingsState)
 	redrawPane(self, "settings")
 end
 
+-- The redeem box now draws inside the settings pane -- see Config.UI.Menu.Tabs -- so it
+-- redraws that pane's id, not a "codes" id that no longer names a tab.
 function MenuUI.SetCodes(self: MenuUIHandle, state: CodesState)
 	self.codes = state
-	redrawPane(self, "codes")
+	redrawPane(self, "settings")
 end
 
 -- The answer to one redeem attempt.
@@ -1856,7 +1941,7 @@ function MenuUI.SetCodeResult(self: MenuUIHandle, ok: boolean, message: string)
 	if ok then
 		self.codeDraft = ""
 	end
-	redrawPane(self, "codes")
+	redrawPane(self, "settings")
 end
 
 function MenuUI.OnCodeSubmitted(self: MenuUIHandle, callback: (code: string) -> ())
