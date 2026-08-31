@@ -82,9 +82,11 @@ OUT = ROOT / "assets" / "SchoolV1Copy.rbxmx"
 # box: the cells were genuinely empty, because v1's grounds are sparse out at that corner, but
 # the two buildings still read as one overlapping mess. Sparse does not mean free.
 #
-# Copy sits at x -640..-180, z -1056..-644. v1 is at x -886..-426, z -585..-181 -- disjoint on
-# z with 59 studs to spare.
-COPY_OFFSET = (246.0, 0.0, -471.0)
+# Moved again when v1 relocated onto open ground: v1's campus pad landed 235 by 252 studs on top
+# of the copy's, because the site search that picked v1's new home excluded the copy from its
+# own occupancy scan. The copy is a sandbox and v1 is the real school, so the copy is the one
+# that moves -- out west, well clear of everything.
+COPY_OFFSET = (-944.0, 0.0, 79.0)
 
 # Which fittings get a real light, and how strong. One in LIGHT_EVERY of the parts whose name
 # matches LIT_NAMES, which works out at roughly a dozen for the whole building.

@@ -302,45 +302,35 @@ local STAIR_SHIFT = BUILDING.StairShiftStuds or 0
 -- -- and it was dead space in the worst possible place, putting a flight fifteen studs from the
 -- front door in the middle of the view in. Pushed to the walls, the walk in is clear and the
 -- stairs frame it instead of blocking it.
-local STAIR_CX_BASE = BUILDING.AtriumWidthStuds / 2 - STAIR_W / 2 - 4
+-- An arc sweeps sideways by its radius, so unlike a straight flight it genuinely does need
+-- that clearance -- this is back to the radius form. What it keeps from the straight version is
+-- the *shift being zero*: the pair is symmetric, and the entrance walk between them is clear.
+local STAIR_CX_BASE = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
 
 -- The centre of one flight after the shift, clamped so its outer edge never crosses the atrium.
 local function stairCentre(side: number): number
 	local atriumHalf = BUILDING.AtriumWidthStuds / 2
 	local wanted = side * STAIR_CX_BASE + STAIR_SHIFT
-	-- Half the flight's *width*, not the old arc's reach. This still read STAIR_R + STAIR_W/2,
-	-- which is 22 studs of clearance a straight flight does not use -- so it quietly clamped the
-	-- stairs back to the middle of the atrium and undid the move out to the walls. The last
-	-- assumption left over from the curve, and the only one that showed up as the stairs simply
-	-- not going where they were put.
-	local halfRun = STAIR_W / 2 + 1
+	local halfRun = STAIR_R + STAIR_W / 2
 	return math.clamp(wanted, -atriumHalf + halfRun, atriumHalf - halfRun)
 end
 
 local STAIR_CX = STAIR_CX_BASE
--- The turn centre sits a radius short of the void's back edge, so the head of the arc finishes
--- exactly where the gallery slab begins and you step straight off it onto solid floor.
--- **How much floor a straight flight needs.**
+-- **The curved flights are back, and this time the arrival is measured.**
 --
--- A curved flight fits in its own radius; a straight one needs its whole run laid out in front
--- of it. Rise is a storey -- 27 studs -- and at a going of 1.25 that is 24 treads and 30 studs
--- of floor. The old well was 22 deep because it only ever had to hold an arc.
+-- They were replaced with straight runs to match a reference photograph, and the straight ones
+-- are correct about one thing -- open risers and glass read better -- but they cost the thing
+-- that made the curve worth having: a quarter turn shows its whole side from the front door and
+-- points you at the corridor as you step off. Straight, you see the end of a wedge.
 --
--- 30 is also the most that fits: the entrance wings reach z 12 and the well's head is pinned at
--- VOID_Z2, so anything longer starts inside them. That is why the going is 1.25 rather than the
--- 1.4 a grander stair would use.
-local STAIR_RUN = 30
-local STAIR_STEPS = 24
-
--- STAIR_CZ is gone with the curve: an arc needed a turn centre, a straight flight only
--- needs its two ends, and those are VOID_Z2 and VOID_Z2 - STAIR_RUN.
-
--- The stairwell openings: outer edge flush with the atrium wall, inner edge leaving the bridge.
--- The well now spans the flight's run rather than the arc's width.
-local WELL_Z1 = VOID_Z2 - STAIR_RUN
--- A straight flight is as wide as the stair and no wider -- there is no arc sweeping sideways
--- any more, so the well is a plain rectangle around the run.
-local WELL_X_OUT = STAIR_CX + STAIR_W / 2
+-- The original fault was never the curve. It was that the top tread finished over the void,
+-- because the hole in the upper floor was cut to the full depth of the atrium. The gallery
+-- fixed that -- VOID_Z2 stops the hole short of the back wall -- and the arc's head is pinned
+-- to it, so the last tread now lands on floor rather than air. `stairArrivalGap()` below checks
+-- that every build, because "it looks like it reaches" is what let this ship broken twice.
+local STAIR_CZ = VOID_Z2 - STAIR_R
+local WELL_Z1 = STAIR_CZ - STAIR_W / 2
+local WELL_X_OUT = STAIR_CX + STAIR_R + STAIR_W / 2
 local WELL_X_IN = STAIR_CX - STAIR_W / 2
 
 -- ---------------------------------------------------------------------------------------
@@ -1207,8 +1197,12 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		-- everything else. A bench in the centre of an entrance hall does not make it welcoming,
 		-- it makes it an obstacle course -- the reference's lobby floor is almost entirely bare
 		-- and that is *why* it reads as big.
+		-- Forward of the flights, not beside them. With the curved stairs back, the arcs sweep
+		-- through the back corners of the atrium again -- which is exactly where these were, and
+		-- a tread came down inside a bench. Sitting them nearer the doors keeps them off the
+		-- stair and out of the central walk at the same time.
 		local wx = side * (ATRIUM_X2 - 7)
-		local wz = VOID_Z2 - 14
+		local wz = ATRIUM_Z1 + 10
 
 		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
 			color = WALNUT,
@@ -1359,93 +1353,77 @@ end
 -- ---------------------------------------------------------------------------------------
 
 local function buildStairs(parent: Instance, at: (number, number, number) -> Vector3)
-	-- **Two straight flights, steel and glass, running back toward the corridor.**
+	-- Two curved flights, one each side of the lobby, sweeping a quarter turn as they climb.
 	--
-	-- These were curved, and the reasoning for that is worth keeping because it was not wrong:
-	-- a straight run presents its end to somebody walking in, and it delivers you facing the way
-	-- you were already going. A quarter turn shows its whole side from the door and points you
-	-- at the corridor when you arrive.
+	-- Straight flights were the wrong shape for this room twice over. A straight run presents
+	-- its *end* to somebody walking in -- you see a wedge of treads edge-on and it reads as a
+	-- ramp -- and it delivers you facing the way you were already going, which in a lobby is
+	-- back out of the front doors. A flight that sweeps round shows its whole side from the
+	-- entrance, and turns you toward the corridor as you arrive. The building tells you where
+	-- to go next without a sign, which is the thing a good stair does.
 	--
-	-- What overrode it is the reference photographs. Theirs are straight flights with open
-	-- risers and glass balustrades, and the thing that makes them read that way is precisely
-	-- what a curve cannot do -- you see daylight through the whole flight, and the underside is
-	-- a clean diagonal rather than a fan of boxes. The turn is bought back with the arrival
-	-- landing instead, which is set to one side so you still step off facing the corridor.
+	-- Each starts near the front of the lobby facing inward and turns 80 degrees toward the
+	-- back, landing on the first floor pointing at the corridor. See Kit.CurvedStairs for why a
+	-- box tread on an arc is close enough to a winder.
 	local rise = floorY(2) - floorY(1)
+	local radius = BUILDING.StairRadiusStuds
 	local width = BUILDING.StairWidthStuds
+	local sweep = math.rad(BUILDING.StairSweepDegrees)
 
 	for side = -1, 1, 2 do
+		-- The turn centre sits inboard of the flight, so the two stairs curve away from each
+		-- other around the middle of the lobby rather than into it.
 		local cx = stairCentre(side)
-		local baseZ = VOID_Z2 - STAIR_RUN
-		local topZ = VOID_Z2
+		-- Set back by its own radius plus a margin, so the whole arc lands inside the atrium
+		-- rather than overrunning into the corridor behind it -- and clear of the entrance wings
+		-- in front, which reach z 12 and had seven treads of each flight inside them.
+		-- The turn centre sits a radius short of the back wall, so the arc finishes there and
+		-- the landing meets the corridor. Everything in front of it -- 22 studs of lobby -- is
+		-- the entrance zone, and stays clear.
+		-- Both of these now come from the same constants the floor openings are cut from, so a
+		-- flight and its stairwell cannot drift apart -- which is how the stairs ended up
+		-- arriving over a hole in the first place.
+		local cz = STAIR_CZ
 
-		local laid = Kit.Stairs(
+		-- **A true quarter turn: from facing the side wall to facing the corridor.**
+		--
+		-- The first attempt swept -140 to -60 degrees, which looks like a curve written down and
+		-- is nearly a straight line on the ground: across that range sine barely changes, so the
+		-- arc moved 74 studs in x and 5 in z. A flight has to turn through a quadrant to read as
+		-- turning at all.
+		--
+		-- Left stair runs 180 -> 90, right runs 0 -> 90. Both start pointing at their own side
+		-- wall and finish pointing at +z, which is the corridor -- so whichever one you take,
+		-- you arrive facing where you are going.
+		local startAngle = if side < 0 then math.rad(180) else 0
+		local turn = if side < 0 then -sweep else sweep
+
+		local laid = Kit.CurvedStairs(
 			parent,
 			`Stair{side}`,
-			at(cx, floorY(1), baseZ),
-			at(cx, floorY(2), topZ),
+			at(cx, floorY(1), cz),
+			radius,
+			startAngle,
+			turn,
+			rise,
+			BUILDING.StairSteps,
 			width,
-			STAIR_STEPS,
 			STAIR_TREAD
 		)
 		if not laid then
 			error(
-				`[AGES world] the school stair is too steep: {rise} studs over {STAIR_STEPS} steps.`
-					.. ` A Roblox humanoid manages 2 studs a step. Raise STAIR_STEPS or lower FloorHeightStuds.`
+				`[AGES world] the school stair is too steep: {rise} studs over {BUILDING.StairSteps} steps.`
+					.. ` A Roblox humanoid manages 2 studs a step. Raise Config.School.Building.StairSteps`
+					.. ` or lower FloorHeightStuds.`
 			)
 		end
 
-		-- **Glass balustrades.** The one detail that separates the reference's stairs from a
-		-- concrete municipal flight: a panel you see the treads through, capped by a slim rail.
-		-- Posts would fight the open risers for attention and give the eye a picket fence to
-		-- read instead of a diagonal.
-		for edge = -1, 1, 2 do
-			local ex = cx + edge * (width / 2 - 0.2)
-			local panels = 8
-			for index = 1, panels do
-				local share = (index - 0.5) / panels
-				local pz = baseZ + STAIR_RUN * share
-				local py = floorY(1) + rise * share + 3
-				local pane = Kit.Block(parent, `StairGlass{side}_{edge}_{index}`, at(ex, py, pz), Vector3.new(0.3, 5.2, STAIR_RUN / panels + 0.3), {
-					color = Color3.fromRGB(198, 220, 236),
-					material = Enum.Material.Glass,
-					transparency = 0.55,
-					reflectance = 0.12,
-				})
-				pane.CastShadow = false
-			end
-			-- The rail, in slim segments following the pitch.
-			for index = 1, panels do
-				local share = (index - 0.5) / panels
-				local pz = baseZ + STAIR_RUN * share
-				local py = floorY(1) + rise * share + 5.9
-				Kit.Block(parent, `StairRail{side}_{edge}_{index}`, at(ex, py, pz), Vector3.new(0.5, 0.5, STAIR_RUN / panels + 0.3), {
-					color = Color3.fromRGB(96, 102, 114),
-					material = Enum.Material.Metal,
-				}).CastShadow = false
-			end
-		end
-
-		-- A stringer under the flight, so it reads as carried rather than floating.
-		for edge = -1, 1, 2 do
-			Kit.Block(parent, `StairStringer{side}_{edge}`, at(cx + edge * (width / 2 + 0.3), floorY(1) + rise / 2 - 1.2, baseZ + STAIR_RUN / 2), Vector3.new(0.6, 2.4, STAIR_RUN * 1.02), {
-				color = Color3.fromRGB(120, 126, 138),
-				material = Enum.Material.Metal,
-				pitchDegrees = -math.deg(math.atan2(rise, STAIR_RUN)),
-			}).CastShadow = false
-		end
-
-		-- The arrival landing, offset toward the corridor so you step off facing it rather than
-		-- facing the wall the flight was climbing at.
-		Kit.Slab(
-			parent,
-			`Landing{side}`,
-			at(cx, floorY(2), VOID_Z2 + 4),
-			width + 6,
-			8,
-			SLAB,
-			{ color = TILE }
-		)
+		-- No landing slab any more. There used to be a 20x20 tile at the head of each flight,
+		-- because the void was cut to the full depth of the atrium and the top tread genuinely
+		-- did deliver you over a hole. Two isolated squares hanging in a double-height space is
+		-- what that looked like from the lobby, and it is the wrong fix: the floor was the thing
+		-- that was missing, not a platform. The gallery is the floor -- see VOID_Z2 -- and the
+		-- flight now tops out on it.
 	end
 end
 
@@ -1586,65 +1564,66 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- objects: a plinth it stands on, a cap along the top, and a thin recessed groove every
 		-- door-width. That reads as lockers from any angle and never floats, because the body
 		-- is its own wall.
-		-- **One continuous run of lockers down the corridor wall. Nothing else, nowhere else.**
+		-- **Two banks, one at each end of the wall. The middle stays empty.**
 		--
-		-- This has been round three times and the reference photo settled it, so the reasoning is
-		-- worth writing down properly.
+		-- This was one unbroken 206-stud run, and continuity was the whole point of it -- a wall
+		-- that *is* lockers rather than a wall with lockers on it. It reads well and it is a bad
+		-- place to keep your books.
 		--
-		-- First attempt: a bank wall-to-wall on every floor. Too much -- from the atrium it was a
-		-- wall of blue on every level. Second: one 46-stud bay in the middle of a 226-stud
-		-- corridor, which fixed that by overcorrecting into a quarter-mile of empty tunnel with one
-		-- object in it. Third: banks on the two end walls, which put an 11-stud blue box across the
-		-- far end of the corridor -- and because you look *down* a corridor, that box sits in the
-		-- middle of your view with a grey wall behind it and reads as something dumped there.
-		--
-		-- What the reference actually shows is none of those: a single unbroken run along one long
-		-- wall, floor-standing, with a bench at the end. The run reads as architecture because it
-		-- is continuous -- a corridor wall that *is* lockers, rather than a corridor with lockers
-		-- placed in it. Continuity is the whole effect, so nothing is allowed to interrupt it:
-		-- the noticeboards and planters that used to break this wall into four are gone with it.
+		-- A locker is somewhere you stop, open a door and stand with your back to the route. Line
+		-- the entire length of a corridor with them and every one of those stops happens in the
+		-- middle of the traffic, and the two hundred studs of frontage that ought to be the widest
+		-- part of the hall is a queue. Put them at the ends and the stopping happens where nobody
+		-- is trying to get past, which is what a real school does -- banks by the stairs, clear
+		-- floor between them.
+		-- The face of the wall the banks stand against, a stud and a half proud of it.
 		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
 		local runEnd = W / 2 - WALL_T - 10
-		local runW = runEnd * 2
+		local bankW = (runEnd * 2) * 0.28
 		local bankH = 11
-		local doors = math.max(8, math.floor(runW / 5))
-		local doorW = runW / doors
-		local x0 = -runEnd
 
-		Kit.Block(parent, `LockerBank{floor}`, at(0, y + 1 + bankH / 2, wallZ), Vector3.new(runW, bankH, 2.4), {
-			color = BLUE,
-			material = Enum.Material.Metal,
-			collide = true,
-		})
-		Kit.Block(parent, `LockerPlinth{floor}`, at(0, y + 0.5, wallZ), Vector3.new(runW, 1, 2.8), {
-			color = DEEP_BLUE,
-			material = Enum.Material.Metal,
-		}).CastShadow = false
-		Kit.Block(parent, `LockerCap{floor}`, at(0, y + 1.3 + bankH, wallZ), Vector3.new(runW, 0.6, 2.8), {
-			color = DEEP_BLUE,
-			material = Enum.Material.Metal,
-		}).CastShadow = false
+		for side = -1, 1, 2 do
+			local bankCx = side * (runEnd - bankW / 2)
+			local doors = math.max(6, math.floor(bankW / 5))
+			local doorW = bankW / doors
+			local x0 = bankCx - bankW / 2
+			local tag = `{floor}_{if side < 0 then "W" else "E"}`
 
-		for index = 1, doors do
-			local dx = x0 + doorW * (index - 0.5)
-			Kit.Block(parent, `LockerHandle{floor}_{index}`, at(dx + doorW * 0.3, y + 1 + bankH * 0.5, wallZ + 1.3), Vector3.new(0.5, 1.8, 0.3), {
-				color = Color3.fromRGB(232, 236, 244),
+			Kit.Block(parent, `LockerBank{tag}`, at(bankCx, y + 1 + bankH / 2, wallZ), Vector3.new(bankW, bankH, 2.4), {
+				color = BLUE,
+				material = Enum.Material.Metal,
+				collide = true,
+			})
+			Kit.Block(parent, `LockerPlinth{tag}`, at(bankCx, y + 0.5, wallZ), Vector3.new(bankW, 1, 2.8), {
+				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerVent{floor}_{index}`, at(dx, y + 1 + bankH * 0.86, wallZ + 1.3), Vector3.new(doorW * 0.42, 0.9, 0.25), {
-				color = Color3.fromRGB(58, 92, 158),
+			Kit.Block(parent, `LockerCap{tag}`, at(bankCx, y + 1.3 + bankH, wallZ), Vector3.new(bankW, 0.6, 2.8), {
+				color = DEEP_BLUE,
+				material = Enum.Material.Metal,
 			}).CastShadow = false
-			if index < doors then
-				Kit.Block(parent, `LockerSeam{floor}_{index}`, at(x0 + doorW * index, y + 1 + bankH / 2, wallZ + 1.25), Vector3.new(0.3, bankH - 0.4, 0.3), {
-					color = DEEP_BLUE,
+
+			for index = 1, doors do
+				local dx = x0 + doorW * (index - 0.5)
+				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(dx + doorW * 0.3, y + 1 + bankH * 0.5, wallZ + 1.3), Vector3.new(0.5, 1.8, 0.3), {
+					color = Color3.fromRGB(232, 236, 244),
+					material = Enum.Material.Metal,
 				}).CastShadow = false
+				Kit.Block(parent, `LockerVent{tag}_{index}`, at(dx, y + 1 + bankH * 0.86, wallZ + 1.3), Vector3.new(doorW * 0.42, 0.9, 0.25), {
+					color = Color3.fromRGB(58, 92, 158),
+				}).CastShadow = false
+				if index < doors then
+					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(x0 + doorW * index, y + 1 + bankH / 2, wallZ + 1.25), Vector3.new(0.3, bankH - 0.4, 0.3), {
+						color = DEEP_BLUE,
+					}).CastShadow = false
+				end
 			end
 		end
 
 		-- A bench at each end of the run, as in the reference. At the ends rather than the middle,
 		-- because a bench in front of the lockers is a bench in front of somebody's locker.
 		for side = -1, 1, 2 do
-			local bx = side * (runEnd - 12)
+			local bx = side * (runEnd - bankW - 12)
 			Kit.Block(parent, `LockerBench{floor}_{side}`, at(bx, y + 2.3, wallZ + 5), Vector3.new(18, 0.7, 3.4), {
 				color = WALNUT,
 				material = Enum.Material.Wood,

@@ -72,18 +72,19 @@ OUT = ROOT / "assets" / "School.rbxmx"
 # worked and the place points silently never moved.
 _site: tuple[float, float, float] | None = None
 
-# **Where the school stands, relative to the map's own marker.**
+# **Where the school stands. An absolute coordinate, not an offset.**
 #
-# The site comes from `Place_school` in Street.rbxmx, which is Agent A's file -- so the school
-# is offset from that marker here rather than by editing their street. The marker still says
-# where the school belongs in the road network; this says how far the campus sits back from it.
+# It was an offset from `Place_school`, and that compounded: `relocate_place_points` moves
+# Place_school onto the finished building, so the next bake read the *moved* marker as its base
+# and added the offset again. The school walked 618 by -767 studs further from the map on every
+# single run, and nothing complained -- the bake succeeded and the building was simply somewhere
+# else. Three bakes in it was a kilometre out to sea.
 #
-# Chosen by surveying every asset's bounding box on a 20-stud grid: the school is 460 x 428 and
-# this puts it at (130, -800) with 240 studs of open ground in every direction, 739 from the
-# town centre. It was wedged among the town buildings before, which is most of why the exterior
-# never had room to be seen. `relocate_place_points` below moves the school's own place points
-# into the rooms of the building that actually got built, so the two cannot disagree.
-SITE_OFFSET = (786.0, 0.0, -429.0)
+# An absolute site cannot do that: bake it as many times as you like and it lands in the same
+# place. Chosen by measuring clearance to the nearest part of every other asset -- 395 studs of
+# open ground beyond the campus edge, against 201 for the industrial site before it, which an
+# occupancy grid had called "clear". Clear is not the same as open.
+SITE = (-38.0, -1138.0)
 
 # Which fittings get a real light, and how strong. One in LIGHT_EVERY of the parts whose name
 # matches LIT_NAMES, which works out at roughly a dozen for the whole building.
@@ -377,8 +378,9 @@ def record() -> tuple[list[dict], list[dict]]:
     for rel in paths:
         lines.append(f"AGES_SOURCES[{_lua_string(rel)}] = {_lua_string((ROOT / rel).read_text(encoding='utf-8'))}")
         lines.append(f"table.insert(AGES_MANIFEST, {_lua_string(rel)})")
-    px, py, pz = school_place_point()
-    px, py, pz = px + SITE_OFFSET[0], py + SITE_OFFSET[1], pz + SITE_OFFSET[2]
+    # Only the ground height comes from the map's marker; x and z are ours. See SITE.
+    _, py, _ = school_place_point()
+    px, pz = SITE
     global _site
     _site = (px, py, pz)
     print(f"school place point: ({px:.1f}, {py:.1f}, {pz:.1f})")
