@@ -34,6 +34,7 @@ Run it after any change to the plan:
 from __future__ import annotations
 
 import math
+import re
 import sys
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -144,6 +145,39 @@ def main() -> int:
                     if is_stair:
                         stairish[li][gx][gz] = True
 
+    # **A flight is a ramp, and a two-layer grid cannot hold a ramp.**
+    #
+    # Marking stair cells at every level is too generous -- it says two floors are joined
+    # wherever a staircase is nearby. Marking them only where a tread sits at floor level is too
+    # strict, and reported this school's first floor as unreachable when it plainly is not: the
+    # cells you actually climb through are mid-flight, at neither level.
+    #
+    # So the flight is judged as a whole. Group the treads by their flight, and if that flight's
+    # treads run from within a step of one floor to within a step of the next, its footprint
+    # joins those two levels. That is what a staircase *is*, and it is checkable.
+    import collections as _c
+    flights = _c.defaultdict(list)
+    for name, c, h in parts:
+        if not any(k in name for k in STAIR):
+            continue
+        key = name.split("Step")[0].split("Nose")[0].split("Post")[0].split("Rail")[0]
+        flights[key].append((c, h))
+    connects = set()
+    for key, members in flights.items():
+        tops = [c[1] + h[1] for c, h in members]
+        lo, hi = min(tops), max(tops)
+        joined = []
+        for li, y in enumerate(levels):
+            if lo - STEP_UP <= y <= hi + STEP_UP:
+                joined.append(li)
+        if len(joined) < 2:
+            continue
+        for c, h in members:
+            gx = int((c[0] - x0) / CELL)
+            gz = int((c[2] - z0) / CELL)
+            for a in range(len(joined) - 1):
+                connects.add((joined[a], joined[a + 1], gx, gz))
+
     def standable(li, gx, gz):
         if not (0 <= gx < nx and 0 <= gz < nz):
             return False
@@ -180,14 +214,16 @@ def main() -> int:
             if nxt not in seen and standable(li, gx + ax, gz + az):
                 seen.add(nxt)
                 stack.append(nxt)
-        # A stair cell joins the storey above and below.
-        if stairish[li][gx][gz]:
-            for other in (li - 1, li + 1):
-                if 0 <= other < len(levels) and standable(other, gx, gz):
-                    nxt = (other, gx, gz)
-                    if nxt not in seen:
-                        seen.add(nxt)
-                        stack.append(nxt)
+        # A flight that spans two storeys joins them, anywhere along its footprint.
+        for other in (li - 1, li + 1):
+            if not (0 <= other < len(levels)):
+                continue
+            pair = (min(li, other), max(li, other), gx, gz)
+            if pair in connects and standable(other, gx, gz):
+                nxt = (other, gx, gz)
+                if nxt not in seen:
+                    seen.add(nxt)
+                    stack.append(nxt)
 
     reached_floor = [sum(1 for li, _, _ in seen if li == i) for i in range(len(levels))]
 
@@ -227,8 +263,9 @@ def main() -> int:
         wide[cell] = w
         li, gx, gz = cell
         nbrs = [(li, gx + ax, gz + az) for ax, az in ((1, 0), (-1, 0), (0, 1), (0, -1))]
-        if stairish[li][gx][gz]:
-            nbrs += [(o, gx, gz) for o in (li - 1, li + 1) if 0 <= o < len(levels)]
+        for o in (li - 1, li + 1):
+            if 0 <= o < len(levels) and (min(li, o), max(li, o), gx, gz) in connects:
+                nbrs.append((o, gx, gz))
         for nb in nbrs:
             if nb not in seen:
                 continue
@@ -259,6 +296,32 @@ def main() -> int:
             # Clearance is a radius in cells, so the walkable width it implies is twice it.
             tight.append((best * 2 * CELL, name))
 
+    # ---- is the staircase itself walkable?
+    #
+    # The grid above cannot answer this. A tread sits mid-air between two floor levels, so the
+    # walkable layers never look at one -- and a flight can be geometrically perfect, land flush,
+    # have head-room the whole way, and still be unusable because something is standing on its
+    # bottom six steps. That is exactly what happened here: a lobby bench, a planter and a shrub
+    # were parked on the foot of the west flight, and every other check in this file passed.
+    NEED = 1.5
+    fouled = []
+    for name, c, h in parts:
+        if not re.match(r"^Stair.*Step\d+$", name):
+            continue
+        y = c[1] + h[1]
+        for other, oc, oh in parts:
+            if any(k in other for k in STAIR) or any(k in other for k in PASSABLE):
+                continue
+            if other.startswith("Floor") or "Ceil" in other:
+                continue
+            if oc[1] + oh[1] < y + 0.5 or oc[1] - oh[1] > y + 5.0:
+                continue
+            dx = max(0.0, abs(oc[0] - c[0]) - oh[0] - h[0])
+            dz = max(0.0, abs(oc[2] - c[2]) - oh[2] - h[2])
+            if math.hypot(dx, dz) < NEED:
+                fouled.append((name, other))
+                break
+
     print(f"walkable map: {nx} x {nz} cells at {CELL:g} studs, {len(levels)} storeys "
           f"at y {', '.join(f'{y:g}' for y in levels)}")
     for i, n in enumerate(reached_floor):
@@ -285,6 +348,18 @@ def main() -> int:
         print(f"FAIL  {len(squeezed)} route(s) squeezed below {SQUEEZE:g} studs:")
         for w, n in squeezed:
             print(f"        {w:5.1f} studs   {n}")
+        failed = True
+
+    if fouled:
+        print()
+        print(f"FAIL  {len(fouled)} stair tread(s) with something standing on or beside them:")
+        seen_pairs = set()
+        for tread, other in fouled:
+            key = other.rstrip("0123456789_")
+            if key in seen_pairs:
+                continue
+            seen_pairs.add(key)
+            print(f"        {tread:20} fouled by {other}")
         failed = True
 
     if unreachable:

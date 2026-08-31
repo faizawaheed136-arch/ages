@@ -16615,7 +16615,7 @@
 <Item class="Part" referent="RBXSCHOOL1245">
 <Properties>
 <string name="Name">LobbyBench1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1106.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1122.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16630,7 +16630,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1246">
 <Properties>
 <string name="Name">LobbyBench2</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1106.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1122.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16645,7 +16645,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1247">
 <Properties>
 <string name="Name">LobbyBench3</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1097.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1117.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16660,7 +16660,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1248">
 <Properties>
 <string name="Name">LobbyBench4</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1097.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1117.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16675,7 +16675,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1249">
 <Properties>
 <string name="Name">LobbyBench5</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1088.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>4.4</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16690,7 +16690,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1250">
 <Properties>
 <string name="Name">LobbyBench6</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1088.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>4.4</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.5</X><Y>0.8</Y><Z>13.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -16711,7 +16711,7 @@
 <Item class="Part" referent="RBXSCHOOL1252">
 <Properties>
 <string name="Name">LobbyBenchLeg1_1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1117.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16726,7 +16726,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1253">
 <Properties>
 <string name="Name">LobbyBenchLeg2_1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1117.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16741,7 +16741,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1254">
 <Properties>
 <string name="Name">LobbyBenchLeg3_1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1092.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16756,7 +16756,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1255">
 <Properties>
 <string name="Name">LobbyBenchLeg4_1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1092.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16771,7 +16771,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1256">
 <Properties>
 <string name="Name">LobbyBenchLeg5_1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1083.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1111.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16786,7 +16786,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1257">
 <Properties>
 <string name="Name">LobbyBenchLeg6_1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1083.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1111.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16807,7 +16807,7 @@
 <Item class="Part" referent="RBXSCHOOL1259">
 <Properties>
 <string name="Name">LobbyBenchLeg1_-1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1111.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1127.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16822,7 +16822,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1260">
 <Properties>
 <string name="Name">LobbyBenchLeg2_-1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1111.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1127.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16837,7 +16837,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1261">
 <Properties>
 <string name="Name">LobbyBenchLeg3_-1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1102.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1122.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16852,7 +16852,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1262">
 <Properties>
 <string name="Name">LobbyBenchLeg4_-1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1102.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1122.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16867,7 +16867,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1263">
 <Properties>
 <string name="Name">LobbyBenchLeg5_-1</string>
-<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1093.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-199.0</X><Y>3.3</Y><Z>-1121.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -16882,7 +16882,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1264">
 <Properties>
 <string name="Name">LobbyBenchLeg6_-1</string>
-<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1093.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-133.0</X><Y>3.3</Y><Z>-1121.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.6</X><Y>2.2</Y><Z>1.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17581,7 +17581,7 @@
 <Item class="Part" referent="RBXSCHOOL1323">
 <Properties>
 <string name="Name">LobbyPlanter1</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>4.0</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>4.0</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>6.0</X><Y>3.6</Y><Z>6.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -17602,7 +17602,7 @@
 <Item class="Part" referent="RBXSCHOOL1325">
 <Properties>
 <string name="Name">LobbyPlanter-1</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>4.0</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>4.0</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>6.0</X><Y>3.6</Y><Z>6.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -17755,7 +17755,7 @@
 <Item class="Part" referent="RBXSCHOOL1337">
 <Properties>
 <string name="Name">LobbyPlanterSoil1</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>5.9</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>5.9</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.2</X><Y>0.4</Y><Z>5.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17776,7 +17776,7 @@
 <Item class="Part" referent="RBXSCHOOL1339">
 <Properties>
 <string name="Name">LobbyPlanterSoil-1</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>5.9</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>5.9</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.2</X><Y>0.4</Y><Z>5.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17797,7 +17797,7 @@
 <Item class="Part" referent="RBXSCHOOL1341">
 <Properties>
 <string name="Name">LobbyShrub1_1</string>
-<CoordinateFrame name="CFrame"><X>-129.6</X><Y>9.0</Y><Z>-1101.8</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-129.6</X><Y>9.0</Y><Z>-1112.8</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17812,7 +17812,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1342">
 <Properties>
 <string name="Name">LobbyShrub1_2</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>9.6</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>9.6</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17827,7 +17827,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1343">
 <Properties>
 <string name="Name">LobbyShrub1_3</string>
-<CoordinateFrame name="CFrame"><X>-126.4</X><Y>10.2</Y><Z>-1100.2</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-126.4</X><Y>10.2</Y><Z>-1111.2</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17848,7 +17848,7 @@
 <Item class="Part" referent="RBXSCHOOL1345">
 <Properties>
 <string name="Name">LobbyShrub-1_1</string>
-<CoordinateFrame name="CFrame"><X>-205.6</X><Y>9.0</Y><Z>-1101.8</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-205.6</X><Y>9.0</Y><Z>-1112.8</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17863,7 +17863,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1346">
 <Properties>
 <string name="Name">LobbyShrub-1_2</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>9.6</Y><Z>-1101.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>9.6</Y><Z>-1112.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -17878,7 +17878,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL1347">
 <Properties>
 <string name="Name">LobbyShrub-1_3</string>
-<CoordinateFrame name="CFrame"><X>-202.4</X><Y>10.2</Y><Z>-1100.2</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-202.4</X><Y>10.2</Y><Z>-1111.2</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.4</X><Y>5.6</Y><Z>1.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31393,7 +31393,7 @@
 <Item class="Part" referent="RBXSCHOOL2338">
 <Properties>
 <string name="Name">WaitBench1</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>4.5</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>4.5</Y><Z>-1120.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>6.0</X><Y>0.7</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -31414,7 +31414,7 @@
 <Item class="Part" referent="RBXSCHOOL2340">
 <Properties>
 <string name="Name">WaitBench-1</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>4.5</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>4.5</Y><Z>-1120.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>6.0</X><Y>0.7</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -31435,7 +31435,7 @@
 <Item class="Part" referent="RBXSCHOOL2342">
 <Properties>
 <string name="Name">WaitBenchBack1</string>
-<CoordinateFrame name="CFrame"><X>-130.6</X><Y>6.6</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-130.6</X><Y>6.6</Y><Z>-1120.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.8</X><Y>4.4</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31456,7 +31456,7 @@
 <Item class="Part" referent="RBXSCHOOL2344">
 <Properties>
 <string name="Name">WaitBenchBack-1</string>
-<CoordinateFrame name="CFrame"><X>-201.4</X><Y>6.6</Y><Z>-1116.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-201.4</X><Y>6.6</Y><Z>-1120.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>0.8</X><Y>4.4</Y><Z>20.0</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31477,7 +31477,7 @@
 <Item class="Part" referent="RBXSCHOOL2346">
 <Properties>
 <string name="Name">WaitBenchLeg1_1</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>3.35</Y><Z>-1109.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>3.35</Y><Z>-1113.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.0</X><Y>2.3</Y><Z>0.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31498,7 +31498,7 @@
 <Item class="Part" referent="RBXSCHOOL2348">
 <Properties>
 <string name="Name">WaitBenchLeg-1_1</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>3.35</Y><Z>-1109.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>3.35</Y><Z>-1113.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.0</X><Y>2.3</Y><Z>0.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31513,7 +31513,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL2349">
 <Properties>
 <string name="Name">WaitBenchLeg1_-1</string>
-<CoordinateFrame name="CFrame"><X>-128.0</X><Y>3.35</Y><Z>-1123.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-128.0</X><Y>3.35</Y><Z>-1127.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.0</X><Y>2.3</Y><Z>0.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -31534,7 +31534,7 @@
 <Item class="Part" referent="RBXSCHOOL2351">
 <Properties>
 <string name="Name">WaitBenchLeg-1_-1</string>
-<CoordinateFrame name="CFrame"><X>-204.0</X><Y>3.35</Y><Z>-1123.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-204.0</X><Y>3.35</Y><Z>-1127.0</Z><R00>1.0</R00><R01>0</R01><R02>0.0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0</R20><R21>0</R21><R22>1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>5.0</X><Y>2.3</Y><Z>0.8</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>

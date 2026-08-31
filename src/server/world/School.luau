@@ -1216,7 +1216,9 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		-- a tread came down inside a bench. Sitting them nearer the doors keeps them off the
 		-- stair and out of the central walk at the same time.
 		local wx = side * (ATRIUM_X2 - 7)
-		local wz = ATRIUM_Z1 + 10
+		-- Far enough forward that the bench and its back both finish before the arcs begin at
+		-- z 28. A bench is 20 studs long, so its centre has to sit at 14 or less.
+		local wz = ATRIUM_Z1 + 6
 
 		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
 			color = WALNUT,
@@ -1234,16 +1236,16 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 			material = Enum.Material.Fabric,
 		}).CastShadow = false
 
-		Kit.Block(parent, `LobbyPlanter{side}`, at(wx, 1.8, wz + 15), Vector3.new(6, 3.6, 6), {
+		Kit.Block(parent, `LobbyPlanter{side}`, at(wx, 1.8, wz + 8), Vector3.new(6, 3.6, 6), {
 			color = Color3.fromRGB(196, 202, 214),
 			material = Enum.Material.Concrete,
 			collide = true,
 		})
-		Kit.Block(parent, `LobbyPlanterSoil{side}`, at(wx, 3.7, wz + 15), Vector3.new(5.2, 0.4, 5.2), {
+		Kit.Block(parent, `LobbyPlanterSoil{side}`, at(wx, 3.7, wz + 8), Vector3.new(5.2, 0.4, 5.2), {
 			color = Color3.fromRGB(72, 56, 42),
 		}).CastShadow = false
 		for leaf = 1, 3 do
-			Kit.Block(parent, `LobbyShrub{side}_{leaf}`, at(wx + (leaf - 2) * 1.6, 6.2 + leaf * 0.6, wz + 15 + (leaf - 2) * 0.8), Vector3.new(1.4, 5.6, 1.4), {
+			Kit.Block(parent, `LobbyShrub{side}_{leaf}`, at(wx + (leaf - 2) * 1.6, 6.2 + leaf * 0.6, wz + 8 + (leaf - 2) * 0.8), Vector3.new(1.4, 5.6, 1.4), {
 				color = Color3.fromRGB(74, 126, 74),
 				material = Enum.Material.Grass,
 			}).CastShadow = false
@@ -1302,7 +1304,17 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		-- Out at the flanks and set back, so they are somewhere to sit rather than something to
 		-- walk around.
 		local x = side * (BUILDING.AtriumWidthStuds / 2 - 12)
-		local z = ATRIUM_Z1 + 20 + row * 9
+		-- **In front of the stairs, not under them.**
+		--
+		-- The arcs sweep z from STAIR_CZ to STAIR_CZ + STAIR_R -- 28 to 44 -- and these sat at 28
+		-- and 37, so a bench, a planter and a shrub were standing on the bottom six treads of the
+		-- west flight. Nobody could get onto the staircase at all, and no check saw it: the treads
+		-- are mid-air between floor levels, so the walkable grid never looked at them.
+		-- Clamped, not just pitched. The row index runs with LobbyBenches, so a bigger bench count
+		-- walks the back row straight into the arcs again -- which is how LobbyBench5 ended up on
+		-- the bottom tread after the first two moves fixed benches 1 and 3. STAIR_CZ is where the
+		-- arcs start; nothing in the lobby may reach it.
+		local z = math.min(ATRIUM_Z1 + 4 + row * 5, STAIR_CZ - 10)
 		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
 			color = WOOD,
 			material = Enum.Material.Wood,
