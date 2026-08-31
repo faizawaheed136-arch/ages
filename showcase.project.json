@@ -1,0 +1,108 @@
+{
+  "name": "gakuran-showcase",
+  "globIgnorePaths": ["**/*.tmp.*"],
+  "tree": {
+    "$className": "DataModel",
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Showcase": { "$path": "src/showcase/server" },
+      "ShowcaseWorld": { "$path": "src/showcase/world" }
+    },
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Showcase": { "$path": "src/showcase/shared" }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Showcase": { "$path": "src/showcase/client" }
+      }
+    },
+
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "GlobalShadows": true,
+        "Brightness": 3,
+        "ExposureCompensation": -0.45,
+        "ShadowSoftness": 0.15,
+        "ClockTime": 7.4,
+        "GeographicLatitude": 35.7,
+        "Ambient": [0.039, 0.047, 0.07],
+        "OutdoorAmbient": [0.11, 0.129, 0.18],
+        "ColorShift_Top": [1.0, 0.878, 0.729],
+        "ColorShift_Bottom": [0.11, 0.149, 0.227],
+        "EnvironmentDiffuseScale": 0.18,
+        "EnvironmentSpecularScale": 0.45
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.42,
+          "Offset": 0.28,
+          "Haze": 2.4,
+          "Glare": 0.45,
+          "Color": [0.494, 0.525, 0.596],
+          "Decay": [0.282, 0.329, 0.431]
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": { "Intensity": 0.85, "Size": 26, "Threshold": 1.85 }
+      },
+      "Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": -0.02,
+          "Contrast": 0.24,
+          "Saturation": -0.15,
+          "TintColor": [0.886, 0.914, 1.0]
+        }
+      },
+      "SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": { "Intensity": 0.14, "Spread": 0.95 }
+      },
+      "Depth": {
+        "$className": "DepthOfFieldEffect",
+        "$properties": {
+          "FarIntensity": 0.14,
+          "FocusDistance": 45,
+          "InFocusRadius": 55,
+          "NearIntensity": 0
+        }
+      }
+    },
+
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "AmbientReverb": "Hallway"
+      }
+    },
+
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": false,
+        "Gravity": 196.2
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Locked": true,
+          "CanCollide": false,
+          "Transparency": 1,
+          "Position": [0, 1.5, -248],
+          "Size": [12, 0.4, 12]
+        }
+      }
+    }
+  }
+}
