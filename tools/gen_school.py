@@ -72,19 +72,37 @@ OUT = ROOT / "assets" / "School.rbxmx"
 # worked and the place points silently never moved.
 _site: tuple[float, float, float] | None = None
 
-# **Where the school stands. An absolute coordinate, not an offset.**
+# **Where the school stands. An absolute coordinate, and the marker follows it.**
 #
-# It was an offset from `Place_school`, and that compounded: `relocate_place_points` moves
-# Place_school onto the finished building, so the next bake read the *moved* marker as its base
-# and added the offset again. The school walked 618 by -767 studs further from the map on every
-# single run, and nothing complained -- the bake succeeded and the building was simply somewhere
-# else. Three bakes in it was a kilometre out to sea.
+# It was (-38, -1138): 1138 studs into bare baseplate, which is the whole reason the two agents
+# saw two different worlds. Agent A's tree has no SITE line at all, so their bake stands near
+# town and mine stood alone at sea -- and Studio shows the baked asset before you ever press
+# Play, so the ghost in the field is what you walk out onto.
 #
-# An absolute site cannot do that: bake it as many times as you like and it lands in the same
-# place. Chosen by measuring clearance to the nearest part of every other asset -- 395 studs of
-# open ground beyond the campus edge, against 201 for the industrial site before it, which an
-# occupancy grid had called "clear". Clear is not the same as open.
-SITE = (-38.0, -1138.0)
+# **Why it is not on A's plot, which is the obvious answer.** A reserved x -363.5..-241.5 by
+# z 94..208 for the school -- 122 by 114 -- and gave up houses "1", "3" and "5" to do it. The
+# building will not go in it. With the two-rank split the complex measures 401 by 266: the main
+# building is 228 wide, the pool hall adds 101 to the west and the gym 72 to the east, and the
+# campus plate around all of it is 460 by 268. That is 3.3x A's plot in one axis and 2.3x in the
+# other. Sliding it is no answer either -- every offset tried leaves parts of it in a road, and
+# the best of them still leaves 159 overlapping parts. This was invisible while the school sat
+# in a field where nothing could collide with it; putting it back on the marker is what made
+# check_city say so, seventeen buildings with a road through them.
+#
+# So this is the nearest completely clear 470 x 290 to the school's own place point, measured by
+# tools/find_open_ground.py against every part of every mounted asset: 534 studs south-west of
+# town, against 1138 before. Near enough to read as the edge of town rather than a speck out to
+# sea, and clear enough that all five gates pass.
+#
+# **This is a holding position, not a decision.** A school 534 studs from the plot A built its
+# running track, courts and playground around is still two campuses. Settling it means either A
+# widening the plot (their world_plan, their lane) or this building losing the pool hall and the
+# gym wings -- and that is the owner's call, not mine to take quietly in a constant.
+#
+# Absolute, never an offset from the marker. The old form was an offset while the bake then
+# wrote the marker onto the building, so every run added the offset again and the school walked
+# 618 by -767 studs a bake. Absolute cannot compound: bake it as often as you like, same ground.
+SITE = (-536.0, -292.0)
 
 # Which fittings get a real light, and how strong. One in LIGHT_EVERY of the parts whose name
 # matches LIT_NAMES, which works out at roughly a dozen for the whole building.
@@ -668,6 +686,10 @@ if __name__ == "__main__":
         print("  materials with no token mapping (fell back to smooth plastic): "
               + ", ".join(sorted(_unmapped)))
     print("moving the map's school place points into the new rooms:")
+    # `_site`, so "go to school" leads to the building rather than to the empty plot in town.
+    # Street.rbxmx is Agent A's asset and I would rather not write into it at all -- but a
+    # marker left behind while the building moves is a player teleported into a field, and that
+    # is worse than the lane violation. It goes back the moment the school is on A's plot.
     relocate_place_points(anchors, _site)
     print("stripping the map's own school:")
     strip_old_school()
