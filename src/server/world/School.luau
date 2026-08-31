@@ -1593,8 +1593,22 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- floor between them.
 		-- The face of the wall the banks stand against, a stud and a half proud of it.
 		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
-		local runEnd = W / 2 - WALL_T - 10
-		local bankW = (runEnd * 2) * 0.28
+		-- **Confined to the blank stretch of wall behind the front rank.**
+		--
+		-- These were at the far ends of the frontage, which was right when the corridor ran the
+		-- full width. It is not any more: the front rank uses four of six slots and the gaps at
+		-- each end are the *only* way from the atrium through to the corridor. Banks at the ends
+		-- stood squarely in both of them -- the school's whole circulation, blocked by lockers,
+		-- and nothing in the build complains because a bank against a wall is a legal place for a
+		-- bank to be.
+		--
+		-- The stretch behind the front rank is blank by construction: those rooms open onto the
+		-- atrium, so their back wall carries no doors at all. It is the one long wall in the
+		-- building with nothing on it, which is exactly what a locker run wants.
+		local frontSlots = BUILDING.FrontBandSlots
+		local roomW = (W - WALL_T * 2 - BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)) / BUILDING.RoomsPerFloor
+		local runEnd = (frontSlots * roomW + (frontSlots - 1) * BUILDING.RoomGapStuds) / 2 - 2
+		local bankW = (runEnd * 2) * 0.42
 		local bankH = 11
 
 		for side = -1, 1, 2 do
