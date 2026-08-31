@@ -71,6 +71,7 @@ local SLAB = BUILDING.SlabThicknessStuds
 local WALL_T = BUILDING.WallThicknessStuds
 local CORRIDOR_W = BUILDING.CorridorWidthStuds
 local BAND_D = BUILDING.BackBandDepthStuds
+local FRONT_BAND_D = BUILDING.FrontBandDepthStuds
 local LABEL_DIST = BUILDING.LabelMaxDistanceStuds
 
 -- The palette. Inline rather than in Config for the reason Studio gives about its furniture
@@ -188,67 +189,80 @@ end
 local function planRooms(): { Rect }
 	local half = W / 2
 	local backZ = D - WALL_T
-	local bandFront = backZ - BAND_D
 	local usable = W - WALL_T * 2
 	local gaps = BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)
 	local roomW = (usable - gaps) / BUILDING.RoomsPerFloor
 
-	-- The left edge of the nth slot in the band, 0-based. One expression rather than six
-	-- hand-written pairs of corners, so a change to the room count cannot leave a gap or an
-	-- overlap behind.
+	-- **Two ranks with the corridor between them.**
+	--
+	-- Back rank against the back wall, corridor, front rank, atrium. The back rank's rooms open
+	-- onto the corridor and the front rank's open onto the atrium -- so both have their door on
+	-- z1, which is the convention every fitter in this file already assumes.
+	local backFront = backZ - BAND_D
+	local corridorMid = backFront - CORRIDOR_W / 2
+	local frontBack = corridorMid - CORRIDOR_W / 2
+	local frontFront = frontBack - FRONT_BAND_D
+
 	local function slotX(index: number): (number, number)
 		local x1 = -half + WALL_T + index * (roomW + BUILDING.RoomGapStuds)
 		return x1, x1 + roomW
 	end
 
-	local a1, a2 = slotX(0)
-	local b1, b2 = slotX(1)
-	local c1, c2 = slotX(2)
-	local d1, d2 = slotX(3)
-	local e1, e2 = slotX(4)
-	local f1, f2 = slotX(5)
+	-- The front rank is narrower than the back and centred, leaving a gap at each end. Those
+	-- gaps are how you get from the atrium to the corridor: without them the corridor is a room
+	-- with no way in, and the back rank is unreachable.
+	local frontSlots = BUILDING.FrontBandSlots
+	local frontOffset = (BUILDING.RoomsPerFloor - frontSlots) / 2
+	local function frontSlotX(index: number): (number, number)
+		return slotX(index + frontOffset)
+	end
+
+	local rooms: { Rect } = {}
+	local function add(id: string, label: string, floor: number, slot: number, rank: string, kind: string, span: number?)
+		local x1, x2
+		if rank == "front" then
+			x1 = select(1, frontSlotX(slot))
+			x2 = select(2, frontSlotX(slot + (span or 1) - 1))
+		else
+			x1 = select(1, slotX(slot))
+			x2 = select(2, slotX(slot + (span or 1) - 1))
+		end
+		local z1 = if rank == "front" then frontFront else backFront
+		local z2 = if rank == "front" then frontBack else backZ
+		table.insert(rooms, { id = id, label = label, floor = floor, x1 = x1, z1 = z1, x2 = x2, z2 = z2, kind = kind })
+	end
 
 	-- **Ground floor is where you go; first floor is where you are sent.**
 	--
-	-- That is the whole organising idea, and it is why this is worth writing down rather than
-	-- being an arbitrary list. Everything on the ground is somewhere a player *chooses* to be
-	-- between lessons -- eat, read, sit, cook -- and it is all reachable from the lobby without
-	-- a stair. Everything upstairs is a subject with a timetable slot. A player who has learned
-	-- that never has to think about which floor anything is on again.
+	-- Everything on the ground is somewhere a player *chooses* to be between lessons, reachable
+	-- from the lobby without a stair. Everything upstairs is a subject with a timetable slot.
 	--
-	-- Only five of these anchors are actually required by code: science, art, reading, music
-	-- and library. The rest exist because a school with five rooms in it is a set.
-	return {
-		-- Ground. The cafeteria and the library take two slots each: one is the room the whole
-		-- school is in at once, the other needs the run for its stacks, and a third of the
-		-- frontage each is what stops them reading as classrooms with odd furniture.
-		{ id = "cafeteria", label = "Cafeteria", floor = 1, x1 = a1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "cafeteria" },
-		{ id = "library", label = "Library", floor = 1, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "library" },
-		{ id = "computers", label = "Computer Lab", floor = 1, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
-		-- The one room in the building nobody sends you to. Every other space here is somewhere
-		-- you are told to be; this is the one you choose, and it is what makes the school
-		-- somewhere a player hangs around rather than somewhere they visit twice a year.
-		{ id = "lounge", label = "Student Lounge", floor = 1, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "lounge" },
-		{ id = "cooking", label = "Cooking Lab", floor = 1, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "cooking" },
-		-- Computers. This was lost when the third floor went, which was a mistake: the brief was to
-		-- even three floors of rooms into two, not to delete a floor's worth of school. It shares
-		-- the library's two slots rather than taking one of its own -- a computer room and a
-		-- library are the same kind of room to a player, and putting them together is what a real
-		-- school does with its resource centre.
+	-- The front rank on each floor takes the things you need to find quickly -- washrooms,
+	-- reception, the nurse -- because it is the rank you meet first, straight off the atrium.
+	add("reception", "Reception", 1, 0, "front", "common")
+	add("nurse", "Nurse", 1, 1, "front", "common")
+	add("washM1", "Washroom", 1, 2, "front", "washroom")
+	add("washF1", "Washroom", 1, 3, "front", "washroom")
 
-		-- First floor: the subjects. Science, Art and Reading are named here and left empty on
-		-- purpose -- Lab.luau, Studio.luau and ReadingRoom.luau lay their own benches inside
-		-- them, and this file must never learn what a bench is.
-		--
-		-- Art needs depth rather than width: its wall and its paint cupboard sit 81 studs apart,
-		-- which is the number the whole 99-stud band is sized around.
-		{ id = "science", label = "Science Lab", floor = 2, x1 = a1, z1 = bandFront, x2 = a2, z2 = backZ, kind = "science" },
-		{ id = "art", label = "Art Studio", floor = 2, x1 = b1, z1 = bandFront, x2 = b2, z2 = backZ, kind = "art" },
-		{ id = "reading", label = "Reading Room", floor = 2, x1 = c1, z1 = bandFront, x2 = c2, z2 = backZ, kind = "reading" },
-		{ id = "music", label = "Music Room", floor = 2, x1 = d1, z1 = bandFront, x2 = d2, z2 = backZ, kind = "class" },
-		{ id = "english", label = "English", floor = 2, x1 = e1, z1 = bandFront, x2 = e2, z2 = backZ, kind = "class" },
-		{ id = "staff", label = "Staff Room", floor = 2, x1 = f1, z1 = bandFront, x2 = f2, z2 = backZ, kind = "common" },
-	}
+	add("cafeteria", "Cafeteria", 1, 0, "back", "cafeteria", 2)
+	add("kitchen", "Kitchen", 1, 2, "back", "cooking")
+	add("library", "Library", 1, 3, "back", "library")
+	add("lounge", "Student Lounge", 1, 4, "back", "lounge")
+	add("cooking", "Cooking Lab", 1, 5, "back", "cooking")
+
+	add("washM2", "Washroom", 2, 0, "front", "washroom")
+	add("washF2", "Washroom", 2, 1, "front", "washroom")
+	add("staff", "Staff Room", 2, 2, "front", "common")
+	add("principal", "Principal", 2, 3, "front", "common")
+
+	add("science", "Science Lab", 2, 0, "back", "none")
+	add("art", "Art Studio", 2, 1, "back", "none")
+	add("reading", "Reading Room", 2, 2, "back", "none")
+	add("music", "Music Room", 2, 3, "back", "class")
+	add("english", "English", 2, 4, "back", "class")
+	add("computers", "Computers", 2, 5, "back", "class")
+
+	return rooms
 end
 
 local ROOMS = planRooms()
@@ -1537,6 +1551,7 @@ end
 local function buildCorridors(parent: Instance, at: (number, number, number) -> Vector3)
 	local half = W / 2
 	local backZ = D - WALL_T
+	-- Between the two ranks. See planRooms.
 	local corridorZ = backZ - BAND_D - CORRIDOR_W / 2
 
 	for floor = 1, BUILDING.Floors do
@@ -1913,7 +1928,11 @@ local function fitCafeteria(parent: Instance, at: (number, number, number) -> Ve
 		local column = (index - 1) % 4
 		local row = math.floor((index - 1) / 4)
 		local x = rect.x1 + width * ((column + 0.5) / 4)
-		local z = rect.z1 + 10 + row * 14
+		-- Pitched off the room's depth rather than a fixed 14 studs. At 94 deep that fitted six
+		-- rows; at 46 it fits two, which is why the cafeteria stayed the sparsest room in the
+		-- building after every other one improved.
+		local rows = math.max(2, math.floor((depth - 16) / 11))
+		local z = rect.z1 + 10 + (row % rows) * ((depth - 18) / rows)
 		Kit.Block(parent, `CafeTable{index}`, at(x, y + 3, z), Vector3.new(9, 0.4, 6), { color = WHITE })
 		Kit.Block(parent, `CafeTableLeg{index}`, at(x, y + 1.5, z), Vector3.new(1.2, 3, 1.2), { color = DARK })
 		for seat = -1, 1, 2 do

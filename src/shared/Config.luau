@@ -3385,7 +3385,31 @@ Config.School.Building = {
 	-- At 94 the band front is 74, the corridor runs 58..74, and the void ends at 56. Two studs of
 	-- daylight. If AtriumDepthStuds or CorridorWidthStuds change, this must be rechecked:
 	-- BackBandDepthStuds <= DepthStuds - 2 - (ATRIUM_Z2 + CorridorWidthStuds + 2).
-	BackBandDepthStuds = 94,
+	-- **46, and there are two of these now.** See FrontBandDepthStuds.
+	--
+	-- 94 was forced by a single rank of rooms having to reach the corridor across a 194-stud
+	-- footprint, and it made every teaching room 10 by 26 metres -- a classroom the length of a
+	-- bowling alley. It is the reason the school read as empty however much furniture went into
+	-- it: the two rooms given *double* slots came out the two emptiest in the building, six times
+	-- sparser than the densest.
+	--
+	-- Two ranks of 46 fit in the same footprint, halve the depth, and take the school from 11
+	-- rooms to 20. 36 by 46 is 10 by 13 metres, which is a classroom.
+	BackBandDepthStuds = 46,
+
+	-- The second rank, between the atrium and the corridor.
+	--
+	-- Its rooms open onto the atrium rather than the corridor, which is what lets every existing
+	-- fitter work unchanged: they all take rect.z1 as the door side, and a front rank facing the
+	-- corridor would have its door on z2. Ninety-one places in the builder read z1 or z2 directly,
+	-- and rewriting all of them to be direction-aware is a far bigger risk than laying the rank
+	-- the other way round.
+	FrontBandDepthStuds = 46,
+
+	-- How many of the six slots the front rank uses. The rest of its frontage is left open at
+	-- both ends, and those gaps are the only way from the atrium through to the corridor -- so
+	-- they are circulation, not leftover space.
+	FrontBandSlots = 4,
 	-- Six slots a floor rather than four. Two floors times four was eight rooms for eleven, and
 	-- the rooms were 55 studs wide against a 99-stud band -- proportions that read as corridors
 	-- with furniture. Six gives about 36 studs each, which against that depth is a classroom.
@@ -3849,8 +3873,11 @@ Config.School.Building = {
 		-- Safe range: 8-30 and 3-8.
 		-- 24 in six rows. The rows divide the room's depth rather than stepping at a fixed pitch,
 	-- so in a 99-stud room they spread across the whole of it instead of huddling by the door.
-	DesksPerClassroom = 24,
-		DeskRows = 6,
+	-- 16 in four rows, not 24 in six. The count was set for a 94-stud room; in a 46-stud one it
+	-- packs the rows 4.3 studs apart, which is a desk and no chair. Halving the depth has to
+	-- halve the furniture or the room swaps one failure for the opposite one.
+	DesksPerClassroom = 16,
+		DeskRows = 4,
 		-- Cafeteria tables, library shelves, cooking benches.
 		-- Safe range: 6-20 each.
 		CafeteriaTables = 12,
