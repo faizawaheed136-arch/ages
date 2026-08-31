@@ -72,7 +72,11 @@ OUT = ROOT / "assets" / "School.rbxmx"
 # Range is deliberately large and brightness modest: a few wide, soft lights read as a lit room,
 # where the same budget spent on many small bright ones reads as a row of spotlights and shows
 # every gap between them.
-LIT_NAMES = ("CeilStrip", "CorridorLight", "LobbyBanner", "Lantern")
+# CeilPanel and LobbyPanel are the current fittings; CeilStrip was the old one and no longer
+# exists, so leaving it here meant the corridor grid and the whole lobby ceiling emitted no
+# light at all -- Neon glows but does not illuminate, so the building got *darker* the moment
+# the strips were replaced by a denser grid. Kept in the list because the copy still builds them.
+LIT_NAMES = ("CeilPanel", "LobbyPanel", "CeilStrip", "CorridorLight", "LobbyBanner", "Lantern")
 LIGHT_EVERY = 3
 LIGHT_RANGE = 62
 LIGHT_BRIGHTNESS = 1.4

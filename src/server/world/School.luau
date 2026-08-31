@@ -289,13 +289,25 @@ local STAIR_W = BUILDING.StairWidthStuds
 -- Raising this past the point where the right flight meets the bridge will start narrowing it.
 local STAIR_SHIFT = BUILDING.StairShiftStuds or 0
 
-local STAIR_CX_BASE = BUILDING.AtriumWidthStuds / 2 - STAIR_R - STAIR_W / 2
+-- **Out at the atrium walls, now that the flights are straight.**
+--
+-- This reserved a whole stair radius of clearance because the flights used to be arcs that
+-- swept sideways. A straight flight is exactly its own width, so the reservation is dead space
+-- -- and it was dead space in the worst possible place, putting a flight fifteen studs from the
+-- front door in the middle of the view in. Pushed to the walls, the walk in is clear and the
+-- stairs frame it instead of blocking it.
+local STAIR_CX_BASE = BUILDING.AtriumWidthStuds / 2 - STAIR_W / 2 - 4
 
 -- The centre of one flight after the shift, clamped so its outer edge never crosses the atrium.
 local function stairCentre(side: number): number
 	local atriumHalf = BUILDING.AtriumWidthStuds / 2
 	local wanted = side * STAIR_CX_BASE + STAIR_SHIFT
-	local halfRun = STAIR_R + STAIR_W / 2
+	-- Half the flight's *width*, not the old arc's reach. This still read STAIR_R + STAIR_W/2,
+	-- which is 22 studs of clearance a straight flight does not use -- so it quietly clamped the
+	-- stairs back to the middle of the atrium and undid the move out to the walls. The last
+	-- assumption left over from the curve, and the only one that showed up as the stairs simply
+	-- not going where they were put.
+	local halfRun = STAIR_W / 2 + 1
 	return math.clamp(wanted, -atriumHalf + halfRun, atriumHalf - halfRun)
 end
 
@@ -1003,22 +1015,89 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	-- The feature wall is now behind the gallery rather than facing a full-height void, so it
 	-- is a one-storey wall. Left at two storeys it would have run straight through the gallery
 	-- slab -- the same mistake as the lockers in the logo, one floor up.
+	-- **The lobby ceiling, lit.**
+	--
+	-- The corridor got a panel grid and the lobby did not, which is why the room you walk into is
+	-- the darkest in the building -- the one place a first impression is actually made. A void
+	-- this size cannot be lit from its edges: the light has to be over the floor you are standing
+	-- on.
+	--
+	-- Hung under the gallery soffit, so they light the ground floor without floating in the void.
+	for col = 1, 5 do
+		for row = 1, 3 do
+			local lx = ATRIUM_X1 + (ATRIUM_X2 - ATRIUM_X1) * ((col - 0.5) / 5)
+			local lz = ATRIUM_Z1 + (VOID_Z2 - ATRIUM_Z1) * ((row - 0.5) / 3)
+			Kit.Block(parent, `LobbyPanel{col}_{row}`, at(lx, FLOOR_H - 3, lz), Vector3.new(11, 0.4, 5), {
+				color = Color3.fromRGB(255, 253, 246),
+				material = Enum.Material.Neon,
+			}).CastShadow = false
+		end
+	end
+
 	local featureZ = ATRIUM_Z2 - 1.2
 	local featureH = FLOOR_H - 2
-	Kit.Block(parent, "LobbyFeature", at(0, featureH / 2, featureZ), Vector3.new(BUILDING.AtriumWidthStuds * 0.5, featureH, 0.5), {
-		color = Color3.fromRGB(206, 212, 222),
+	-- **Lockers flanking a signed opening, not a target on a blank wall.**
+	--
+	-- The reference's lobby ends in a wide opening with the room's name over it in letters you
+	-- can read from the door, and banks of lockers either side of it. Ours ended in a concrete
+	-- panel with a three-ring crest on it, which from the entrance reads as a target and tells
+	-- you nothing about where to go.
+	--
+	-- The opening is what does the work: a room you can see into from the front door is a room
+	-- you walk toward. The crest was decoration on a dead end.
+	local atriumW = ATRIUM_X2 - ATRIUM_X1
+	local openingW = atriumW * 0.34
+	local pierW = (atriumW * 0.5 - openingW) / 2
+
+	for side = -1, 1, 2 do
+		local px = side * (openingW / 2 + pierW / 2)
+		-- The pier itself.
+		Kit.Block(parent, `LobbyPier{side}`, at(px, featureH / 2, featureZ), Vector3.new(pierW, featureH, 0.6), {
+			color = Color3.fromRGB(214, 218, 228),
+			material = Enum.Material.Concrete,
+		})
+		-- Lockers against it, in the reference's grey rather than the school's blue: the blue is
+		-- already doing the floor bands and the signage, and a third blue object here would flatten
+		-- the whole wall into one colour.
+		local bankW = pierW - 6
+		local doors = math.max(3, math.floor(bankW / 4.5))
+		local doorW = bankW / doors
+		Kit.Block(parent, `LobbyLockerBank{side}`, at(px, 6.5, featureZ - 1.6), Vector3.new(bankW, 11, 2.4), {
+			color = Color3.fromRGB(176, 182, 192),
+			material = Enum.Material.Metal,
+			collide = true,
+		})
+		Kit.Block(parent, `LobbyLockerCap{side}`, at(px, 12.2, featureZ - 1.6), Vector3.new(bankW, 0.6, 2.8), {
+			color = Color3.fromRGB(140, 146, 158),
+			material = Enum.Material.Metal,
+		}).CastShadow = false
+		for index = 1, doors - 1 do
+			Kit.Block(parent, `LobbyLockerSeam{side}_{index}`, at(px - bankW / 2 + doorW * index, 6.5, featureZ - 2.9), Vector3.new(0.25, 10.4, 0.3), {
+				color = Color3.fromRGB(140, 146, 158),
+			}).CastShadow = false
+		end
+		for index = 1, doors do
+			Kit.Block(parent, `LobbyLockerHandle{side}_{index}`, at(px - bankW / 2 + doorW * (index - 0.5) + doorW * 0.28, 6.5, featureZ - 3), Vector3.new(0.4, 1.6, 0.3), {
+				color = Color3.fromRGB(232, 236, 244),
+				material = Enum.Material.Metal,
+			}).CastShadow = false
+		end
+	end
+
+	-- The head over the opening, and the sign on it. Big, because the reference's is big and
+	-- that is the entire point -- it is legible from the front door, which is where you need it.
+	Kit.Block(parent, "LobbyOpeningHead", at(0, featureH - 4, featureZ), Vector3.new(openingW + 4, 8, 0.6), {
+		color = Color3.fromRGB(214, 218, 228),
 		material = Enum.Material.Concrete,
 	})
-	for ring = 1, 3 do
-		local radius = 9 * (1 - (ring - 1) * 0.3)
-		local disc = Kit.Block(parent, `LobbyCrest{ring}`, at(0, featureH * 0.62, featureZ - 0.4 - ring * 0.1), Vector3.new(0.3, radius * 2, radius * 2), {
-			color = if ring % 2 == 1 then BLUE else WHITE,
-		})
-		disc.Shape = Enum.PartType.Cylinder
-		disc.CFrame = CFrame.new(at(0, featureH * 0.62, featureZ - 0.4 - ring * 0.1)) * CFrame.Angles(0, math.rad(90), 0)
-		disc.Size = Vector3.new(0.3, radius * 2, radius * 2)
-		disc.CastShadow = false
-	end
+	Kit.Block(parent, "LobbySignBand", at(0, featureH - 4, featureZ - 0.5), Vector3.new(openingW, 6, 0.4), {
+		color = BLUE,
+	}).CastShadow = false
+	local signBoard = Kit.Block(parent, "LobbySign", at(0, featureH - 4, featureZ - 0.8), Vector3.new(openingW - 3, 4.4, 0.3), {
+		color = WHITE,
+	})
+	signBoard.CastShadow = false
+	Kit.Sign(signBoard, "CAFETERIA", openingW - 3, LABEL_DIST * 2, Color3.fromRGB(96, 102, 114))
 
 	-- **The gallery fascia, and the fins that carry the height.**
 	--
@@ -1115,8 +1194,15 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		-- were standing inside the footprint of each flight, at the bottom where you start
 		-- climbing. Moving them inboard puts them under the bridge instead, which is a
 		-- sheltered spot to wait and is not in anybody's way.
-		local wx = side * (WELL_X_IN - 5)
-		local wz = ATRIUM_Z1 + 12
+		-- **Against the side wall, at the back.**
+		--
+		-- These sat under the bridge in the middle of the lobby, which is the one part of the
+		-- floor that has to stay empty: it is the whole view from the front door and the route to
+		-- everything else. A bench in the centre of an entrance hall does not make it welcoming,
+		-- it makes it an obstacle course -- the reference's lobby floor is almost entirely bare
+		-- and that is *why* it reads as big.
+		local wx = side * (ATRIUM_X2 - 7)
+		local wz = VOID_Z2 - 14
 
 		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
 			color = WALNUT,
@@ -1192,8 +1278,17 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	for index = 1, BUILDING.LobbyBenches do
 		local side = if index % 2 == 1 then -1 else 1
 		local row = math.floor((index - 1) / 2)
-		local x = side * 7
-		local z = ATRIUM_Z1 + 10 + row * 9
+		-- **Off the entrance axis.**
+		--
+		-- These sat seven studs either side of the centreline, thirteen studs in -- the first
+		-- thing in the room and directly across the view from the doors. The reference's lobby
+		-- floor is almost entirely bare, and that is exactly why it reads as large: what makes a
+		-- room feel big is an uninterrupted floor, not a high ceiling.
+		--
+		-- Out at the flanks and set back, so they are somewhere to sit rather than something to
+		-- walk around.
+		local x = side * (BUILDING.AtriumWidthStuds / 2 - 12)
+		local z = ATRIUM_Z1 + 20 + row * 9
 		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
 			color = WOOD,
 			material = Enum.Material.Wood,

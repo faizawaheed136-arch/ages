@@ -3713,7 +3713,11 @@ Config.School.Building = {
 	-- flights sit flush to that edge already, so a negative shift moves the right-hand one into
 	-- open floor and leaves the left one where it is.
 	-- Safe range: -8 to 8. Past that the moving flight starts eating the bridge between the wells.
-	StairShiftStuds = -6,
+	-- Zero. This nudged a flight clear of something it was crowding back when both stairs sat in
+	-- the middle of the atrium. They are out at the walls now, which solves that properly, and a
+	-- leftover shift only made the pair asymmetric -- one flight hard against the glass and the
+	-- other nine studs off its partner.
+	StairShiftStuds = 0,
 
 	StairRadiusStuds = 16,
 	StairWidthStuds = 12,
