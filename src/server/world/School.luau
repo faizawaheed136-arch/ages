@@ -1191,66 +1191,20 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 		}).CastShadow = false
 	end
 
-	-- **The lobby's back corners.**
+	-- **The lobby floor is bare, and that is deliberate.**
 	--
-	-- The middle of the lobby is the route from the doors to the stairs and stays clear, but the
-	-- two back corners either side of that route were bare floor. A school entrance hall uses
-	-- those for waiting -- somebody is always waiting outside the office -- so they get a bench,
-	-- a planter and a case of whatever the school is proud of this year.
-	for side = -1, 1, 2 do
-		-- Pulled in against the bridge rather than out at the atrium's edge.
-		--
-		-- These corners sat under what is now a stairwell -- a planter, a shrub and a bench leg
-		-- were standing inside the footprint of each flight, at the bottom where you start
-		-- climbing. Moving them inboard puts them under the bridge instead, which is a
-		-- sheltered spot to wait and is not in anybody's way.
-		-- **Against the side wall, at the back.**
-		--
-		-- These sat under the bridge in the middle of the lobby, which is the one part of the
-		-- floor that has to stay empty: it is the whole view from the front door and the route to
-		-- everything else. A bench in the centre of an entrance hall does not make it welcoming,
-		-- it makes it an obstacle course -- the reference's lobby floor is almost entirely bare
-		-- and that is *why* it reads as big.
-		-- Forward of the flights, not beside them. With the curved stairs back, the arcs sweep
-		-- through the back corners of the atrium again -- which is exactly where these were, and
-		-- a tread came down inside a bench. Sitting them nearer the doors keeps them off the
-		-- stair and out of the central walk at the same time.
-		local wx = side * (ATRIUM_X2 - 7)
-		-- Far enough forward that the bench and its back both finish before the arcs begin at
-		-- z 28. A bench is 20 studs long, so its centre has to sit at 14 or less.
-		local wz = ATRIUM_Z1 + 6
-
-		Kit.Block(parent, `WaitBench{side}`, at(wx, 2.3, wz), Vector3.new(6, 0.7, 20), {
-			color = WALNUT,
-			material = Enum.Material.Wood,
-			collide = true,
-		})
-		for leg = -1, 1, 2 do
-			Kit.Block(parent, `WaitBenchLeg{side}_{leg}`, at(wx, 1.15, wz + leg * 7), Vector3.new(5, 2.3, 0.8), {
-				color = Color3.fromRGB(96, 102, 114),
-				material = Enum.Material.Metal,
-			}).CastShadow = false
-		end
-		Kit.Block(parent, `WaitBenchBack{side}`, at(wx - side * 2.6, 4.4, wz), Vector3.new(0.8, 4.4, 20), {
-			color = Color3.fromRGB(104, 118, 176),
-			material = Enum.Material.Fabric,
-		}).CastShadow = false
-
-		Kit.Block(parent, `LobbyPlanter{side}`, at(wx, 1.8, wz + 8), Vector3.new(6, 3.6, 6), {
-			color = Color3.fromRGB(196, 202, 214),
-			material = Enum.Material.Concrete,
-			collide = true,
-		})
-		Kit.Block(parent, `LobbyPlanterSoil{side}`, at(wx, 3.7, wz + 8), Vector3.new(5.2, 0.4, 5.2), {
-			color = Color3.fromRGB(72, 56, 42),
-		}).CastShadow = false
-		for leaf = 1, 3 do
-			Kit.Block(parent, `LobbyShrub{side}_{leaf}`, at(wx + (leaf - 2) * 1.6, 6.2 + leaf * 0.6, wz + 8 + (leaf - 2) * 0.8), Vector3.new(1.4, 5.6, 1.4), {
-				color = Color3.fromRGB(74, 126, 74),
-				material = Enum.Material.Grass,
-			}).CastShadow = false
-		end
-	end
+	-- Two benches, a planter and a shrub stood in the back corners, and six more benches down the
+	-- middle. They have fouled the foot of the staircase three times now: once when the flights
+	-- were curved, again when they were straightened, and again when the arc was widened to give
+	-- the treads a going you can actually stand on. Every time the fix was to move the furniture,
+	-- and every time the next change to the stairs put it back on the treads.
+	--
+	-- At radius 26 the two arcs occupy z 18 to 44 and reach out to the atrium wall at x 45. The
+	-- void starts at z 8. What is left is a ten-stud strip inside the doors and the channel
+	-- between the flights -- that is the walk, not a seating area, and furnishing it is what
+	-- caused all three collisions. So it stays empty, which is also what the reference
+	-- photographs show: their lobby floor is almost entirely bare, and that is exactly why it
+	-- reads as large. Seating lives in the lounge and the cafeteria, both off the same floor.
 
 	-- The banners are gone.
 	--
@@ -1286,75 +1240,42 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 	deskFront.CastShadow = false
 	Kit.Sign(deskFront, "RECEPTION", 20, LABEL_DIST, Color3.fromRGB(246, 250, 255))
 
-	-- Benches in two facing ranks down the *middle* of the lobby, between the doors and the
-	-- desk. They used to sit out at the sides, which is where the stairs now sweep -- a scan of
-	-- the stair found forty-seven parts within twenty studs of a tread, most of them these and
-	-- the trophy cases. A stair needs air around its foot or arriving at it is an obstacle
-	-- course.
-	for index = 1, BUILDING.LobbyBenches do
-		local side = if index % 2 == 1 then -1 else 1
-		local row = math.floor((index - 1) / 2)
-		-- **Off the entrance axis.**
-		--
-		-- These sat seven studs either side of the centreline, thirteen studs in -- the first
-		-- thing in the room and directly across the view from the doors. The reference's lobby
-		-- floor is almost entirely bare, and that is exactly why it reads as large: what makes a
-		-- room feel big is an uninterrupted floor, not a high ceiling.
-		--
-		-- Out at the flanks and set back, so they are somewhere to sit rather than something to
-		-- walk around.
-		local x = side * (BUILDING.AtriumWidthStuds / 2 - 12)
-		-- **In front of the stairs, not under them.**
-		--
-		-- The arcs sweep z from STAIR_CZ to STAIR_CZ + STAIR_R -- 28 to 44 -- and these sat at 28
-		-- and 37, so a bench, a planter and a shrub were standing on the bottom six treads of the
-		-- west flight. Nobody could get onto the staircase at all, and no check saw it: the treads
-		-- are mid-air between floor levels, so the walkable grid never looked at them.
-		-- Clamped, not just pitched. The row index runs with LobbyBenches, so a bigger bench count
-		-- walks the back row straight into the arcs again -- which is how LobbyBench5 ended up on
-		-- the bottom tread after the first two moves fixed benches 1 and 3. STAIR_CZ is where the
-		-- arcs start; nothing in the lobby may reach it.
-		local z = math.min(ATRIUM_Z1 + 4 + row * 5, STAIR_CZ - 10)
-		Kit.Block(parent, `LobbyBench{index}`, at(x, 2.2, z), Vector3.new(4.5, 0.8, 13), {
-			color = WOOD,
-			material = Enum.Material.Wood,
-			collide = true,
-		})
-		for end_ = -1, 1, 2 do
-			Kit.Block(parent, `LobbyBenchLeg{index}_{end_}`, at(x, 1.1, z + end_ * 5), Vector3.new(3.6, 2.2, 1), {
-				color = Color3.fromRGB(78, 82, 94),
-				material = Enum.Material.Metal,
-			})
-		end
-	end
 
 	-- Planting, because every lobby in the reference has a tree in it and a hard-surfaced room
 	-- three storeys tall needs one thing in it that is not a rectangle.
 	for index = 1, BUILDING.LobbyTrees do
 		local side = if index % 2 == 1 then -1 else 1
-		local row = math.floor((index - 1) / 2)
-		Kit.Planter(
-			parent,
-			`LobbyPlanter{index}`,
-			at(side * (BUILDING.AtriumWidthStuds / 2 - 8), 0.4, ATRIUM_Z1 + 4 + row * 7),
-			5,
-			14
-		)
+		-- **In the entrance strip, not down the sides.**
+		--
+		-- These stood at x +-37 in two rows seven studs apart, which put the back pair inside the
+		-- sweep of a flight. The arcs occupy z 18 to 44 and reach all the way out to the atrium wall
+		-- at x 45, so there is no side strip left to line planters down -- the only clear floor is
+		-- the ten studs between the doors and the foot of the stairs. Both trees go there, set wide
+		-- apart, framing the walk in rather than lining it.
+		Kit.Planter(parent, `LobbyPlanter{index}`, at(side * 30, 0.4, ATRIUM_Z1 + 5), 5, 14)
 	end
 
 	-- The trophy case. One object that says the building has a past, which is a thing no amount
 	-- of clean geometry can say on its own.
+	--
+	-- **Sized from the stairs, not from a number.** It used to be 16 studs long starting at z 5,
+	-- which reached z 21 -- three studs past the foot of the arc at z 18, so its back corner and
+	-- its last row of cups stood in the bottom treads. Every fixed dimension in this room has
+	-- been wrong at least once for the same reason: the stairs moved and the furniture did not.
+	-- So the case runs from just inside the front wall to three studs short of the arc, and if
+	-- the radius changes again this follows it.
+	local caseFront = ATRIUM_Z1 + 1
+	local caseBack = STAIR_CZ - 3
+	local caseLen = caseBack - caseFront
+	local caseZ = (caseFront + caseBack) / 2
 	for index = 1, BUILDING.LobbyCases do
 		local side = if index % 2 == 1 then -1 else 1
-		-- Against the back wall beside the reception, not out at the sides where the stairs are.
-		-- On the side walls at the *front* of the lobby, in the strip the stairs do not reach.
-		-- The sweep occupies z 16-48; this sits at 13, which is the entrance zone.
 		local x = side * (BUILDING.AtriumWidthStuds / 2 - 3)
-		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, ATRIUM_Z1 + 5), Vector3.new(1.5, 12, 16), {
+		Kit.Block(parent, `TrophyCase{index}`, at(x, 6, caseZ), Vector3.new(1.5, 12, caseLen), {
 			color = WOOD,
 			material = Enum.Material.Wood,
 		})
-		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, ATRIUM_Z1 + 5), Vector3.new(0.2, 10, 14), {
+		local glass = Kit.Block(parent, `TrophyGlass{index}`, at(x - side * 0.9, 6.5, caseZ), Vector3.new(0.2, 10, caseLen - 2), {
 			color = GLASS_TINT,
 			material = Enum.Material.Glass,
 			transparency = 0.45,
@@ -1365,7 +1286,7 @@ local function buildLobby(parent: Instance, at: (number, number, number) -> Vect
 				Kit.Block(
 					parent,
 					`Trophy{index}_{shelf}_{cup}`,
-					at(x, 2.6 + shelf * 3, ATRIUM_Z1 + cup * 3.4),
+					at(x, 2.6 + shelf * 3, caseFront + caseLen * (cup / 4)),
 					Vector3.new(1, 2.2, 1),
 					{ color = Color3.fromRGB(226, 188, 92), material = Enum.Material.Metal }
 				).CastShadow = false

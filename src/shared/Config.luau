@@ -3743,7 +3743,21 @@ Config.School.Building = {
 	-- other nine studs off its partner.
 	StairShiftStuds = 0,
 
-	StairRadiusStuds = 16,
+	-- **26, not 16 -- because the radius is what sets the tread depth.**
+	--
+	-- A quarter turn at radius 16 is a 25-stud arc, and twenty treads across it is a going of
+	-- 1.26 studs. That is climbable and it looks wrong: from above the flight is a fan of thin
+	-- blades bunched into one corner of its well, because each tread is barely a stud deep
+	-- against an avatar that is five studs tall.
+	--
+	-- Radius 26 gives a 41-stud arc and a going of 2.04 -- a tread you can stand on -- while
+	-- keeping the same twenty steps and the same 1.35 riser that was already comfortable. The
+	-- two flights then need 64 studs of the atrium's 90, leaving 26 for the bridge between them.
+	--
+	-- The rule, since this has been guessed at twice: going = radians(sweep) * radius / steps,
+	-- and it wants to be about 2. Changing the step count alone trades tread depth against riser
+	-- height; only the radius buys both.
+	StairRadiusStuds = 26,
 	StairWidthStuds = 12,
 	-- Ninety. A quarter is the amount that actually reads as a turn: less than that and the
 	-- arc is a straight line with a kink, which is what 80 degrees over the wrong angle range
