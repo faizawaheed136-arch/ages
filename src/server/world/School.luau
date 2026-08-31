@@ -1593,56 +1593,61 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- floor between them.
 		-- The face of the wall the banks stand against, a stud and a half proud of it.
 		local wallZ = corridorZ - CORRIDOR_W / 2 + 1.4
-		-- **Confined to the blank stretch of wall behind the front rank.**
+		-- **On the two end walls of the corridor, turned to face down it.**
 		--
-		-- These were at the far ends of the frontage, which was right when the corridor ran the
-		-- full width. It is not any more: the front rank uses four of six slots and the gaps at
-		-- each end are the *only* way from the atrium through to the corridor. Banks at the ends
-		-- stood squarely in both of them -- the school's whole circulation, blocked by lockers,
-		-- and nothing in the build complains because a bank against a wall is a legal place for a
-		-- bank to be.
+		-- Third position for these and the reasoning is worth keeping, because each move was right
+		-- about the thing before it and wrong about something new.
 		--
-		-- The stretch behind the front rank is blank by construction: those rooms open onto the
-		-- atrium, so their back wall carries no doors at all. It is the one long wall in the
-		-- building with nothing on it, which is exactly what a locker run wants.
-		local frontSlots = BUILDING.FrontBandSlots
-		local roomW = (W - WALL_T * 2 - BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)) / BUILDING.RoomsPerFloor
-		local runEnd = (frontSlots * roomW + (frontSlots - 1) * BUILDING.RoomGapStuds) / 2 - 2
-		local bankW = (runEnd * 2) * 0.42
+		-- Along the whole corridor: a wall that *is* lockers, and a bad place to keep your books --
+		-- every stop happens in the traffic. At the ends of the frontage: out of the traffic, but
+		-- the two-rank split turned those ends into the only passages from the atrium, so they
+		-- narrowed the school's circulation to eleven studs. Behind the front rank: genuinely
+		-- blank, genuinely clear -- and it puts a long blue wall down the side of the route you
+		-- walk most, which is what the end walls are for.
+		--
+		-- The end walls are the one surface in the corridor that faces *along* it. A bank there is
+		-- something you walk up to and stand at, with the corridor behind you rather than beside
+		-- you -- and the wall carries nothing else, because a corridor end is where a corridor
+		-- stops.
 		local bankH = 11
+		local bankLen = CORRIDOR_W - 6
 
 		for side = -1, 1, 2 do
-			local bankCx = side * (runEnd - bankW / 2)
-			local doors = math.max(6, math.floor(bankW / 5))
-			local doorW = bankW / doors
-			local x0 = bankCx - bankW / 2
+			local bankX = side * (half - WALL_T - 1.4)
 			local tag = `{floor}_{if side < 0 then "W" else "E"}`
+			local doors = math.max(6, math.floor(bankLen / 4.5))
+			local doorW = bankLen / doors
+			local z0 = corridorZ - bankLen / 2
 
-			Kit.Block(parent, `LockerBank{tag}`, at(bankCx, y + 1 + bankH / 2, wallZ), Vector3.new(bankW, bankH, 2.4), {
+			-- Turned a quarter so its length runs along the corridor's depth rather than across it.
+			Kit.Block(parent, `LockerBank{tag}`, at(bankX, y + 1 + bankH / 2, corridorZ), Vector3.new(bankLen, bankH, 2.4), {
 				color = BLUE,
 				material = Enum.Material.Metal,
 				collide = true,
+				yawDegrees = 90,
 			})
-			Kit.Block(parent, `LockerPlinth{tag}`, at(bankCx, y + 0.5, wallZ), Vector3.new(bankW, 1, 2.8), {
+			Kit.Block(parent, `LockerPlinth{tag}`, at(bankX, y + 0.5, corridorZ), Vector3.new(bankLen, 1, 2.8), {
 				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
+				yawDegrees = 90,
 			}).CastShadow = false
-			Kit.Block(parent, `LockerCap{tag}`, at(bankCx, y + 1.3 + bankH, wallZ), Vector3.new(bankW, 0.6, 2.8), {
+			Kit.Block(parent, `LockerCap{tag}`, at(bankX, y + 1.3 + bankH, corridorZ), Vector3.new(bankLen, 0.6, 2.8), {
 				color = DEEP_BLUE,
 				material = Enum.Material.Metal,
+				yawDegrees = 90,
 			}).CastShadow = false
 
 			for index = 1, doors do
-				local dx = x0 + doorW * (index - 0.5)
-				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(dx + doorW * 0.3, y + 1 + bankH * 0.5, wallZ + 1.3), Vector3.new(0.5, 1.8, 0.3), {
+				local dz = z0 + doorW * (index - 0.5)
+				Kit.Block(parent, `LockerHandle{tag}_{index}`, at(bankX - side * 1.3, y + 1 + bankH * 0.5, dz + doorW * 0.3), Vector3.new(0.3, 1.8, 0.5), {
 					color = Color3.fromRGB(232, 236, 244),
 					material = Enum.Material.Metal,
 				}).CastShadow = false
-				Kit.Block(parent, `LockerVent{tag}_{index}`, at(dx, y + 1 + bankH * 0.86, wallZ + 1.3), Vector3.new(doorW * 0.42, 0.9, 0.25), {
+				Kit.Block(parent, `LockerVent{tag}_{index}`, at(bankX - side * 1.3, y + 1 + bankH * 0.86, dz), Vector3.new(0.25, 0.9, doorW * 0.42), {
 					color = Color3.fromRGB(58, 92, 158),
 				}).CastShadow = false
 				if index < doors then
-					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(x0 + doorW * index, y + 1 + bankH / 2, wallZ + 1.25), Vector3.new(0.3, bankH - 0.4, 0.3), {
+					Kit.Block(parent, `LockerSeam{tag}_{index}`, at(bankX - side * 1.25, y + 1 + bankH / 2, z0 + doorW * index), Vector3.new(0.3, bankH - 0.4, 0.3), {
 						color = DEEP_BLUE,
 					}).CastShadow = false
 				end
@@ -1652,7 +1657,7 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- A bench at each end of the run, as in the reference. At the ends rather than the middle,
 		-- because a bench in front of the lockers is a bench in front of somebody's locker.
 		for side = -1, 1, 2 do
-			local bx = side * (runEnd - bankW - 12)
+			local bx = side * (half - WALL_T - 12)
 			Kit.Block(parent, `LockerBench{floor}_{side}`, at(bx, y + 2.3, wallZ + 5), Vector3.new(18, 0.7, 3.4), {
 				color = WALNUT,
 				material = Enum.Material.Wood,
