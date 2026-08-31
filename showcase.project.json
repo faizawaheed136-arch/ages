@@ -142,14 +142,36 @@
           "CanCollide": false,
           "Transparency": 1,
           "Position": [
-            0,
+            -240,
             1.5,
-            -248
+            -980
           ],
           "Size": [
             12,
             0.4,
             12
+          ]
+        }
+      },
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Locked": true,
+          "Size": [
+            2048,
+            20,
+            2048
+          ],
+          "Position": [
+            -240,
+            -10,
+            -732
+          ],
+          "Color": [
+            0.31,
+            0.31,
+            0.29
           ]
         }
       }

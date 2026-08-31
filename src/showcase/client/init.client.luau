@@ -5,7 +5,9 @@
 -- them poll, and none of them exist before the remotes do -- every module WaitForChilds its way
 -- to ReplicatedStorage.Showcase.Remotes, which the server creates.
 
-for _, name in { "WardrobeUI", "BannerUI", "ScoreboardUI", "ArenaCamera" } do
+-- LightingZone first: it captures the place's own Lighting values at startup, and it should do
+-- that before anything else has a chance to touch them.
+for _, name in { "LightingZone", "WardrobeUI", "BannerUI", "ScoreboardUI", "ArenaCamera" } do
 	local module = script:FindFirstChild(name)
 	if module == nil then
 		warn(`[Showcase] {name} is missing`)

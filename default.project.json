@@ -8,6 +8,12 @@
     "ServerScriptService": {
       "Server": {
         "$path": "src/server"
+      },
+      "Showcase": {
+        "$path": "src/showcase/server"
+      },
+      "ShowcaseWorld": {
+        "$path": "src/showcase/world"
       }
     },
     "ServerStorage": {
@@ -17,7 +23,10 @@
       }
     },
     "ReplicatedStorage": {
-      "$path": "src/shared"
+      "$path": "src/shared",
+      "Showcase": {
+        "$path": "src/showcase/shared"
+      }
     },
     "Lighting": {
       "$className": "Lighting",
@@ -82,6 +91,9 @@
       "StarterPlayerScripts": {
         "Client": {
           "$path": "src/client"
+        },
+        "Showcase": {
+          "$path": "src/showcase/client"
         }
       }
     },
@@ -154,14 +166,14 @@
       "School": {
         "$path": "assets/School.rbxmx"
       },
-      "Versailles": {
-        "$path": "assets/Versailles.rbxmx"
-      },
       "ProperSchool": {
         "$path": "assets/ProperSchool.rbxmx"
       },
       "SchoolV1Copy": {
         "$path": "assets/SchoolV1Copy.rbxmx"
+      },
+      "Academy": {
+        "$path": "assets/showcase/Showcase.rbxmx"
       }
     }
   }

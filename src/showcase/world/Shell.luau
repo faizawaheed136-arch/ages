@@ -107,9 +107,30 @@ end
 -- Build
 -- ---------------------------------------------------------------------------------------
 
-function Shell.Build(origin: Vector3): Folder?
+export type Options = {
+	-- Lay the ground apron under the building. True for the standalone showcase place, which has
+	-- no terrain of its own; **false inside AGES**, where the baseplate is already ground and a
+	-- 560 x 608 apron would reach straight into the roads and houses the site was chosen to
+	-- clear. The building is 400 x 448; the apron is not part of it.
+	Ground: boolean?,
+}
+
+function Shell.Build(origin: Vector3, options: Options?): Instance?
+	-- **The baked model wins.**
+	--
+	-- assets/showcase/Showcase.rbxmx holds these same parts, produced by running this same
+	-- function under a recorder, and both places mount it -- so the building is there the moment
+	-- Rojo connects rather than only after somebody presses Play. A place that looks empty until
+	-- F5 is indistinguishable from a place where the sync is broken, and this project has
+	-- already lost time to exactly that.
+	--
+	-- So if it is already standing, do not lay a second copy on top of it.
+	local existing = workspace:FindFirstChild("Showcase")
+	if existing ~= nil then
+		return existing
+	end
 	if built then
-		return workspace:FindFirstChild("Showcase") :: Folder?
+		return nil
 	end
 	built = true
 
@@ -131,7 +152,9 @@ function Shell.Build(origin: Vector3): Folder?
 	local gym = Plan.Gym()
 
 	-- ---- ground, with an apron so the building is not standing on a cliff edge
-	Kit.Block(folder, "Ground", at(W / 2, -1, D / 2), Vector3.new(W + 160, 2, D + 160), DARK)
+	if options == nil or options.Ground ~= false then
+		Kit.Block(folder, "Ground", at(W / 2, -1, D / 2), Vector3.new(W + 160, 2, D + 160), DARK)
+	end
 
 	-- ---- courtyard floor, one storey of it and open to the sky above
 	slab(folder, "CourtyardGround", courtX1, courtZ1, courtX2, courtZ2, -Plan.SlabStuds, at)

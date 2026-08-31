@@ -36,6 +36,17 @@ SRC = ROOT / "src/showcase"
 # showcase keeps its assets somewhere that check is not making a claim about.
 OUT = ROOT / "assets" / "showcase" / "Showcase.rbxmx"
 
+# **Where it stands in the AGES world.**
+#
+# Measured, not chosen: the nearest clear 408 x 456 to the town's school marker, with every
+# mounted asset counted as an obstacle -- the two parked schools included, because neither is
+# being removed. AGES has nothing closer. Even a 292 x 332 cannot get within 484 studs of the
+# marker; the land around the town is full.
+#
+# The apron is off for this build. The baseplate is already ground, and a 560 x 608 apron would
+# reach straight into the roads the site was picked to clear.
+SITE = (-240.0, -732.0)
+
 # A stub environment that keeps what it is given. The bootcheck harness this repo uses elsewhere
 # returns write-only stubs, which is fine for proving code runs and useless for reading geometry
 # back -- every recorded part came out empty. See the note at the top of check_showcase.py.
@@ -94,7 +105,7 @@ def record() -> list[dict]:
         plan, kit, shell,
         # Baked at the origin the starter uses, so the model lands exactly where the runtime
         # build would have put it.
-        "Shell.Build(Vector3.new(-Plan.WidthStuds / 2, 0, -Plan.DepthStuds / 2))",
+        f"Shell.Build(Vector3.new({SITE[0]} - Plan.WidthStuds / 2, 0, {SITE[1]} - Plan.DepthStuds / 2), {{ Ground = false }})",
     ])
     script = Path(os.environ.get("TEMP", "/tmp")) / "gen_showcase.luau"
     script.write_text(HARNESS.replace("__BODY__", body), encoding="utf-8")
