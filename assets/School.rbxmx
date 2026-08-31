@@ -7693,7 +7693,7 @@
 <Item class="Part" referent="RBXSCHOOL0567">
 <Properties>
 <string name="Name">CorridorVending1CoffeeBody</string>
-<CoordinateFrame name="CFrame"><X>-90.2</X><Y>8.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-105.2</X><Y>8.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>7.0</X><Y>13.0</Y><Z>3.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7708,7 +7708,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0568">
 <Properties>
 <string name="Name">CorridorVending2CoffeeBody</string>
-<CoordinateFrame name="CFrame"><X>-90.2</X><Y>35.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-105.2</X><Y>35.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>7.0</X><Y>13.0</Y><Z>3.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7729,7 +7729,7 @@
 <Item class="Part" referent="RBXSCHOOL0570">
 <Properties>
 <string name="Name">CorridorVending1CoffeeCup</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>6.04</Y><Z>-990.53</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>6.04</Y><Z>-990.53</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.5</X><Y>2.0</Y><Z>1.5</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7744,7 +7744,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0571">
 <Properties>
 <string name="Name">CorridorVending2CoffeeCup</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>33.04</Y><Z>-990.53</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>33.04</Y><Z>-990.53</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.5</X><Y>2.0</Y><Z>1.5</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7765,7 +7765,7 @@
 <Item class="Part" referent="RBXSCHOOL0573">
 <Properties>
 <string name="Name">CorridorVending1CoffeeGlass</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>9.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>9.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>7.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7780,7 +7780,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0574">
 <Properties>
 <string name="Name">CorridorVending2CoffeeGlass</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>36.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>36.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>7.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7801,7 +7801,7 @@
 <Item class="Part" referent="RBXSCHOOL0576">
 <Properties>
 <string name="Name">CorridorVending1CoffeeMenu</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>10.46</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>10.46</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>3.12</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7816,7 +7816,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0577">
 <Properties>
 <string name="Name">CorridorVending2CoffeeMenu</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>37.46</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>37.46</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>3.12</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7837,7 +7837,7 @@
 <Item class="Part" referent="RBXSCHOOL0579">
 <Properties>
 <string name="Name">CorridorVending1CoffeePad</string>
-<CoordinateFrame name="CFrame"><X>-87.96</X><Y>9.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-102.96</X><Y>9.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.68</X><Y>3.9</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7852,7 +7852,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0580">
 <Properties>
 <string name="Name">CorridorVending2CoffeePad</string>
-<CoordinateFrame name="CFrame"><X>-87.96</X><Y>36.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-102.96</X><Y>36.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.68</X><Y>3.9</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7873,7 +7873,7 @@
 <Item class="Part" referent="RBXSCHOOL0582">
 <Properties>
 <string name="Name">CorridorVending1CoffeeReader</string>
-<CoordinateFrame name="CFrame"><X>-87.96</X><Y>12.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-102.96</X><Y>12.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.54</X><Y>2.0</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7888,7 +7888,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0583">
 <Properties>
 <string name="Name">CorridorVending2CoffeeReader</string>
-<CoordinateFrame name="CFrame"><X>-87.96</X><Y>39.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-102.96</X><Y>39.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.54</X><Y>2.0</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7909,7 +7909,7 @@
 <Item class="Part" referent="RBXSCHOOL0585">
 <Properties>
 <string name="Name">CorridorVending1CoffeeRecess</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>6.3</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>6.3</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.038</X><Y>2.86</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7924,7 +7924,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0586">
 <Properties>
 <string name="Name">CorridorVending2CoffeeRecess</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>33.3</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>33.3</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.038</X><Y>2.86</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7945,7 +7945,7 @@
 <Item class="Part" referent="RBXSCHOOL0588">
 <Properties>
 <string name="Name">CorridorVending1CoffeeTray</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>3.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>3.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.472</X><Y>1.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7960,7 +7960,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0589">
 <Properties>
 <string name="Name">CorridorVending2CoffeeTray</string>
-<CoordinateFrame name="CFrame"><X>-91.18</X><Y>30.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-106.18</X><Y>30.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.472</X><Y>1.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -7981,7 +7981,7 @@
 <Item class="Part" referent="RBXSCHOOL0591">
 <Properties>
 <string name="Name">CorridorVending1SnacksBody</string>
-<CoordinateFrame name="CFrame"><X>-81.8</X><Y>8.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.8</X><Y>8.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>7.0</X><Y>13.0</Y><Z>3.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -7996,7 +7996,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0592">
 <Properties>
 <string name="Name">CorridorVending2SnacksBody</string>
-<CoordinateFrame name="CFrame"><X>-81.8</X><Y>35.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.8</X><Y>35.9</Y><Z>-989.0</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>7.0</X><Y>13.0</Y><Z>3.4</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">true</bool>
@@ -8017,7 +8017,7 @@
 <Item class="Part" referent="RBXSCHOOL0594">
 <Properties>
 <string name="Name">CorridorVending1SnacksGlass</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>9.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>9.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>7.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8032,7 +8032,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0595">
 <Properties>
 <string name="Name">CorridorVending2SnacksGlass</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>36.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>36.94</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>7.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8053,7 +8053,7 @@
 <Item class="Part" referent="RBXSCHOOL0597">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem1</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8068,7 +8068,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0598">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem2</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8083,7 +8083,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0599">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem3</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8098,7 +8098,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0600">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem4</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>13.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8113,7 +8113,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0601">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem5</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8128,7 +8128,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0602">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem6</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8143,7 +8143,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0603">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem7</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8158,7 +8158,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0604">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem8</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>11.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8173,7 +8173,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0605">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem9</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8188,7 +8188,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0606">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem10</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8203,7 +8203,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0607">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem11</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8218,7 +8218,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0608">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem12</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>9.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8233,7 +8233,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0609">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem13</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8248,7 +8248,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0610">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem14</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8263,7 +8263,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0611">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem15</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8278,7 +8278,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0612">
 <Properties>
 <string name="Name">CorridorVending1SnacksItem16</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>7.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8293,7 +8293,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0613">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem1</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8308,7 +8308,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0614">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem2</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8323,7 +8323,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0615">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem3</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8338,7 +8338,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0616">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem4</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>40.32</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8353,7 +8353,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0617">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem5</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8368,7 +8368,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0618">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem6</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8383,7 +8383,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0619">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem7</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8398,7 +8398,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0620">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem8</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>38.37</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8413,7 +8413,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0621">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem9</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8428,7 +8428,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0622">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem10</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8443,7 +8443,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0623">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem11</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8458,7 +8458,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0624">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem12</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>36.42</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8473,7 +8473,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0625">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem13</string>
-<CoordinateFrame name="CFrame"><X>-84.407</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-99.407</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8488,7 +8488,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0626">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem14</string>
-<CoordinateFrame name="CFrame"><X>-83.322</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-98.322</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8503,7 +8503,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0627">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem15</string>
-<CoordinateFrame name="CFrame"><X>-82.237</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.237</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8518,7 +8518,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0628">
 <Properties>
 <string name="Name">CorridorVending2SnacksItem16</string>
-<CoordinateFrame name="CFrame"><X>-81.153</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-96.153</X><Y>34.47</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.1</X><Y>1.7</Y><Z>0.9</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8539,7 +8539,7 @@
 <Item class="Part" referent="RBXSCHOOL0630">
 <Properties>
 <string name="Name">CorridorVending1SnacksPad</string>
-<CoordinateFrame name="CFrame"><X>-79.56</X><Y>9.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-94.56</X><Y>9.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.68</X><Y>3.9</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8554,7 +8554,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0631">
 <Properties>
 <string name="Name">CorridorVending2SnacksPad</string>
-<CoordinateFrame name="CFrame"><X>-79.56</X><Y>36.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-94.56</X><Y>36.55</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.68</X><Y>3.9</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8575,7 +8575,7 @@
 <Item class="Part" referent="RBXSCHOOL0633">
 <Properties>
 <string name="Name">CorridorVending1SnacksReader</string>
-<CoordinateFrame name="CFrame"><X>-79.56</X><Y>12.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-94.56</X><Y>12.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.54</X><Y>2.0</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8590,7 +8590,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0634">
 <Properties>
 <string name="Name">CorridorVending2SnacksReader</string>
-<CoordinateFrame name="CFrame"><X>-79.56</X><Y>39.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-94.56</X><Y>39.8</Y><Z>-990.768</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>1.54</X><Y>2.0</Y><Z>0.2</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8611,7 +8611,7 @@
 <Item class="Part" referent="RBXSCHOOL0636">
 <Properties>
 <string name="Name">CorridorVending1SnacksShelf1</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>11.92</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>11.92</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8626,7 +8626,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0637">
 <Properties>
 <string name="Name">CorridorVending1SnacksShelf2</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>9.97</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>9.97</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8641,7 +8641,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0638">
 <Properties>
 <string name="Name">CorridorVending1SnacksShelf3</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>8.02</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>8.02</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8656,7 +8656,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0639">
 <Properties>
 <string name="Name">CorridorVending1SnacksShelf4</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>6.07</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>6.07</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8671,7 +8671,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0640">
 <Properties>
 <string name="Name">CorridorVending2SnacksShelf1</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>38.92</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>38.92</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8686,7 +8686,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0641">
 <Properties>
 <string name="Name">CorridorVending2SnacksShelf2</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>36.97</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>36.97</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8701,7 +8701,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0642">
 <Properties>
 <string name="Name">CorridorVending2SnacksShelf3</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>35.02</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>35.02</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8716,7 +8716,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0643">
 <Properties>
 <string name="Name">CorridorVending2SnacksShelf4</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>33.07</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>33.07</Y><Z>-990.36</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.2</Y><Z>1.7</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8737,7 +8737,7 @@
 <Item class="Part" referent="RBXSCHOOL0645">
 <Properties>
 <string name="Name">CorridorVending1SnacksStrip1</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>11.42</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>11.42</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8752,7 +8752,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0646">
 <Properties>
 <string name="Name">CorridorVending1SnacksStrip2</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>9.47</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>9.47</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8767,7 +8767,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0647">
 <Properties>
 <string name="Name">CorridorVending1SnacksStrip3</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>7.52</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>7.52</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8782,7 +8782,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0648">
 <Properties>
 <string name="Name">CorridorVending1SnacksStrip4</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>5.57</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>5.57</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8797,7 +8797,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0649">
 <Properties>
 <string name="Name">CorridorVending2SnacksStrip1</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>38.42</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>38.42</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8812,7 +8812,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0650">
 <Properties>
 <string name="Name">CorridorVending2SnacksStrip2</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>36.47</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>36.47</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8827,7 +8827,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0651">
 <Properties>
 <string name="Name">CorridorVending2SnacksStrip3</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>34.52</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>34.52</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8842,7 +8842,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0652">
 <Properties>
 <string name="Name">CorridorVending2SnacksStrip4</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>32.57</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>32.57</Y><Z>-990.87</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>4.34</X><Y>0.7</Y><Z>0.15</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8863,7 +8863,7 @@
 <Item class="Part" referent="RBXSCHOOL0654">
 <Properties>
 <string name="Name">CorridorVending1SnacksTray</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>3.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>3.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.472</X><Y>1.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>
@@ -8878,7 +8878,7 @@
 </Item><Item class="Part" referent="RBXSCHOOL0655">
 <Properties>
 <string name="Name">CorridorVending2SnacksTray</string>
-<CoordinateFrame name="CFrame"><X>-82.78</X><Y>30.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
+<CoordinateFrame name="CFrame"><X>-97.78</X><Y>30.96</Y><Z>-990.7</Z><R00>-1.0</R00><R01>0</R01><R02>1.2246467991473532e-16</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.2246467991473532e-16</R20><R21>0</R21><R22>-1.0</R22></CoordinateFrame>
 <Vector3 name="size"><X>3.472</X><Y>1.8</Y><Z>0.25</Z></Vector3>
 <bool name="Anchored">true</bool>
 <bool name="CanCollide">false</bool>

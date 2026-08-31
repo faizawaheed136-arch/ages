@@ -1842,7 +1842,18 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 		-- *back* rather than the locker wall on purpose: the lockers are where the corridor
 		-- system stands people, and a cabinet in that run would be somewhere to be cornered
 		-- against rather than somewhere to buy a drink.
-		buildVendingPair(parent, `CorridorVending{floor}`, at, half - 34, y + 0.2, corridorZ + CORRIDOR_W / 2 - 2, 180)
+		-- **Between two doors, not in front of one.**
+		--
+		-- This stood at a hand-picked 34 studs in from the corner, which was a blank piece of wall
+		-- until the two-rank split moved every room door. It then sat two studs off the cooking and
+		-- computer-lab doorways -- a 7 by 13 machine parked in a 13-stud opening, on both floors.
+		--
+		-- Doors sit seven studs in from each room's left edge, so the midpoint between two adjacent
+		-- doors is the widest blank stretch the wall has. Derived, so it follows the rooms if they
+		-- move again.
+		local roomPitch = (W - WALL_T * 2 - BUILDING.RoomGapStuds * (BUILDING.RoomsPerFloor - 1)) / BUILDING.RoomsPerFloor + BUILDING.RoomGapStuds
+		local vendX = -half + WALL_T + 7 + roomPitch * (BUILDING.RoomsPerFloor - 1.5)
+		buildVendingPair(parent, `CorridorVending{floor}`, at, vendX, y + 0.2, corridorZ + CORRIDOR_W / 2 - 2, 180)
 	end
 end
 
