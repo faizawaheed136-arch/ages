@@ -4,6 +4,132 @@ _No entry yet. Append yours at the top, newest first._
 
 ---
 
+## 2026-08-31 — read the first section before you touch build_street.py
+
+Branch `agent-c`, level with `main` at `3460156`. All six gates clean.
+
+### **Street.rbxmx is written by both of us, and the order matters. This one is for A.**
+
+`build_street.py` (yours) writes the street from `world_plan`, including the map's own school
+model and the `Place_*` points at their planned coordinates. `gen_school.py` (mine) then does two
+post-passes over the same file: `strip_old_school()` removes the map's school so v1's building is
+not standing inside it, and `relocate_place_points()` moves `school`, `classroom`, `cafeteria` and
+`science_lab` into the rooms of the building that actually got built.
+
+Run them the other way round and the second undoes the first:
+
+    Street.rbxmx   252 KB -> 405 KB      (the old school model comes back)
+    Place_school   (-536, -292) -> (-238, 151)
+
+and **every gate still passes**, because each asset is internally consistent — they are just
+consistent with different plans. Anything sending a player "to school" then delivers them to a
+building that is no longer there. Nothing errors.
+
+Not hypothetical: I did it to myself on 2026-08-31 while auditing whether the assets were still in
+sync with the generators, and the only reason I caught it is that I compared the regenerated file
+against the committed one instead of trusting a green gate.
+
+**So: run `python tools/rebuild.py` rather than the generators by hand.** It runs all seven in the
+one order that works — town, city, street, school, ProperSchool, academy, mapshapes — then all six
+gates. A full ordered rebuild reproduces every committed asset byte for byte; that is checked.
+
+If you would rather I stopped writing into your file at all, say so and I will move the two
+post-passes elsewhere. It is your asset and I am not comfortable with the arrangement either.
+
+### Your three commits sat unmerged for two days
+
+`7f020d7`, `a68540e`, `6bd80fb` were in neither `main` nor `agent-c` until `5bfde2c`. Everything I
+built for several sessions sat on a tree a day out of date and nothing complained — a stale tree
+is internally consistent and passes every gate. I now check `merge-base --is-ancestor
+origin/agent-a HEAD` at the start of a session.
+
+Twelve conflicts. Most wanted the union; three needed a decision:
+
+- **Music** — we both wrote it. Yours wins whole: service, UI, config block and the `rhythm` verb.
+  My `keep` verb and its four-lane implementation are gone. Line-merging two implementations of
+  one verb makes rubble.
+- **PE** — we both added `id = "pe"`, and Curriculum refuses the duplicate at load. Both lessons
+  survive: your 3v3 match keeps `pe`, my drill meter became `gym`, which is what `/gym` and
+  StatsUI's `"gym" | "drill"` sweep sources already called it.
+- **The lab** — your `buildRoom` places it at `science_lab` rather than the forecourt, which is
+  right. But your side of that hunk has no `School.Build(at)` in it, so taking it whole would have
+  quietly stopped raising the building at all. Kept both.
+
+Two silent clobbers the gates caught: a second `Config.School.Music` assignment further down the
+file was replacing yours wholesale, so MusicService died on a nil `CountInSecondsByLevel`; and
+init.client still fired a `RequestMusicHit` remote that no longer exists.
+
+Also fixed ProperSchool's plinth, which overlapped itself at all four corners — found by **your**
+new coplanar check in `check_city.py`. It earns its keep.
+
+### v1's school moved, and `SITE` is absolute now
+
+It is at **(-536, -292)**, 534 studs south-west of town, with `Place_school` following it. It had
+been baked at (-38, -1138) — 1138 studs into bare baseplate — which is why the owner was seeing a
+different world from you: your tree has no `SITE` line, so your bake stood near town and mine
+stood alone in a field, and Studio shows the baked asset before anyone presses Play.
+
+`SITE` is **absolute**, never an offset from the marker. As an offset it compounded, because the
+bake then writes the marker onto the building: the school walked 618 by -767 studs every run and
+nothing complained. Two consecutive bakes now hash identically.
+
+**It does not fit the plot you reserved.** Your plot is 122 x 114; v1's complex is 401 x 266 —
+228 of main building, 101 of pool hall west, 72 of gym east — inside a 460 x 268 campus plate. No
+offset saves it; the best one tried still leaves 159 overlapping parts. Putting it back on the
+marker is what made `check_city` report seventeen buildings with a road through them. The current
+site is a holding position: settling it is either you widening the plot or this building losing
+its wings, and that is the owner's call.
+
+### A second school: the Gakuran academy
+
+New, unrelated to v1 — the owner asked for a dark, moody interactive showcase school. It is now
+**in AGES** at (-240, -732), 400 x 448 x 60, mounted as `Workspace.Academy`.
+
+- `src/showcase/world/Plan.luau` is the plan **as data**, and that is load-bearing rather than
+  tidy: every dimension derives from the band widths, and because it is data it can be executed.
+  The edge indices were off by one on the first run, which put the south rooms at z -72 and
+  overlapped twelve of them. Caught before a single part was laid.
+- `src/showcase/{server,client,shared}/` — lockers and uniform changing, a period/duty-chime loop,
+  hinged doors, a sparring arena with camera work, gym equipment. All found by CollectionService
+  tag, so nothing is wired by path.
+- **Lighting.** Its look is the inverse of AGES's — 3 / -0.45 / 0.18 against 2.1 / 0.1 / 0.75 —
+  and there is one Lighting service per place. `LightingZone.luau` grades **per client** on a box
+  test, so the town stays bright for everyone outside it. It captures AGES's own values at
+  startup rather than hardcoding them, so it cannot override a change you make to the town.
+- Its assets live in `assets/showcase/`, not `assets/`, so your "every `assets/*.rbxmx` is mounted
+  in one of the two AGES places" check keeps meaning what it says. Its glob is not recursive.
+
+Site chosen by measurement: with every mounted asset counted as an obstacle (both parked schools
+included), AGES has nothing closer. Even a 292 x 332 cannot get within 484 studs of the marker.
+
+### New tools
+
+- **`tools/check_routes.py`** — voxelises a baked school, floods it from the front door, reports
+  the narrowest point on every route and anything fouling a stair tread. Written after the fourth
+  time geometry was individually correct and collectively unwalkable. It found live bugs
+  immediately: vending machines two studs off two doorways, and lobby furniture standing on the
+  bottom six treads.
+- **`tools/check_showcase.py`** — gates the academy, and checks **geometry rather than the absence
+  of an error**: 280 parts across the expected extent. This repo has already shipped a bake that
+  wrote zero parts and reported success, so "it ran" is not evidence.
+- **`tools/rebuild.py`** — see the first section.
+
+### The repo moved
+
+`C:\Users\saabi\GitHub\ages`, out of iCloudDrive — the owner switched Apple accounts and iCloud
+would not adopt the old folder while it still held files, and a git repo inside a sync engine is a
+corruption hazard anyway. Nothing hardcodes the old path. Irrelevant to you on the Mac, except
+that paths in older entries of this file are now stale.
+
+### One thing I want from you
+
+**Push more often, or say where you are working.** Your last commit is 2026-08-29 16:38. If you
+have done anything since, it is not on `origin` and not in the owner's iCloud — I checked both
+today. I cannot see a Mac working tree, and the owner has now twice believed we were out of sync
+when the truth was that there was nothing to sync.
+
+---
+
 ## 2026-08-29 (later) — the timetable is finished, and the school is a building
 
 Branch `agent-c`. Gate: **all clean** — 133 server modules, 49 client modules, both places
