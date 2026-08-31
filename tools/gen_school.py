@@ -66,6 +66,25 @@ import rbxmx  # noqa: E402
 LUAU = Path.home() / ".aftman/tool-storage/luau" / ("luau.exe" if sys.platform == "win32" else "luau")
 OUT = ROOT / "assets" / "School.rbxmx"
 
+# Where the building actually got put, filled in by record(). Module level because the place
+# points are moved from __main__, which cannot see record()'s locals -- reaching for them there
+# raised NameError *after* the asset had already been written, so the bake looked like it had
+# worked and the place points silently never moved.
+_site: tuple[float, float, float] | None = None
+
+# **Where the school stands, relative to the map's own marker.**
+#
+# The site comes from `Place_school` in Street.rbxmx, which is Agent A's file -- so the school
+# is offset from that marker here rather than by editing their street. The marker still says
+# where the school belongs in the road network; this says how far the campus sits back from it.
+#
+# Chosen by surveying every asset's bounding box on a 20-stud grid: the school is 460 x 428 and
+# this puts it at (130, -800) with 240 studs of open ground in every direction, 739 from the
+# town centre. It was wedged among the town buildings before, which is most of why the exterior
+# never had room to be seen. `relocate_place_points` below moves the school's own place points
+# into the rooms of the building that actually got built, so the two cannot disagree.
+SITE_OFFSET = (786.0, 0.0, -429.0)
+
 # Which fittings get a real light, and how strong. One in LIGHT_EVERY of the parts whose name
 # matches LIT_NAMES, which works out at roughly a dozen for the whole building.
 #
@@ -77,9 +96,14 @@ OUT = ROOT / "assets" / "School.rbxmx"
 # light at all -- Neon glows but does not illuminate, so the building got *darker* the moment
 # the strips were replaced by a denser grid. Kept in the list because the copy still builds them.
 LIT_NAMES = ("CeilPanel", "LobbyPanel", "CeilStrip", "CorridorLight", "LobbyBanner", "Lantern")
-LIGHT_EVERY = 3
-LIGHT_RANGE = 62
-LIGHT_BRIGHTNESS = 1.4
+# Every second fitting rather than every third: more, weaker, closer-spaced lights give an even
+# wash, where a few strong ones give hot spots with shadow between them.
+LIGHT_EVERY = 2
+# 30, down from 62. A 62-stud range in a 44-stud hall means every fitting reaches every other
+# one and then some -- thirty-two of them stacked and the whole interior blew out to flat white.
+# A ceiling light should light the floor under it, not the entire building.
+LIGHT_RANGE = 30
+LIGHT_BRIGHTNESS = 0.65
 LIGHT_COLOR = (255, 250, 235)
 SCRATCH = ROOT / "build"
 
@@ -354,6 +378,9 @@ def record() -> tuple[list[dict], list[dict]]:
         lines.append(f"AGES_SOURCES[{_lua_string(rel)}] = {_lua_string((ROOT / rel).read_text(encoding='utf-8'))}")
         lines.append(f"table.insert(AGES_MANIFEST, {_lua_string(rel)})")
     px, py, pz = school_place_point()
+    px, py, pz = px + SITE_OFFSET[0], py + SITE_OFFSET[1], pz + SITE_OFFSET[2]
+    global _site
+    _site = (px, py, pz)
     print(f"school place point: ({px:.1f}, {py:.1f}, {pz:.1f})")
     recorder = (RECORDER.replace("SCHOOL_X", repr(px))
                         .replace("SCHOOL_Y", repr(py))
@@ -529,7 +556,7 @@ RELOCATE = {
 }
 
 
-def relocate_place_points(anchors: list[dict]) -> None:
+def relocate_place_points(anchors: list[dict], site: tuple[float, float, float] | None = None) -> None:
     from xml.etree import ElementTree as ET
     import importlib.util
 
@@ -553,6 +580,23 @@ def relocate_place_points(anchors: list[dict]) -> None:
         except Exception:
             continue
         pid = attrs.get("PlaceId")
+
+        # **Place_school moves with the building.**
+        #
+        # The room points below are relocated into the rooms, but the school's own point was
+        # left where the map put it -- and with SITE_OFFSET applied it no longer marks the
+        # school. It marked bare ground, so anything sending a player "to school" would have
+        # arrived in an empty field with the building half a map away. Nothing errors; the
+        # player simply ends up nowhere.
+        if pid == "school" and site is not None:
+            cf = props.find("CoordinateFrame[@name='CFrame']")
+            if cf is not None:
+                cf.find("X").text = f"{site[0]:.4f}"
+                cf.find("Y").text = f"{site[1]:.4f}"
+                cf.find("Z").text = f"{site[2]:.4f}"
+                moved.append("school -> the building")
+            continue
+
         room = RELOCATE.get(pid)
         if room is None or room not in by_id:
             continue
@@ -622,6 +666,6 @@ if __name__ == "__main__":
         print("  materials with no token mapping (fell back to smooth plastic): "
               + ", ".join(sorted(_unmapped)))
     print("moving the map's school place points into the new rooms:")
-    relocate_place_points(anchors)
+    relocate_place_points(anchors, _site)
     print("stripping the map's own school:")
     strip_old_school()

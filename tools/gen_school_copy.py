@@ -97,9 +97,14 @@ COPY_OFFSET = (246.0, 0.0, -471.0)
 # light at all -- Neon glows but does not illuminate, so the building got *darker* the moment
 # the strips were replaced by a denser grid. Kept in the list because the copy still builds them.
 LIT_NAMES = ("CeilPanel", "LobbyPanel", "CeilStrip", "CorridorLight", "LobbyBanner", "Lantern")
-LIGHT_EVERY = 3
-LIGHT_RANGE = 62
-LIGHT_BRIGHTNESS = 1.4
+# Every second fitting rather than every third: more, weaker, closer-spaced lights give an even
+# wash, where a few strong ones give hot spots with shadow between them.
+LIGHT_EVERY = 2
+# 30, down from 62. A 62-stud range in a 44-stud hall means every fitting reaches every other
+# one and then some -- thirty-two of them stacked and the whole interior blew out to flat white.
+# A ceiling light should light the floor under it, not the entire building.
+LIGHT_RANGE = 30
+LIGHT_BRIGHTNESS = 0.65
 LIGHT_COLOR = (255, 250, 235)
 SCRATCH = ROOT / "build"
 

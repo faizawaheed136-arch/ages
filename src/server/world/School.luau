@@ -79,8 +79,14 @@ local LABEL_DIST = BUILDING.LabelMaxDistanceStuds
 --
 -- White, cool grey and one blue, which is what the reference is: a modern school reads as
 -- bright and low-contrast, and every accent in it is the same blue doing different jobs.
-local WHITE = Color3.fromRGB(242, 243, 246)
-local OFF_WHITE = Color3.fromRGB(228, 230, 235)
+-- **Pale lilac-grey, not white.**
+--
+-- The reference's walls are a soft lilac; ours were within thirteen points of pure white on
+-- every channel. Under any exposure at all a near-white wall next to a Neon ceiling has nowhere
+-- left to go and clips to flat white -- which is what "way too bright" actually was. It was not
+-- only the lights: it was a surface with no headroom above it.
+local WHITE = Color3.fromRGB(224, 222, 234)
+local OFF_WHITE = Color3.fromRGB(210, 208, 222)
 local TILE = Color3.fromRGB(232, 232, 234)
 local CONCRETE = Color3.fromRGB(176, 178, 182)
 local BLUE = Color3.fromRGB(58, 122, 206)
@@ -1754,6 +1760,18 @@ local function buildCorridors(parent: Instance, at: (number, number, number) -> 
 					Vector3.new(3.5, FLOOR_H - SLAB, 3.5),
 					{ color = OFF_WHITE, material = Enum.Material.Concrete, collide = true }
 				)
+				-- The blue stripe up each column. Every column in the reference carries one, and
+				-- it is the detail that ties the columns to the floor bands and the door frames
+				-- -- without it they are just grey posts and the blue reads as unrelated trim.
+				for face = -1, 1, 2 do
+					Kit.Block(
+						parent,
+						`HallColumnStripe{floor}_{index}_{side}_{face}`,
+						at(-half + W * ((index - 0.5) / 8) + face * 1.9, y + (FLOOR_H - SLAB) / 2, corridorZ + side * (CORRIDOR_W / 2 - 7)),
+						Vector3.new(0.4, FLOOR_H - SLAB, 2.2),
+						{ color = BLUE }
+					).CastShadow = false
+				end
 			end
 		end
 

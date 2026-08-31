@@ -26,8 +26,8 @@
         "GlobalShadows": true,
         "ClockTime": 15.5,
         "GeographicLatitude": 41.7,
-        "Brightness": 2.4,
-        "ExposureCompensation": 0.42,
+        "Brightness": 2.1,
+        "ExposureCompensation": 0.1,
         "Ambient": [
           0.243,
           0.247,
@@ -38,7 +38,7 @@
           0.43921,
           0.47843
         ],
-        "EnvironmentDiffuseScale": 1,
+        "EnvironmentDiffuseScale": 0.75,
         "EnvironmentSpecularScale": 0.85,
         "FogEnd": 4000
       },
