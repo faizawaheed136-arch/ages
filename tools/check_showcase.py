@@ -127,10 +127,13 @@ for _, p in recorded do
 	end
 end
 print(("EXTENT %g %g %g %g %g %g"):format(minx, maxx, miny, maxy, minz, maxz))
+-- What the plan says it should be, so the assertion below derives instead of hardcoding and
+-- cannot go stale the next time the footprint changes. It already did, once.
+print(("EXPECT %g %g %g"):format(Plan.WidthStuds, Plan.DepthStuds, Plan.RoofStuds + Plan.LanternStuds))
 """
 
 
-def run_shell() -> tuple[int, list[float]]:
+def run_shell() -> tuple[int, list[float], list[float]]:
     plan = (SRC / "world/Plan.luau").read_text(encoding="utf-8").replace("\nreturn Plan\n", "\n")
     kit = (SRC / "world/Kit.luau").read_text(encoding="utf-8").replace("\nreturn Kit\n", "\n")
     props = (SRC / "world/Props.luau").read_text(encoding="utf-8").replace("\nreturn Props\n", "\n")
@@ -152,14 +155,16 @@ def run_shell() -> tuple[int, list[float]]:
     r = subprocess.run([str(LUAU), str(script)], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     if r.returncode != 0:
         print("        " + (r.stderr.strip().splitlines() or ["failed"])[0])
-        return 0, []
-    parts, extent = 0, []
+        return 0, [], []
+    parts, extent, expect = 0, [], []
     for line in r.stdout.splitlines():
         if line.startswith("PARTS "):
             parts = int(line.split()[1])
         elif line.startswith("EXTENT "):
             extent = [float(v) for v in line.split()[1:]]
-    return parts, extent
+        elif line.startswith("EXPECT "):
+            expect = [float(v) for v in line.split()[1:]]
+    return parts, extent, expect
 
 
 def check_plan_and_shell() -> None:
@@ -168,16 +173,31 @@ def check_plan_and_shell() -> None:
     asserts = r"""
 local out = {}
 local function t(name, cond) table.insert(out, (cond and "ok " or "no ") .. name) end
-local E = Plan.Edge
-t("bands sum to the footprint", Plan.WidthStuds == 400 and Plan.DepthStuds == 448)
+local E, ZE = Plan.Edge, Plan.ZEdge
+
+t("bands sum to 400 x 340", Plan.WidthStuds == 400 and Plan.DepthStuds == 340)
 t("edge lists close on the footprint", Plan.X[#Plan.X] == Plan.WidthStuds and Plan.Z[#Plan.Z] == Plan.DepthStuds)
-t("corridor is 24 wide", Plan.Z[E.CorridorInner] - Plan.Z[E.BandInner] == Plan.CorridorStuds)
-t("corridor runs 240 unbroken", Plan.X[E.CorridorFar] - Plan.X[E.BandInner] == 240)
-t("courtyard is square", Plan.X[E.CourtFar] - Plan.X[E.CourtNear] == Plan.Z[E.CourtFar] - Plan.Z[E.CourtNear])
-t("ceiling clears a jump (16 > 12.2)", Plan.ClearStuds > 12.2)
-t("stair climbs exactly one storey", math.abs(Plan.StairTreads * Plan.StairRiserStuds - Plan.StoreyStuds) < 1e-9)
+t("gallery is 28 wide", Plan.X[E.GalleryInner] - Plan.X[E.RoomInner] == Plan.GalleryStuds)
+t("atrium is square in plan", Plan.X[E.VoidFar] - Plan.X[E.VoidNear] == Plan.Z[ZE.AtriumBack] - Plan.Z[ZE.GardenBack])
+t("garden is 160 x 140, open to the south", Plan.X[E.VoidFar] - Plan.X[E.VoidNear] == 160 and Plan.Z[ZE.GardenBack] == 140)
+t("both clear heights beat the 12.2 jump crown", Plan.GroundClearStuds > 12.2 and Plan.UpperClearStuds > 12.2)
+t("ground floor is taller than the upper", Plan.GroundClearStuds > Plan.UpperClearStuds)
+t("roof 48, lantern above the parapet", Plan.RoofStuds == 48 and Plan.LanternStuds > 0)
+t("gym is one volume through both storeys", Plan.GymClearStuds == Plan.RoofStuds - Plan.SlabStuds)
+
+-- The stair climbs FLOOR TO FLOOR, not clear height. Getting that wrong lands it a slab short
+-- of its own landing, which is a bug you find by walking into it.
+t("stair rise == the ground storey", math.abs(Plan.StairTreads * Plan.StairRiserStuds - Plan.GroundStoreyStuds) < 1e-9)
 t("stair riser is walkable (< 2)", Plan.StairRiserStuds < 2)
-t("stair run fits its band", Plan.StairTreads * Plan.StairGoingStuds < Plan.BandStuds)
+t("stair run fits inside the atrium", Plan.StairRunStuds() < Plan.AtriumStuds)
+t("stair is wide enough to sit on and climb", Plan.StairWidthStuds >= 24)
+t("seating tiers are deeper than the walking going", Plan.StairTierGoingStuds > Plan.StairGoingStuds)
+
+local bridges = Plan.Bridges()
+t("two bridges, wing to wing", #bridges == 2
+	and bridges[1].X1 == Plan.X[E.GalleryInner] and bridges[1].X2 == Plan.X[E.EdgeFar])
+t("bridges do not overlap each other", bridges[2].Z1 > bridges[1].Z2)
+
 local rooms, bad, outside = Plan.Rooms(), 0, 0
 for i, a in rooms do
 	if a.X1 < 0 or a.Z1 < 0 or a.X2 > Plan.WidthStuds or a.Z2 > Plan.DepthStuds then outside += 1 end
@@ -186,8 +206,14 @@ for i, a in rooms do
 end
 t("no room overlaps another on its floor", bad == 0)
 t("every room is inside the footprint", outside == 0)
-local gym = Plan.Gym()
-t("gym clears both side bands", gym.X1 > Plan.X[E.BandInner] and gym.X2 < Plan.X[E.CorridorFar])
+
+local gym, cafe = Plan.Gym(), Plan.Cafeteria()
+t("gym and cafeteria are in opposite wings",
+	cafe.X2 <= Plan.X[E.VoidNear] and gym.X1 >= Plan.X[E.VoidFar])
+local want = { ["Art Studio"] = false, ["Science Lab"] = false, Math = false, Kitchen = false }
+for _, r in rooms do if want[r.Label] ~= nil then want[r.Label] = true end end
+for label, found in want do t("programme has " .. label, found) end
+
 for _, line in out do print("ASSERT " .. line) end
 """
     script = Path(os.environ.get("TEMP", "/tmp")) / "showcase_plan.luau"
@@ -202,15 +228,20 @@ for _, line in out do print("ASSERT " .. line) end
             report(name, state == "ok ")
 
     print("\n3. The shell lays real geometry")
-    parts, extent = run_shell()
+    parts, extent, expect = run_shell()
     report("shell laid parts", parts > 0, f"{parts} parts")
-    if extent:
+    if extent and expect:
         w, d, h = extent[1] - extent[0], extent[5] - extent[4], extent[3] - extent[2]
-        # The ground apron is 160 wider than the building on each axis; the building itself is
-        # 400 x 448 x 60. Checking the extent rather than the part count is what catches a shell
-        # that lays plenty of parts in the wrong place.
-        report("extent matches the plan + apron", abs(w - 560) < 1 and abs(d - 608) < 1, f"{w:g} x {d:g}")
-        report("stands 60 studs to the roof deck", abs(h - 62) < 3, f"{h:g} tall")
+        # The ground apron overhangs the footprint by 100 studs on each axis. Both numbers come
+        # from the plan rather than from this file, so a footprint change moves them together.
+        want_w, want_d, want_h = expect[0] + 200, expect[1] + 200, expect[2]
+        report("extent matches the plan plus its apron", abs(w - want_w) < 1 and abs(d - want_d) < 1,
+               f"{w:g} x {d:g}, wanted {want_w:g} x {want_d:g}")
+        # Ground plate sits 2 below zero and the tallest thing is the lantern, so the total is a
+        # little over the plan's height. Loose on purpose: this catches a building that failed to
+        # rise, not one that is a stud out.
+        report("stands to roughly the plan's full height", want_h - 4 < h < want_h + 12,
+               f"{h:g} tall, plan says {want_h:g}")
 
 
 # ---------------------------------------------------------------- 3b. the props are tagged
