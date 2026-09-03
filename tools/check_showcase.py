@@ -93,6 +93,13 @@ partMeta.__newindex = function(self, key, value)
 end
 
 Instance = { new = function(class) return newPart(class) end }
+
+-- Kit tags and attributes, so the stub has to accept both or the shell errors on the first prop.
+function partMeta.SetAttribute() end
+function partMeta.GetAttribute() return nil end
+game = { GetService = function(_, name)
+	return setmetatable({}, { __index = function() return function() end end })
+end }
 local workspaceFolder = newPart("Workspace")
 workspace = workspaceFolder
 workspace.FindFirstChild = function() return nil end
@@ -126,13 +133,17 @@ print(("EXTENT %g %g %g %g %g %g"):format(minx, maxx, miny, maxy, minz, maxz))
 def run_shell() -> tuple[int, list[float]]:
     plan = (SRC / "world/Plan.luau").read_text(encoding="utf-8").replace("\nreturn Plan\n", "\n")
     kit = (SRC / "world/Kit.luau").read_text(encoding="utf-8").replace("\nreturn Kit\n", "\n")
+    props = (SRC / "world/Props.luau").read_text(encoding="utf-8").replace("\nreturn Props\n", "\n")
+    props = props.replace("local Plan = require(script.Parent.Plan)", "")
+    props = props.replace("local Kit = require(script.Parent.Kit)", "")
     shell = (SRC / "world/Shell.luau").read_text(encoding="utf-8")
     shell = shell.replace("local Plan = require(script.Parent.Plan)", "")
     shell = shell.replace("local Kit = require(script.Parent.Kit)", "")
+    shell = shell.replace("local Props = require(script.Parent.Props)", "")
     shell = shell.replace("\nreturn Shell\n", "\n")
 
     body = "\n".join([
-        plan, kit, shell,
+        plan, kit, props, shell,
         "Shell.Build(Vector3.new(-Plan.WidthStuds / 2, 0, -Plan.DepthStuds / 2))",
     ])
     script = Path(os.environ.get("TEMP", "/tmp")) / "showcase_shell.luau"
@@ -202,6 +213,52 @@ for _, line in out do print("ASSERT " .. line) end
         report("stands 60 studs to the roof deck", abs(h - 62) < 3, f"{h:g} tall")
 
 
+# ---------------------------------------------------------------- 3b. the props are tagged
+def check_props() -> None:
+    """Every interactive system finds its geometry by CollectionService tag, so an untagged bake
+    is a building full of props that do nothing -- with no error anywhere to explain it.
+
+    This reads the **baked asset**, not the source, because that is where the tags have to survive:
+    the recorder has to collect them, the writer has to encode them, and either can drop them
+    silently. It has already happened once -- the stub collected the tags and the print statement
+    that fed the writer did not carry them.
+    """
+    import base64
+    import collections
+    import xml.etree.ElementTree as ET
+
+    print("\n3b. The props carry their tags")
+    asset = ROOT / "assets/showcase/Showcase.rbxmx"
+    if not asset.exists():
+        report("baked asset exists", False, "run tools/gen_showcase.py")
+        return
+
+    tags: collections.Counter = collections.Counter()
+    for item in ET.parse(asset).getroot().iter("Item"):
+        props = item.find("Properties")
+        if props is None:
+            continue
+        blob = props.find("BinaryString[@name='Tags']")
+        if blob is not None and blob.text:
+            for tag in base64.b64decode(blob.text).decode().split("\0"):
+                if tag:
+                    tags[tag] += 1
+
+    # One row per system that binds a tag at Start(). A system whose tag count drops to zero has
+    # nothing to attach to, which is exactly the failure this file exists to catch.
+    expected = {
+        "VendingMachine": 1,
+        "SparringRing": 1,
+        "TargetNode": 1,
+        "ArenaCamera": 1,
+        "LockerDoor": 1,
+        "Wardrobe": 1,
+        "Door": 1,
+    }
+    for tag, least in sorted(expected.items()):
+        report(f"{tag}", tags[tag] >= least, f"{tags[tag]} tagged")
+
+
 # ---------------------------------------------------------------- 4. the place builds
 def check_builds() -> None:
     print("\n4. The place builds")
@@ -216,6 +273,7 @@ def main() -> int:
     print("showcase gate")
     check_compiles()
     check_plan_and_shell()
+    check_props()
     check_builds()
     if failures:
         print(f"\n{len(failures)} CHECK(S) FAILED")

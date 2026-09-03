@@ -78,7 +78,20 @@ partMeta.__newindex = function(self, key, value)
 	end
 end
 Instance = { new = function(class)
-	return setmetatable({ ClassName = class, Name = "", Children = {} }, partMeta)
+	return setmetatable({ ClassName = class, Name = "", Children = {}, Tags = {}, Attrs = {} }, partMeta)
+end }
+
+-- Kit tags and attributes its parts, so the recorder has to keep both -- a stub that swallows
+-- them bakes untagged geometry, and every system finds nothing with no error anywhere.
+function partMeta.SetAttribute(self, key, value) self.Attrs[key] = value end
+function partMeta.GetAttribute(self, key) return self.Attrs[key] end
+local CollectionStub = {
+	AddTag = function(_, part, tag) table.insert(part.Tags, tag) end,
+	GetTagged = function() return {} end,
+}
+game = { GetService = function(_, name)
+	if name == "CollectionService" then return CollectionStub end
+	return setmetatable({}, { __index = function() return function() end end })
 end }
 workspace = setmetatable({ ClassName = "Workspace", Children = {} }, partMeta)
 workspace.FindFirstChild = function() return nil end
@@ -87,8 +100,15 @@ __BODY__
 
 for _, p in recorded do
 	local c, s, col = p.CFrame.Position, p.Size, p.Color
-	print(("PART\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%d\t%d\t%d"):format(
-		p.Name, c.X, c.Y, c.Z, s.X, s.Y, s.Z, col.R, col.G, col.B))
+	-- Tags and attributes come out alongside the geometry. A recorder that drops them bakes
+	-- untagged props, every system finds nothing, and there is no error anywhere to explain it.
+	local attrs = {}
+	for k, v in p.Attrs do
+		table.insert(attrs, k .. "=" .. tostring(v))
+	end
+	print(("PART\t%s\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%d\t%d\t%d\t%s\t%s"):format(
+		p.Name, c.X, c.Y, c.Z, s.X, s.Y, s.Z, col.R, col.G, col.B,
+		table.concat(p.Tags, ","), table.concat(attrs, ",")))
 end
 """
 
@@ -96,13 +116,17 @@ end
 def record() -> list[dict]:
     plan = (SRC / "world/Plan.luau").read_text(encoding="utf-8").replace("\nreturn Plan\n", "\n")
     kit = (SRC / "world/Kit.luau").read_text(encoding="utf-8").replace("\nreturn Kit\n", "\n")
+    props = (SRC / "world/Props.luau").read_text(encoding="utf-8").replace("\nreturn Props\n", "\n")
+    props = props.replace("local Plan = require(script.Parent.Plan)", "")
+    props = props.replace("local Kit = require(script.Parent.Kit)", "")
     shell = (SRC / "world/Shell.luau").read_text(encoding="utf-8")
     shell = shell.replace("local Plan = require(script.Parent.Plan)", "")
     shell = shell.replace("local Kit = require(script.Parent.Kit)", "")
+    shell = shell.replace("local Props = require(script.Parent.Props)", "")
     shell = shell.replace("\nreturn Shell\n", "\n")
 
     body = "\n".join([
-        plan, kit, shell,
+        plan, kit, props, shell,
         # Baked at the origin the starter uses, so the model lands exactly where the runtime
         # build would have put it.
         f"Shell.Build(Vector3.new({SITE[0]} - Plan.WidthStuds / 2, 0, {SITE[1]} - Plan.DepthStuds / 2), {{ Ground = false }})",
@@ -125,6 +149,8 @@ def record() -> list[dict]:
             "c": (float(f[2]), float(f[3]), float(f[4])),
             "s": (float(f[5]), float(f[6]), float(f[7])),
             "rgb": (int(f[8]), int(f[9]), int(f[10])),
+            "tags": [t for t in (f[11] if len(f) > 11 else "").split(",") if t],
+            "attrs": dict(kv.split("=", 1) for kv in (f[12] if len(f) > 12 else "").split(",") if "=" in kv),
         })
     return parts
 
@@ -146,6 +172,8 @@ def main() -> int:
             (cx - sx / 2, cx + sx / 2, cz - sz / 2, cz + sz / 2, cy - sy / 2, cy + sy / 2),
             p["rgb"],
             rbxmx.CONCRETE,
+            tags=p["tags"] or None,
+            attrs=p["attrs"] or None,
         )
     print(f"recorded {len(parts)} parts from Shell.luau")
     print(rbxmx.write(OUT, "Showcase"))

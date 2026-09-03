@@ -20,6 +20,21 @@ if not ok then
 	warn(`[Showcase] the shell failed to build: {err}`)
 end
 
+-- **Always, even when the shell stood down.**
+--
+-- Shell.Build returns early if the baked model is already in the workspace, and the baked model
+-- carries every *static* prop. What it cannot carry is a Seat or a bag on two constraints, so
+-- those are laid here on every boot regardless of which path the shell took.
+local Props = require(ServerScriptService:WaitForChild("ShowcaseWorld"):WaitForChild("Props"))
+local placed, problem = pcall(function()
+	Props.Dynamic(workspace, function(x: number, y: number, z: number)
+		return ORIGIN + Vector3.new(x, y, z)
+	end)
+end)
+if not placed then
+	warn(`[Showcase] the dynamic props failed: {problem}`)
+end
+
 -- Best effort, each in its own pcall: a service that throws should cost its own feature and not
 -- the six that come after it in this list.
 for _, name in { "WardrobeService", "ScheduleService", "DoorService", "ArenaService", "GymService", "VendingService" } do

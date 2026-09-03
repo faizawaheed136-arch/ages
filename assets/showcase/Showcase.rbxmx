@@ -3589,6 +3589,502 @@
 </Item>
 <Item class="Part" referent="SC0225">
 <Properties>
+<string name="Name">Vending1</string>
+<CoordinateFrame name="CFrame"><X>-279.6</X><Y>9.5</Y><Z>-669.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>7.0</X><Y>11.0</Y><Z>3.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VmVuZGluZ01hY2hpbmU=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0226">
+<Properties>
+<string name="Name">VendingFace1</string>
+<CoordinateFrame name="CFrame"><X>-279.6</X><Y>10.5</Y><Z>-670.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.399999999999977</X><Y>7.0</Y><Z>0.2999999999999545</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4284510336</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0227">
+<Properties>
+<string name="Name">Vending2</string>
+<CoordinateFrame name="CFrame"><X>-200.4</X><Y>9.5</Y><Z>-669.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>7.0</X><Y>11.0</Y><Z>3.5</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VmVuZGluZ01hY2hpbmU=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0228">
+<Properties>
+<string name="Name">VendingFace2</string>
+<CoordinateFrame name="CFrame"><X>-200.4</X><Y>10.5</Y><Z>-670.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>5.399999999999977</X><Y>7.0</Y><Z>0.2999999999999545</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4284510336</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0229">
+<Properties>
+<string name="Name">RingFloor</string>
+<CoordinateFrame name="CFrame"><X>-240.0</X><Y>5.0</Y><Z>-574.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>52.0</X><Y>2.0</Y><Z>52.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282399284</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0230">
+<Properties>
+<string name="Name">RingRope1</string>
+<CoordinateFrame name="CFrame"><X>-214.0</X><Y>9.0</Y><Z>-574.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>1.0</Y><Z>55.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">U3BhcnJpbmdSaW5n</BinaryString><BinaryString name="AttributesSerialize">AQAAAAYAAABSaW5nSWQCBQAAAG5vcnRo</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0231">
+<Properties>
+<string name="Name">RingRope2</string>
+<CoordinateFrame name="CFrame"><X>-266.0</X><Y>9.0</Y><Z>-574.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>3.0</X><Y>1.0</Y><Z>55.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">U3BhcnJpbmdSaW5n</BinaryString><BinaryString name="AttributesSerialize">AQAAAAYAAABSaW5nSWQCBQAAAG5vcnRo</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0232">
+<Properties>
+<string name="Name">RingRope3</string>
+<CoordinateFrame name="CFrame"><X>-240.0</X><Y>9.0</Y><Z>-548.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>55.0</X><Y>1.0</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">U3BhcnJpbmdSaW5n</BinaryString><BinaryString name="AttributesSerialize">AQAAAAYAAABSaW5nSWQCBQAAAG5vcnRo</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0233">
+<Properties>
+<string name="Name">RingRope4</string>
+<CoordinateFrame name="CFrame"><X>-240.0</X><Y>9.0</Y><Z>-600.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>55.0</X><Y>1.0</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">U3BhcnJpbmdSaW5n</BinaryString><BinaryString name="AttributesSerialize">AQAAAAYAAABSaW5nSWQCBQAAAG5vcnRo</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0234">
+<Properties>
+<string name="Name">Target1</string>
+<CoordinateFrame name="CFrame"><X>-311.4286</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0235">
+<Properties>
+<string name="Name">Target2</string>
+<CoordinateFrame name="CFrame"><X>-282.8571</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0236">
+<Properties>
+<string name="Name">Target3</string>
+<CoordinateFrame name="CFrame"><X>-254.28570000000002</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.000000000000028</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0237">
+<Properties>
+<string name="Name">Target4</string>
+<CoordinateFrame name="CFrame"><X>-225.7143</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0238">
+<Properties>
+<string name="Name">Target5</string>
+<CoordinateFrame name="CFrame"><X>-197.1429</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0239">
+<Properties>
+<string name="Name">Target6</string>
+<CoordinateFrame name="CFrame"><X>-168.5714</X><Y>13.0</Y><Z>-514.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>6.0</X><Y>6.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286198828</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">VGFyZ2V0Tm9kZQ==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0240">
+<Properties>
+<string name="Name">ArenaVantage</string>
+<CoordinateFrame name="CFrame"><X>-240.0</X><Y>34.0</Y><Z>-628.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>2.0</X><Y>2.0</Y><Z>2.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">QXJlbmFDYW1lcmE=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0241">
+<Properties>
+<string name="Name">Locker0</string>
+<CoordinateFrame name="CFrame"><X>-346.0</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0242">
+<Properties>
+<string name="Name">Locker1</string>
+<CoordinateFrame name="CFrame"><X>-322.4444</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIFAAAAUmlnaHQ=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0243">
+<Properties>
+<string name="Name">Locker2</string>
+<CoordinateFrame name="CFrame"><X>-298.8889</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0244">
+<Properties>
+<string name="Name">Locker3</string>
+<CoordinateFrame name="CFrame"><X>-275.3333</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIFAAAAUmlnaHQ=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0245">
+<Properties>
+<string name="Name">Locker4</string>
+<CoordinateFrame name="CFrame"><X>-251.7778</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0246">
+<Properties>
+<string name="Name">Locker5</string>
+<CoordinateFrame name="CFrame"><X>-228.2222</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIFAAAAUmlnaHQ=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0247">
+<Properties>
+<string name="Name">Locker6</string>
+<CoordinateFrame name="CFrame"><X>-204.6667</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0248">
+<Properties>
+<string name="Name">Locker7</string>
+<CoordinateFrame name="CFrame"><X>-181.1111</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIFAAAAUmlnaHQ=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0249">
+<Properties>
+<string name="Name">Locker8</string>
+<CoordinateFrame name="CFrame"><X>-157.5556</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0250">
+<Properties>
+<string name="Name">Locker9</string>
+<CoordinateFrame name="CFrame"><X>-134.0</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>4.5</X><Y>11.0</Y><Z>2.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280690732</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">TG9ja2VyRG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIFAAAAUmlnaHQ=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0251">
+<Properties>
+<string name="Name">WardrobeBank</string>
+<CoordinateFrame name="CFrame"><X>-356.0</X><Y>9.5</Y><Z>-874.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>10.0</X><Y>11.0</Y><Z>2.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">V2FyZHJvYmU=</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0252">
+<Properties>
+<string name="Name">Door_s1_2</string>
+<CoordinateFrame name="CFrame"><X>-338.0</X><Y>11.0</Y><Z>-876.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>12.0</X><Y>14.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0253">
+<Properties>
+<string name="Name">Door_s1_3</string>
+<CoordinateFrame name="CFrame"><X>-272.6667</X><Y>11.0</Y><Z>-876.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>12.0</X><Y>14.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0254">
+<Properties>
+<string name="Name">Door_s1_4</string>
+<CoordinateFrame name="CFrame"><X>-207.3333</X><Y>11.0</Y><Z>-876.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>12.0</X><Y>14.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0255">
+<Properties>
+<string name="Name">Door_s1_5</string>
+<CoordinateFrame name="CFrame"><X>-142.0</X><Y>11.0</Y><Z>-876.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>12.0</X><Y>14.0</Y><Z>1.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4282138694</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RG9vcg==</BinaryString><BinaryString name="AttributesSerialize">AQAAAAUAAABIaW5nZQIEAAAATGVmdA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC0256">
+<Properties>
 <string name="Name">stair1F1Step1</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>4.7143</Y><Z>-944.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
 <Vector3 name="size"><X>16.0</X><Y>1.4285999999999999</Y><Z>3.0</Z></Vector3>
@@ -3603,7 +4099,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0226">
+<Item class="Part" referent="SC0257">
 <Properties>
 <string name="Name">stair1F1Step2</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>6.1429</Y><Z>-941.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3619,7 +4115,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0227">
+<Item class="Part" referent="SC0258">
 <Properties>
 <string name="Name">stair1F1Step3</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>7.571400000000001</Y><Z>-938.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3635,7 +4131,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0228">
+<Item class="Part" referent="SC0259">
 <Properties>
 <string name="Name">stair1F1Step4</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>9.0</Y><Z>-935.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3651,7 +4147,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0229">
+<Item class="Part" referent="SC0260">
 <Properties>
 <string name="Name">stair1F1Step5</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>10.4286</Y><Z>-932.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3667,7 +4163,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0230">
+<Item class="Part" referent="SC0261">
 <Properties>
 <string name="Name">stair1F1Step6</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>11.8571</Y><Z>-929.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3683,7 +4179,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0231">
+<Item class="Part" referent="SC0262">
 <Properties>
 <string name="Name">stair1F1Step7</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>13.2857</Y><Z>-926.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3699,7 +4195,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0232">
+<Item class="Part" referent="SC0263">
 <Properties>
 <string name="Name">stair1F1Step8</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>14.7143</Y><Z>-923.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3715,7 +4211,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0233">
+<Item class="Part" referent="SC0264">
 <Properties>
 <string name="Name">stair1F1Step9</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>16.1429</Y><Z>-920.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3731,7 +4227,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0234">
+<Item class="Part" referent="SC0265">
 <Properties>
 <string name="Name">stair1F1Step10</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>17.5714</Y><Z>-917.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3747,7 +4243,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0235">
+<Item class="Part" referent="SC0266">
 <Properties>
 <string name="Name">stair1F1Step11</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>19.0</Y><Z>-914.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3763,7 +4259,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0236">
+<Item class="Part" referent="SC0267">
 <Properties>
 <string name="Name">stair1F1Step12</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>20.4286</Y><Z>-911.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3779,7 +4275,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0237">
+<Item class="Part" referent="SC0268">
 <Properties>
 <string name="Name">stair1F1Step13</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>21.8571</Y><Z>-908.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3795,7 +4291,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0238">
+<Item class="Part" referent="SC0269">
 <Properties>
 <string name="Name">stair1F1Step14</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>23.2857</Y><Z>-905.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3811,7 +4307,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0239">
+<Item class="Part" referent="SC0270">
 <Properties>
 <string name="Name">stair1F2Step1</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>24.7143</Y><Z>-944.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3827,7 +4323,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0240">
+<Item class="Part" referent="SC0271">
 <Properties>
 <string name="Name">stair1F2Step2</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>26.1429</Y><Z>-941.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3843,7 +4339,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0241">
+<Item class="Part" referent="SC0272">
 <Properties>
 <string name="Name">stair1F2Step3</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>27.5714</Y><Z>-938.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3859,7 +4355,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0242">
+<Item class="Part" referent="SC0273">
 <Properties>
 <string name="Name">stair1F2Step4</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>29.0</Y><Z>-935.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3875,7 +4371,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0243">
+<Item class="Part" referent="SC0274">
 <Properties>
 <string name="Name">stair1F2Step5</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>30.4286</Y><Z>-932.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3891,7 +4387,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0244">
+<Item class="Part" referent="SC0275">
 <Properties>
 <string name="Name">stair1F2Step6</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>31.857099999999996</Y><Z>-929.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3907,7 +4403,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0245">
+<Item class="Part" referent="SC0276">
 <Properties>
 <string name="Name">stair1F2Step7</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>33.2857</Y><Z>-926.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3923,7 +4419,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0246">
+<Item class="Part" referent="SC0277">
 <Properties>
 <string name="Name">stair1F2Step8</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>34.7143</Y><Z>-923.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3939,7 +4435,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0247">
+<Item class="Part" referent="SC0278">
 <Properties>
 <string name="Name">stair1F2Step9</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>36.1429</Y><Z>-920.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3955,7 +4451,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0248">
+<Item class="Part" referent="SC0279">
 <Properties>
 <string name="Name">stair1F2Step10</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>37.5714</Y><Z>-917.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3971,7 +4467,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0249">
+<Item class="Part" referent="SC0280">
 <Properties>
 <string name="Name">stair1F2Step11</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>39.0</Y><Z>-914.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -3987,7 +4483,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0250">
+<Item class="Part" referent="SC0281">
 <Properties>
 <string name="Name">stair1F2Step12</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>40.4286</Y><Z>-911.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4003,7 +4499,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0251">
+<Item class="Part" referent="SC0282">
 <Properties>
 <string name="Name">stair1F2Step13</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>41.8571</Y><Z>-908.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4019,7 +4515,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0252">
+<Item class="Part" referent="SC0283">
 <Properties>
 <string name="Name">stair1F2Step14</string>
 <CoordinateFrame name="CFrame"><X>-403.3333</X><Y>43.2857</Y><Z>-905.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4035,7 +4531,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0253">
+<Item class="Part" referent="SC0284">
 <Properties>
 <string name="Name">stair2F1Step1</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>4.7143</Y><Z>-944.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4051,7 +4547,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0254">
+<Item class="Part" referent="SC0285">
 <Properties>
 <string name="Name">stair2F1Step2</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>6.1429</Y><Z>-941.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4067,7 +4563,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0255">
+<Item class="Part" referent="SC0286">
 <Properties>
 <string name="Name">stair2F1Step3</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>7.571400000000001</Y><Z>-938.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4083,7 +4579,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0256">
+<Item class="Part" referent="SC0287">
 <Properties>
 <string name="Name">stair2F1Step4</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>9.0</Y><Z>-935.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4099,7 +4595,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0257">
+<Item class="Part" referent="SC0288">
 <Properties>
 <string name="Name">stair2F1Step5</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>10.4286</Y><Z>-932.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4115,7 +4611,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0258">
+<Item class="Part" referent="SC0289">
 <Properties>
 <string name="Name">stair2F1Step6</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>11.8571</Y><Z>-929.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4131,7 +4627,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0259">
+<Item class="Part" referent="SC0290">
 <Properties>
 <string name="Name">stair2F1Step7</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>13.2857</Y><Z>-926.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4147,7 +4643,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0260">
+<Item class="Part" referent="SC0291">
 <Properties>
 <string name="Name">stair2F1Step8</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>14.7143</Y><Z>-923.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4163,7 +4659,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0261">
+<Item class="Part" referent="SC0292">
 <Properties>
 <string name="Name">stair2F1Step9</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>16.1429</Y><Z>-920.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4179,7 +4675,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0262">
+<Item class="Part" referent="SC0293">
 <Properties>
 <string name="Name">stair2F1Step10</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>17.5714</Y><Z>-917.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4195,7 +4691,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0263">
+<Item class="Part" referent="SC0294">
 <Properties>
 <string name="Name">stair2F1Step11</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>19.0</Y><Z>-914.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4211,7 +4707,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0264">
+<Item class="Part" referent="SC0295">
 <Properties>
 <string name="Name">stair2F1Step12</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>20.4286</Y><Z>-911.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4227,7 +4723,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0265">
+<Item class="Part" referent="SC0296">
 <Properties>
 <string name="Name">stair2F1Step13</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>21.8571</Y><Z>-908.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4243,7 +4739,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0266">
+<Item class="Part" referent="SC0297">
 <Properties>
 <string name="Name">stair2F1Step14</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>23.2857</Y><Z>-905.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4259,7 +4755,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0267">
+<Item class="Part" referent="SC0298">
 <Properties>
 <string name="Name">stair2F2Step1</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>24.7143</Y><Z>-944.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4275,7 +4771,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0268">
+<Item class="Part" referent="SC0299">
 <Properties>
 <string name="Name">stair2F2Step2</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>26.1429</Y><Z>-941.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4291,7 +4787,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0269">
+<Item class="Part" referent="SC0300">
 <Properties>
 <string name="Name">stair2F2Step3</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>27.5714</Y><Z>-938.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4307,7 +4803,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0270">
+<Item class="Part" referent="SC0301">
 <Properties>
 <string name="Name">stair2F2Step4</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>29.0</Y><Z>-935.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4323,7 +4819,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0271">
+<Item class="Part" referent="SC0302">
 <Properties>
 <string name="Name">stair2F2Step5</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>30.4286</Y><Z>-932.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4339,7 +4835,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0272">
+<Item class="Part" referent="SC0303">
 <Properties>
 <string name="Name">stair2F2Step6</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>31.857099999999996</Y><Z>-929.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4355,7 +4851,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0273">
+<Item class="Part" referent="SC0304">
 <Properties>
 <string name="Name">stair2F2Step7</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>33.2857</Y><Z>-926.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4371,7 +4867,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0274">
+<Item class="Part" referent="SC0305">
 <Properties>
 <string name="Name">stair2F2Step8</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>34.7143</Y><Z>-923.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4387,7 +4883,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0275">
+<Item class="Part" referent="SC0306">
 <Properties>
 <string name="Name">stair2F2Step9</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>36.1429</Y><Z>-920.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4403,7 +4899,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0276">
+<Item class="Part" referent="SC0307">
 <Properties>
 <string name="Name">stair2F2Step10</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>37.5714</Y><Z>-917.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4419,7 +4915,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0277">
+<Item class="Part" referent="SC0308">
 <Properties>
 <string name="Name">stair2F2Step11</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>39.0</Y><Z>-914.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4435,7 +4931,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0278">
+<Item class="Part" referent="SC0309">
 <Properties>
 <string name="Name">stair2F2Step12</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>40.4286</Y><Z>-911.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4451,7 +4947,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0279">
+<Item class="Part" referent="SC0310">
 <Properties>
 <string name="Name">stair2F2Step13</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>41.8571</Y><Z>-908.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
@@ -4467,7 +4963,7 @@
 </Properties>
 
 </Item>
-<Item class="Part" referent="SC0280">
+<Item class="Part" referent="SC0311">
 <Properties>
 <string name="Name">stair2F2Step14</string>
 <CoordinateFrame name="CFrame"><X>-76.6667</X><Y>43.2857</Y><Z>-905.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>

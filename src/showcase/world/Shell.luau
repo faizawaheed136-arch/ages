@@ -10,6 +10,7 @@
 
 local Plan = require(script.Parent.Plan)
 local Kit = require(script.Parent.Kit)
+local Props = require(script.Parent.Props)
 
 local Shell = {}
 
@@ -251,6 +252,13 @@ function Shell.Build(origin: Vector3, options: Options?): Instance?
 		Vector3.new(gym.X2 - gym.X1, Plan.SlabStuds, gym.Z2 - gym.Z1),
 		DARK
 	)
+
+	-- ---- the props, laid before the stairs so they share the folder and the bake.
+	--
+	-- Static ones only: every tagged Part goes into the asset, so the systems have geometry to
+	-- find the moment Rojo connects rather than only after somebody presses Play. The seats and
+	-- the hanging bags cannot be axis-aligned boxes, so init.server calls Props.Dynamic for them.
+	Props.Static(folder, at)
 
 	-- ---- stairs
 	for _, core in Plan.Stairs() do
