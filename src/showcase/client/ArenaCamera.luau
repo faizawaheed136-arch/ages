@@ -84,11 +84,15 @@ end
 -- Seating
 -- ---------------------------------------------------------------------------------------
 
-local function sit(target: CFrame)
+local function sit(target: CFrame, fov: number?)
 	if seated then
 		return
 	end
 	seated = true
+	-- The caller names the lens. The gym's benches want the wide 78; a classroom desk wants
+	-- something nearer a reading distance, because 78 puts half the room in frame and makes the
+	-- chalkboard tiny. Defaulting keeps every existing caller unchanged.
+	local lens = fov or SEATED_FOV
 
 	-- Start from where the camera already is, so the move reads as a camera travelling rather
 	-- than a cut. Setting Scriptable first and then tweening from a stale value is what produces
@@ -97,7 +101,7 @@ local function sit(target: CFrame)
 	camera.CameraType = Enum.CameraType.Scriptable
 
 	TweenService:Create(base, MOVE_IN, { Value = target }):Play()
-	TweenService:Create(camera, MOVE_IN, { FieldOfView = SEATED_FOV }):Play()
+	TweenService:Create(camera, MOVE_IN, { FieldOfView = lens }):Play()
 end
 
 local function stand()
@@ -130,9 +134,9 @@ end
 -- ---------------------------------------------------------------------------------------
 
 function ArenaCamera.Start()
-	SeatCamera.OnClientEvent:Connect(function(on: boolean, target: CFrame?)
+	SeatCamera.OnClientEvent:Connect(function(on: boolean, target: CFrame?, fov: number?)
 		if on and target ~= nil then
-			sit(target)
+			sit(target, fov)
 		else
 			stand()
 		end

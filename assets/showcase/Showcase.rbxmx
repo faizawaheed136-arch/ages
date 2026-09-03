@@ -24307,5 +24307,2501 @@
 </Properties>
 
 </Item>
+<Item class="Part" referent="SC1520">
+<Properties>
+<string name="Name">Board_w2_1</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>39.0</Y><Z>-893.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1521">
+<Properties>
+<string name="Name">BoardTray_w2_1</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>33.6</Y><Z>-892.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1522">
+<Properties>
+<string name="Name">DeskTop_w2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1523">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1524">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1525">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-869.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1526">
+<Properties>
+<string name="Name">DeskTop_w2_1_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1527">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1528">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1529">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-851.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1530">
+<Properties>
+<string name="Name">DeskTop_w2_1_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1531">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1532">
+<Properties>
+<string name="Name">DeskLeg_w2_1_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1533">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-834.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1534">
+<Properties>
+<string name="Name">DeskTop_w2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1535">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1536">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-871.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1537">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-869.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1538">
+<Properties>
+<string name="Name">DeskTop_w2_1_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1539">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1540">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-853.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1541">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-851.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1542">
+<Properties>
+<string name="Name">DeskTop_w2_1_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1543">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1544">
+<Properties>
+<string name="Name">DeskLeg_w2_1_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-835.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1545">
+<Properties>
+<string name="Name">DeskDrawer_w2_1_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-834.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1546">
+<Properties>
+<string name="Name">Board_w2_2</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>39.0</Y><Z>-820.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1547">
+<Properties>
+<string name="Name">BoardTray_w2_2</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>33.6</Y><Z>-819.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1548">
+<Properties>
+<string name="Name">DeskTop_w2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1549">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1550">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1551">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-796.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1552">
+<Properties>
+<string name="Name">DeskTop_w2_2_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1553">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1554">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1555">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-778.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1556">
+<Properties>
+<string name="Name">DeskTop_w2_2_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1557">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1558">
+<Properties>
+<string name="Name">DeskLeg_w2_2_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1559">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-761.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1560">
+<Properties>
+<string name="Name">DeskTop_w2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1561">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1562">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-798.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1563">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-796.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1564">
+<Properties>
+<string name="Name">DeskTop_w2_2_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1565">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1566">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-780.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1567">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-778.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1568">
+<Properties>
+<string name="Name">DeskTop_w2_2_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1569">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1570">
+<Properties>
+<string name="Name">DeskLeg_w2_2_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-762.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1571">
+<Properties>
+<string name="Name">DeskDrawer_w2_2_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-761.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1572">
+<Properties>
+<string name="Name">Board_w2_3</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>39.0</Y><Z>-747.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1573">
+<Properties>
+<string name="Name">BoardTray_w2_3</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>33.6</Y><Z>-746.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1574">
+<Properties>
+<string name="Name">DeskTop_w2_3_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1575">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1576">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1577">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-723.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1578">
+<Properties>
+<string name="Name">DeskTop_w2_3_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1579">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1580">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1581">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-705.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1582">
+<Properties>
+<string name="Name">DeskTop_w2_3_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1583">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1584">
+<Properties>
+<string name="Name">DeskLeg_w2_3_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1585">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-688.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1586">
+<Properties>
+<string name="Name">DeskTop_w2_3_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1587">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1588">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-725.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1589">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-723.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1590">
+<Properties>
+<string name="Name">DeskTop_w2_3_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1591">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1592">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-707.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1593">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-705.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1594">
+<Properties>
+<string name="Name">DeskTop_w2_3_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1595">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1596">
+<Properties>
+<string name="Name">DeskLeg_w2_3_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-689.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1597">
+<Properties>
+<string name="Name">DeskDrawer_w2_3_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-688.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1598">
+<Properties>
+<string name="Name">Board_w2_4</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>39.0</Y><Z>-674.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1599">
+<Properties>
+<string name="Name">BoardTray_w2_4</string>
+<CoordinateFrame name="CFrame"><X>-398.0</X><Y>33.6</Y><Z>-673.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1600">
+<Properties>
+<string name="Name">DeskTop_w2_4_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1601">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1602">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1603">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_1_1</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-650.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1604">
+<Properties>
+<string name="Name">DeskTop_w2_4_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1605">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1606">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1607">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_1_2</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-632.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1608">
+<Properties>
+<string name="Name">DeskTop_w2_4_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>33.2</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1609">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-421.6</X><Y>31.6</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1610">
+<Properties>
+<string name="Name">DeskLeg_w2_4_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-412.4</X><Y>31.6</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1611">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_1_3</string>
+<CoordinateFrame name="CFrame"><X>-417.0</X><Y>32.2</Y><Z>-615.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1612">
+<Properties>
+<string name="Name">DeskTop_w2_4_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1613">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1614">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-652.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1615">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_2_1</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-650.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1616">
+<Properties>
+<string name="Name">DeskTop_w2_4_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1617">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1618">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-634.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1619">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_2_2</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-632.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1620">
+<Properties>
+<string name="Name">DeskTop_w2_4_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>33.2</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1621">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-383.6</X><Y>31.6</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1622">
+<Properties>
+<string name="Name">DeskLeg_w2_4_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-374.4</X><Y>31.6</Y><Z>-616.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1623">
+<Properties>
+<string name="Name">DeskDrawer_w2_4_2_3</string>
+<CoordinateFrame name="CFrame"><X>-379.0</X><Y>32.2</Y><Z>-615.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1624">
+<Properties>
+<string name="Name">Board_e2_1</string>
+<CoordinateFrame name="CFrame"><X>-82.0</X><Y>39.0</Y><Z>-751.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1625">
+<Properties>
+<string name="Name">BoardTray_e2_1</string>
+<CoordinateFrame name="CFrame"><X>-82.0</X><Y>33.6</Y><Z>-750.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1626">
+<Properties>
+<string name="Name">DeskTop_e2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1627">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1628">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1629">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-727.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1630">
+<Properties>
+<string name="Name">DeskTop_e2_1_1_2</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1631">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1632">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1633">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_1_2</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-708.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1634">
+<Properties>
+<string name="Name">DeskTop_e2_1_1_3</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1635">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1636">
+<Properties>
+<string name="Name">DeskLeg_e2_1_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1637">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_1_3</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-690.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1638">
+<Properties>
+<string name="Name">DeskTop_e2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1639">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1640">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-728.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1641">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-727.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1642">
+<Properties>
+<string name="Name">DeskTop_e2_1_2_2</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1643">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1644">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-710.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1645">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_2_2</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-708.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1646">
+<Properties>
+<string name="Name">DeskTop_e2_1_2_3</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1647">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1648">
+<Properties>
+<string name="Name">DeskLeg_e2_1_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-692.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1649">
+<Properties>
+<string name="Name">DeskDrawer_e2_1_2_3</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-690.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1650">
+<Properties>
+<string name="Name">Board_e2_2</string>
+<CoordinateFrame name="CFrame"><X>-82.0</X><Y>39.0</Y><Z>-676.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>10.0</Y><Z>0.599999999999909</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4280298022</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">Q2hhbGtib2FyZA==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1651">
+<Properties>
+<string name="Name">BoardTray_e2_2</string>
+<CoordinateFrame name="CFrame"><X>-82.0</X><Y>33.6</Y><Z>-675.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>58.0</X><Y>0.5</Y><Z>1.400000000000091</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1652">
+<Properties>
+<string name="Name">DeskTop_e2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1653">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1654">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_1_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1655">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-652.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1656">
+<Properties>
+<string name="Name">DeskTop_e2_2_1_2</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1657">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1658">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_2_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1659">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_1_2</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-633.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1660">
+<Properties>
+<string name="Name">DeskTop_e2_2_1_3</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>33.2</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1661">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-105.6</X><Y>31.6</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1662">
+<Properties>
+<string name="Name">DeskLeg_e2_2_1_3_1</string>
+<CoordinateFrame name="CFrame"><X>-96.4</X><Y>31.6</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1663">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_1_3</string>
+<CoordinateFrame name="CFrame"><X>-101.0</X><Y>32.2</Y><Z>-615.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1664">
+<Properties>
+<string name="Name">DeskTop_e2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1665">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_1_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1666">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_1_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-653.8333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1667">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-652.2333</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1668">
+<Properties>
+<string name="Name">DeskTop_e2_2_2_2</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1669">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_2_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1670">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_2_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-635.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1671">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_2_2</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-633.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1672">
+<Properties>
+<string name="Name">DeskTop_e2_2_2_3</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>33.2</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>11.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4286207546</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1673">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_3_-1</string>
+<CoordinateFrame name="CFrame"><X>-67.6</X><Y>31.6</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1674">
+<Properties>
+<string name="Name">DeskLeg_e2_2_2_3_1</string>
+<CoordinateFrame name="CFrame"><X>-58.4</X><Y>31.6</Y><Z>-617.1667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>0.5</X><Y>3.200000000000003</Y><Z>5.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4281348664</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+
+</Properties>
+
+</Item>
+<Item class="Part" referent="SC1675">
+<Properties>
+<string name="Name">DeskDrawer_e2_2_2_3</string>
+<CoordinateFrame name="CFrame"><X>-63.0</X><Y>32.2</Y><Z>-615.5667</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Vector3 name="size"><X>9.0</X><Y>1.4000000000000021</Y><Z>3.0</Z></Vector3>
+<bool name="Anchored">true</bool>
+<bool name="CanCollide">true</bool>
+<token name="Material">816</token>
+<token name="shape">1</token>
+<Color3uint8 name="Color3uint8">4283973162</Color3uint8>
+<float name="Transparency">0.0</float>
+<float name="Reflectance">0</float>
+<BinaryString name="Tags">RGVza0RyYXdlcg==</BinaryString>
+</Properties>
+
+</Item>
 </Item>
 </roblox>

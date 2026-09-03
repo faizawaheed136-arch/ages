@@ -7,7 +7,7 @@
 
 -- LightingZone first: it captures the place's own Lighting values at startup, and it should do
 -- that before anything else has a chance to touch them.
-for _, name in { "LightingZone", "WardrobeUI", "BannerUI", "ScoreboardUI", "ArenaCamera", "VendingUI" } do
+for _, name in { "LightingZone", "WardrobeUI", "BannerUI", "ScoreboardUI", "ArenaCamera", "VendingUI", "ChalkboardUI" } do
 	local module = script:FindFirstChild(name)
 	if module == nil then
 		warn(`[Showcase] {name} is missing`)

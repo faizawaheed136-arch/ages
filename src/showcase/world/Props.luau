@@ -25,6 +25,15 @@ local TIMBER = Color3.fromRGB(122, 86, 58)
 local TIMBER_DARK = Color3.fromRGB(88, 62, 42)
 local CANVAS = Color3.fromRGB(64, 58, 52)
 
+-- Which rooms get a board and desks. A set rather than a list, so the loop below reads as a
+-- question about the room instead of a search.
+local TEACHING_ROOMS: { [string]: boolean } = {
+	["Art Studio"] = true,
+	["Science Lab"] = true,
+	Math = true,
+	Classroom = true,
+}
+
 -- ---------------------------------------------------------------------------------------
 -- Static: baked, tagged
 -- ---------------------------------------------------------------------------------------
@@ -171,6 +180,54 @@ function Props.Static(parent: Instance, toWorld: (number, number, number) -> Vec
 		end
 	end
 
+
+	-- ---- classrooms: a chalkboard on each end wall, and desks laid out from the room's own span
+	--
+	-- **Derived, not pitched.** Fixed furniture spacing breaks silently the moment a room
+	-- changes size -- v1 lost an afternoon to exactly that. Dividing the span means a wider
+	-- classroom gets wider aisles rather than a row hanging out through the wall.
+	for _, room in Plan.Rooms() do
+		if not TEACHING_ROOMS[room.Label] then
+			continue
+		end
+		local base = if room.Floor == 1 then floor else Plan.GroundStoreyStuds + Plan.SlabStuds
+		local wide = room.X2 - room.X1
+		local deep = room.Z2 - room.Z1
+
+		-- The board goes on the end wall the desks face, not on the glazed side.
+		Kit.Block(folder, `Board_{room.Id}`, toWorld((room.X1 + room.X2) / 2, base + 9, room.Z1 + 1), Vector3.new(wide - 18, 10, 0.6), Color3.fromRGB(32, 42, 38), {
+			material = Enum.Material.Slate,
+			tags = { "Chalkboard" },
+		})
+		Kit.Block(folder, `BoardTray_{room.Id}`, toWorld((room.X1 + room.X2) / 2, base + 3.6, room.Z1 + 1.6), Vector3.new(wide - 18, 0.5, 1.4), TIMBER, {
+			material = Enum.Material.Wood,
+			shadow = false,
+		})
+
+		local cols, rows = 2, 3
+		for col = 1, cols do
+			for row = 1, rows do
+				local x = room.X1 + wide * ((col - 0.5) / cols)
+				local z = room.Z1 + 14 + (deep - 20) * ((row - 0.5) / rows)
+				local id = `{room.Id}_{col}_{row}`
+				Kit.Block(folder, `DeskTop_{id}`, toWorld(x, base + 3.2, z), Vector3.new(11, 0.5, 6), TIMBER, {
+					material = Enum.Material.WoodPlanks,
+				})
+				for side = -1, 1, 2 do
+					Kit.Block(folder, `DeskLeg_{id}_{side}`, toWorld(x + side * 4.6, base + 1.6, z), Vector3.new(0.5, 3.2, 5), IRON, {
+						material = Enum.Material.Metal,
+						shadow = false,
+					})
+				end
+				-- The drawer. Shallower than it is wide, which is what Drawer.new measures to
+				-- decide the pull axis -- it comes out of the short face, toward the seat.
+				Kit.Block(folder, `DeskDrawer_{id}`, toWorld(x, base + 2.2, z + 1.6), Vector3.new(9, 1.4, 3), TIMBER_DARK, {
+					material = Enum.Material.Wood,
+					tags = { "DeskDrawer" },
+				})
+			end
+		end
+	end
 	return folder
 end
 
@@ -277,6 +334,32 @@ function Props.Dynamic(parent: Instance, toWorld: (number, number, number) -> Ve
 		CollectionService:AddTag(seat, "SpectatorSeat")
 	end
 
+
+	-- ---- one seat per desk, facing the board. A Seat is not a Part, so it cannot be baked.
+	for _, room in Plan.Rooms() do
+		if not TEACHING_ROOMS[room.Label] then
+			continue
+		end
+		local base = if room.Floor == 1 then floor else Plan.GroundStoreyStuds + Plan.SlabStuds
+		local wide, deep = room.X2 - room.X1, room.Z2 - room.Z1
+		for col = 1, 2 do
+			for row = 1, 3 do
+				local x = room.X1 + wide * ((col - 0.5) / 2)
+				local z = room.Z1 + 14 + (deep - 20) * ((row - 0.5) / 3)
+				local seat = Instance.new("Seat")
+				seat.Name = `DeskSeat_{room.Id}_{col}_{row}`
+				seat.Size = Vector3.new(5, 1, 4)
+				-- Behind the desk, and turned to face the board so the fixed camera DeskService
+				-- computes starts from a sensible direction.
+				seat.CFrame = CFrame.new(toWorld(x, base + 2, z + 5)) * CFrame.Angles(0, math.rad(180), 0)
+				seat.Anchored = true
+				seat.Color = TIMBER_DARK
+				seat.Material = Enum.Material.Wood
+				seat.Parent = folder
+				CollectionService:AddTag(seat, "ClassroomDesk")
+			end
+		end
+	end
 	return folder
 end
 

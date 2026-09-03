@@ -296,6 +296,8 @@ def check_props() -> None:
         "LockerDoor": 1,
         "Wardrobe": 1,
         "Door": 1,
+        "Chalkboard": 1,
+        "DeskDrawer": 1,
     }
     for tag, least in sorted(expected.items()):
         report(f"{tag}", tags[tag] >= least, f"{tags[tag]} tagged")

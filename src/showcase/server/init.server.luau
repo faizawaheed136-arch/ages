@@ -37,7 +37,7 @@ end
 
 -- Best effort, each in its own pcall: a service that throws should cost its own feature and not
 -- the six that come after it in this list.
-for _, name in { "WardrobeService", "ScheduleService", "DoorService", "ArenaService", "GymService", "VendingService" } do
+for _, name in { "WardrobeService", "ScheduleService", "DoorService", "ArenaService", "GymService", "VendingService", "DeskService" } do
 	local module = script:FindFirstChild(name)
 	if module == nil then
 		warn(`[Showcase] {name} is missing`)
