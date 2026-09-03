@@ -117,22 +117,40 @@ function Props.Static(parent: Instance, toWorld: (number, number, number) -> Vec
 		tags = { "Wardrobe" },
 	})
 
-	-- ---- classroom doors, in the south band's bay openings
+	-- ---- classroom doors, on all three bands
 	--
-	-- **South band only.** Hinge derives the pivot from the leaf's local X, so a door leaf needs
-	-- its width on X. These bays run along X; the east and west bands do not, and a baked box
-	-- cannot be rotated -- rbxmx writes axis-aligned geometry. Doors on the side bands want a
-	-- rotated leaf, which is a runtime prop, and they are deliberately not here yet.
+	-- **A door leaf is laid width-first along whichever way its wall runs**, and that is all the
+	-- orientation handling this needs. Hinge measures the leaf's width axis rather than assuming
+	-- local X (see its `widthOnX`), so a south-band door is 12 x 14 x 1 and a side-band door is
+	-- 1 x 14 x 12, both axis-aligned, both baked by the same writer, both hinging on their own
+	-- long edge.
+	--
+	-- These used to be south-band only, because Hinge read Size.X outright and a width-on-Z leaf
+	-- hinged half a *thickness* from its centre -- pivoting about its own face and sweeping
+	-- through the wall, which is precisely the bug the pivot maths exists to prevent.
+	local DOOR_W, DOOR_H, DOOR_T = 12, 14, 1
 	for _, room in Plan.Rooms() do
-		if room.Floor ~= 1 or room.Z2 ~= Z[E.BandInner] or room.Label == "Stair" then
+		if room.Floor ~= 1 or room.Label == "Stair" then
 			continue
 		end
-		local centre = (room.X1 + room.X2) / 2
-		Kit.Block(folder, `Door_{room.Id}`, toWorld(centre, floor + 7, Z[E.BandInner]), Vector3.new(12, 14, 1), IRON_LIT, {
-			material = Enum.Material.Metal,
-			tags = { "Door" },
-			attrs = { Hinge = "Left" },
-		})
+		local name = `Door_{room.Id}`
+		if room.Z2 == Z[E.BandInner] then
+			-- South band: the wall runs along X, so the leaf's width is on X.
+			Kit.Block(folder, name, toWorld((room.X1 + room.X2) / 2, floor + DOOR_H / 2, Z[E.BandInner]), Vector3.new(DOOR_W, DOOR_H, DOOR_T), IRON_LIT, {
+				material = Enum.Material.Metal,
+				tags = { "Door" },
+				attrs = { Hinge = "Left" },
+			})
+		elseif room.X2 == X[E.BandInner] or room.X1 == X[E.CorridorFar] then
+			-- West and east bands: the wall runs along Z, so the leaf's width is on Z.
+			local x = if room.X2 == X[E.BandInner] then X[E.BandInner] else X[E.CorridorFar]
+			Kit.Block(folder, name, toWorld(x, floor + DOOR_H / 2, (room.Z1 + room.Z2) / 2), Vector3.new(DOOR_T, DOOR_H, DOOR_W), IRON_LIT, {
+				material = Enum.Material.Metal,
+				tags = { "Door" },
+				-- Alternating, so a corridor of open doors does not all swing the same way.
+				attrs = { Hinge = if (room.Z1 // 60) % 2 == 0 then "Left" else "Right" },
+			})
+		end
 	end
 
 	return folder

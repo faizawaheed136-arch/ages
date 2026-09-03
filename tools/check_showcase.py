@@ -234,15 +234,26 @@ def check_props() -> None:
         return
 
     tags: collections.Counter = collections.Counter()
+    leaves: list[tuple[str, float, float]] = []
     for item in ET.parse(asset).getroot().iter("Item"):
         props = item.find("Properties")
         if props is None:
             continue
         blob = props.find("BinaryString[@name='Tags']")
-        if blob is not None and blob.text:
-            for tag in base64.b64decode(blob.text).decode().split("\0"):
-                if tag:
-                    tags[tag] += 1
+        if blob is None or not blob.text:
+            continue
+        found = [t for t in base64.b64decode(blob.text).decode().split("\0") if t]
+        for tag in found:
+            tags[tag] += 1
+        if "Door" in found or "LockerDoor" in found:
+            name_el = props.find("string[@name='Name']")
+            size = props.find("Vector3[@name='size']")
+            if size is not None:
+                leaves.append((
+                    name_el.text if name_el is not None else "?",
+                    float(size.find("X").text),
+                    float(size.find("Z").text),
+                ))
 
     # One row per system that binds a tag at Start(). A system whose tag count drops to zero has
     # nothing to attach to, which is exactly the failure this file exists to catch.
@@ -257,6 +268,25 @@ def check_props() -> None:
     }
     for tag, least in sorted(expected.items()):
         report(f"{tag}", tags[tag] >= least, f"{tags[tag]} tagged")
+
+    # **Every hinged leaf needs an unambiguous width axis.**
+    #
+    # Hinge picks the longer of the leaf's two horizontal dimensions as its width and hinges on
+    # that edge. A leaf that is *square* gives it nothing to choose between: floating-point noise
+    # decides, and the door pivots about the wrong edge with no error anywhere.
+    #
+    # The bar is deliberately low. It first went in at a 2:1 aspect ratio, which failed all ten
+    # locker doors at 4.5 x 2.4 -- and those are fine, because 4.5 is plainly the longer side.
+    # That was a style rule pretending to be a correctness check. What actually breaks the pivot
+    # is near-equality, so that is what this measures.
+    ambiguous = []
+    for name, sx, sz in leaves:
+        if min(sx, sz) > max(sx, sz) * 0.9:
+            ambiguous.append(f"{name} {sx:g} x {sz:g}  (ratio {min(sx, sz) / max(sx, sz):.2f})")
+    for line in ambiguous[:4]:
+        print(f"        {line}")
+    report("every hinged leaf is clearly wider than it is thick", not ambiguous,
+           f"{len(leaves)} leaves, {len(ambiguous)} ambiguous")
 
 
 # ---------------------------------------------------------------- 4. the place builds

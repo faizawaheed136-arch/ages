@@ -84,10 +84,25 @@ function Hinge.new(subject: PVInstance, config: Config): Door?
 		return nil
 	end
 
-	-- The hinge sits on the leaf's local X edge, full height, centred in depth. Which edge is
-	-- the Side; which way it swings is the sign of SwingDegrees.
+	-- **The width axis is measured, not assumed.**
+	--
+	-- This used to read `leaf.Size.X` outright, which is only right for a door whose leaf happens
+	-- to have been modelled with its width on local X. A door in a wall running the other way is
+	-- built width-on-Z, and the hinge then landed half a *thickness* from the centre instead of
+	-- half a width -- so the leaf pivoted about its own face and swept through the wall, which is
+	-- the exact bug the pivot maths was written to prevent.
+	--
+	-- A door leaf is always wider than it is thick, so the longer of the two horizontal
+	-- dimensions is the width and the shorter is the thickness. That holds however the leaf was
+	-- authored, which matters because these are tagged by hand in Studio as well as built here.
+	local size = leaf.Size
+	local widthOnX = size.X >= size.Z
+	local halfWidth = (if widthOnX then size.X else size.Z) / 2
+
+	-- Which edge the hinge is on is the Side; which way it swings is the sign of SwingDegrees.
 	local sign = if config.Side == "Right" then 1 else -1
-	local hinge = leaf.CFrame * CFrame.new(sign * leaf.Size.X / 2, 0, 0)
+	local edge = if widthOnX then Vector3.new(sign * halfWidth, 0, 0) else Vector3.new(0, 0, sign * halfWidth)
+	local hinge = leaf.CFrame * CFrame.new(edge)
 
 	local self = setmetatable({
 		subject = subject,
