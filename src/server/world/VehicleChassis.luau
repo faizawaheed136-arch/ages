@@ -78,6 +78,9 @@ local GLASS_MATERIAL = Enum.Material.Glass
 -- flush with the corners -- a wheel is not a knife-edge, it has its own width --
 -- and not so far in that a wide, low car loses the roll stability that comes from
 -- spreading its four springs as wide as the body actually is.
+-- How far a car at rest stands its body above its wheel centres: the gap a settled suspension
+-- leaves, for BuildDisplay's cars, which have no suspension to settle.
+local DISPLAY_BODY_CLEARANCE = 0.5
 local WHEEL_INSET_X = 0.35
 local WHEEL_INSET_Z = 0.9
 
@@ -448,7 +451,12 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame): Chassis
 	-- never changes for the life of this chassis.
 	local ignore: { Instance } = { model }
 
-	task.spawn(function()
+	-- Deferred, not spawned. `model` has no parent yet -- every caller parents it after Build
+	-- returns -- and task.spawn ran this loop's first condition before that, found no parent and
+	-- exited on the spot: a car that stood in the world with no suspension and no drive, and in
+	-- VehicleService's case never stood in the world at all. Deferred, it starts once the caller
+	-- has parented the model.
+	task.defer(function()
 		while running and model.Parent ~= nil do
 			local elapsed = task.wait(VEHICLES.TickSeconds)
 			if not running or model.Parent == nil or chassis.Parent == nil then
@@ -503,6 +511,31 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame): Chassis
 			end
 		end,
 	}
+end
+
+--[[
+	A car that is only looked at: the same body Build lays, on four wheels at rest, everything
+	anchored -- no seat, no suspension, no drive loop. For a dealership floor, where a car that
+	looks different from the one you drive away would be the showroom lying.
+
+	`ground` is a CFrame on the floor the car stands on, turned the way its nose should point.
+]]
+function VehicleChassis.BuildDisplay(kind: VehicleKind, ground: CFrame): Model
+	local radius = VEHICLES.WheelRadius
+	local centre = ground * CFrame.new(0, radius + DISPLAY_BODY_CLEARANCE + kind.size.Y / 2, 0)
+	local model = buildBody(kind, centre)
+	local halfX = kind.size.X / 2 - WHEEL_INSET_X
+	local halfZ = kind.size.Z / 2 - WHEEL_INSET_Z
+	for _, corner in { Vector2.new(-halfX, -halfZ), Vector2.new(halfX, -halfZ), Vector2.new(-halfX, halfZ), Vector2.new(halfX, halfZ) } do
+		local wheel = buildWheel(model, radius)
+		wheel.CFrame = ground * CFrame.new(corner.X, radius, corner.Y) * CFrame.Angles(0, 0, math.rad(90))
+	end
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+		end
+	end
+	return model
 end
 
 -- Studs per second, read off the seat's own chassis. For a speedometer HUD --

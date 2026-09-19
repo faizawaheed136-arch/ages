@@ -48,6 +48,7 @@ local Prompts = require(script.world.Prompts)
 local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
+local DealershipTurntables = require(script.world.DealershipTurntables)
 local SpeechBubble = require(script.world.SpeechBubble)
 local StadiumEntrance = require(script.world.StadiumEntrance)
 
@@ -144,6 +145,7 @@ local minimap = Minimap.new()
 local mapSheet = MapUI.new()
 local vehicles = VehicleUI.new()
 local dealerMark = DealerMark.new()
+DealershipTurntables.Start()
 local chapterReel = ChapterReel.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the

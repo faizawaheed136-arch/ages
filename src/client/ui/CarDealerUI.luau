@@ -101,7 +101,7 @@ function CarDealerUI.new(): CarDealerUIHandle
 	titleLabel.TextSize = 16
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.TextColor3 = TITLE_COLOR
-	titleLabel.Text = "AUTOPIA"
+	titleLabel.Text = "MERIDIAN MOTORS"
 	titleLabel.LayoutOrder = 0
 	titleLabel.Parent = panel
 

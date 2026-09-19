@@ -8883,4 +8883,42 @@ Config.Codes = {
 	MaxRedeemed = 200,
 }
 
+-- Meridian Motors: the dealership's display floor and test drives. See
+-- services/DealershipService.luau; the building itself is world/DealershipBuild.luau.
+Config.Dealership = {
+	-- How close a player must be to a display car for its Buy and Test drive prompts.
+	-- Safe range: 8-16.
+	PromptStuds = 12,
+	-- How long Buy is held before it spends. A car is the biggest purchase a life makes, and a
+	-- tap that took a year's wages from somebody brushing past it would not be forgiven.
+	-- Safe range: 0.5-2.
+	BuyHoldSeconds = 1,
+	-- How far away a price tag can still be read, and its size and lift above the car's roof.
+	-- Safe range: TagStuds 30-90, TagWidthStuds 5-9, TagLiftStuds 0.5-3.
+	TagStuds = 60,
+	TagWidthStuds = 7,
+	TagLiftStuds = 1.2,
+	-- A test drive: how long it lasts, when the "seconds left" warning comes, how long the car
+	-- waits for a driver who climbed out before it goes back, and the gap before another.
+	-- Safe range: TestDriveSeconds 45-180, the rest 10-30.
+	TestDriveSeconds = 90,
+	TestDriveWarnSeconds = 15,
+	TestDriveAbandonSeconds = 20,
+	TestDriveCooldownSeconds = 20,
+	-- The youngest a life can be to take a car out. Buying has no age line -- VehicleService never
+	-- had one, and a child with the money can own a car -- but driving it is another matter.
+	-- Safe range: 14-18.
+	TestDriveMinAgeYears = 16,
+	-- How far a test car must move off its bay before the bay is free for the next one.
+	-- Safe range: 15-40.
+	BayClearStuds = 25,
+	-- How high above the return mark a driver is set down when the clock runs out, so they land
+	-- on the lot rather than in it.
+	-- Safe range: 2-5.
+	ReturnLiftStuds = 3,
+	-- How often the test-drive watcher looks at every car out.
+	-- Safe range: 0.5-2.
+	TickSeconds = 1,
+}
+
 return Config

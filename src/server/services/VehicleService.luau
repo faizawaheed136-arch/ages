@@ -27,6 +27,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Money = require(ReplicatedStorage:WaitForChild("Money"))
@@ -240,6 +241,9 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	local cframe = CFrame.lookAt(spot + Vector3.new(0, lift, 0), spot + Vector3.new(0, lift, 0) + look)
 
 	local chassis = VehicleChassis.Build(kind, cframe)
+	-- Into the world. Nothing did this: Build hands back an unparented model, so a bought car was
+	-- paid for, recorded as owned and marked active, and never appeared anywhere.
+	chassis.model.Parent = Workspace
 	spawning[player] = false
 
 	-- Re-checked after the build: a life can end, sell the car, or request a
