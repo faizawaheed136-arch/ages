@@ -1372,7 +1372,7 @@ local function buildCustomerParking(model: Model)
 	local park = folder(model, "CustomerParking")
 	box(park, "Driveway", 272, 286, 0, 0.2, 0, 8, C.Asphalt, Enum.Material.Asphalt)
 	box(park, "Asphalt", 270, 308, 0, LOT, 8, 98, C.Asphalt, Enum.Material.Asphalt)
-	box(park, "KerbEast", 308, 309, 0, 0.45, 8, 98, C.Kerb, Enum.Material.Concrete)
+	box(park, "KerbEast", 308, 309, 0, 0.45, 8, 112, C.Kerb, Enum.Material.Concrete)
 	for i = 0, 7 do
 		local z = 12 + i * 10.5
 		paint(park, "BayLine", 288, 308, z - 0.18, z + 0.18, C.Line)
@@ -1422,6 +1422,126 @@ local function buildCustomerParking(model: Model)
 	sign(evPlate, Enum.NormalId.Left, "EV\nCHARGING", C.White, true, Enum.Font.GothamBold)
 end
 
+--[[
+	A drive-through car wash east of the service centre, fed by the service lane: pay at the
+	kiosk, roll north through the tunnel, dry off and vacuum out on the apron behind. The lane is
+	carried east to the customer car park's aisle, so the car park, the lane and the service
+	bays are one loop rather than three dead ends.
+]]
+local WASH = { x0 = 280, x1 = 300, z0 = 116, z1 = 146, height = 13 }
+
+local function buildCarWash(model: Model)
+	local wash = folder(model, "CarWash")
+	local x0, x1, z0, z1, h = WASH.x0, WASH.x1, WASH.z0, WASH.z1, WASH.height
+	local deck = 0.25 -- the tunnel floor, a lip above the asphalt
+
+	box(wash, "Lane", SERVICE.x1, 308, 0, LOT, 98, 112, C.Asphalt, Enum.Material.Asphalt)
+	box(wash, "Approach", x0, x1, 0, LOT, 112, z0, C.Asphalt, Enum.Material.Asphalt)
+	groundText(wash, "LaneText", "WASH", 268, 290, 100, 110, C.Line)
+	box(wash, "Slab", x0, x1, 0, deck, z0, z1, C.DarkFloor, Enum.Material.Concrete)
+	for _, x in { 286, 293.6 } do
+		box(wash, "GuideRail", x, x + 0.4, deck, deck + 0.45, z0, z1, C.Yellow, Enum.Material.Metal)
+	end
+
+	-- Side walls: solid at the foot and head, a glass band between so the brushes show.
+	for _, side in { { x0, x0 + 1 }, { x1 - 1, x1 } } do
+		local a, b = side[1], side[2]
+		box(wash, "WallLow", a, b, deck, 4, z0, z1, C.Panel, Enum.Material.SmoothPlastic)
+		box(wash, "WallHigh", a, b, 9, h, z0, z1, C.Panel, Enum.Material.SmoothPlastic)
+		box(wash, "Band", a + 0.3, b - 0.3, 4, 9, z0, z1, C.Glass, Enum.Material.Glass, { transparency = 0.45, reflectance = 0.2, query = false, shadow = false })
+		for z = z0 + 5, z1 - 5, 5 do
+			box(wash, "Mullion", a, b, 4, 9, z - 0.25, z + 0.25, C.Charcoal, Enum.Material.Metal)
+		end
+		box(wash, "Plinth", a - 0.15, b + 0.15, 0, 1.2, z0 + 0.3, z1 - 0.3, C.Charcoal, Enum.Material.Slate)
+	end
+	box(wash, "Roof", x0 - 0.6, x1 + 0.6, h, h + 0.8, z0 - 0.6, z1 + 0.6, C.OffWhite, Enum.Material.SmoothPlastic)
+	local front = box(wash, "Fascia", x0 - 1, x1 + 1, h - 2.2, h + 1.4, z0 - 1.2, z0 - 0.6, C.Navy, Enum.Material.SmoothPlastic)
+	sign(front, Enum.NormalId.Front, "MERIDIAN CAR WASH", C.Gold, true)
+	box(wash, "FasciaGlow", x0 - 1, x1 + 1, h - 2.5, h - 2.2, z0 - 1.25, z0 - 0.55, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	local back = box(wash, "Fascia", x0 - 1, x1 + 1, h - 2.2, h + 1.4, z1 + 0.6, z1 + 1.2, C.Navy, Enum.Material.SmoothPlastic)
+	sign(back, Enum.NormalId.Back, "THANK YOU", C.Gold, true)
+	for _, z in { z0 - 0.6, z1 } do
+		box(wash, "Header", x0 + 1, x1 - 1, h - 2.2, h, z, z + 0.6, C.Panel, Enum.Material.SmoothPlastic)
+	end
+
+	-- A stop-go light on the entrance pier.
+	box(wash, "Signal", x0 - 0.9, x0 - 0.1, 6, 9, z0 - 0.5, z0 + 0.3, C.Charcoal, Enum.Material.Metal)
+	box(wash, "Stop", x0 - 0.95, x0 - 0.9, 7.8, 8.7, z0 - 0.35, z0 + 0.15, C.Red, Enum.Material.Neon, { collide = false, shadow = false })
+	box(wash, "Go", x0 - 0.95, x0 - 0.9, 6.3, 7.2, z0 - 0.35, z0 + 0.15, C.Green, Enum.Material.Neon, { collide = false, shadow = false })
+
+	-- Inside, in the order a car meets them: a curtain of cloth strips, the two side brushes,
+	-- the top brush on its gantry, and the dryer arch at the exit.
+	for i = 0, 15 do
+		local x = x0 + 1.4 + i * 1.1
+		box(wash, "Strip", x, x + 0.8, 5, h - 0.4, 122, 122.15, if i % 2 == 0 then C.Blue else C.White, Enum.Material.Fabric, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+	end
+	box(wash, "StripRail", x0 + 1, x1 - 1, h - 0.4, h, 121.8, 122.35, C.Charcoal, Enum.Material.Metal)
+	for _, x in { 283.2, 296.8 } do
+		post(wash, "BrushCore", x, 130, deck, h - 0.4, 0.5, C.Charcoal, Enum.Material.Metal)
+		post(wash, "Brush", x, 130, 1.2, 9.5, 3.8, C.Blue, Enum.Material.Fabric)
+		box(wash, "BrushArm", if x < 290 then x0 + 1 else x, if x < 290 then x else x1 - 1, h - 1.2, h - 0.6, 129.7, 130.3, C.Charcoal, Enum.Material.Metal)
+	end
+	for _, x in { x0 + 1.2, x1 - 2 } do
+		box(wash, "GantryPost", x, x + 0.8, deck, h - 1.4, 135.6, 136.4, C.Charcoal, Enum.Material.Metal)
+	end
+	box(wash, "GantryBeam", x0 + 1.2, x1 - 1.2, h - 1.4, h - 0.4, 135.6, 136.4, C.Charcoal, Enum.Material.Metal)
+	-- A cylinder's length runs along its own X, which is already across the tunnel.
+	local topBrush = Instance.new("Part")
+	topBrush.Name = "TopBrush"
+	topBrush.Shape = Enum.PartType.Cylinder
+	topBrush.Size = Vector3.new(13, 3, 3)
+	topBrush.CFrame = at(290, 7.6, 136)
+	style(topBrush, C.Blue, Enum.Material.Fabric, { collide = false })
+	topBrush.Parent = wash
+	for _, x in { 284.6, 295.4 } do
+		box(wash, "Hanger", x - 0.15, x + 0.15, 7.6, h - 1.4, 135.85, 136.15, C.Charcoal, Enum.Material.Metal, { collide = false })
+	end
+	box(wash, "DryerArch", x0 + 1, x1 - 1, h - 3.4, h - 0.4, 141, 143, C.Panel, Enum.Material.SmoothPlastic)
+	for i = 0, 5 do
+		local x = x0 + 3 + i * 2.6
+		box(wash, "Nozzle", x, x + 1.4, h - 3.8, h - 3.4, 141.4, 142.6, C.Charcoal, Enum.Material.Metal, { collide = false })
+	end
+	for _, z in { 126, 138 } do
+		local lamp = box(wash, "Lamp", 288, 292, h - 0.15, h, z - 2, z + 2, C.White, Enum.Material.Neon, { collide = false, shadow = false })
+		light(lamp, "Point", 1.1, 20, C.White)
+	end
+
+	-- The pay kiosk on its island by the way in.
+	box(wash, "PayIsland", 274, 279, 0, 0.5, 112.5, 118, C.Kerb, Enum.Material.Concrete)
+	box(wash, "PayPost", 276.6, 278, 0.5, 5.2, 114.5, 116, C.White, Enum.Material.SmoothPlastic)
+	local pay = box(wash, "PayScreen", 278, 278.15, 3.2, 4.6, 114.7, 115.8, C.Screen, Enum.Material.SmoothPlastic)
+	sign(pay, Enum.NormalId.Right, "PAY\nHERE", C.Gold, true, Enum.Font.GothamBold)
+	box(wash, "PayCanopy", 275.4, 279.2, 5.2, 5.5, 113.9, 116.6, C.Navy, Enum.Material.SmoothPlastic)
+	for _, z in { 113.2, 117.3 } do
+		bollard(wash, 276, z, 0.5, 3.2, 0.7, C.Yellow, C.Charcoal)
+	end
+
+	-- Dry-off and vacuum bays behind, running on into the service yard.
+	local yard = folder(wash, "VacuumBays")
+	box(yard, "Apron", SERVICE.x1, 306, 0, LOT, z1, 172, C.Asphalt, Enum.Material.Asphalt)
+	box(yard, "KerbNorth", SERVICE.x1, 306.6, 0, 0.45, 172, 172.6, C.Kerb, Enum.Material.Concrete)
+	box(yard, "KerbEast", 306, 306.6, 0, 0.45, z1, 172, C.Kerb, Enum.Material.Concrete)
+	for i = 0, 3 do
+		local x = 268 + i * 11
+		paint(yard, "BayLine", x - 0.18, x + 0.18, 152, 170, C.Line)
+	end
+	for i = 0, 2 do
+		local x = 273.5 + i * 11
+		local pole = folder(yard, "Vacuum")
+		box(pole, "Body", x - 0.8, x + 0.8, LOT, LOT + 4.2, 170, 171.4, C.Blue, Enum.Material.SmoothPlastic)
+		box(pole, "Top", x - 0.9, x + 0.9, LOT + 4.2, LOT + 4.5, 169.9, 171.5, C.White, Enum.Material.SmoothPlastic)
+		post(pole, "Mast", x, 170.7, LOT + 4.5, LOT + 10, 0.35, C.Kerb, Enum.Material.Metal)
+		box(pole, "Boom", x - 0.15, x + 0.15, LOT + 9.7, LOT + 10, 164, 170.7, C.Kerb, Enum.Material.Metal, { collide = false })
+		box(pole, "Hose", x - 0.2, x + 0.2, LOT + 3.4, LOT + 9.7, 164.1, 164.5, C.Charcoal, Enum.Material.Rubber, { collide = false })
+		local label = box(pole, "Label", x - 0.6, x + 0.6, LOT + 2.2, LOT + 3.6, 169.95, 170, C.White, Enum.Material.SmoothPlastic, { collide = false })
+		sign(label, Enum.NormalId.Front, "VAC", C.Blue, false, Enum.Font.GothamBlack)
+	end
+end
+
 local function buildEastSide(model: Model)
 	local east = folder(model, "EastSide")
 	-- Vertical fins across the blank east wall: the cheapest way to give a solid wall a rhythm.
@@ -1464,8 +1584,8 @@ local function buildEastSide(model: Model)
 	for _, x in { 164, 184 } do
 		tree(trees, x, 162, 0, 20)
 	end
-	for _, z in { 118, 138 } do
-		tree(trees, 276, z, 0, 18)
+	for _, z in { 120, 140 } do
+		tree(trees, 272, z, 0, 18)
 	end
 end
 
@@ -1505,6 +1625,7 @@ function DealershipBuild.Build(corner: CFrame, parent: Instance): Model
 	buildPlaza(model)
 	buildDetail(model)
 	buildService(model)
+	buildCarWash(model)
 	buildCustomerParking(model)
 	buildEastSide(model)
 	buildSlots(model)

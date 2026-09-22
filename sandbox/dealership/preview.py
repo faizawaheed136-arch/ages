@@ -39,6 +39,8 @@ VIEWS = {
     "rear": ((207, 40, 230), (207, 8, 120)),
     "parking": ((279, 14, -6), (296, 2, 70)),
     "lotfront": ((40, 5.5, -16), (55, 5, 30)),  # a player on the far pavement
+    "wash": ((262, 9, 103), (292, 6, 124)),  # from the service lane
+    "vacuum": ((250, 12, 186), (286, 4, 150)),
 }
 
 
