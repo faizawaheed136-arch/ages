@@ -1,0 +1,88 @@
+{
+  "name": "dealership-sandbox",
+  "tree": {
+    "$className": "DataModel",
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "DealershipBuild": {
+        "$path": "src/server/world/DealershipBuild.luau"
+      },
+      "SandboxSite": {
+        "$path": "sandbox/dealership/SandboxSite.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "BuildOnPlay": {
+        "$path": "sandbox/dealership/BuildOnPlay.server.luau"
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "GlobalShadows": true,
+        "ClockTime": 15.5,
+        "GeographicLatitude": 41.7,
+        "Brightness": 2.1,
+        "ExposureCompensation": 0.1,
+        "Ambient": [
+          0.243,
+          0.247,
+          0.267
+        ],
+        "OutdoorAmbient": [
+          0.42352,
+          0.43921,
+          0.47843
+        ],
+        "EnvironmentDiffuseScale": 0.75,
+        "EnvironmentSpecularScale": 0.85,
+        "FogEnd": 4000
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.32,
+          "Offset": 0.15,
+          "Haze": 1.2,
+          "Glare": 0.25,
+          "Color": [
+            0.79607,
+            0.80784,
+            0.8196
+          ],
+          "Decay": [
+            0.42352,
+            0.44705,
+            0.50196
+          ]
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.5,
+          "Size": 20,
+          "Threshold": 1.6
+        }
+      },
+      "SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.06,
+          "Spread": 0.7
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Dealership": {
+        "$path": "sandbox/dealership/build/Dealership.sandbox.model.json"
+      },
+      "SandboxSite": {
+        "$path": "sandbox/dealership/build/SandboxSite.model.json"
+      }
+    }
+  }
+}
