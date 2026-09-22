@@ -541,6 +541,20 @@ local function buildLot(model: Model)
 	chair(cabin, 18, 99.5, 0.55, 180, C.Fabric)
 	local lamp = box(cabin, "CeilingLamp", 20, 24, 8.6, 9, 98, 102, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
 	light(lamp, "Point", 1.2, 16)
+	-- The porch: a deck out from the door, a bench under the eaves, planters either side.
+	box(cabin, "Deck", 12, 34, LOT, 0.5, 86, 90, C.Wood, Enum.Material.WoodPlanks)
+	box(cabin, "Step", 26, 30, LOT, 0.3, 85, 86, C.Wood, Enum.Material.WoodPlanks)
+	for _, x in { 13.5, 32.5 } do
+		post(cabin, "PorchPost", x, 88.9, 0.5, 9, 0.5, C.White, Enum.Material.SmoothPlastic)
+	end
+	box(cabin, "BenchSeat", 15, 22, 1.9, 2.2, 88, 89.4, C.Wood, Enum.Material.Wood)
+	for _, x in { 15.5, 21.5 } do
+		box(cabin, "BenchLeg", x - 0.2, x + 0.2, 0.5, 1.9, 88.2, 89.2, C.Charcoal, Enum.Material.Metal)
+	end
+	plant(cabin, 24.8, 87.5, 0.5, 1.4)
+	plant(cabin, 31.2, 87.5, 0.5, 1.4)
+	local porchLamp = box(cabin, "PorchLamp", 27.3, 28.7, 8.4, 9, 88.8, 89.4, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
+	light(porchLamp, "Spot", 1.2, 12, C.Warm, 100)
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -1303,6 +1317,13 @@ local function buildService(model: Model)
 	local dropSign = box(service, "DropOffSign", 132, 132.3, 12.8, 14.2, 104, 118, C.Navy, Enum.Material.SmoothPlastic)
 	sign(dropSign, Enum.NormalId.Left, "SERVICE DROP-OFF", C.Gold, true, Enum.Font.GothamBold)
 	box(service, "DropOffPad", 132, x0, 0, LOT + 0.04, 104, 118, C.DarkFloor, Enum.Material.Asphalt)
+	-- The door the canopy is for: without it, a driver dropping off pulls up to a blank wall.
+	box(service, "ReceptionFrame", x0 - 0.3, x0, FLOOR, FLOOR + 8.6, 113.2, 117.6, C.Charcoal, Enum.Material.Metal)
+	box(service, "ReceptionDoor", x0 - 0.45, x0 - 0.3, FLOOR + 0.2, FLOOR + 8.2, 113.5, 117.3, C.Screen, Enum.Material.Glass, { reflectance = 0.3 })
+	post(service, "ReceptionHandle", x0 - 0.6, 116.6, FLOOR + 3, FLOOR + 5.4, 0.2, C.Gold, Enum.Material.Metal)
+	local reception = box(service, "ReceptionSign", x0 - 0.3, x0, FLOOR + 9, FLOOR + 10.6, 113.2, 117.6, C.Navy, Enum.Material.SmoothPlastic)
+	sign(reception, Enum.NormalId.Left, "SERVICE\nRECEPTION", C.Gold, true, Enum.Font.GothamBold)
+	box(service, "ReceptionStep", x0 - 1.6, x0 - 0.3, 0, 0.45, 113.2, 117.6, C.Kerb, Enum.Material.Concrete)
 
 	-- A dark base course and a shadow line under the roof: a plain box of panel reads as a
 	-- building once its foot and its head are drawn.
@@ -1542,6 +1563,45 @@ local function buildCarWash(model: Model)
 	end
 end
 
+--[[
+	The handover bay: a canopy off the showroom's side door, over the pickup lane, where a bought
+	car is parked for its new owner (Config.Vehicles.ParkStuds west of the counter). It turns the
+	moment of buying from a notice on the screen into a place -- walk out of the side door and
+	the car is waiting under the lights.
+
+	Cantilevered from two posts at the lane's edge, not four across it: posts in the lane would
+	stand where the car is parked, and in the chest-height ray Ground.SpotAt looks along from
+	the counter to find the spot.
+]]
+local HANDOVER = { x0 = 121, x1 = SHOW.x0 - 0.2, z0 = 58, z1 = 74, y = 11.6 }
+
+local function buildHandover(model: Model)
+	local bay = folder(model, "HandoverBay")
+	local x0, x1, z0, z1, y = HANDOVER.x0, HANDOVER.x1, HANDOVER.z0, HANDOVER.z1, HANDOVER.y
+	box(bay, "Canopy", x0, x1, y, y + 0.8, z0, z1, C.Panel, Enum.Material.SmoothPlastic)
+	box(bay, "FasciaWest", x0 - 0.3, x0, y - 0.4, y + 1.1, z0 - 0.3, z1 + 0.3, C.Navy, Enum.Material.SmoothPlastic)
+	local south = box(bay, "FasciaSouth", x0, x1, y - 0.4, y + 1.1, z0 - 0.3, z0, C.Navy, Enum.Material.SmoothPlastic)
+	sign(south, Enum.NormalId.Front, "HANDOVER BAY", C.Gold, true, Enum.Font.GothamBold)
+	box(bay, "FasciaNorth", x0, x1, y - 0.4, y + 1.1, z1, z1 + 0.3, C.Navy, Enum.Material.SmoothPlastic)
+	local board = box(bay, "Board", x0 - 0.2, x0 + 0.2, y + 1.3, y + 3.6, z0 + 3, z1 - 3, C.Navy, Enum.Material.SmoothPlastic)
+	sign(board, Enum.NormalId.Left, "YOUR NEW CAR", C.Gold, true)
+	box(bay, "BoardGlow", x0 - 0.25, x0 + 0.25, y + 1.1, y + 1.3, z0 + 2.8, z1 - 2.8, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	-- A gold line round the underside, and three downlights over where the car stands.
+	for _, run in { { x0 + 0.4, x1, z0 + 0.4, z0 + 0.7 }, { x0 + 0.4, x1, z1 - 0.7, z1 - 0.4 }, { x0 + 0.4, x0 + 0.7, z0 + 0.7, z1 - 0.7 } } do
+		box(bay, "Glow", run[1], run[2], y - 0.1, y, run[3], run[4], C.Gold, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	end
+	for _, x in { 126, 134, 142 } do
+		local lamp = box(bay, "Downlight", x - 1, x + 1, y - 0.1, y, 65, 67, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+		light(lamp, "Spot", 2, 16, C.Warm, 90)
+	end
+	for _, z in { z0 + 0.8, z1 - 0.8 } do
+		post(bay, "Post", 139.4, z, LOT, y, 0.9, C.Charcoal, Enum.Material.Metal)
+		disc(bay, "PostFoot", 139.4, z, LOT, LOT + 0.3, 1.6, C.Kerb, Enum.Material.Concrete)
+	end
+	-- The walkway under it gets a runner to the side door, like the one indoors.
+	box(bay, "Runner", 140, SHOW.x0, WALK, WALK + 0.02, 62, 68, C.DarkFloor, Enum.Material.Slate, { collide = false, query = false })
+end
+
 local function buildEastSide(model: Model)
 	local east = folder(model, "EastSide")
 	-- Vertical fins across the blank east wall: the cheapest way to give a solid wall a rhythm.
@@ -1626,6 +1686,7 @@ function DealershipBuild.Build(corner: CFrame, parent: Instance): Model
 	buildDetail(model)
 	buildService(model)
 	buildCarWash(model)
+	buildHandover(model)
 	buildCustomerParking(model)
 	buildEastSide(model)
 	buildSlots(model)
