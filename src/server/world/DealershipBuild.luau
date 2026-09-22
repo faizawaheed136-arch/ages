@@ -17,8 +17,14 @@
 	WHAT IT LEAVES FOR RUNTIME. The cars. Each display spot is a `CarSlot` part carrying a
 	`VehicleId`; `DealershipService` builds the car on it from `content/Vehicles` when the
 	server starts, so what stands on the floor is always what the lot actually sells, at the
-	price it actually charges. A slot is a translucent footprint in edit mode so the layout
-	reads without Play.
+	price it actually charges. A slot is invisible: it is a marker, and an outline on an empty bay
+	is clutter.
+
+	WHERE IT IS DESIGNED. Offline, in sandbox/dealership: export.py runs this file under a stand-in
+	for Roblox's API and writes it as a drop-in .rbxmx for AGES and as an open-field sandbox place
+	(stocked with the game's own display cars); preview.py draws it by day and night, signs and
+	all; audit.py lists faces that would z-fight. Run the three after any change here, then
+	tools/check.py.
 
 	THE MARKERS the services read, all found by name under the model:
 	  * `CounterMark` -- where the `auto_dealer` place point belongs: in front of the sales
@@ -220,10 +226,15 @@ end
 --[[
 	Text on one face of a part. `glow` makes it ignore the scene's lighting, for signs that are lit.
 
-	The pixel density is worked out from the face rather than fixed. TextScaled never draws text
-	larger than 100 pixels, so at a fixed 40 pixels a stud the fascia sign -- four studs tall --
-	capped its lettering at two and a half studs and read as small print on a big board. A
-	hundred pixels across the face's short side lets the text fill it.
+	The pixel density is worked out from the text, not fixed. TextScaled never draws text larger
+	than 100 pixels, so the density decides both how big the lettering can get and how sharp it
+	is: at a fixed 40 pixels a stud the four-stud fascia sign capped its lettering at two and a
+	half studs, and a density taken from the face's short side alone left a long word on a narrow
+	face -- CUSTOMERS on the car park, the pylon's name -- fitted at 15 pixels and stretched over
+	a stud and a half, small and soft. So: estimate the font size, in studs, the text can have on
+	this face -- the height shared between its lines, or the width its longest line needs at
+	about 0.72 of the font size a character, whichever is less -- and set the density so that size
+	is exactly 100 pixels.
 ]]
 local function sign(part: BasePart, face: Enum.NormalId, text: string, color: Color3, glow: boolean?, font: Enum.Font?)
 	local across, up = faceSize(part, face)
@@ -231,7 +242,14 @@ local function sign(part: BasePart, face: Enum.NormalId, text: string, color: Co
 	gui.Name = "Sign" .. face.Name
 	gui.Face = face
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	gui.PixelsPerStud = math.clamp(100 / math.min(across, up), 4, 50)
+	local lines = string.split(text, "\n")
+	local longest = 1
+	for _, line in lines do
+		longest = math.max(longest, utf8.len(line) or #line)
+	end
+	local fontStuds = math.min(up / #lines, across / (0.72 * longest))
+	-- Up to 100 a stud: a small face (a screen, a spec card) keeps its size but gets sharper.
+	gui.PixelsPerStud = math.clamp(100 / fontStuds, 4, 100)
 	gui.LightInfluence = if glow then 0 else 1
 	gui.Brightness = if glow then 2.5 else 1
 	gui.Parent = part
@@ -464,9 +482,10 @@ local function buildLot(model: Model)
 		end
 	end
 
-	-- Balloon clusters either side of the driveway.
+	-- Balloon clusters at the two ends of the lot's frontage: by the driveway, and at the far
+	-- corner. Not beside the pylon, where they hung across its lower panels from the road.
 	local balloons = folder(lot, "Balloons")
-	for _, base in { Vector3.new(102.5, 0, 4), Vector3.new(141.5, 0, 4) } do
+	for _, base in { Vector3.new(102.5, 0, 4), Vector3.new(8, 0, 4) } do
 		post(balloons, "Weight", base.X, base.Z, WALK, WALK + 0.8, 1, C.Charcoal, Enum.Material.Metal)
 		for i = 1, 5 do
 			local angle = i * 72
@@ -782,8 +801,10 @@ local function buildInterior(model: Model)
 			seg.CFrame = at(207 + ring.r * math.cos(a), ring.y, 73 + ring.r * math.sin(a)) * CFrame.Angles(0, -a, 0)
 			style(seg, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
 			seg.Parent = halo
-			if i % 8 == 0 then
-				light(seg, "Point", 0.7, 18)
+			-- The neon is the look; two lights on the outer ring are the light. Every lamp in a room
+			-- costs on a phone, and seven here lit nothing the other two did not.
+			if ringIndex == 1 and i % 16 == 0 then
+				light(seg, "Point", 1, 20)
 			end
 		end
 		for i = 0, 2 do
@@ -871,14 +892,17 @@ local function buildInterior(model: Model)
 	end
 	plant(lounge, 183.5, 95, FLOOR, 2.2)
 	-- Many small pendants rather than one big light: the cheap signal that a space is lived in.
-	for _, p in { { 163, 84 }, { 169, 84 }, { 175, 84 }, { 163, 90 }, { 169, 90 }, { 175, 90 } } do
+	for index, p in { { 163, 84 }, { 169, 84 }, { 175, 84 }, { 163, 90 }, { 169, 90 }, { 175, 90 } } do
 		box(lounge, "PendantCord", p[1] - 0.04, p[1] + 0.04, 11, CEIL, p[2] - 0.04, p[2] + 0.04, C.Charcoal, Enum.Material.Metal, {
 			collide = false,
 			shadow = false,
 			query = false,
 		})
 		local lamp = ball(lounge, "Pendant", Vector3.new(p[1], 10.6, p[2]), 1.2, C.Warm, Enum.Material.Neon)
-		light(lamp, "Point", 0.6, 10)
+		-- All six glow; the middle two cast, for the lounge.
+		if index == 2 or index == 5 then
+			light(lamp, "Point", 0.9, 13)
+		end
 	end
 
 	-- Planters in the corners and either side of the doors.
@@ -937,17 +961,25 @@ local function buildPlaza(model: Model)
 	end
 
 	-- The pylon at the corner of the lot and the plaza: the one thing a driver on the road reads.
+	-- Built the way dealership pylons are: the brand's mark big at the top, the name under it,
+	-- then what the site does. It was a 5.6-stud column with the name across it, and a column that
+	-- narrow fits MERIDIAN at two thirds of a stud -- the size of the spec cards indoors.
 	local pylon = folder(model, "Pylon")
-	box(pylon, "Base", 140.6, 147.4, WALK, 2.2, 8, 11, C.Kerb, Enum.Material.Concrete)
-	local body = box(pylon, "Body", 141.2, 146.8, 2.2, 26, 8.6, 10.4, C.Navy, Enum.Material.SmoothPlastic)
-	body.Name = "Body"
-	local upper = box(pylon, "Upper", 141.3, 146.7, 15, 25.5, 8.55, 10.45, C.Navy, Enum.Material.SmoothPlastic, { collide = false })
-	sign(upper, Enum.NormalId.Front, "MERIDIAN\nMOTORS", C.Gold, true)
-	sign(upper, Enum.NormalId.Back, "MERIDIAN\nMOTORS", C.Gold, true)
-	local lower = box(pylon, "Lower", 141.3, 146.7, 4, 13.5, 8.55, 10.45, C.Navy, Enum.Material.SmoothPlastic, { collide = false })
-	sign(lower, Enum.NormalId.Front, "LUXURY\n•\nEVERYDAY\n•\nTEST\nDRIVES", C.White, true, Enum.Font.GothamBold)
-	sign(lower, Enum.NormalId.Back, "LUXURY\n•\nEVERYDAY\n•\nTEST\nDRIVES", C.White, true, Enum.Font.GothamBold)
-	box(pylon, "Cap", 141, 147, 26, 26.6, 8.4, 10.6, C.Gold, Enum.Material.Neon, { shadow = false })
+	box(pylon, "Base", 139.9, 149.1, WALK, 2.6, 8.2, 10.8, C.Kerb, Enum.Material.Concrete)
+	box(pylon, "Body", 140.2, 148.8, 2.6, 27, 8.6, 10.4, C.Navy, Enum.Material.SmoothPlastic)
+	local function panel(name: string, y0: number, y1: number, text: string, colour: Color3, font: Enum.Font)
+		local face = box(pylon, name, 140.4, 148.6, y0, y1, 8.55, 10.45, C.Navy, Enum.Material.SmoothPlastic, { collide = false })
+		sign(face, Enum.NormalId.Front, text, colour, true, font)
+		sign(face, Enum.NormalId.Back, text, colour, true, font)
+	end
+	panel("Mark", 20.2, 26.6, "M", C.Gold, Enum.Font.GothamBlack)
+	panel("Name", 18, 19.8, "MERIDIAN", C.Gold, Enum.Font.GothamBlack)
+	panel("Motors", 16.2, 17.8, "MOTORS", C.Gold, Enum.Font.GothamBlack)
+	box(pylon, "Rule", 140.4, 148.6, 15.5, 15.7, 8.5, 10.5, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	panel("Sales", 13.2, 14.8, "SALES", C.White, Enum.Font.GothamBold)
+	panel("Service", 11.2, 12.8, "SERVICE", C.White, Enum.Font.GothamBold)
+	panel("Wash", 9.2, 10.8, "CAR WASH", C.White, Enum.Font.GothamBold)
+	box(pylon, "Cap", 140, 149, 27, 27.6, 8.4, 10.6, C.Gold, Enum.Material.Neon, { shadow = false })
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -1111,8 +1143,8 @@ local function buildDetail(model: Model)
 	local street = folder(model, "Street")
 	for i = 0, 8 do
 		local band = bollard(street, 154 + i * 13, 7.2, PLAZA, 3.4, 0.8, C.Charcoal, C.Gold)
-		if i % 2 == 0 then
-			light(band, "Point", 0.8, 10)
+		if i % 4 == 0 then
+			light(band, "Point", 1, 13)
 		end
 	end
 	-- Either side of the doors, where a kerb is what stops a car on the plaza.
@@ -1130,8 +1162,8 @@ local function buildDetail(model: Model)
 	end
 	-- The pylon gets a planted base and a lit OPEN panel: the two things that say the place is
 	-- trading, read from a car on the road.
-	box(street, "PylonPlanter", 139.6, 148.4, WALK, WALK + 1.4, 7, 12, C.Planter, Enum.Material.SmoothPlastic)
-	box(street, "PylonHedge", 140, 148, WALK + 1.4, WALK + 2.6, 7.4, 11.6, C.Leaf, Enum.Material.LeafyGrass)
+	box(street, "PylonPlanter", 139.6, 149.6, WALK, WALK + 1.4, 7, 12, C.Planter, Enum.Material.SmoothPlastic)
+	box(street, "PylonHedge", 140, 149.2, WALK + 1.4, WALK + 2.6, 7.4, 11.6, C.Leaf, Enum.Material.LeafyGrass)
 	local openPanel = box(street, "OpenPanel", 141.4, 146.6, 2.6, 3.9, 8.5, 10.5, C.Gold, Enum.Material.Neon)
 	sign(openPanel, Enum.NormalId.Front, "OPEN", C.Navy, false, Enum.Font.GothamBlack)
 	sign(openPanel, Enum.NormalId.Back, "OPEN", C.Navy, false, Enum.Font.GothamBlack)
@@ -1236,9 +1268,11 @@ local function buildDetail(model: Model)
 	end
 	box(slats, "Backing", sx0, sx1, FLOOR, CEIL - 1, SHOW.z1 - 1.05, SHOW.z1 - 1, C.Charcoal, Enum.Material.SmoothPlastic)
 	box(slats, "Uplight", sx0, sx1, FLOOR, FLOOR + 0.15, SHOW.z1 - 2, SHOW.z1 - 1.5, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
-	for x = sx0 + 3, sx1 - 2, 8 do
+	for index, x in { sx0 + 3, sx0 + 11, sx0 + 19, sx0 + 27, sx0 + 35 } do
 		local washer = box(slats, "WallWasher", x - 0.5, x + 0.5, CEIL - 1.5, CEIL - 0.15, SHOW.z1 - 3.3, SHOW.z1 - 2.7, C.Charcoal, Enum.Material.Metal, { collide = false })
-		light(washer, "Spot", 1.4, 22, C.Warm, 70)
+		if index % 2 == 1 then
+			light(washer, "Spot", 1.6, 22, C.Warm, 80)
+		end
 		box(slats, "WasherLens", x - 0.4, x + 0.4, CEIL - 1.55, CEIL - 1.5, SHOW.z1 - 3.2, SHOW.z1 - 2.8, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
 	end
 
