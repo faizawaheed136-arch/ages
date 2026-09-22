@@ -83,6 +83,7 @@ local C = {
 	Red = Color3.fromRGB(214, 44, 52),
 	Blue = Color3.fromRGB(40, 96, 214),
 	Bark = Color3.fromRGB(92, 66, 46),
+	Green = Color3.fromRGB(58, 168, 92),
 }
 
 local FLAG_COLOURS = { C.Red, C.Blue, C.Yellow, C.White }
@@ -349,7 +350,11 @@ local function buildGround(model: Model)
 	box(g, "Driveway", 104, 140, 0, 0.2, 0, 8, C.Asphalt, Enum.Material.Asphalt)
 	box(g, "Kerb", 6, 104, 0, 0.45, 7.2, 8, C.Kerb, Enum.Material.Concrete)
 	box(g, "Lot", 6, 140, 0, LOT, 8, 114, C.Asphalt, Enum.Material.Asphalt)
-	box(g, "Plaza", 140, 268, 0, PLAZA, 6, 22, C.Paving, Enum.Material.Slate)
+	box(g, "Plaza", 140, 270, 0, PLAZA, 6, 22, C.Paving, Enum.Material.Slate)
+	-- Bands across the paving every eight studs: large-format stone, not one grey sheet.
+	for x = 148, 264, 8 do
+		box(g, "PavingBand", x - 0.2, x + 0.2, PLAZA, PLAZA + 0.02, 6, 22, C.Kerb, Enum.Material.Slate, { collide = false, query = false, shadow = false })
+	end
 	box(g, "Walkway", 140, 150, 0, WALK, 22, 98, C.Paving, Enum.Material.Slate)
 	box(g, "HedgeNorth", 6, 130, 0, 2.6, 114.5, 117, C.Leaf, Enum.Material.LeafyGrass)
 	box(g, "HedgeWest", 2.5, 5, 0, 2.6, 8, 117, C.Leaf, Enum.Material.LeafyGrass)
@@ -482,13 +487,37 @@ local function buildLot(model: Model)
 	box(tube, "ArmL", 94.2, 96.4, LOT + 8.2, LOT + 8.8, 9.7, 10.3, C.Yellow, Enum.Material.Fabric, { collide = false })
 	box(tube, "ArmR", 97.6, 99.8, LOT + 9.4, LOT + 10, 9.7, 10.3, C.Yellow, Enum.Material.Fabric, { collide = false })
 
-	-- "EVERYDAY CARS" over the front of the lot.
+	-- Feather flags along the kerb, between the road and the front row.
+	local feathers = folder(lot, "FeatherFlags")
+	for _, f in { { 9, C.Red, "SALE" }, { 19, C.Blue, "DEALS" }, { 87, C.Red, "SALE" } } do
+		local x, colour, text = f[1] :: number, f[2] :: Color3, f[3] :: string
+		local z = 11.5
+		box(feathers, "Foot", x - 0.8, x + 0.8, LOT, LOT + 0.3, z - 0.8, z + 0.8, C.Charcoal, Enum.Material.Metal)
+		post(feathers, "Pole", x, z, LOT, LOT + 13.4, 0.25, C.Kerb, Enum.Material.Metal)
+		local flag = box(feathers, "Feather", x + 0.15, x + 2.5, LOT + 3.6, LOT + 12.2, z - 0.04, z + 0.04, colour, Enum.Material.Fabric, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+		-- Stepped in at the top, the way a feather flag curves off its pole.
+		box(feathers, "Tip", x + 0.15, x + 1.9, LOT + 12.2, LOT + 12.9, z - 0.04, z + 0.04, colour, Enum.Material.Fabric, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+		local letters = table.concat(string.split(text, ""), "\n")
+		sign(flag, Enum.NormalId.Front, letters, C.White, false, Enum.Font.GothamBlack)
+		sign(flag, Enum.NormalId.Back, letters, C.White, false, Enum.Font.GothamBlack)
+	end
+
+	-- "EVERYDAY CARS" over the front of the lot, high: at 7 studs it hung at a player's eye
+	-- line and walled the front row off from the road it is meant to be sold to.
 	local banner = folder(lot, "Banner")
-	post(banner, "PostL", 30, 10, LOT, 11, 0.6, C.Charcoal, Enum.Material.Metal)
-	post(banner, "PostR", 80, 10, LOT, 11, 0.6, C.Charcoal, Enum.Material.Metal)
-	local board = box(banner, "Board", 29, 81, 7.4, 11, 9.8, 10.2, C.Navy, Enum.Material.SmoothPlastic)
-	box(banner, "Trim", 29, 81, 7.1, 7.4, 9.75, 10.25, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
-	box(banner, "Cap", 28.6, 81.4, 11, 11.3, 9.6, 10.4, C.Panel, Enum.Material.Metal)
+	post(banner, "PostL", 34, 10, LOT, 15.2, 0.6, C.Charcoal, Enum.Material.Metal)
+	post(banner, "PostR", 76, 10, LOT, 15.2, 0.6, C.Charcoal, Enum.Material.Metal)
+	local board = box(banner, "Board", 33, 77, 11.8, 15.2, 9.8, 10.2, C.Navy, Enum.Material.SmoothPlastic)
+	box(banner, "Trim", 33, 77, 11.5, 11.8, 9.75, 10.25, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	box(banner, "Cap", 32.6, 77.4, 15.2, 15.5, 9.6, 10.4, C.Panel, Enum.Material.Metal)
 	sign(board, Enum.NormalId.Front, "EVERYDAY CARS  •  DRIVE AWAY TODAY", C.Gold, true)
 	sign(board, Enum.NormalId.Back, "EVERYDAY CARS  •  DRIVE AWAY TODAY", C.Gold, true)
 
@@ -689,6 +718,32 @@ local function buildInterior(model: Model)
 	box(hero, "BackdropGlow", 192.6, 221.4, FLOOR + 15, FLOOR + 15.3, 89.6, 92.4, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
 	spot(hero, 201, 70, 3.5)
 	spot(hero, 213, 70, 3.5)
+
+	-- A ring of light hung over the flagship: the showroom's one piece of theatre, and the
+	-- thing a player sees first through the doors, at the far end of the runway.
+	local halo = folder(hero, "Halo")
+	local haloY, haloR, haloN = 16.5, 9, 32
+	for i = 0, haloN - 1 do
+		local a = i / haloN * math.pi * 2
+		local seg = Instance.new("Part")
+		seg.Name = "Ring"
+		seg.Size = Vector3.new(0.45, 0.35, haloR * 2 * math.pi / haloN * 1.04)
+		seg.CFrame = at(207 + haloR * math.cos(a), haloY, 73 + haloR * math.sin(a)) * CFrame.Angles(0, -a, 0)
+		style(seg, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+		seg.Parent = halo
+		if i % 8 == 0 then
+			light(seg, "Point", 0.7, 18)
+		end
+	end
+	for i = 0, 2 do
+		local a = i / 3 * math.pi * 2 + math.pi / 2
+		local x, z = 207 + haloR * math.cos(a), 73 + haloR * math.sin(a)
+		box(halo, "Cable", x - 0.04, x + 0.04, haloY + 0.2, CEIL, z - 0.04, z + 0.04, C.Charcoal, Enum.Material.Metal, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+	end
 
 	-- The sales counter, level with the side door. The auto_dealer place point stands in front of it.
 	local counter = folder(inside, "Counter")
@@ -908,7 +963,7 @@ local function specBoard(parent: Instance, x: number, z: number, y: number, faci
 	local plate = box(model, "Plate", -1.7, 1.7, 2.4, 3.6, -0.12, 0.12, C.Navy, Enum.Material.SmoothPlastic)
 	sign(plate, Enum.NormalId.Front, text, C.Gold, true, Enum.Font.GothamBold)
 	-- Tipped back, the way a lectern card is, so it reads from standing height.
-	local frame = at(x, y, z) * CFrame.Angles(0, math.rad(facingDegrees), 0) * CFrame.Angles(math.rad(-20), 0, 0)
+	local frame = at(x, y, z) * CFrame.Angles(0, math.rad(facingDegrees), 0) * CFrame.Angles(math.rad(20), 0, 0)
 	plate.CFrame = frame * origin:ToObjectSpace(plate.CFrame)
 	stem.CFrame = at(x, y + 1.3, z) * CFrame.Angles(0, 0, math.rad(90))
 end
@@ -1067,6 +1122,21 @@ local function buildDetail(model: Model)
 		if z == 38 or z == 70 then
 			light(strip, "Point", 0.9, 44, C.White)
 		end
+	end
+
+	-- Configurator kiosks either side of the runway, facing the doors: a screen on a stand, tipped
+	-- back to be read standing.
+	for _, x in { 198.5, 215.5 } do
+		local kiosk = folder(inside, "Kiosk")
+		box(kiosk, "Foot", x - 1.1, x + 1.1, FLOOR, FLOOR + 0.2, 30.2, 31.8, C.Charcoal, Enum.Material.Metal)
+		box(kiosk, "Stem", x - 0.35, x + 0.35, FLOOR + 0.2, FLOOR + 3.6, 30.7, 31.3, C.Charcoal, Enum.Material.Metal)
+		local screen = Instance.new("Part")
+		screen.Name = "Screen"
+		screen.Size = Vector3.new(2.8, 1.9, 0.2)
+		screen.CFrame = at(x, FLOOR + 4.3, 31) * CFrame.Angles(math.rad(30), 0, 0)
+		style(screen, C.Screen, Enum.Material.SmoothPlastic, { collide = false })
+		screen.Parent = kiosk
+		sign(screen, Enum.NormalId.Front, "BUILD\nYOURS", C.Gold, true, Enum.Font.GothamBold)
 	end
 
 	stanchions(inside, 178, 44, 14, FLOOR)
@@ -1315,11 +1385,41 @@ local function buildCustomerParking(model: Model)
 	post(parkSign, "Post", 271, 7.5, WALK, 8, 0.4, C.Charcoal, Enum.Material.Metal)
 	local plate = box(parkSign, "Plate", 268.5, 273.5, 5.5, 8, 7.35, 7.65, C.Navy, Enum.Material.SmoothPlastic)
 	sign(plate, Enum.NormalId.Front, "CUSTOMER\nPARKING", C.Gold, true, Enum.Font.GothamBold)
-	for _, z in { 14, 96 } do
-		box(park, "Island", 270.5, 286, 0, 0.5, z - 3, z + 3, C.Kerb, Enum.Material.Concrete)
-		box(park, "IslandGrass", 270.9, 285.6, 0.5, 0.6, z - 2.6, z + 2.6, C.Leaf, Enum.Material.Grass)
-		tree(park, 278, z, 0.6, 16)
+	-- Planted ends at the head and foot of the bays -- not across the aisle, where the south one
+	-- first stood and closed the way in off the driveway.
+	for _, span in { { 8.4, 11.6 }, { 86, 97.6 } } do
+		box(park, "Island", 288, 307.6, 0, 0.5, span[1], span[2], C.Kerb, Enum.Material.Concrete)
+		box(park, "IslandGrass", 288.4, 307.2, 0.5, 0.6, span[1] + 0.4, span[2] - 0.4, C.Leaf, Enum.Material.Grass)
 	end
+	tree(park, 298, 92, 0.6, 16)
+	for _, x in { 292, 304 } do
+		plant(park, x, 10, 0.6, 1.4)
+	end
+
+	-- A zebra across the aisle from the bays to the plaza: the way a customer walks in.
+	for k = 0, 8 do
+		local x = 271 + k * 2
+		paint(park, "Zebra", x, x + 1, 17, 21, C.Line)
+	end
+
+	-- Two EV bays nearest the showroom door, painted, each with its charger at the kerb.
+	local ev = folder(park, "EVCharging")
+	for i = 5, 6 do
+		local z0, z1 = 12 + i * 10.5, 12 + (i + 1) * 10.5
+		local mid = (z0 + z1) / 2
+		paint(ev, "EVBay", 288.6, 304.6, z0 + 0.4, z1 - 0.4, C.Green)
+		groundText(ev, "EVText", "EV", 290, 300, z0 + 2.5, z1 - 2.5, C.White)
+		box(ev, "Pedestal", 306.4, 307.6, LOT, LOT + 5, mid - 0.6, mid + 0.6, C.White, Enum.Material.SmoothPlastic)
+		box(ev, "Cap", 306.25, 307.75, LOT + 5, LOT + 5.25, mid - 0.75, mid + 0.75, C.Green, Enum.Material.SmoothPlastic)
+		local screen = box(ev, "Screen", 306.25, 306.4, LOT + 3.3, LOT + 4.5, mid - 0.45, mid + 0.45, C.Screen, Enum.Material.SmoothPlastic)
+		sign(screen, Enum.NormalId.Left, "EV", C.Green, true)
+		box(ev, "Glow", 306.3, 306.4, LOT + 1.2, LOT + 2.9, mid - 0.1, mid + 0.1, C.Green, Enum.Material.Neon, { collide = false, shadow = false })
+		box(ev, "Holster", 306.1, 306.4, LOT + 2.3, LOT + 3, mid + 0.2, mid + 0.5, C.Charcoal, Enum.Material.SmoothPlastic)
+	end
+	local evSign = folder(ev, "Sign")
+	post(evSign, "Post", 308.5, 75, 0.45, 8, 0.35, C.Charcoal, Enum.Material.Metal)
+	local evPlate = box(evSign, "Plate", 308.35, 308.65, 5.6, 8, 72.5, 77.5, C.Green, Enum.Material.SmoothPlastic)
+	sign(evPlate, Enum.NormalId.Left, "EV\nCHARGING", C.White, true, Enum.Font.GothamBold)
 end
 
 local function buildEastSide(model: Model)
