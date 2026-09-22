@@ -106,6 +106,12 @@ end
 -- Properties the file carries elsewhere, or that no .rbxmx needs.
 local SKIPPED = { Name = true, WorldPivot = true }
 
+-- What the display cars carry for driving and an anchored car has no use for: the welds between
+-- their parts, references to other instances (PrimaryPart, a weld's Part0 and Part1), and custom
+-- physical properties. Left out rather than written, which Rojo would need Refs for.
+local SKIPPED_CLASSES = { WeldConstraint = true }
+local SKIPPED_KINDS = { Instance = true, PhysicalProperties = true }
+
 local counts = { instances = 0 }
 
 local function node(instance, isRoot: boolean): string
@@ -119,8 +125,8 @@ local function node(instance, isRoot: boolean): string
 	table.insert(parts, `"className":{jstring(className)}`)
 
 	local names = {}
-	for key in props do
-		if not SKIPPED[key] then
+	for key, value in props do
+		if not SKIPPED[key] and not SKIPPED_KINDS[typeof(value)] then
 			table.insert(names, key)
 		end
 	end
@@ -161,7 +167,9 @@ local function node(instance, isRoot: boolean): string
 	if #children > 0 then
 		local kids = {}
 		for _, child in children do
-			table.insert(kids, node(child, false))
+			if not SKIPPED_CLASSES[rawget(child, "__class")] then
+				table.insert(kids, node(child, false))
+			end
 		end
 		table.insert(parts, `"children":[{table.concat(kids, ",")}]`)
 	end
@@ -171,6 +179,9 @@ end
 -- One document per planned model, each between markers the Python side splits on.
 for _, plan in EXPORT_PLAN do
 	local root = plan.build(CFrame.new(plan.x, plan.y, plan.z), workspace)
+	if plan.after then
+		plan.after(root)
+	end
 	counts.instances = 0
 	local json = node(root, true)
 	print(`=====BEGIN {plan.file} {counts.instances}`)

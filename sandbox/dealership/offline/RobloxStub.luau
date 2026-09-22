@@ -12,6 +12,11 @@
 	attributes and tags, and CollectionService:AddTag. A builder change that reaches for something
 	not here fails loudly on the missing name, which is the point.
 
+	And what it takes to run the game's own car builder, world/VehicleChassis.BuildDisplay, for the
+	sandbox's display cars: Vector2, PhysicalProperties, IsA across the BasePart family,
+	WaitForChild, and ReplicatedStorage and Players as services. The modules it requires come from
+	export.py's registry, not from here.
+
 	Not a module: sandbox/dealership/export.py splices it in front of the builder, because the Luau
 	command line gives each required module its own globals and the builder reads these as globals.
 ]]
@@ -241,6 +246,17 @@ function Color3.fromRGB(r: number, g: number, b: number)
 	return Color3.new(r / 255, g / 255, b / 255)
 end
 
+local Vector2 = {}
+function Vector2.new(x: number?, y: number?)
+	return { X = x or 0, Y = y or 0, __kind = "Vector2" }
+end
+
+-- Physics only a moving car needs; a display car is anchored, and the exporter leaves it out.
+local PhysicalProperties = {}
+function PhysicalProperties.new(...)
+	return { __kind = "PhysicalProperties" }
+end
+
 local UDim = {}
 function UDim.new(scale: number, offset: number)
 	return { Scale = scale, Offset = offset, __kind = "UDim" }
@@ -327,8 +343,23 @@ function methods.GetDescendants(self)
 	walk(self)
 	return out
 end
+-- The part classes a builder here makes, for IsA("BasePart").
+local BASE_PARTS = { Part = true, WedgePart = true, MeshPart = true, Seat = true, VehicleSeat = true, TrussPart = true }
+
 function methods.IsA(self, className)
+	if className == "BasePart" then
+		return BASE_PARTS[self.__class] == true
+	elseif className == "Instance" then
+		return true
+	end
 	return self.__class == className
+end
+function methods.WaitForChild(self, name)
+	local child = methods.FindFirstChild(self, name)
+	if child == nil then
+		error(`RobloxStub: {self.__props.Name} has no child "{name}" to wait for; nothing will ever add one here`)
+	end
+	return child
 end
 function methods.Destroy(self)
 	self.Parent = nil
@@ -377,10 +408,22 @@ function CollectionService.AddTag(_, instance, tag)
 	table.insert(rawget(instance, "__tags"), tag)
 end
 
+-- ReplicatedStorage holds a stand-in for each module export.py registers, so that
+-- `require(ReplicatedStorage:WaitForChild("Config"))` finds a child with that name to hand to the
+-- registry's require.
+local ReplicatedStorage = newInstance("ReplicatedStorage")
+ReplicatedStorage.Name = "ReplicatedStorage"
+local Players = newInstance("Players")
+Players.Name = "Players"
+
 local game = {}
 function game.GetService(_, name)
 	if name == "CollectionService" then
 		return CollectionService
+	elseif name == "ReplicatedStorage" then
+		return ReplicatedStorage
+	elseif name == "Players" then
+		return Players
 	end
 	error(`RobloxStub: no service "{name}"`)
 end

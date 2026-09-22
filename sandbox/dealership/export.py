@@ -21,6 +21,7 @@ reviewed, versioned and dropped into a place without either.
 
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -32,25 +33,71 @@ ROJO = pathlib.Path.home() / ".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo.exe"
 
 # Where each exported copy stands. AGES's plot corner is the grass at the south-west of the plot
 # north of the estate streets; the sandbox builds at the origin.
+#
+# The sandbox copy is stocked with the game's own display cars afterwards; the AGES copy is not,
+# because DealershipService stocks it when the server starts.
 PLAN = [
-    ("Dealership.ages", "DealershipBuild", (-280, 1.95, 1940)),
-    ("Dealership.sandbox", "DealershipBuild", (0, 0, 0)),
-    ("SandboxSite", "SandboxSite", (0, 0, 0)),
+    ("Dealership.ages", "DealershipBuild", (-280, 1.95, 1940), None),
+    ("Dealership.sandbox", "DealershipBuild", (0, 0, 0), "stockDisplayCars"),
+    ("SandboxSite", "SandboxSite", (0, 0, 0), None),
 ]
+
+# Game modules the display cars need, in load order, each registered under the name the code
+# requires it by: `require(ReplicatedStorage:WaitForChild("Config"))` resolves through the registry.
+REGISTERED = [
+    ("Config", ROOT / "src/shared/Config.luau"),
+    ("Types", ROOT / "src/shared/Types.luau"),
+]
+# Loaded as locals, after the registry.
+CAR_MODULES = [
+    ("Vehicles", ROOT / "src/server/content/Vehicles.luau"),
+    ("VehicleChassis", ROOT / "src/server/world/VehicleChassis.luau"),
+]
+
+REGISTRY = """
+local MODULES = {}
+local function require(target)
+	local module = MODULES[target.Name]
+	if module == nil then
+		error(`export: {target.Name} is required but not registered in export.py's REGISTERED`)
+	end
+	return module
+end
+local function register(name, module)
+	MODULES[name] = module
+	local stand = Instance.new("ModuleScript")
+	stand.Name = name
+	stand.Parent = ReplicatedStorage
+	return module
+end
+"""
+
+
+def source(path: pathlib.Path) -> str:
+    # Spliced into a function body, where `export type` is not allowed; the types still parse.
+    return re.sub(r"^export type ", "type ", path.read_text(encoding="utf-8"), flags=re.M)
 
 
 def wrap(name: str, path: pathlib.Path) -> str:
-    return f"local {name} = (function()\n{path.read_text(encoding='utf-8')}\nend)()\n"
+    return f"local {name} = (function()\n{source(path)}\nend)()\n"
+
+
+def registered(name: str, path: pathlib.Path) -> str:
+    return f'local {name} = register("{name}", (function()\n{source(path)}\nend)())\n'
 
 
 def compose() -> str:
     plan = ",\n".join(
-        f'\t{{ file = "{file}", build = {builder}.Build, x = {x}, y = {y}, z = {z} }}'
-        for file, builder, (x, y, z) in PLAN
+        f'\t{{ file = "{file}", build = {builder}.Build, x = {x}, y = {y}, z = {z}, after = {after or "nil"} }}'
+        for file, builder, (x, y, z), after in PLAN
     )
     return "\n".join(
         [
             (HERE / "offline/RobloxStub.luau").read_text(encoding="utf-8"),
+            REGISTRY,
+            *(registered(name, path) for name, path in REGISTERED),
+            *(wrap(name, path) for name, path in CAR_MODULES),
+            (HERE / "offline/DisplayCars.luau").read_text(encoding="utf-8"),
             wrap("DealershipBuild", ROOT / "src/server/world/DealershipBuild.luau"),
             wrap("SandboxSite", HERE / "SandboxSite.luau"),
             f"local EXPORT_PLAN = {{\n{plan}\n}}\n",
@@ -79,7 +126,7 @@ def run_builders() -> dict[str, tuple[str, int]]:
             sys.exit(f"export of {name} was cut short")
         json.loads(body)  # Fails here, not inside Rojo, if the exporter wrote bad JSON.
         documents[name] = (body, int(count))
-    missing = [file for file, _, _ in PLAN if file not in documents]
+    missing = [file for file, _, _, _ in PLAN if file not in documents]
     if missing:
         sys.exit(f"the exporter produced nothing for {missing}")
     return documents
