@@ -970,6 +970,13 @@ local function buildInterior(model: Model)
 			end
 		end
 	end
+	-- Wall-washers along the top of the east wall: thirty studs of plain wall is a black slab after
+	-- dark unless something rakes light down it.
+	for _, z in { 34, 46, 58, 70 } do
+		local washer = box(ceiling, "EastWasher", SHOW.x1 - 2.6, SHOW.x1 - 1, CEIL - 1.6, CEIL - 0.15, z - 0.5, z + 0.5, C.Charcoal, Enum.Material.Metal, { collide = false })
+		light(washer, "Spot", 1.5, 32, C.Warm, 60)
+		box(ceiling, "EastWasherLens", SHOW.x1 - 2.5, SHOW.x1 - 1.1, CEIL - 1.65, CEIL - 1.6, z - 0.4, z + 0.4, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	end
 	local banner = box(ceiling, "WallBanner", SHOW.x1 - 1.4, SHOW.x1 - 1, FLOOR + 17, FLOOR + 21.5, 28, 76, C.Navy, Enum.Material.SmoothPlastic)
 	sign(banner, Enum.NormalId.Left, "PERFORMANCE  •  LUXURY  •  EVERYDAY", C.Gold, true)
 end
@@ -1071,6 +1078,12 @@ local function buildMezzanine(model: Model)
 		local za = STAIR.z0 + i * STAIR.run
 		local top = FLOOR + rise * (i + 1)
 		box(stair, "Tread", STAIR.x0, STAIR.x1, top - 0.35, top, za, za + STAIR.run, C.Wood, Enum.Material.Wood)
+		-- A line of light under each tread's nose: what makes a floating stair float after dark.
+		box(stair, "TreadGlow", STAIR.x0 + 0.2, STAIR.x1 - 0.2, top - 0.45, top - 0.35, za + 0.1, za + 0.3, C.Warm, Enum.Material.Neon, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
 	end
 	local zTop = STAIR.z0 + STAIR.steps * STAIR.run
 	local mid = (STAIR.x0 + STAIR.x1) / 2
