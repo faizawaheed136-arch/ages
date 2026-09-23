@@ -291,6 +291,25 @@ local function folder(parent: Instance, name: string): Model
 	return model
 end
 
+--[[
+	Marks a model as the block stand-in for a real prop. world/DealershipDressing swaps it at
+	server start for the model content/DealershipProps names under `prop`, fitted to this one's
+	space; until that prop is uploaded, or if it fails to load, the stand-in is what stays.
+	`facing` is where its front points (0 = local -Z, as for chairs); `variant` picks one of a
+	pack's objects. The attribute names are DealershipDressing's, written out here because this
+	file requires nothing from the game.
+]]
+local function standIn(model: Model, prop: string, facing: number?, variant: number?): Model
+	model:SetAttribute("Prop", prop)
+	if facing then
+		model:SetAttribute("Facing", facing)
+	end
+	if variant then
+		model:SetAttribute("Variant", variant)
+	end
+	return model
+end
+
 -- An invisible marker the services find by name. Anchored and out of every physics query.
 local function mark(parent: Instance, name: string, x: number, y: number, z: number, facingDegrees: number): Part
 	local part = box(parent, name, x - 1, x + 1, y, y + 0.2, z - 1, z + 1, C.Yellow, Enum.Material.Neon, {
@@ -330,7 +349,7 @@ end
 
 -- A chair facing `facingDegrees` (0 = the sitter looks south, -Z).
 local function chair(parent: Instance, x: number, z: number, y: number, facingDegrees: number, color: Color3)
-	local model = folder(parent, "Chair")
+	local model = standIn(folder(parent, "Chair"), "chair", facingDegrees)
 	local seat = box(model, "Seat", -1.3, 1.3, 1.8, 2.3, -1.3, 1.3, color, Enum.Material.Fabric)
 	local back = box(model, "Back", -1.3, 1.3, 2.3, 5.0, 1.0, 1.4, color, Enum.Material.Fabric)
 	local stem = box(model, "Stem", -0.2, 0.2, 0, 1.8, -0.2, 0.2, C.Charcoal, Enum.Material.Metal)
@@ -342,7 +361,7 @@ local function chair(parent: Instance, x: number, z: number, y: number, facingDe
 end
 
 local function plant(parent: Instance, x: number, z: number, y: number, size: number)
-	local model = folder(parent, "Plant")
+	local model = standIn(folder(parent, "Plant"), "plant")
 	box(model, "Pot", x - size * 0.45, x + size * 0.45, y, y + size * 0.7, z - size * 0.45, z + size * 0.45, C.Planter, Enum.Material.SmoothPlastic)
 	ball(model, "Foliage", Vector3.new(x, y + size * 1.2, z), size * 1.3, C.Leaf, Enum.Material.LeafyGrass)
 	ball(model, "Foliage2", Vector3.new(x + size * 0.3, y + size * 1.6, z - size * 0.2), size * 0.9, C.LeafDark, Enum.Material.LeafyGrass)
@@ -576,9 +595,10 @@ local function buildLot(model: Model)
 	for _, x in { 13.5, 32.5 } do
 		post(cabin, "PorchPost", x, 88.9, 0.5, 9, 0.5, C.White, Enum.Material.SmoothPlastic)
 	end
-	box(cabin, "BenchSeat", 15, 22, 1.9, 2.2, 88, 89.4, C.Wood, Enum.Material.Wood)
+	local porchBench = standIn(folder(cabin, "Bench"), "bench", 0)
+	box(porchBench, "BenchSeat", 15, 22, 1.9, 2.2, 88, 89.4, C.Wood, Enum.Material.Wood)
 	for _, x in { 15.5, 21.5 } do
-		box(cabin, "BenchLeg", x - 0.2, x + 0.2, 0.5, 1.9, 88.2, 89.2, C.Charcoal, Enum.Material.Metal)
+		box(porchBench, "BenchLeg", x - 0.2, x + 0.2, 0.5, 1.9, 88.2, 89.2, C.Charcoal, Enum.Material.Metal)
 	end
 	plant(cabin, 24.8, 87.5, 0.5, 1.4)
 	plant(cabin, 31.2, 87.5, 0.5, 1.4)
@@ -873,10 +893,11 @@ local function buildInterior(model: Model)
 	-- The customer lounge, north-west: somewhere to sit while the paperwork is done.
 	local lounge = folder(inside, "Lounge")
 	box(lounge, "Rug", 157, 183, FLOOR, FLOOR + 0.05, 82, 95, C.Rug, Enum.Material.Fabric, { collide = false })
-	box(lounge, "SofaBase", 160, 178, FLOOR, FLOOR + 2, 92, 95.5, C.Fabric, Enum.Material.Fabric)
-	box(lounge, "SofaBack", 160, 178, FLOOR + 2, FLOOR + 4.6, 95, 96.5, C.Fabric, Enum.Material.Fabric)
-	box(lounge, "SofaArm", 159, 160, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
-	box(lounge, "SofaArm", 178, 179, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
+	local sofa = standIn(folder(lounge, "Sofa"), "couch", 0)
+	box(sofa, "SofaBase", 160, 178, FLOOR, FLOOR + 2, 92, 95.5, C.Fabric, Enum.Material.Fabric)
+	box(sofa, "SofaBack", 160, 178, FLOOR + 2, FLOOR + 4.6, 95, 96.5, C.Fabric, Enum.Material.Fabric)
+	box(sofa, "SofaArm", 159, 160, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
+	box(sofa, "SofaArm", 178, 179, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
 	box(lounge, "CoffeeTable", 164, 174, FLOOR + 1.3, FLOOR + 1.6, 85, 89, C.Wood, Enum.Material.Wood)
 	box(lounge, "TableLegs", 165, 173, FLOOR, FLOOR + 1.3, 86, 88, C.Charcoal, Enum.Material.Metal)
 	chair(lounge, 159, 85, FLOOR, 270, C.Leather)
@@ -885,8 +906,10 @@ local function buildInterior(model: Model)
 	sign(tv, Enum.NormalId.Front, "DRIVE THE DREAM", C.Gold, true)
 	box(lounge, "CoffeeBar", 151, 154.5, FLOOR, FLOOR + 3.4, 81, 96, C.Navy, Enum.Material.SmoothPlastic)
 	box(lounge, "CoffeeBarTop", 151, 155, FLOOR + 3.4, FLOOR + 3.7, 80.6, 96.4, C.White, Enum.Material.Marble)
-	box(lounge, "CoffeeMachine", 151.4, 154, FLOOR + 3.7, FLOOR + 6.2, 84, 86.5, C.Charcoal, Enum.Material.Metal)
-	box(lounge, "CoffeeLight", 154, 154.1, FLOOR + 5.2, FLOOR + 5.6, 84.6, 85.9, C.Gold, Enum.Material.Neon, { collide = false })
+	-- Faces +X, into the lounge.
+	local machine = standIn(folder(lounge, "CoffeeMachine"), "coffee", 270)
+	box(machine, "Body", 151.4, 154, FLOOR + 3.7, FLOOR + 6.2, 84, 86.5, C.Charcoal, Enum.Material.Metal)
+	box(machine, "CoffeeLight", 154, 154.1, FLOOR + 5.2, FLOOR + 5.6, 84.6, 85.9, C.Gold, Enum.Material.Neon, { collide = false })
 	for _, z in { 89, 90, 91 } do
 		post(lounge, "Cup", 153, z, FLOOR + 3.7, FLOOR + 4.3, 0.5, C.White, Enum.Material.SmoothPlastic)
 	end
@@ -940,9 +963,10 @@ local function buildPlaza(model: Model)
 		box(plaza, "Hedge", x - 2.7, x + 2.7, PLAZA + 1.6, PLAZA + 3, 7.8, 9.7, C.Leaf, Enum.Material.LeafyGrass)
 	end
 	for _, x in { 184, 230 } do
-		box(plaza, "BenchSeat", x - 3, x + 3, PLAZA + 1.5, PLAZA + 1.9, 14, 15.6, C.Wood, Enum.Material.Wood)
-		box(plaza, "BenchLeg", x - 2.8, x - 2.3, PLAZA, PLAZA + 1.5, 14.1, 15.5, C.Charcoal, Enum.Material.Metal)
-		box(plaza, "BenchLeg", x + 2.3, x + 2.8, PLAZA, PLAZA + 1.5, 14.1, 15.5, C.Charcoal, Enum.Material.Metal)
+		local bench = standIn(folder(plaza, "Bench"), "bench", 0)
+		box(bench, "BenchSeat", x - 3, x + 3, PLAZA + 1.5, PLAZA + 1.9, 14, 15.6, C.Wood, Enum.Material.Wood)
+		box(bench, "BenchLeg", x - 2.8, x - 2.3, PLAZA, PLAZA + 1.5, 14.1, 15.5, C.Charcoal, Enum.Material.Metal)
+		box(bench, "BenchLeg", x + 2.3, x + 2.8, PLAZA, PLAZA + 1.5, 14.1, 15.5, C.Charcoal, Enum.Material.Metal)
 	end
 
 	-- Flags on three poles by the corner, where the road can see them.
@@ -1155,8 +1179,9 @@ local function buildDetail(model: Model)
 		box(street, "BikeHoop", x - 0.15, x + 0.15, PLAZA, PLAZA + 3.2, 16.9, 17.2, C.Kerb, Enum.Material.Metal, { collide = false })
 		box(street, "BikeHoop", x - 0.15, x + 0.15, PLAZA + 3, PLAZA + 3.2, 14.4, 17.2, C.Kerb, Enum.Material.Metal, { collide = false })
 	end
-	post(street, "Bin", 227, 15.5, PLAZA, PLAZA + 3.6, 2.2, C.Charcoal, Enum.Material.Metal)
-	disc(street, "BinLid", 227, 15.5, PLAZA + 3.6, PLAZA + 3.9, 2.5, C.Kerb, Enum.Material.Metal)
+	local plazaBin = standIn(folder(street, "Bin"), "trash", 0)
+	post(plazaBin, "Bin", 227, 15.5, PLAZA, PLAZA + 3.6, 2.2, C.Charcoal, Enum.Material.Metal)
+	disc(plazaBin, "BinLid", 227, 15.5, PLAZA + 3.6, PLAZA + 3.9, 2.5, C.Kerb, Enum.Material.Metal)
 	for _, x in { 152, 157, 162 } do
 		disc(street, "PolePad", x, 9, PLAZA, PLAZA + 0.25, 2.4, C.Kerb, Enum.Material.Concrete)
 	end
@@ -1338,11 +1363,26 @@ end
 -- A tree from primitives: a trunk and three overlapping crowns, the same way the city's own
 -- trees are made.
 local function tree(parent: Instance, x: number, z: number, y: number, height: number)
-	local model = folder(parent, "Tree")
+	-- One of the pack's three trees, picked from where it stands so neighbours differ.
+	local model = standIn(folder(parent, "Tree"), "trees", 0, math.floor(x * 7 + z * 13) % 3 + 1)
 	post(model, "Trunk", x, z, y, y + height * 0.55, height * 0.09, C.Bark, Enum.Material.Wood)
 	ball(model, "Crown", Vector3.new(x, y + height * 0.7, z), height * 0.55, C.Leaf, Enum.Material.LeafyGrass)
 	ball(model, "Crown", Vector3.new(x + height * 0.14, y + height * 0.86, z - height * 0.1), height * 0.42, C.LeafDark, Enum.Material.LeafyGrass)
 	ball(model, "Crown", Vector3.new(x - height * 0.15, y + height * 0.8, z + height * 0.12), height * 0.38, C.Leaf, Enum.Material.LeafyGrass)
+end
+
+-- A stack of four tyres, where a workshop keeps them.
+local function tyreStack(parent: Instance, x: number, z: number, y: number)
+	local stack = standIn(folder(parent, "Tyres"), "tires")
+	for i = 0, 3 do
+		disc(stack, "Tyre", x, z, y + i * 0.9, y + i * 0.9 + 0.85, 2.8, C.Leather, Enum.Material.Rubber)
+	end
+end
+
+-- A low bush.
+local function bush(parent: Instance, x: number, z: number, y: number, size: number)
+	local model = standIn(folder(parent, "Bush"), "bush")
+	ball(model, "Leaves", Vector3.new(x, y + size * 0.4, z), size, C.LeafDark, Enum.Material.LeafyGrass)
 end
 
 -- A lamp post like the lot's: a pole, a head, a warm glow and a spot throwing down wide. `reach`
@@ -1399,9 +1439,13 @@ local function buildService(model: Model)
 			box(service, "LiftArm", cx + side * 6 - (if side < 0 then 0 else 3), cx + side * 6 + (if side < 0 then 3 else 0), FLOOR + 2.2, FLOOR + 2.6, cz + 3.4, cz + 4, C.Charcoal, Enum.Material.Metal)
 		end
 		box(service, "LiftBeam", cx - 6, cx + 6, 10.4, 10.9, cz - 0.4, cz + 0.4, C.Red, Enum.Material.Metal)
-		box(service, "ToolChest", bx1 - 4, bx1 - 1.2, FLOOR, FLOOR + 4.4, z1 - 5, z1 - 2, if i % 2 == 0 then C.Red else C.Blue, Enum.Material.Metal)
+		local chest = standIn(folder(service, "ToolChest"), "toolcart", 90)
+		box(chest, "Body", bx1 - 4, bx1 - 1.2, FLOOR, FLOOR + 4.4, z1 - 5, z1 - 2, if i % 2 == 0 then C.Red else C.Blue, Enum.Material.Metal)
 		for d = 0, 3 do
-			box(service, "Drawer", bx1 - 4.05, bx1 - 3.95, FLOOR + 0.8 + d, FLOOR + 1.5 + d, z1 - 4.8, z1 - 2.2, C.Charcoal, Enum.Material.Metal, { collide = false })
+			box(chest, "Drawer", bx1 - 4.05, bx1 - 3.95, FLOOR + 0.8 + d, FLOOR + 1.5 + d, z1 - 4.8, z1 - 2.2, C.Charcoal, Enum.Material.Metal, { collide = false })
+		end
+		if i ~= 1 then
+			tyreStack(service, bx0 + 2.2, z1 - 3.5, FLOOR)
 		end
 		local bayLamp = box(service, "BayLamp", cx - 4, cx + 4, h - 0.3, h, cz - 0.5, cz + 0.5, C.White, Enum.Material.Neon, { collide = false })
 		light(bayLamp, "Point", 1, 26, C.White)
@@ -1514,10 +1558,15 @@ local function buildService(model: Model)
 			disc(yard, "Wheel", wx, ez0 + 4.2, LOT, LOT + 0.6, 0.6, C.Charcoal, Enum.Material.Rubber)
 		end
 	end
-	box(yard, "Bench", 200, 205, FLOOR + 1.3, FLOOR + 1.6, z1 + 2, z1 + 3.4, C.Wood, Enum.Material.Wood)
+	-- Facing away from the wall, into the yard.
+	local yardBench = standIn(folder(yard, "Bench"), "bench", 180)
+	box(yardBench, "BenchSeat", 200, 205, FLOOR + 1.3, FLOOR + 1.6, z1 + 2, z1 + 3.4, C.Wood, Enum.Material.Wood)
 	for _, x in { 200.5, 204.5 } do
-		box(yard, "BenchLeg", x - 0.2, x + 0.2, LOT, FLOOR + 1.3, z1 + 2.2, z1 + 3.2, C.Charcoal, Enum.Material.Metal)
+		box(yardBench, "BenchLeg", x - 0.2, x + 0.2, LOT, FLOOR + 1.3, z1 + 2.2, z1 + 3.2, C.Charcoal, Enum.Material.Metal)
 	end
+	-- Tyres by the parts door, waiting to go in.
+	tyreStack(yard, 256.5, z1 + 3.5, LOT)
+	tyreStack(yard, 259.5, z1 + 3.5, LOT)
 end
 
 -- The customer car park on the east flank, with its own driveway off the road.
@@ -1549,8 +1598,11 @@ local function buildCustomerParking(model: Model)
 		box(park, "IslandGrass", 288.4, 307.2, 0.5, 0.6, span[1] + 0.4, span[2] - 0.4, C.Leaf, Enum.Material.Grass)
 	end
 	tree(park, 298, 92, 0.6, 16)
-	for _, x in { 292, 304 } do
-		plant(park, x, 10, 0.6, 1.4)
+	for _, x in { 292, 298, 304 } do
+		bush(park, x, 10, 0.6, 2.4)
+	end
+	for _, x in { 291, 305 } do
+		bush(park, x, 92, 0.6, 2.6)
 	end
 
 	-- A zebra across the aisle from the bays to the plaza: the way a customer walks in.

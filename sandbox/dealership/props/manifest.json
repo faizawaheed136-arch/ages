@@ -11,7 +11,12 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 282,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "footprint",
+    "yaw": 180,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "plant",
@@ -25,7 +30,12 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 1954,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 0,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "trees",
@@ -39,7 +49,25 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 1616,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 0,
+    "collide": false,
+    "drop": [],
+    "variants": [
+      [
+        "Object_4",
+        "Object_5"
+      ],
+      [
+        "Object_7",
+        "Object_8"
+      ],
+      [
+        "Object_10",
+        "Object_11"
+      ]
+    ]
   },
   {
     "key": "bush",
@@ -53,7 +81,12 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 988,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "footprint",
+    "yaw": 0,
+    "collide": false,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "chair",
@@ -67,7 +100,12 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 1234,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 180,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "coffee",
@@ -81,7 +119,14 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 5930,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 0,
+    "collide": false,
+    "drop": [
+      "Object_4"
+    ],
+    "variants": []
   },
   {
     "key": "toolcart",
@@ -95,7 +140,12 @@
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 850,
     "downloaded": true,
-    "robloxAssetId": null
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 0,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "tires",
@@ -108,8 +158,13 @@
     "license": "CC Attribution",
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 2478,
-    "downloaded": false,
-    "robloxAssetId": null
+    "downloaded": true,
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 0,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "bench",
@@ -122,8 +177,13 @@
     "license": "CC Attribution",
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 1988,
-    "downloaded": false,
-    "robloxAssetId": null
+    "downloaded": true,
+    "robloxAssetId": null,
+    "fit": "width",
+    "yaw": 0,
+    "collide": true,
+    "drop": [],
+    "variants": []
   },
   {
     "key": "trash",
@@ -136,7 +196,12 @@
     "license": "CC Attribution",
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 1924,
-    "downloaded": false,
-    "robloxAssetId": null
+    "downloaded": true,
+    "robloxAssetId": null,
+    "fit": "height",
+    "yaw": 180,
+    "collide": true,
+    "drop": [],
+    "variants": []
   }
 ]

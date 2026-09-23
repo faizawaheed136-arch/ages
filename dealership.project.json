@@ -9,6 +9,12 @@
       },
       "SandboxSite": {
         "$path": "sandbox/dealership/SandboxSite.luau"
+      },
+      "DealershipDressing": {
+        "$path": "src/server/world/DealershipDressing.luau"
+      },
+      "DealershipProps": {
+        "$path": "src/server/content/DealershipProps.luau"
       }
     },
     "ServerScriptService": {

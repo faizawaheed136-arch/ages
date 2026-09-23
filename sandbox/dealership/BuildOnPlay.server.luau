@@ -19,3 +19,9 @@ end
 if Workspace:FindFirstChild(DealershipBuild.ModelName) == nil then
 	DealershipBuild.Build(CORNER, Workspace)
 end
+
+-- The props, as in AGES: DealershipService does this there, and there is no DealershipService here.
+local DealershipDressing = require(ServerStorage:WaitForChild("DealershipDressing"))
+local DealershipProps = require(ServerStorage:WaitForChild("DealershipProps"))
+local swapped, kept = DealershipDressing.Dress(Workspace:WaitForChild(DealershipBuild.ModelName) :: Model, DealershipProps)
+print(`[dealership sandbox] {swapped} props placed, {kept} still block stand-ins`)

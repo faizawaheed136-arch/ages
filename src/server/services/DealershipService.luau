@@ -39,6 +39,8 @@ local DataService = require(script.Parent.DataService)
 local VehicleService = require(script.Parent.VehicleService)
 
 local DealershipBuild = require(script.Parent.Parent.world.DealershipBuild)
+local DealershipDressing = require(script.Parent.Parent.world.DealershipDressing)
+local DealershipProps = require(script.Parent.Parent.content.DealershipProps)
 local VehicleChassis = require(script.Parent.Parent.world.VehicleChassis)
 local Vehicles = require(script.Parent.Parent.content.Vehicles)
 
@@ -423,6 +425,15 @@ function DealershipService:Start()
 	end
 	dealership = model
 	stock(model)
+	-- The props: the Sketchfab models content/DealershipProps names, in place of the builder's
+	-- block stand-ins, wherever one is uploaded. Off the start path, because loading an asset
+	-- waits on the network and nothing else here should wait for a chair.
+	task.spawn(function()
+		local swapped, kept = DealershipDressing.Dress(model, DealershipProps)
+		if kept > 0 and swapped > 0 then
+			print(`[AGES dealership] {swapped} props placed, {kept} still block stand-ins`)
+		end
+	end)
 
 	task.spawn(function()
 		while true do
