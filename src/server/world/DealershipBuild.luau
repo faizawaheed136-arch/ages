@@ -53,9 +53,13 @@ DealershipBuild.TurntableTag = "DealershipTurntable"
 
 -- Heights above the plot's grass, which the origin sits on.
 local FLOOR = 0.65 -- showroom floor top: one small step up off the plaza
-local CEIL = FLOOR + 20
+-- A double-height hall: thirty studs to the ceiling, with a mezzanine round the back. It was
+-- twenty, one tall storey, and from the road the building read as a shed with a glass front.
+local CEIL = FLOOR + 30
 local ROOF = CEIL + 1.2
 local PARAPET = ROOF + 3.3
+local MEZZ = FLOOR + 12 -- the underside of the mezzanine slab
+local UPPER = MEZZ + 0.8 -- the mezzanine's floor
 local LOT = 0.15 -- asphalt top
 local WALK = 0.25 -- sidewalk and walkway top
 local PLAZA = 0.3
@@ -726,6 +730,21 @@ local function buildShell(model: Model)
 		box(shell, "Hedge", run[1] + 0.2, run[2] - 0.2, PLAZA + 0.7, PLAZA + 2.3, SHOW.z0 - 2.5, SHOW.z0 - 0.7, C.Leaf, Enum.Material.LeafyGrass)
 	end
 
+	-- The entrance portal: silver fins either side of the doors, up the full height of the glass
+	-- to a lintel under the fascia, lit gold on their inner faces. On a double-height front, a
+	-- single-storey canopy on its own read as a side door; the portal says where the way in is.
+	local portal = folder(shell, "Portal")
+	local top = CEIL - 0.9
+	for _, fin in { { 195.4, 196.8, 196.8, 196.9 }, { 217.2, 218.6, 217.1, 217.2 } } do
+		box(portal, "Fin", fin[1], fin[2], PLAZA, top - 2.5, 16.5, 21.6, C.Panel, Enum.Material.SmoothPlastic, { reflectance = 0.08 })
+		box(portal, "FinGlow", fin[3], fin[4], PLAZA + 0.6, top - 2.9, 20.2, 21.2, C.Gold, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+		local up = box(portal, "FinUplight", fin[1] + 0.2, fin[2] - 0.2, PLAZA, PLAZA + 0.25, 15.6, 16.4, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+		local beam = light(up, "Spot", 1.8, 30, C.Warm, 40) :: SpotLight
+		beam.Face = Enum.NormalId.Top
+	end
+	box(portal, "Lintel", 195.4, 218.6, top - 2.5, top, 16.5, 21.6, C.Panel, Enum.Material.SmoothPlastic, { reflectance = 0.08 })
+	box(portal, "LintelGlow", 196.9, 217.1, top - 2.6, top - 2.5, 20.2, 21.2, C.Gold, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+
 	-- The entrance canopy.
 	local canopy = box(shell, "Canopy", 196, 218, FLOOR + 11, FLOOR + 11.8, 11, SHOW.z0 - 1.4, C.Charcoal, Enum.Material.SmoothPlastic)
 	box(shell, "CanopyGlow", 196.2, 217.8, FLOOR + 10.9, FLOOR + 11, 11.2, 12, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
@@ -740,7 +759,7 @@ end
 local function spot(parent: Instance, x: number, z: number, brightness: number)
 	local can = post(parent, "SpotCan", x, z, CEIL - 1.2, CEIL, 1.2, C.Charcoal, Enum.Material.Metal)
 	box(parent, "SpotLens", x - 0.4, x + 0.4, CEIL - 1.25, CEIL - 1.2, z - 0.4, z + 0.4, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
-	light(can, "Spot", brightness, 26, C.Warm, 45)
+	light(can, "Spot", brightness, 36, C.Warm, 45)
 end
 
 local function turntable(parent: Instance, name: string, vehicleId: string, x: number, z: number)
@@ -803,8 +822,8 @@ local function buildInterior(model: Model)
 	-- The screen on the timber wall behind the car. It replaced a navy block that stood in front of
 	-- the wall and hid it: the timber is the warm thing in the room, and it should be what frames
 	-- the flagship.
-	box(hero, "ScreenBezel", 197.4, 216.6, FLOOR + 5.6, FLOOR + 12.4, SHOW.z1 - 2.65, SHOW.z1 - 2.5, C.Charcoal, Enum.Material.Metal)
-	local screen = box(hero, "Screen", 198, 216, FLOOR + 6, FLOOR + 12, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.ScreenGlow, Enum.Material.Neon, { shadow = false })
+	box(hero, "ScreenBezel", 197.4, 216.6, FLOOR + 3.6, FLOOR + 10.4, SHOW.z1 - 2.65, SHOW.z1 - 2.5, C.Charcoal, Enum.Material.Metal)
+	local screen = box(hero, "Screen", 198, 216, FLOOR + 4, FLOOR + 10, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.ScreenGlow, Enum.Material.Neon, { shadow = false })
 	sign(screen, Enum.NormalId.Front, "MERIDIAN", C.Navy, true)
 	spot(hero, 201, 70, 3.5)
 	spot(hero, 213, 70, 3.5)
@@ -812,7 +831,7 @@ local function buildInterior(model: Model)
 	-- A ring of light hung over the flagship: the showroom's one piece of theatre, and the
 	-- thing a player sees first through the doors, at the far end of the runway.
 	local halo = folder(hero, "Halo")
-	for ringIndex, ring in { { y = 16.5, r = 9, n = 32 }, { y = 17.7, r = 6.4, n = 24 } } do
+	for ringIndex, ring in { { y = FLOOR + 20.5, r = 9, n = 32 }, { y = FLOOR + 21.7, r = 6.4, n = 24 } } do
 		for i = 0, ring.n - 1 do
 			local a = i / ring.n * math.pi * 2
 			local seg = Instance.new("Part")
@@ -861,7 +880,7 @@ local function buildInterior(model: Model)
 		desk(desks, 250, z, 90)
 	end
 	plant(desks, 259, 42, FLOOR, 2.4)
-	plant(desks, 259, 58, FLOOR, 2.4)
+	plant(desks, 255.5, 58, FLOOR, 2.4)
 
 	-- Two glass offices in the north-east corner.
 	local offices = folder(inside, "Offices")
@@ -869,14 +888,16 @@ local function buildInterior(model: Model)
 	for i, span in { { 224, 243, "FINANCE" }, { 243, 262, "MANAGER" } } do
 		local x0, x1 = span[1] :: number, span[2] :: number
 		local mid = (x0 + x1) / 2
-		box(offices, "Glass", x0, mid - 2, FLOOR, CEIL - 6, 80, 80.3, C.Glass, Enum.Material.Glass, officeGlass)
-		box(offices, "Glass", mid + 2, x1, FLOOR, CEIL - 6, 80, 80.3, C.Glass, Enum.Material.Glass, officeGlass)
-		box(offices, "Head", x0, x1, CEIL - 6, CEIL, 80, 80.3, C.OffWhite, Enum.Material.SmoothPlastic)
-		box(offices, "Head", mid - 2, mid + 2, FLOOR + 10, CEIL - 6, 80, 80.3, C.OffWhite, Enum.Material.SmoothPlastic)
+		-- The mezzanine above is their ceiling: glass to a head, the head to the slab.
+		local top = MEZZ - 1.5
+		box(offices, "Glass", x0, mid - 2, FLOOR, top, 80, 80.3, C.Glass, Enum.Material.Glass, officeGlass)
+		box(offices, "Glass", mid + 2, x1, FLOOR, top, 80, 80.3, C.Glass, Enum.Material.Glass, officeGlass)
+		box(offices, "Head", x0, x1, top, MEZZ, 80, 80.3, C.OffWhite, Enum.Material.SmoothPlastic)
+		box(offices, "Head", mid - 2, mid + 2, FLOOR + 10, top, 80, 80.3, C.OffWhite, Enum.Material.SmoothPlastic)
 		if i == 1 then
-			box(offices, "Glass", 224, 224.3, FLOOR, CEIL - 6, 80.3, 97, C.Glass, Enum.Material.Glass, officeGlass)
+			box(offices, "Glass", 224, 224.3, FLOOR, top, 80.3, 97, C.Glass, Enum.Material.Glass, officeGlass)
 		end
-		box(offices, "Glass", x1 - 0.15, x1 + 0.15, FLOOR, CEIL - 6, 80.3, 97, C.Glass, Enum.Material.Glass, officeGlass)
+		box(offices, "Glass", x1 - 0.15, x1 + 0.15, FLOOR, top, 80.3, 97, C.Glass, Enum.Material.Glass, officeGlass)
 		local plate = box(offices, "DoorPlate", mid - 2, mid + 2, FLOOR + 10.6, FLOOR + 11.6, 79.8, 80, C.Navy, Enum.Material.SmoothPlastic)
 		sign(plate, Enum.NormalId.Front, span[3] :: string, C.Gold, true)
 		box(offices, "Desk", mid - 4, mid + 4, FLOOR + 2.9, FLOOR + 3.2, 88, 92, C.Wood, Enum.Material.Wood)
@@ -902,7 +923,7 @@ local function buildInterior(model: Model)
 	box(lounge, "TableLegs", 165, 173, FLOOR, FLOOR + 1.3, 86, 88, C.Charcoal, Enum.Material.Metal)
 	chair(lounge, 159, 85, FLOOR, 270, C.Leather)
 	chair(lounge, 181, 85, FLOOR, 90, C.Leather)
-	local tv = box(lounge, "TV", 160, 176, FLOOR + 7, FLOOR + 14, 96.6, 97, C.Screen, Enum.Material.SmoothPlastic)
+	local tv = box(lounge, "TV", 160, 176, FLOOR + 4, FLOOR + 10.5, 96.6, 97, C.Screen, Enum.Material.SmoothPlastic)
 	sign(tv, Enum.NormalId.Front, "DRIVE THE DREAM", C.Gold, true)
 	box(lounge, "CoffeeBar", 151, 154.5, FLOOR, FLOOR + 3.4, 81, 96, C.Navy, Enum.Material.SmoothPlastic)
 	box(lounge, "CoffeeBarTop", 151, 155, FLOOR + 3.4, FLOOR + 3.7, 80.6, 96.4, C.White, Enum.Material.Marble)
@@ -916,7 +937,7 @@ local function buildInterior(model: Model)
 	plant(lounge, 183.5, 95, FLOOR, 2.2)
 	-- Many small pendants rather than one big light: the cheap signal that a space is lived in.
 	for index, p in { { 163, 84 }, { 169, 84 }, { 175, 84 }, { 163, 90 }, { 169, 90 }, { 175, 90 } } do
-		box(lounge, "PendantCord", p[1] - 0.04, p[1] + 0.04, 11, CEIL, p[2] - 0.04, p[2] + 0.04, C.Charcoal, Enum.Material.Metal, {
+		box(lounge, "PendantCord", p[1] - 0.04, p[1] + 0.04, 11, MEZZ, p[2] - 0.04, p[2] + 0.04, C.Charcoal, Enum.Material.Metal, {
 			collide = false,
 			shadow = false,
 			query = false,
@@ -949,8 +970,178 @@ local function buildInterior(model: Model)
 			end
 		end
 	end
-	local banner = box(ceiling, "WallBanner", SHOW.x1 - 1.4, SHOW.x1 - 1, FLOOR + 12, FLOOR + 16.5, 28, 76, C.Navy, Enum.Material.SmoothPlastic)
+	local banner = box(ceiling, "WallBanner", SHOW.x1 - 1.4, SHOW.x1 - 1, FLOOR + 17, FLOOR + 21.5, 28, 76, C.Navy, Enum.Material.SmoothPlastic)
 	sign(banner, Enum.NormalId.Left, "PERFORMANCE  •  LUXURY  •  EVERYDAY", C.Gold, true)
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The mezzanine: an upper floor round the back of the double-height hall. A west wing over the
+-- lounge (the owners' lounge), an east wing over the offices (the heritage gallery), and a
+-- bridge between them across the timber wall, reached by a floating stair up the east wall.
+-- The middle stays open to the ceiling: the flagship keeps its full height, and from upstairs
+-- the whole floor is on show over the glass.
+-- ---------------------------------------------------------------------------------------------
+local WEST_WING = { x0 = SHOW.x0 + 1, x1 = 186, z0 = 78, z1 = SHOW.z1 - 1 }
+local EAST_WING = { x0 = 224, x1 = SHOW.x1 - 1, z0 = 78, z1 = SHOW.z1 - 1 }
+local BRIDGE = { x0 = 186, x1 = 224, z0 = 91, z1 = SHOW.z1 - 2.6 }
+local STAIR = { x0 = SHOW.x1 - 5.6, x1 = SHOW.x1 - 1.4, z0 = 50, steps = 16, run = 1.75 }
+
+-- A glass rail along one open edge of the mezzanine: a pane, a steel handrail, and posts.
+local function balustrade(parent: Instance, x0: number, x1: number, z0: number, z1: number)
+	box(parent, "RailGlass", x0, x1, UPPER, UPPER + 3.3, z0, z1, C.Glass, Enum.Material.Glass, {
+		transparency = 0.55,
+		reflectance = 0.15,
+		query = false,
+		shadow = false,
+	})
+	local along = x1 - x0 > z1 - z0
+	local cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+	if along then
+		box(parent, "Handrail", x0, x1, UPPER + 3.3, UPPER + 3.6, cz - 0.15, cz + 0.15, C.Panel, Enum.Material.Metal)
+		local count = math.max(1, math.floor((x1 - x0) / 6))
+		for i = 0, count do
+			local x = x0 + 0.3 + (x1 - x0 - 0.6) * i / count
+			box(parent, "RailPost", x - 0.1, x + 0.1, UPPER, UPPER + 3.3, cz - 0.12, cz + 0.12, C.Charcoal, Enum.Material.Metal)
+		end
+	else
+		box(parent, "Handrail", cx - 0.15, cx + 0.15, UPPER + 3.3, UPPER + 3.6, z0, z1, C.Panel, Enum.Material.Metal)
+		local count = math.max(1, math.floor((z1 - z0) / 6))
+		for i = 0, count do
+			local z = z0 + 0.3 + (z1 - z0 - 0.6) * i / count
+			box(parent, "RailPost", cx - 0.12, cx + 0.12, UPPER, UPPER + 3.3, z - 0.1, z + 0.1, C.Charcoal, Enum.Material.Metal)
+		end
+	end
+end
+
+-- A sloped part from `a` to `b` (local points), `width` across and `depth` thick: stair stringers
+-- and the stair's rail.
+local function slope(parent: Instance, name: string, a: Vector3, b: Vector3, width: number, depth: number, color: Color3, material: Enum.Material, opts: Opts?): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = Vector3.new(width, depth, (b - a).Magnitude)
+	part.CFrame = origin * CFrame.lookAt((a + b) / 2, b)
+	style(part, color, material, opts)
+	part.Parent = parent
+	return part
+end
+
+-- A sofa facing `facing` degrees, built at (x0..x1, z) with its back to +Z before turning: here
+-- only ever 0 (facing the rail) or 180.
+local function sofa(parent: Instance, x0: number, x1: number, z: number, y: number, color: Color3): Model
+	local model = standIn(folder(parent, "Sofa"), "couch", 0)
+	box(model, "SofaBase", x0 + 1, x1 - 1, y, y + 2, z, z + 3.5, color, Enum.Material.Fabric)
+	box(model, "SofaBack", x0 + 1, x1 - 1, y + 2, y + 4.6, z + 3, z + 4.5, color, Enum.Material.Fabric)
+	box(model, "SofaArm", x0, x0 + 1, y, y + 3.2, z, z + 4.5, color, Enum.Material.Fabric)
+	box(model, "SofaArm", x1 - 1, x1, y, y + 3.2, z, z + 4.5, color, Enum.Material.Fabric)
+	return model
+end
+
+local function buildMezzanine(model: Model)
+	local mezz = folder(model, "Mezzanine")
+	for _, part in { WEST_WING, EAST_WING, BRIDGE } do
+		box(mezz, "Slab", part.x0, part.x1, MEZZ, UPPER, part.z0, part.z1, C.OffWhite, Enum.Material.SmoothPlastic)
+	end
+	-- A panel edge on every open side, with a warm line of light under it: the slab reads as a
+	-- floor floating in the hall, not a shelf.
+	local edges = {
+		{ WEST_WING.x0, WEST_WING.x1, WEST_WING.z0 - 0.25, WEST_WING.z0 },
+		{ WEST_WING.x1, WEST_WING.x1 + 0.25, WEST_WING.z0 - 0.25, BRIDGE.z0 },
+		{ BRIDGE.x0 + 0.25, BRIDGE.x1 - 0.25, BRIDGE.z0 - 0.25, BRIDGE.z0 },
+		{ EAST_WING.x0 - 0.25, EAST_WING.x0, EAST_WING.z0 - 0.25, BRIDGE.z0 },
+		{ EAST_WING.x0, STAIR.x0, EAST_WING.z0 - 0.25, EAST_WING.z0 },
+	}
+	for _, e in edges do
+		box(mezz, "Edge", e[1], e[2], MEZZ - 0.5, UPPER, e[3], e[4], C.Panel, Enum.Material.SmoothPlastic)
+		box(mezz, "EdgeGlow", e[1], e[2], MEZZ - 0.6, MEZZ - 0.5, e[3], e[4], C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	end
+
+	-- Glass rails on the open edges, each stopping short of the next so no two panes overlap.
+	local rails = folder(mezz, "Rails")
+	balustrade(rails, WEST_WING.x0, WEST_WING.x1 - 0.5, WEST_WING.z0 + 0.2, WEST_WING.z0 + 0.35)
+	balustrade(rails, WEST_WING.x1 - 0.35, WEST_WING.x1 - 0.2, WEST_WING.z0 + 0.5, BRIDGE.z0 + 0.2)
+	balustrade(rails, BRIDGE.x0, BRIDGE.x1, BRIDGE.z0 + 0.2, BRIDGE.z0 + 0.35)
+	balustrade(rails, EAST_WING.x0 + 0.2, EAST_WING.x0 + 0.35, EAST_WING.z0 + 0.5, BRIDGE.z0 + 0.2)
+	balustrade(rails, EAST_WING.x0 + 0.5, STAIR.x0 - 0.3, EAST_WING.z0 + 0.2, EAST_WING.z0 + 0.35)
+
+	-- The stair: floating timber treads up the east wall on one steel stringer, a glass rail on
+	-- the open side. Sixteen rises of 0.8 from the floor to the mezzanine.
+	local stair = folder(mezz, "Stair")
+	local rise = (UPPER - FLOOR) / STAIR.steps
+	for i = 0, STAIR.steps - 1 do
+		local za = STAIR.z0 + i * STAIR.run
+		local top = FLOOR + rise * (i + 1)
+		box(stair, "Tread", STAIR.x0, STAIR.x1, top - 0.35, top, za, za + STAIR.run, C.Wood, Enum.Material.Wood)
+	end
+	local zTop = STAIR.z0 + STAIR.steps * STAIR.run
+	local mid = (STAIR.x0 + STAIR.x1) / 2
+	slope(stair, "Stringer", Vector3.new(mid, FLOOR, STAIR.z0), Vector3.new(mid, UPPER - 0.4, zTop), 1.4, 0.7, C.Charcoal, Enum.Material.Metal)
+	local railLow, railHigh = Vector3.new(STAIR.x0 - 0.2, FLOOR + 1.8, STAIR.z0 + 0.8), Vector3.new(STAIR.x0 - 0.2, UPPER + 1.8, zTop)
+	slope(stair, "RailGlass", railLow, railHigh, 0.15, 3.2, C.Glass, Enum.Material.Glass, { transparency = 0.55, reflectance = 0.15, query = false, shadow = false })
+	slope(stair, "Handrail", railLow + Vector3.new(0, 1.75, 0), railHigh + Vector3.new(0, 1.75, 0), 0.3, 0.3, C.Panel, Enum.Material.Metal)
+
+	-- West wing: the owners' lounge. Two sofas to the rail, a bar, planters, pendants, its name.
+	local lounge = folder(mezz, "OwnersLounge")
+	box(lounge, "Rug", 157, 185, UPPER, UPPER + 0.05, 80.5, 94, C.Rug, Enum.Material.Fabric, { collide = false })
+	sofa(lounge, 158, 170, 88, UPPER, C.Leather)
+	sofa(lounge, 173, 185, 88, UPPER, C.Leather)
+	for _, x in { 160, 175 } do
+		box(lounge, "LowTable", x, x + 8, UPPER + 1.2, UPPER + 1.5, 82.5, 85.5, C.Wood, Enum.Material.Wood)
+		box(lounge, "LowTableBase", x + 1, x + 7, UPPER, UPPER + 1.2, 83.2, 84.8, C.Charcoal, Enum.Material.Metal)
+	end
+	box(lounge, "Bar", 151.5, 155, UPPER, UPPER + 3.4, 81, 95, C.Navy, Enum.Material.SmoothPlastic)
+	box(lounge, "BarTop", 151.5, 155.4, UPPER + 3.4, UPPER + 3.7, 80.6, 95.4, C.White, Enum.Material.Marble)
+	box(lounge, "BarGlow", 155, 155.05, UPPER + 0.3, UPPER + 0.5, 81.2, 94.8, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	for _, z in { 84, 88, 92 } do
+		post(lounge, "StoolLeg", 156.6, z, UPPER, UPPER + 2.6, 0.5, C.Charcoal, Enum.Material.Metal)
+		disc(lounge, "StoolSeat", 156.6, z, UPPER + 2.6, UPPER + 3, 2.2, C.Leather, Enum.Material.Fabric)
+	end
+	plant(lounge, 153.5, 80, UPPER, 2)
+	plant(lounge, 171.5, 95.5, UPPER, 2)
+	local lname = box(lounge, "Name", 158, 184, UPPER + 8, UPPER + 10.5, SHOW.z1 - 1.4, SHOW.z1 - 1, C.Navy, Enum.Material.SmoothPlastic)
+	sign(lname, Enum.NormalId.Front, "OWNERS' LOUNGE", C.Gold, true)
+	for _, x in { 164, 171.5, 179 } do
+		box(lounge, "PendantCord", x - 0.04, x + 0.04, UPPER + 9, CEIL - 0.15, 84 - 0.04, 84 + 0.04, C.Charcoal, Enum.Material.Metal, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+		local lamp = ball(lounge, "Pendant", Vector3.new(x, UPPER + 8.6, 84), 1.4, C.Warm, Enum.Material.Neon)
+		if x == 171.5 then
+			light(lamp, "Point", 1.1, 20)
+		end
+	end
+
+	-- East wing: the heritage gallery. Three framed panels lit from above, a plinth for a car of
+	-- the marque's past (empty until cars come), benches to sit and look.
+	local gallery = folder(mezz, "Gallery")
+	for index, panelText in { "EST. 1968", "MOTORSPORT", "HANDCRAFTED" } do
+		local x0 = 227 + (index - 1) * 10
+		local x1 = x0 + 8
+		local face = box(gallery, "Panel", x0, x1, UPPER + 3, UPPER + 9, SHOW.z1 - 1.3, SHOW.z1 - 1, C.Navy, Enum.Material.SmoothPlastic)
+		sign(face, Enum.NormalId.Front, panelText, C.Gold, true)
+		box(gallery, "Frame", x0 - 0.3, x1 + 0.3, UPPER + 9, UPPER + 9.3, SHOW.z1 - 1.45, SHOW.z1 - 1, C.Gold, Enum.Material.Metal)
+		box(gallery, "Frame", x0 - 0.3, x1 + 0.3, UPPER + 2.7, UPPER + 3, SHOW.z1 - 1.45, SHOW.z1 - 1, C.Gold, Enum.Material.Metal)
+		box(gallery, "Frame", x0 - 0.3, x0, UPPER + 3, UPPER + 9, SHOW.z1 - 1.45, SHOW.z1 - 1, C.Gold, Enum.Material.Metal)
+		box(gallery, "Frame", x1, x1 + 0.3, UPPER + 3, UPPER + 9, SHOW.z1 - 1.45, SHOW.z1 - 1, C.Gold, Enum.Material.Metal)
+		local lamp = box(gallery, "PictureLight", (x0 + x1) / 2 - 1.5, (x0 + x1) / 2 + 1.5, UPPER + 10, UPPER + 10.4, SHOW.z1 - 2.2, SHOW.z1 - 1, C.Charcoal, Enum.Material.Metal)
+		light(lamp, "Spot", 1.4, 12, C.Warm, 80)
+		box(gallery, "PictureLens", (x0 + x1) / 2 - 1.4, (x0 + x1) / 2 + 1.4, UPPER + 9.95, UPPER + 10, SHOW.z1 - 2.1, SHOW.z1 - 1.1, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	end
+	local gname = box(gallery, "Name", 230, 254, UPPER + 11, UPPER + 13, SHOW.z1 - 1.4, SHOW.z1 - 1, C.Navy, Enum.Material.SmoothPlastic)
+	sign(gname, Enum.NormalId.Front, "HERITAGE GALLERY", C.Gold, true)
+	box(gallery, "Plinth", 234, 252, UPPER, UPPER + 0.8, 81, 89, C.Charcoal, Enum.Material.SmoothPlastic, { reflectance = 0.25 })
+	for _, z in { 81, 89 } do
+		box(gallery, "PlinthEdge", 234, 252, UPPER + 0.2, UPPER + 0.6, z - 0.1, z + 0.1, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	end
+	for _, x in { 229, 257 } do
+		local bench = standIn(folder(gallery, "Bench"), "bench", 90)
+		box(bench, "BenchSeat", x - 0.8, x + 0.8, UPPER + 1.5, UPPER + 1.9, 82, 88, C.Wood, Enum.Material.Wood)
+		box(bench, "BenchLeg", x - 0.7, x + 0.7, UPPER, UPPER + 1.5, 82.2, 82.7, C.Charcoal, Enum.Material.Metal)
+		box(bench, "BenchLeg", x - 0.7, x + 0.7, UPPER, UPPER + 1.5, 87.3, 87.8, C.Charcoal, Enum.Material.Metal)
+	end
+	plant(gallery, 226.5, 95.5, UPPER, 2)
+	local glow = box(gallery, "Glow", 242, 244, CEIL - 0.4, CEIL - 0.15, 86, 88, C.White, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	light(glow, "Point", 1, 22, C.White)
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -969,11 +1160,38 @@ local function buildPlaza(model: Model)
 		box(bench, "BenchLeg", x + 2.3, x + 2.8, PLAZA, PLAZA + 1.5, 14.1, 15.5, C.Charcoal, Enum.Material.Metal)
 	end
 
+	-- A reflecting pool either side of the entrance: dark stone, still water, a row of low jets and
+	-- a light under them. The water is what makes a forecourt read as a place and not a car park.
+	for _, span in { { 176, 191 }, { 223, 238 } } do
+		local x0, x1, z0, z1 = span[1], span[2], 9.5, 13
+		box(plaza, "PoolFloor", x0 + 0.5, x1 - 0.5, PLAZA, PLAZA + 0.3, z0 + 0.5, z1 - 0.5, C.Charcoal, Enum.Material.Slate)
+		box(plaza, "PoolRim", x0, x1, PLAZA, PLAZA + 1, z0, z0 + 0.5, C.Kerb, Enum.Material.Concrete)
+		box(plaza, "PoolRim", x0, x1, PLAZA, PLAZA + 1, z1 - 0.5, z1, C.Kerb, Enum.Material.Concrete)
+		box(plaza, "PoolRim", x0, x0 + 0.5, PLAZA, PLAZA + 1, z0 + 0.5, z1 - 0.5, C.Kerb, Enum.Material.Concrete)
+		box(plaza, "PoolRim", x1 - 0.5, x1, PLAZA, PLAZA + 1, z0 + 0.5, z1 - 0.5, C.Kerb, Enum.Material.Concrete)
+		box(plaza, "Water", x0 + 0.5, x1 - 0.5, PLAZA + 0.3, PLAZA + 0.75, z0 + 0.5, z1 - 0.5, Color3.fromRGB(40, 86, 118), Enum.Material.Glass, {
+			transparency = 0.15,
+			reflectance = 0.45,
+			collide = false,
+			query = false,
+			shadow = false,
+		})
+		local count = 5
+		for i = 1, count do
+			local x = x0 + (x1 - x0) * i / (count + 1)
+			post(plaza, "Jet", x, (z0 + z1) / 2, PLAZA + 0.75, PLAZA + 2.2, 0.25, C.White, Enum.Material.SmoothPlastic)
+			ball(plaza, "Spray", Vector3.new(x, PLAZA + 2.3, (z0 + z1) / 2), 0.6, C.White, Enum.Material.SmoothPlastic)
+		end
+		local lamp = box(plaza, "PoolLight", (x0 + x1) / 2 - 1, (x0 + x1) / 2 + 1, PLAZA + 0.3, PLAZA + 0.4, (z0 + z1) / 2 - 0.4, (z0 + z1) / 2 + 0.4, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+		local up = light(lamp, "Spot", 1.2, 10, C.Warm, 90) :: SpotLight
+		up.Face = Enum.NormalId.Top
+	end
+
 	-- Flags on three poles by the corner, where the road can see them.
 	for i, x in { 152, 157, 162 } do
-		post(plaza, "Flagpole", x, 9, PLAZA, 24, 0.35, C.White, Enum.Material.Metal)
-		ball(plaza, "Finial", Vector3.new(x, 24.2, 9), 0.6, C.Gold, Enum.Material.Metal)
-		local flag = box(plaza, "Flag", x + 0.2, x + 4.6, 20.4, 23.4, 8.95, 9.05, ({ C.Navy, C.Gold, C.Navy })[i], Enum.Material.Fabric, {
+		post(plaza, "Flagpole", x, 9, PLAZA, 32, 0.4, C.White, Enum.Material.Metal)
+		ball(plaza, "Finial", Vector3.new(x, 32.2, 9), 0.7, C.Gold, Enum.Material.Metal)
+		local flag = box(plaza, "Flag", x + 0.2, x + 4.6, 27.8, 31.4, 8.95, 9.05, ({ C.Navy, C.Gold, C.Navy })[i], Enum.Material.Fabric, {
 			collide = false,
 			shadow = false,
 			query = false,
@@ -990,20 +1208,22 @@ local function buildPlaza(model: Model)
 	-- narrow fits MERIDIAN at two thirds of a stud -- the size of the spec cards indoors.
 	local pylon = folder(model, "Pylon")
 	box(pylon, "Base", 139.9, 149.1, WALK, 2.6, 8.2, 10.8, C.Kerb, Enum.Material.Concrete)
-	box(pylon, "Body", 140.2, 148.8, 2.6, 27, 8.6, 10.4, C.Navy, Enum.Material.SmoothPlastic)
+	box(pylon, "Body", 140.2, 148.8, 2.6, 36, 8.6, 10.4, C.Navy, Enum.Material.SmoothPlastic)
 	local function panel(name: string, y0: number, y1: number, text: string, colour: Color3, font: Enum.Font)
 		local face = box(pylon, name, 140.4, 148.6, y0, y1, 8.55, 10.45, C.Navy, Enum.Material.SmoothPlastic, { collide = false })
 		sign(face, Enum.NormalId.Front, text, colour, true, font)
 		sign(face, Enum.NormalId.Back, text, colour, true, font)
 	end
-	panel("Mark", 20.2, 26.6, "M", C.Gold, Enum.Font.GothamBlack)
-	panel("Name", 18, 19.8, "MERIDIAN", C.Gold, Enum.Font.GothamBlack)
-	panel("Motors", 16.2, 17.8, "MOTORS", C.Gold, Enum.Font.GothamBlack)
-	box(pylon, "Rule", 140.4, 148.6, 15.5, 15.7, 8.5, 10.5, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
-	panel("Sales", 13.2, 14.8, "SALES", C.White, Enum.Font.GothamBold)
-	panel("Service", 11.2, 12.8, "SERVICE", C.White, Enum.Font.GothamBold)
-	panel("Wash", 9.2, 10.8, "CAR WASH", C.White, Enum.Font.GothamBold)
-	box(pylon, "Cap", 140, 149, 27, 27.6, 8.4, 10.6, C.Gold, Enum.Material.Neon, { shadow = false })
+	panel("Mark", 27.4, 35.4, "M", C.Gold, Enum.Font.GothamBlack)
+	panel("Name", 24.8, 26.8, "MERIDIAN", C.Gold, Enum.Font.GothamBlack)
+	panel("Motors", 22.8, 24.6, "MOTORS", C.Gold, Enum.Font.GothamBlack)
+	box(pylon, "Rule", 140.4, 148.6, 22.1, 22.3, 8.5, 10.5, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	panel("Sales", 19.6, 21.2, "SALES", C.White, Enum.Font.GothamBold)
+	panel("Service", 17.6, 19.2, "SERVICE", C.White, Enum.Font.GothamBold)
+	panel("Wash", 15.6, 17.2, "CAR WASH", C.White, Enum.Font.GothamBold)
+	-- A lit line down the plain lower column, so it reads as part of the sign and not a post.
+	box(pylon, "Stripe", 144.2, 144.6, 4.6, 15, 8.5, 10.5, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	box(pylon, "Cap", 140, 149, 36, 36.6, 8.4, 10.6, C.Gold, Enum.Material.Neon, { shadow = false })
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -1090,9 +1310,9 @@ local function buildDetail(model: Model)
 	-- A shadow line across the glazing at head height: one band, and the wall stops reading as
 	-- a single sheet of nothing.
 	for _, span in { { SHOW.x0, 198.8 }, { 215.2, SHOW.x1 } } do
-		box(frame, "Spandrel", span[1], span[2], FLOOR + 11.2, FLOOR + 11.9, SHOW.z0 - 0.2, SHOW.z0 + 1.05, C.Charcoal, Enum.Material.Metal, { shadow = false })
+		box(frame, "Spandrel", span[1], span[2], MEZZ, UPPER, SHOW.z0 - 0.2, SHOW.z0 + 1.05, C.Charcoal, Enum.Material.Metal, { shadow = false })
 	end
-	box(frame, "Spandrel", SHOW.x0 - 0.2, SHOW.x0 + 1.05, FLOOR + 11.2, FLOOR + 11.9, SHOW.z0, SHOW.z1, C.Charcoal, Enum.Material.Metal, { shadow = false })
+	box(frame, "Spandrel", SHOW.x0 - 0.2, SHOW.x0 + 1.05, MEZZ, UPPER, SHOW.z0, SHOW.z1, C.Charcoal, Enum.Material.Metal, { shadow = false })
 	for _, corner in { { SHOW.x0, SHOW.z0 }, { SHOW.x1, SHOW.z0 }, { SHOW.x0, SHOW.z1 }, { SHOW.x1, SHOW.z1 } } do
 		-- Stops inside the fascia, which wraps over its head: flush with the fascia's top, the two
 		-- would fight for the same face under the coping.
@@ -1156,7 +1376,7 @@ local function buildDetail(model: Model)
 	for _, x in { 256.4, 258.6 } do
 		box(roof, "LadderRail", x - 0.12, x + 0.12, FLOOR + 3, ROOF + 2.5, SHOW.z1 + 0.05, SHOW.z1 + 0.35, C.Charcoal, Enum.Material.Metal, { collide = false })
 	end
-	for i = 0, 8 do
+	for i = 0, math.floor((ROOF - FLOOR - 3.6) / 2) do
 		box(roof, "Rung", 256.4, 258.6, FLOOR + 3.6 + i * 2, FLOOR + 3.8 + i * 2, SHOW.z1 + 0.1, SHOW.z1 + 0.3, C.Charcoal, Enum.Material.Metal, {
 			collide = false,
 			shadow = false,
@@ -1807,9 +2027,9 @@ local function buildEastSide(model: Model)
 		reflectance = 0.2,
 		query = false,
 	})
-	local logo = box(east, "Logo", SHOW.x1 + 0.9, SHOW.x1 + 1.3, 5, 13, 50, 70, C.Navy, Enum.Material.SmoothPlastic)
+	local logo = box(east, "Logo", SHOW.x1 + 0.9, SHOW.x1 + 1.3, 8, 24, 48, 72, C.Navy, Enum.Material.SmoothPlastic)
 	sign(logo, Enum.NormalId.Right, "M", C.Gold, true)
-	box(east, "LogoGlow", SHOW.x1 + 0.85, SHOW.x1 + 1.35, 4.7, 5, 49.7, 70.3, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
+	box(east, "LogoGlow", SHOW.x1 + 0.85, SHOW.x1 + 1.35, 7.7, 8, 47.7, 72.3, C.Gold, Enum.Material.Neon, { collide = false, shadow = false })
 
 	-- Skylights down the middle of the showroom roof.
 	for _, x in { 178, 207, 236 } do
@@ -1878,6 +2098,7 @@ function DealershipBuild.Build(corner: CFrame, parent: Instance): Model
 	buildLot(model)
 	buildShell(model)
 	buildInterior(model)
+	buildMezzanine(model)
 	buildPlaza(model)
 	buildDetail(model)
 	buildService(model)

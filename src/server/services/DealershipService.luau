@@ -38,6 +38,11 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local DataService = require(script.Parent.DataService)
 local VehicleService = require(script.Parent.VehicleService)
 
+-- Cars are off the floor for now, on the owner's word (2026-09-22): "remove cars, we'll add that
+-- concept later". The slots, the buying and the test drives are all still here; true stands the
+-- display cars again.
+local SHOW_CARS = false
+
 local DealershipBuild = require(script.Parent.Parent.world.DealershipBuild)
 local DealershipDressing = require(script.Parent.Parent.world.DealershipDressing)
 local DealershipProps = require(script.Parent.Parent.content.DealershipProps)
@@ -424,7 +429,9 @@ function DealershipService:Start()
 		return
 	end
 	dealership = model
-	stock(model)
+	if SHOW_CARS then
+		stock(model)
+	end
 	-- The props: the Sketchfab models content/DealershipProps names, in place of the builder's
 	-- block stand-ins, wherever one is uploaded. Off the start path, because loading an asset
 	-- waits on the network and nothing else here should wait for a chair.

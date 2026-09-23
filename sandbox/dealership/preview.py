@@ -64,6 +64,8 @@ VIEWS = {
     "cabin": ((30, 6.5, 68), (22, 4, 92)),
     "street": ((110, 5.5, -30), (200, 9, 30)),  # across the road, at a player's eye
     "bays": ((186, 8, 99), (214, 6, 120)),  # the workshop from the service lane
+    "mezz": ((242, 19, 86), (205, 6, 42)),  # from the gallery, over the rail
+    "hall": ((182, 5.5, 30), (214, 15, 90)),  # a player inside the doors, looking up the hall
 }
 
 # SurfaceGui faces, in the part's own axes: the outward normal, the gui's x axis and its down

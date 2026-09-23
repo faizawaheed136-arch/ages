@@ -38,7 +38,9 @@ ROJO = pathlib.Path.home() / ".aftman/tool-storage/rojo-rbx/rojo/7.7.0/rojo.exe"
 # because DealershipService stocks it when the server starts.
 PLAN = [
     ("Dealership.ages", "DealershipBuild", (-280, 1.95, 1940), None),
-    ("Dealership.sandbox", "DealershipBuild", (0, 0, 0), "stockDisplayCars"),
+    # Cars are out for now, on the owner's word (2026-09-22): "remove cars, we'll add that concept
+    # later". Put "stockDisplayCars" back here to stand the game's display cars again.
+    ("Dealership.sandbox", "DealershipBuild", (0, 0, 0), None),
     ("SandboxSite", "SandboxSite", (0, 0, 0), None),
 ]
 
