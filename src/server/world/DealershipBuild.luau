@@ -27,9 +27,12 @@
 	tools/check.py.
 
 	THE MARKERS the services read, all found by name under the model:
-	  * `CounterMark` -- where the `auto_dealer` place point belongs: in front of the sales
-	    counter, level with the side door, so a bought car parks in the pickup lane 36 studs
-	    west of it (Config.Vehicles.ParkStuds) with a clear line of sight through the door.
+	  * `CounterMark` -- where the `auto_dealer` place point belongs: across the buy desk from
+	    the salesman, in the green circle in the middle of the showroom, so the customers' queue
+	    forms down the runway toward the doors. Moved there from the reception counter by the
+	    side door on the owner's word (2026-09-23). VehicleService parks a bought car
+	    Config.Vehicles.ParkStuds west of the place point, which from here is still inside the
+	    showroom: before this goes live in AGES, point that search at the handover bay.
 	  * `TestDriveBay` x2 -- where a test-drive car is put, nose to the road.
 	  * `TestDriveReturn` -- where a driver is set down when a test drive ends.
 	  * `Turntable` models -- their `Rotor` is spun on each client by DealershipTurntables.
@@ -103,6 +106,12 @@ local C = {
 	-- The showroom floor: dark timber planks, so the lit cars and the light stone runway stand
 	-- out on it.
 	WoodDark = Color3.fromRGB(46, 40, 38),
+	-- The buy desk's top and front, and the panelling under the east deck.
+	Walnut = Color3.fromRGB(112, 76, 52),
+	-- The salesman.
+	Skin = Color3.fromRGB(224, 172, 132),
+	Hair = Color3.fromRGB(52, 36, 26),
+	Shoe = Color3.fromRGB(24, 22, 22),
 }
 
 local FLAG_COLOURS = { C.Red, C.Blue, C.Yellow, C.White }
@@ -762,14 +771,18 @@ end
 -- The skylight strip's opening in the roof and the ceiling.
 local SKY = { x0 = 201, x1 = 213, z0 = 28, z1 = 62 }
 
+-- The buy desk, in the middle of the showroom (buildBuyStation), and the top of its platform.
+local BUY = { x = 207, z = 68 }
+local BUY_TOP = FLOOR + 0.65
+
 local function buildShell(model: Model)
 	local shell = folder(model, "Shell")
 	-- Dark timber underfoot, and a runway of light stone from the doors to the hero car, lit along
 	-- its edges: the floor says where to walk.
 	box(shell, "Floor", SHOW.x0, SHOW.x1, 0, FLOOR, SHOW.z0, SHOW.z1, C.WoodDark, Enum.Material.WoodPlanks, { reflectance = 0.12 })
-	box(shell, "Runway", 201, 213, FLOOR, FLOOR + 0.02, FRONT.apex + 1, 60, C.Marble, Enum.Material.Marble, { collide = false, query = false, reflectance = 0.2 })
+	box(shell, "Runway", 201, 213, FLOOR, FLOOR + 0.02, FRONT.apex + 1, BUY.z - 16, C.Marble, Enum.Material.Marble, { collide = false, query = false, reflectance = 0.2 })
 	for _, x in { 200.8, 213.2 } do
-		box(shell, "RunwayEdge", x - 0.12, x + 0.12, FLOOR, FLOOR + 0.03, FRONT.apex + 1, 60, C.Accent, Enum.Material.Neon, { collide = false, query = false, shadow = false })
+		box(shell, "RunwayEdge", x - 0.12, x + 0.12, FLOOR, FLOOR + 0.03, FRONT.apex + 1, BUY.z - 16, C.Accent, Enum.Material.Neon, { collide = false, query = false, shadow = false })
 	end
 
 	-- The west face: 8 bays, a side door in bay 4, opposite the counter and the pickup lane. The
@@ -1023,82 +1036,216 @@ local function desk(parent: Instance, x: number, z: number, facingDegrees: numbe
 	end
 end
 
-local function buildInterior(model: Model)
-	local inside = folder(model, "Interior")
-
-	-- The two turntables in the window, and the hero car on its podium at the end of the runway.
-	turntable(inside, "TurntableWest", "roadster", 178, 44)
-	turntable(inside, "TurntableEast", "coupe", 228, 44)
-
-	local hero = folder(inside, "Hero")
-	box(hero, "Podium", 197, 217, FLOOR, FLOOR + 1, 60, 86, C.Charcoal, Enum.Material.SmoothPlastic, { reflectance = 0.25 })
-	for _, x in { 197, 217 } do
-		box(hero, "PodiumEdge", x - 0.1, x + 0.1, FLOOR + 0.2, FLOOR + 0.9, 60, 86, C.Accent, Enum.Material.Neon, { collide = false, shadow = false })
+-- ---------------------------------------------------------------------------------------------
+-- The buy desk: the middle of the room. A green circle -- a raised white disc ringed in green
+-- light, on a stone apron with a second green ring round it -- and on it a work desk, where the
+-- salesman sits waving at the doors under a green halo and the room's one sign that says what
+-- the building is for. The first thing a player sees through the doors, at the end of the runway.
+-- ---------------------------------------------------------------------------------------------
+-- The salesman: a seated figure of parts, built facing -Z (the doors) with his chair's seat top
+-- at `y` + 2.3. Blocky, the way the game's own people are: a head with the engine's own smiling
+-- face (a built-in texture, not an upload), a navy suit, a green tie, one hand on the desk and
+-- the other up in a wave. Nothing on him collides: he is scenery a player can stand beside.
+local function salesman(parent: Instance, cx: number, cz: number, y: number)
+	local man = folder(parent, "Salesman")
+	man:SetAttribute("Npc", "car_salesman")
+	local body: Opts = { collide = false, query = false }
+	local function limb(name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, color: Color3)
+		box(man, name, cx + x0, cx + x1, y + y0, y + y1, cz + z0, cz + z1, color, Enum.Material.SmoothPlastic, body)
 	end
-	box(hero, "PodiumEdge", 197, 217, FLOOR + 0.2, FLOOR + 0.9, 59.9, 60.1, C.Accent, Enum.Material.Neon, { collide = false, shadow = false })
-	slot(hero, "roadster", "Hero", 207, FLOOR + 1, 73, 0)
-	-- The screen on the timber wall behind the car. It replaced a navy block that stood in front of
-	-- the wall and hid it: the timber is the warm thing in the room, and it should be what frames
-	-- the flagship.
-	box(hero, "ScreenBezel", 197.4, 216.6, FLOOR + 3.6, FLOOR + 10.4, SHOW.z1 - 2.65, SHOW.z1 - 2.5, C.Charcoal, Enum.Material.Metal)
-	local screen = box(hero, "Screen", 198, 216, FLOOR + 4, FLOOR + 10, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.ScreenGlow, Enum.Material.Neon, { shadow = false })
-	sign(screen, Enum.NormalId.Front, "MERIDIAN", C.Navy, true)
-	spot(hero, 201, 70, 3.5)
-	spot(hero, 213, 70, 3.5)
+	-- Torso, and the shirt and tie on its front.
+	limb("Torso", -1, 1, 2.3, 4.3, 3.6, 4.6, C.Navy)
+	limb("Shirt", -0.35, 0.35, 3.35, 4.3, 3.55, 3.6, C.White)
+	limb("Tie", -0.13, 0.13, 3.45, 4.2, 3.5, 3.55, C.Green)
+	-- Legs: thighs along the seat, shins down to the floor, under the desk's top.
+	for _, side in { -1, 1 } do
+		local x0, x1 = if side < 0 then -0.95 else 0.05, if side < 0 then -0.05 else 0.95
+		limb("Thigh", x0, x1, 2.3, 2.95, 2.0, 3.6, C.Charcoal)
+		limb("Shin", x0, x1, 0.35, 2.3, 2.0, 2.75, C.Charcoal)
+		limb("Shoe", x0 - 0.02, x1 + 0.02, 0, 0.35, 1.7, 2.8, C.Shoe)
+	end
+	-- His right arm (+X, facing the doors) up in a wave; his left on the desk by the keyboard.
+	limb("UpperArm", 1, 2.3, 3.75, 4.3, 3.75, 4.45, C.Navy)
+	limb("Forearm", 2.3, 2.85, 3.75, 5.3, 3.8, 4.4, C.Navy)
+	limb("Hand", 2.32, 2.83, 5.3, 5.85, 3.85, 4.35, C.Skin)
+	limb("UpperArm", -1.95, -1.05, 3.35, 4.3, 3.7, 4.5, C.Navy)
+	limb("Forearm", -1.9, -1.1, 3.3, 3.85, 1.7, 3.7, C.Navy)
+	limb("Hand", -1.85, -1.15, 3.3, 3.75, 1.25, 1.7, C.Skin)
 
-	-- A ring of light hung over the flagship: the showroom's one piece of theatre, and the
-	-- thing a player sees first through the doors, at the far end of the runway.
-	local halo = folder(hero, "Halo")
-	for ringIndex, ring in { { y = FLOOR + 20.5, r = 9, n = 32 }, { y = FLOOR + 21.7, r = 6.4, n = 24 } } do
+	-- The head: a head-shaped mesh on the standard 2x1x1 head part, and the face on its front.
+	local head = Instance.new("Part")
+	head.Name = "Head"
+	head.Size = Vector3.new(2, 1, 1)
+	head.CFrame = at(cx, y + 4.95, cz + 4.1)
+	style(head, C.Skin, Enum.Material.SmoothPlastic, body)
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Head
+	mesh.Scale = Vector3.new(1.25, 1.25, 1.25)
+	mesh.Parent = head
+	local face = Instance.new("Decal")
+	face.Name = "face"
+	face.Face = Enum.NormalId.Front
+	face.Texture = "rbxasset://textures/face.png"
+	face.Parent = head
+	head.Parent = man
+	-- Short hair: a cap over the crown and down the back.
+	limb("Hair", -0.68, 0.68, 5.45, 5.72, 3.42, 4.78, C.Hair)
+	limb("Hair", -0.68, 0.68, 4.7, 5.45, 4.6, 4.78, C.Hair)
+end
+
+-- A proper work desk, facing -Z: a walnut top over two white drawer pedestals and a knee space,
+-- a front panel to the customers lit green top and bottom, and the working clutter of the job --
+-- a monitor, keyboard and mouse, a lamp, papers, a pen pot, a plant, a name plate.
+local function workDesk(parent: Instance, cx: number, cz: number, y: number)
+	local model = folder(parent, "WorkDesk")
+	local trim: Opts = { collide = false, shadow = false, query = false }
+	local small: Opts = { collide = false, query = false }
+	box(model, "Top", cx - 4.6, cx + 4.6, y + 3, y + 3.3, cz - 2.2, cz + 2.2, C.Walnut, Enum.Material.Wood, { reflectance = 0.05 })
+	for _, side in { -1, 1 } do
+		local x0, x1 = if side < 0 then cx - 4.4 else cx + 2.1, if side < 0 then cx - 2.1 else cx + 4.4
+		box(model, "Pedestal", x0, x1, y, y + 3, cz - 1.8, cz + 2, C.White, Enum.Material.SmoothPlastic)
+		-- Three drawers on the staff side, each with a steel pull.
+		for _, band in { { 0.15, 0.95 }, { 1.05, 1.95 }, { 2.05, 2.85 } } do
+			box(model, "Drawer", x0 + 0.12, x1 - 0.12, y + band[1], y + band[2], cz + 2, cz + 2.06, C.OffWhite, Enum.Material.SmoothPlastic, trim)
+			local mid = (x0 + x1) / 2
+			local py = y + band[2] - 0.25
+			box(model, "Pull", mid - 0.5, mid + 0.5, py - 0.06, py + 0.06, cz + 2.06, cz + 2.14, C.Panel, Enum.Material.Metal, trim)
+		end
+	end
+	box(model, "Front", cx - 4.4, cx + 4.4, y + 0.5, y + 3, cz - 2, cz - 1.8, C.Walnut, Enum.Material.Wood)
+	for _, band in { { 0.5, 0.65 }, { 2.82, 2.97 } } do
+		box(model, "FrontGlow", cx - 4.4, cx + 4.4, y + band[1], y + band[2], cz - 2.05, cz - 2, C.Green, Enum.Material.Neon, trim)
+	end
+
+	-- On the top. Nothing tall on his right, where the wave is: the monitor is on his left.
+	local top = y + 3.3
+	monitor(model, cx - 2.9, cz + 0.7, top, 195)
+	box(model, "Keyboard", cx - 1.5, cx + 0.5, top, top + 0.08, cz + 0.9, cz + 1.5, C.Charcoal, Enum.Material.SmoothPlastic, small)
+	box(model, "Mouse", cx + 0.9, cx + 1.2, top, top + 0.1, cz + 1, cz + 1.4, C.Charcoal, Enum.Material.SmoothPlastic, small)
+	disc(model, "LampBase", cx + 3.9, cz + 1.3, top, top + 0.1, 0.8, C.Charcoal, Enum.Material.Metal, small)
+	post(model, "LampStem", cx + 3.9, cz + 1.3, top + 0.1, top + 1.75, 0.15, C.Charcoal, Enum.Material.Metal)
+	box(model, "LampHead", cx + 2.9, cx + 3.9, top + 1.5, top + 1.85, cz + 1.05, cz + 1.55, C.Charcoal, Enum.Material.Metal, small)
+	box(model, "LampBulb", cx + 3.1, cx + 3.7, top + 1.45, top + 1.5, cz + 1.15, cz + 1.45, C.Warm, Enum.Material.Neon, trim)
+	box(model, "Paper", cx + 1.6, cx + 2.8, top, top + 0.06, cz - 1.4, cz - 0.2, C.White, Enum.Material.SmoothPlastic, small)
+	box(model, "Paper", cx + 1.8, cx + 3, top + 0.06, top + 0.1, cz - 1.2, cz, C.White, Enum.Material.SmoothPlastic, small)
+	post(model, "PenPot", cx + 3.9, cz - 1.2, top, top + 0.6, 0.4, C.Charcoal, Enum.Material.Metal)
+	plant(model, cx - 4, cz - 1.3, top, 0.7)
+	local plate = box(model, "NamePlate", cx - 1.3, cx + 1.3, top, top + 0.5, cz - 2, cz - 1.8, C.Charcoal, Enum.Material.SmoothPlastic, small)
+	sign(plate, Enum.NormalId.Front, "SALES", C.Green, true, Enum.Font.GothamBold)
+end
+
+-- The salesman's chair: a tall black executive chair on a five-star base.
+local function officeChair(parent: Instance, cx: number, cz: number, y: number)
+	local model = standIn(folder(parent, "OfficeChair"), "chair", 0)
+	disc(model, "Base", cx, cz + 4.1, y, y + 0.2, 2.4, C.Charcoal, Enum.Material.Metal)
+	post(model, "Stem", cx, cz + 4.1, y + 0.2, y + 1.9, 0.4, C.Charcoal, Enum.Material.Metal)
+	box(model, "Seat", cx - 1.3, cx + 1.3, y + 1.9, y + 2.3, cz + 2.95, cz + 5.2, C.Leather, Enum.Material.Fabric)
+	box(model, "Back", cx - 1.25, cx + 1.25, y + 2.3, y + 6.2, cz + 4.8, cz + 5.25, C.Leather, Enum.Material.Fabric)
+end
+
+local function buildBuyStation(model: Model)
+	local station = folder(model, "BuyStation")
+	local cx, cz = BUY.x, BUY.z
+	local glow: Opts = { collide = false, shadow = false, query = false }
+
+	-- The circle: a green ring on the floor round a stone apron, and the raised disc inside it
+	-- with a band of green round its side and a line of green let into its top.
+	disc(station, "RingGlow", cx, cz, FLOOR, FLOOR + 0.04, 32, C.Green, Enum.Material.Neon, glow)
+	disc(station, "Apron", cx, cz, FLOOR, FLOOR + 0.05, 30.8, C.Marble, Enum.Material.Marble, { reflectance = 0.15, shadow = false })
+	disc(station, "Base", cx, cz, FLOOR, FLOOR + 0.6, 22, C.Charcoal, Enum.Material.SmoothPlastic, { reflectance = 0.3 })
+	disc(station, "BaseGlow", cx, cz, FLOOR + 0.15, FLOOR + 0.45, 22.6, C.Green, Enum.Material.Neon, glow)
+	disc(station, "Top", cx, cz, FLOOR + 0.6, FLOOR + 0.63, 22, C.Marble, Enum.Material.Marble, { reflectance = 0.15, shadow = false })
+	disc(station, "InlayGlow", cx, cz, FLOOR + 0.6, FLOOR + 0.64, 20.4, C.Green, Enum.Material.Neon, glow)
+	disc(station, "Inlay", cx, cz, FLOOR + 0.6, BUY_TOP, 19.8, C.Marble, Enum.Material.Marble, { reflectance = 0.15, shadow = false })
+
+	workDesk(station, cx, cz, BUY_TOP)
+	officeChair(station, cx, cz, BUY_TOP)
+	salesman(station, cx, cz, BUY_TOP)
+	-- Two chairs for customers at the desk's front corners, turned in to it: square to its front,
+	-- their backs hid the salesman from the doors.
+	chair(station, cx - 5.8, cz - 4.2, BUY_TOP, 217, C.White)
+	chair(station, cx + 5.8, cz - 4.2, BUY_TOP, 143, C.White)
+	-- Tall planters either side of the timber wall, framing the desk from the doors.
+	plant(station, cx - 13, SHOW.z1 - 5, FLOOR, 3.2)
+	plant(station, cx + 13, SHOW.z1 - 5, FLOOR, 3.2)
+	-- Where the auto_dealer place point belongs: across the desk from the salesman, the queue
+	-- forming behind it down the runway toward the doors.
+	mark(model, "CounterMark", cx, BUY_TOP, cz - 3.4, 0)
+
+	-- The sign, hung over the desk: green on black, both faces, a green frame round each.
+	local sign_ = folder(station, "BuySign")
+	local sx0, sx1, sy0, sy1 = cx - 9, cx + 9, FLOOR + 14, FLOOR + 18.5
+	local board = box(sign_, "Board", sx0, sx1, sy0, sy1, cz - 0.4, cz + 0.4, C.Screen, Enum.Material.SmoothPlastic, { collide = false })
+	sign(board, Enum.NormalId.Front, "BUY CARS!", C.Green, true, Enum.Font.GothamBlack)
+	sign(board, Enum.NormalId.Back, "BUY CARS!", C.Green, true, Enum.Font.GothamBlack)
+	for _, face in { { cz - 0.45, cz - 0.4 }, { cz + 0.4, cz + 0.45 } } do
+		local z0, z1 = face[1], face[2]
+		box(sign_, "Frame", sx0, sx1, sy1 - 0.3, sy1, z0, z1, C.Green, Enum.Material.Neon, glow)
+		box(sign_, "Frame", sx0, sx1, sy0, sy0 + 0.3, z0, z1, C.Green, Enum.Material.Neon, glow)
+		box(sign_, "Frame", sx0, sx0 + 0.3, sy0 + 0.3, sy1 - 0.3, z0, z1, C.Green, Enum.Material.Neon, glow)
+		box(sign_, "Frame", sx1 - 0.3, sx1, sy0 + 0.3, sy1 - 0.3, z0, z1, C.Green, Enum.Material.Neon, glow)
+	end
+	for _, x in { cx - 7, cx + 7 } do
+		box(sign_, "Cable", x - 0.04, x + 0.04, sy1, CEIL - 0.15, cz - 0.04, cz + 0.04, C.Charcoal, Enum.Material.Metal, glow)
+	end
+
+	-- A halo over the circle, green outside and white in: the green read from the doors, the
+	-- white what actually lights the desk. Two lamps on the outer ring; neon is the look.
+	local halo = folder(station, "Halo")
+	for ringIndex, ring in { { y = FLOOR + 23, r = 12, n = 40, colour = C.Green }, { y = FLOOR + 24.2, r = 9, n = 32, colour = C.White } } do
 		for i = 0, ring.n - 1 do
 			local a = i / ring.n * math.pi * 2
 			local seg = Instance.new("Part")
 			seg.Name = "Ring"
 			seg.Size = Vector3.new(0.45, 0.35, ring.r * 2 * math.pi / ring.n * 1.04)
-			seg.CFrame = at(207 + ring.r * math.cos(a), ring.y, 73 + ring.r * math.sin(a)) * CFrame.Angles(0, -a, 0)
-			style(seg, C.Warm, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+			seg.CFrame = at(cx + ring.r * math.cos(a), ring.y, cz + ring.r * math.sin(a)) * CFrame.Angles(0, -a, 0)
+			style(seg, ring.colour, Enum.Material.Neon, glow)
 			seg.Parent = halo
-			-- The neon is the look; two lights on the outer ring are the light. Every lamp in a room
-			-- costs on a phone, and seven here lit nothing the other two did not.
-			if ringIndex == 1 and i % 16 == 0 then
-				light(seg, "Point", 1, 20)
+			if ringIndex == 1 and i % 20 == 0 then
+				light(seg, "Point", 1.1, 26, C.White)
 			end
 		end
 		for i = 0, 2 do
 			local a = i / 3 * math.pi * 2 + math.pi / 2 + ringIndex * 0.5
-			local x, z = 207 + ring.r * math.cos(a), 73 + ring.r * math.sin(a)
-			box(halo, "Cable", x - 0.04, x + 0.04, ring.y + 0.2, CEIL - 0.15, z - 0.04, z + 0.04, C.Charcoal, Enum.Material.Metal, {
-				collide = false,
-				shadow = false,
-				query = false,
-			})
+			local x, z = cx + ring.r * math.cos(a), cz + ring.r * math.sin(a)
+			box(halo, "Cable", x - 0.04, x + 0.04, ring.y + 0.2, CEIL - 0.15, z - 0.04, z + 0.04, C.Charcoal, Enum.Material.Metal, glow)
 		end
 	end
+	spot(station, cx - 6, cz, 3.5)
+	spot(station, cx + 6, cz, 3.5)
+end
 
-	-- The sales counter, level with the side door. The auto_dealer place point stands in front of it.
+local function buildInterior(model: Model)
+	local inside = folder(model, "Interior")
+
+	-- The two turntables in the window. The middle of the room is the buy desk.
+	turntable(inside, "TurntableWest", "roadster", 178, 44)
+	turntable(inside, "TurntableEast", "coupe", 228, 44)
+	buildBuyStation(model)
+
+	-- The screen on the timber wall behind the buy desk: the timber is the warm thing in the room,
+	-- and it frames the desk the way it framed the flagship before.
+	local backdrop = folder(inside, "Backdrop")
+	box(backdrop, "ScreenBezel", 197.4, 216.6, FLOOR + 3.6, FLOOR + 10.4, SHOW.z1 - 2.65, SHOW.z1 - 2.5, C.Charcoal, Enum.Material.Metal)
+	local screen = box(backdrop, "Screen", 198, 216, FLOOR + 4, FLOOR + 10, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.ScreenGlow, Enum.Material.Neon, { shadow = false })
+	sign(screen, Enum.NormalId.Front, "MERIDIAN", C.Navy, true)
+
+	-- The reception counter, level with the side door, where a visitor is met. Cars are bought at
+	-- the desk in the middle of the room.
 	local counter = folder(inside, "Counter")
 	box(counter, "Body", 154, 172, FLOOR, FLOOR + 3.6, 70, 73.5, C.Navy, Enum.Material.SmoothPlastic)
 	box(counter, "Top", 153.6, 172.4, FLOOR + 3.6, FLOOR + 3.9, 69.6, 73.9, C.White, Enum.Material.Marble)
-	box(counter, "Kick", 154, 172, FLOOR + 0.2, FLOOR + 0.35, 69.85, 70, C.Green, Enum.Material.Neon, { collide = false, shadow = false })
-	-- A line of green let into the floor round the customers' side: where to stand to buy.
-	local inlay: Opts = { collide = false, shadow = false, query = false }
-	box(counter, "BuyLine", 153.5, 172.5, FLOOR, FLOOR + 0.03, 61.75, 62, C.Green, Enum.Material.Neon, inlay)
-	box(counter, "BuyLine", 153.5, 153.75, FLOOR, FLOOR + 0.03, 62, 69.6, C.Green, Enum.Material.Neon, inlay)
-	box(counter, "BuyLine", 172.25, 172.5, FLOOR, FLOOR + 0.03, 62, 69.6, C.Green, Enum.Material.Neon, inlay)
+	box(counter, "Kick", 154, 172, FLOOR + 0.2, FLOOR + 0.35, 69.85, 70, C.Accent, Enum.Material.Neon, { collide = false, shadow = false })
 	monitor(counter, 158, 72.5, FLOOR + 3.9, 180)
 	monitor(counter, 167, 72.5, FLOOR + 3.9, 180)
 	chair(counter, 158, 75.4, FLOOR, 0, C.Leather)
 	chair(counter, 167, 75.4, FLOOR, 0, C.Leather)
-	local hanging = box(counter, "SalesSign", 156, 170, 13, 15.5, 71.6, 72, C.Screen, Enum.Material.SmoothPlastic)
-	sign(hanging, Enum.NormalId.Front, "CAR SALES", C.Green, true)
-	sign(hanging, Enum.NormalId.Back, "CAR SALES", C.Green, true)
-	for _, y in { 12.75, 15.5 } do
-		box(counter, "SalesSignLine", 156, 170, y, y + 0.25, 71.6, 72, C.Green, Enum.Material.Neon, { collide = false, shadow = false, query = false })
-	end
+	local hanging = box(counter, "ReceptionSign", 156, 170, 13, 15.5, 71.6, 72, C.Navy, Enum.Material.SmoothPlastic)
+	sign(hanging, Enum.NormalId.Front, "RECEPTION", C.Gold, true)
+	sign(hanging, Enum.NormalId.Back, "RECEPTION", C.Gold, true)
 	for _, x in { 158, 168 } do
-		box(counter, "Cord", x - 0.05, x + 0.05, 15.75, CEIL, 71.75, 71.85, C.Charcoal, Enum.Material.Metal, { collide = false, shadow = false, query = false })
+		box(counter, "Cord", x - 0.05, x + 0.05, 15.5, CEIL, 71.75, 71.85, C.Charcoal, Enum.Material.Metal, { collide = false, shadow = false, query = false })
 	end
-	mark(model, "CounterMark", 162, FLOOR, 66, 0)
 
 	-- Sales desks under the east deck, customers with their backs to the hall.
 	local desks = folder(inside, "SalesDesks")
@@ -1458,6 +1605,23 @@ local function buildEastDeck(mezz: Model)
 		end
 	end
 
+	local panelling = folder(deck, "Panelling")
+	local wx = SHOW.x1 - 1
+	box(panelling, "Panel", wx - 0.3, wx, FLOOR, MEZZ, SHOW.z0 + 1, EAST_DECK.z1, C.Walnut, Enum.Material.Wood)
+	box(panelling, "Skirting", wx - 0.45, wx - 0.3, FLOOR, FLOOR + 0.4, SHOW.z0 + 1, EAST_DECK.z1, C.Charcoal, Enum.Material.Metal)
+	box(panelling, "Line", wx - 0.4, wx - 0.3, MEZZ - 0.35, MEZZ - 0.2, SHOW.z0 + 1, EAST_DECK.z1, C.Accent, Enum.Material.Neon, {
+		collide = false,
+		shadow = false,
+		query = false,
+	})
+	for z = SHOW.z0 + 3.4, EAST_DECK.z1 - 1, 2.4 do
+		box(panelling, "Groove", wx - 0.36, wx - 0.3, FLOOR + 0.4, MEZZ - 0.4, z - 0.05, z + 0.05, C.WoodDark, Enum.Material.Wood, {
+			collide = false,
+			shadow = false,
+			query = false,
+		})
+	end
+
 	lift(deck)
 	deckOffice(deck, "PRIVATE SALES", 31, 43, "YOUR NEXT CAR")
 	deckOffice(deck, "CONCIERGE", 45, 57, "DELIVERY DAY")
@@ -1801,11 +1965,11 @@ local function stanchions(parent: Instance, x: number, z: number, radius: number
 	for i = 0, 5 do
 		local angle = math.rad(i * 60 + 30)
 		local px, pz = x + math.cos(angle) * radius, z + math.sin(angle) * radius
-		bollard(model, px, pz, y, 2.4, 0.3, C.Gold, C.Navy)
+		bollard(model, px, pz, y, 2.4, 0.3, C.Panel, C.Accent)
 		table.insert(points, Vector3.new(px, y + 2.2, pz))
 	end
 	for i = 1, #points do
-		rope(model, points[i], points[i % #points + 1], C.Navy)
+		rope(model, points[i], points[i % #points + 1], C.Accent)
 	end
 end
 
@@ -1984,14 +2148,8 @@ local function buildDetail(model: Model)
 	stanchions(inside, 228, 44, 14, FLOOR)
 	specBoard(inside, 166, 27, FLOOR, 0, "SPECIFICATION")
 	specBoard(inside, 240, 27, FLOOR, 0, "SPECIFICATION")
-	specBoard(inside, 221, 66, FLOOR + 1, 270, "THE FLAGSHIP")
-	-- A stone disc ringed in gold under the hero podium, so the middle of the room has a centre.
-	-- Light, not dark: runway, podium and backdrop are dark already, and a dark disc as well
-	-- turned the whole back of the hall into one black mass.
-	disc(inside, "HeroRing", 207, 73, FLOOR, FLOOR + 0.05, 44, C.Gold, Enum.Material.Metal, { collide = false, query = false, shadow = false })
-	disc(inside, "HeroInlay", 207, 73, FLOOR, FLOOR + 0.07, 43, C.Paving, Enum.Material.Marble, { collide = false, query = false, reflectance = 0.1 })
 
-	-- Timber slats on the back wall behind the hero: the one warm surface in a hall of white
+	-- Timber slats on the back wall behind the buy desk: the one warm surface in a hall of white
 	-- stone and dark metal, where every photo of the flagship car is taken.
 	local slats = folder(inside, "FeatureWall")
 	local slatCount = 26
@@ -2467,7 +2625,7 @@ end
 
 --[[
 	The handover bay: a canopy off the showroom's side door, over the pickup lane, where a bought
-	car is parked for its new owner (Config.Vehicles.ParkStuds west of the counter). It turns the
+	car is parked for its new owner (see `CounterMark` in the header). It turns the
 	moment of buying from a notice on the screen into a place -- walk out of the side door and
 	the car is waiting under the lights.
 

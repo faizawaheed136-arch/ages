@@ -69,6 +69,8 @@ VIEWS = {
     "deckside": ((196, 6, 36), (256, 13, 58)),  # across the hall to the east deck, stair and lift
     "deck": ((249, 18.5, 75), (238, 11, 30)),  # on the east deck by the lounge, looking to the front
     "westdeck": ((196, 7, 70), (156, 4, 38)),  # the raised display deck and the counter
+    "buy": ((207, 7.5, 50), (207, 5, 72)),  # walking up the runway to the buy desk
+    "salesman": ((205, 6.3, 60), (207, 5.7, 72)),  # close on the man at the desk
     # Floor plans of the showroom: straight down, everything above the cut left out.
     "plan": ((207, 150, 59.9), (207, 0, 60), 29),  # under the ceiling: the upper floor
     "plan0": ((207, 150, 59.9), (207, 0, 60), 12),  # under the upper floor: the showroom floor
@@ -151,6 +153,13 @@ class Scene:
         if node.get("className") in ("Part", "WedgePart") and "CFrame" in props:
             pos, rot = cframe(props["CFrame"])
             size = np.array(props.get("Size", [4, 1, 2]), float)
+            # A character's head: the Head mesh draws as a ball the height of the scaled part.
+            for child in node.get("children", []):
+                mesh = child.get("properties", {})
+                if child.get("className") == "SpecialMesh" and mesh.get("MeshType") == "Head":
+                    diameter = size[1] * mesh.get("Scale", [1, 1, 1])[1]
+                    props = dict(props, Shape="Ball")
+                    size = np.array([diameter, diameter, diameter])
             if props.get("Transparency", 0) < 0.97:
                 self.parts.append((node["className"], props, pos, rot, size))
             for child in node.get("children", []):

@@ -31,7 +31,7 @@
         "ClockTime": 15.5,
         "GeographicLatitude": 41.7,
         "Brightness": 2.1,
-        "ExposureCompensation": 0.1,
+        "ExposureCompensation": 0.25,
         "Ambient": [
           0.243,
           0.247,
@@ -68,9 +68,9 @@
       "Bloom": {
         "$className": "BloomEffect",
         "$properties": {
-          "Intensity": 0.5,
-          "Size": 20,
-          "Threshold": 1.6
+          "Intensity": 0.6,
+          "Size": 22,
+          "Threshold": 1.25
         }
       },
       "SunRays": {
@@ -78,6 +78,18 @@
         "$properties": {
           "Intensity": 0.06,
           "Spread": 0.7
+        }
+      },
+      "ColorCorrection": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Contrast": 0.08,
+          "Saturation": 0.06,
+          "TintColor": [
+            1,
+            0.985,
+            0.96
+          ]
         }
       }
     },
