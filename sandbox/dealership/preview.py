@@ -66,6 +66,12 @@ VIEWS = {
     "bays": ((186, 8, 99), (214, 6, 120)),  # the workshop from the service lane
     "mezz": ((242, 19, 86), (205, 6, 42)),  # from the gallery, over the rail
     "hall": ((182, 5.5, 30), (214, 15, 90)),  # a player inside the doors, looking up the hall
+    "deckside": ((196, 6, 36), (256, 13, 58)),  # across the hall to the east deck, stair and lift
+    "deck": ((249, 18.5, 75), (238, 11, 30)),  # on the east deck by the lounge, looking to the front
+    "westdeck": ((196, 7, 70), (156, 4, 38)),  # the raised display deck and the counter
+    # Floor plans of the showroom: straight down, everything above the cut left out.
+    "plan": ((207, 150, 59.9), (207, 0, 60), 29),  # under the ceiling: the upper floor
+    "plan0": ((207, 150, 59.9), (207, 0, 60), 12),  # under the upper floor: the showroom floor
 }
 
 # SurfaceGui faces, in the part's own axes: the outward normal, the gui's x axis and its down
@@ -245,8 +251,11 @@ def draw_triangles(indices, cam, focal, colours, alphas, ids, image, depth, owne
             raster(np.array([polygon[0], polygon[k], polygon[k + 1]]), focal, colours[i], alphas[i], ids[i], i, image, depth, owner, which)
 
 
-def render(scene, geometry, eye, target, night=False):
+def render(scene, geometry, eye, target, night=False, cut=None):
     tris, colours, alphas, glows, ids = geometry
+    if cut is not None:
+        keep = tris[:, :, 1].min(axis=1) < cut
+        tris, colours, alphas, glows, ids = tris[keep], colours[keep], alphas[keep], glows[keep], ids[keep]
     origin, view = camera(eye, target)
     focal = (HEIGHT / 2) / math.tan(FOV / 2)
     cam = (tris - origin) @ view.T  # camera space: x right, y up, looking down -z
@@ -292,7 +301,8 @@ def render(scene, geometry, eye, target, night=False):
         bloom[glowing] = image[glowing]
 
     for sign in scene.signs:
-        draw_sign(sign, image, depth, factor, bloom, origin, rays, night)
+        if cut is None or sign["pos"][1] < cut:
+            draw_sign(sign, image, depth, factor, bloom, origin, rays, night)
 
     # Translucent parts over everything opaque, far to near. After dark glass is only as bright
     # as the little light it catches.
@@ -471,9 +481,9 @@ def main() -> int:
     wanted = sys.argv[2].split(",") if len(sys.argv) > 2 else list(VIEWS)
     for name in wanted:
         view, _, mode = name.partition("@")
-        eye, target = VIEWS[view]
+        eye, target, *cut = VIEWS[view]
         out = f"{view}-{mode}.png" if mode else f"{view}.png"
-        render(scene, geometry, eye, target, night=mode == "night").save(out_dir / out)
+        render(scene, geometry, eye, target, night=mode == "night", cut=cut[0] if cut else None).save(out_dir / out)
         print(f"  {out}")
     return 0
 
