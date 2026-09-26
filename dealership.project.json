@@ -15,12 +15,21 @@
       },
       "DealershipProps": {
         "$path": "src/server/content/DealershipProps.luau"
+      },
+      "Vehicles": {
+        "$path": "src/server/content/Vehicles.luau"
+      },
+      "VehicleChassis": {
+        "$path": "src/server/world/VehicleChassis.luau"
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "BuildOnPlay": {
         "$path": "sandbox/dealership/BuildOnPlay.server.luau"
+      },
+      "ShopSandbox": {
+        "$path": "sandbox/dealership/ShopSandbox.server.luau"
       }
     },
     "Lighting": {
@@ -100,6 +109,51 @@
       },
       "SandboxSite": {
         "$path": "sandbox/dealership/build/SandboxSite.model.json"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Config": {
+        "$path": "src/shared/Config.luau"
+      },
+      "Types": {
+        "$path": "src/shared/Types.luau"
+      },
+      "CarBody": {
+        "$path": "src/shared/CarBody.luau"
+      },
+      "ShopClient": {
+        "$className": "Folder",
+        "DealershipShop": {
+          "$path": "src/client/world/DealershipShop.luau"
+        },
+        "DealershipShopUI": {
+          "$path": "src/client/ui/DealershipShopUI.luau"
+        },
+        "ShopStage": {
+          "$path": "src/client/world/ShopStage.luau"
+        },
+        "DealershipTurntables": {
+          "$path": "src/client/world/DealershipTurntables.luau"
+        },
+        "CarDriver": {
+          "$path": "src/client/world/CarDriver.luau"
+        },
+        "CarWheels": {
+          "$path": "src/client/world/CarWheels.luau"
+        }
+      },
+      "CarPhysics": {
+        "$path": "src/shared/CarPhysics.luau"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "ShopSandbox": {
+          "$path": "sandbox/dealership/ShopSandbox.client.luau"
+        }
       }
     }
   }

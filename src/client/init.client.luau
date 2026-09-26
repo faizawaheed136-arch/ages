@@ -49,6 +49,11 @@ local LabDots = require(script.world.LabDots)
 local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
 local DealershipTurntables = require(script.world.DealershipTurntables)
+local CarDriver = require(script.world.CarDriver)
+local CarWheels = require(script.world.CarWheels)
+local DealershipShop = require(script.world.DealershipShop)
+local DealershipShopUI = require(script.ui.DealershipShopUI)
+local ShopStage = require(script.world.ShopStage)
 local SpeechBubble = require(script.world.SpeechBubble)
 local StadiumEntrance = require(script.world.StadiumEntrance)
 
@@ -146,6 +151,10 @@ local mapSheet = MapUI.new()
 local vehicles = VehicleUI.new()
 local dealerMark = DealerMark.new()
 DealershipTurntables.Start()
+-- Cars: the one this player drives is stepped on this machine, which owns its physics; every car's
+-- wheels are turned here, locally, frame by frame.
+CarDriver.Start()
+CarWheels.Start()
 local chapterReel = ChapterReel.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the
@@ -576,6 +585,44 @@ end)
 vehicles:OnStore(function()
 	RequestStoreVehicleRemote:FireServer()
 end)
+
+-- The dealership's shop, opened from the BUY CARS! circle in the showroom: the same buy and spawn
+-- remotes as the garage panel above, the shop's own test-drive request, and the balance and car
+-- state this script already listens for further down.
+local RequestTestDriveRemote = Remotes.Get("RequestTestDrive")
+DealershipShop.Start(DealershipShopUI, ShopStage, {
+	onState = function(callback)
+		Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
+			if state ~= nil then
+				callback(state.catalog, state.owned, state.paint, state.active)
+			end
+		end)
+	end,
+	onMoney = function(callback)
+		Remotes.Get("MoneyUpdated").OnClientEvent:Connect(function(balance: number)
+			callback(balance)
+		end)
+	end,
+	onNotice = function(callback)
+		Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
+			if state ~= nil and state.notice ~= nil then
+				callback(state.notice)
+			end
+		end)
+		Remotes.Get("Notice").OnClientEvent:Connect(function(text: string)
+			callback(text)
+		end)
+	end,
+	buy = function(vehicleId: string, paintKey: string?)
+		RequestBuyVehicleRemote:FireServer(vehicleId, paintKey)
+	end,
+	drive = function(vehicleId: string)
+		RequestSpawnVehicleRemote:FireServer(vehicleId)
+	end,
+	testDrive = function(vehicleId: string, paintKey: string?)
+		RequestTestDriveRemote:FireServer(vehicleId, paintKey)
+	end,
+})
 
 -- Undo and Commit, off the panel rather than off anything in the world. Both are things
 -- you do *to the bench you are standing at*, and the bench already has the player's

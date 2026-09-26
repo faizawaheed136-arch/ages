@@ -3371,6 +3371,9 @@ export type LifeData = {
 	vehicles: {
 		owned: { [string]: boolean },
 		active: string?,
+		-- The paint each owned car was bought in, by CarBody.Paints key. Nil, or a car missing from
+		-- it, is the car's own colour: saves from before paint had none.
+		paint: { [string]: string }?,
 	},
 	-- Bills tracking per life. Reset on death like money.
 	bills: {
@@ -3597,6 +3600,20 @@ export type VehicleKind = {
 	-- curve every car steers less sharply along as it goes faster.
 	-- Safe range: 20-40.
 	steerDegrees: number,
+	-- What the showroom prints about it, and what shared/CarBody draws it as. All optional, so a car
+	-- added without them still sells: it is drawn as a sedan with no maker's name.
+	-- The maker, as the dealership's Brands tab groups it.
+	brand: string?,
+	-- The model year, printed before its name the way a showroom does.
+	year: number?,
+	-- The body shared/CarBody builds: "sedan", "wagon", "pickup", "suv", "coupe", "gt",
+	-- "roadster" or "supercar".
+	style: string?,
+	-- "FWD", "RWD", "AWD" or "4WD": printed in the shop, not simulated.
+	drivetrain: string?,
+	seats: number?,
+	-- Shown with a NEW badge in the shop.
+	isNew: boolean?,
 }
 
 -- What the client needs to draw the dealership's showroom floor and a life's own
@@ -3606,6 +3623,8 @@ export type VehicleState = {
 	catalog: { VehicleKind },
 	owned: { [string]: boolean },
 	active: string?,
+	-- The paint each owned car wears, by CarBody.Paints key.
+	paint: { [string]: string }?,
 	-- Whether a build is in flight for the currently-requested action, so the
 	-- panel can grey its own button rather than let a second click queue a
 	-- second spawn behind the first.

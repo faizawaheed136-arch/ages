@@ -1452,10 +1452,12 @@ end
 -- shared ball -- has exactly one owner at a time and Roblox already solves that
 -- correctly once the seat-enter handoff is done explicitly. See VehicleService.
 Config.Vehicles = {
-	-- How many cars a single life may own at once. More than a couple is a garage
-	-- nobody visits; the point is trading up, not collecting.
+	-- How many cars a single life may own at once. More than a few is a garage
+	-- nobody visits; the point is trading up, not collecting. Three since the
+	-- showroom grew to eight cars (2026-09-25): at two, most of the lot went
+	-- untried by anyone who already owned two.
 	-- Safe range: 1-4.
-	MaxOwned = 2,
+	MaxOwned = 3,
 	-- Fraction of the buy price refunded on sale, the same shape and the same
 	-- reasoning as Config.House.ResaleFraction: it makes buying and selling a
 	-- cycle instead of a one-way ratchet, and the loss is the cost of having
@@ -8919,6 +8921,10 @@ Config.Dealership = {
 	-- How often the test-drive watcher looks at every car out.
 	-- Safe range: 0.5-2.
 	TickSeconds = 1,
+	-- How close to the buy desk a player must stand for the shop's test-drive request to be
+	-- honoured: the shop opens in the green circle, and a request from further out is not from it.
+	-- Safe range: 25-60.
+	ShopStuds = 40,
 }
 
 return Config

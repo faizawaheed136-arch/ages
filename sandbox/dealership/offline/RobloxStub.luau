@@ -424,6 +424,10 @@ function game.GetService(_, name)
 		return ReplicatedStorage
 	elseif name == "Players" then
 		return Players
+	elseif name == "PhysicsService" then
+		-- VehicleChassis registers its collision groups only when a car is driven, which never
+		-- happens offline; the display cars need the module to load, not the service to work.
+		return {}
 	end
 	error(`RobloxStub: no service "{name}"`)
 end
@@ -437,3 +441,5 @@ end
 
 local workspace = newInstance("Workspace")
 workspace.Name = "Workspace"
+-- Roblox's default: shared/CarBody settles a car on its springs against it.
+workspace.Gravity = 196.2

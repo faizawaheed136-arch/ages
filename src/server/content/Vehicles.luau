@@ -3,14 +3,12 @@
 -- are what a car *is*, and adding a sixth one to the lot should be a table entry
 -- rather than a new build in Studio.
 --
--- Sized and coloured rather than modelled, on the same reasoning Props.luau gives
--- at length: a car built from a block and two cylinders per wheel needs nothing
--- bought or uploaded, so the showroom exists and drives correctly on the day this
--- file is written rather than on the day somebody finishes five car meshes. A real
--- model dropped into the Studio folder under a matching name takes over -- see
--- world/VehicleChassis.luau -- and nothing here changes when it does.
+-- Sized and styled rather than modelled, on the same reasoning Props.luau gives at
+-- length: shared/CarBody draws every car from parts, from its `style` and `size`,
+-- so nothing is bought or uploaded and the car in the shop, on the floor and at
+-- the kerb is one drawing.
 --
--- Four cars, priced as a ladder against the same jobs a life is actually earning
+-- Eight cars, priced as a ladder against the same jobs a life is actually earning
 -- from -- see content/Jobs.luau for the salaries this is read against. Up through
 -- a car that means the manager's desk paid off, to one that is a statement rather
 -- than a commute. Performance climbs with price, and it is the only thing that
@@ -31,14 +29,25 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type VehicleKind = Types.VehicleKind
 
+-- Eight cars from four makers, two each, on one price ladder: every car costs more than the one
+-- below it and beats every cheaper car on top speed or acceleration (checked below). `size` is the
+-- car's whole outline -- width (X), roof height above the road (Y), length (Z) -- and `style` is the
+-- body shared/CarBody draws inside it; the two are drawn for each other, so a new car picks an
+-- existing style and that style's outline. Names are the dealership's own: no maker's badge or
+-- model name from outside this game.
 local SOURCE: { VehicleKind } = {
 	{
 		id = "sedan",
-		name = "Fairline Sedan",
-		-- The car most lives actually own: nothing about it is the best on the
-		-- lot, and nothing about it is the worst.
+		name = "Fairline Arden",
+		brand = "Fairline",
+		year = 2023,
+		style = "sedan",
+		drivetrain = "FWD",
+		seats = 5,
+		-- The car most lives actually own: nothing about it is the best on the lot, and nothing
+		-- about it is the worst.
 		price = 6400,
-		size = Vector3.new(7.0, 2.8, 16.5),
+		size = Vector3.new(7.0, 5.3, 16.5),
 		color = Color3.fromRGB(96, 110, 128),
 		accentColor = Color3.fromRGB(24, 24, 26),
 		topSpeedStuds = 80,
@@ -47,33 +56,71 @@ local SOURCE: { VehicleKind } = {
 	},
 	{
 		id = "wagon",
-		name = "Elmhurst Wagon",
-		-- The longest body on the lot and the widest turning circle to go with
-		-- it -- a family car should feel like one to drive, not just look like
-		-- one parked.
+		name = "Elmhurst Wayfarer",
+		brand = "Elmhurst",
+		year = 2021,
+		style = "wagon",
+		drivetrain = "AWD",
+		seats = 5,
+		-- The longest roof on the lot and the widest turning circle to go with it -- a family car
+		-- should feel like one to drive, not just look like one parked. 81, not 76: at 76 it lost
+		-- to the cheaper sedan on both numbers, a car nobody would buy, and the check below threw
+		-- at require time and took the server down with it.
 		price = 8800,
-		size = Vector3.new(7.2, 2.9, 18.5),
+		size = Vector3.new(7.2, 5.5, 17.8),
 		color = Color3.fromRGB(150, 138, 108),
 		accentColor = Color3.fromRGB(58, 52, 40),
-		-- 81, not 76: the dominance check a few lines down refuses a car that
-		-- costs more than a cheaper one without beating it on top speed or
-		-- acceleration, and at 76 this lost to the $6400 sedan's 80 on both
-		-- axes -- a strictly worse car nobody would ever buy, which threw at
-		-- require time and took the whole server down with it (nothing after
-		-- VehicleService in init.server.luau's boot order ever ran). One stud
-		-- over the sedan is enough to clear the check without pretending a
-		-- wagon this size outruns a coupe.
 		topSpeedStuds = 81,
 		acceleration = 10,
 		steerDegrees = 26,
 	},
 	{
+		id = "pickup",
+		name = "Fairline Hauler",
+		brand = "Fairline",
+		year = 2022,
+		style = "pickup",
+		drivetrain = "4WD",
+		seats = 5,
+		-- A working truck: a shade quicker than the family cars, a turning circle like a bus.
+		price = 10900,
+		size = Vector3.new(7.4, 6.1, 18.5),
+		color = Color3.fromRGB(176, 40, 36),
+		accentColor = Color3.fromRGB(30, 30, 32),
+		topSpeedStuds = 84,
+		acceleration = 11.5,
+		steerDegrees = 25,
+	},
+	{
+		id = "suv",
+		name = "Elmhurst Summit",
+		brand = "Elmhurst",
+		year = 2024,
+		style = "suv",
+		drivetrain = "AWD",
+		seats = 7,
+		isNew = true,
+		-- Seven seats on a raised ride, and the power to carry them.
+		price = 12500,
+		size = Vector3.new(7.4, 6.3, 17.2),
+		color = Color3.fromRGB(34, 44, 58),
+		accentColor = Color3.fromRGB(26, 26, 28),
+		topSpeedStuds = 86,
+		acceleration = 12,
+		steerDegrees = 27,
+	},
+	{
 		id = "coupe",
-		name = "Vantage Coupe",
-		-- The manager's-desk car. Priced to want the second job's rung, not the
-		-- first one, and the numbers say so before the colour does.
+		name = "Castellan Rapier",
+		brand = "Castellan",
+		year = 2022,
+		style = "coupe",
+		drivetrain = "RWD",
+		seats = 4,
+		-- The manager's-desk car. Priced to want the second job's rung, not the first one, and the
+		-- numbers say so before the colour does.
 		price = 15500,
-		size = Vector3.new(6.8, 2.3, 15.5),
+		size = Vector3.new(7.0, 4.7, 15.6),
 		color = Color3.fromRGB(224, 200, 60),
 		accentColor = Color3.fromRGB(30, 28, 24),
 		topSpeedStuds = 100,
@@ -81,19 +128,58 @@ local SOURCE: { VehicleKind } = {
 		steerDegrees = 36,
 	},
 	{
+		id = "gt",
+		name = "Castellan Sabre GT",
+		brand = "Castellan",
+		year = 2025,
+		style = "gt",
+		drivetrain = "RWD",
+		seats = 4,
+		isNew = true,
+		-- A long-legged tourer: faster than the coupe everywhere, a touch less nimble.
+		price = 21000,
+		size = Vector3.new(7.2, 4.6, 16.6),
+		color = Color3.fromRGB(28, 72, 150),
+		accentColor = Color3.fromRGB(22, 22, 24),
+		topSpeedStuds = 112,
+		acceleration = 16.5,
+		steerDegrees = 34,
+	},
+	{
 		id = "roadster",
-		name = "Solari Roadster",
-		-- The statement, and the top of the ladder deliberately: low, narrow,
-		-- and the only car here whose steer rating is as sharp as the cheapest
-		-- one on the lot at a third again the top speed. Nothing subtle about
-		-- what this one is for.
+		name = "Solari Spyder",
+		brand = "Solari",
+		year = 2024,
+		style = "roadster",
+		drivetrain = "RWD",
+		seats = 2,
+		-- The statement, and the top of the everyday ladder: low, narrow, open, and as sharp to
+		-- steer as anything on the lot at a third again the sedan's top speed.
 		price = 28000,
-		size = Vector3.new(6.6, 2.0, 14.8),
+		size = Vector3.new(6.8, 4.2, 14.8),
 		color = Color3.fromRGB(200, 32, 44),
 		accentColor = Color3.fromRGB(18, 18, 20),
 		topSpeedStuds = 126,
 		acceleration = 19,
 		steerDegrees = 34,
+	},
+	{
+		id = "supercar",
+		name = "Solari Vento",
+		brand = "Solari",
+		year = 2026,
+		style = "supercar",
+		drivetrain = "AWD",
+		seats = 2,
+		isNew = true,
+		-- The dream on the turntable: the fastest thing in the game, at the top of every range.
+		price = 60000,
+		size = Vector3.new(7.6, 4.5, 16.2),
+		color = Color3.fromRGB(236, 236, 232),
+		accentColor = Color3.fromRGB(16, 16, 18),
+		topSpeedStuds = 140,
+		acceleration = 20,
+		steerDegrees = 33,
 	},
 }
 

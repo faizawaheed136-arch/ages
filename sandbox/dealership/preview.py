@@ -71,6 +71,16 @@ VIEWS = {
     "westdeck": ((196, 7, 70), (156, 4, 38)),  # the raised display deck and the counter
     "buy": ((207, 7.5, 50), (207, 5, 72)),  # walking up the runway to the buy desk
     "salesman": ((205, 6.3, 60), (207, 5.7, 72)),  # close on the man at the desk
+    # The cars, close: each style's front three-quarters, and one from behind.
+    "car_sedan": ((51, 6.5, 11), (59.5, 2.6, 24)),
+    "car_coupe": ((40, 6, 11), (48.5, 2.3, 24)),
+    "car_suv": ((29, 8, 10), (37.5, 3.1, 24)),
+    "car_pickup": ((18, 8, 10), (26.5, 3.1, 24)),
+    "car_wagon": ((7, 7, 11), (15.5, 2.8, 24)),
+    "car_rear": ((66, 6.5, 39), (59.5, 2.6, 24)),
+    "car_super": ((169, 6.5, 29), (178, 3, 44)),
+    "car_roadster": ((237, 7, 29), (228, 3, 44)),
+    "car_gt": ((167, 8, 29), (157.5, 4, 42.5)),
     # Floor plans of the showroom: straight down, everything above the cut left out.
     "plan": ((207, 150, 59.9), (207, 0, 60), 29),  # under the ceiling: the upper floor
     "plan0": ((207, 150, 59.9), (207, 0, 60), 12),  # under the upper floor: the showroom floor

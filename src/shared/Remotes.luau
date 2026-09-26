@@ -411,6 +411,10 @@ export type RemoteName =
 	-- same action idle-timeout and a death both drive from the server side; this
 	-- is the player choosing to do it early.
 	| "RequestStoreVehicle"
+	-- "Let me take this one out." From the dealership shop's TEST DRIVE button: a vehicle id and
+	-- an optional CarBody.Paints key. DealershipService runs it as the same test drive the floor
+	-- cars' prompt starts, and refuses it unless the player is standing at the shop.
+	| "RequestTestDrive"
 	-- The fight in progress, pushed whole every tick it changes. Whole rather than
 	-- split into "my bars" and "their bars" because a fight is read as one picture --
 	-- a charge held against a wind-up filling opposite it -- and two remotes landing a
@@ -753,6 +757,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestSellVehicle",
 	"RequestSpawnVehicle",
 	"RequestStoreVehicle",
+	"RequestTestDrive",
 	"FightUpdated",
 	"RequestFightAction",
 	"RequestFightSquare",

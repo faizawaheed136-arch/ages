@@ -29,6 +29,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Money = require(ReplicatedStorage:WaitForChild("Money"))
@@ -38,10 +39,10 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 local DataService = require(script.Parent.DataService)
 local VehicleService = require(script.Parent.VehicleService)
 
--- Cars are off the floor for now, on the owner's word (2026-09-22): "remove cars, we'll add that
--- concept later". The slots, the buying and the test drives are all still here; true stands the
--- display cars again.
-local SHOW_CARS = false
+-- Cars were off the floor from 2026-09-22 ("remove cars, we'll add that concept later") until the
+-- owner asked for the cars to be made properly (2026-09-25): shared/CarBody's cars stand on every
+-- slot again. False takes them off; the slots, the buying and the test drives do not depend on it.
+local SHOW_CARS = true
 
 local DealershipBuild = require(script.Parent.Parent.world.DealershipBuild)
 local DealershipDressing = require(script.Parent.Parent.world.DealershipDressing)
@@ -57,6 +58,7 @@ local DEALER = Config.Dealership
 local VEHICLES = Config.Vehicles
 
 local NoticeRemote = Remotes.Get("Notice")
+local RequestTestDriveRemote = Remotes.Get("RequestTestDrive")
 
 -- The price tag's palette: the showroom's own navy and gold, so a tag reads as the building's.
 local TAG_BACKGROUND = Color3.fromRGB(20, 30, 54)
@@ -215,7 +217,7 @@ local function freeBay(): BasePart?
 	return nil
 end
 
-local function testDrive(player: Player, kind: VehicleKind)
+local function testDrive(player: Player, kind: VehicleKind, paint: Color3?)
 	if drives[player] ~= nil then
 		say(player, "You're already out on a test drive.")
 		return
@@ -246,8 +248,8 @@ local function testDrive(player: Player, kind: VehicleKind)
 
 	-- Dropped from the same height VehicleService spawns a bought car from, so it settles onto
 	-- its suspension the same way rather than landing on its wheels from nowhere.
-	local lift = kind.size.Y / 2 + VEHICLES.SuspensionLength + VEHICLES.WheelRadius + 0.5
-	local chassis = VehicleChassis.Build(kind, bay.CFrame * CFrame.new(0, lift, 0))
+	local lift = CarBody.Layout(kind).hullY + 0.1
+	local chassis = VehicleChassis.Build(kind, bay.CFrame * CFrame.new(0, lift, 0), paint)
 	chassis.model.Name = `TestDrive_{player.Name}`
 	chassis.model:SetAttribute("TestDriveFor", player.UserId)
 	chassis.model.Parent = Workspace
@@ -262,7 +264,7 @@ local function testDrive(player: Player, kind: VehicleKind)
 		bay = bay,
 		outOfSeatSince = nil,
 	}
-	chassis.seat:Sit(humanoid)
+	chassis.seatDriver(humanoid)
 	say(player, `Test drive: {DEALER.TestDriveSeconds} seconds in the {kind.name}. Take it out on the road!`)
 end
 
@@ -323,7 +325,8 @@ local function priceTag(part: BasePart, kind: VehicleKind, display: string)
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "PriceTag"
 	gui.Size = UDim2.fromScale(DEALER.TagWidthStuds, DEALER.TagWidthStuds * 0.38)
-	gui.StudsOffsetWorldSpace = Vector3.new(0, kind.size.Y * 1.5 + DEALER.TagLiftStuds, 0)
+	-- Over the roof: the tag hangs off the hull, whose centre is hullY off the floor.
+	gui.StudsOffsetWorldSpace = Vector3.new(0, kind.size.Y - CarBody.Layout(kind).hullY + DEALER.TagLiftStuds, 0)
 	gui.MaxDistance = DEALER.TagStuds
 	gui.LightInfluence = 0
 	gui.Parent = part
@@ -412,10 +415,39 @@ function DealershipService.Describe(): string
 	return `dealership {if dealership then "open" else "missing"}: {cars} cars on show, {count} test drives out`
 end
 
+-- Whether `player` is standing within Config.Dealership.ShopStuds of the buy desk -- where the
+-- shop is opened. What stops the shop's test-drive request being a teleport to the dealership
+-- from anywhere in the city.
+local function atShop(player: Player): boolean
+	local _, root = humanoidOf(player)
+	local model = dealership
+	if root == nil or model == nil then
+		return false
+	end
+	local station = model:FindFirstChild("BuyStation")
+	local apron = if station then station:FindFirstChild("Apron") else nil
+	if apron == nil or not apron:IsA("BasePart") then
+		return false
+	end
+	return (root.Position - apron.Position).Magnitude <= DEALER.ShopStuds
+end
+
 function DealershipService:Init()
 	Players.PlayerRemoving:Connect(function(player: Player)
 		finish(player, nil, false)
 		lastDriveAt[player] = nil
+	end)
+	-- The shop's TEST DRIVE button: the car it was showing, in the paint it was showing it in.
+	RequestTestDriveRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any, paintKey: any)
+		if typeof(vehicleId) ~= "string" then
+			return
+		end
+		local kind = Vehicles.Get(vehicleId)
+		if kind == nil or not atShop(player) then
+			return
+		end
+		local paint = if typeof(paintKey) == "string" then CarBody.Paint(paintKey) else nil
+		testDrive(player, kind, if paint then paint.color else nil)
 	end)
 end
 

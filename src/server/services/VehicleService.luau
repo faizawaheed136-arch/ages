@@ -29,6 +29,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Money = require(ReplicatedStorage:WaitForChild("Money"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
@@ -109,6 +110,7 @@ local function stateFor(player: Player, notice: string?): VehicleState?
 		catalog = Vehicles.All,
 		owned = life.vehicles.owned,
 		active = life.vehicles.active,
+		paint = life.vehicles.paint,
 		busy = spawning[player] == true,
 		notice = notice,
 	}
@@ -125,7 +127,12 @@ function push(player: Player, notice: string?)
 			table.insert(owned, id)
 		end
 		table.sort(owned)
-		digest = `{table.concat(owned, ",")}|{tostring(state.active)}|{tostring(state.busy)}|{tostring(state.notice)}`
+		local paints: { string } = {}
+		for id, key in state.paint or {} do
+			table.insert(paints, `{id}={key}`)
+		end
+		table.sort(paints)
+		digest = `{table.concat(owned, ",")}|{table.concat(paints, ",")}|{tostring(state.active)}|{tostring(state.busy)}|{tostring(state.notice)}`
 	end
 	if pushed[player] == digest and notice == nil then
 		-- Renotified pushes always go out -- a notice is a one-off line for the
@@ -237,10 +244,13 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	local facing = place.part.Position - spot
 	local flat = Vector3.new(facing.X, 0, facing.Z)
 	local look = if flat.Magnitude > 0.01 then flat.Unit else -Vector3.zAxis
-	local lift = kind.size.Y / 2 + VEHICLES.SuspensionLength + VEHICLES.WheelRadius + 0.5
+	-- Its hull at the height it rides at, a hair over, so it settles onto its springs rather than
+	-- dropping onto them.
+	local lift = CarBody.Layout(kind).hullY + 0.1
 	local cframe = CFrame.lookAt(spot + Vector3.new(0, lift, 0), spot + Vector3.new(0, lift, 0) + look)
 
-	local chassis = VehicleChassis.Build(kind, cframe)
+	local paint = CarBody.Paint((life.vehicles.paint or {})[vehicleId])
+	local chassis = VehicleChassis.Build(kind, cframe, if paint then paint.color else nil)
 	-- Into the world. Nothing did this: Build hands back an unparented model, so a bought car was
 	-- paid for, recorded as owned and marked active, and never appeared anywhere.
 	chassis.model.Parent = Workspace
@@ -260,10 +270,10 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	return true
 end
 
--- Buys a car outright. Returns whether it happened; a refusal is always said in
--- the pushed notice, because a buy button that quietly did nothing is
--- indistinguishable from the panel being broken.
-function VehicleService.Buy(player: Player, vehicleId: string): boolean
+-- Buys a car outright, in `paintKey` (a CarBody.Paints key) or its own colour. Returns whether it
+-- happened; a refusal is always said in the pushed notice, because a buy button that quietly did
+-- nothing is indistinguishable from the panel being broken.
+function VehicleService.Buy(player: Player, vehicleId: string, paintKey: string?): boolean
 	if not enabled then
 		return false
 	end
@@ -290,6 +300,13 @@ function VehicleService.Buy(player: Player, vehicleId: string): boolean
 	end
 
 	life.vehicles.owned[vehicleId] = true
+	-- The paint is kept only if it is one the shop sells; anything else is the car's own colour.
+	local paint = CarBody.Paint(paintKey)
+	if paint ~= nil then
+		local paints = life.vehicles.paint or {}
+		paints[vehicleId] = paint.key
+		life.vehicles.paint = paints
+	end
 	push(player, `Bought the {kind.name}.`)
 
 	-- The first car a life owns is worth pulling straight out onto the forecourt
@@ -333,6 +350,9 @@ function VehicleService.Sell(player: Player, vehicleId: string): boolean
 	local refund = math.floor(kind.price * VEHICLES.ResaleFraction)
 	MoneyService.Add(player, refund, `sold a {kind.name}`)
 	life.vehicles.owned[vehicleId] = nil
+	if life.vehicles.paint then
+		life.vehicles.paint[vehicleId] = nil
+	end
 	push(player, `Sold the {kind.name} for {Money.Format(refund)}.`)
 	return true
 end
@@ -449,11 +469,11 @@ function VehicleService.Describe(player: Player): string
 end
 
 function VehicleService:Init()
-	RequestBuyVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any)
+	RequestBuyVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any, paintKey: any)
 		if typeof(vehicleId) ~= "string" then
 			return
 		end
-		VehicleService.Buy(player, vehicleId)
+		VehicleService.Buy(player, vehicleId, if typeof(paintKey) == "string" then paintKey else nil)
 	end)
 
 	RequestSellVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any)
