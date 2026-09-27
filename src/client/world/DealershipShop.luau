@@ -24,14 +24,19 @@ local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type VehicleKind = Types.VehicleKind
 
+-- A car's look as keys (CarBody.Paints, Rims, Glows), and every owned car's.
+export type LookKeys = { paint: string?, rims: string?, glow: string? }
+export type Looks = { paint: { [string]: string }?, rims: { [string]: string }?, glow: { [string]: string }? }
+
 export type Backend = {
-	-- Called with (catalog, owned, paint, active) whenever any of them changes.
-	onState: ((catalog: { VehicleKind }, owned: { [string]: boolean }, paint: { [string]: string }?, active: string?) -> ()) -> (),
+	-- Called with (catalog, owned, looks, active) whenever any of them changes.
+	onState: ((catalog: { VehicleKind }, owned: { [string]: boolean }, looks: Looks, active: string?) -> ()) -> (),
 	onMoney: ((balance: number) -> ()) -> (),
 	onNotice: ((message: string) -> ()) -> (),
-	buy: (vehicleId: string, paintKey: string?) -> (),
+	buy: (vehicleId: string, look: LookKeys) -> (),
 	drive: (vehicleId: string) -> (),
 	testDrive: (vehicleId: string, paintKey: string?) -> (),
+	customize: (vehicleId: string, look: LookKeys) -> (),
 }
 
 -- How often the circle is checked, and how far above or below its floor still counts as on it.
@@ -90,11 +95,11 @@ function DealershipShop.Start(ui: any, stage: any, backend: Backend, title: stri
 	end
 	shop:OnClose(close)
 
-	backend.onState(function(catalog, owned, paint, active)
+	backend.onState(function(catalog, owned, looks, active)
 		if #catalog ~= #shop.catalog then
 			shop:SetCatalog(catalog)
 		end
-		shop:SetOwned(owned, paint, active)
+		shop:SetOwned(owned, looks, active)
 	end)
 	backend.onMoney(function(balance)
 		shop:SetMoney(balance)
@@ -104,8 +109,11 @@ function DealershipShop.Start(ui: any, stage: any, backend: Backend, title: stri
 			shop:Notice(message)
 		end
 	end)
-	shop:OnBuy(function(id: string, paintKey: string?)
-		backend.buy(id, paintKey)
+	shop:OnBuy(function(id: string, look: LookKeys)
+		backend.buy(id, look)
+	end)
+	shop:OnCustomize(function(id: string, look: LookKeys)
+		backend.customize(id, look)
 	end)
 	-- Driving and test drives leave the shop: the car is out on the forecourt, and the player is
 	-- put in it.

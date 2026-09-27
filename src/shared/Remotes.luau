@@ -394,7 +394,8 @@ export type RemoteName =
 	| "VehicleUpdated"
 	-- "I want to buy this car." Carries a vehicle id from `content/Vehicles.luau`;
 	-- the server checks the id is real, the price against the balance, and the
-	-- garage is not already at Config.Vehicles.MaxOwned before granting anything.
+	-- car is not already owned before granting anything. Optional after the id: CarBody paint, rim
+	-- and underglow keys, the look the shop showed it in.
 	| "RequestBuyVehicle"
 	-- "I want to sell this car." Carries a vehicle id. Refuses on the currently
 	-- active one -- selling the car you are about to be told to get into would
@@ -415,6 +416,10 @@ export type RemoteName =
 	-- an optional CarBody.Paints key. DealershipService runs it as the same test drive the floor
 	-- cars' prompt starts, and refuses it unless the player is standing at the shop.
 	| "RequestTestDrive"
+	-- "Make my car look like this." From the shop's CUSTOMIZE: a vehicle id the life owns and
+	-- CarBody paint, rim and underglow keys (nil keeps it as it came). VehicleService saves them and
+	-- rebuilds the car if it is the one out on the road.
+	| "RequestCustomizeVehicle"
 	-- The fight in progress, pushed whole every tick it changes. Whole rather than
 	-- split into "my bars" and "their bars" because a fight is read as one picture --
 	-- a charge held against a wind-up filling opposite it -- and two remotes landing a
@@ -758,6 +763,7 @@ local REMOTE_NAMES: { RemoteName } = {
 	"RequestSpawnVehicle",
 	"RequestStoreVehicle",
 	"RequestTestDrive",
+	"RequestCustomizeVehicle",
 	"FightUpdated",
 	"RequestFightAction",
 	"RequestFightSquare",

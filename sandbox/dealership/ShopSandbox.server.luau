@@ -4,8 +4,9 @@
 
 	In AGES the shop sells through VehicleService and the life's own balance. None of that exists
 	here, so this stands in for it -- every player starts with STARTING_MONEY, buying takes it off,
-	and DRIVE or TEST DRIVE builds the real car (world/VehicleChassis, drawn by shared/CarBody) on a
-	test-drive bay in front of the showroom and sits the player in it. Nothing is saved.
+	CUSTOMIZE keeps a car's paint, rims and underglow, and DRIVE or TEST DRIVE builds the real car
+	(world/VehicleChassis, drawn by shared/CarBody) on a test-drive bay in front of the showroom and
+	sits the player in it. No garage limit, as in the game. Nothing is saved.
 
 	Talks to sandbox/dealership/ShopSandbox.client.luau over two remotes it makes itself.
 ]]
@@ -36,6 +37,8 @@ type Garage = {
 	money: number,
 	owned: { [string]: boolean },
 	paint: { [string]: string },
+	rims: { [string]: string },
+	glow: { [string]: string },
 	active: string?,
 	car: VehicleChassis.Chassis?,
 }
@@ -45,7 +48,7 @@ local garages: { [Player]: Garage } = {}
 local function garageOf(player: Player): Garage
 	local garage = garages[player]
 	if garage == nil then
-		garage = { money = STARTING_MONEY, owned = {}, paint = {}, active = nil, car = nil }
+		garage = { money = STARTING_MONEY, owned = {}, paint = {}, rims = {}, glow = {}, active = nil, car = nil }
 		garages[player] = garage
 	end
 	return garage :: Garage
@@ -57,14 +60,24 @@ local function push(player: Player, notice: string?)
 		catalog = Vehicles.All,
 		owned = garage.owned,
 		paint = garage.paint,
+		rims = garage.rims,
+		glow = garage.glow,
 		active = garage.active,
 		money = garage.money,
 		notice = notice,
 	})
 end
 
+-- Keeps a car's look, dropping any key the shop does not offer.
+local function keep(garage: Garage, id: string, paintKey: string?, rimKey: string?, glowKey: string?)
+	local paint, rim, glow = CarBody.Paint(paintKey), CarBody.Rim(rimKey), CarBody.Glow(glowKey)
+	garage.paint[id] = if paint then paint.key else nil
+	garage.rims[id] = if rim then rim.key else nil
+	garage.glow[id] = if glow then glow.key else nil
+end
+
 -- Builds `kind` on the first test-drive bay, nose to the road, and puts the player at the wheel.
-local function roll(player: Player, kind: VehicleKind, paintKey: string?, name: string)
+local function roll(player: Player, kind: VehicleKind, look: CarBody.Look, name: string)
 	local garage = garageOf(player)
 	if garage.car then
 		garage.car.destroy()
@@ -73,8 +86,7 @@ local function roll(player: Player, kind: VehicleKind, paintKey: string?, name: 
 	local dealership = Workspace:FindFirstChild("Dealership")
 	local bay = if dealership then dealership:FindFirstChild("TestDriveBay") else nil
 	local ground = if bay and bay:IsA("BasePart") then bay.CFrame else CFrame.new()
-	local paint = CarBody.Paint(paintKey)
-	local chassis = VehicleChassis.Build(kind, ground * CFrame.new(0, CarBody.Layout(kind).hullY + 0.1, 0), if paint then paint.color else nil)
+	local chassis = VehicleChassis.Build(kind, ground * CFrame.new(0, CarBody.Layout(kind).hullY + 0.1, 0), nil, look)
 	chassis.model.Name = name
 	chassis.model.Parent = Workspace
 	garage.car = chassis
@@ -86,7 +98,11 @@ local function roll(player: Player, kind: VehicleKind, paintKey: string?, name: 
 	end
 end
 
-request.OnServerEvent:Connect(function(player: Player, action: any, vehicleId: any, paintKey: any)
+local function key(value: any): string?
+	return if typeof(value) == "string" then value else nil
+end
+
+request.OnServerEvent:Connect(function(player: Player, action: any, vehicleId: any, paintKey: any, rimKey: any, glowKey: any)
 	local garage = garageOf(player)
 	if action == "hello" then
 		push(player, nil)
@@ -99,7 +115,6 @@ request.OnServerEvent:Connect(function(player: Player, action: any, vehicleId: a
 	if kind == nil then
 		return
 	end
-	local paint = if typeof(paintKey) == "string" then paintKey else nil
 	if action == "buy" then
 		if garage.owned[kind.id] then
 			push(player, "Already yours.")
@@ -108,17 +123,18 @@ request.OnServerEvent:Connect(function(player: Player, action: any, vehicleId: a
 		else
 			garage.money -= kind.price
 			garage.owned[kind.id] = true
-			if CarBody.Paint(paint) then
-				garage.paint[kind.id] = paint :: string
-			end
+			keep(garage, kind.id, key(paintKey), key(rimKey), key(glowKey))
 			push(player, `Bought the {kind.name}.`)
 		end
+	elseif action == "customize" and garage.owned[kind.id] then
+		keep(garage, kind.id, key(paintKey), key(rimKey), key(glowKey))
+		push(player, "New look saved.")
 	elseif action == "drive" and garage.owned[kind.id] then
 		garage.active = kind.id
-		roll(player, kind, garage.paint[kind.id], `Vehicle_{player.Name}`)
+		roll(player, kind, CarBody.LookOf(garage.paint[kind.id], garage.rims[kind.id], garage.glow[kind.id]), `Vehicle_{player.Name}`)
 		push(player, nil)
 	elseif action == "test" then
-		roll(player, kind, paint, `TestDrive_{player.Name}`)
+		roll(player, kind, CarBody.LookOf(key(paintKey), nil, nil), `TestDrive_{player.Name}`)
 		push(player, `Test drive: the {kind.name}. Take it out on the road!`)
 	end
 end)

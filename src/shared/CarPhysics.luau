@@ -46,6 +46,20 @@ local YAW_RESPONSIVENESS = 6
 local MAX_SPRING_SHARE = 3
 -- How fast a grounded car's pitch and roll settle, per second.
 local TILT_SETTLE = 3
+-- Nitro: how much further past its rated top speed a car goes, and how much harder it pushes.
+CarPhysics.BoostTop = 1.35
+local BOOST_PUSH = 1.8
+-- Drifting (the handbrake held): the share of grip the tyres keep, how much more the car yaws
+-- for the same steering, how quickly it swings into the slide, and the drag of locked rear wheels.
+local DRIFT_GRIP = 0.3
+local DRIFT_YAW = 1.5
+local DRIFT_RESPONSIVENESS = 9
+local DRIFT_DRAG = 0.3
+-- The drift assist: past DRIFT_ANGLE sideways the tyres bite back, fully by DRIFT_ANGLE plus
+-- DRIFT_CATCH, so a drift holds its angle instead of becoming a spin. Tried without it at full
+-- lock and flat out: the car went round and backwards off the road.
+local DRIFT_ANGLE = math.rad(35)
+local DRIFT_CATCH = math.rad(20)
 
 export type Mount = { attachment: Attachment, force: VectorForce }
 
@@ -115,8 +129,12 @@ local function velocityAt(hull: BasePart, point: Vector3): Vector3
 	return hull.AssemblyLinearVelocity + hull.AssemblyAngularVelocity:Cross(point - hull.Position)
 end
 
--- One step: `dt` seconds, the driver's throttle and steer (-1..1 each; zero for a parked car).
-function CarPhysics.Step(rig: Rig, dt: number, throttle: number, steer: number)
+--[[
+	One step: `dt` seconds, the driver's throttle and steer (-1..1 each; zero for a parked car),
+	whether nitro is burning, and how far into a drift the car is (0 gripping, 1 handbrake fully
+	on -- the driver eases it, so the tyres bite back gradually rather than snapping the car straight).
+]]
+function CarPhysics.Step(rig: Rig, dt: number, throttle: number, steer: number, boost: boolean?, drift: number?)
 	local hull = rig.hull
 	if hull.Parent == nil then
 		return
@@ -153,25 +171,37 @@ function CarPhysics.Step(rig: Rig, dt: number, throttle: number, steer: number)
 	local right = hull.CFrame.RightVector
 	local velocity = hull.AssemblyLinearVelocity
 	local speed = velocity:Dot(forward)
+	local slipAngle = math.atan2(math.abs(velocity:Dot(right)), math.max(math.abs(velocity:Dot(forward)), 1))
+	local catch = math.clamp((slipAngle - DRIFT_ANGLE) / DRIFT_CATCH, 0, 1)
+	local sliding = math.clamp(drift or 0, 0, 1) * (1 - catch)
+	local top = rig.topSpeed * (if boost then CarPhysics.BoostTop else 1)
+	local accel = rig.acceleration * (if boost then BOOST_PUSH else 1)
+	if boost then
+		throttle = 1
+	end
 	local total = Vector3.zero
 	if throttle ~= 0 then
-		local share = math.clamp(math.abs(speed) / rig.topSpeed, 0, 1)
+		local share = math.clamp(math.abs(speed) / top, 0, 1)
 		local headroom = 1 - share * (1 - VEHICLES.TopSpeedTaper)
-		local push = math.clamp((throttle * rig.topSpeed - speed) * rig.acceleration * 40, -rig.acceleration * 4000, rig.acceleration * 4000) * headroom
+		local push = math.clamp((throttle * top - speed) * accel * 40, -accel * 4000, accel * 4000) * headroom
 		total += forward * push
 	end
-	total += -right * velocity:Dot(right) * LATERAL_GRIP
+	local grip = LATERAL_GRIP * (1 - sliding * (1 - DRIFT_GRIP))
+	total += -right * velocity:Dot(right) * grip
+	total += -forward * speed * DRIFT_DRAG * sliding * hull.AssemblyMass
 	hull:ApplyImpulse(total * dt)
 
 	-- The bicycle model: a steered front wheel traces a circle of radius wheelbase / tan(angle), so
 	-- the yaw rate is speed / radius -- which is zero standing still, as a real car's is. Positive
 	-- yaw turns the nose toward -X; steering right (+1) must turn it toward +X.
 	local angle = math.rad(steer * rig.steerDegrees)
-	local target = -(speed / rig.wheelbase) * math.tan(angle) * CarPhysics.SteerScale(speed)
-	local cap = math.rad(rig.steerDegrees) * 1.6
+	local swing = 1 + sliding * (DRIFT_YAW - 1)
+	local target = -(speed / rig.wheelbase) * math.tan(angle) * CarPhysics.SteerScale(speed) * swing
+	local cap = math.rad(rig.steerDegrees) * 1.6 * swing
 	target = math.clamp(target, -cap, cap)
 	local current = hull.AssemblyAngularVelocity
-	local yaw = current.Y + (target - current.Y) * math.clamp(YAW_RESPONSIVENESS * dt, 0, 1)
+	local responsiveness = YAW_RESPONSIVENESS + sliding * (DRIFT_RESPONSIVENESS - YAW_RESPONSIVENESS)
+	local yaw = current.Y + (target - current.Y) * math.clamp(responsiveness * dt, 0, 1)
 	local settle = math.exp(-TILT_SETTLE * dt)
 	hull.AssemblyAngularVelocity = Vector3.new(current.X * settle, yaw, current.Z * settle)
 end

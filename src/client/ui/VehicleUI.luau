@@ -308,6 +308,13 @@ function VehicleUI.new(): VehicleUIHandle
 				speedLabel.Visible = false
 				return
 			end
+			-- The dealership's cars carry their own dial (client/ui/DriveHUD); two speedometers on
+			-- one screen is one too many.
+			local car = seatPart.Parent
+			if car and car:GetAttribute("TopSpeed") ~= nil then
+				speedLabel.Visible = false
+				return
+			end
 			speedLabel.Visible = true
 			self.renderConnection = RunService.RenderStepped:Connect(function()
 				if seatPart.Parent == nil then

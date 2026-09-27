@@ -55,7 +55,6 @@ type VehicleKind = Types.VehicleKind
 type Chassis = VehicleChassis.Chassis
 
 local DEALER = Config.Dealership
-local VEHICLES = Config.Vehicles
 
 local NoticeRemote = Remotes.Get("Notice")
 local RequestTestDriveRemote = Remotes.Get("RequestTestDrive")
@@ -93,14 +92,6 @@ local function lifeOf(player: Player): LifeData?
 	return Lives.Active(profile.Data)
 end
 
-local function ownedCount(life: LifeData): number
-	local count = 0
-	for _ in life.vehicles.owned do
-		count += 1
-	end
-	return count
-end
-
 local function humanoidOf(player: Player): (Humanoid?, BasePart?)
 	local character = player.Character
 	if character == nil then
@@ -128,10 +119,6 @@ local function buy(player: Player, kind: VehicleKind)
 	end
 	if life.vehicles.owned[kind.id] == true then
 		say(player, `You already own the {kind.name}.`)
-		return
-	end
-	if ownedCount(life) >= VEHICLES.MaxOwned then
-		say(player, `Your garage holds {VEHICLES.MaxOwned} cars. Sell one at the sales counter first.`)
 		return
 	end
 	if life.money < kind.price then

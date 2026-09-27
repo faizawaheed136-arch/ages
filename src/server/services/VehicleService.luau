@@ -60,6 +60,7 @@ local IDLE_TICK_SECONDS = 2
 
 local VehicleUpdatedRemote = Remotes.Get("VehicleUpdated")
 local RequestBuyVehicleRemote = Remotes.Get("RequestBuyVehicle")
+local RequestCustomizeVehicleRemote = Remotes.Get("RequestCustomizeVehicle")
 local RequestSellVehicleRemote = Remotes.Get("RequestSellVehicle")
 local RequestSpawnVehicleRemote = Remotes.Get("RequestSpawnVehicle")
 local RequestStoreVehicleRemote = Remotes.Get("RequestStoreVehicle")
@@ -86,14 +87,6 @@ local function dataFor(player: Player): LifeData?
 	return Lives.Active(profile.Data)
 end
 
-local function ownedCount(life: LifeData): number
-	local count = 0
-	for _ in life.vehicles.owned do
-		count += 1
-	end
-	return count
-end
-
 -- Forward declaration -- push is defined below stateFor, which reads `spawned`
 -- and `dataFor`, both already in scope. Declared here for the same reason
 -- GangService declares `push` ahead of `checkEscape`: a name used with no
@@ -111,6 +104,8 @@ local function stateFor(player: Player, notice: string?): VehicleState?
 		owned = life.vehicles.owned,
 		active = life.vehicles.active,
 		paint = life.vehicles.paint,
+		rims = life.vehicles.rims,
+		glow = life.vehicles.glow,
 		busy = spawning[player] == true,
 		notice = notice,
 	}
@@ -128,8 +123,10 @@ function push(player: Player, notice: string?)
 		end
 		table.sort(owned)
 		local paints: { string } = {}
-		for id, key in state.paint or {} do
-			table.insert(paints, `{id}={key}`)
+		for tag, map in { p = state.paint, r = state.rims, g = state.glow } do
+			for id, key in map or {} do
+				table.insert(paints, `{tag}{id}={key}`)
+			end
 		end
 		table.sort(paints)
 		digest = `{table.concat(owned, ",")}|{table.concat(paints, ",")}|{tostring(state.active)}|{tostring(state.busy)}|{tostring(state.notice)}`
@@ -249,8 +246,9 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	local lift = CarBody.Layout(kind).hullY + 0.1
 	local cframe = CFrame.lookAt(spot + Vector3.new(0, lift, 0), spot + Vector3.new(0, lift, 0) + look)
 
-	local paint = CarBody.Paint((life.vehicles.paint or {})[vehicleId])
-	local chassis = VehicleChassis.Build(kind, cframe, if paint then paint.color else nil)
+	local vehicles = life.vehicles
+	local look = CarBody.LookOf((vehicles.paint or {})[vehicleId], (vehicles.rims or {})[vehicleId], (vehicles.glow or {})[vehicleId])
+	local chassis = VehicleChassis.Build(kind, cframe, nil, look)
 	-- Into the world. Nothing did this: Build hands back an unparented model, so a bought car was
 	-- paid for, recorded as owned and marked active, and never appeared anywhere.
 	chassis.model.Parent = Workspace
@@ -270,10 +268,22 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	return true
 end
 
--- Buys a car outright, in `paintKey` (a CarBody.Paints key) or its own colour. Returns whether it
--- happened; a refusal is always said in the pushed notice, because a buy button that quietly did
--- nothing is indistinguishable from the panel being broken.
-function VehicleService.Buy(player: Player, vehicleId: string, paintKey: string?): boolean
+-- Keeps a car's chosen look -- CarBody paint, rim and underglow keys -- dropping any key the shop
+-- does not offer, which leaves that part as the car came.
+local function keepLook(life: LifeData, vehicleId: string, paintKey: string?, rimKey: string?, glowKey: string?)
+	local vehicles = life.vehicles
+	local paints, rims, glows = vehicles.paint or {}, vehicles.rims or {}, vehicles.glow or {}
+	local paint, rim, glow = CarBody.Paint(paintKey), CarBody.Rim(rimKey), CarBody.Glow(glowKey)
+	paints[vehicleId] = if paint then paint.key else nil
+	rims[vehicleId] = if rim then rim.key else nil
+	glows[vehicleId] = if glow then glow.key else nil
+	vehicles.paint, vehicles.rims, vehicles.glow = paints, rims, glows
+end
+
+-- Buys a car outright, in the look the shop showed it in (CarBody paint, rim and underglow keys;
+-- nil for as it came). Returns whether it happened; a refusal is always said in the pushed notice,
+-- because a buy button that quietly did nothing is indistinguishable from the panel being broken.
+function VehicleService.Buy(player: Player, vehicleId: string, paintKey: string?, rimKey: string?, glowKey: string?): boolean
 	if not enabled then
 		return false
 	end
@@ -290,23 +300,13 @@ function VehicleService.Buy(player: Player, vehicleId: string, paintKey: string?
 		push(player, "Already yours.")
 		return false
 	end
-	if ownedCount(life) >= VEHICLES.MaxOwned then
-		push(player, `The garage only holds {VEHICLES.MaxOwned}. Sell one first.`)
-		return false
-	end
 	if not MoneyService.Spend(player, kind.price, `bought a {kind.name}`) then
 		push(player, `{Money.Format(kind.price)} for the {kind.name}.`)
 		return false
 	end
 
 	life.vehicles.owned[vehicleId] = true
-	-- The paint is kept only if it is one the shop sells; anything else is the car's own colour.
-	local paint = CarBody.Paint(paintKey)
-	if paint ~= nil then
-		local paints = life.vehicles.paint or {}
-		paints[vehicleId] = paint.key
-		life.vehicles.paint = paints
-	end
+	keepLook(life, vehicleId, paintKey, rimKey, glowKey)
 	push(player, `Bought the {kind.name}.`)
 
 	-- The first car a life owns is worth pulling straight out onto the forecourt
@@ -350,10 +350,24 @@ function VehicleService.Sell(player: Player, vehicleId: string): boolean
 	local refund = math.floor(kind.price * VEHICLES.ResaleFraction)
 	MoneyService.Add(player, refund, `sold a {kind.name}`)
 	life.vehicles.owned[vehicleId] = nil
-	if life.vehicles.paint then
-		life.vehicles.paint[vehicleId] = nil
-	end
+	keepLook(life, vehicleId, nil, nil, nil)
 	push(player, `Sold the {kind.name} for {Money.Format(refund)}.`)
+	return true
+end
+
+-- Changes an owned car's look: the shop's CUSTOMIZE. Free -- the car is already paid for, and a
+-- paint shop's bill is not a decision anybody enjoys making. If it is the car out on the road it is
+-- rebuilt in its new look where the dealership parks cars.
+function VehicleService.Customize(player: Player, vehicleId: string, paintKey: string?, rimKey: string?, glowKey: string?): boolean
+	local life = dataFor(player)
+	if life == nil or not life.alive or life.vehicles.owned[vehicleId] ~= true then
+		return false
+	end
+	keepLook(life, vehicleId, paintKey, rimKey, glowKey)
+	push(player, "New look saved.")
+	if life.vehicles.active == vehicleId then
+		task.spawn(spawnActive, player, vehicleId)
+	end
 	return true
 end
 
@@ -459,9 +473,8 @@ function VehicleService.Describe(player: Player): string
 		)
 	end
 	return string.format(
-		"garage %d/%d: %s | %s | %s",
+		"garage %d: %s | %s | %s",
 		#owned,
-		VEHICLES.MaxOwned,
 		if #owned > 0 then table.concat(owned, ", ") else "empty",
 		out,
 		if enabled then "on" else "off"
@@ -469,11 +482,21 @@ function VehicleService.Describe(player: Player): string
 end
 
 function VehicleService:Init()
-	RequestBuyVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any, paintKey: any)
+	local function key(value: any): string?
+		return if typeof(value) == "string" then value else nil
+	end
+	RequestBuyVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any, paintKey: any, rimKey: any, glowKey: any)
 		if typeof(vehicleId) ~= "string" then
 			return
 		end
-		VehicleService.Buy(player, vehicleId, if typeof(paintKey) == "string" then paintKey else nil)
+		VehicleService.Buy(player, vehicleId, key(paintKey), key(rimKey), key(glowKey))
+	end)
+
+	RequestCustomizeVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any, paintKey: any, rimKey: any, glowKey: any)
+		if typeof(vehicleId) ~= "string" then
+			return
+		end
+		VehicleService.Customize(player, vehicleId, key(paintKey), key(rimKey), key(glowKey))
 	end)
 
 	RequestSellVehicleRemote.OnServerEvent:Connect(function(player: Player, vehicleId: any)

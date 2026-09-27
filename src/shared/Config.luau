@@ -1452,12 +1452,8 @@ end
 -- shared ball -- has exactly one owner at a time and Roblox already solves that
 -- correctly once the seat-enter handoff is done explicitly. See VehicleService.
 Config.Vehicles = {
-	-- How many cars a single life may own at once. More than a few is a garage
-	-- nobody visits; the point is trading up, not collecting. Three since the
-	-- showroom grew to eight cars (2026-09-25): at two, most of the lot went
-	-- untried by anyone who already owned two.
-	-- Safe range: 1-4.
-	MaxOwned = 3,
+	-- No cap on how many cars a life owns, on the owner's word (2026-09-26): "have no garage
+	-- limit". There was one (MaxOwned); a showroom of eight made collecting the point.
 	-- Fraction of the buy price refunded on sale, the same shape and the same
 	-- reasoning as Config.House.ResaleFraction: it makes buying and selling a
 	-- cycle instead of a one-way ratchet, and the loss is the cost of having

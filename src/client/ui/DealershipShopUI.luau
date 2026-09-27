@@ -5,28 +5,36 @@
 	Two views, the way the big driving games lay a car shop out:
 	  * THE LIST -- a Cars / Brands tab pair across the top; down the left the shop's name, the
 	    filters (New, All, Owned, Favourites) and a sort; across the top of the grid a search box,
-	    the player's money and Exit; then a grid of cards, each a turning-free portrait of the car,
-	    its year and name, its price (or OWNED), a heart, and NEW on what just arrived.
-	  * THE CAR -- the camera goes to the stage (world/ShopStage), the car on a turntable. Its name
-	    across the top with the heart, BUY and TEST DRIVE under it (or DRIVE, once it is yours),
-	    Back to Vehicles in the corner, the stats down the right, the paint swatches along the
-	    bottom -- pick one and the car on the turntable is repainted, and that is the paint it is
-	    bought in.
+	    the player's money and Exit; then a grid of cards, each a portrait of the car in the look it
+	    wears, its year and name, its price (or OWNED), a heart, and NEW on what just arrived.
+	  * THE CAR -- the camera sweeps onto the stage (world/ShopStage), the car on a turntable and two
+	    more on plinths behind. Its name across the top with the heart; BUY and TEST DRIVE under it,
+	    or DRIVE and CUSTOMIZE once it is yours; Back to Vehicles in the corner; the stats down the
+	    right; and along the bottom the look -- Paint, Rims, Underglow -- every pick shown on the
+	    turntable at once. A car is bought in the look on the turntable; an owned one's new look is
+	    kept with SAVE LOOK.
 	The layout is the genre's; the names, colours and letters are this dealership's own.
 
 	A view and nothing else: it holds no money and moves no car. Everything it asks for goes out
 	through the callbacks (world/DealershipShop wires them to the server), and everything it shows
-	comes in through Set*: the catalog, what is owned and in what paint, the balance, a notice.
+	comes in through Set*: the catalog, what is owned and how it looks, the balance, a notice.
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type VehicleKind = Types.VehicleKind
+type Paint = CarBody.Paint
+
+-- A car's look as keys: into CarBody.Paints, CarBody.Rims and CarBody.Glows. Nil for as it came.
+export type LookKeys = { paint: string?, rims: string?, glow: string? }
+-- Every owned car's look, as the server keeps them.
+export type Looks = { paint: { [string]: string }?, rims: { [string]: string }?, glow: { [string]: string }? }
 
 -- The palette. Dark glass panels, one blue for everything selectable, green to buy, red to leave.
 local PANEL = Color3.fromRGB(24, 28, 38)
@@ -42,6 +50,7 @@ local WHITE = Color3.fromRGB(244, 246, 250)
 local GREY = Color3.fromRGB(150, 158, 176)
 local DIM = Color3.fromRGB(96, 104, 122)
 local HEART = Color3.fromRGB(240, 70, 92)
+local PURPLE = Color3.fromRGB(150, 80, 240)
 
 -- Drawn at this size and scaled to the screen, so a phone and a monitor see the same layout.
 local REFERENCE_HEIGHT = 720
@@ -71,18 +80,17 @@ local FILTERS = {
 	{ key = "favorites", label = "Favorite Vehicles", icon = "♥" },
 }
 
-export type Stage = {
-	Show: (any, VehicleKind, Color3?) -> (),
-	Enter: (any) -> (),
-	Leave: (any) -> (),
-	SetAutoSpin: (any, boolean) -> (),
-	ResetView: (any) -> (),
+-- The look bar's three tabs, and the swatches under each.
+local PARTS = {
+	{ key = "paint", label = "Paint", list = CarBody.Paints, none = "Factory colour" },
+	{ key = "rims", label = "Rims", list = CarBody.Rims, none = "Factory rims" },
+	{ key = "glow", label = "Underglow", list = CarBody.Glows, none = "No underglow" },
 }
 
 local DealershipShopUI = {}
 DealershipShopUI.__index = DealershipShopUI
 
-type Card = { frame: Frame, heart: TextButton, price: TextLabel, kind: VehicleKind }
+type Card = { frame: Frame, heart: TextButton, price: TextLabel, kind: VehicleKind, grow: UIScale }
 
 export type Handle = typeof(setmetatable(
 	{} :: {
@@ -91,7 +99,7 @@ export type Handle = typeof(setmetatable(
 		stage: any,
 		title: string,
 		-- The list.
-		list: Frame,
+		list: CanvasGroup,
 		tabs: { [string]: TextButton },
 		filterButtons: { [string]: TextButton },
 		brandBanner: TextLabel,
@@ -99,24 +107,28 @@ export type Handle = typeof(setmetatable(
 		sortButton: TextButton,
 		sortMenu: Frame,
 		search: TextBox,
+		count: TextLabel,
 		grid: ScrollingFrame,
 		brandGrid: ScrollingFrame,
 		empty: TextLabel,
 		cards: { Card },
 		-- The car.
-		detail: Frame,
+		detail: CanvasGroup,
 		nameLabel: TextLabel,
 		detailHeart: TextButton,
 		buyButton: TextButton,
 		testButton: TextButton,
 		driveButton: TextButton,
-		stats: Frame,
+		styleButton: TextButton,
 		statRows: { [string]: { bar: Frame, value: TextLabel } },
 		statNotes: TextLabel,
 		priceLabel: TextLabel,
 		ownedLabel: TextLabel,
-		swatches: { [string]: TextButton },
-		paintName: TextLabel,
+		partTabs: { [string]: TextButton },
+		partRows: { [string]: Frame },
+		swatches: { [string]: { [string]: TextButton } },
+		lookName: TextLabel,
+		banner: TextLabel,
 		-- Shared.
 		moneyLabels: { TextLabel },
 		notice: TextLabel,
@@ -124,7 +136,7 @@ export type Handle = typeof(setmetatable(
 		open: boolean,
 		catalog: { VehicleKind },
 		owned: { [string]: boolean },
-		paint: { [string]: string },
+		looks: Looks,
 		active: string?,
 		money: number,
 		favorites: { [string]: boolean },
@@ -134,11 +146,13 @@ export type Handle = typeof(setmetatable(
 		sort: string,
 		query: string,
 		viewing: VehicleKind?,
-		chosenPaint: string?,
+		part: string,
+		chosen: LookKeys,
 		noticeToken: number,
-		onBuy: ((string, string?) -> ())?,
+		onBuy: ((string, LookKeys) -> ())?,
 		onTestDrive: ((string, string?) -> ())?,
 		onDrive: ((string) -> ())?,
+		onCustomize: ((string, LookKeys) -> ())?,
 		onClose: (() -> ())?,
 	},
 	DealershipShopUI
@@ -183,6 +197,17 @@ local function frame(parent: Instance, name: string, position: UDim2, size: UDim
 	return f
 end
 
+-- A whole view, fadeable as one.
+local function group(parent: Instance, name: string): CanvasGroup
+	local g = Instance.new("CanvasGroup")
+	g.Name = name
+	g.Size = UDim2.fromScale(1, 1)
+	g.BackgroundTransparency = 1
+	g.BorderSizePixel = 0
+	g.Parent = parent
+	return g
+end
+
 local function text(parent: Instance, name: string, position: UDim2, size: UDim2, value: string, color: Color3, textSize: number, font: Enum.Font, align: Enum.TextXAlignment?): TextLabel
 	local t = Instance.new("TextLabel")
 	t.Name = name
@@ -216,6 +241,10 @@ local function button(parent: Instance, name: string, position: UDim2, size: UDi
 	return b
 end
 
+local function tween(instance: Instance, seconds: number, goal: { [string]: any }, style: Enum.EasingStyle?)
+	TweenService:Create(instance, TweenInfo.new(seconds, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal):Play()
+end
+
 local function displayName(kind: VehicleKind): string
 	if kind.year then
 		return `{kind.year} {kind.name}`
@@ -228,8 +257,12 @@ local function rating(value: number, low: number, high: number): number
 	return math.clamp(1 + 9 * (value - low) / (high - low), 1, 10)
 end
 
+local function sameLook(a: LookKeys, b: LookKeys): boolean
+	return a.paint == b.paint and a.rims == b.rims and a.glow == b.glow
+end
+
 -- The car in a card: its own portrait, drawn by the same CarBody the stage and the road use.
-local function portrait(parent: Instance, kind: VehicleKind, paint: Color3?): ViewportFrame
+local function portrait(parent: Instance, kind: VehicleKind, look: CarBody.Look): ViewportFrame
 	local view = Instance.new("ViewportFrame")
 	view.Name = "Portrait"
 	view.BackgroundTransparency = 1
@@ -242,7 +275,7 @@ local function portrait(parent: Instance, kind: VehicleKind, paint: Color3?): Vi
 	camera.FieldOfView = 30
 	camera.Parent = view
 	view.CurrentCamera = camera
-	local built = CarBody.Build(kind, CFrame.new(), paint)
+	local built = CarBody.Build(kind, CFrame.new(), nil, look)
 	CarBody.Anchor(built)
 	built.model.Parent = view
 	-- Front three-quarters, a little above: the angle every dealer photographs a car from.
@@ -281,7 +314,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	self.open = false
 	self.catalog = {}
 	self.owned = {}
-	self.paint = {}
+	self.looks = {}
 	self.active = nil
 	self.money = 0
 	self.favorites = {}
@@ -291,17 +324,20 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	self.sort = "priceUp"
 	self.query = ""
 	self.viewing = nil
-	self.chosenPaint = nil
+	self.part = "paint"
+	self.chosen = {}
 	self.noticeToken = 0
 	self.cards = {}
 	self.moneyLabels = {}
 	self.statRows = {}
 	self.swatches = {}
+	self.partTabs = {}
+	self.partRows = {}
 	self.tabs = {}
 	self.filterButtons = {}
 
 	-- ============================== THE LIST ==============================
-	local list = frame(canvas, "List", UDim2.new(), UDim2.fromScale(1, 1), PANEL, 1)
+	local list = group(canvas, "List")
 	self.list = list
 
 	-- Tabs across the top.
@@ -329,7 +365,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	local bannerBox = frame(side, "Banner", UDim2.fromOffset(12, 64), UDim2.fromOffset(226, 70), CARD, 0)
 	corner(bannerBox, 10)
 	self.brandBanner = text(bannerBox, "Brand", UDim2.fromOffset(0, 0), UDim2.fromScale(1, 1), "ALL MAKERS", WHITE, 24, Enum.Font.GothamBlack, Enum.TextXAlignment.Center)
-	self.brandClear = button(bannerBox, "Clear", UDim2.fromOffset(198, 6), UDim2.fromOffset(22, 22), "✕", RED, 12)
+	self.brandClear = button(bannerBox, "Clear", UDim2.fromOffset(198, 6), UDim2.fromOffset(22, 22), "X", RED, 12)
 	self.brandClear.Visible = false
 	self.brandClear.MouseButton1Click:Connect(function()
 		self.brand = nil
@@ -364,6 +400,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	self.sortButton.MouseButton1Click:Connect(function()
 		self.sortMenu.Visible = not self.sortMenu.Visible
 	end)
+	self.count = text(side, "Count", UDim2.fromOffset(16, 520), UDim2.fromOffset(220, 20), "", DIM, 13, Enum.Font.GothamBold)
 
 	-- Your money, bottom left, as the shop's own panel.
 	local purse = frame(list, "Purse", UDim2.fromOffset(24, 634), UDim2.fromOffset(250, 62), PANEL, 0.06)
@@ -376,7 +413,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	local searchBox = frame(list, "SearchBox", UDim2.fromOffset(290, 70), UDim2.fromOffset(640, 42), PANEL, 0.06)
 	corner(searchBox, 10)
 	stroke(searchBox, STROKE, 1.5)
-	text(searchBox, "Glass", UDim2.fromOffset(12, 0), UDim2.fromOffset(24, 42), "⌕", GREY, 16, Enum.Font.GothamBold)
+	text(searchBox, "Glass", UDim2.fromOffset(12, 0), UDim2.fromOffset(24, 42), "⌕", GREY, 18, Enum.Font.GothamBold)
 	local search = Instance.new("TextBox")
 	search.Name = "Search"
 	search.Position = UDim2.fromOffset(40, 0)
@@ -422,6 +459,10 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	layout.CellPadding = UDim2.fromOffset(12, 12)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = grid
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 6)
+	pad.PaddingLeft = UDim.new(0, 6)
+	pad.Parent = grid
 	self.grid = grid
 	self.empty = text(list, "Empty", UDim2.fromOffset(290, 300), UDim2.fromOffset(966, 30), "No vehicles match.", GREY, 18, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 	self.empty.Visible = false
@@ -435,7 +476,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	self.brandGrid = brandGrid
 
 	-- ============================== THE CAR ==============================
-	local detail = frame(canvas, "Detail", UDim2.new(), UDim2.fromScale(1, 1), PANEL, 1)
+	local detail = group(canvas, "Detail")
 	detail.Visible = false
 	self.detail = detail
 
@@ -454,19 +495,20 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	end)
 	self.buyButton = button(detail, "Buy", UDim2.fromOffset(640 - 206, 74), UDim2.fromOffset(200, 42), "BUY", GREEN, 18)
 	self.testButton = button(detail, "TestDrive", UDim2.fromOffset(640 + 6, 74), UDim2.fromOffset(200, 42), "🚦  TEST DRIVE", BLUE, 17)
-	self.driveButton = button(detail, "Drive", UDim2.fromOffset(640 - 100, 74), UDim2.fromOffset(200, 42), "🚗  DRIVE", BLUE, 18)
+	self.driveButton = button(detail, "Drive", UDim2.fromOffset(640 - 206, 74), UDim2.fromOffset(200, 42), "🚗  DRIVE", BLUE, 18)
+	self.styleButton = button(detail, "Customize", UDim2.fromOffset(640 + 6, 74), UDim2.fromOffset(200, 42), "🎨  CUSTOMIZE", PURPLE, 17)
 	self.buyButton.MouseButton1Click:Connect(function()
 		local kind = self.viewing
 		local callback = self.onBuy
 		if kind and callback and self.money >= kind.price and not self.owned[kind.id] then
-			callback(kind.id, self.chosenPaint)
+			callback(kind.id, table.clone(self.chosen))
 		end
 	end)
 	self.testButton.MouseButton1Click:Connect(function()
 		local kind = self.viewing
 		local callback = self.onTestDrive
 		if kind and callback then
-			callback(kind.id, self.chosenPaint)
+			callback(kind.id, self.chosen.paint)
 		end
 	end)
 	self.driveButton.MouseButton1Click:Connect(function()
@@ -474,6 +516,19 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 		local callback = self.onDrive
 		if kind and callback then
 			callback(kind.id)
+		end
+	end)
+	self.styleButton.MouseButton1Click:Connect(function()
+		local kind = self.viewing
+		if kind == nil then
+			return
+		end
+		local callback = self.onCustomize
+		if not sameLook(self.chosen, self:SavedLook(kind.id)) and callback then
+			callback(kind.id, table.clone(self.chosen))
+		else
+			-- Nothing changed yet: point at the look bar, starting from the rims.
+			self:SetPart(if self.part == "paint" then "rims" else self.part)
 		end
 	end)
 	local back = button(detail, "Back", UDim2.fromOffset(1280 - 24 - 190, 18), UDim2.fromOffset(190, 40), "Back to Vehicles", RED, 16)
@@ -496,7 +551,6 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	local stats = frame(detail, "Stats", UDim2.fromOffset(1280 - 24 - 270, 384), UDim2.fromOffset(270, 250), PANEL, 0.06)
 	corner(stats, 12)
 	stroke(stats, STROKE, 1.5)
-	self.stats = stats
 	text(stats, "Title", UDim2.fromOffset(14, 8), UDim2.fromOffset(240, 26), "Vehicle Stats", WHITE, 19, Enum.Font.GothamBlack)
 	for i, row in { { key = "speed", label = "Top Speed" }, { key = "accel", label = "Acceleration" }, { key = "handling", label = "Handling" } } do
 		local y = 40 + (i - 1) * 30
@@ -515,34 +569,68 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	self.ownedLabel.BackgroundTransparency = 0
 	corner(self.ownedLabel, 8)
 
-	-- The paint along the bottom.
-	local paints = CarBody.Paints
-	local barWidth = #paints * 42 + 110
-	local paintBar = frame(detail, "Paint", UDim2.fromOffset(640 - barWidth / 2, 640), UDim2.fromOffset(barWidth, 56), PANEL, 0.06)
-	corner(paintBar, 12)
-	stroke(paintBar, STROKE, 1.5)
-	local primary = text(paintBar, "Primary", UDim2.fromOffset(10, 12), UDim2.fromOffset(88, 32), "Primary", WHITE, 14, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
-	primary.BackgroundColor3 = BLUE
-	primary.BackgroundTransparency = 0
-	corner(primary, 8)
-	for i, paint in paints do
-		local swatch = button(paintBar, "Swatch", UDim2.fromOffset(106 + (i - 1) * 42, 12), UDim2.fromOffset(34, 32), "", paint.color, 1)
-		stroke(swatch, STROKE, 2)
-		swatch.MouseButton1Click:Connect(function()
-			self.chosenPaint = paint.key
-			self:RefreshDetail()
-			local kind = self.viewing
-			if kind then
-				self.stage:Show(kind, paint.color)
-			end
-		end)
-		self.swatches[paint.key] = swatch
+	-- The look along the bottom: three tabs, a row of swatches under each.
+	local most = 0
+	for _, part in PARTS do
+		most = math.max(most, #part.list + (if part.key == "glow" then 1 else 0))
 	end
-	self.paintName = text(detail, "PaintName", UDim2.fromOffset(640 - 150, 612), UDim2.fromOffset(300, 22), "", WHITE, 15, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+	local barWidth = most * 42 + 132
+	local lookBar = frame(detail, "Look", UDim2.fromOffset(640 - barWidth / 2, 630), UDim2.fromOffset(barWidth, 74), PANEL, 0.06)
+	corner(lookBar, 12)
+	stroke(lookBar, STROKE, 1.5)
+	for i, part in PARTS do
+		local t = button(lookBar, "PartTab", UDim2.fromOffset(10, 6 + (i - 1) * 21), UDim2.fromOffset(112, 19), part.label, CARD, 12)
+		t.MouseButton1Click:Connect(function()
+			self:SetPart(part.key)
+		end)
+		self.partTabs[part.key] = t
+		local row = frame(lookBar, "Row", UDim2.fromOffset(128, 0), UDim2.new(1, -128, 1, 0), PANEL, 1)
+		row.Visible = false
+		self.partRows[part.key] = row
+		local swatches: { [string]: TextButton } = {}
+		local entries: { Paint } = table.clone(part.list)
+		if part.key == "glow" then
+			-- Underglow can be switched off: a first swatch for none.
+			table.insert(entries, 1, { key = "", name = part.none, color = CARD })
+		end
+		for j, entry in entries do
+			local swatch = button(row, "Swatch", UDim2.fromOffset(4 + (j - 1) * 42, 20), UDim2.fromOffset(34, 34), if entry.key == "" then "X" else "", entry.color, 14)
+			swatch.TextColor3 = GREY
+			stroke(swatch, STROKE, 2)
+			swatch.MouseButton1Click:Connect(function()
+				local key = if entry.key == "" then nil else entry.key
+				if part.key == "paint" then
+					self.chosen.paint = key
+				elseif part.key == "rims" then
+					self.chosen.rims = key
+				else
+					self.chosen.glow = key
+				end
+				local kind = self.viewing
+				if kind then
+					self.stage:Show(kind, CarBody.LookOf(self.chosen.paint, self.chosen.rims, self.chosen.glow))
+				end
+				self:RefreshDetail()
+			end)
+			swatches[entry.key] = swatch
+		end
+		self.swatches[part.key] = swatches
+	end
+	self.lookName = text(detail, "LookName", UDim2.fromOffset(640 - 200, 604), UDim2.fromOffset(400, 22), "", WHITE, 15, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+	self.lookName.TextStrokeTransparency = 0.5
 
 	local purse2 = purse:Clone()
 	purse2.Parent = detail
 	table.insert(self.moneyLabels, purse2:FindFirstChild("Money") :: TextLabel)
+
+	-- The moment a car is yours.
+	local banner = text(canvas, "Purchased", UDim2.fromOffset(640, 300), UDim2.fromOffset(600, 90), "🎉  PURCHASED!", GOLD, 56, Enum.Font.GothamBlack, Enum.TextXAlignment.Center)
+	banner.AnchorPoint = Vector2.new(0.5, 0.5)
+	banner.TextStrokeColor3 = Color3.fromRGB(60, 40, 0)
+	banner.TextStrokeTransparency = 0.2
+	banner.ZIndex = 20
+	banner.Visible = false
+	self.banner = banner
 
 	-- A notice, dropping in under the top of whichever view is showing.
 	local notice = text(canvas, "Notice", UDim2.fromOffset(640 - 260, 128), UDim2.fromOffset(520, 40), "", WHITE, 17, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
@@ -554,6 +642,7 @@ function DealershipShopUI.new(stage: any, title: string): Handle
 	stroke(notice, BLUE, 1.5)
 	self.notice = notice
 
+	self:SetPart("paint")
 	self:Refresh()
 	return self
 end
@@ -602,18 +691,16 @@ local function visible(self: Handle, kind: VehicleKind): boolean
 	return true
 end
 
-local function paintOf(self: Handle, kind: VehicleKind): Color3?
-	local paint = CarBody.Paint(self.paint[kind.id])
-	return if paint then paint.color else nil
-end
-
 local function buildCard(self: Handle, kind: VehicleKind, order: number): Card
 	local card = frame(self.grid, "Card", UDim2.new(), UDim2.new(), CARD, 0)
 	card.LayoutOrder = order
 	corner(card, 10)
 	stroke(card, STROKE, 1.5)
+	local grow = Instance.new("UIScale")
+	grow.Parent = card
 	local shot = frame(card, "Shot", UDim2.fromOffset(4, 24), UDim2.fromOffset(CARD_W - 8, 96), CARD, 1)
-	portrait(shot, kind, paintOf(self, kind))
+	local saved = self:SavedLook(kind.id)
+	portrait(shot, kind, CarBody.LookOf(saved.paint, saved.rims, saved.glow))
 	local name = text(card, "Name", UDim2.fromOffset(10, 6), UDim2.fromOffset(CARD_W - 20, 18), displayName(kind), WHITE, 13, Enum.Font.GothamBold)
 	name.ZIndex = 2
 	local price = text(card, "Price", UDim2.fromOffset(10, 122), UDim2.fromOffset(120, 24), "", GOLD, 17, Enum.Font.GothamBlack)
@@ -642,21 +729,22 @@ local function buildCard(self: Handle, kind: VehicleKind, order: number): Card
 	hit.MouseButton1Click:Connect(function()
 		self:ShowCar(kind)
 	end)
+	local outline = card:FindFirstChildOfClass("UIStroke")
 	hit.MouseEnter:Connect(function()
 		card.BackgroundColor3 = CARD_HOVER
-		local s = card:FindFirstChildOfClass("UIStroke")
-		if s then
-			s.Color = BLUE
+		if outline then
+			outline.Color = BLUE
 		end
+		tween(grow, 0.15, { Scale = 1.05 })
 	end)
 	hit.MouseLeave:Connect(function()
 		card.BackgroundColor3 = CARD
-		local s = card:FindFirstChildOfClass("UIStroke")
-		if s then
-			s.Color = STROKE
+		if outline then
+			outline.Color = STROKE
 		end
+		tween(grow, 0.2, { Scale = 1 })
 	end)
-	return { frame = card, heart = heart, price = price, kind = kind }
+	return { frame = card, heart = heart, price = price, kind = kind, grow = grow }
 end
 
 local function rebuildBrands(self: Handle)
@@ -695,9 +783,27 @@ local function rebuildBrands(self: Handle)
 	end
 end
 
+-- Fades a view in, rising a little as it comes.
+local function reveal(view: CanvasGroup)
+	view.Visible = true
+	view.GroupTransparency = 1
+	view.Position = UDim2.fromOffset(0, 24)
+	tween(view, 0.35, { GroupTransparency = 0, Position = UDim2.new() })
+end
+
 -- ---------------------------------------------------------------------------------------------
 -- Public.
 -- ---------------------------------------------------------------------------------------------
+
+-- The look an owned car wears, as keys; empty for a car not owned.
+function DealershipShopUI.SavedLook(self: Handle, id: string): LookKeys
+	local looks = self.looks
+	return {
+		paint = (looks.paint or {})[id],
+		rims = (looks.rims or {})[id],
+		glow = (looks.glow or {})[id],
+	}
+end
 
 function DealershipShopUI.SetCatalog(self: Handle, catalog: { VehicleKind })
 	self.catalog = catalog
@@ -712,19 +818,26 @@ function DealershipShopUI.SetCatalog(self: Handle, catalog: { VehicleKind })
 	self:Refresh()
 end
 
-function DealershipShopUI.SetOwned(self: Handle, owned: { [string]: boolean }, paint: { [string]: string }?, active: string?)
-	local repaint = false
-	for id, key in paint or {} do
-		if self.paint[id] ~= key then
-			repaint = true
+function DealershipShopUI.SetOwned(self: Handle, owned: { [string]: boolean }, looks: Looks, active: string?)
+	-- A car bought or restyled: its card is redrawn in the look it now wears.
+	local changed = false
+	for _, kind in self.catalog do
+		local before = self:SavedLook(kind.id)
+		local after: LookKeys = { paint = (looks.paint or {})[kind.id], rims = (looks.rims or {})[kind.id], glow = (looks.glow or {})[kind.id] }
+		if not sameLook(before, after) then
+			changed = true
 		end
 	end
+	local viewing = self.viewing
+	local justBought = viewing ~= nil and not self.owned[viewing.id] and owned[viewing.id] == true
 	self.owned = owned
-	self.paint = paint or {}
+	self.looks = looks
 	self.active = active
-	if repaint and #self.catalog > 0 then
-		-- A car bought in a new colour: its card shows the colour it is now.
+	if changed and #self.catalog > 0 then
 		self:SetCatalog(self.catalog)
+	end
+	if justBought then
+		self:Celebrate()
 	end
 	self:Refresh()
 	self:RefreshDetail()
@@ -735,6 +848,7 @@ function DealershipShopUI.SetMoney(self: Handle, balance: number)
 	for _, label in self.moneyLabels do
 		label.Text = money(balance)
 	end
+	self:Refresh()
 	self:RefreshDetail()
 end
 
@@ -750,7 +864,25 @@ function DealershipShopUI.Notice(self: Handle, message: string)
 	end)
 end
 
-function DealershipShopUI.OnBuy(self: Handle, callback: (string, string?) -> ())
+-- The PURCHASED! banner: in with a bounce, held, and gone.
+function DealershipShopUI.Celebrate(self: Handle)
+	local banner = self.banner
+	local grow = banner:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	grow.Parent = banner
+	grow.Scale = 0.3
+	banner.TextTransparency = 0
+	banner.TextStrokeTransparency = 0.2
+	banner.Visible = true
+	TweenService:Create(grow, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	task.delay(1.6, function()
+		tween(banner, 0.6, { TextTransparency = 1, TextStrokeTransparency = 1 }, Enum.EasingStyle.Quad)
+		task.delay(0.6, function()
+			banner.Visible = false
+		end)
+	end)
+end
+
+function DealershipShopUI.OnBuy(self: Handle, callback: (string, LookKeys) -> ())
 	self.onBuy = callback
 end
 
@@ -760,6 +892,10 @@ end
 
 function DealershipShopUI.OnDrive(self: Handle, callback: (string) -> ())
 	self.onDrive = callback
+end
+
+function DealershipShopUI.OnCustomize(self: Handle, callback: (string, LookKeys) -> ())
+	self.onCustomize = callback
 end
 
 function DealershipShopUI.OnClose(self: Handle, callback: () -> ())
@@ -809,23 +945,43 @@ function DealershipShopUI.SetTab(self: Handle, tab: string)
 	self:Refresh()
 end
 
+function DealershipShopUI.SetPart(self: Handle, part: string)
+	self.part = part
+	for key, t in self.partTabs do
+		t.BackgroundColor3 = if key == part then BLUE else CARD
+	end
+	for key, row in self.partRows do
+		row.Visible = key == part
+	end
+	self:RefreshDetail()
+end
+
 function DealershipShopUI.ShowList(self: Handle)
 	self.viewing = nil
 	self.detail.Visible = false
-	self.list.Visible = true
 	self.stage:Leave()
+	reveal(self.list)
 	self:Refresh()
 end
 
 function DealershipShopUI.ShowCar(self: Handle, kind: VehicleKind)
 	self.viewing = kind
-	self.chosenPaint = self.paint[kind.id]
+	self.chosen = self:SavedLook(kind.id)
 	self.list.Visible = false
-	self.detail.Visible = true
 	self.sortMenu.Visible = false
+	reveal(self.detail)
+	-- The two cars behind it: the next two in the list, as they came.
+	local others: { VehicleKind } = {}
+	for _, other in sorted(self, self.catalog) do
+		if other.id ~= kind.id and #others < 2 then
+			table.insert(others, other)
+		end
+	end
 	self.stage:Enter()
-	self.stage:Show(kind, paintOf(self, kind))
-	self:RefreshDetail()
+	self.stage:Dress(others)
+	self.stage:Show(kind, CarBody.LookOf(self.chosen.paint, self.chosen.rims, self.chosen.glow))
+	self.stage:Sweep()
+	self:SetPart("paint")
 end
 
 function DealershipShopUI.IsViewing(self: Handle): boolean
@@ -856,7 +1012,7 @@ function DealershipShopUI.Refresh(self: Handle)
 	for i, kind in sorted(self, self.catalog) do
 		order[kind.id] = i
 	end
-	local shown = 0
+	local shown, ownedCount = 0, 0
 	for _, card in self.cards do
 		local kind = card.kind
 		local show = visible(self, kind)
@@ -866,6 +1022,7 @@ function DealershipShopUI.Refresh(self: Handle)
 			shown += 1
 		end
 		if self.owned[kind.id] then
+			ownedCount += 1
 			card.price.Text = "OWNED"
 			card.price.TextColor3 = GREEN
 		else
@@ -877,6 +1034,7 @@ function DealershipShopUI.Refresh(self: Handle)
 		card.heart.TextColor3 = if fav then HEART else GREY
 	end
 	self.empty.Visible = onCars and shown == 0
+	self.count.Text = `{shown} shown  •  {ownedCount} of {#self.catalog} owned`
 end
 
 function DealershipShopUI.RefreshDetail(self: Handle)
@@ -893,11 +1051,15 @@ function DealershipShopUI.RefreshDetail(self: Handle)
 	self.buyButton.Visible = not owned
 	self.testButton.Visible = not owned
 	self.driveButton.Visible = owned
+	self.styleButton.Visible = owned
 	local affordable = self.money >= kind.price
 	self.buyButton.Text = if affordable then `BUY  {money(kind.price)}` else `NEED  {money(kind.price - self.money)}  MORE`
 	self.buyButton.BackgroundColor3 = if affordable then GREEN else CARD
 	self.buyButton.AutoButtonColor = affordable
 	self.driveButton.Text = if self.active == kind.id then "🚗  DRIVING" else "🚗  DRIVE"
+	local unsaved = owned and not sameLook(self.chosen, self:SavedLook(kind.id))
+	self.styleButton.Text = if unsaved then "💾  SAVE LOOK" else "🎨  CUSTOMIZE"
+	self.styleButton.BackgroundColor3 = if unsaved then GREEN else PURPLE
 
 	local speed = self.statRows.speed
 	speed.value.Text = `{CarBody.Mph(kind.topSpeedStuds)} MPH`
@@ -925,16 +1087,27 @@ function DealershipShopUI.RefreshDetail(self: Handle)
 	self.ownedLabel.Text = if owned then "Owned" elseif affordable then "Available" else "Can't afford yet"
 	self.ownedLabel.BackgroundColor3 = if owned then BLUE elseif affordable then GREEN else CARD
 
-	local chosen = self.chosenPaint
-	for key, swatch in self.swatches do
-		local s = swatch:FindFirstChildOfClass("UIStroke")
-		if s then
-			s.Color = if key == chosen then WHITE else STROKE
-			s.Thickness = if key == chosen then 3 else 2
+	-- The swatches: the one chosen in each part ringed in white.
+	local chosenKeys = { paint = self.chosen.paint, rims = self.chosen.rims, glow = self.chosen.glow }
+	local names: { string } = {}
+	for _, part in PARTS do
+		local chosenKey = chosenKeys[part.key] or ""
+		for key, swatch in self.swatches[part.key] do
+			local s = swatch:FindFirstChildOfClass("UIStroke")
+			if s then
+				s.Color = if key == chosenKey then WHITE else STROKE
+				s.Thickness = if key == chosenKey then 3 else 2
+			end
 		end
+		local entry: Paint? = nil
+		for _, candidate in part.list do
+			if candidate.key == chosenKey then
+				entry = candidate
+			end
+		end
+		table.insert(names, if entry then (entry :: Paint).name else part.none)
 	end
-	local paint = CarBody.Paint(chosen)
-	self.paintName.Text = if paint then paint.name else "Factory colour"
+	self.lookName.Text = table.concat(names, "   •   ")
 end
 
 return DealershipShopUI

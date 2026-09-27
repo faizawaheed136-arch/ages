@@ -172,11 +172,11 @@ local function rig(built: CarBody.Built, welds: { Weld })
 	end
 end
 
--- Builds a car standing with its hull's centre at `cframe`, painted `paint` if given. It settles on
--- its springs once the caller parents the model.
-function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?): Chassis
+-- Builds a car standing with its hull's centre at `cframe`, painted `paint` if given, wearing
+-- `look`'s rims and underglow. It settles on its springs once the caller parents the model.
+function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?, look: CarBody.Look?): Chassis
 	ensureGroups()
-	local built = CarBody.Build(kind, cframe, paint)
+	local built = CarBody.Build(kind, cframe, paint, look)
 	local model = built.model
 	local layout = built.layout
 	local chassis = built.hull

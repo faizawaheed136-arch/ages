@@ -141,6 +141,9 @@
         },
         "CarWheels": {
           "$path": "src/client/world/CarWheels.luau"
+        },
+        "DriveHUD": {
+          "$path": "src/client/ui/DriveHUD.luau"
         }
       },
       "CarPhysics": {

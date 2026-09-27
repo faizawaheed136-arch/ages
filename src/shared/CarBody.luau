@@ -58,16 +58,66 @@ CarBody.Paints = {
 	{ key = "purple", name = "Violet", color = Color3.fromRGB(94, 44, 148) },
 } :: { Paint }
 
-function CarBody.Paint(key: string?): Paint?
+local function find(list: { Paint }, key: string?): Paint?
 	if key == nil then
 		return nil
 	end
-	for _, paint in CarBody.Paints do
-		if paint.key == key then
-			return paint
+	for _, entry in list do
+		if entry.key == key then
+			return entry
 		end
 	end
 	return nil
+end
+
+function CarBody.Paint(key: string?): Paint?
+	return find(CarBody.Paints, key)
+end
+
+-- Rim finishes, for the shop's CUSTOMIZE: each car's own finish unless one is chosen.
+CarBody.Rims = {
+	{ key = "silver", name = "Silver", color = Color3.fromRGB(196, 200, 206) },
+	{ key = "gunmetal", name = "Gunmetal", color = Color3.fromRGB(78, 80, 86) },
+	{ key = "black", name = "Gloss Black", color = Color3.fromRGB(26, 26, 28) },
+	{ key = "gold", name = "Gold", color = Color3.fromRGB(214, 170, 72) },
+	{ key = "bronze", name = "Bronze", color = Color3.fromRGB(150, 104, 62) },
+	{ key = "white", name = "White", color = Color3.fromRGB(236, 236, 234) },
+	{ key = "red", name = "Red", color = Color3.fromRGB(200, 30, 40) },
+	{ key = "blue", name = "Blue", color = Color3.fromRGB(40, 100, 220) },
+} :: { Paint }
+
+function CarBody.Rim(key: string?): Paint?
+	return find(CarBody.Rims, key)
+end
+
+-- Underglow: a line of light under the car and the pool it throws on the road. None by default.
+CarBody.Glows = {
+	{ key = "red", name = "Red", color = Color3.fromRGB(255, 40, 60) },
+	{ key = "orange", name = "Orange", color = Color3.fromRGB(255, 130, 30) },
+	{ key = "yellow", name = "Yellow", color = Color3.fromRGB(255, 220, 40) },
+	{ key = "green", name = "Green", color = Color3.fromRGB(40, 255, 110) },
+	{ key = "cyan", name = "Cyan", color = Color3.fromRGB(40, 230, 255) },
+	{ key = "blue", name = "Blue", color = Color3.fromRGB(50, 110, 255) },
+	{ key = "purple", name = "Purple", color = Color3.fromRGB(170, 70, 255) },
+	{ key = "pink", name = "Pink", color = Color3.fromRGB(255, 80, 200) },
+	{ key = "white", name = "White", color = Color3.fromRGB(240, 244, 255) },
+} :: { Paint }
+
+function CarBody.Glow(key: string?): Paint?
+	return find(CarBody.Glows, key)
+end
+
+-- A car's chosen look, as colours: nil for anything left as it came.
+export type Look = { paint: Color3?, rims: Color3?, glow: Color3? }
+
+-- The look named by a set of keys, as the shop and a save hold it.
+function CarBody.LookOf(paintKey: string?, rimKey: string?, glowKey: string?): Look
+	local paint, rims, glow = CarBody.Paint(paintKey), CarBody.Rim(rimKey), CarBody.Glow(glowKey)
+	return {
+		paint = if paint then paint.color else nil,
+		rims = if rims then rims.color else nil,
+		glow = if glow then glow.color else nil,
+	}
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -545,6 +595,7 @@ type Ctx = {
 	base: CFrame,
 	layout: Layout,
 	paint: Color3,
+	rims: Color3?,
 	accent: Color3,
 	riders: { { BasePart } },
 	hull: Part,
@@ -1171,7 +1222,8 @@ local function wheel(ctx: Ctx, front: boolean, side: number): Wheel
 	local outer = w / 2
 	local knuckle = disc("BrakeDisc", outer - 0.02, outer + 0.03, r * 1.02, DISC, Enum.Material.Metal)
 	knuckle.Transparency = 1
-	disc("RimLip", outer, outer + 0.04, r * 1.44, style.rimColor, Enum.Material.Metal, tyre)
+	local rimColor = ctx.rims or style.rimColor
+	disc("RimLip", outer, outer + 0.04, r * 1.44, rimColor, Enum.Material.Metal, tyre)
 	disc("Barrel", outer + 0.04, outer + 0.06, r * 1.32, TRIM, Enum.Material.SmoothPlastic, tyre)
 	disc("Rotor", outer + 0.06, outer + 0.08, r * 0.98, DISC, Enum.Material.Metal, knuckle)
 	-- The calliper, clasping the disc's trailing top edge.
@@ -1185,10 +1237,10 @@ local function wheel(ctx: Ctx, front: boolean, side: number): Wheel
 		local twin = style.rims == "twin"
 		for _, offset in (if twin then { -0.07, 0.07 } else { 0 }) do
 			local cf = face * CFrame.Angles(angle + offset, 0, 0) * CFrame.new(outer + 0.16, reach / 2 + 0.12, 0)
-			add(ctx, "Part", "Spoke", Vector3.new(0.08, reach, if twin then 0.1 else spokeW), cf, style.rimColor, Enum.Material.Metal, tyre)
+			add(ctx, "Part", "Spoke", Vector3.new(0.08, reach, if twin then 0.1 else spokeW), cf, rimColor, Enum.Material.Metal, tyre)
 		end
 	end
-	disc("Cap", outer + 0.12, outer + 0.24, r * 0.34, style.rimColor, Enum.Material.Metal, tyre)
+	disc("Cap", outer + 0.12, outer + 0.24, r * 0.34, rimColor, Enum.Material.Metal, tyre)
 	return { spin = tyre, knuckle = knuckle, front = front, side = side, rest = rest }
 end
 
@@ -1201,7 +1253,7 @@ end
 	given). Nothing is anchored and nothing is welded: the caller does one or the other -- Anchor
 	for a car that is only looked at, Weld for one that drives.
 ]]
-function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?): Built
+function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?, extras: Look?): Built
 	local layout = CarBody.Layout(kind)
 	local model = Instance.new("Model")
 	model.Name = `Vehicle_{kind.id}`
@@ -1233,7 +1285,8 @@ function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?): 
 		model = model,
 		base = cframe,
 		layout = layout,
-		paint = paintColor or kind.color,
+		paint = paintColor or (if extras then extras.paint else nil) or kind.color,
+		rims = if extras then extras.rims else nil,
 		accent = kind.accentColor,
 		riders = built.riders,
 		hull = hull,
@@ -1250,6 +1303,25 @@ function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?): 
 	rearEnd(ctx, kind, built)
 	for _, spec in { { true, -1 }, { true, 1 }, { false, -1 }, { false, 1 } } do
 		table.insert(built.wheels, wheel(ctx, spec[1], spec[2]))
+	end
+	local glow = if extras then extras.glow else nil
+	if glow then
+		-- A bar of light under the sills between the axles, and a light throwing its colour on the
+		-- road beneath: the pool is the effect; the bar is where it comes from.
+		local style = layout.style
+		local sill = lineAt(style.bottom, 0.5)
+		local half = layout.width / 2 - 0.9
+		local bar = block(ctx, "Underglow", -half, half, sill - 0.14, sill - 0.04, style.axles[1] + 0.03, style.axles[2] - 0.03, glow, Enum.Material.Neon)
+		if bar then
+			bar.CastShadow = false
+			local pool = Instance.new("SurfaceLight")
+			pool.Face = Enum.NormalId.Bottom
+			pool.Color = glow
+			pool.Brightness = 4
+			pool.Range = 9
+			pool.Angle = 120
+			pool.Parent = bar
+		end
 	end
 
 	-- The corner weights: a cubic stud each, as dense as its share of the mass makes it, invisible

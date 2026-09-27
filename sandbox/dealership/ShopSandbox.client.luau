@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local client = ReplicatedStorage:WaitForChild("ShopClient")
 local CarDriver = require(client:WaitForChild("CarDriver") :: ModuleScript)
 local CarWheels = require(client:WaitForChild("CarWheels") :: ModuleScript)
+local DriveHUD = require(client:WaitForChild("DriveHUD") :: ModuleScript)
 local DealershipShop = require(client:WaitForChild("DealershipShop") :: ModuleScript)
 local DealershipShopUI = require(client:WaitForChild("DealershipShopUI") :: ModuleScript)
 local DealershipTurntables = require(client:WaitForChild("DealershipTurntables") :: ModuleScript)
@@ -25,7 +26,7 @@ local onNotice: { (string) -> () } = {}
 
 stateRemote.OnClientEvent:Connect(function(state: any)
 	for _, callback in onState do
-		callback(state.catalog, state.owned, state.paint, state.active)
+		callback(state.catalog, state.owned, { paint = state.paint, rims = state.rims, glow = state.glow }, state.active)
 	end
 	for _, callback in onMoney do
 		callback(state.money)
@@ -38,7 +39,7 @@ stateRemote.OnClientEvent:Connect(function(state: any)
 end)
 
 DealershipTurntables.Start()
-CarDriver.Start()
+CarDriver.Start(DriveHUD)
 CarWheels.Start()
 DealershipShop.Start(DealershipShopUI, ShopStage, {
 	onState = function(callback)
@@ -50,8 +51,11 @@ DealershipShop.Start(DealershipShopUI, ShopStage, {
 	onNotice = function(callback)
 		table.insert(onNotice, callback)
 	end,
-	buy = function(vehicleId: string, paintKey: string?)
-		request:FireServer("buy", vehicleId, paintKey)
+	buy = function(vehicleId: string, look: any)
+		request:FireServer("buy", vehicleId, look.paint, look.rims, look.glow)
+	end,
+	customize = function(vehicleId: string, look: any)
+		request:FireServer("customize", vehicleId, look.paint, look.rims, look.glow)
 	end,
 	drive = function(vehicleId: string)
 		request:FireServer("drive", vehicleId)

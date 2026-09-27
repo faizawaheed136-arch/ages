@@ -34,6 +34,13 @@ local TURN_SECONDS = 26
 -- The view: how far out, how high, and how far it may be zoomed either way.
 local VIEW_PITCH = math.rad(11)
 local VIEW_MIN, VIEW_MAX = 12, 40
+-- Opening a car, the camera sweeps in from further out and round to the side over this long.
+local SWEEP_SECONDS = 1.1
+local SWEEP_OUT = 16
+local SWEEP_TURN = math.rad(55)
+-- Two more cars on plinths behind the turntable, the way a showroom stage is dressed.
+local SIDE_SPOTS = { Vector3.new(-26, 0, -20), Vector3.new(26, 0, -20) }
+local SIDE_TURN = { math.rad(35), math.rad(-35) }
 local DRAG_RATE = 0.008
 local ZOOM_STEP = 2.5
 
@@ -53,6 +60,8 @@ export type Stage = typeof(setmetatable(
 		folder: Model,
 		turntable: BasePart,
 		car: Model?,
+		sides: { Model },
+		sweep: number,
 		carCentre: CFrame,
 		spin: number,
 		yaw: number,
@@ -143,6 +152,10 @@ local function buildHall(folder: Model): BasePart
 	wash.Range = 40
 	wash.Shadows = true
 	wash.Parent = sun
+	for _, spot in SIDE_SPOTS do
+		disc(folder, "Plinth", 22, 0.6, ORIGIN * CFrame.new(spot + Vector3.new(0, 0.3, 0)), WHITE, Enum.Material.SmoothPlastic)
+		disc(folder, "PlinthRing", 22.8, 0.3, ORIGIN * CFrame.new(spot + Vector3.new(0, 0.15, 0)), ACCENT, Enum.Material.Neon)
+	end
 	disc(folder, "TurntableRing", TURNTABLE_DIAMETER + 1, TURNTABLE_HEIGHT - 0.3, ORIGIN * CFrame.new(0, (TURNTABLE_HEIGHT - 0.3) / 2, 0), ACCENT, Enum.Material.Neon)
 	local turntable = disc(folder, "Turntable", TURNTABLE_DIAMETER, TURNTABLE_HEIGHT, ORIGIN * CFrame.new(0, TURNTABLE_HEIGHT / 2, 0), WHITE, Enum.Material.SmoothPlastic)
 	turntable.Reflectance = 0.12
@@ -157,6 +170,8 @@ function ShopStage.new(): Stage
 		folder = folder,
 		turntable = turntable,
 		car = nil,
+		sides = {},
+		sweep = 1,
 		carCentre = ORIGIN * CFrame.new(0, TURNTABLE_HEIGHT, 0),
 		spin = 0,
 		yaw = math.rad(-35),
@@ -172,14 +187,8 @@ function ShopStage.new(): Stage
 	return self
 end
 
--- Puts `kind` on the turntable in `paint`, replacing whatever was there.
-function ShopStage.Show(self: Stage, kind: VehicleKind, paint: Color3?)
-	if self.car then
-		self.car:Destroy()
-		self.car = nil
-	end
-	local ground = self.carCentre * CFrame.Angles(0, self.spin, 0)
-	local built = CarBody.Build(kind, CarBody.RestOn(kind, ground), paint)
+local function display(parent: Instance, kind: VehicleKind, ground: CFrame, look: CarBody.Look?): Model
+	local built = CarBody.Build(kind, CarBody.RestOn(kind, ground), nil, look)
 	CarBody.Anchor(built)
 	for _, d in built.model:GetDescendants() do
 		if d:IsA("BasePart") then
@@ -187,10 +196,41 @@ function ShopStage.Show(self: Stage, kind: VehicleKind, paint: Color3?)
 			d.CanQuery = false
 		end
 	end
-	built.model.Parent = self.folder
-	self.car = built.model
+	built.model.Parent = parent
+	return built.model
+end
+
+-- Puts `kind` on the turntable in `look` (its paint, rims and underglow; nil for as it came),
+-- replacing whatever was there.
+function ShopStage.Show(self: Stage, kind: VehicleKind, look: CarBody.Look?)
+	if self.car then
+		self.car:Destroy()
+		self.car = nil
+	end
+	self.car = display(self.folder, kind, self.carCentre * CFrame.Angles(0, self.spin, 0), look)
 	-- Stand back far enough for the car's length.
 	self.distance = math.clamp(kind.size.Z * 0.85 + 5, VIEW_MIN, VIEW_MAX)
+end
+
+-- Dresses the two plinths behind the turntable with `kinds` (up to two), as they came.
+function ShopStage.Dress(self: Stage, kinds: { VehicleKind })
+	for _, model in self.sides do
+		model:Destroy()
+	end
+	table.clear(self.sides)
+	for i, kind in kinds do
+		local spot = SIDE_SPOTS[i]
+		if spot == nil then
+			break
+		end
+		local plinth = ORIGIN * CFrame.new(spot)
+		table.insert(self.sides, display(self.folder, kind, plinth * CFrame.new(0, 0.6, 0) * CFrame.Angles(0, SIDE_TURN[i], 0), nil))
+	end
+end
+
+-- Starts the camera's sweep in toward the car.
+function ShopStage.Sweep(self: Stage)
+	self.sweep = 0
 end
 
 function ShopStage.SetAutoSpin(self: Stage, on: boolean)
@@ -208,7 +248,11 @@ local function place(self: Stage)
 		return
 	end
 	local target = self.carCentre.Position + Vector3.new(0, 2.2, 0)
-	local offset = CFrame.Angles(0, self.yaw, 0) * CFrame.Angles(-VIEW_PITCH, 0, 0) * Vector3.new(0, 0, self.distance)
+	-- The sweep: eased out, so it arrives gently.
+	local t = 1 - (1 - math.clamp(self.sweep, 0, 1)) ^ 3
+	local yaw = self.yaw + SWEEP_TURN * (1 - t)
+	local distance = self.distance + SWEEP_OUT * (1 - t)
+	local offset = CFrame.Angles(0, yaw, 0) * CFrame.Angles(-VIEW_PITCH * (1 + (1 - t)), 0, 0) * Vector3.new(0, 0, distance)
 	camera.CFrame = CFrame.lookAt(target + offset, target)
 end
 
@@ -235,6 +279,7 @@ function ShopStage.Enter(self: Stage)
 	table.insert(
 		self.connections,
 		RunService.RenderStepped:Connect(function(dt: number)
+			self.sweep = math.min(1, self.sweep + dt / SWEEP_SECONDS)
 			if self.autoSpin and not self.dragging and self.car then
 				self.spin = (self.spin + dt * math.pi * 2 / TURN_SECONDS) % (math.pi * 2)
 				local car = self.car :: Model

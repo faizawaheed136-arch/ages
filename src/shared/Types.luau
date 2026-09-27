@@ -3374,6 +3374,9 @@ export type LifeData = {
 		-- The paint each owned car was bought in, by CarBody.Paints key. Nil, or a car missing from
 		-- it, is the car's own colour: saves from before paint had none.
 		paint: { [string]: string }?,
+		-- The rim finish and underglow each owned car wears, by CarBody.Rims and CarBody.Glows key.
+		rims: { [string]: string }?,
+		glow: { [string]: string }?,
 	},
 	-- Bills tracking per life. Reset on death like money.
 	bills: {
@@ -3623,8 +3626,10 @@ export type VehicleState = {
 	catalog: { VehicleKind },
 	owned: { [string]: boolean },
 	active: string?,
-	-- The paint each owned car wears, by CarBody.Paints key.
+	-- The paint each owned car wears, by CarBody.Paints key; its rims and underglow likewise.
 	paint: { [string]: string }?,
+	rims: { [string]: string }?,
+	glow: { [string]: string }?,
 	-- Whether a build is in flight for the currently-requested action, so the
 	-- panel can grey its own button rather than let a second click queue a
 	-- second spawn behind the first.

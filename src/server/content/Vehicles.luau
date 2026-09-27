@@ -24,7 +24,6 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type VehicleKind = Types.VehicleKind
@@ -233,16 +232,6 @@ end
 
 if #SOURCE == 0 then
 	error("[AGES content] there are no vehicles, so the dealership has nothing to sell")
-end
-
-if #SOURCE > Config.Vehicles.MaxOwned * 3 then
-	-- Not a hard rule, just a sanity check: a garage cap of two on a lot of fifteen
-	-- cars would mean most of the lot can never be tried by anyone who already
-	-- owns something, which is a worse showroom than a smaller one.
-	warn(
-		`[AGES content] {#SOURCE} vehicles on the lot against a garage cap of {Config.Vehicles.MaxOwned}; `
-			.. `most of it will go untried by anyone who already owns two cars`
-	)
 end
 
 local Vehicles = {}

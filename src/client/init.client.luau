@@ -50,6 +50,7 @@ local SearchRing = require(script.world.SearchRing)
 local DealerMark = require(script.world.DealerMark)
 local DealershipTurntables = require(script.world.DealershipTurntables)
 local CarDriver = require(script.world.CarDriver)
+local DriveHUD = require(script.ui.DriveHUD)
 local CarWheels = require(script.world.CarWheels)
 local DealershipShop = require(script.world.DealershipShop)
 local DealershipShopUI = require(script.ui.DealershipShopUI)
@@ -153,7 +154,7 @@ local dealerMark = DealerMark.new()
 DealershipTurntables.Start()
 -- Cars: the one this player drives is stepped on this machine, which owns its physics; every car's
 -- wheels are turned here, locally, frame by frame.
-CarDriver.Start()
+CarDriver.Start(DriveHUD)
 CarWheels.Start()
 local chapterReel = ChapterReel.new()
 
@@ -590,11 +591,12 @@ end)
 -- remotes as the garage panel above, the shop's own test-drive request, and the balance and car
 -- state this script already listens for further down.
 local RequestTestDriveRemote = Remotes.Get("RequestTestDrive")
+local RequestCustomizeVehicleRemote = Remotes.Get("RequestCustomizeVehicle")
 DealershipShop.Start(DealershipShopUI, ShopStage, {
 	onState = function(callback)
 		Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
 			if state ~= nil then
-				callback(state.catalog, state.owned, state.paint, state.active)
+				callback(state.catalog, state.owned, { paint = state.paint, rims = state.rims, glow = state.glow }, state.active)
 			end
 		end)
 	end,
@@ -613,8 +615,11 @@ DealershipShop.Start(DealershipShopUI, ShopStage, {
 			callback(text)
 		end)
 	end,
-	buy = function(vehicleId: string, paintKey: string?)
-		RequestBuyVehicleRemote:FireServer(vehicleId, paintKey)
+	buy = function(vehicleId: string, look: DealershipShop.LookKeys)
+		RequestBuyVehicleRemote:FireServer(vehicleId, look.paint, look.rims, look.glow)
+	end,
+	customize = function(vehicleId: string, look: DealershipShop.LookKeys)
+		RequestCustomizeVehicleRemote:FireServer(vehicleId, look.paint, look.rims, look.glow)
 	end,
 	drive = function(vehicleId: string)
 		RequestSpawnVehicleRemote:FireServer(vehicleId)
