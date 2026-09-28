@@ -112,6 +112,10 @@ local C = {
 	Skin = Color3.fromRGB(224, 172, 132),
 	Hair = Color3.fromRGB(52, 36, 26),
 	Shoe = Color3.fromRGB(24, 22, 22),
+	-- The lot's floodlights: a cool white, as real lots are lit, so paint reads true at night.
+	LotWhite = Color3.fromRGB(236, 242, 255),
+	-- Solar panels: the dark blue of the cells.
+	Solar = Color3.fromRGB(28, 38, 70),
 }
 
 local FLAG_COLOURS = { C.Red, C.Blue, C.Yellow, C.White }
@@ -468,15 +472,23 @@ local function buildLot(model: Model)
 
 	-- Lights at the aisle ends, clear of every bay.
 	local poles = folder(lot, "LightPoles")
-	local polePoints = { { 7, 46 }, { 101, 46 }, { 7, 102 }, { 101, 102 } }
+	-- The two front corners as well as the aisle ends: the front row is the one the road sees, and
+	-- lit only from behind it stood in its own shadow after dark.
+	local polePoints = { { 7, 11 }, { 101, 11 }, { 7, 46 }, { 101, 46 }, { 7, 102 }, { 101, 102 } }
+	-- Twin shoebox heads on a cross-arm, in the cool white real lots are lit with: warm light turns
+	-- a white car cream and a blue one grey.
 	for _, p in polePoints do
 		post(poles, "Pole", p[1], p[2], LOT, 16, 0.7, C.Charcoal, Enum.Material.Metal)
-		local head = box(poles, "Lamp", p[1] - 1.4, p[1] + 1.4, 15.4, 16.1, p[2] - 0.7, p[2] + 0.7, C.Charcoal, Enum.Material.Metal)
-		box(poles, "LampGlow", p[1] - 1.2, p[1] + 1.2, 15.3, 15.4, p[2] - 0.5, p[2] + 0.5, C.Warm, Enum.Material.Neon, {
-			collide = false,
-			shadow = false,
-		})
-		light(head, "Spot", 2.2, 44, C.Warm, 110)
+		box(poles, "Arm", p[1] - 3.2, p[1] + 3.2, 15.95, 16.25, p[2] - 0.2, p[2] + 0.2, C.Charcoal, Enum.Material.Metal)
+		for _, side in { -1, 1 } do
+			local hx = p[1] + side * 2.6
+			local head = box(poles, "Lamp", hx - 1.4, hx + 1.4, 15.4, 16.1, p[2] - 0.7, p[2] + 0.7, C.Charcoal, Enum.Material.Metal)
+			box(poles, "LampGlow", hx - 1.2, hx + 1.2, 15.3, 15.4, p[2] - 0.5, p[2] + 0.5, C.LotWhite, Enum.Material.Neon, {
+				collide = false,
+				shadow = false,
+			})
+			light(head, "Spot", 2.4, 46, C.LotWhite, 115)
+		end
 	end
 
 	-- Bunting: strings of pennants between the pole tops, sagging.
@@ -947,6 +959,9 @@ local function buildFront(model: Model)
 		shadow = false,
 	})
 	sign(letters, Enum.NormalId.Front, "MERIDIAN MOTORS", C.Accent, true)
+	for _, x in { FRONT.cx - 24, FRONT.cx + 24 } do
+		box(front, "LetteringCable", x - 0.04, x + 0.04, UPPER + 10.5, CEIL - 0.15, FRONT.apex + 3.51, FRONT.apex + 3.59, C.Charcoal, Enum.Material.Metal, lineProps)
+	end
 
 	-- The entrance: a portal standing out from the middle three segments, outlined in white light,
 	-- over an opening the width of all three. The doors are sliding leaves parked open behind the
@@ -964,11 +979,14 @@ local function buildFront(model: Model)
 	arcBox(portal, "Lintel", d0, d1, 0.55, depth, top - 2.2, top, C.Panel, Enum.Material.SmoothPlastic, { reflectance = 0.08 }, 1.2)
 	arcBox(portal, "LintelLine", d0, d1, depth, depth + 0.12, top - 2.2, top - 1.9, C.White, Enum.Material.Neon, lineProps, 1.2)
 	arcBox(portal, "LintelLine", d0, d1, depth, depth + 0.12, top - 0.3, top, C.White, Enum.Material.Neon, lineProps, 1.2)
-	local name = arcBox(portal, "Name", d0, d1, depth + 0.12, depth + 0.3, top - 1.7, top - 0.5, C.Navy, Enum.Material.SmoothPlastic, nil, -3)
+	local name = arcBox(portal, "Name", d0, d1, depth, depth + 0.3, top - 1.7, top - 0.5, C.Navy, Enum.Material.SmoothPlastic, nil, -3)
 	sign(name, Enum.NormalId.Front, "SHOWROOM", C.White, true, Enum.Font.GothamBold)
 	for _, k in { -0.6, 0.6 } do
 		local lamp = radialBox(portal, "Downlight", (d0 + d1) / 2 + k * FRONT_STEP, 1.8, 1.6, 3.2, top - 2.3, top - 2.2, C.Warm, Enum.Material.Neon, lineProps)
 		light(lamp, "Spot", 2.2, 18, C.Warm, 90)
+	end
+	for i = FRONT.doorFirst - 1, FRONT.doorFirst + 3 do
+		arcBox(portal, "DoorTrack", frontAngle(i), frontAngle(i + 1), -1.05, -0.5, FLOOR + 9.9, FLOOR + 10.3, C.Charcoal, Enum.Material.Metal, nil, 0.05)
 	end
 	for _, i in { FRONT.doorFirst - 1, FRONT.doorFirst + 3 } do
 		arcBox(portal, "DoorLeaf", frontAngle(i), frontAngle(i + 1), -0.95, -0.75, FLOOR + 0.2, FLOOR + 9.9, C.Glass, Enum.Material.Glass, {
@@ -1550,7 +1568,7 @@ local function lift(parent: Instance)
 	for _, p in { { cx0, cz0 }, { cx1 - 0.2, cz0 }, { cx0, cz1 - 0.2 }, { cx1 - 0.2, cz1 - 0.2 } } do
 		box(car, "Post", p[1], p[1] + 0.2, FLOOR + 0.3, FLOOR + 8.5, p[2], p[2] + 0.2, C.Charcoal, Enum.Material.Metal)
 	end
-	box(car, "Handrail", cx0 + 0.4, cx1 - 0.4, FLOOR + 3, FLOOR + 3.2, cz0 + 0.3, cz0 + 0.45, C.Panel, Enum.Material.Metal, trim)
+	box(car, "Handrail", cx0 + 0.2, cx1 - 0.2, FLOOR + 3, FLOOR + 3.2, cz0 + 0.2, cz0 + 0.35, C.Panel, Enum.Material.Metal, trim)
 	box(car, "Light", cx0 + 1, cx1 - 1, FLOOR + 8.4, FLOOR + 8.5, cz0 + 1, cz1 - 1, C.White, Enum.Material.Neon, trim)
 	for _, x in { xm - 0.7, xm + 0.7 } do
 		local z = (z0 + z1) / 2
@@ -1583,7 +1601,7 @@ local function deckOffice(parent: Instance, name: string, z0: number, z1: number
 	local zc = z0 + 5
 	desk(pod, 257.5, zc, 90, UPPER)
 	plant(pod, 261.6, z1 - 1.8, UPPER, 2)
-	local screen = box(pod, "WallScreen", x1 - 0.45, x1 - 0.1, UPPER + 5.4, UPPER + 8.6, zc - 3, zc + 3, C.Screen, Enum.Material.SmoothPlastic)
+	local screen = box(pod, "WallScreen", x1 - 0.35, x1, UPPER + 5.4, UPPER + 8.6, zc - 3, zc + 3, C.Screen, Enum.Material.SmoothPlastic)
 	sign(screen, Enum.NormalId.Left, screenText, C.White, true)
 	local glow = box(pod, "CeilingLight", 254, 260, top - 0.12, top, zc - 0.5, zc + 0.5, C.White, Enum.Material.Neon, { collide = false, shadow = false })
 	light(glow, "Point", 0.8, 14, C.White)
@@ -1982,10 +2000,11 @@ end
 local function specBoard(parent: Instance, x: number, z: number, y: number, facingDegrees: number, text: string)
 	local model = folder(parent, "SpecBoard")
 	local stem = post(model, "Stem", x, z, y, y + 2.6, 0.22, C.Charcoal, Enum.Material.Metal)
-	local plate = box(model, "Plate", -1.7, 1.7, 2.4, 3.6, -0.12, 0.12, C.Navy, Enum.Material.SmoothPlastic)
+	local plate = box(model, "Plate", -1.7, 1.7, -0.1, 1.1, -0.12, 0.12, C.Navy, Enum.Material.SmoothPlastic)
 	sign(plate, Enum.NormalId.Front, text, C.Gold, true, Enum.Font.GothamBold)
-	-- Tipped back, the way a lectern card is, so it reads from standing height.
-	local frame = at(x, y, z) * CFrame.Angles(0, math.rad(facingDegrees), 0) * CFrame.Angles(math.rad(20), 0, 0)
+	-- Tipped back about the top of its stem, the way a lectern card is, so it reads from standing
+	-- height and still sits on the stem.
+	local frame = at(x, y + 2.5, z) * CFrame.Angles(0, math.rad(facingDegrees), 0) * CFrame.Angles(math.rad(20), 0, 0)
 	plate.CFrame = frame * origin:ToObjectSpace(plate.CFrame)
 	stem.CFrame = at(x, y + 1.3, z) * CFrame.Angles(0, 0, math.rad(90))
 end
@@ -2312,6 +2331,9 @@ local function buildService(model: Model)
 			box(service, "LiftArm", cx + side * 6 - (if side < 0 then 0 else 3), cx + side * 6 + (if side < 0 then 3 else 0), FLOOR + 2.2, FLOOR + 2.6, cz + 3.4, cz + 4, C.Charcoal, Enum.Material.Metal)
 		end
 		box(service, "LiftBeam", cx - 6, cx + 6, 10.4, 10.9, cz - 0.4, cz + 0.4, C.Red, Enum.Material.Metal)
+		for _, side in { -1, 1 } do
+			box(service, "LiftCarriage", cx + side * 6 - 0.3, cx + side * 6 + 0.3, FLOOR + 2.2, FLOOR + 2.6, cz - 4, cz + 4, C.Charcoal, Enum.Material.Metal)
+		end
 		local chest = standIn(folder(service, "ToolChest"), "toolcart", 90)
 		box(chest, "Body", bx1 - 4, bx1 - 1.2, FLOOR, FLOOR + 4.4, z1 - 5, z1 - 2, if i % 2 == 0 then C.Red else C.Blue, Enum.Material.Metal)
 		for d = 0, 3 do
@@ -2884,6 +2906,100 @@ local function buildShowroomLife(model: Model)
 		disc(studio, "StoolSeat", 230, sz, FLOOR + 2.4, FLOOR + 2.7, 1.4, C.Leather, Enum.Material.Leather)
 	end
 
+	-- THE MERIDIAN STORE, in the west window: what the flagships sell besides cars -- the
+	-- mugs, caps and scale models on a double-sided gondola, shirts on a table, a jacket on a form.
+	local store = folder(life, "Store")
+	local item: Opts = { collide = false, shadow = false }
+	box(store, "GondolaBase", 169, 177, FLOOR, FLOOR + 0.5, 21.9, 22.7, C.Charcoal, Enum.Material.Metal)
+	box(store, "GondolaBack", 169, 177, FLOOR + 0.5, FLOOR + 6.2, 22.2, 22.4, C.Navy, Enum.Material.SmoothPlastic)
+	for _, end_ in { 168.8, 177 } do
+		box(store, "GondolaEnd", end_, end_ + 0.2, FLOOR, FLOOR + 6.2, 21.1, 23.5, C.Charcoal, Enum.Material.Metal)
+	end
+	local shelves = { FLOOR + 1.6, FLOOR + 3.0, FLOOR + 4.4 }
+	for _, sy in shelves do
+		box(store, "Shelf", 169, 177, sy - 0.12, sy, 21.1, 23.5, C.White, Enum.Material.SmoothPlastic)
+	end
+	local header = box(store, "Header", 168.8, 177.2, FLOOR + 6.2, FLOOR + 7.4, 22.05, 22.55, C.Navy, Enum.Material.SmoothPlastic)
+	sign(header, Enum.NormalId.Front, "MERIDIAN STORE", C.Gold, true)
+	sign(header, Enum.NormalId.Back, "MERIDIAN STORE", C.Gold, true)
+	box(store, "HeaderLine", 168.85, 177.15, FLOOR + 6.05, FLOOR + 6.2, 22.05, 22.55, C.Accent, Enum.Material.Neon, trim)
+	for _, face in { { 21.75, -1 }, { 22.85, 1 } } do
+		local fz = face[1]
+		-- Bottom shelf: mugs, red and white.
+		for k = 0, 7 do
+			post(store, "Mug", 169.6 + k * 0.95, fz, shelves[1], shelves[1] + 0.6, 0.5, if k % 2 == 0 then C.White else C.Accent, Enum.Material.SmoothPlastic)
+		end
+		-- Middle shelf: scale models in the brand's paints.
+		for k = 0, 5 do
+			local mx = 169.8 + k * 1.25
+			local paint = ({ C.Accent, C.White, C.Navy, C.Yellow, Color3.fromRGB(24, 24, 28), C.Blue })[k + 1]
+			box(store, "ModelCar", mx - 0.45, mx + 0.45, shelves[2], shelves[2] + 0.3, fz - 0.22, fz + 0.22, paint, Enum.Material.SmoothPlastic, item)
+			box(store, "ModelCabin", mx - 0.22, mx + 0.2, shelves[2] + 0.3, shelves[2] + 0.5, fz - 0.18, fz + 0.18, C.Screen, Enum.Material.Glass, item)
+		end
+		-- Top shelf: caps, crown and peak.
+		for k = 0, 5 do
+			local cx = 169.8 + k * 1.25
+			disc(store, "Cap", cx, fz, shelves[3], shelves[3] + 0.35, 0.8, if k % 3 == 0 then C.Accent else C.Navy, Enum.Material.Fabric, item)
+			box(store, "Peak", cx - 0.25, cx + 0.25, shelves[3], shelves[3] + 0.06, fz + face[2] * 0.35, fz + face[2] * 0.65, C.Charcoal, Enum.Material.Fabric, item)
+		end
+	end
+	-- The table: shirts in stacks.
+	box(store, "TableTop", 169, 175, FLOOR + 2.7, FLOOR + 2.9, 25, 27.2, C.Walnut, Enum.Material.Wood)
+	box(store, "TableBase", 169.6, 174.4, FLOOR, FLOOR + 2.7, 25.5, 26.7, C.Charcoal, Enum.Material.Metal)
+	for k, colour in { C.Navy, C.White, C.Accent } do
+		local tx = 169.9 + (k - 1) * 1.8
+		for level = 0, 2 do
+			local y = FLOOR + 2.9 + level * 0.16
+			box(store, "Shirt", tx, tx + 1.4, y, y + 0.15, 25.5, 26.7, colour, Enum.Material.Fabric, item)
+		end
+	end
+	-- The jacket, on a form by the glass.
+	local form = folder(store, "JacketForm")
+	disc(form, "Base", 164.5, 21.8, FLOOR, FLOOR + 0.2, 1.4, C.Charcoal, Enum.Material.Metal)
+	post(form, "Stand", 164.5, 21.8, FLOOR + 0.2, FLOOR + 3.4, 0.2, C.Charcoal, Enum.Material.Metal)
+	box(form, "Jacket", 163.6, 165.4, FLOOR + 3.4, FLOOR + 5.6, 21.35, 22.25, C.Navy, Enum.Material.Fabric)
+	box(form, "Stripe", 163.55, 165.45, FLOOR + 4.3, FLOOR + 4.5, 21.3, 22.3, C.Accent, Enum.Material.Fabric, item)
+	for _, side in { -1, 1 } do
+		box(form, "Sleeve", 164.5 + side * 0.9 - 0.25, 164.5 + side * 0.9 + 0.25, FLOOR + 3.5, FLOOR + 5.5, 21.5, 22.1, C.Navy, Enum.Material.Fabric)
+	end
+	ball(form, "Head", Vector3.new(164.5, FLOOR + 6.05, 21.8), 0.9, C.White, Enum.Material.SmoothPlastic)
+
+	-- The kids' corner, in the east window: a play mat, a little table, blocks, a ride-on, bean
+	-- bags. A showroom a family can stay in is one a family buys from.
+	local kids = folder(life, "KidsCorner")
+	local mat = { C.Accent, C.Yellow, C.Blue, Color3.fromRGB(80, 190, 110), C.Blue, C.Yellow }
+	for k, colour in mat do
+		local col, row = (k - 1) % 3, (k - 1) // 3
+		box(kids, "Mat", 228.5 + col * 3, 231.5 + col * 3, FLOOR, FLOOR + 0.1, 19.5 + row * 3, 22.5 + row * 3, colour, Enum.Material.Rubber)
+	end
+	post(kids, "TableStem", 232, 23, FLOOR + 0.1, FLOOR + 1.5, 0.4, C.White, Enum.Material.SmoothPlastic)
+	disc(kids, "TableTop", 232, 23, FLOOR + 1.5, FLOOR + 1.65, 2.6, C.White, Enum.Material.SmoothPlastic)
+	for k, offset in { { 1.8, 0 }, { -1.8, 0 }, { 0, 1.8 }, { 0, -1.8 } } do
+		disc(kids, "Stool", 232 + offset[1], 23 + offset[2], FLOOR + 0.1, FLOOR + 1.0, 0.9, mat[k], Enum.Material.SmoothPlastic)
+	end
+	for k, colour in { C.Accent, C.Yellow, C.Blue, Color3.fromRGB(80, 190, 110), C.Accent } do
+		local level = if k <= 3 then 0 else 1
+		local bx = 235.2 + (if k <= 3 then (k - 1) * 0.85 else (k - 3.5) * 0.85)
+		box(kids, "Block", bx, bx + 0.8, FLOOR + 0.1 + level * 0.8, FLOOR + 0.9 + level * 0.8, 20.4, 21.2, colour, Enum.Material.SmoothPlastic)
+	end
+	-- A ride-on car, which is a toy and not a car.
+	local toy = folder(kids, "RideOn")
+	box(toy, "Body", 234.6, 236.4, FLOOR + 0.35, FLOOR + 1.05, 23.8, 24.8, C.Accent, Enum.Material.SmoothPlastic)
+	box(toy, "Seat", 235.4, 236.2, FLOOR + 1.05, FLOOR + 1.35, 23.9, 24.7, C.Charcoal, Enum.Material.SmoothPlastic)
+	post(toy, "Column", 234.95, 24.3, FLOOR + 1.05, FLOOR + 1.6, 0.12, C.Charcoal, Enum.Material.Metal)
+	for _, wheel in { { 234.9, 23.75 }, { 236.1, 23.75 }, { 234.9, 24.85 }, { 236.1, 24.85 } } do
+		drum(toy, "Wheel", wheel[1], FLOOR + 0.35, wheel[2], 0.2, 0.5, false, C.Charcoal, Enum.Material.Rubber)
+	end
+	for _, bz in { 20.4, 24.6 } do
+		ball(kids, "BeanBag", Vector3.new(229.6, FLOOR + 0.95, bz), 1.7, if bz < 22 then C.Blue else C.Yellow, Enum.Material.Fabric)
+	end
+	local kidsSign = box(kids, "Sign", 229.5, 236.5, FLOOR + 9, FLOOR + 10.4, 22.4, 22.6, C.White, Enum.Material.SmoothPlastic, { collide = false })
+	sign(kidsSign, Enum.NormalId.Front, "KIDS' CORNER", C.Blue, true)
+	sign(kidsSign, Enum.NormalId.Back, "KIDS' CORNER", C.Blue, true)
+	for _, x in { 230.5, 235.5 } do
+		box(kids, "Cord", x - 0.04, x + 0.04, FLOOR + 10.4, CEIL - 0.15, 22.46, 22.54, C.Charcoal, Enum.Material.Metal, trim)
+	end
+
 	-- A screen either side of the doors: the brand over one word, WELCOME to whoever comes in
 	-- and the other side to whoever is leaving. A narrow screen holds one word legibly, not three.
 	for _, tx in { 189.5, 224.5 } do
@@ -2945,6 +3061,23 @@ local function buildBackOfHouse(model: Model)
 		box(back, "Head", x0 - 0.35, x0, 12, 12.4, wz0 - 0.3, wz1 + 0.3, C.Charcoal, Enum.Material.Metal)
 		for _, jz in { wz0 - 0.3, wz1 } do
 			box(back, "Jamb", x0 - 0.3, x0, 3.5, 12, jz, jz + 0.3, C.Charcoal, Enum.Material.Metal)
+		end
+	end
+
+	-- Solar on the service roof: two rows of racked panels, clear of the plant on it. Seen from
+	-- the upper floor and from anywhere above, a bare white roof is a greybox.
+	local solar = folder(back, "Solar")
+	local roofTop = h + 1
+	for _, zc in { 116.2, 146.2 } do
+		for x = 156, 251, 8.6 do
+			box(solar, "RackFront", x - 3.8, x + 3.8, roofTop, roofTop + 0.5, zc - 1.9, zc - 1.6, C.Charcoal, Enum.Material.Metal)
+			box(solar, "RackBack", x - 3.8, x + 3.8, roofTop, roofTop + 1.5, zc + 1.6, zc + 1.9, C.Charcoal, Enum.Material.Metal)
+			local panel = box(solar, "Panel", x - 4, x + 4, 0, 0.16, 0, 4, C.Solar, Enum.Material.Glass, { reflectance = 0.25 })
+			panel.CFrame = at(x, roofTop + 1.0, zc) * CFrame.Angles(math.rad(-15), 0, 0)
+			for k = -1, 1 do
+				local line = box(solar, "CellLine", x + k * 2 - 0.04, x + k * 2 + 0.04, 0, 0.02, 0, 3.9, C.Panel, Enum.Material.Metal, { collide = false, shadow = false, query = false })
+				line.CFrame = at(x + k * 2, roofTop + 1.0, zc) * CFrame.Angles(math.rad(-15), 0, 0) * CFrame.new(0, 0.09, 0)
+			end
 		end
 	end
 

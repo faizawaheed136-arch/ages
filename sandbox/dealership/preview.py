@@ -90,7 +90,11 @@ VIEWS = {
     "backhouse": ((190, 14, 205), (205, 8, 150)),  # the service block's back wall from the far lawn
     "engine": ((190, 7.5, 70), (182, 3, 63)),
     "buildyours": ((226, 7, 60), (236.6, 5.5, 67)),
-    "doors": ((207, 6, 40), (207, 5, 16)),  # from inside, looking back at the doors and their screens
+    "doors": ((207, 6, 40), (207, 5, 16)),
+    "store": ((180, 6.5, 30), (170, 3.5, 21)),
+    "kids": ((224, 6, 30), (233, 1.5, 22)),
+    "solar": ((150, 40, 100), (205, 19, 132)),
+    "lotnight": ((54, 22, -20), (54, 2, 46)),  # from inside, looking back at the doors and their screens
     # The whole site from straight above, roofs on: where the grounds have room.
     "site": ((155, 330, 89.9), (155, 0, 90), 80),
 }
