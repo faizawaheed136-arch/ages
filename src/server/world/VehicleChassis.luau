@@ -39,8 +39,10 @@
 -- **Network ownership is Roblox's own, handed off explicitly.** The moment a player sits in the
 -- VehicleSeat, this file gives them SetNetworkOwner on the chassis, so the physics they are watching
 -- are the physics their own machine is resolving -- zero-latency, the same as their own character.
--- The moment they get out, ownership goes back to SetNetworkOwnershipAuto(). There is no passenger
--- seat for exactly that reason: one seat, one owner, nothing to get backwards.
+-- The moment they get out, ownership comes back to the server, which steps a car nobody is in.
+-- Not SetNetworkOwnershipAuto(): that hands an empty car to whichever client is nearest -- often the
+-- one who just climbed out -- where nothing steps it, and it rolled away on the last forces their
+-- machine had set. There is no passenger seat for the same reason: one seat, one owner.
 --
 -- The step runs where the physics runs. It used to run on the server for every car, driven or
 -- not: the forces it wrote reached the driver's machine late, and late springs bucked a car onto
@@ -228,6 +230,11 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	-- Deferred, not spawned: `model` has no parent until the caller gives it one, and a loop that
 	-- started first would find none and exit on the spot.
 	task.defer(function()
+		-- The server's from the start: left to Auto, a new car belongs to whoever stands nearest, and
+		-- nothing steps it there until somebody sits in it.
+		if model:IsDescendantOf(workspace) and seat.Occupant == nil then
+			chassis:SetNetworkOwner(nil)
+		end
 		while running and model.Parent ~= nil do
 			local elapsed = task.wait(VEHICLES.TickSeconds)
 			if not running or model.Parent == nil or chassis.Parent == nil then
@@ -297,7 +304,7 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 			-- the explicit handoff the header argues for.
 			chassis:SetNetworkOwner(player)
 		else
-			chassis:SetNetworkOwnershipAuto()
+			chassis:SetNetworkOwner(nil)
 		end
 		for _, beam in beams do
 			beam.Enabled = occupant ~= nil

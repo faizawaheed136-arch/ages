@@ -1,6 +1,6 @@
 --!strict
 -- The dealership landmark: a teal breathing disc at the counter with a floating
--- "MERIDIAN MOTORS" sign above it.
+-- "AUTOPIA" sign above it.
 --
 -- Gold discs in this game mean "walk here to do something." The dealership is
 -- different — it is a place the player visits, browses, and serves from. A blue-
@@ -97,7 +97,7 @@ function DealerMark.new(): Handle
 	title.TextSize = TITLE_SIZE
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.TextColor3 = TITLE_COLOR
-	title.Text = "MERIDIAN MOTORS"
+	title.Text = "AUTOPIA"
 	title.Parent = billboard
 
 	local stroke1 = Instance.new("UIStroke")

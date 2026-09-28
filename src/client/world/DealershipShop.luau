@@ -37,6 +37,9 @@ export type Backend = {
 	drive: (vehicleId: string) -> (),
 	testDrive: (vehicleId: string, paintKey: string?) -> (),
 	customize: (vehicleId: string, look: LookKeys) -> (),
+	-- Told when the shop opens (true) and closes (false), for anything else on screen that
+	-- should step aside while it is up. Optional.
+	onOpen: ((open: boolean) -> ())?,
 }
 
 -- How often the circle is checked, and how far above or below its floor still counts as on it.
@@ -92,6 +95,9 @@ function DealershipShop.Start(ui: any, stage: any, backend: Backend, title: stri
 	local function close()
 		blur.Size = 0
 		setControls(true)
+		if backend.onOpen then
+			backend.onOpen(false)
+		end
 	end
 	shop:OnClose(close)
 
@@ -147,6 +153,9 @@ function DealershipShop.Start(ui: any, stage: any, backend: Backend, title: stri
 				setControls(false)
 				blur.Size = BLUR
 				shop:Open()
+				if backend.onOpen then
+					backend.onOpen(true)
+				end
 			elseif not on and flat > radius + REARM_STUDS then
 				armed = true
 			end

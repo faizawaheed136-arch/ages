@@ -1528,6 +1528,34 @@ Config.Vehicles = {
 	-- thing running.
 	-- Safe range: 1/60-1/30.
 	TickSeconds = 1 / 60,
+
+	-- How close to the dealership's place point a player has to stand before the
+	-- showroom panel exists at all.
+	--
+	-- **It used to have no gate, and that was the bug the owner reported**: *"remove
+	-- this on the top left corner of the game which is always telling me to buy cars
+	-- that dont even appear. We can just get those at the dealership."* The panel was
+	-- pushed once on join and then whenever anything changed, so a life that had never
+	-- been near a car carried a catalogue of eight of them in the corner of the screen
+	-- from birth. A permanent advert for a building you have not found is not a
+	-- feature, and it is worse than useless before the player can drive.
+	--
+	-- Sized off the forecourt rather than off arm's length. `ParkStuds` is 36 and the
+	-- retry goes to 58, so a car the player just spawned can be standing a little
+	-- under sixty studs away; anything tighter than that and walking to your own car
+	-- closes the panel that has the button to put it away. `Config.World.InteractRadius`
+	-- is 6 and is the wrong scale entirely -- that is for a doorway, this is for a lot.
+	-- Safe range: 40-140 studs.
+	ShowroomStuds = 70,
+	-- How often the server re-checks who is standing on the lot. Walking onto a
+	-- forecourt and waiting for the showroom to appear is the one place this number
+	-- is felt, so it is fast enough not to read as a lag and slow enough that it is
+	-- not a per-frame distance check against every player in the server. Nothing is
+	-- sent when the answer has not changed -- `push` folds the state to a digest and
+	-- drops a repeat -- so the cost of a tick with nobody moving is a Vector3
+	-- subtraction per player.
+	-- Safe range: 0.25-2 seconds.
+	ShowroomTickSeconds = 0.5,
 }
 
 -- Monthly living expenses. Money leaves every game month whether the player

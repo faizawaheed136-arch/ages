@@ -30,6 +30,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
+local CarPhysics = require(ReplicatedStorage:WaitForChild("CarPhysics"))
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Lives = require(ReplicatedStorage:WaitForChild("Lives"))
 local Money = require(ReplicatedStorage:WaitForChild("Money"))
@@ -44,7 +45,6 @@ local VehicleService = require(script.Parent.VehicleService)
 -- slot again. False takes them off; the slots, the buying and the test drives do not depend on it.
 local SHOW_CARS = true
 
-local DealershipBuild = require(script.Parent.Parent.world.DealershipBuild)
 local DealershipDressing = require(script.Parent.Parent.world.DealershipDressing)
 local DealershipProps = require(script.Parent.Parent.content.DealershipProps)
 local VehicleChassis = require(script.Parent.Parent.world.VehicleChassis)
@@ -195,9 +195,27 @@ local function finish(player: Player, message: string?, bringBack: boolean)
 	end
 end
 
+-- How near a bay a car's middle has to be for the bay to count as taken. The two bays are 18 studs
+-- apart, so this is half that: a car on one never blocks the other.
+local BAY_TAKEN_STUDS = 9
+
+-- Whether any car is standing on `bay`: a test car, or one somebody brought out from the shop.
+local function occupied(bay: BasePart): boolean
+	for _, car in CollectionService:GetTagged(CarPhysics.Tag) do
+		local body = if car:IsA("Model") then car.PrimaryPart else nil
+		if body and body:IsDescendantOf(Workspace) then
+			local offset = body.Position - bay.Position
+			if Vector3.new(offset.X, 0, offset.Z).Magnitude < BAY_TAKEN_STUDS then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 local function freeBay(): BasePart?
 	for _, bay in markers("TestDriveBay") do
-		if bayHolder[bay] == nil then
+		if bayHolder[bay] == nil and not occupied(bay) then
 			return bay
 		end
 	end
@@ -350,8 +368,8 @@ local function prompt(part: BasePart, name: string, action: string, kind: Vehicl
 	return p
 end
 
-local function stock(model: Model)
-	for _, slot in CollectionService:GetTagged(DealershipBuild.SlotTag) do
+local function stock(model: Model, slotTag: string)
+	for _, slot in CollectionService:GetTagged(slotTag) do
 		if not slot:IsDescendantOf(model) or not slot:IsA("BasePart") then
 			continue
 		end
@@ -382,6 +400,8 @@ local function stock(model: Model)
 		drivePrompt.Triggered:Connect(function(player: Player)
 			testDrive(player, kind)
 		end)
+		-- A car a frame: see Start.
+		task.wait()
 	end
 end
 
@@ -406,9 +426,14 @@ end
 -- shop is opened. What stops the shop's test-drive request being a teleport to the dealership
 -- from anywhere in the city.
 local function atShop(player: Player): boolean
-	local _, root = humanoidOf(player)
+	-- Asked on VehicleService's showroom tick for every player, so the cheap answers go first.
 	local model = dealership
-	if root == nil or model == nil then
+	local character = player.Character
+	if model == nil or character == nil then
+		return false
+	end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root == nil or not root:IsA("BasePart") then
 		return false
 	end
 	local station = model:FindFirstChild("BuyStation")
@@ -419,7 +444,34 @@ local function atShop(player: Player): boolean
 	return (root.Position - apron.Position).Magnitude <= DEALER.ShopStuds
 end
 
+-- Whether the dealership can open at all. Its tunables are Config.Dealership; a Config without
+-- them (an older copy synced over this one) closes the dealership with one warning, rather than
+-- throwing on every tick -- including inside VehicleService's showroom loop, which asks `atShop`
+-- and would stop for everybody.
+local function configured(): boolean
+	if (Config :: any).Dealership == nil then
+		warn(
+			"[AGES dealership] Config.Dealership is missing, so Meridian Motors stays closed this session. "
+				.. "Its block belongs at the end of shared/Config.luau."
+		)
+		return false
+	end
+	return true
+end
+
 function DealershipService:Init()
+	if not configured() then
+		return
+	end
+	-- The shop's DRIVE and its car list: VehicleService asks whether a player is at the desk, and
+	-- brings their car out on a free bay here when they are.
+	VehicleService.SetShop(function(player: Player): (boolean, CFrame?)
+		if not atShop(player) then
+			return false, nil
+		end
+		local bay = freeBay()
+		return true, if bay then bay.CFrame else nil
+	end)
 	Players.PlayerRemoving:Connect(function(player: Player)
 		finish(player, nil, false)
 		lastDriveAt[player] = nil
@@ -439,22 +491,38 @@ function DealershipService:Init()
 end
 
 function DealershipService:Start()
-	local model = Workspace:FindFirstChild(DealershipBuild.ModelName)
-	if model == nil or not model:IsA("Model") then
-		warn(
-			`[AGES dealership] no Workspace.{DealershipBuild.ModelName}, so nothing is on sale. `
-				.. `Build it in Studio: require(ServerScriptService.Server.world.DealershipBuild).Build(corner, workspace).`
-		)
+	if (Config :: any).Dealership == nil then
 		return
 	end
-	dealership = model
-	if SHOW_CARS then
-		stock(model)
-	end
+	-- All of it after the boot, not during it. The whole server starts in one uninterrupted run of
+	-- the Server script, and Studio stops a script that runs ten seconds without yielding: the
+	-- error lands in whichever service happens to be starting, and every one after it never does.
+	-- Nineteen cars of primitives stocked inline did exactly that (it surfaced in RiverService's
+	-- fill), so the cars go up a frame at a time; and world/DealershipBuild -- 150 KB of builder
+	-- read here for two names -- is required here rather than when this file loads.
+	task.defer(function()
+		local DealershipBuild = require(script.Parent.Parent.world.DealershipBuild)
+		local model = Workspace:FindFirstChild(DealershipBuild.ModelName)
+		if model == nil or not model:IsA("Model") then
+			warn(
+				`[AGES dealership] no Workspace.{DealershipBuild.ModelName}, so nothing is on sale. `
+					.. `Build it in Studio: require(ServerScriptService.Server.world.DealershipBuild).Build(corner, workspace).`
+			)
+			return
+		end
+		dealership = model
+		if SHOW_CARS then
+			stock(model, DealershipBuild.SlotTag)
+		end
+	end)
 	-- The props: the Sketchfab models content/DealershipProps names, in place of the builder's
 	-- block stand-ins, wherever one is uploaded. Off the start path, because loading an asset
 	-- waits on the network and nothing else here should wait for a chair.
 	task.spawn(function()
+		local model = Workspace:WaitForChild("Dealership", 30)
+		if model == nil or not model:IsA("Model") then
+			return
+		end
 		local swapped, kept = DealershipDressing.Dress(model, DealershipProps)
 		if kept > 0 and swapped > 0 then
 			print(`[AGES dealership] {swapped} props placed, {kept} still block stand-ins`)

@@ -60,6 +60,11 @@ local DRIFT_DRAG = 0.3
 -- lock and flat out: the car went round and backwards off the road.
 local DRIFT_ANGLE = math.rad(35)
 local DRIFT_CATCH = math.rad(20)
+-- Off the throttle a car slows by this many studs/s every second until it stands still: rolling
+-- resistance and engine braking in one, and a parked car's handbrake. Without it nothing slowed a
+-- car but its brakes, so a car nudged while being got into rolled off on its own.
+-- Safe range: 6-20.
+local COAST_BRAKE = 10
 
 export type Mount = { attachment: Attachment, force: VectorForce }
 
@@ -185,6 +190,9 @@ function CarPhysics.Step(rig: Rig, dt: number, throttle: number, steer: number, 
 		local headroom = 1 - share * (1 - VEHICLES.TopSpeedTaper)
 		local push = math.clamp((throttle * top - speed) * accel * 40, -accel * 4000, accel * 4000) * headroom
 		total += forward * push
+	elseif speed ~= 0 then
+		local slow = math.min(math.abs(speed), COAST_BRAKE * dt)
+		total += -forward * math.sign(speed) * slow * hull.AssemblyMass / math.max(dt, 1 / 240)
 	end
 	local grip = LATERAL_GRIP * (1 - sliding * (1 - DRIFT_GRIP))
 	total += -right * velocity:Dot(right) * grip

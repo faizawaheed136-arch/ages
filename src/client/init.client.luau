@@ -592,6 +592,8 @@ end)
 -- state this script already listens for further down.
 local RequestTestDriveRemote = Remotes.Get("RequestTestDrive")
 local RequestCustomizeVehicleRemote = Remotes.Get("RequestCustomizeVehicle")
+local hiddenForShop: { ScreenGui } = {}
+local shopWatches: { RBXScriptConnection } = {}
 DealershipShop.Start(DealershipShopUI, ShopStage, {
 	onState = function(callback)
 		Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
@@ -626,6 +628,45 @@ DealershipShop.Start(DealershipShopUI, ShopStage, {
 	end,
 	testDrive = function(vehicleId: string, paintKey: string?)
 		RequestTestDriveRemote:FireServer(vehicleId, paintKey)
+	end,
+	-- The shop takes the whole screen, as Driving Empire's does: every other panel steps aside
+	-- while it is up -- the stats, the clock, the minimap, the garage panel listing the same
+	-- cars -- and exactly those come back when it closes.
+	onOpen = function(open: boolean)
+		local playerGui = game:GetService("Players").LocalPlayer.PlayerGui
+		local function hide(gui: ScreenGui)
+			if gui.Enabled then
+				gui.Enabled = false
+				if table.find(hiddenForShop, gui) == nil then
+					table.insert(hiddenForShop, gui)
+				end
+			end
+		end
+		local function watch(gui: Instance)
+			if gui:IsA("ScreenGui") and gui.Name ~= "DealershipShop" then
+				hide(gui)
+				-- A panel that turns itself back on while the shop is up -- the stats on a balance
+				-- change, the drive dial -- goes straight back off, and returns with the rest.
+				table.insert(shopWatches, gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+					hide(gui)
+				end))
+			end
+		end
+		if open then
+			for _, gui in playerGui:GetChildren() do
+				watch(gui)
+			end
+			table.insert(shopWatches, playerGui.ChildAdded:Connect(watch))
+		else
+			for _, connection in shopWatches do
+				connection:Disconnect()
+			end
+			table.clear(shopWatches)
+			for _, gui in hiddenForShop do
+				gui.Enabled = true
+			end
+			table.clear(hiddenForShop)
+		end
 	end,
 })
 
@@ -1436,7 +1477,8 @@ Remotes.Get("CarDealerUpdated").OnClientEvent:Connect(function(state: Types.CarD
 end)
 
 Remotes.Get("VehicleUpdated").OnClientEvent:Connect(function(state: Types.VehicleState?)
-	vehicles:Set(state)
+	-- Not at Meridian's desk: the dealership's own shop is the panel there.
+	vehicles:Set(if state ~= nil and state.atShop then nil else state)
 end)
 
 Remotes.Get("BillDue").OnClientEvent:Connect(function(state: Types.BillState?)

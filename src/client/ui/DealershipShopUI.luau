@@ -20,6 +20,7 @@
 	comes in through Set*: the catalog, what is owned and how it looks, the balance, a notice.
 ]]
 
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -96,6 +97,7 @@ export type Handle = typeof(setmetatable(
 	{} :: {
 		gui: ScreenGui,
 		scale: UIScale,
+		refit: RBXScriptConnection?,
 		stage: any,
 		title: string,
 		-- The list.
@@ -906,12 +908,20 @@ function DealershipShopUI.IsOpen(self: Handle): boolean
 	return self.open
 end
 
--- Fits the 1280x720 canvas to the screen: what makes a phone and a monitor see one layout.
+-- Fits the 1280x720 canvas to the screen: what makes a phone and a monitor see one layout. Fitted
+-- below Roblox's own top bar: the gui ignores the inset so the backdrop reaches the top of the
+-- screen, but the shop's buttons must not sit under the menu and chat buttons -- on a screen as
+-- short as a phone's the top row, Exit with it, was there and could not be pressed.
 local function fit(self: Handle)
 	local camera = Workspace.CurrentCamera
 	if camera then
 		local size = camera.ViewportSize
-		self.scale.Scale = math.clamp(math.min(size.Y / REFERENCE_HEIGHT, size.X / 1280), 0.45, 1.6)
+		local top = GuiService:GetGuiInset().Y
+		self.scale.Scale = math.clamp(math.min((size.Y - top) / REFERENCE_HEIGHT, size.X / 1280), 0.3, 1.6)
+		local canvas = self.scale.Parent
+		if canvas and canvas:IsA("GuiObject") then
+			canvas.Position = UDim2.new(0.5, 0, 0.5, top / 2)
+		end
 	end
 end
 
@@ -921,6 +931,15 @@ function DealershipShopUI.Open(self: Handle)
 	end
 	self.open = true
 	fit(self)
+	-- And again if the window changes while the shop is up: a phone turned, a window resized.
+	local camera = Workspace.CurrentCamera
+	if self.refit == nil and camera then
+		self.refit = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+			if self.open then
+				fit(self)
+			end
+		end)
+	end
 	self.gui.Enabled = true
 	self:ShowList()
 end

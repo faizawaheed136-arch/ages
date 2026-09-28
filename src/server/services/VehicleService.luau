@@ -79,6 +79,21 @@ local spawning: { [Player]: boolean } = {}
 local pushed: { [Player]: string } = {}
 local enabled = true
 
+-- A line the panel should have shown, held for a player who was not standing in
+-- the showroom when it happened.
+--
+-- There is exactly one way to get one: a car left empty long enough returns to the
+-- lot on its own, and the sentence that says so is generated while the player is
+-- somewhere else by definition. Every other notice in this file answers a button
+-- that only exists on the panel, so the player is on the lot already.
+--
+-- Held rather than dropped because a dropped one is a silent failure of the kind
+-- this project's rules name outright -- your car is gone, nothing ever said why, and
+-- the next time you look for it you conclude the game lost it. Held rather than
+-- shown through some other channel because a floating toast for this is a second
+-- notification system built to carry one sentence.
+local pendingNotice: { [Player]: string } = {}
+
 local function dataFor(player: Player): LifeData?
 	local profile = DataService.GetProfile(player)
 	if profile == nil then
@@ -94,12 +109,75 @@ end
 -- clean, and dies the first time anybody actually buys a car.
 local push: (player: Player, notice: string?) -> ()
 
+-- Meridian Motors' shop, once DealershipService is running: whether a player is standing at its buy
+-- desk, and if so the ground a car they bring out should stand on -- a free test-drive bay, nose to
+-- the road -- or nil when every bay is taken. Handed in through SetShop rather than required,
+-- because DealershipService requires this file. The shop is a second way onto the lot: its car list
+-- is this file's state, so a player at the desk is on the showroom as much as one at the
+-- auto_dealer counter is.
+local shopAt: ((player: Player) -> (boolean, CFrame?))? = nil
+
+-- Whether this player is standing on the dealership's lot.
+--
+-- Asked on a loop, and `PlaceService.Find` is built for that -- it warns once per
+-- missing id rather than once per call, and says so in its own header. If the
+-- dealership is not in the world at all this returns false forever and the showroom
+-- never opens, which is the honest answer: there is no dealership to be at.
+--
+-- Measured off `HumanoidRootPart` rather than off the model's pivot, because a
+-- character being rebuilt has a pivot at the origin for a frame or two, and the
+-- origin is a long way from the lot -- which would close the panel under a player
+-- who had not moved.
+local function atCounter(player: Player): boolean
+	local character = player.Character
+	if character == nil then
+		return false
+	end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root == nil or not root:IsA("BasePart") then
+		return false
+	end
+	local place = PlaceService.Find(PLACE_ID)
+	if place == nil then
+		return false
+	end
+	return (root.Position - place.part.Position).Magnitude <= VEHICLES.ShowroomStuds
+end
+
+-- At Meridian's buy desk (see `shopAt`).
+local function atShop(player: Player): boolean
+	return shopAt ~= nil and (shopAt(player)) == true
+end
+
+local function atShowroom(player: Player): boolean
+	return atCounter(player) or atShop(player)
+end
+
+-- The showroom as the client should see it, or nil for "there is no showroom here".
+--
+-- **The distance check is the whole of the fix for the panel that never went away.**
+-- A nil state is what tells `VehicleUI` to stop existing, and before this there was
+-- no path to nil for a living player: the panel was pushed on join and stayed up for
+-- the rest of the life, advertising cars from inside a pram. Gating here rather than
+-- in `push` means every caller gets it for free and none of them has to remember.
+--
+-- Deliberately *not* also gating `Buy`, `Sell`, `Spawn` and `Store`. Those are
+-- server-authoritative already and the panel is the only thing that can reach them,
+-- so a second check would add nothing except a race: walk off the lot while a buy is
+-- in flight and the money is gone with no car to show for it. The gate is about what
+-- is on screen, and it is kept to that.
 local function stateFor(player: Player, notice: string?): VehicleState?
 	local life = dataFor(player)
 	if life == nil then
 		return nil
 	end
+	local counter = atCounter(player)
+	local shop = not counter and atShop(player)
+	if not counter and not shop then
+		return nil
+	end
 	return {
+		atShop = if shop then true else nil,
 		catalog = Vehicles.All,
 		owned = life.vehicles.owned,
 		active = life.vehicles.active,
@@ -115,6 +193,13 @@ function push(player: Player, notice: string?)
 	local state = stateFor(player, notice)
 	local digest: string
 	if state == nil then
+		-- Nowhere to show it right now. Keep the sentence rather than firing it into
+		-- a hidden panel; the showroom tick hands it over the moment the player is
+		-- back on the lot. Only the last one is kept -- these are statements about
+		-- where your car is, and an older one is simply wrong by then.
+		if notice ~= nil then
+			pendingNotice[player] = notice
+		end
 		digest = "none"
 	else
 		local owned: { string } = {}
@@ -204,7 +289,7 @@ end
 -- back here. The re-check below costs nothing while it is unnecessary and is
 -- exactly what every other spawn in this game already does for the case where
 -- it is not.
-local function spawnActive(player: Player, vehicleId: string): boolean
+local function spawnActive(player: Player, vehicleId: string, drive: boolean?): boolean
 	if spawning[player] then
 		return false
 	end
@@ -219,15 +304,25 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	if kind == nil then
 		return false
 	end
+	-- At Meridian's desk the car comes out on a test-drive bay; anywhere else, beside the
+	-- auto_dealer counter as it always has.
+	local atShop, bay = false, nil
+	if shopAt ~= nil then
+		atShop, bay = shopAt(player)
+	end
+	if atShop and bay == nil then
+		push(player, "Both bays out front are taken. Try again in a moment.")
+		return false
+	end
 	local place = PlaceService.Find(PLACE_ID)
-	if place == nil then
+	if bay == nil and place == nil then
 		return false
 	end
 
 	spawning[player] = true
 	push(player, nil)
 
-	local spot = findParkSpot(place.part.Position)
+	local spot = if bay then bay.Position else findParkSpot((place :: any).part.Position)
 	if spot == nil then
 		spawning[player] = false
 		push(player, "There is nowhere to park it right now.")
@@ -238,7 +333,7 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	-- life's cars standing in the world at once.
 	despawn(player)
 
-	local facing = place.part.Position - spot
+	local facing = if bay then bay.LookVector else (place :: any).part.Position - spot
 	local flat = Vector3.new(facing.X, 0, facing.Z)
 	local look = if flat.Magnitude > 0.01 then flat.Unit else -Vector3.zAxis
 	-- Its hull at the height it rides at, a hair over, so it settles onto its springs rather than
@@ -265,6 +360,14 @@ local function spawnActive(player: Player, vehicleId: string): boolean
 	spawned[player] = { chassis = chassis, idleFor = 0 }
 	life.vehicles.active = vehicleId
 	push(player, nil)
+	-- DRIVE from the shop: the player is put at the wheel, as a test drive puts them.
+	if drive and bay then
+		local character = player.Character
+		local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
+		if humanoid and humanoid.Health > 0 then
+			chassis.seatDriver(humanoid)
+		end
+	end
 	return true
 end
 
@@ -376,7 +479,7 @@ function VehicleService.Spawn(player: Player, vehicleId: string): boolean
 	if not enabled then
 		return false
 	end
-	local ok = spawnActive(player, vehicleId)
+	local ok = spawnActive(player, vehicleId, true)
 	if not ok and spawning[player] ~= true then
 		push(player, "Could not bring that one out.")
 	end
@@ -434,6 +537,11 @@ function VehicleService.ResetForNewLife(player: Player)
 	despawn(player)
 	spawning[player] = nil
 	pushed[player] = nil
+end
+
+-- Called by DealershipService once, at Init: see `shopAt`.
+function VehicleService.SetShop(at: (player: Player) -> (boolean, CFrame?))
+	shopAt = at
 end
 
 function VehicleService.SetEnabled(value: boolean)
@@ -530,10 +638,39 @@ function VehicleService:Init()
 		despawn(player)
 		spawning[player] = nil
 		pushed[player] = nil
+		pendingNotice[player] = nil
 	end)
 end
 
 function VehicleService:Start()
+	-- Who is standing on the lot. Walking on and off is the only thing in this game
+	-- that opens and closes the showroom, and neither is an event anything fires --
+	-- so it is polled. Cheap by construction: `push` folds the state to a digest and
+	-- sends nothing when it has not changed, so a server full of people nowhere near
+	-- the dealership costs one distance test each and no network traffic at all.
+	--
+	-- Separate from the idle tick below rather than folded into it. That one runs
+	-- every two seconds because a car's parking timer does not care, and two seconds
+	-- of standing on a forecourt looking at nothing is exactly the lag that reads as
+	-- the dealership being broken.
+	task.spawn(function()
+		while true do
+			task.wait(VEHICLES.ShowroomTickSeconds)
+			if not enabled then
+				continue
+			end
+			for _, player in Players:GetPlayers() do
+				local waiting = pendingNotice[player]
+				if waiting ~= nil and atShowroom(player) then
+					pendingNotice[player] = nil
+					push(player, waiting)
+				else
+					push(player, nil)
+				end
+			end
+		end
+	end)
+
 	task.spawn(function()
 		while true do
 			local elapsed = task.wait(IDLE_TICK_SECONDS)

@@ -3623,6 +3623,9 @@ export type VehicleKind = {
 -- garage from one push: every car sold, what this life already owns, and which
 -- one -- if any -- is standing in the world right now.
 export type VehicleState = {
+	-- Set when the player is on the lot only by standing at Meridian's buy desk: the state is for
+	-- the dealership's shop there, and the garage panel stays out of the way.
+	atShop: boolean?,
 	catalog: { VehicleKind },
 	owned: { [string]: boolean },
 	active: string?,

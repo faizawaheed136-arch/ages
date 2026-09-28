@@ -140,6 +140,18 @@ local function node(instance, isRoot: boolean): string
 			table.insert(written, `{jstring(key)}:{property(value)}`)
 		end
 	end
+	-- CollectionService tags go in as the Tags property. A top-level "tags" key is not part of
+	-- Rojo's model format and is dropped without a word: every DealershipSlot and
+	-- DealershipTurntable tag was lost that way until 2026-09-27, so the AGES copy had no car
+	-- slots for DealershipService to stock and no turntables for the client to spin.
+	local tags = rawget(instance, "__tags")
+	if #tags > 0 then
+		local quoted = {}
+		for _, tag in tags do
+			table.insert(quoted, jstring(tag))
+		end
+		table.insert(written, `"Tags":[{table.concat(quoted, ",")}]`)
+	end
 	if #written > 0 then
 		table.insert(parts, `"properties":\{{table.concat(written, ",")}\}`)
 	end
@@ -154,14 +166,6 @@ local function node(instance, isRoot: boolean): string
 		table.insert(parts, `"attributes":\{{table.concat(attrs, ",")}\}`)
 	end
 
-	local tags = rawget(instance, "__tags")
-	if #tags > 0 then
-		local quoted = {}
-		for _, tag in tags do
-			table.insert(quoted, jstring(tag))
-		end
-		table.insert(parts, `"tags":[{table.concat(quoted, ",")}]`)
-	end
 
 	local children = rawget(instance, "__children")
 	if #children > 0 then
