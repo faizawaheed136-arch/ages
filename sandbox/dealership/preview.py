@@ -84,6 +84,15 @@ VIEWS = {
     # Floor plans of the showroom: straight down, everything above the cut left out.
     "plan": ((207, 150, 59.9), (207, 0, 60), 29),  # under the ceiling: the upper floor
     "plan0": ((207, 150, 59.9), (207, 0, 60), 12),  # under the upper floor: the showroom floor
+    # The grand pass: the garden, the back of house, the new floor pieces.
+    "garden": ((77, 16, 112), (77, 3, 150)),  # from the drop-off end, down the garden walk
+    "gardenhigh": ((30, 55, 100), (90, 0, 150)),
+    "backhouse": ((190, 14, 205), (205, 8, 150)),  # the service block's back wall from the far lawn
+    "engine": ((190, 7.5, 70), (182, 3, 63)),
+    "buildyours": ((226, 7, 60), (236.6, 5.5, 67)),
+    "doors": ((207, 6, 40), (207, 5, 16)),  # from inside, looking back at the doors and their screens
+    # The whole site from straight above, roofs on: where the grounds have room.
+    "site": ((155, 330, 89.9), (155, 0, 90), 80),
 }
 
 # SurfaceGui faces, in the part's own axes: the outward normal, the gui's x axis and its down

@@ -1225,10 +1225,15 @@ local function buildInterior(model: Model)
 
 	-- The screen on the timber wall behind the buy desk: the timber is the warm thing in the room,
 	-- and it frames the desk the way it framed the flagship before.
+	-- An LED wall, dark with the name lit on it. It was a white neon slab with the name printed on
+	-- it, which in the game read as a blank sheet glaring over the salesman's head.
 	local backdrop = folder(inside, "Backdrop")
 	box(backdrop, "ScreenBezel", 197.4, 216.6, FLOOR + 3.6, FLOOR + 10.4, SHOW.z1 - 2.65, SHOW.z1 - 2.5, C.Charcoal, Enum.Material.Metal)
-	local screen = box(backdrop, "Screen", 198, 216, FLOOR + 4, FLOOR + 10, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.ScreenGlow, Enum.Material.Neon, { shadow = false })
-	sign(screen, Enum.NormalId.Front, "MERIDIAN", C.Navy, true)
+	local screen = box(backdrop, "Screen", 198, 216, FLOOR + 6.9, FLOOR + 10, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.Screen, Enum.Material.SmoothPlastic, { shadow = false })
+	sign(screen, Enum.NormalId.Front, "MERIDIAN MOTORS", C.White, true)
+	box(backdrop, "ScreenLine", 198, 216, FLOOR + 6.6, FLOOR + 6.9, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.Accent, Enum.Material.Neon, { collide = false, shadow = false, query = false })
+	local tagline = box(backdrop, "ScreenTag", 198, 216, FLOOR + 4, FLOOR + 6.6, SHOW.z1 - 2.8, SHOW.z1 - 2.65, C.Screen, Enum.Material.SmoothPlastic, { shadow = false })
+	sign(tagline, Enum.NormalId.Front, "FIND YOUR DRIVE", C.Gold, true, Enum.Font.GothamBold)
 
 	-- The reception counter, level with the side door, where a visitor is met. Cars are bought at
 	-- the desk in the middle of the room.
@@ -2704,6 +2709,326 @@ local function buildEastSide(model: Model)
 	end
 end
 
+-- ---------------------------------------------------------------------------------------------
+-- The floor between the displays, the back of house, and the grounds.
+--
+-- The building was finished where a customer arrives and bare everywhere else: an empty floor
+-- either side of the runway, a hundred-odd studs of plain panel on the back of the service
+-- block, an empty lawn behind the lot, and no light anywhere a driver passed after dark but
+-- the front. Detail follows function -- dense where people stand, a rhythm where they pass --
+-- so each of these gets the thing that tells you what it is for.
+-- ---------------------------------------------------------------------------------------------
+
+-- A cylinder lying along local X (`alongX`) or Z, centred at (x, y, z): wheels, pulleys, rims.
+local function drum(parent: Instance, name: string, x: number, y: number, z: number, length: number, diameter: number, alongX: boolean, color: Color3, material: Enum.Material, opts: Opts?): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Shape = Enum.PartType.Cylinder
+	part.Size = Vector3.new(length, diameter, diameter)
+	part.CFrame = at(x, y, z) * (if alongX then CFrame.new() else CFrame.Angles(0, math.rad(90), 0))
+	style(part, color, material, opts)
+	part.Parent = parent
+	return part
+end
+
+-- A park bench facing `facingDegrees` (0 = the sitter looks south, -Z).
+local function parkBench(parent: Instance, x: number, z: number, y: number, facingDegrees: number)
+	local model = standIn(folder(parent, "Bench"), "bench", facingDegrees)
+	local parts = {
+		box(model, "Seat", -2.6, 2.6, 1.45, 1.75, -0.7, 0.7, C.Wood, Enum.Material.Wood),
+		box(model, "Back", -2.6, 2.6, 2.1, 3.3, 0.75, 1.0, C.Wood, Enum.Material.Wood),
+		box(model, "Leg", -2.3, -2.0, 0, 1.45, -0.6, 0.9, C.Charcoal, Enum.Material.Metal),
+		box(model, "Leg", 2.0, 2.3, 0, 1.45, -0.6, 0.9, C.Charcoal, Enum.Material.Metal),
+		box(model, "Upright", -2.3, -2.0, 1.75, 3.3, 0.65, 0.75, C.Charcoal, Enum.Material.Metal),
+		box(model, "Upright", 2.0, 2.3, 1.75, 3.3, 0.65, 0.75, C.Charcoal, Enum.Material.Metal),
+	}
+	local frame = at(x, y, z) * CFrame.Angles(0, math.rad(facingDegrees), 0)
+	for _, part in parts do
+		part.CFrame = frame * origin:ToObjectSpace(part.CFrame)
+	end
+end
+
+-- Flowers, deterministically mixed: the same bed on every export.
+local BLOSSOMS = {
+	Color3.fromRGB(226, 70, 96),
+	Color3.fromRGB(250, 206, 72),
+	Color3.fromRGB(244, 244, 238),
+	Color3.fromRGB(170, 104, 206),
+	Color3.fromRGB(248, 142, 60),
+}
+
+-- A raised bed of flowers inside a stone edge, with a few low shrubs among them.
+local function flowerBed(parent: Instance, x0: number, x1: number, z0: number, z1: number)
+	local bed = folder(parent, "FlowerBed")
+	box(bed, "Edge", x0 - 0.35, x1 + 0.35, 0, 0.7, z0 - 0.35, z1 + 0.35, C.Kerb, Enum.Material.Concrete)
+	box(bed, "Soil", x0, x1, 0.7, 0.75, z0, z1, C.Bark, Enum.Material.Ground, { collide = false })
+	local step = 1.3
+	local i = 0
+	for x = x0 + 0.7, x1 - 0.6, step do
+		local j = 0
+		for z = z0 + 0.7, z1 - 0.6, step do
+			local jitter = ((i * 7 + j * 13) % 5 - 2) * 0.12
+			if (i + j * 3) % 7 == 3 then
+				ball(bed, "Shrub", Vector3.new(x + jitter, 1.25, z - jitter), 1.5, C.LeafDark, Enum.Material.LeafyGrass)
+			else
+				ball(bed, "Leaves", Vector3.new(x + jitter, 1.0, z - jitter), 1.0, C.Leaf, Enum.Material.LeafyGrass)
+				ball(bed, "Flower", Vector3.new(x + jitter, 1.45, z - jitter), 0.75, BLOSSOMS[(i * 2 + j) % #BLOSSOMS + 1], Enum.Material.SmoothPlastic)
+			end
+			j += 1
+		end
+		i += 1
+	end
+end
+
+-- A knee-high path light: a post and a glowing cap, lighting the ground round it.
+local function pathLight(parent: Instance, x: number, z: number, y: number, lit: boolean)
+	local model = folder(parent, "PathLight")
+	post(model, "Post", x, z, y, y + 2.6, 0.7, C.Charcoal, Enum.Material.Metal)
+	local cap = disc(model, "Cap", x, z, y + 2.6, y + 2.9, 0.9, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
+	disc(model, "Hood", x, z, y + 2.9, y + 3.05, 1.1, C.Charcoal, Enum.Material.Metal, { shadow = false })
+	if lit then
+		light(cap, "Point", 0.8, 11)
+	end
+end
+
+-- The showroom floor: an engine on a plinth, the build-your-own wall, and a screen at each door.
+local function buildShowroomLife(model: Model)
+	local life = folder(model, "ShowroomLife")
+	local trim: Opts = { collide = false, shadow = false, query = false }
+
+	-- An engine under glass between the west turntable and reception: the thing you walk round.
+	local engine = folder(life, "EngineDisplay")
+	local ex, ez = 182, 63
+	disc(engine, "Glow", ex, ez, FLOOR, FLOOR + 0.15, 7.6, C.Accent, Enum.Material.Neon, trim)
+	disc(engine, "Plinth", ex, ez, FLOOR, FLOOR + 1.4, 7, C.Charcoal, Enum.Material.SmoothPlastic, { reflectance = 0.2 })
+	disc(engine, "PlinthTop", ex, ez, FLOOR + 1.4, FLOOR + 1.55, 6.6, C.Marble, Enum.Material.Marble)
+	local y = FLOOR + 1.55
+	local steel = Color3.fromRGB(150, 154, 160)
+	box(engine, "Sump", ex - 1.1, ex + 1.1, y, y + 0.5, ez - 1.1, ez + 1.1, C.Charcoal, Enum.Material.Metal)
+	box(engine, "Block", ex - 1.4, ex + 1.4, y + 0.5, y + 2.3, ez - 1.4, ez + 1.4, Color3.fromRGB(78, 80, 86), Enum.Material.Metal)
+	for _, side in { -1, 1 } do
+		-- The two banks of the V, their cam covers in the brand red.
+		box(engine, "Head", ex + side * 1.6 - 0.5, ex + side * 1.6 + 0.5, y + 2.0, y + 2.9, ez - 1.5, ez + 1.5, C.Accent, Enum.Material.Metal)
+		box(engine, "Manifold", ex + side * 1.8 - 0.25, ex + side * 1.8 + 0.25, y + 0.9, y + 1.9, ez - 1.3, ez + 1.3, steel, Enum.Material.Metal)
+	end
+	box(engine, "Plenum", ex - 1.0, ex + 1.0, y + 2.3, y + 3.1, ez - 1.2, ez + 1.2, steel, Enum.Material.Metal, { reflectance = 0.2 })
+	drum(engine, "Throttle", ex, y + 2.7, ez - 1.6, 0.7, 0.8, false, steel, Enum.Material.Metal)
+	drum(engine, "Pulley", ex - 0.5, y + 1.2, ez - 1.55, 0.3, 1.1, false, C.Charcoal, Enum.Material.Metal)
+	drum(engine, "Pulley", ex + 0.6, y + 1.7, ez - 1.55, 0.3, 0.8, false, C.Charcoal, Enum.Material.Metal)
+	-- The case: glass on a slim frame, which a hand stops on. Square, inside the round plinth.
+	box(engine, "Case", ex - 2.3, ex + 2.3, y + 0.02, y + 4.2, ez - 2.3, ez + 2.3, C.Glass, Enum.Material.Glass, { transparency = 0.8, reflectance = 0.15, query = false, shadow = false })
+	for _, cx in { ex - 2.3, ex + 2.3 } do
+		for _, cz in { ez - 2.3, ez + 2.3 } do
+			box(engine, "CaseEdge", cx - 0.08, cx + 0.08, y, y + 4.2, cz - 0.08, cz + 0.08, C.Charcoal, Enum.Material.Metal, trim)
+		end
+	end
+	box(engine, "CaseLid", ex - 2.35, ex + 2.35, y + 4.2, y + 4.3, ez - 2.35, ez + 2.35, C.Charcoal, Enum.Material.Metal)
+	-- The card on the runway side.
+	local card = box(engine, "Placard", ex + 3.9, ex + 4.05, FLOOR, FLOOR + 2.4, ez - 1, ez + 1, C.Navy, Enum.Material.SmoothPlastic)
+	sign(card, Enum.NormalId.Right, "V10\n612 HP", C.Gold, true, Enum.Font.GothamBold)
+
+	-- BUILD YOURS: the shop's paint, rims and glow as things on a wall, in front of the stair.
+	local studio = folder(life, "BuildYours")
+	local wx = 236.6
+	box(studio, "Wall", wx, wx + 0.8, FLOOR, FLOOR + 11, 58, 76, C.White, Enum.Material.SmoothPlastic)
+	box(studio, "Cap", wx - 0.1, wx + 0.9, FLOOR + 11, FLOOR + 11.3, 57.9, 76.1, C.Charcoal, Enum.Material.Metal)
+	for _, z in { 57.7, 76 } do
+		box(studio, "Edge", wx - 0.1, wx + 0.9, FLOOR, FLOOR + 11, z, z + 0.3, C.Charcoal, Enum.Material.Metal)
+	end
+	local title = box(studio, "Title", wx - 0.2, wx, FLOOR + 8.8, FLOOR + 10.6, 58.3, 75.7, C.Navy, Enum.Material.SmoothPlastic)
+	sign(title, Enum.NormalId.Left, "BUILD YOURS", C.Gold, true)
+	-- Rims, each on its tyre, as the shop sells them.
+	local rims = {
+		{ Color3.fromRGB(196, 200, 206), 0.3 },
+		{ Color3.fromRGB(78, 80, 86), 0.1 },
+		{ Color3.fromRGB(28, 28, 30), 0.05 },
+		{ C.Gold, 0.3 },
+		{ Color3.fromRGB(150, 110, 70), 0.15 },
+		{ Color3.fromRGB(232, 234, 238), 0.45 },
+	}
+	for index, rim in rims do
+		local column = (index - 1) % 3
+		local row = (index - 1) // 3
+		local rz, ry = 60.2 + column * 3.4, FLOOR + 2.3 + row * 3.6
+		drum(studio, "Tyre", wx - 0.35, ry, rz, 0.7, 3.0, true, C.Leather, Enum.Material.Rubber)
+		drum(studio, "Rim", wx - 0.6, ry, rz, 0.3, 2.1, true, rim[1], Enum.Material.Metal, { reflectance = rim[2] })
+		drum(studio, "Hub", wx - 0.78, ry, rz, 0.1, 0.7, true, C.Charcoal, Enum.Material.Metal)
+	end
+	-- Paint: a board of swatches.
+	box(studio, "SwatchBoard", wx - 0.15, wx, FLOOR + 1.6, FLOOR + 8.2, 69.2, 75.4, C.Charcoal, Enum.Material.SmoothPlastic)
+	local swatches = {
+		C.Red, C.Blue, Color3.fromRGB(24, 24, 28), C.White,
+		Color3.fromRGB(190, 194, 200), C.Yellow, Color3.fromRGB(240, 120, 40), Color3.fromRGB(46, 150, 80),
+		Color3.fromRGB(120, 70, 180), Color3.fromRGB(40, 170, 180), Color3.fromRGB(236, 110, 170), C.Gold,
+		C.Navy, Color3.fromRGB(150, 210, 60), Color3.fromRGB(150, 100, 60), Color3.fromRGB(110, 114, 120),
+		Color3.fromRGB(150, 20, 40), Color3.fromRGB(120, 190, 240), Color3.fromRGB(150, 230, 190), Color3.fromRGB(214, 196, 150),
+	}
+	for index, colour in swatches do
+		local column = (index - 1) % 4
+		local row = (index - 1) // 4
+		local sz, sy = 69.75 + column * 1.45, FLOOR + 7.1 - row * 1.3
+		box(studio, "Swatch", wx - 0.25, wx - 0.15, sy, sy + 1.05, sz, sz + 1.1, colour, Enum.Material.SmoothPlastic, { reflectance = 0.15, collide = false })
+	end
+	-- Underglow, running along the foot of the wall in three colours.
+	for i, colour in { Color3.fromRGB(0, 220, 255), Color3.fromRGB(255, 60, 200), Color3.fromRGB(60, 255, 120) } do
+		local z0 = 58.4 + (i - 1) * 5.8
+		box(studio, "Glow", wx - 0.15, wx, FLOOR + 0.25, FLOOR + 0.55, z0, z0 + 5.6, colour, Enum.Material.Neon, trim)
+	end
+	-- A high table to talk it over at.
+	post(studio, "TableStem", 230, 67, FLOOR, FLOOR + 3.6, 0.5, C.Charcoal, Enum.Material.Metal)
+	disc(studio, "TableFoot", 230, 67, FLOOR, FLOOR + 0.15, 1.8, C.Charcoal, Enum.Material.Metal)
+	disc(studio, "TableTop", 230, 67, FLOOR + 3.6, FLOOR + 3.8, 3, C.Marble, Enum.Material.Marble)
+	for _, sz in { 64.4, 69.6 } do
+		post(studio, "StoolStem", 230, sz, FLOOR, FLOOR + 2.4, 0.3, C.Charcoal, Enum.Material.Metal)
+		disc(studio, "StoolFoot", 230, sz, FLOOR, FLOOR + 0.12, 1.2, C.Charcoal, Enum.Material.Metal)
+		disc(studio, "StoolSeat", 230, sz, FLOOR + 2.4, FLOOR + 2.7, 1.4, C.Leather, Enum.Material.Leather)
+	end
+
+	-- A screen either side of the doors: the brand over one word, WELCOME to whoever comes in
+	-- and the other side to whoever is leaving. A narrow screen holds one word legibly, not three.
+	for _, tx in { 189.5, 224.5 } do
+		local totem = folder(life, "Totem")
+		box(totem, "Body", tx - 1.6, tx + 1.6, FLOOR, FLOOR + 7.8, 18.15, 18.85, C.Charcoal, Enum.Material.Metal)
+		local function screenFace(z0: number, z1: number, face: Enum.NormalId, words: string)
+			local logo = box(totem, "Logo", tx - 1.4, tx + 1.4, FLOOR + 4.4, FLOOR + 7.4, z0, z1, C.Screen, Enum.Material.SmoothPlastic, { shadow = false })
+			sign(logo, face, "M", C.Accent, true)
+			box(totem, "Line", tx - 1.4, tx + 1.4, FLOOR + 4.2, FLOOR + 4.4, z0, z1, C.Accent, Enum.Material.Neon, trim)
+			local screen = box(totem, "Screen", tx - 1.4, tx + 1.4, FLOOR + 1.8, FLOOR + 4.2, z0, z1, C.Screen, Enum.Material.SmoothPlastic, { shadow = false })
+			sign(screen, face, words, C.White, true, Enum.Font.GothamBold)
+		end
+		screenFace(18.05, 18.15, Enum.NormalId.Front, "WELCOME")
+		screenFace(18.85, 18.95, Enum.NormalId.Back, "SEE YOU" .. string.char(10) .. "SOON")
+	end
+end
+
+-- The back of house: the service block's three plain faces, and the showroom's back wall above it.
+local function buildBackOfHouse(model: Model)
+	local back = folder(model, "BackOfHouse")
+	local x0, x1, z0, z1, h = SERVICE.x0, SERVICE.x1, SERVICE.z0, SERVICE.z1, SERVICE.height
+	local trim: Opts = { collide = false, shadow = false, query = false }
+
+	-- North face. The brand where the road behind sees it, lit; a shadow line under the windows.
+	local brand = box(back, "Brand", 160, 192, 4.6, 10.5, z1, z1 + 0.35, C.Navy, Enum.Material.SmoothPlastic)
+	sign(brand, Enum.NormalId.Back, "MERIDIAN MOTORS", C.Gold, true)
+	box(back, "BrandLine", 160, 192, 4.1, 4.4, z1, z1 + 0.4, C.Accent, Enum.Material.Neon, trim)
+	local strap = box(back, "Strapline", 163, 189, 2.6, 3.9, z1, z1 + 0.3, C.Navy, Enum.Material.SmoothPlastic)
+	sign(strap, Enum.NormalId.Back, "SALES  •  SERVICE  •  PARTS  •  CAR WASH", C.White, true, Enum.Font.GothamBold)
+	for _, run in { { x0, 235 }, { 253, x1 } } do
+		box(back, "Reveal", run[1], run[2], 12.1, 12.35, z1 - 0.03, z1 + 0.1, C.Charcoal, Enum.Material.Metal, trim)
+	end
+	for _, x in { 153, 200, 230, 261.5 } do
+		local pack = box(back, "WallPack", x - 0.8, x + 0.8, 11, 11.9, z1, z1 + 0.7, C.Charcoal, Enum.Material.Metal)
+		light(pack, "Spot", 1.4, 22, C.White, 110)
+		box(back, "WallPackLens", x - 0.7, x + 0.7, 10.95, 11, z1 + 0.1, z1 + 0.6, C.White, Enum.Material.Neon, trim)
+	end
+	-- A planted strip along the wall where the yard's concrete stops.
+	box(back, "PlantingStrip", x0 + 0.2, 195.6, 0, 0.35, z1 + 0.2, z1 + 3.8, C.Bark, Enum.Material.Ground)
+	for x = x0 + 3, 193, 4.6 do
+		bush(back, x, z1 + 2, 0.35, 2.2)
+	end
+
+	-- East face, onto the wash lane: fins, as on the showroom's east wall, and two lamps.
+	for i = 0, 8 do
+		local z = z0 + 2 + i * 4.1
+		box(back, "Fin", x1, x1 + 0.8, 2.2, h - 1.6, z, z + 0.7, if i % 2 == 0 then C.Charcoal else C.Panel, Enum.Material.Metal, { shadow = false })
+	end
+	for _, z in { z0 + 12, z0 + 29 } do
+		local pack = box(back, "WallPack", x1, x1 + 0.9, 12.4, 13.3, z - 0.8, z + 0.8, C.Charcoal, Enum.Material.Metal)
+		light(pack, "Spot", 1.4, 22, C.White, 110)
+	end
+
+	-- West face, over the drop-off: windows to the workshop office, framed.
+	for _, span in { { 122, 130 }, { 134, 142 }, { 146, 150 } } do
+		local wz0, wz1 = span[1], span[2]
+		box(back, "Window", x0 - 0.07, x0, 3.5, 12, wz0, wz1, C.Glass, Enum.Material.Glass, { transparency = 0.3, reflectance = 0.25, query = false, shadow = false })
+		box(back, "Sill", x0 - 0.35, x0, 3.1, 3.5, wz0 - 0.3, wz1 + 0.3, C.Charcoal, Enum.Material.Metal)
+		box(back, "Head", x0 - 0.35, x0, 12, 12.4, wz0 - 0.3, wz1 + 0.3, C.Charcoal, Enum.Material.Metal)
+		for _, jz in { wz0 - 0.3, wz1 } do
+			box(back, "Jamb", x0 - 0.3, x0, 3.5, 12, jz, jz + 0.3, C.Charcoal, Enum.Material.Metal)
+		end
+	end
+
+	-- The showroom's back wall, seen down the service lane and over the service roof: panel
+	-- joints, an LED line under the parapet, and the name.
+	local wz = SHOW.z1
+	for x = SHOW.x0 + 8, 254, 8 do
+		box(back, "PanelJoint", x - 0.06, x + 0.06, FLOOR + 0.4, CEIL - 0.1, wz - 0.02, wz + 0.08, C.Joint, Enum.Material.Metal, trim)
+	end
+	for _, run in { { SHOW.x0 + 0.5, 255.8 }, { 259.2, SHOW.x1 - 0.5 } } do
+		box(back, "WallLED", run[1], run[2], CEIL - 1.4, CEIL - 1.2, wz - 0.02, wz + 0.12, C.White, Enum.Material.Neon, trim)
+	end
+	local name = box(back, "WallName", 186, 228, 21, 27, wz, wz + 0.4, C.Navy, Enum.Material.SmoothPlastic)
+	sign(name, Enum.NormalId.Back, "MERIDIAN", C.Gold, true)
+	box(back, "WallNameLine", 186, 228, 20.5, 20.8, wz, wz + 0.45, C.Accent, Enum.Material.Neon, trim)
+end
+
+-- The lawn behind the lot, made a garden: a walk with a fountain at its middle, trees down both
+-- sides, beds, benches and path lights. And street lights along the pavement out front.
+local GARDEN = { x0 = 10, x1 = 148, walk = 145, fountainX = 77 }
+
+local function buildGarden(model: Model)
+	local garden = folder(model, "Garden")
+	local w = GARDEN.walk
+	local fx = GARDEN.fountainX
+
+	-- The walk, east-west, broken by the fountain's round; and a spur south to the drop-off.
+	for _, run in { { GARDEN.x0, fx - 9.6 }, { fx + 9.6, GARDEN.x1 } } do
+		box(garden, "Walk", run[1], run[2], 0, WALK, w - 2.5, w + 2.5, C.Paving, Enum.Material.Slate)
+		for x = run[1] + 4, run[2] - 1, 4 do
+			box(garden, "WalkJoint", x - 0.08, x + 0.08, WALK, WALK + 0.02, w - 2.5, w + 2.5, C.Kerb, Enum.Material.Slate, { collide = false, query = false, shadow = false })
+		end
+	end
+	box(garden, "Spur", 134, 139, 0, WALK, 118, w - 2.5, C.Paving, Enum.Material.Slate)
+
+	-- The fountain, on a round of paving.
+	disc(garden, "Round", fx, w, 0, WALK + 0.06, 20, C.Paving, Enum.Material.Slate)
+	disc(garden, "RoundEdge", fx, w, 0, WALK + 0.03, 20.8, C.Kerb, Enum.Material.Concrete)
+	disc(garden, "Basin", fx, w, WALK, WALK + 1.4, 12, C.Kerb, Enum.Material.Concrete)
+	local water = Color3.fromRGB(70, 132, 172)
+	disc(garden, "Water", fx, w, WALK + 1.4, WALK + 1.45, 10.8, water, Enum.Material.Glass, { transparency = 0.2, reflectance = 0.35, collide = false, shadow = false })
+	post(garden, "Pedestal", fx, w, WALK + 1.4, WALK + 3.8, 1.6, C.Kerb, Enum.Material.Concrete)
+	disc(garden, "Bowl", fx, w, WALK + 3.8, WALK + 4.4, 4.4, C.Kerb, Enum.Material.Concrete)
+	disc(garden, "BowlWater", fx, w, WALK + 4.4, WALK + 4.45, 3.8, water, Enum.Material.Glass, { transparency = 0.2, reflectance = 0.35, collide = false, shadow = false })
+	post(garden, "Jet", fx, w, WALK + 4.45, WALK + 7.2, 0.35, C.White, Enum.Material.Neon)
+	ball(garden, "JetTop", Vector3.new(fx, WALK + 7.3, w), 0.9, C.White, Enum.Material.Glass)
+	for index = 0, 2 do
+		local a = math.rad(index * 120 + 30)
+		local up = disc(garden, "Uplight", fx + math.cos(a) * 3.6, w + math.sin(a) * 3.6, WALK + 1.45, WALK + 1.55, 0.7, C.Warm, Enum.Material.Neon, { collide = false, shadow = false })
+		local beam = light(up, "Spot", 1.2, 12, C.Warm, 50) :: SpotLight
+		beam.Face = Enum.NormalId.Top
+	end
+	parkBench(garden, fx, w - 7.6, WALK, 180)
+	parkBench(garden, fx, w + 7.6, WALK, 0)
+
+	-- Trees in two rows, beds either side of the walk, benches facing it.
+	for _, z in { 131, 159 } do
+		for _, x in { 22, 50, 104, 126 } do
+			tree(garden, x, z, 0, 17 + (x + z) % 4)
+		end
+	end
+	for _, x in { 28, 96 } do
+		flowerBed(garden, x, x + 16, w - 9, w - 4.5)
+		flowerBed(garden, x, x + 16, w + 4.5, w + 9)
+	end
+	for _, x in { 58, 118 } do
+		parkBench(garden, x, w - 4.2, 0, 180)
+		parkBench(garden, x, w + 4.2, 0, 0)
+	end
+	local lamp = 0
+	for _, x in { 16, 32, 48, 62, 92, 108, 124, 142 } do
+		for _, side in { -1, 1 } do
+			lamp += 1
+			pathLight(garden, x, w + side * 3.3, 0, lamp % 2 == 1)
+		end
+	end
+
+	-- Street lights along the pavement, where the lot meets the road and past the east car park.
+	local street = folder(model, "StreetLights")
+	for _, x in { 22, 62, 98, 300 } do
+		lampPost(street, x, 1.5, WALK)
+	end
+end
+
 local function buildSlots(model: Model)
 	local stock = folder(model, "LotStock")
 	for rowIndex, row in { ROW_A, ROW_B } do
@@ -2746,6 +3071,9 @@ function DealershipBuild.Build(corner: CFrame, parent: Instance): Model
 	buildHandover(model)
 	buildCustomerParking(model)
 	buildEastSide(model)
+	buildShowroomLife(model)
+	buildBackOfHouse(model)
+	buildGarden(model)
 	buildSlots(model)
 	model.WorldPivot = corner
 	model.Parent = parent
