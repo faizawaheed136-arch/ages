@@ -1903,15 +1903,15 @@ local function buildPlaza(model: Model)
 	for i, x in { 152, 157, 162 } do
 		post(plaza, "Flagpole", x, 9, PLAZA, 32, 0.4, C.White, Enum.Material.Metal)
 		ball(plaza, "Finial", Vector3.new(x, 32.2, 9), 0.7, C.Gold, Enum.Material.Metal)
-		local flag = box(plaza, "Flag", x + 0.2, x + 4.6, 27.8, 31.4, 8.95, 9.05, ({ C.Navy, C.Gold, C.Navy })[i], Enum.Material.Fabric, {
+		-- Navy, white, navy: gold fabric, tried in the middle, reads a muddy olive in the engine.
+		local middle = i == 2
+		local flag = box(plaza, "Flag", x + 0.2, x + 4.6, 27.8, 31.4, 8.95, 9.05, if middle then C.White else C.Navy, Enum.Material.Fabric, {
 			collide = false,
 			shadow = false,
 			query = false,
 		})
-		if i ~= 2 then
-			sign(flag, Enum.NormalId.Front, "M", C.Gold, false)
-			sign(flag, Enum.NormalId.Back, "M", C.Gold, false)
-		end
+		sign(flag, Enum.NormalId.Front, "M", if middle then C.Accent else C.Gold, false)
+		sign(flag, Enum.NormalId.Back, "M", if middle then C.Accent else C.Gold, false)
 	end
 
 	-- The pylon at the corner of the lot and the plaza: the one thing a driver on the road reads.
@@ -2723,8 +2723,9 @@ local function buildEastSide(model: Model)
 	for _, x in { 40, 70 } do
 		tree(trees, x, 122, 0, 18)
 	end
-	for _, x in { 164, 184 } do
-		tree(trees, x, 162, 0, 20)
+	-- Flanking the service block's brand panel (x 160-192), not in front of it.
+	for _, p in { { 146, 163 }, { 206, 176 } } do
+		tree(trees, p[1], p[2], 0, 20)
 	end
 	for _, z in { 120, 140 } do
 		tree(trees, 272, z, 0, 18)
@@ -2939,10 +2940,11 @@ local function buildShowroomLife(model: Model)
 		-- Top shelf: caps, crown and peak.
 		for k = 0, 5 do
 			local cx = 169.8 + k * 1.25
-			disc(store, "Cap", cx, fz, shelves[3], shelves[3] + 0.35, 0.8, if k % 3 == 0 then C.Accent else C.Navy, Enum.Material.Fabric, item)
-			box(store, "Peak", cx - 0.25, cx + 0.25, shelves[3], shelves[3] + 0.06, fz + face[2] * 0.35, fz + face[2] * 0.65, C.Charcoal, Enum.Material.Fabric, item)
+			disc(store, "Cap", cx, fz, shelves[3], shelves[3] + 0.35, 0.8, if k % 3 == 0 then C.Accent else C.Navy, Enum.Material.SmoothPlastic, item)
+			box(store, "Peak", cx - 0.25, cx + 0.25, shelves[3], shelves[3] + 0.06, fz + face[2] * 0.35, fz + face[2] * 0.65, C.Charcoal, Enum.Material.SmoothPlastic, item)
 		end
 	end
+	spot(store, 172.5, 23.5, 2)
 	-- The table: shirts in stacks.
 	box(store, "TableTop", 169, 175, FLOOR + 2.7, FLOOR + 2.9, 25, 27.2, C.Walnut, Enum.Material.Wood)
 	box(store, "TableBase", 169.6, 174.4, FLOOR, FLOOR + 2.7, 25.5, 26.7, C.Charcoal, Enum.Material.Metal)
@@ -2950,7 +2952,7 @@ local function buildShowroomLife(model: Model)
 		local tx = 169.9 + (k - 1) * 1.8
 		for level = 0, 2 do
 			local y = FLOOR + 2.9 + level * 0.16
-			box(store, "Shirt", tx, tx + 1.4, y, y + 0.15, 25.5, 26.7, colour, Enum.Material.Fabric, item)
+			box(store, "Shirt", tx, tx + 1.4, y, y + 0.15, 25.5, 26.7, colour, Enum.Material.SmoothPlastic, item)
 		end
 	end
 	-- The jacket, on a form by the glass.
@@ -2991,8 +2993,9 @@ local function buildShowroomLife(model: Model)
 		drum(toy, "Wheel", wheel[1], FLOOR + 0.35, wheel[2], 0.2, 0.5, false, C.Charcoal, Enum.Material.Rubber)
 	end
 	for _, bz in { 20.4, 24.6 } do
-		ball(kids, "BeanBag", Vector3.new(229.6, FLOOR + 0.95, bz), 1.7, if bz < 22 then C.Blue else C.Yellow, Enum.Material.Fabric)
+		ball(kids, "BeanBag", Vector3.new(229.6, FLOOR + 0.95, bz), 1.7, if bz < 22 then C.Blue else C.Yellow, Enum.Material.SmoothPlastic)
 	end
+	spot(kids, 233, 25, 2)
 	local kidsSign = box(kids, "Sign", 229.5, 236.5, FLOOR + 9, FLOOR + 10.4, 22.4, 22.6, C.White, Enum.Material.SmoothPlastic, { collide = false })
 	sign(kidsSign, Enum.NormalId.Front, "KIDS' CORNER", C.Blue, true)
 	sign(kidsSign, Enum.NormalId.Back, "KIDS' CORNER", C.Blue, true)
@@ -3157,7 +3160,8 @@ local function buildGarden(model: Model)
 
 	-- Street lights along the pavement, where the lot meets the road and past the east car park.
 	local street = folder(model, "StreetLights")
-	for _, x in { 22, 62, 98, 300 } do
+	-- Clear of the lot banner's span (x 33-77): one at 62 stood in front of its lettering.
+	for _, x in { 12, 90, 300 } do
 		lampPost(street, x, 1.5, WALK)
 	end
 end
