@@ -173,7 +173,7 @@ class Scene:
 
     def walk(self, node):
         props = node.get("properties", {})
-        if node.get("className") in ("Part", "WedgePart") and "CFrame" in props:
+        if node.get("className") in ("Part", "Seat", "WedgePart") and "CFrame" in props:
             pos, rot = cframe(props["CFrame"])
             size = np.array(props.get("Size", [4, 1, 2]), float)
             # A character's head: the Head mesh draws as a ball the height of the scaled part.

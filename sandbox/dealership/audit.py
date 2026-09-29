@@ -38,7 +38,7 @@ def walk(node, path, out):
     here = f"{path}/{name}" if path else name
     props = node.get("properties", {})
     transparency = props.get("Transparency", 0)
-    if node.get("className") == "Part" and props.get("Shape", "Block") == "Block" and transparency < 0.97:
+    if node.get("className") in ("Part", "Seat") and props.get("Shape", "Block") == "Block" and transparency < 0.97:
         cf = props["CFrame"]["CFrame"]
         rot = np.array(cf["orientation"], float)
         if np.allclose(np.abs(rot), np.round(np.abs(rot)), atol=1e-4):

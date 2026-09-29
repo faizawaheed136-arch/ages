@@ -10744,7 +10744,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="368">
+          <Item class="Seat" referent="368">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -10868,7 +10868,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="373">
+          <Item class="Seat" referent="373">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -11154,7 +11154,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="384">
+          <Item class="Seat" referent="384">
             <Properties>
               <string name="Name">BenchSeat</string>
               <bool name="Anchored">true</bool>
@@ -26406,7 +26406,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="910">
+          <Item class="Seat" referent="910">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -26530,7 +26530,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="915">
+          <Item class="Seat" referent="915">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -27075,7 +27075,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="939">
+            <Item class="Seat" referent="939">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -27199,7 +27199,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="944">
+            <Item class="Seat" referent="944">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -27323,7 +27323,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="949">
+            <Item class="Seat" referent="949">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -27698,7 +27698,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="965">
+            <Item class="Seat" referent="965">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -27822,7 +27822,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="970">
+            <Item class="Seat" referent="970">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -27946,7 +27946,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="975">
+            <Item class="Seat" referent="975">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -28321,7 +28321,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="991">
+            <Item class="Seat" referent="991">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -28445,7 +28445,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="996">
+            <Item class="Seat" referent="996">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -28569,7 +28569,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="1001">
+            <Item class="Seat" referent="1001">
               <Properties>
                 <string name="Name">Seat</string>
                 <bool name="Anchored">true</bool>
@@ -29342,7 +29342,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1032">
+          <Item class="Seat" referent="1032">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -29466,7 +29466,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1037">
+          <Item class="Seat" referent="1037">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -29590,7 +29590,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1042">
+          <Item class="Seat" referent="1042">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -30288,7 +30288,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1070">
+          <Item class="Seat" referent="1070">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -30412,7 +30412,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1075">
+          <Item class="Seat" referent="1075">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -30536,7 +30536,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1080">
+          <Item class="Seat" referent="1080">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -30861,7 +30861,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY291Y2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1094">
+          <Item class="Seat" referent="1094">
             <Properties>
               <string name="Name">SofaBase</string>
               <bool name="Anchored">true</bool>
@@ -31042,7 +31042,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1101">
+          <Item class="Seat" referent="1101">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -31166,7 +31166,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1106">
+          <Item class="Seat" referent="1106">
             <Properties>
               <string name="Name">Seat</string>
               <bool name="Anchored">true</bool>
@@ -35113,7 +35113,7 @@ E</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAga0AEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="1254">
+        <Item class="Seat" referent="1254">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -35237,7 +35237,7 @@ E</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgYUAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="1259">
+        <Item class="Seat" referent="1259">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -47862,7 +47862,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY291Y2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1669">
+          <Item class="Seat" referent="1669">
             <Properties>
               <string name="Name">SofaBase</string>
               <bool name="Anchored">true</bool>
@@ -47985,7 +47985,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAY291Y2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1674">
+          <Item class="Seat" referent="1674">
             <Properties>
               <string name="Name">SofaBase</string>
               <bool name="Anchored">true</bool>
@@ -51307,7 +51307,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1789">
+          <Item class="Seat" referent="1789">
             <Properties>
               <string name="Name">BenchSeat</string>
               <bool name="Anchored">true</bool>
@@ -51316,22 +51316,22 @@ E</string>
                 <X>-51</X>
                 <Y>17.1</Y>
                 <Z>2025</Z>
-                <R00>1</R00>
+                <R00>0</R00>
                 <R01>0</R01>
-                <R02>0</R02>
+                <R02>-1</R02>
                 <R10>0</R10>
                 <R11>1</R11>
                 <R12>0</R12>
-                <R20>0</R20>
+                <R20>1</R20>
                 <R21>0</R21>
-                <R22>1</R22>
+                <R22>0</R22>
               </CoordinateFrame>
               <Color3uint8 name="Color3uint8">8412222</Color3uint8>
               <token name="Material">512</token>
               <Vector3 name="size">
-                <X>1.6</X>
+                <X>6</X>
                 <Y>0.4</Y>
-                <Z>6</Z>
+                <Z>1.6</Z>
               </Vector3>
               <token name="TopSurface">0</token>
             </Properties>
@@ -51401,7 +51401,7 @@ E</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="1793">
+          <Item class="Seat" referent="1793">
             <Properties>
               <string name="Name">BenchSeat</string>
               <bool name="Anchored">true</bool>
@@ -51410,22 +51410,22 @@ E</string>
                 <X>-23</X>
                 <Y>17.1</Y>
                 <Z>2025</Z>
-                <R00>1</R00>
+                <R00>0</R00>
                 <R01>0</R01>
-                <R02>0</R02>
+                <R02>1</R02>
                 <R10>0</R10>
                 <R11>1</R11>
                 <R12>0</R12>
-                <R20>0</R20>
+                <R20>-1</R20>
                 <R21>0</R21>
-                <R22>1</R22>
+                <R22>0</R22>
               </CoordinateFrame>
               <Color3uint8 name="Color3uint8">8412222</Color3uint8>
               <token name="Material">512</token>
               <Vector3 name="size">
-                <X>1.6</X>
+                <X>6</X>
                 <Y>0.4</Y>
-                <Z>6</Z>
+                <Z>1.6</Z>
               </Vector3>
               <token name="TopSurface">0</token>
             </Properties>
@@ -54438,7 +54438,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1903">
+              <Item class="Seat" referent="1903">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -54562,7 +54562,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1908">
+              <Item class="Seat" referent="1908">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -54686,7 +54686,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1913">
+              <Item class="Seat" referent="1913">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -55563,7 +55563,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1949">
+              <Item class="Seat" referent="1949">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -55687,7 +55687,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1954">
+              <Item class="Seat" referent="1954">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -55811,7 +55811,7 @@ E</string>
                 <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAADgcEAEAAAAUHJvcAIFAAAAY2hhaXI=</BinaryString>
                 <bool name="NeedsPivotMigration">false</bool>
               </Properties>
-              <Item class="Part" referent="1959">
+              <Item class="Seat" referent="1959">
                 <Properties>
                   <string name="Name">Seat</string>
                   <bool name="Anchored">true</bool>
@@ -56181,7 +56181,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY291Y2g=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="1975">
+            <Item class="Seat" referent="1975">
               <Properties>
                 <string name="Name">SofaBase</string>
                 <bool name="Anchored">true</bool>
@@ -56190,22 +56190,22 @@ E</string>
                   <X>-19.4</X>
                   <Y>16.4</Y>
                   <Z>2004.5</Z>
-                  <R00>1</R00>
+                  <R00>0</R00>
                   <R01>0</R01>
-                  <R02>0</R02>
+                  <R02>1</R02>
                   <R10>0</R10>
                   <R11>1</R11>
                   <R12>0</R12>
-                  <R20>0</R20>
+                  <R20>-1</R20>
                   <R21>0</R21>
-                  <R22>1</R22>
+                  <R22>0</R22>
                 </CoordinateFrame>
                 <Color3uint8 name="Color3uint8">1973794</Color3uint8>
                 <token name="Material">1312</token>
                 <Vector3 name="size">
-                  <X>3.6</X>
+                  <X>6</X>
                   <Y>2</Y>
-                  <Z>6</Z>
+                  <Z>3.6</Z>
                 </Vector3>
                 <token name="TopSurface">0</token>
               </Properties>
@@ -57090,7 +57090,7 @@ E</string>
               <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAVkAEAAAAUHJvcAIFAAAAY291Y2g=</BinaryString>
               <bool name="NeedsPivotMigration">false</bool>
             </Properties>
-            <Item class="Part" referent="2006">
+            <Item class="Seat" referent="2006">
               <Properties>
                 <string name="Name">SofaBase</string>
                 <bool name="Anchored">true</bool>
@@ -57099,22 +57099,22 @@ E</string>
                   <X>-19.4</X>
                   <Y>16.4</Y>
                   <Z>2013.5</Z>
-                  <R00>1</R00>
+                  <R00>0</R00>
                   <R01>0</R01>
-                  <R02>0</R02>
+                  <R02>1</R02>
                   <R10>0</R10>
                   <R11>1</R11>
                   <R12>0</R12>
-                  <R20>0</R20>
+                  <R20>-1</R20>
                   <R21>0</R21>
-                  <R22>1</R22>
+                  <R22>0</R22>
                 </CoordinateFrame>
                 <Color3uint8 name="Color3uint8">1973794</Color3uint8>
                 <token name="Material">1312</token>
                 <Vector3 name="size">
-                  <X>3.6</X>
+                  <X>6</X>
                   <Y>2</Y>
-                  <Z>6</Z>
+                  <Z>3.6</Z>
                 </Vector3>
                 <token name="TopSurface">0</token>
               </Properties>
@@ -61662,7 +61662,7 @@ E</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="2160">
+        <Item class="Seat" referent="2160">
           <Properties>
             <string name="Name">BenchSeat</string>
             <bool name="Anchored">true</bool>
@@ -61756,7 +61756,7 @@ E</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="2164">
+        <Item class="Seat" referent="2164">
           <Properties>
             <string name="Name">BenchSeat</string>
             <bool name="Anchored">true</bool>
@@ -80475,7 +80475,7 @@ RECEPTION</string>
             <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
             <bool name="NeedsPivotMigration">false</bool>
           </Properties>
-          <Item class="Part" referent="2848">
+          <Item class="Seat" referent="2848">
             <Properties>
               <string name="Name">BenchSeat</string>
               <bool name="Anchored">true</bool>
@@ -80484,7 +80484,7 @@ RECEPTION</string>
                 <X>-77.5</X>
                 <Y>4.05</Y>
                 <Z>2094.7</Z>
-                <R00>1</R00>
+                <R00>-1</R00>
                 <R01>0</R01>
                 <R02>0</R02>
                 <R10>0</R10>
@@ -80492,7 +80492,7 @@ RECEPTION</string>
                 <R12>0</R12>
                 <R20>0</R20>
                 <R21>0</R21>
-                <R22>1</R22>
+                <R22>-1</R22>
               </CoordinateFrame>
               <Color3uint8 name="Color3uint8">8412222</Color3uint8>
               <token name="Material">512</token>
@@ -105478,7 +105478,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="3751">
+        <Item class="Seat" referent="3751">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -105659,7 +105659,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="3758">
+        <Item class="Seat" referent="3758">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -115612,7 +115612,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="4081">
+        <Item class="Seat" referent="4081">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -115793,7 +115793,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="4088">
+        <Item class="Seat" referent="4088">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -115974,7 +115974,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAACAZkAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="4095">
+        <Item class="Seat" referent="4095">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>
@@ -116155,7 +116155,7 @@ SOON</string>
           <BinaryString name="AttributesSerialize">AgAAAAYAAABGYWNpbmcGAAAAAAAAAAAEAAAAUHJvcAIFAAAAYmVuY2g=</BinaryString>
           <bool name="NeedsPivotMigration">false</bool>
         </Properties>
-        <Item class="Part" referent="4102">
+        <Item class="Seat" referent="4102">
           <Properties>
             <string name="Name">Seat</string>
             <bool name="Anchored">true</bool>

@@ -61,7 +61,7 @@ def load():
         name = node.get("name", "Dealership")
         here = f"{path}/{name}" if path else name
         props = node.get("properties", {})
-        if node["className"] in ("Part", "WedgePart", "CornerWedgePart", "TrussPart") and "CFrame" in props:
+        if node["className"] in ("Part", "Seat", "WedgePart", "CornerWedgePart", "TrussPart") and "CFrame" in props:
             cf = props["CFrame"]["CFrame"]
             gui = [c for c in node.get("children", []) if c["className"] == "SurfaceGui"]
             parts.append({

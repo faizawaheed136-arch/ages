@@ -128,6 +128,9 @@ type Opts = {
 	shadow: boolean?,
 	query: boolean?,
 	shape: Enum.PartType?,
+	-- A Seat rather than a Part: somewhere a player can sit. It faces its own -Z, as a chair's
+	-- sitter does here; turnSeat turns one that should face another way.
+	seat: boolean?,
 }
 
 -- Set once per Build: every position below is local to it.
@@ -176,13 +179,22 @@ local function box(
 	material: Enum.Material,
 	opts: Opts?
 ): Part
-	local part = Instance.new("Part")
+	local part = Instance.new(if opts and opts.seat then "Seat" else "Part") :: Part
 	part.Name = name
 	part.Size = Vector3.new(math.abs(x1 - x0), math.abs(y1 - y0), math.abs(z1 - z0))
 	part.CFrame = at((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2)
 	style(part, color, material, opts)
 	part.Parent = parent
 	return part
+end
+
+-- Turns a seat made by box() so its sitter faces `degrees` (0 = south, -Z; 90 = west, -X;
+-- -90 = east; 180 = north), keeping the footprint it was drawn with.
+local function turnSeat(part: BasePart, degrees: number)
+	if degrees % 180 ~= 0 then
+		part.Size = Vector3.new(part.Size.Z, part.Size.Y, part.Size.X)
+	end
+	part.CFrame = part.CFrame * CFrame.Angles(0, math.rad(degrees), 0)
 end
 
 -- A flat disc standing on its face, centred at (x, z), from y0 up to y1.
@@ -373,7 +385,7 @@ end
 -- A chair facing `facingDegrees` (0 = the sitter looks south, -Z).
 local function chair(parent: Instance, x: number, z: number, y: number, facingDegrees: number, color: Color3)
 	local model = standIn(folder(parent, "Chair"), "chair", facingDegrees)
-	local seat = box(model, "Seat", -1.3, 1.3, 1.8, 2.3, -1.3, 1.3, color, Enum.Material.Fabric)
+	local seat = box(model, "Seat", -1.3, 1.3, 1.8, 2.3, -1.3, 1.3, color, Enum.Material.Fabric, { seat = true })
 	local back = box(model, "Back", -1.3, 1.3, 2.3, 5.0, 1.0, 1.4, color, Enum.Material.Fabric)
 	local stem = box(model, "Stem", -0.2, 0.2, 0, 1.8, -0.2, 0.2, C.Charcoal, Enum.Material.Metal)
 	local foot = disc(model, "Foot", 0, 0, 0, 0.2, 2.2, C.Charcoal, Enum.Material.Metal)
@@ -627,7 +639,7 @@ local function buildLot(model: Model)
 		post(cabin, "PorchPost", x, 88.9, 0.5, 9, 0.5, C.White, Enum.Material.SmoothPlastic)
 	end
 	local porchBench = standIn(folder(cabin, "Bench"), "bench", 0)
-	box(porchBench, "BenchSeat", 15, 22, 1.9, 2.2, 88, 89.4, C.Wood, Enum.Material.Wood)
+	box(porchBench, "BenchSeat", 15, 22, 1.9, 2.2, 88, 89.4, C.Wood, Enum.Material.Wood, { seat = true })
 	for _, x in { 15.5, 21.5 } do
 		box(porchBench, "BenchLeg", x - 0.2, x + 0.2, 0.5, 1.9, 88.2, 89.2, C.Charcoal, Enum.Material.Metal)
 	end
@@ -1311,7 +1323,7 @@ local function buildInterior(model: Model)
 	local lounge = folder(inside, "Lounge")
 	box(lounge, "Rug", 157, 183, FLOOR, FLOOR + 0.05, 82, 95, C.Rug, Enum.Material.Fabric, { collide = false })
 	local sofa = standIn(folder(lounge, "Sofa"), "couch", 0)
-	box(sofa, "SofaBase", 160, 178, FLOOR, FLOOR + 2, 92, 95.5, C.Fabric, Enum.Material.Fabric)
+	box(sofa, "SofaBase", 160, 178, FLOOR, FLOOR + 2, 92, 95.5, C.Fabric, Enum.Material.Fabric, { seat = true })
 	box(sofa, "SofaBack", 160, 178, FLOOR + 2, FLOOR + 4.6, 95, 96.5, C.Fabric, Enum.Material.Fabric)
 	box(sofa, "SofaArm", 159, 160, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
 	box(sofa, "SofaArm", 178, 179, FLOOR, FLOOR + 3.2, 92, 96.5, C.Fabric, Enum.Material.Fabric)
@@ -1440,7 +1452,7 @@ end
 -- only ever 0 (facing the rail) or 180.
 local function sofa(parent: Instance, x0: number, x1: number, z: number, y: number, color: Color3): Model
 	local model = standIn(folder(parent, "Sofa"), "couch", 0)
-	box(model, "SofaBase", x0 + 1, x1 - 1, y, y + 2, z, z + 3.5, color, Enum.Material.Fabric)
+	box(model, "SofaBase", x0 + 1, x1 - 1, y, y + 2, z, z + 3.5, color, Enum.Material.Fabric, { seat = true })
 	box(model, "SofaBack", x0 + 1, x1 - 1, y + 2, y + 4.6, z + 3, z + 4.5, color, Enum.Material.Fabric)
 	box(model, "SofaArm", x0, x0 + 1, y, y + 3.2, z, z + 4.5, color, Enum.Material.Fabric)
 	box(model, "SofaArm", x1 - 1, x1, y, y + 3.2, z, z + 4.5, color, Enum.Material.Fabric)
@@ -1656,7 +1668,7 @@ local function buildEastDeck(mezz: Model)
 		local z0, z1 = span[1], span[2]
 		-- Faces west, over the rail and down into the hall.
 		local couch = standIn(folder(lounge, "Sofa"), "couch", 90)
-		box(couch, "SofaBase", 258.8, 262.4, UPPER, UPPER + 2, z0 + 1, z1 - 1, C.Leather, Enum.Material.Fabric)
+		turnSeat(box(couch, "SofaBase", 258.8, 262.4, UPPER, UPPER + 2, z0 + 1, z1 - 1, C.Leather, Enum.Material.Fabric, { seat = true }), 90)
 		box(couch, "SofaBack", 261.2, 262.7, UPPER + 2, UPPER + 4.6, z0 + 1, z1 - 1, C.Leather, Enum.Material.Fabric)
 		box(couch, "SofaArm", 258.8, 262.7, UPPER, UPPER + 3.2, z0, z0 + 1, C.Leather, Enum.Material.Fabric)
 		box(couch, "SofaArm", 258.8, 262.7, UPPER, UPPER + 3.2, z1 - 1, z1, C.Leather, Enum.Material.Fabric)
@@ -1847,7 +1859,8 @@ local function buildMezzanine(model: Model)
 	end
 	for _, x in { 229, 257 } do
 		local bench = standIn(folder(gallery, "Bench"), "bench", 90)
-		box(bench, "BenchSeat", x - 0.8, x + 0.8, UPPER + 1.5, UPPER + 1.9, 82, 88, C.Wood, Enum.Material.Wood)
+		-- Each faces the plinth between them.
+		turnSeat(box(bench, "BenchSeat", x - 0.8, x + 0.8, UPPER + 1.5, UPPER + 1.9, 82, 88, C.Wood, Enum.Material.Wood, { seat = true }), if x < 243 then -90 else 90)
 		box(bench, "BenchLeg", x - 0.7, x + 0.7, UPPER, UPPER + 1.5, 82.2, 82.7, C.Charcoal, Enum.Material.Metal)
 		box(bench, "BenchLeg", x - 0.7, x + 0.7, UPPER, UPPER + 1.5, 87.3, 87.8, C.Charcoal, Enum.Material.Metal)
 	end
@@ -1867,7 +1880,7 @@ local function buildPlaza(model: Model)
 	-- Benches at the plaza's two ends, clear of the curve.
 	for _, x in { 160, 252 } do
 		local bench = standIn(folder(plaza, "Bench"), "bench", 0)
-		box(bench, "BenchSeat", x - 3, x + 3, PLAZA + 1.5, PLAZA + 1.9, 11.4, 13, C.Wood, Enum.Material.Wood)
+		box(bench, "BenchSeat", x - 3, x + 3, PLAZA + 1.5, PLAZA + 1.9, 11.4, 13, C.Wood, Enum.Material.Wood, { seat = true })
 		box(bench, "BenchLeg", x - 2.8, x - 2.3, PLAZA, PLAZA + 1.5, 11.5, 12.9, C.Charcoal, Enum.Material.Metal)
 		box(bench, "BenchLeg", x + 2.3, x + 2.8, PLAZA, PLAZA + 1.5, 11.5, 12.9, C.Charcoal, Enum.Material.Metal)
 	end
@@ -2455,7 +2468,7 @@ local function buildService(model: Model)
 	end
 	-- Facing away from the wall, into the yard.
 	local yardBench = standIn(folder(yard, "Bench"), "bench", 180)
-	box(yardBench, "BenchSeat", 200, 205, FLOOR + 1.3, FLOOR + 1.6, z1 + 2, z1 + 3.4, C.Wood, Enum.Material.Wood)
+	turnSeat(box(yardBench, "BenchSeat", 200, 205, FLOOR + 1.3, FLOOR + 1.6, z1 + 2, z1 + 3.4, C.Wood, Enum.Material.Wood, { seat = true }), 180)
 	for _, x in { 200.5, 204.5 } do
 		box(yardBench, "BenchLeg", x - 0.2, x + 0.2, LOT, FLOOR + 1.3, z1 + 2.2, z1 + 3.2, C.Charcoal, Enum.Material.Metal)
 	end
@@ -2758,7 +2771,7 @@ end
 local function parkBench(parent: Instance, x: number, z: number, y: number, facingDegrees: number)
 	local model = standIn(folder(parent, "Bench"), "bench", facingDegrees)
 	local parts = {
-		box(model, "Seat", -2.6, 2.6, 1.45, 1.75, -0.7, 0.7, C.Wood, Enum.Material.Wood),
+		box(model, "Seat", -2.6, 2.6, 1.45, 1.75, -0.7, 0.7, C.Wood, Enum.Material.Wood, { seat = true }),
 		box(model, "Back", -2.6, 2.6, 2.1, 3.3, 0.75, 1.0, C.Wood, Enum.Material.Wood),
 		box(model, "Leg", -2.3, -2.0, 0, 1.45, -0.6, 0.9, C.Charcoal, Enum.Material.Metal),
 		box(model, "Leg", 2.0, 2.3, 0, 1.45, -0.6, 0.9, C.Charcoal, Enum.Material.Metal),
