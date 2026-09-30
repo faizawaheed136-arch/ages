@@ -1843,7 +1843,8 @@ local function buildDisplayDeck(model: Model)
 	local cx = (x0 + x1) / 2
 	spot(deck, cx, 36, 2.2)
 	spot(deck, cx, 50, 2.2)
-	slot(deck, "gt", "Deck", cx, top, (z0 + z1) / 2, 0)
+	-- NEW ARRIVALS: the GT-R, the newest and the quickest car in the game.
+	slot(deck, "gtr", "Deck", cx, top, (z0 + z1) / 2, 0)
 	local fin = box(deck, "Sign", cx - 0.2, cx + 0.2, FLOOR + 16, FLOOR + 19, 33, 52, C.Charcoal, Enum.Material.SmoothPlastic, { collide = false })
 	sign(fin, Enum.NormalId.Right, "NEW ARRIVALS", C.White, true)
 	sign(fin, Enum.NormalId.Left, "NEW ARRIVALS", C.White, true)

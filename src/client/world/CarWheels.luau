@@ -298,7 +298,7 @@ local function animate(car: Car, dt: number)
 		car.steer = tele.steer
 	else
 		local seat = car.seat
-		local input = if seat and seat.Occupant then seat.Steer else 0
+		local input = if seat and seat.Occupant then seat.SteerFloat else 0
 		local wanted = CarPhysics.SteerAngle(car.spec, speed, input)
 		car.steer += (wanted - car.steer) * math.clamp(STEER_RATE * dt, 0, 1)
 	end
@@ -392,10 +392,12 @@ function CarWheels.Start()
 	local function add(model: Instance)
 		if model:IsA("Model") then
 			-- Built on the server with its wheels already welded; read once it has arrived whole.
-			task.defer(function()
-				local car = read(model)
-				if car then
-					cars[model] = car
+			CarPhysics.WhenReady(model, function()
+				if cars[model] == nil then
+					local car = read(model)
+					if car then
+						cars[model] = car
+					end
 				end
 			end)
 		end

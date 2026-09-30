@@ -261,6 +261,14 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		end
 	end
 
+	-- Tells a client the car has been sent whole: set a moment after it is in the world, so it reaches
+	-- a client after the parts, welds and attributes it describes. See CarPhysics.WhenReady.
+	task.delay(0.3, function()
+		if model.Parent ~= nil then
+			model:SetAttribute("Ready", true)
+		end
+	end)
+
 	local running = true
 	local occupantConnection: RBXScriptConnection? = nil
 	local function stop()

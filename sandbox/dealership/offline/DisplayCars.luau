@@ -22,6 +22,11 @@ local function stockDisplayCars(root)
 		if kind == nil then
 			error(`DisplayCars: a CarSlot asks for vehicle "{tostring(id)}", which content/Vehicles does not sell`)
 		end
+		-- A car drawn from a model (the GT-R) cannot be baked here: there is no model to draw it from
+		-- offline. sandbox/dealership/BuildOnPlay stands it on its slot when the place is played.
+		if kind.model ~= nil then
+			continue
+		end
 		-- The slot sits a tenth of a stud above the floor it marks: as in DealershipService.stock.
 		local car = VehicleChassis.BuildDisplay(kind, slot.CFrame * CFrame.new(0, -slot.Size.Y / 2, 0))
 		car.Name = `Display_{kind.id}`

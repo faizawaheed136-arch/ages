@@ -4,6 +4,7 @@
 	already baked into it. Sandbox only: in AGES the dealership is baked into the place, at its plot.
 ]]
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
@@ -25,3 +26,21 @@ local DealershipDressing = require(ServerStorage:WaitForChild("DealershipDressin
 local DealershipProps = require(ServerStorage:WaitForChild("DealershipProps"))
 local swapped, kept = DealershipDressing.Dress(Workspace:WaitForChild(DealershipBuild.ModelName) :: Model, DealershipProps)
 print(`[dealership sandbox] {swapped} props placed, {kept} still block stand-ins`)
+
+-- Cars drawn from a model (the GT-R) cannot be baked into the place offline, where there is no model
+-- to draw them from; stand them on their slots now, as DealershipService does in AGES.
+local MeshCar = require(ReplicatedStorage:WaitForChild("MeshCar"))
+local Vehicles = require(ServerStorage:WaitForChild("Vehicles"))
+local VehicleChassis = require(ServerStorage:WaitForChild("VehicleChassis"))
+for _, slot in Workspace:GetDescendants() do
+	if slot.Name ~= "CarSlot" or not slot:IsA("BasePart") then
+		continue
+	end
+	local id = slot:GetAttribute("VehicleId")
+	local kind = if typeof(id) == "string" then Vehicles.Get(id) else nil
+	if kind and kind.model and MeshCar.Available(kind.model) and slot.Parent and slot.Parent:FindFirstChild("Display_" .. kind.id) == nil then
+		local car = VehicleChassis.BuildDisplay(kind, slot.CFrame * CFrame.new(0, -slot.Size.Y / 2, 0))
+		car.Name = `Display_{kind.id}`
+		car.Parent = slot.Parent
+	end
+end

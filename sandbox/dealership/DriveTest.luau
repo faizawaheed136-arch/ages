@@ -540,6 +540,39 @@ function DriveTest.Probe(id: string, seconds: number): { [string]: any }
 	return { test = "probe", rows = rows }
 end
 
+-- A car standing on the test road for looking at and driving by hand: the real parked-car loop steps
+-- it, and `player`, if given, is put behind the wheel.
+function DriveTest.Show(id: string, paintKey: string?, player: Player?): Model
+	ground()
+	clear()
+	local kind = Vehicles.Get(id)
+	assert(kind, "no such car " .. id)
+	local layout = CarBody.Layout(kind)
+	local look = CarBody.LookOf(paintKey, nil, nil)
+	local chassis = VehicleChassis.Build(kind, CFrame.new(ORIGIN + Vector3.new(0, layout.hullY + 0.3, -60)), nil, look)
+	chassis.model.Name = "Vehicle_show"
+	chassis.model:SetAttribute("DriveTest", true)
+	chassis.model.Parent = workspace
+	for _ = 1, 90 do
+		RunService.Heartbeat:Wait()
+	end
+	if player then
+		player:LoadCharacter()
+		task.wait(1.5)
+		local character = player.Character :: Model
+		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+		for _, part in character:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CollisionGroup = "VehicleDrivers"
+			end
+		end
+		character:PivotTo(chassis.seat.CFrame * CFrame.new(0, 2.5, 0))
+		task.wait(0.05)
+		chassis.seatDriver(humanoid)
+	end
+	return chassis.model
+end
+
 -- Runs each of `list` ({ name, args, skip }) in turn, in the background, and appends a line for each to
 -- workspace's DriveTestLog (a StringValue): the result without its samples. Read it while it runs.
 function DriveTest.Suite(list: { { any } })

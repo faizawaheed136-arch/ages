@@ -56,6 +56,29 @@ local CarPhysics = {}
 -- The tag every drivable car carries, so a client can find the cars it animates and drives.
 CarPhysics.Tag = "AgesCar"
 
+--[[
+	Calls `callback` with `model` once it has arrived whole. A car is a tree of a hundred parts with
+	tags, attributes and welds, and a client can be told of its tag before it has the rest: reading it
+	then finds no wheels, no seat. The server sets `Ready` (world/VehicleChassis) a moment after the
+	car is in the world, which reaches a client after the tree it describes; a car that never says it
+	is read anyway after a few seconds.
+]]
+function CarPhysics.WhenReady(model: Model, callback: (Model) -> ())
+	task.spawn(function()
+		local waited = 0
+		while model.Parent ~= nil and waited < 12 do
+			if model:GetAttribute("Ready") == true and model.PrimaryPart ~= nil then
+				callback(model)
+				return
+			end
+			waited += task.wait(0.1)
+		end
+		if model.Parent ~= nil and model.PrimaryPart ~= nil then
+			callback(model)
+		end
+	end)
+end
+
 -- The rig of the car this machine is driving, by model, for the wheels, the sound and the camera to
 -- read the telemetry of. Empty for every car somebody else has the wheel of.
 CarPhysics.Live = setmetatable({}, { __mode = "k" }) :: { [Model]: any }

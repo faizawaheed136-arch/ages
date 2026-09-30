@@ -109,7 +109,7 @@ function CarDriver.Start(hudModule: any)
 
 	local function watch(character: Model)
 		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
-		humanoid:GetPropertyChangedSignal("SeatPart"):Connect(function()
+		local function seated()
 			stop()
 			local seat = humanoid.SeatPart
 			if seat == nil or not seat:IsA("VehicleSeat") or seat.Name ~= "DriverSeat" then
@@ -153,8 +153,9 @@ function CarDriver.Start(hudModule: any)
 				end
 				drift = if driftHeld then math.min(1, drift + dt * DRIFT_IN) else math.max(0, drift - dt * DRIFT_OUT)
 				local tele = CarPhysics.Step(rig, dt, {
-					throttle = driverSeat.Throttle,
-					steer = driverSeat.Steer,
+					-- The floats, so a thumbstick or a phone's slider is not rounded to a key.
+					throttle = driverSeat.ThrottleFloat,
+					steer = driverSeat.SteerFloat,
 					handbrake = drift,
 					boost = boosting,
 				})
@@ -178,7 +179,12 @@ function CarDriver.Start(hudModule: any)
 				end
 				hud:Set(tele, fuel, boosting, if drifting then score else nil)
 			end)
-		end)
+		end
+		humanoid:GetPropertyChangedSignal("SeatPart"):Connect(seated)
+		-- Already in a car when this starts: the script ran late, or a respawn put them straight back.
+		if humanoid.SeatPart ~= nil then
+			seated()
+		end
 	end
 
 	player.CharacterAdded:Connect(function(character: Model)

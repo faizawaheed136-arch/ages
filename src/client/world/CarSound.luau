@@ -289,8 +289,8 @@ function CarSound.Start()
 	local cars: { [Model]: Car } = {}
 	local function add(model: Instance)
 		if model:IsA("Model") then
-			task.defer(function()
-				if cars[model] == nil and model.Parent ~= nil then
+			CarPhysics.WhenReady(model, function()
+				if cars[model] == nil then
 					local car = build(model)
 					if car then
 						cars[model] = car

@@ -89,9 +89,8 @@ export type Spec = {
 	voice: string,
 }
 
--- The torque curve of a spec, at `rpm`.
-function CarSpec.Torque(spec: Spec, rpm: number): number
-	local curve = spec.torque
+-- A torque curve, at `rpm`.
+local function curveAt(curve: { { number } }, rpm: number): number
 	if rpm <= curve[1][1] then
 		return curve[1][2]
 	end
@@ -102,6 +101,11 @@ function CarSpec.Torque(spec: Spec, rpm: number): number
 		end
 	end
 	return curve[#curve][2]
+end
+
+-- The torque curve of a spec, at `rpm`.
+function CarSpec.Torque(spec: Spec, rpm: number): number
+	return curveAt(spec.torque, rpm)
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -219,18 +223,26 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 	local vTop = top / S
 	local a0 = accel / S
 	local rolling = 0.015
-	-- Power: what it takes to pull a0 at the speed it hits top gear, less a little.
-	local power = mass * a0 * vTop * 0.6
-	-- Drag area: the drag that stops it at `top` with that power on the wheels.
+	-- Power: what it takes to pull a0 at the speed it hits top gear -- so the car keeps the pull its
+	-- catalog entry promises up to about a third of the way to top speed, not just at a standstill.
+	local power = mass * a0 * vTop
 	local driveEff = 0.9
-	local cdA = math.max(0.35, (driveEff * power - rolling * mass * CarSpec.Gravity * vTop) / (0.5 * 1.2 * vTop ^ 3))
 	local radius = radiusStuds / S
 	local redline, idle = 6400, 800
 	local peakPowerRpm = 0.78 * redline
+	local curve = genericCurve(redline, idle, power)
+	-- Drag area: the drag that stops it at `top`, with what the engine really makes at the revs `top` is
+	-- reached at -- a little under its peak -- on the wheels.
+	local powerAtTop = curveAt(curve, peakPowerRpm) * peakPowerRpm * 2 * math.pi / 60
+	local cdA = math.max(0.35, (driveEff * powerAtTop - rolling * mass * CarSpec.Gravity * vTop) / (0.5 * 1.2 * vTop ^ 3))
 	local topRatio = (peakPowerRpm * 2 * math.pi / 60) * radius / vTop
 	local finalDrive = 3.4
 	local topGear = topRatio / finalDrive
-	local firstGear = topGear * 5.2
+	-- First gear only as much lower than top as a car of this power needs to pull its first g: 2.2
+	-- times, not the five a road car with six forward gears has. The gearing of a car that tops out
+	-- at 80 km/h is already that of a car's first and second, and five times that would be 48:1, which
+	-- a driven wheel can only spin up on, never roll with.
+	local firstGear = topGear * 2.2
 	local gears: { number } = {}
 	for i = 0, 4 do
 		table.insert(gears, firstGear * (topGear / firstGear) ^ (i / 4))
@@ -247,7 +259,7 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		tyreRadius = radius,
 		cgHeight = math.clamp(size.Y / S * 0.36, 0.45, 0.8),
 		weightFront = if drive == "FWD" then 0.6 elseif drive == "RWD" then 0.5 else 0.54,
-		torque = genericCurve(redline, idle, power),
+		torque = curve,
 		idleRpm = idle,
 		redlineRpm = redline,
 		limiterRpm = redline + 200,
