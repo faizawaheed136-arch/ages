@@ -95,6 +95,15 @@ VIEWS = {
     "kids": ((224, 6, 30), (233, 1.5, 22)),
     "solar": ((150, 40, 100), (205, 19, 132)),
     "lotnight": ((54, 22, -20), (54, 2, 46)),  # from inside, looking back at the doors and their screens
+    # The second review pass: what the critics' fixes built.
+    "heritage": ((243, 19.5, 77), (243, 16, 86)),  # the gallery exhibit from the stair head
+    "workshop": ((262, 7, 132), (190, 6, 132)),  # inside open bay 4 looking west along the workshop
+    "svcdesk": ((146, 6, 122), (154, 4, 125)),  # the service reception desk from the drop-off door
+    "pergola": ((128, 7, 145), (146, 5, 145)),  # the garden walk's east end
+    "cabinin": ((14, 6, 94), (24, 4, 104)),  # inside the sales cabin
+    "stairfoot": ((228, 6, 38), (242, 4, 52)),  # the way up, from the hall
+    "handsign": ((200, 6, 62), (152, 12, 64)),  # the handover sign, from the buy circle
+    "fascia": ((207, 8, -40), (207, 28, 13)),  # the fascia letters, from across the road
     # The whole site from straight above, roofs on: where the grounds have room.
     "site": ((155, 330, 89.9), (155, 0, 90), 80),
 }

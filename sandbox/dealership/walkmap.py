@@ -38,7 +38,7 @@ AREAS = {
         "showroom": (207, 40), "lot": (60, 46), "cabin door": (22, 86), "garden fountain": (77, 134),
         "garden west": (14, 145), "service reception": (148, 115.4), "parts door": (244, 154),
         "wash entry": (290, 110), "vacuum bays": (286, 160), "ev bays": (290, 40), "handover": (135, 66),
-        "yard bench": (202.5, 156), "bins": (221, 166),
+        "yard bench": (202.5, 156), "bins": (221, 161.5),
     }),
 }
 

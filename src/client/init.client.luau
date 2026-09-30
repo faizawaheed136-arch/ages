@@ -52,6 +52,7 @@ local DealershipTurntables = require(script.world.DealershipTurntables)
 local CarDriver = require(script.world.CarDriver)
 local DriveHUD = require(script.ui.DriveHUD)
 local CarWheels = require(script.world.CarWheels)
+local CarSound = require(script.world.CarSound)
 local DealershipShop = require(script.world.DealershipShop)
 local DealershipShopUI = require(script.ui.DealershipShopUI)
 local ShopStage = require(script.world.ShopStage)
@@ -156,6 +157,7 @@ DealershipTurntables.Start()
 -- wheels are turned here, locally, frame by frame.
 CarDriver.Start(DriveHUD)
 CarWheels.Start()
+CarSound.Start()
 local chapterReel = ChapterReel.new()
 
 -- Nothing is known yet, and a HUD is a claim that a life is being lived. It goes up the

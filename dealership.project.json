@@ -122,6 +122,18 @@
       "CarBody": {
         "$path": "src/shared/CarBody.luau"
       },
+      "CarSpec": {
+        "$path": "src/shared/CarSpec.luau"
+      },
+      "MeshCar": {
+        "$path": "src/shared/MeshCar.luau"
+      },
+      "CarModels": {
+        "$className": "Folder",
+        "GTR": {
+          "$path": "assets/vehicles/GTR.rbxmx"
+        }
+      },
       "ShopClient": {
         "$className": "Folder",
         "DealershipShop": {
@@ -141,6 +153,9 @@
         },
         "CarWheels": {
           "$path": "src/client/world/CarWheels.luau"
+        },
+        "CarSound": {
+          "$path": "src/client/world/CarSound.luau"
         },
         "DriveHUD": {
           "$path": "src/client/ui/DriveHUD.luau"

@@ -3617,6 +3617,9 @@ export type VehicleKind = {
 	seats: number?,
 	-- Shown with a NEW badge in the shop.
 	isNew: boolean?,
+	-- A modelled car: the name of a model in ReplicatedStorage.CarModels (see shared/MeshCar), drawn
+	-- in place of the parts-built body. If the model is not in the place the car falls back to `style`.
+	model: string?,
 }
 
 -- What the client needs to draw the dealership's showroom floor and a life's own

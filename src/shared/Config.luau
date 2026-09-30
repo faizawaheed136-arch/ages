@@ -8912,9 +8912,13 @@ Config.Codes = {
 -- Meridian Motors: the dealership's display floor and test drives. See
 -- services/DealershipService.luau; the building itself is world/DealershipBuild.luau.
 Config.Dealership = {
-	-- How close a player must be to a display car for its Buy and Test drive prompts.
+	-- How close a player must be to a display car for its Buy and Test drive prompts, measured
+	-- from the middle of the car. 16 because the two hero cars are roped off: a player standing
+	-- at the rope round a turntable is 12.6 to 14.7 studs from the car, and at 12 nobody standing
+	-- where the rope tells them to ever saw a prompt. Lot cars stand 11 apart, but only one
+	-- prompt per key shows at a time, the nearest, so the longer reach does not make them fight.
 	-- Safe range: 8-16.
-	PromptStuds = 12,
+	PromptStuds = 16,
 	-- How long Buy is held before it spends. A car is the biggest purchase a life makes, and a
 	-- tap that took a year's wages from somebody brushing past it would not be forgiven.
 	-- Safe range: 0.5-2.

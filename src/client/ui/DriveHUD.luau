@@ -1,9 +1,11 @@
 --!strict
 --[[
-	What a driver sees on screen: a speedometer dial in the corner -- the speed large, a ring of lamps
-	round it lighting toward red as the car nears flat out -- the nitro left under it, a drift score
-	that climbs while the car is sideways and banks when it straightens, and the keys. On a phone,
-	buttons for nitro, drift and getting out, since there is no Shift or Space to hold.
+	What a driver sees on screen: a dial in the corner -- the speed large, a ring of lamps round it
+	that is the engine's rev counter, lighting toward red as the revs near the limit -- the gear
+	engaged, lamps for ABS and traction control that light while they are working, the nitro left
+	under it, a drift score that climbs while the car is sideways and banks when it straightens, and
+	the keys. On a phone, buttons for nitro, drift and getting out, since there is no Shift or Space
+	to hold.
 
 	A view only: client/world/CarDriver feeds it every frame and wires its buttons.
 ]]
@@ -35,6 +37,9 @@ export type HUD = typeof(setmetatable(
 		gui: ScreenGui,
 		ring: { Frame },
 		speed: TextLabel,
+		gear: TextLabel,
+		absLamp: TextLabel,
+		tcLamp: TextLabel,
 		nitroFill: Frame,
 		nitroLabel: TextLabel,
 		driftBadge: TextLabel,
@@ -112,8 +117,17 @@ function DriveHUD.new(): HUD
 		corner(seg, UDim.new(0, 2))
 		table.insert(ring, seg)
 	end
-	local speed = label(dial, "Speed", UDim2.fromScale(0.5, 0.45), UDim2.fromOffset(150, 64), "0", WHITE, 58, Enum.Font.GothamBlack)
-	label(dial, "Unit", UDim2.fromScale(0.5, 0.68), UDim2.fromOffset(100, 20), "MPH", GREY, 16, Enum.Font.GothamBold)
+	local speed = label(dial, "Speed", UDim2.fromScale(0.5, 0.43), UDim2.fromOffset(150, 64), "0", WHITE, 58, Enum.Font.GothamBlack)
+	label(dial, "Unit", UDim2.fromScale(0.5, 0.65), UDim2.fromOffset(100, 20), "MPH", GREY, 16, Enum.Font.GothamBold)
+	-- The gear, under the speed: N at rest, R in reverse, the gear number between.
+	local gear = label(dial, "Gear", UDim2.fromScale(0.5, 0.82), UDim2.fromOffset(46, 28), "N", WHITE, 26, Enum.Font.GothamBlack)
+	-- What the car is doing for you, over the speed: dark until it does it.
+	local function lamp(name: string, x: number): TextLabel
+		local l = label(dial, name, UDim2.fromScale(x, 0.17), UDim2.fromOffset(38, 16), name, UNLIT, 12, Enum.Font.GothamBlack)
+		return l
+	end
+	local absLamp = lamp("ABS", 0.39)
+	local tcLamp = lamp("TC", 0.61)
 
 	-- Nitro, under the dial.
 	local nitro = Instance.new("Frame")
@@ -159,6 +173,9 @@ function DriveHUD.new(): HUD
 		gui = gui,
 		ring = ring,
 		speed = speed,
+		gear = gear,
+		absLamp = absLamp,
+		tcLamp = tcLamp,
 		nitroFill = fill,
 		nitroLabel = nitroLabel,
 		driftBadge = drift,
@@ -237,19 +254,29 @@ local function comma(n: number): string
 	return out
 end
 
--- One frame: the speed in mph, how far toward flat out (0-1, past 1 on nitro), the nitro left
--- (0-1) and whether it is burning, and the drift score so far (nil when not drifting).
-function DriveHUD.Set(self: HUD, mph: number, share: number, fuel: number, boosting: boolean, driftScore: number?)
-	self.speed.Text = tostring(math.floor(mph))
-	local lit = math.floor(math.clamp(share, 0, 1) * #self.ring + 0.5)
+-- One frame: what the car reports (shared/CarPhysics' telemetry), the nitro left (0-1) and whether it
+-- is burning, and the drift score so far (nil when not drifting).
+function DriveHUD.Set(self: HUD, tele: { [string]: any }, fuel: number, boosting: boolean, driftScore: number?)
+	local mph = math.abs(tele.kph) / 1.609344
+	self.speed.Text = tostring(math.floor(mph + 0.5))
+	-- The ring is the rev counter: lit to the revs, blue through amber to red, flashing at the limiter.
+	local revs = math.clamp((tele.rpm - 800) / (tele.redline - 800), 0, 1)
+	local lit = math.floor(revs * #self.ring + 0.5)
+	local limiter = tele.rpm >= tele.redline - 50 and tele.throttle > 0.3
+	local flash = limiter and (math.floor(os.clock() * 14) % 2 == 0)
 	for i, seg in self.ring do
 		if i <= lit then
 			local t = (i - 1) / (#self.ring - 1)
-			seg.BackgroundColor3 = if boosting then NITRO else LOW:Lerp(HIGH, t * t)
+			seg.BackgroundColor3 = if boosting then NITRO elseif flash then WHITE else LOW:Lerp(HIGH, t * t * t)
 		else
 			seg.BackgroundColor3 = UNLIT
 		end
 	end
+	local gear = tele.gear
+	self.gear.Text = if gear < 0 then "R" elseif mph < 1 and tele.throttle < 0.05 then "N" else tostring(gear)
+	self.gear.TextColor3 = if gear < 0 then HIGH else WHITE
+	self.absLamp.TextColor3 = if tele.abs then DRIFT else UNLIT
+	self.tcLamp.TextColor3 = if tele.tc then DRIFT else UNLIT
 	self.nitroFill.Size = UDim2.fromScale(math.clamp(fuel, 0, 1), 1)
 	self.nitroFill.BackgroundColor3 = if boosting then Color3.fromRGB(150, 240, 255) else NITRO
 	self.nitroLabel.Text = if boosting then "NITRO!" else "NITRO"

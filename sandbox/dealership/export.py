@@ -49,6 +49,8 @@ PLAN = [
 REGISTERED = [
     ("Config", ROOT / "src/shared/Config.luau"),
     ("Types", ROOT / "src/shared/Types.luau"),
+    ("CarSpec", ROOT / "src/shared/CarSpec.luau"),
+    ("MeshCar", ROOT / "src/shared/MeshCar.luau"),
     ("CarBody", ROOT / "src/shared/CarBody.luau"),
     ("CarPhysics", ROOT / "src/shared/CarPhysics.luau"),
 ]

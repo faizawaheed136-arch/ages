@@ -1,0 +1,28 @@
+{
+  "name": "DriveBundle",
+  "tree": {
+    "$className": "Folder",
+    "RS": {
+      "$className": "Folder",
+      "Config": { "$path": "src/shared/Config.luau" },
+      "Types": { "$path": "src/shared/Types.luau" },
+      "CarSpec": { "$path": "src/shared/CarSpec.luau" },
+      "MeshCar": { "$path": "src/shared/MeshCar.luau" },
+      "CarBody": { "$path": "src/shared/CarBody.luau" },
+      "CarPhysics": { "$path": "src/shared/CarPhysics.luau" }
+    },
+    "SS": {
+      "$className": "Folder",
+      "Vehicles": { "$path": "src/server/content/Vehicles.luau" },
+      "VehicleChassis": { "$path": "src/server/world/VehicleChassis.luau" },
+      "DriveTest": { "$path": "sandbox/dealership/DriveTest.luau" }
+    },
+    "Client": {
+      "$className": "Folder",
+      "CarWheels": { "$path": "src/client/world/CarWheels.luau" },
+      "CarDriver": { "$path": "src/client/world/CarDriver.luau" },
+      "CarSound": { "$path": "src/client/world/CarSound.luau" },
+      "DriveHUD": { "$path": "src/client/ui/DriveHUD.luau" }
+    }
+  }
+}

@@ -13,28 +13,18 @@
 -- to catch, because there is no wheel there to catch it. The hull rides clear of the kerbs too:
 -- everything below it -- sills, bumpers -- is paint that does not collide (CarBody's HULL_BOTTOM).
 --
--- The suspension is the textbook damped spring, one per wheel:
---
---   F = k*x - c*v
---
--- k is Config.Vehicles.SuspensionStiffness, x is how far the spring is compressed from its rest
--- length, c is SuspensionDamping, and v is how fast that wheel's mount is already moving along the
--- spring's own axis -- without the second term every landing bounces forever. Applied through a
--- VectorForce at an Attachment at each axle, which is the one force primitive that does not care
--- what the part underneath it is built from.
+-- The suspension is a damped spring per wheel, set the way a real car's is -- by the ride frequency
+-- it is meant to have and how hard it is damped, from shared/CarSpec -- with an anti-roll bar per
+-- axle and a bump stop. Each wheel pushes through a VectorForce at an Attachment at its mount, which
+-- is the one force primitive that does not care what the part underneath it is built from, and each
+-- tyre pushes on the road through a second one at the contact patch: drive, brakes and cornering
+-- force all act there, below the centre of mass, so a car squats, dives and rolls because the forces
+-- that do it are there, not because anything animates it. See shared/CarPhysics.
 --
 -- The wheels you see are the springs made visible: client/world/CarWheels puts each wheel where its
 -- ray meets the road, turns the front pair with the steering and spins them with the road, on every
 -- client, every frame. They ride on Welds whose C0 moves, part of the car's own assembly, weighing
 -- nothing.
---
--- Steering is not a turned wheel. It is a yaw rate written straight onto the chassis's own
--- AssemblyAngularVelocity, scaled by how fast the car is already going -- a stationary car does not
--- spin on the spot, because a stationary real car cannot either. That is a simplification and it is
--- a deliberate one: a wheel whose raycast direction turned with the steering would need its own
--- friction model to feel like anything, and the arcade version -- Jailbreak's version, and every
--- casual Roblox driving game's version -- reads as correct to a player at street speed and is a
--- fraction of the code.
 --
 -- **Network ownership is Roblox's own, handed off explicitly.** The moment a player sits in the
 -- VehicleSeat, this file gives them SetNetworkOwner on the chassis, so the physics they are watching
@@ -55,6 +45,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
 local CarPhysics = require(ReplicatedStorage:WaitForChild("CarPhysics"))
+local CarSpec = require(ReplicatedStorage:WaitForChild("CarSpec"))
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
@@ -144,27 +135,44 @@ local function buildSeat(layout: Layout, hull: BasePart): VehicleSeat
 	return seat
 end
 
--- A spring mount at each wheel, and the force it pushes with; and on each wheel's roots what
--- client/world/CarWheels needs to put the wheel where its spring says.
+local function force(parent: Attachment, name: string): VectorForce
+	local f = Instance.new("VectorForce")
+	f.Name = name
+	f.Attachment0 = parent
+	f.RelativeTo = Enum.ActuatorRelativeTo.World
+	f.Force = Vector3.zero
+	f.ApplyAtCenterOfMass = false
+	f.Parent = parent
+	return f
+end
+
+-- Each wheel's spring mount and the force it pushes the body up with; the tyre's contact patch and
+-- the force it drives, brakes and corners with; one more force at the centre of mass for the air and
+-- the hill; and on each wheel's roots what client/world/CarWheels needs to put the wheel where its
+-- spring says.
 local function rig(built: CarBody.Built, welds: { Weld })
 	local layout = built.layout
 	local hull = built.hull
 	for index, wheel in built.wheels do
-		local attachment = Instance.new("Attachment")
-		attachment.Name = "SuspensionMount"
-		attachment.Position = Vector3.new(wheel.rest.X, layout.mountY, wheel.rest.Z)
-		attachment.Parent = hull
+		local mount = Instance.new("Attachment")
+		mount.Name = "SuspensionMount"
+		mount.Position = Vector3.new(wheel.rest.X, layout.mountY, wheel.rest.Z)
+		mount:SetAttribute("WheelIndex", index)
+		mount:SetAttribute("Front", wheel.front)
+		mount:SetAttribute("Side", wheel.side)
+		mount.Parent = hull
+		force(mount, "SuspensionForce")
 
-		local force = Instance.new("VectorForce")
-		force.Name = "SuspensionForce"
-		force.Attachment0 = attachment
-		force.RelativeTo = Enum.ActuatorRelativeTo.World
-		force.Force = Vector3.zero
-		force.Parent = attachment
+		local patch = Instance.new("Attachment")
+		patch.Name = `TyrePatch{index}`
+		patch.Position = Vector3.new(wheel.rest.X, wheel.rest.Y - layout.wheelRadius, wheel.rest.Z)
+		patch.Parent = hull
+		force(patch, "TyreForce")
 
 		local centre = CFrame.new(wheel.rest) * (if wheel.side < 0 then CFrame.Angles(0, math.pi, 0) else CFrame.new())
 		for slot, root in { wheel.spin, wheel.knuckle } do
 			local weld = welds[index * 2 - 2 + slot]
+			root:SetAttribute("WheelIndex", index)
 			root:SetAttribute("WheelRest", wheel.rest)
 			root:SetAttribute("WheelSide", wheel.side)
 			root:SetAttribute("WheelFront", wheel.front)
@@ -172,6 +180,25 @@ local function rig(built: CarBody.Built, welds: { Weld })
 			root:SetAttribute("WheelOffset", centre:Inverse() * weld.C0)
 		end
 	end
+	local body = Instance.new("Attachment")
+	body.Name = "BodyMount"
+	-- Where the weight is, which for a car with its corner weights set to the spec is not the middle.
+	body.Position = Vector3.new(0, 0, (layout :: any).comZ or 0)
+	body.Parent = hull
+	force(body, "BodyForce")
+end
+
+-- The lamps of a car drawn from a model cannot be recoloured -- a texture ignores its colour -- so a
+-- brake lamp is one that glows, and throws a little red on the road behind it.
+local function lampLight(lamp: BasePart, color: Color3, brightness: number, range: number): PointLight
+	local light = Instance.new("PointLight")
+	light.Color = color
+	light.Brightness = brightness
+	light.Range = range
+	light.Shadows = false
+	light.Enabled = false
+	light.Parent = lamp
+	return light
 end
 
 -- Builds a car standing with its hull's centre at `cframe`, painted `paint` if given, wearing
@@ -190,11 +217,23 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	local welds = CarBody.Weld(built)
 	local seat = buildSeat(layout, chassis)
 	rig(built, welds)
+	-- What shared/CarPhysics builds this car's spec from, and what the client reads to draw and hear it.
+	model:SetAttribute("SpecId", kind.id)
 	model:SetAttribute("TopSpeed", kind.topSpeedStuds)
 	model:SetAttribute("Acceleration", kind.acceleration)
 	model:SetAttribute("SteerDegrees", kind.steerDegrees)
 	model:SetAttribute("Wheelbase", math.max(layout.axleRear - layout.axleFront, 1))
 	model:SetAttribute("MountY", layout.mountY)
+	model:SetAttribute("SizeX", kind.size.X)
+	model:SetAttribute("SizeY", kind.size.Y)
+	model:SetAttribute("SizeZ", kind.size.Z)
+	model:SetAttribute("Drive", if kind.drivetrain == "FWD" or kind.drivetrain == "RWD" then kind.drivetrain else "AWD")
+	model:SetAttribute("WheelRadius", layout.wheelRadius)
+	model:SetAttribute("SpringRide", layout.springRide)
+	model:SetAttribute("SpringBump", layout.springBump)
+	model:SetAttribute("SpringDroop", layout.springDroop)
+	local spec = CarSpec.Specs[kind.id]
+	model:SetAttribute("Voice", if spec then spec.voice else "road")
 	CollectionService:AddTag(model, CarPhysics.Tag)
 
 	local beams: { SpotLight } = {}
@@ -211,6 +250,17 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		table.insert(beams, beam)
 	end
 
+	-- Lamps that light up rather than change colour: a modelled car's.
+	local lamps: { [BasePart]: { material: Enum.Material, light: PointLight? } } = {}
+	if built.mesh then
+		for _, lamp in built.brakeLights do
+			lamps[lamp] = { material = lamp.Material, light = lampLight(lamp, Color3.fromRGB(255, 30, 30), 1.4, 7) }
+		end
+		for _, lamp in built.reverseLights do
+			lamps[lamp] = { material = lamp.Material, light = lampLight(lamp, Color3.fromRGB(240, 246, 255), 1.6, 12) }
+		end
+	end
+
 	local running = true
 	local occupantConnection: RBXScriptConnection? = nil
 	local function stop()
@@ -224,7 +274,9 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		end
 	end
 
-	local physics = CarPhysics.Rig(model)
+	-- Made on the first tick the car is in the world: a rig reads where the weight is, which a part that
+	-- has not been given a parent yet cannot say.
+	local physics: CarPhysics.Rig? = nil
 	local braking, reversing = false, false
 
 	-- Deferred, not spawned: `model` has no parent until the caller gives it one, and a loop that
@@ -241,8 +293,14 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 				break
 			end
 			-- Parked, the server owns the car and steps it; driven, the driver's machine does.
-			if seat.Occupant == nil and physics then
-				CarPhysics.Step(physics, elapsed, 0, 0)
+			-- Driven: something else is stepping this car -- a script's test of it, an AI driver.
+			if seat.Occupant == nil and model:GetAttribute("Driven") ~= true then
+				if physics == nil then
+					physics = CarPhysics.Rig(model)
+				end
+				if physics then
+					CarPhysics.Park(physics, elapsed)
+				end
 			end
 
 			-- The lamps, from what the driver's seat and the car's motion replicate here: brake lights
@@ -255,13 +313,25 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 			if nowBraking ~= braking then
 				braking = nowBraking
 				for _, lamp in built.brakeLights do
-					lamp.Color = if braking then CarBody.BrakeColor else CarBody.TailColor
+					local glow = lamps[lamp]
+					if glow then
+						lamp.Material = if braking then Enum.Material.Neon else glow.material
+						if glow.light then
+							glow.light.Enabled = braking
+						end
+					else
+						lamp.Color = if braking then CarBody.BrakeColor else CarBody.TailColor
+					end
 				end
 			end
 			if nowReversing ~= reversing then
 				reversing = nowReversing
 				for _, lamp in built.reverseLights do
-					lamp.Material = if reversing then Enum.Material.Neon else Enum.Material.SmoothPlastic
+					local glow = lamps[lamp]
+					lamp.Material = if reversing then Enum.Material.Neon elseif glow then glow.material else Enum.Material.SmoothPlastic
+					if glow and glow.light then
+						glow.light.Enabled = reversing
+					end
 				end
 			end
 		end

@@ -4,9 +4,10 @@
 
 	The server hands a seated driver network ownership of their car (world/VehicleChassis), so the
 	car's physics resolves here, with no lag between a key and the road. The physics step
-	(shared/CarPhysics) has to run where the physics does, or the springs it writes arrive late and
+	(shared/CarPhysics) has to run where the physics does, or the forces it writes arrive late and
 	buck the car -- so from the moment the local character sits in a car's DriverSeat until it gets
-	up, this steps that car every frame.
+	up, this steps that car every frame, and lists it in CarPhysics.Live for the wheels and the
+	sound to read the telemetry of.
 
 	THE CONTROLS, beyond the seat's own WASD:
 	  * Shift -- nitro, while there is any left (NITRO_SECONDS of it, refilling when not in use);
@@ -16,8 +17,8 @@
 	On a phone the same three are buttons on the HUD (client/ui/DriveHUD). The camera widens with
 	speed and further on nitro; a drift scores for as long as the car stays sideways.
 
-	What a driver is doing is set as attributes on their car -- Boosting, Drifting -- locally, for
-	client/world/CarWheels' flames and smoke to show without waiting on anything.
+	Whether the driver is on nitro is set as an attribute on their car -- Boosting -- locally, for
+	client/world/CarWheels' flames to show without waiting on anything.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -27,7 +28,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
-local CarBody = require(ReplicatedStorage:WaitForChild("CarBody"))
 local CarPhysics = require(ReplicatedStorage:WaitForChild("CarPhysics"))
 
 local CarDriver = {}
@@ -86,10 +86,16 @@ function CarDriver.Start(hudModule: any)
 	end
 
 	local baseFov: number? = nil
+	local driving: Model? = nil
 	local function stop()
 		if stepping then
 			stepping:Disconnect()
 			stepping = nil
+		end
+		if driving then
+			CarPhysics.Live[driving] = nil
+			driving:SetAttribute("Boosting", nil)
+			driving = nil
 		end
 		unbind()
 		hud:Show(false)
@@ -119,6 +125,9 @@ function CarDriver.Start(hudModule: any)
 			end
 			local driverSeat = seat :: VehicleSeat
 			local car = model :: Model
+			local topSpeed = (car:GetAttribute("TopSpeed") :: number?) or 100
+			driving = car
+			CarPhysics.Live[car] = rig
 			local fuel = 1
 			local drift = 0
 			local score = 0
@@ -126,7 +135,7 @@ function CarDriver.Start(hudModule: any)
 			baseFov = if camera then camera.FieldOfView else 70
 			bind()
 			hud:Show(true)
-			stepping = RunService.Stepped:Connect(function(_, dt: number)
+			stepping = RunService.PreSimulation:Connect(function(dt: number)
 				if humanoid.SeatPart ~= driverSeat or rig.hull.Parent == nil then
 					stop()
 					return
@@ -143,7 +152,12 @@ function CarDriver.Start(hudModule: any)
 					fuel = math.min(1, fuel + dt / REFILL_SECONDS)
 				end
 				drift = if driftHeld then math.min(1, drift + dt * DRIFT_IN) else math.max(0, drift - dt * DRIFT_OUT)
-				CarPhysics.Step(rig, dt, driverSeat.Throttle, driverSeat.Steer, boosting, drift)
+				local tele = CarPhysics.Step(rig, dt, {
+					throttle = driverSeat.Throttle,
+					steer = driverSeat.Steer,
+					handbrake = drift,
+					boost = boosting,
+				})
 
 				local hull = rig.hull
 				local velocity = hull.AssemblyLinearVelocity
@@ -156,14 +170,13 @@ function CarDriver.Start(hudModule: any)
 					score = 0
 				end
 				car:SetAttribute("Boosting", boosting)
-				car:SetAttribute("Drifting", drifting)
 
-				local share = math.abs(speed) / rig.topSpeed
+				local share = math.abs(speed) / topSpeed
 				if camera and baseFov then
 					local want = (baseFov :: number) + FOV_SPEED * math.clamp(share, 0, 1) + (if boosting then FOV_BOOST else 0)
 					camera.FieldOfView += (want - camera.FieldOfView) * math.clamp(FOV_RATE * dt, 0, 1)
 				end
-				hud:Set(CarBody.Mph(math.abs(speed)), share, fuel, boosting, if drifting then score else nil)
+				hud:Set(tele, fuel, boosting, if drifting then score else nil)
 			end)
 		end)
 	end

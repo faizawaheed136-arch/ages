@@ -29,7 +29,9 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local CarSpec = require(ReplicatedStorage:WaitForChild("CarSpec"))
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local MeshCar = require(ReplicatedStorage:WaitForChild("MeshCar"))
 local Types = require(ReplicatedStorage:WaitForChild("Types"))
 
 type VehicleKind = Types.VehicleKind
@@ -510,9 +512,23 @@ export type Layout = {
 	wheelWidth: number,
 	-- The driver's seat part's centre, hull-local.
 	seat: Vector3,
+	-- The springs, in studs: how long each is at rest, how far it compresses, how far it drops.
+	springRide: number,
+	springBump: number,
+	springDroop: number,
+	-- Set on a car drawn from a model (shared/MeshCar), which brings its own corner weights.
+	mesh: boolean?,
+	ballastWeights: { number }?,
 }
 
 function CarBody.Layout(kind: VehicleKind): Layout
+	local spec = CarSpec.Specs[kind.id]
+	if kind.model ~= nil and spec ~= nil and MeshCar.Available(kind.model) then
+		local layout = MeshCar.Layout(kind, spec)
+		-- A modelled car is never drawn from a style; this only keeps the field honest.
+		layout.style = STYLES.gt
+		return layout
+	end
 	local style = CarBody.Style(kind)
 	local length, width = kind.size.Z, kind.size.X
 	local midShare = (style.axles[1] + style.axles[2]) / 2
@@ -563,6 +579,9 @@ function CarBody.Layout(kind: VehicleKind): Layout
 		wheelRadius = VEHICLES.WheelRadius,
 		wheelWidth = TYRE_WIDTH,
 		seat = Vector3.new(driverX, style.seatY - 0.5 - hullY, seatZ),
+		springRide = VEHICLES.SuspensionLength - compression,
+		springBump = 0.6,
+		springDroop = 0.5,
 	}
 end
 
@@ -588,6 +607,9 @@ export type Built = {
 	headlights: { BasePart },
 	brakeLights: { BasePart },
 	reverseLights: { BasePart },
+	-- A modelled car's own steering wheel, for the wheels to turn with the driver's hands.
+	steeringWheel: BasePart?,
+	mesh: boolean?,
 }
 
 type Ctx = {
@@ -1254,6 +1276,12 @@ end
 	for a car that is only looked at, Weld for one that drives.
 ]]
 function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?, extras: Look?): Built
+	local spec = CarSpec.Specs[kind.id]
+	if kind.model ~= nil and spec ~= nil and MeshCar.Available(kind.model) then
+		local built = MeshCar.Build(kind, spec, cframe, paintColor or (if extras then extras.paint else nil), if extras then extras.rims else nil, if extras then extras.glow else nil)
+		built.layout.style = STYLES.gt
+		return built :: any
+	end
 	local layout = CarBody.Layout(kind)
 	local model = Instance.new("Model")
 	model.Name = `Vehicle_{kind.id}`
@@ -1389,6 +1417,17 @@ function CarBody.Weld(built: Built): { Weld }
 		if roots[part] then
 			continue
 		end
+		if part == built.steeringWheel then
+			-- Held by a Weld whose C0 client/world/CarWheels turns with the driver's hands.
+			local steer = Instance.new("Weld")
+			steer.Name = "SteerWeld"
+			steer.Part0 = on
+			steer.Part1 = part
+			steer.C0 = on.CFrame:ToObjectSpace(part.CFrame)
+			steer.C1 = CFrame.new()
+			steer.Parent = part
+			continue
+		end
 		local weld = Instance.new("WeldConstraint")
 		weld.Part0 = on
 		weld.Part1 = part
@@ -1417,7 +1456,8 @@ end
 
 -- The headline numbers a showroom prints: from the same fields the chassis drives on.
 function CarBody.Mph(studsPerSecond: number): number
-	return math.floor(studsPerSecond * 0.68 + 0.5)
+	-- A stud is 0.28 m (shared/CarSpec), and a metre a second is 2.237 miles an hour.
+	return math.floor(studsPerSecond / CarSpec.StudsPerMetre * 2.23694 + 0.5)
 end
 
 return CarBody
