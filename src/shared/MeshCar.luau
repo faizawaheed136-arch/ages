@@ -205,6 +205,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		brakeLights = {},
 		reverseLights = {},
 		lamps = {},
+		lenses = {},
 		mesh = true,
 	}
 	local roots: { [string]: BasePart } = {}
@@ -246,7 +247,21 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		else
 			table.insert(built.riders, { piece, hull })
 			if name == "Lens_HeadL" or name == "Lens_HeadR" then
-				table.insert(built.headlights, piece)
+				table.insert(built.lenses, piece)
+				-- The beam starts a little ahead of the lens, which sits inside the shell of the wing.
+				local aim = Instance.new("Part")
+				aim.Name = "HeadlightAim"
+				aim.Size = Vector3.new(0.2, 0.2, 0.2)
+				aim.CFrame = piece.CFrame * CFrame.new(0, 0, -(piece.Size.Z / 2 + 0.2))
+				aim.Transparency = 1
+				aim.Anchored = false
+				aim.CanCollide = false
+				aim.CanQuery = false
+				aim.CanTouch = false
+				aim.Massless = true
+				aim.Parent = model
+				table.insert(built.riders, { aim, hull })
+				table.insert(built.headlights, aim)
 			elseif string.sub(name, 1, #LAMP_PREFIX) == LAMP_PREFIX then
 				table.insert(built.lamps, piece)
 				if name == "Lamp_RearBumper" then

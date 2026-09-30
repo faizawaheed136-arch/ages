@@ -244,17 +244,24 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		beam.Range = HEADLIGHT_RANGE
 		beam.Angle = HEADLIGHT_ANGLE
 		beam.Color = Color3.fromRGB(255, 246, 228)
-		beam.Shadows = true
+		-- A modelled car's lamps sit inside the shell of its wings; a shadow-casting beam is stopped by it.
+		beam.Shadows = not built.mesh
 		beam.Enabled = false
 		beam.Parent = aim
 		table.insert(beams, beam)
+	end
+
+	-- What each headlamp lens is made of off, to go back to it.
+	local lenses: { [BasePart]: Enum.Material } = {}
+	for _, lens in built.lenses or {} do
+		lenses[lens] = lens.Material
 	end
 
 	-- Lamps that light up rather than change colour: a modelled car's.
 	local lamps: { [BasePart]: { material: Enum.Material, light: PointLight? } } = {}
 	if built.mesh then
 		for _, lamp in built.brakeLights do
-			lamps[lamp] = { material = lamp.Material, light = lampLight(lamp, Color3.fromRGB(255, 30, 30), 1.4, 7) }
+			lamps[lamp] = { material = lamp.Material, light = lampLight(lamp, Color3.fromRGB(255, 30, 30), 0.8, 6) }
 		end
 		for _, lamp in built.reverseLights do
 			lamps[lamp] = { material = lamp.Material, light = lampLight(lamp, Color3.fromRGB(240, 246, 255), 1.6, 12) }
@@ -386,6 +393,9 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		end
 		for _, beam in beams do
 			beam.Enabled = occupant ~= nil
+		end
+		for _, lens in built.lenses or {} do
+			lens.Material = if occupant ~= nil then Enum.Material.Neon else lenses[lens]
 		end
 		prompt.Enabled = occupant == nil
 		if occupant ~= nil then

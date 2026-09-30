@@ -609,6 +609,8 @@ export type Built = {
 	reverseLights: { BasePart },
 	-- A modelled car's own steering wheel, for the wheels to turn with the driver's hands.
 	steeringWheel: BasePart?,
+	-- A modelled car's headlamp lenses, which glow when its beams are on.
+	lenses: { BasePart }?,
 	mesh: boolean?,
 }
 

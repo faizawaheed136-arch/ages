@@ -17,6 +17,15 @@
       "VehicleChassis": { "$path": "src/server/world/VehicleChassis.luau" },
       "DriveTest": { "$path": "sandbox/dealership/DriveTest.luau" }
     },
+    "SSS": {
+      "$className": "Folder",
+      "BuildOnPlay": { "$path": "sandbox/dealership/BuildOnPlay.server.luau" },
+      "ShopSandbox": { "$path": "sandbox/dealership/ShopSandbox.server.luau" }
+    },
+    "SPS": {
+      "$className": "Folder",
+      "ShopSandbox": { "$path": "sandbox/dealership/ShopSandbox.client.luau" }
+    },
     "Client": {
       "$className": "Folder",
       "CarWheels": { "$path": "src/client/world/CarWheels.luau" },

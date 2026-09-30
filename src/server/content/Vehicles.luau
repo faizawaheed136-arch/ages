@@ -195,7 +195,7 @@ local SOURCE: { VehicleKind } = {
 		-- Above the Vento: the one car here that is quicker than the price says.
 		price = 95000,
 		size = Vector3.new(7.14, 4.93, 16.85),
-		color = Color3.fromRGB(236, 236, 232),
+		color = Color3.fromRGB(30, 62, 150),
 		accentColor = Color3.fromRGB(16, 16, 18),
 		-- 315 km/h is 87.5 m/s, 312 studs a second at 0.28 m a stud; and 0-100 km/h in 2.9 s, 9.6 m/s^2,
 		-- is 34 studs a second squared -- the numbers the real car puts up, for the shop's bars.
