@@ -49,6 +49,8 @@ local FOV_SPEED, FOV_BOOST, FOV_RATE = 14, 10, 5
 -- How quickly the chase camera swings round behind the car, a second: close enough that a turn is seen
 -- as the world turning, not the car turning in front of it.
 local CHASE_RATE = 9
+-- How far, in degrees, the driver's arms swing with the wheel at full lock.
+local ARM_SWING = 24
 -- A drift scores this many points per stud of sideways slide; below MIN_SLIP studs a second
 -- sideways the car is not drifting, just turning.
 local DRIFT_POINTS = 1.6
@@ -202,7 +204,45 @@ function CarDriver.Start(hudModule: any)
 		end
 	end
 
+	-- The driver's hands follow the wheel. The server has put the arms up on it (world/VehicleChassis
+	-- poseDriver); here, on this machine, the shoulders swing with the steering: a wheel turned right
+	-- takes both hands to the right. Only this player's own screen sees it.
+	local armJoints: { { target: Instance, property: string, base: CFrame } } = {}
+	local function armsFollow(amount: number)
+		if character == nil then
+			return
+		end
+		if #armJoints == 0 then
+			for _, name in { "LeftShoulder", "RightShoulder" } do
+				for _, joint in character:GetDescendants() do
+					if joint.Name ~= name then
+						continue
+					end
+					local target: Instance? = nil
+					local property = "C0"
+					if joint:IsA("Motor6D") then
+						target = joint
+					elseif joint:IsA("AnimationConstraint") and joint.Attachment0 then
+						target = joint.Attachment0
+						property = "CFrame"
+					end
+					-- Posed by the server: it leaves the joint's own frame in CarPoseHome, and the posed one here.
+					if target and typeof(target:GetAttribute("CarPoseHome")) == "CFrame" then
+						table.insert(armJoints, { target = target, property = property, base = (target :: any)[property] })
+					end
+					break
+				end
+			end
+		end
+		for _, arm in armJoints do
+			if arm.target.Parent ~= nil then
+				(arm.target :: any)[arm.property] = arm.base * CFrame.Angles(0, -amount * math.rad(ARM_SWING), 0)
+			end
+		end
+	end
+
 	local function stop()
+		table.clear(armJoints)
 		if stepping then
 			stepping:Disconnect()
 			stepping = nil
@@ -357,6 +397,7 @@ function CarDriver.Start(hudModule: any)
 					score = 0
 				end
 				car:SetAttribute("Boosting", boosting)
+				armsFollow(math.clamp(tele.steer / math.max(math.rad(rig.spec.steerLock), 0.01), -1, 1))
 
 				hud:Set(tele, fuel, boosting, if drifting then score else nil)
 				hud:SetState({ lights = lights, signal = signal, camera = CAMERAS[camMode], manual = manual })
