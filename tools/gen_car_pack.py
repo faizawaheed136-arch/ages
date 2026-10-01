@@ -60,6 +60,22 @@ WHEEL_MESH = {
     "RL": (140006374850353, 87700987764014),
     "RR": (130420570516088, 80706659341289),
 }
+# The GT-R's brake disc and its two callipers, one set per corner: (mesh, native size, offset from the
+# tyre's centre in the GT-R's own metres, sign of the side). A disc and callipers behind the spokes are what
+# make a wheel look like a wheel and not a hubcap.
+BRAKE_NATIVE = {"Disc": (0.0491, 0.40306, 0.40306), "CalliperA": (0.0694, 0.3468, 0.10501), "CalliperB": (0.069, 0.30242, 0.10028)}
+BRAKE_MESH = {
+    "FL": {"Disc": 84540892455488, "CalliperA": 105777465647918, "CalliperB": 82136105306654},
+    "FR": {"Disc": 94925874567584, "CalliperA": 79131389053309, "CalliperB": 112702625889537},
+    "RL": {"Disc": 106788071769315, "CalliperA": 113657721251117, "CalliperB": 122556556823243},
+    "RR": {"Disc": 94744654214933, "CalliperA": 82518713431395, "CalliperB": 130168495554227},
+}
+# Offsets from the tyre's centre, for a LEFT wheel (x outward is negative), in the GT-R's metres; a right
+# wheel is the mirror. The callipers sit ahead of the axle.
+BRAKE_OFFSET = {"Disc": (-0.0367, 0.0, 0.0), "CalliperA": (-0.023, -0.0047, -0.1684), "CalliperB": (-0.0228, 0.0235, -0.1652)}
+TYRE_REF_D, TYRE_REF_W = 0.72827, 0.2326
+DISC_COLOR, CALLIPER_COLOR, RIM_COLOR = (92, 94, 102), (196, 28, 34), (214, 218, 226)
+
 # What the overlay is over the baked wheel: a little bigger all round, so it hides it.
 TYRE_GROW_D, TYRE_GROW_W = 1.03, 1.10
 RIM_OF_TYRE = 0.80
@@ -112,7 +128,8 @@ def skin(name: str, colormap: int, texturepack: int, alpha: str) -> str:
 """
 
 
-def mesh_part(name, mesh, texture, size, native, pos, phi, double, skin_xml="", collide=False) -> str:
+def mesh_part(name, mesh, texture, size, native, pos, phi, double, skin_xml="", collide=False, material=256, reflectance=0.0, color=None, fidelity=1) -> str:
+    colour_xml = "" if color is None else f'<Color3uint8 name="Color3uint8">{(color[0] << 16) | (color[1] << 8) | color[2] | 0xFF000000}</Color3uint8>'
     return f"""    <Item class="MeshPart" referent="{ref()}">
       <Properties>
         <string name="Name">{name}</string>
@@ -128,8 +145,10 @@ def mesh_part(name, mesh, texture, size, native, pos, phi, double, skin_xml="", 
         <bool name="Massless">true</bool>
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">{"true" if double else "false"}</bool>
-        <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <token name="Material">{material}</token>
+        <float name="Reflectance">{reflectance}</float>
+        {colour_xml}
+        <token name="RenderFidelity">{fidelity}</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
 {skin_xml}    </Item>
@@ -237,7 +256,21 @@ def build(car, car_id: str):
         centre = (w["x"], w["y"], w["z"])
         tyre_mesh, rim_mesh = WHEEL_MESH[corner]
         items.append(mesh_part(f"Wheel{corner}_Tyre", tyre_mesh, TYRE_TEXTURE, tyre_size, TYRE_NATIVE, centre, 0.0, False))
-        items.append(mesh_part(f"Wheel{corner}_Rim", rim_mesh, 0, rim_size, RIM_NATIVE, centre, 0.0, False, skin("Tint", RIM_TEXTURE, 0, "0")))
+        # The rim is bare metal -- no texture, so it takes a colour and shines: chrome by default.
+        items.append(mesh_part(f"Wheel{corner}_Rim", rim_mesh, 0, rim_size, RIM_NATIVE, centre, 0.0, False, material=1088, reflectance=0.35, color=RIM_COLOR))
+        # Behind the spokes: a drilled steel disc (which steers with the wheel and does not spin) and two
+        # red callipers on it.
+        side = -1.0 if corner[1] == "L" else 1.0
+        fd, fw = tyre_size[1] / TYRE_REF_D, tyre_size[0] / TYRE_REF_W
+        for role in ("Disc", "CalliperA", "CalliperB"):
+            ox, oy, oz = BRAKE_OFFSET[role]
+            nx, ny, nz = BRAKE_NATIVE[role]
+            part_size = (nx * fw, ny * fd, nz * fd)
+            at = (centre[0] + side * abs(ox) * fw, centre[1] + oy * fd, centre[2] + oz * fd)
+            if role == "Disc":
+                items.append(mesh_part(f"Wheel{corner}_Disc", BRAKE_MESH[corner][role], 0, part_size, BRAKE_NATIVE[role], at, 0.0, False, material=1088, reflectance=0.25, color=DISC_COLOR))
+            else:
+                items.append(mesh_part(f"Wheel{corner}_{role}", BRAKE_MESH[corner][role], 0, part_size, BRAKE_NATIVE[role], at, 0.0, False, material=272, reflectance=0.1, color=CALLIPER_COLOR))
     ride_h = top
     front_z, rear_z = wheels["FL"]["z"], wheels["RL"]["z"]
     wheelbase = rear_z - front_z

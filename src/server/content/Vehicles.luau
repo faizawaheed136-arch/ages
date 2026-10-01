@@ -1066,7 +1066,15 @@ end
 
 local Vehicles = {}
 
-Vehicles.All = SOURCE
+-- What the dealership sells is the modelled cars: the eight the catalog began with are parts-built boxes
+-- beside them, and no longer for sale. They stay in ById, so a life that already owns one still has it.
+local sold: { VehicleKind } = {}
+for _, vehicle in SOURCE do
+	if vehicle.model ~= nil then
+		table.insert(sold, vehicle)
+	end
+end
+Vehicles.All = sold
 Vehicles.ById = byId
 
 -- Nil for an id nothing sells any more. Every caller handles that rather than

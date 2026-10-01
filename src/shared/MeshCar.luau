@@ -279,6 +279,9 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 			end
 			if role == "Rim" and rimColor and tint and tint:IsA("SurfaceAppearance") then
 				tint.Color = rimColor
+			elseif role == "Rim" and rimColor and tint == nil and piece:IsA("MeshPart") then
+				-- A bare-metal rim (the imported cars') is coloured directly.
+				piece.Color = rimColor
 			end
 			if role ~= "Tyre" and role ~= "Disc" then
 				-- Rims turn with the tyre, callipers stay with the disc.

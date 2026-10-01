@@ -52,10 +52,13 @@ local REVERSE_FADE, REVERSE_LIMIT = 9, 12
 -- How much of a front wheel's share of the braking a rear wheel is asked for, at the same load.
 local REAR_BRAKE = 0.9
 -- How fast the wheel goes over to what a key asks and back to centre, in lock a second.
-local STEER_IN, STEER_OUT = 7, 11
+local STEER_IN, STEER_OUT = 10, 14
 -- Direct steering (see the step): the most it will turn the car by, rad/s^2; and the body slip angle, in
 -- radians, it starts to let go at and has let go of altogether, so the car can slide.
-local YAW_ACCEL = 22
+local YAW_ACCEL = 30
+-- The first turn of the wheel asks for this much more than the tyres hold, settling to what they can in YAW_BURST_SECONDS.
+-- A tap on a key is then a real turn, and a held corner is not a scrubbing one.
+local YAW_BURST, YAW_BURST_SECONDS = 0.5, 0.55
 local YAW_SLIDE_FROM, YAW_SLIDE_TO = math.rad(7), math.rad(17)
 -- On the handbrake: how much more turn the wheel asks for, how much more than the tyres' grip it may,
 -- and how much of the assist is kept.
@@ -184,6 +187,7 @@ export type Rig = {
 	peakSlip: number, -- the slip angle a tyre's grip peaks at, radians
 	steerAngle: number,
 	steerIn: number, -- what the driver has on the wheel, -1 to 1, ramped
+	steerHeld: number, -- seconds the wheel has been held over
 	reverse: boolean,
 	gear: number,
 	nextGear: number,
@@ -364,6 +368,7 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 		peakSlip = math.tan(math.pi / (2 * spec.cornerC)) / spec.cornerB,
 		steerAngle = 0,
 		steerIn = 0,
+		steerHeld = 0,
 		reverse = false,
 		gear = 1,
 		nextGear = 1,
@@ -508,6 +513,11 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	local towardCentre = inputWanted == 0 or (math.sign(inputWanted) == math.sign(rig.steerIn) and math.abs(inputWanted) < math.abs(rig.steerIn))
 	local inputRate = if towardCentre then STEER_OUT else STEER_IN
 	rig.steerIn = approach(rig.steerIn, inputWanted, inputRate, inputRate, dt)
+	if math.abs(rig.steerIn) > 0.4 and math.sign(rig.steerIn) == math.sign(inputWanted) then
+		rig.steerHeld += dt
+	elseif math.abs(rig.steerIn) < 0.15 or inputWanted == 0 then
+		rig.steerHeld = 0
+	end
 	local wanted = rig.steerIn * maxSteer
 	if vLong > 2 and spec.steerAssist > 0 then
 		local frontPoint = frame:PointToWorldSpace(Vector3.new(0, 0, rig.frontZ))
@@ -730,6 +740,9 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	local brakeRatio = spec.muBrake / spec.muLong
 	-- A driving game's tyres hold more the faster they go, which is what lets a car corner at speed.
 	local gripUp = 1 + spec.gripGain * math.min(speedMs / 30, 1)
+	-- A driving game's cars turn in hard at the speeds of a town and settle down on a motorway: more sideways
+	-- grip (and so more turn asked of it) the slower the car goes, none extra past 45 m/s.
+	local turnIn = 1 + spec.turnIn * (1 - math.clamp(speedMs / 45, 0, 1))
 	local mw = spec.massKg / 4
 	local anyAbs = false
 	local anySliding = false
@@ -788,7 +801,7 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		if brakeForce < 0 and vx > 1 then
 			limX *= brakeRatio
 		end
-		local limY = muBase * w.grip
+		local limY = muBase * w.grip * turnIn
 
 		-- Lateral: a slip angle, through the magic formula, as a share of the grip there is.
 		local alpha = math.atan2(vy, math.abs(vx) + 1)
@@ -906,11 +919,12 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 				hits += 1
 			end
 		end
-		local aLat = spec.mu * spec.yawGrip * gripUp * (surface / math.max(hits, 1)) * G_REAL
+		local aLat = spec.mu * spec.yawGrip * gripUp * turnIn * (surface / math.max(hits, 1)) * G_REAL
 		-- The handbrake does not stop the assist, it turns it: the wheel and the handbrake together ask for
 		-- more of a turn than the tyres hold, and the loosened rear lets the car have it -- a drift.
 		local hb = rig.handbrake
-		local cap = aLat * (1 + YAW_DRIFT_CAP * hb) / math.max(av, 3)
+		local burst = 1 + YAW_BURST * (1 - hb) * math.max(0, 1 - rig.steerHeld / YAW_BURST_SECONDS)
+		local cap = aLat * burst * (1 + YAW_DRIFT_CAP * hb) / math.max(av, 3)
 		local yawWanted = math.clamp(kinematic * (1 + YAW_DRIFT_KICK * hb), -cap, cap)
 		local yawNow = angVel:Dot(up)
 		local slipAngle = math.atan2(math.abs(vel:Dot(frame.RightVector)), math.max(math.abs(vel:Dot(fwdHull)), 1))

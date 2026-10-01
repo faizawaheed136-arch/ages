@@ -85,6 +85,7 @@ export type Spec = {
 	yawAssist: number, -- 0 to 1: how much of the turn the wheel asks for is simply given to the car
 	yawGain: number, -- per second: how quickly the car's yaw is taken to what the wheel asks for
 	yawGrip: number, -- the sideways g, as a multiple of the tyres', the assist will ask for
+	turnIn: number, -- more sideways grip, as a share of mu, at a crawl, fading to none by 45 m/s
 	nitroG: number, -- the push the nitro adds, in g
 	cornerB: number, -- how quickly grip builds with slip angle
 	cornerC: number,
@@ -193,11 +194,12 @@ local GTR: Spec = {
 	muRear = 1.03,
 	gripGain = 0.5,
 	driftGrip = 0.3,
-	steerSpeed = 38,
+	steerSpeed = 52,
 	steerAssist = 1.15,
 	yawAssist = 1,
-	yawGain = 14,
-	yawGrip = 0.8,
+	yawGain = 20,
+	yawGrip = 0.88,
+	turnIn = 0.3,
 	nitroG = 0.55,
 	cornerB = 14,
 	cornerC = 1.4,
@@ -323,11 +325,12 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		muRear = 1.03,
 		gripGain = 0.4,
 		driftGrip = 0.32,
-		steerSpeed = 30,
+		steerSpeed = 44,
 		steerAssist = 1.15,
 		yawAssist = 1,
-		yawGain = 14,
-		yawGrip = 0.8,
+		yawGain = 20,
+		yawGrip = 0.88,
+		turnIn = 0.3,
 		nitroG = 0.45,
 		cornerB = 12,
 		cornerC = 1.4,

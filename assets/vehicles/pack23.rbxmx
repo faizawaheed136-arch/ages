@@ -1,9 +1,9 @@
 <roblox version="4">
-  <Item class="Model" referent="RBX666">
+  <Item class="Model" referent="RBX842">
     <Properties>
       <string name="Name">pack23</string>
     </Properties>
-    <Item class="MeshPart" referent="RBX638">
+    <Item class="MeshPart" referent="RBX806">
       <Properties>
         <string name="Name">Paint_1</string>
         <Content name="MeshId"><url>rbxassetid://90403190725724</url></Content>
@@ -19,10 +19,12 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX637">
+      <Item class="SurfaceAppearance" referent="RBX805">
         <Properties>
           <string name="Name">Tint</string>
           <Content name="ColorMap"><url>rbxassetid://71411731108195</url></Content>
@@ -31,7 +33,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX640">
+    <Item class="MeshPart" referent="RBX808">
       <Properties>
         <string name="Name">Paint_2</string>
         <Content name="MeshId"><url>rbxassetid://104923413372194</url></Content>
@@ -47,10 +49,12 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX639">
+      <Item class="SurfaceAppearance" referent="RBX807">
         <Properties>
           <string name="Name">Tint</string>
           <Content name="ColorMap"><url>rbxassetid://104425173468448</url></Content>
@@ -59,7 +63,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX642">
+    <Item class="MeshPart" referent="RBX810">
       <Properties>
         <string name="Name">Paint_3</string>
         <Content name="MeshId"><url>rbxassetid://81275431157250</url></Content>
@@ -75,10 +79,12 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX641">
+      <Item class="SurfaceAppearance" referent="RBX809">
         <Properties>
           <string name="Name">Tint</string>
           <Content name="ColorMap"><url>rbxassetid://104425173468448</url></Content>
@@ -87,7 +93,7 @@
         </Properties>
       </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX643">
+    <Item class="MeshPart" referent="RBX811">
       <Properties>
         <string name="Name">WheelFL_Tyre</string>
         <Content name="MeshId"><url>rbxassetid://123758535222665</url></Content>
@@ -103,11 +109,13 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
     </Item>
-    <Item class="MeshPart" referent="RBX645">
+    <Item class="MeshPart" referent="RBX812">
       <Properties>
         <string name="Name">WheelFL_Rim</string>
         <Content name="MeshId"><url>rbxassetid://127721857418428</url></Content>
@@ -122,20 +130,80 @@
         <bool name="Massless">true</bool>
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
-        <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.35</float>
+        <Color3uint8 name="Color3uint8">4292270818</Color3uint8>
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX644">
-        <Properties>
-          <string name="Name">Tint</string>
-          <Content name="ColorMap"><url>rbxassetid://100297853731521</url></Content>
-          <Content name="TexturePack"><null></null></Content>
-          <token name="AlphaMode">0</token>
-        </Properties>
-      </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX646">
+    <Item class="MeshPart" referent="RBX813">
+      <Properties>
+        <string name="Name">WheelFL_Disc</string>
+        <Content name="MeshId"><url>rbxassetid://84540892455488</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.049412</X><Y>0.255383</Y><Z>0.255383</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.049100</X><Y>0.403060</Y><Z>0.403060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.748134</X><Y>0.224000</Y><Z>-1.112160</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.25</float>
+        <Color3uint8 name="Color3uint8">4284243558</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX814">
+      <Properties>
+        <string name="Name">WheelFL_CalliperA</string>
+        <Content name="MeshId"><url>rbxassetid://105777465647918</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069842</X><Y>0.219736</Y><Z>0.066536</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069400</X><Y>0.346800</Y><Z>0.105010</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.734347</X><Y>0.221022</Y><Z>-1.218860</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX815">
+      <Properties>
+        <string name="Name">WheelFL_CalliperB</string>
+        <Content name="MeshId"><url>rbxassetid://82136105306654</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069439</X><Y>0.191617</Y><Z>0.063539</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069000</X><Y>0.302420</Y><Z>0.100280</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.734145</X><Y>0.238890</Y><Z>-1.216832</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX816">
       <Properties>
         <string name="Name">WheelRR_Tyre</string>
         <Content name="MeshId"><url>rbxassetid://130420570516088</url></Content>
@@ -151,11 +219,13 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
     </Item>
-    <Item class="MeshPart" referent="RBX648">
+    <Item class="MeshPart" referent="RBX817">
       <Properties>
         <string name="Name">WheelRR_Rim</string>
         <Content name="MeshId"><url>rbxassetid://80706659341289</url></Content>
@@ -170,20 +240,80 @@
         <bool name="Massless">true</bool>
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
-        <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.35</float>
+        <Color3uint8 name="Color3uint8">4292270818</Color3uint8>
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX647">
-        <Properties>
-          <string name="Name">Tint</string>
-          <Content name="ColorMap"><url>rbxassetid://100297853731521</url></Content>
-          <Content name="TexturePack"><null></null></Content>
-          <token name="AlphaMode">0</token>
-        </Properties>
-      </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX649">
+    <Item class="MeshPart" referent="RBX818">
+      <Properties>
+        <string name="Name">WheelRR_Disc</string>
+        <Content name="MeshId"><url>rbxassetid://94744654214933</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.049412</X><Y>0.255383</Y><Z>0.255383</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.049100</X><Y>0.403060</Y><Z>0.403060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.748134</X><Y>0.224000</Y><Z>1.112440</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.25</float>
+        <Color3uint8 name="Color3uint8">4284243558</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX819">
+      <Properties>
+        <string name="Name">WheelRR_CalliperA</string>
+        <Content name="MeshId"><url>rbxassetid://82518713431395</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069842</X><Y>0.219736</Y><Z>0.066536</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069400</X><Y>0.346800</Y><Z>0.105010</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.734347</X><Y>0.221022</Y><Z>1.005740</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX820">
+      <Properties>
+        <string name="Name">WheelRR_CalliperB</string>
+        <Content name="MeshId"><url>rbxassetid://130168495554227</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069439</X><Y>0.191617</Y><Z>0.063539</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069000</X><Y>0.302420</Y><Z>0.100280</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.734145</X><Y>0.238890</Y><Z>1.007767</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX821">
       <Properties>
         <string name="Name">WheelRL_Tyre</string>
         <Content name="MeshId"><url>rbxassetid://140006374850353</url></Content>
@@ -199,11 +329,13 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
     </Item>
-    <Item class="MeshPart" referent="RBX651">
+    <Item class="MeshPart" referent="RBX822">
       <Properties>
         <string name="Name">WheelRL_Rim</string>
         <Content name="MeshId"><url>rbxassetid://87700987764014</url></Content>
@@ -218,20 +350,80 @@
         <bool name="Massless">true</bool>
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
-        <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.35</float>
+        <Color3uint8 name="Color3uint8">4292270818</Color3uint8>
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX650">
-        <Properties>
-          <string name="Name">Tint</string>
-          <Content name="ColorMap"><url>rbxassetid://100297853731521</url></Content>
-          <Content name="TexturePack"><null></null></Content>
-          <token name="AlphaMode">0</token>
-        </Properties>
-      </Item>
     </Item>
-    <Item class="MeshPart" referent="RBX652">
+    <Item class="MeshPart" referent="RBX823">
+      <Properties>
+        <string name="Name">WheelRL_Disc</string>
+        <Content name="MeshId"><url>rbxassetid://106788071769315</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.049412</X><Y>0.255383</Y><Z>0.255383</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.049100</X><Y>0.403060</Y><Z>0.403060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.748133</X><Y>0.224000</Y><Z>1.112440</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.25</float>
+        <Color3uint8 name="Color3uint8">4284243558</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX824">
+      <Properties>
+        <string name="Name">WheelRL_CalliperA</string>
+        <Content name="MeshId"><url>rbxassetid://113657721251117</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069842</X><Y>0.219736</Y><Z>0.066536</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069400</X><Y>0.346800</Y><Z>0.105010</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.734346</X><Y>0.221022</Y><Z>1.005740</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX825">
+      <Properties>
+        <string name="Name">WheelRL_CalliperB</string>
+        <Content name="MeshId"><url>rbxassetid://122556556823243</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069439</X><Y>0.191617</Y><Z>0.063539</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069000</X><Y>0.302420</Y><Z>0.100280</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.734145</X><Y>0.238890</Y><Z>1.007768</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX826">
       <Properties>
         <string name="Name">WheelFR_Tyre</string>
         <Content name="MeshId"><url>rbxassetid://88276289357347</url></Content>
@@ -247,11 +439,13 @@
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
         <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <float name="Reflectance">0.0</float>
+        
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
     </Item>
-    <Item class="MeshPart" referent="RBX654">
+    <Item class="MeshPart" referent="RBX827">
       <Properties>
         <string name="Name">WheelFR_Rim</string>
         <Content name="MeshId"><url>rbxassetid://121644899848728</url></Content>
@@ -266,20 +460,80 @@
         <bool name="Massless">true</bool>
         <bool name="CastShadow">true</bool>
         <bool name="DoubleSided">false</bool>
-        <token name="Material">256</token>
-        <token name="RenderFidelity">0</token>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.35</float>
+        <Color3uint8 name="Color3uint8">4292270818</Color3uint8>
+        <token name="RenderFidelity">1</token>
         <token name="CollisionFidelity">0</token>
       </Properties>
-      <Item class="SurfaceAppearance" referent="RBX653">
-        <Properties>
-          <string name="Name">Tint</string>
-          <Content name="ColorMap"><url>rbxassetid://100297853731521</url></Content>
-          <Content name="TexturePack"><null></null></Content>
-          <token name="AlphaMode">0</token>
-        </Properties>
-      </Item>
     </Item>
-    <Item class="Part" referent="RBX655">
+    <Item class="MeshPart" referent="RBX828">
+      <Properties>
+        <string name="Name">WheelFR_Disc</string>
+        <Content name="MeshId"><url>rbxassetid://94925874567584</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.049412</X><Y>0.255383</Y><Z>0.255383</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.049100</X><Y>0.403060</Y><Z>0.403060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.748133</X><Y>0.224000</Y><Z>-1.112160</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">1088</token>
+        <float name="Reflectance">0.25</float>
+        <Color3uint8 name="Color3uint8">4284243558</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX829">
+      <Properties>
+        <string name="Name">WheelFR_CalliperA</string>
+        <Content name="MeshId"><url>rbxassetid://79131389053309</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069842</X><Y>0.219736</Y><Z>0.066536</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069400</X><Y>0.346800</Y><Z>0.105010</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.734346</X><Y>0.221022</Y><Z>-1.218860</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="MeshPart" referent="RBX830">
+      <Properties>
+        <string name="Name">WheelFR_CalliperB</string>
+        <Content name="MeshId"><url>rbxassetid://112702625889537</url></Content>
+        <Content name="TextureID"><null></null></Content>
+        <Vector3 name="size"><X>0.069439</X><Y>0.191617</Y><Z>0.063539</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.069000</X><Y>0.302420</Y><Z>0.100280</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.734145</X><Y>0.238890</Y><Z>-1.216833</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <bool name="Anchored">false</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="Massless">true</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="Material">272</token>
+        <float name="Reflectance">0.1</float>
+        <Color3uint8 name="Color3uint8">4291042338</Color3uint8>
+        <token name="RenderFidelity">1</token>
+        <token name="CollisionFidelity">0</token>
+      </Properties>
+    </Item>
+    <Item class="Part" referent="RBX831">
       <Properties>
         <string name="Name">Lens_HeadL</string>
         <Vector3 name="size"><X>0.200000</X><Y>0.090000</Y><Z>0.060000</Z></Vector3>
@@ -295,7 +549,7 @@
         <token name="Material">272</token>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX656">
+    <Item class="Part" referent="RBX832">
       <Properties>
         <string name="Name">Lens_HeadR</string>
         <Vector3 name="size"><X>0.200000</X><Y>0.090000</Y><Z>0.060000</Z></Vector3>
@@ -311,7 +565,7 @@
         <token name="Material">272</token>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX657">
+    <Item class="Part" referent="RBX833">
       <Properties>
         <string name="Name">Lamp_TailL</string>
         <Vector3 name="size"><X>0.260000</X><Y>0.080000</Y><Z>0.040000</Z></Vector3>
@@ -327,7 +581,7 @@
         <token name="Material">272</token>
       </Properties>
     </Item>
-    <Item class="Part" referent="RBX658">
+    <Item class="Part" referent="RBX834">
       <Properties>
         <string name="Name">Lamp_TailR</string>
         <Vector3 name="size"><X>0.260000</X><Y>0.080000</Y><Z>0.040000</Z></Vector3>
@@ -343,12 +597,12 @@
         <token name="Material">272</token>
       </Properties>
     </Item>
-    <Item class="NumberValue" referent="RBX659"><Properties><string name="Name">RoofY</string><double name="Value">1.19280</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX660"><Properties><string name="Name">WheelX</string><double name="Value">-0.32715</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX661"><Properties><string name="Name">WheelZ</string><double name="Value">-0.17783</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX662"><Properties><string name="Name">HoodY</string><double name="Value">0.95424</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX663"><Properties><string name="Name">HoodZ</string><double name="Value">-0.87069</double></Properties></Item>
-    <Item class="Vector3Value" referent="RBX664"><Properties><string name="Name">SigFront</string><Vector3 name="Value"><X>0.572320</X><Y>0.548688</Y><Z>-1.905360</Z></Vector3></Properties></Item>
-    <Item class="Vector3Value" referent="RBX665"><Properties><string name="Name">SigRear</string><Vector3 name="Value"><X>0.539616</X><Y>0.656040</Y><Z>1.837040</Z></Vector3></Properties></Item>
+    <Item class="NumberValue" referent="RBX835"><Properties><string name="Name">RoofY</string><double name="Value">1.19280</double></Properties></Item>
+    <Item class="NumberValue" referent="RBX836"><Properties><string name="Name">WheelX</string><double name="Value">-0.32715</double></Properties></Item>
+    <Item class="NumberValue" referent="RBX837"><Properties><string name="Name">WheelZ</string><double name="Value">-0.17783</double></Properties></Item>
+    <Item class="NumberValue" referent="RBX838"><Properties><string name="Name">HoodY</string><double name="Value">0.95424</double></Properties></Item>
+    <Item class="NumberValue" referent="RBX839"><Properties><string name="Name">HoodZ</string><double name="Value">-0.87069</double></Properties></Item>
+    <Item class="Vector3Value" referent="RBX840"><Properties><string name="Name">SigFront</string><Vector3 name="Value"><X>0.572320</X><Y>0.548688</Y><Z>-1.905360</Z></Vector3></Properties></Item>
+    <Item class="Vector3Value" referent="RBX841"><Properties><string name="Name">SigRear</string><Vector3 name="Value"><X>0.539616</X><Y>0.656040</Y><Z>1.837040</Z></Vector3></Properties></Item>
   </Item>
 </roblox>
