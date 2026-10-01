@@ -9,8 +9,8 @@
         <Content name="MeshId"><url>rbxassetid://88827142938369</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>4.096938</X><Y>0.963782</Y><Z>2.039240</Z></Vector3>
-        <Vector3 name="InitialSize"><X>4.096938</X><Y>0.963782</Y><Z>2.039240</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.003590</X><Y>0.573849</Y><Z>-0.081474</Z><R00>0.0000003</R00><R01>0</R01><R02>1.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.0000000</R20><R21>0</R21><R22>0.0000003</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>14.631920</X><Y>3.442080</Y><Z>7.283000</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.003590</X><Y>0.573849</Y><Z>0.081474</Z><R00>0.0000000</R00><R01>0</R01><R02>-1.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1.0000000</R20><R21>0</R21><R22>0.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -37,8 +37,8 @@
         <Content name="MeshId"><url>rbxassetid://109698364787380</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>3.896164</X><Y>1.003727</Y><Z>1.753640</Z></Vector3>
-        <Vector3 name="InitialSize"><X>3.896164</X><Y>1.003727</Y><Z>1.753640</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.003590</X><Y>0.502583</Y><Z>-0.074802</Z><R00>0.0000003</R00><R01>0</R01><R02>1.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1.0000000</R20><R21>0</R21><R22>0.0000003</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>13.914870</X><Y>3.584740</Y><Z>6.263000</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.003590</X><Y>0.502583</Y><Z>0.074802</Z><R00>0.0000000</R00><R01>0</R01><R02>-1.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>1.0000000</R20><R21>0</R21><R22>0.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -61,12 +61,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX737">
       <Properties>
-        <string name="Name">WheelRL_Tyre</string>
-        <Content name="MeshId"><url>rbxassetid://140006374850353</url></Content>
+        <string name="Name">WheelFR_Tyre</string>
+        <Content name="MeshId"><url>rbxassetid://88276289357347</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.258720</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.258720</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.761880</X><Y>0.238000</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.761880</X><Y>0.238000</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -81,12 +81,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX739">
       <Properties>
-        <string name="Name">WheelRL_Rim</string>
-        <Content name="MeshId"><url>rbxassetid://87700987764014</url></Content>
+        <string name="Name">WheelFR_Rim</string>
+        <Content name="MeshId"><url>rbxassetid://121644899848728</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.261501</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.261501</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.761880</X><Y>0.238000</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.761880</X><Y>0.238000</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -109,12 +109,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX740">
       <Properties>
-        <string name="Name">WheelRR_Tyre</string>
-        <Content name="MeshId"><url>rbxassetid://130420570516088</url></Content>
+        <string name="Name">WheelFL_Tyre</string>
+        <Content name="MeshId"><url>rbxassetid://123758535222665</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.227920</X><Y>0.501816</Y><Z>0.501816</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.227920</X><Y>0.501816</Y><Z>0.501816</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.769720</X><Y>0.296800</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.769720</X><Y>0.296800</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -129,12 +129,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX742">
       <Properties>
-        <string name="Name">WheelRR_Rim</string>
-        <Content name="MeshId"><url>rbxassetid://80706659341289</url></Content>
+        <string name="Name">WheelFL_Rim</string>
+        <Content name="MeshId"><url>rbxassetid://127721857418428</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.230370</X><Y>0.401453</Y><Z>0.401453</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.230370</X><Y>0.401453</Y><Z>0.401453</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.769720</X><Y>0.296800</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.769720</X><Y>0.296800</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -157,12 +157,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX743">
       <Properties>
-        <string name="Name">WheelFR_Tyre</string>
-        <Content name="MeshId"><url>rbxassetid://88276289357347</url></Content>
+        <string name="Name">WheelRL_Tyre</string>
+        <Content name="MeshId"><url>rbxassetid://140006374850353</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.221760</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.221760</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.769720</X><Y>0.291200</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.769720</X><Y>0.291200</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -177,12 +177,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX745">
       <Properties>
-        <string name="Name">WheelFR_Rim</string>
-        <Content name="MeshId"><url>rbxassetid://121644899848728</url></Content>
+        <string name="Name">WheelRL_Rim</string>
+        <Content name="MeshId"><url>rbxassetid://87700987764014</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.224143</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.224143</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.769720</X><Y>0.291200</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>-0.769720</X><Y>0.291200</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -205,12 +205,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX746">
       <Properties>
-        <string name="Name">WheelFL_Tyre</string>
-        <Content name="MeshId"><url>rbxassetid://123758535222665</url></Content>
+        <string name="Name">WheelRR_Tyre</string>
+        <Content name="MeshId"><url>rbxassetid://130420570516088</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.218680</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.218680</X><Y>0.490280</Y><Z>0.490280</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.777280</X><Y>0.291200</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.777280</X><Y>0.291200</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -225,12 +225,12 @@
     </Item>
     <Item class="MeshPart" referent="RBX748">
       <Properties>
-        <string name="Name">WheelFL_Rim</string>
-        <Content name="MeshId"><url>rbxassetid://127721857418428</url></Content>
+        <string name="Name">WheelRR_Rim</string>
+        <Content name="MeshId"><url>rbxassetid://80706659341289</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.221030</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.221030</X><Y>0.392224</Y><Z>0.392224</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.777280</X><Y>0.291200</Y><Z>-1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
+        <CoordinateFrame name="CFrame"><X>0.777280</X><Y>0.291200</Y><Z>1.227800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -255,7 +255,7 @@
       <Properties>
         <string name="Name">Lens_HeadL</string>
         <Vector3 name="size"><X>0.200000</X><Y>0.090000</Y><Z>0.060000</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.628992</X><Y>0.527800</Y><Z>-2.070800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <CoordinateFrame name="CFrame"><X>-0.631008</X><Y>0.527800</Y><Z>-1.905600</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -271,7 +271,7 @@
       <Properties>
         <string name="Name">Lens_HeadR</string>
         <Vector3 name="size"><X>0.200000</X><Y>0.090000</Y><Z>0.060000</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.628992</X><Y>0.527800</Y><Z>-2.070800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <CoordinateFrame name="CFrame"><X>0.631008</X><Y>0.527800</Y><Z>-1.905600</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -287,7 +287,7 @@
       <Properties>
         <string name="Name">Lamp_TailL</string>
         <Vector3 name="size"><X>0.260000</X><Y>0.080000</Y><Z>0.040000</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>-0.628992</X><Y>0.612248</Y><Z>1.925600</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <CoordinateFrame name="CFrame"><X>-0.631008</X><Y>0.612248</Y><Z>2.090800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -303,7 +303,7 @@
       <Properties>
         <string name="Name">Lamp_TailR</string>
         <Vector3 name="size"><X>0.260000</X><Y>0.080000</Y><Z>0.040000</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0.628992</X><Y>0.612248</Y><Z>1.925600</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
+        <CoordinateFrame name="CFrame"><X>0.631008</X><Y>0.612248</Y><Z>2.090800</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -316,11 +316,11 @@
       </Properties>
     </Item>
     <Item class="NumberValue" referent="RBX753"><Properties><string name="Name">RoofY</string><double name="Value">1.05560</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX754"><Properties><string name="Name">WheelX</string><double name="Value">-0.35581</double></Properties></Item>
+    <Item class="NumberValue" referent="RBX754"><Properties><string name="Name">WheelX</string><double name="Value">-0.35227</double></Properties></Item>
     <Item class="NumberValue" referent="RBX755"><Properties><string name="Name">WheelZ</string><double name="Value">-0.19645</double></Properties></Item>
     <Item class="NumberValue" referent="RBX756"><Properties><string name="Name">HoodY</string><double name="Value">0.84448</double></Properties></Item>
-    <Item class="NumberValue" referent="RBX757"><Properties><string name="Name">HoodZ</string><double name="Value">-0.98381</double></Properties></Item>
-    <Item class="Vector3Value" referent="RBX758"><Properties><string name="Name">SigFront</string><Vector3 name="Value"><X>0.611520</X><Y>0.485576</Y><Z>-2.100800</Z></Vector3></Properties></Item>
-    <Item class="Vector3Value" referent="RBX759"><Properties><string name="Name">SigRear</string><Vector3 name="Value"><X>0.576576</X><Y>0.580580</Y><Z>1.935600</Z></Vector3></Properties></Item>
+    <Item class="NumberValue" referent="RBX757"><Properties><string name="Name">HoodZ</string><double name="Value">-0.81861</double></Properties></Item>
+    <Item class="Vector3Value" referent="RBX758"><Properties><string name="Name">SigFront</string><Vector3 name="Value"><X>0.613480</X><Y>0.485576</Y><Z>-1.935600</Z></Vector3></Properties></Item>
+    <Item class="Vector3Value" referent="RBX759"><Properties><string name="Name">SigRear</string><Vector3 name="Value"><X>0.578424</X><Y>0.580580</Y><Z>2.100800</Z></Vector3></Properties></Item>
   </Item>
 </roblox>

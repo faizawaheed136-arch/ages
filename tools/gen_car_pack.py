@@ -112,14 +112,14 @@ def skin(name: str, colormap: int, texturepack: int, alpha: str) -> str:
 """
 
 
-def mesh_part(name, mesh, texture, size, pos, phi, double, skin_xml="", collide=False) -> str:
+def mesh_part(name, mesh, texture, size, native, pos, phi, double, skin_xml="", collide=False) -> str:
     return f"""    <Item class="MeshPart" referent="{ref()}">
       <Properties>
         <string name="Name">{name}</string>
         {content("MeshId", mesh)}
         {content("TextureID", texture)}
         {vec("size", size)}
-        {vec("InitialSize", size)}
+        {vec("InitialSize", native)}
         {cframe(pos, phi)}
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">{"true" if collide else "false"}</bool>
@@ -215,7 +215,7 @@ def build(car, car_id: str):
                 xmin, xmax = min(xmin, bx * M), max(xmax, bx * M)
         top = max(top, (p["bbox"][1][1] - ground) * M)
         sk = skin("Tint", p["colormap"], p["texturepack"], p["alpha"])
-        items.append(mesh_part(f"Paint_{i}", p["mesh"], 0, size, pos, phi, p["doubleSided"], sk))
+        items.append(mesh_part(f"Paint_{i}", p["mesh"], 0, size, p["size"], pos, phi, p["doubleSided"], sk))
     length = zmax - zmin
     track = (abs(wheels["FL"]["x"]) + abs(wheels["FR"]["x"])) / 2
     width = 2 * track + (wheels["FL"]["w"] + wheels["FR"]["w"]) / 2
@@ -226,8 +226,8 @@ def build(car, car_id: str):
         rim_size = (tyre_size[0] * RIM_NATIVE[0] / TYRE_NATIVE[0], tyre_size[1] * RIM_OF_TYRE, tyre_size[1] * RIM_OF_TYRE)
         centre = (w["x"], w["y"], w["z"])
         tyre_mesh, rim_mesh = WHEEL_MESH[corner]
-        items.append(mesh_part(f"Wheel{corner}_Tyre", tyre_mesh, TYRE_TEXTURE, tyre_size, centre, 0.0, False))
-        items.append(mesh_part(f"Wheel{corner}_Rim", rim_mesh, 0, rim_size, centre, 0.0, False, skin("Tint", RIM_TEXTURE, 0, "0")))
+        items.append(mesh_part(f"Wheel{corner}_Tyre", tyre_mesh, TYRE_TEXTURE, tyre_size, TYRE_NATIVE, centre, 0.0, False))
+        items.append(mesh_part(f"Wheel{corner}_Rim", rim_mesh, 0, rim_size, RIM_NATIVE, centre, 0.0, False, skin("Tint", RIM_TEXTURE, 0, "0")))
     ride_h = top
     front_z, rear_z = wheels["FL"]["z"], wheels["RL"]["z"]
     wheelbase = rear_z - front_z
@@ -271,11 +271,11 @@ def build(car, car_id: str):
 
 CLASSES = ["compact", "sedan", "suv", "sports", "super"]
 NAMES = {
-    "compact": ("Kestrel", ["Wren", "Finch", "Lark", "Swift", "Pipit", "Teal", "Linnet"]),
-    "sedan": ("Marlow", ["Verve", "Sterling", "Regent", "Aria", "Corso", "Meridian", "Hallmark", "Cadence", "Dominion", "Ambassador"]),
-    "suv": ("Elmhurst", ["Ridge", "Trailhead", "Overland", "Vantage", "Cairn", "Ranger", "Tundra"]),
-    "sports": ("Castellan", ["Gale", "Ember", "Blaze", "Falcon", "Rival", "Apex", "Strike", "Vector", "Fury", "Surge", "Rapid", "Talon"]),
-    "super": ("Solari", ["Corsa", "Tempesta", "Lampo", "Furia", "Veloce", "Saetta", "Fulmine", "Scatto", "Raggio"]),
+    "compact": (["Kestrel", "Brightwater"], ["Wren", "Finch", "Lark", "Swift", "Pipit", "Teal", "Linnet", "Sparrow", "Plover"]),
+    "sedan": (["Marlow", "Halden"], ["Verve", "Sterling", "Regent", "Aria", "Corso", "Meridian", "Hallmark", "Cadence", "Dominion", "Ambassador", "Lyric", "Sovereign", "Tribune", "Monarch"]),
+    "suv": (["Elmhurst", "Ostrava"], ["Ridge", "Trailhead", "Overland", "Vantage", "Cairn", "Ranger", "Tundra", "Highland", "Escarp"]),
+    "sports": (["Castellan", "Rhodes"], ["Gale", "Ember", "Blaze", "Falcon", "Rival", "Apex", "Strike", "Vector", "Fury", "Surge", "Rapid", "Talon", "Havoc", "Comet", "Riot", "Sprint"]),
+    "super": (["Solari", "Vanta"], ["Corsa", "Tempesta", "Lampo", "Furia", "Veloce", "Saetta", "Fulmine", "Scatto", "Raggio", "Zenith", "Inferno", "Aurora"]),
 }
 PAINTS = [
     (30, 62, 150), (176, 40, 36), (24, 24, 28), (150, 154, 160), (36, 96, 70), (214, 120, 30),
@@ -319,12 +319,16 @@ def main() -> None:
     entries = []
     for rank, m in enumerate(built):
         t = rank / (n - 1)
-        brand, models = NAMES[m["class"]]
+        brands, models = NAMES[m["class"]]
+        brand = brands[used[m["class"]] % len(brands)]
         name = models[used[m["class"]] % len(models)]
         used[m["class"]] += 1
         price = int(round(11000 * (86000 / 11000) ** t / 100.0)) * 100
         kph = 172 + (338 - 172) * t ** 0.92
-        a0 = 3.9 + (8.9 - 3.9) * t
+        # 0-100 km/h from 9.5 s down to 3.2 s along the ladder; the harness measures a car's mean pull to 100 km/h
+        # at about 1.55 times the initial pull its entry asks for.
+        t100 = 9.5 - 6.3 * t
+        a0 = (100 / 3.6 / t100) / 1.55
         top_studs = round(kph / 3.6 * S + rank * 0.25, 1)
         accel = round(a0 * S + rank * 0.05, 2)
         color = PAINTS[rank % len(PAINTS)] if m["paintable"] else (255, 255, 255)

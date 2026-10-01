@@ -706,6 +706,44 @@ function DriveTest.Show(id: string, paintKey: string?, player: Player?): Model
 	return chassis.model
 end
 
+-- Every car in `ids` (all of them if nil), built at rest and anchored on the test road in rows of `cols`,
+-- nose to -Z, 26 studs apart: for looking at. Returns where the first one stands and the spacing.
+function DriveTest.Gallery(ids: { string }?, cols: number?): (Vector3, number)
+	ground()
+	for _, m in workspace:GetChildren() do
+		if m.Name == "DriveTestGallery" then
+			m:Destroy()
+		end
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "DriveTestGallery"
+	folder.Parent = workspace
+	local list: { string } = {}
+	if ids then
+		list = ids
+	else
+		for _, kind in Vehicles.All do
+			table.insert(list, kind.id)
+		end
+	end
+	local perRow = cols or 6
+	local spacing = 26
+	for index, id in list do
+		local kind = Vehicles.Get(id)
+		if kind == nil then
+			continue
+		end
+		local layout = CarBody.Layout(kind)
+		local col, row = (index - 1) % perRow, (index - 1) // perRow
+		local pos = ORIGIN + Vector3.new(col * spacing, layout.hullY + 0.05, row * spacing)
+		local built = CarBody.Build(kind, CFrame.new(pos), if kind.model ~= nil then Color3.fromRGB(215, 218, 224) else nil, nil)
+		CarBody.Anchor(built)
+		built.model.Name = "Gallery_" .. id
+		built.model.Parent = folder
+	end
+	return ORIGIN, spacing
+end
+
 -- Runs each of `list` ({ name, args, skip }) in turn, in the background, and appends a line for each to
 -- workspace's DriveTestLog (a StringValue): the result without its samples. Read it while it runs.
 function DriveTest.Suite(list: { { any } })

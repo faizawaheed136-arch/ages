@@ -483,7 +483,7 @@ local BAY_FIRST_X = 10
 local BAY_COUNT = 8
 local ROW_A = { z0 = 14, z1 = 34 }
 local ROW_B = { z0 = 58, z1 = 78 }
-local LOT_KINDS = { "sedan", "wagon", "pickup", "suv", "coupe" }
+local LOT_KINDS = { "pack23", "pack08", "pack06", "pack37", "pack30" }
 
 local function paint(parent: Instance, name: string, x0: number, x1: number, z0: number, z1: number, color: Color3)
 	return box(parent, name, x0, x1, LOT, LOT + 0.03, z0, z1, color, Enum.Material.SmoothPlastic, {
@@ -1347,8 +1347,8 @@ local function buildInterior(model: Model)
 	local inside = folder(model, "Interior")
 
 	-- The two turntables in the window. The middle of the room is the buy desk.
-	turntable(inside, "TurntableWest", "supercar", 178, 44)
-	turntable(inside, "TurntableEast", "roadster", 228, 44)
+	turntable(inside, "TurntableWest", "pack16", 178, 44)
+	turntable(inside, "TurntableEast", "pack20", 228, 44)
 	buildBuyStation(model)
 
 	-- The screen on the timber wall behind the buy desk: the timber is the warm thing in the room,

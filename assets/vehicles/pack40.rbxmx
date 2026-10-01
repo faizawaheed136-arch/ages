@@ -9,7 +9,7 @@
         <Content name="MeshId"><url>rbxassetid://92049169324110</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>1.957368</X><Y>1.162378</Y><Z>4.409154</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1.957368</X><Y>1.162378</Y><Z>4.409154</Z></Vector3>
+        <Vector3 name="InitialSize"><X>6.990600</X><Y>4.151350</Y><Z>15.746980</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.000946</X><Y>0.677429</Y><Z>0.114293</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -37,7 +37,7 @@
         <Content name="MeshId"><url>rbxassetid://119210205973140</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>1.779680</X><Y>0.854420</Y><Z>4.614686</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1.779680</X><Y>0.854420</Y><Z>4.614686</Z></Vector3>
+        <Vector3 name="InitialSize"><X>6.356000</X><Y>3.051500</Y><Z>16.481020</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.000946</X><Y>0.525034</Y><Z>0.073688</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -65,7 +65,7 @@
         <Content name="MeshId"><url>rbxassetid://80803263195352</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>1.776544</X><Y>1.236024</Y><Z>4.516957</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1.776544</X><Y>1.236024</Y><Z>4.516957</Z></Vector3>
+        <Vector3 name="InitialSize"><X>6.344800</X><Y>4.414370</Y><Z>16.131990</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.000946</X><Y>0.617403</Y><Z>0.065142</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -93,7 +93,7 @@
         <Content name="MeshId"><url>rbxassetid://140006374850353</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.764400</X><Y>0.254800</Y><Z>1.351560</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -113,7 +113,7 @@
         <Content name="MeshId"><url>rbxassetid://87700987764014</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.764400</X><Y>0.254800</Y><Z>1.351560</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -141,7 +141,7 @@
         <Content name="MeshId"><url>rbxassetid://88276289357347</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>0.764400</X><Y>0.254800</Y><Z>-1.351840</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -161,7 +161,7 @@
         <Content name="MeshId"><url>rbxassetid://121644899848728</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>0.764400</X><Y>0.254800</Y><Z>-1.351840</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -189,7 +189,7 @@
         <Content name="MeshId"><url>rbxassetid://130420570516088</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>0.764400</X><Y>0.254800</Y><Z>1.345960</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -209,7 +209,7 @@
         <Content name="MeshId"><url>rbxassetid://80706659341289</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>0.764400</X><Y>0.254800</Y><Z>1.345960</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -237,7 +237,7 @@
         <Content name="MeshId"><url>rbxassetid://123758535222665</url></Content>
         <Content name="TextureID"><url>rbxassetid://118898513318919</url></Content>
         <Vector3 name="size"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.237160</X><Y>0.524888</Y><Z>0.524888</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.232600</X><Y>0.728270</Y><Z>0.728270</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.764400</X><Y>0.254800</Y><Z>-1.346240</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>
@@ -257,7 +257,7 @@
         <Content name="MeshId"><url>rbxassetid://127721857418428</url></Content>
         <Content name="TextureID"><null></null></Content>
         <Vector3 name="size"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
-        <Vector3 name="InitialSize"><X>0.239709</X><Y>0.419910</Y><Z>0.419910</Z></Vector3>
+        <Vector3 name="InitialSize"><X>0.235100</X><Y>0.557060</Y><Z>0.557060</Z></Vector3>
         <CoordinateFrame name="CFrame"><X>-0.764400</X><Y>0.254800</Y><Z>-1.346240</Z><R00>1.0000000</R00><R01>0</R01><R02>0.0000000</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-0.0000000</R20><R21>0</R21><R22>1.0000000</R22></CoordinateFrame>
         <bool name="Anchored">false</bool>
         <bool name="CanCollide">false</bool>

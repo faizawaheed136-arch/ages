@@ -32,15 +32,19 @@ print(`[dealership sandbox] {swapped} props placed, {kept} still block stand-ins
 local MeshCar = require(ReplicatedStorage:WaitForChild("MeshCar"))
 local Vehicles = require(ServerStorage:WaitForChild("Vehicles"))
 local VehicleChassis = require(ServerStorage:WaitForChild("VehicleChassis"))
+local standing: { [string]: number } = {}
 for _, slot in Workspace:GetDescendants() do
 	if slot.Name ~= "CarSlot" or not slot:IsA("BasePart") then
 		continue
 	end
 	local id = slot:GetAttribute("VehicleId")
 	local kind = if typeof(id) == "string" then Vehicles.Get(id) else nil
-	if kind and kind.model and MeshCar.Available(kind.model) and slot.Parent and slot.Parent:FindFirstChild("Display_" .. kind.id) == nil then
+	if kind and kind.model and MeshCar.Available(kind.model) and slot.Parent then
 		local car = VehicleChassis.BuildDisplay(kind, slot.CFrame * CFrame.new(0, -slot.Size.Y / 2, 0))
-		car.Name = `Display_{kind.id}`
+		-- The lot stands one kind in several bays: the first is Display_<id>, the rest numbered.
+		local seen = standing[kind.id] or 0
+		standing[kind.id] = seen + 1
+		car.Name = if seen == 0 then `Display_{kind.id}` else `Display_{kind.id}_{seen + 1}`
 		car.Parent = slot.Parent
 	end
 end
