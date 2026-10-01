@@ -177,6 +177,10 @@ def analyse(car):
         along_x = abs(car["axis"][0]) > 0.7          # the car lies along world X: its axles run along Z
         width = ext[2] if along_x else ext[0]
         diameter = ext[1]
+        if w.get("oblique"):
+            # Parked at an angle: the box round the wheel says nothing of its width. A tyre's is a third
+            # of its diameter.
+            width = 0.34 * diameter
         wheels[corner + side] = {"x": x * M, "y": (wc[1] - ground) * M, "z": z * M, "d": diameter * M, "w": width * M}
     assert sorted(wheels) == ["FL", "FR", "RL", "RR"], f"car {car['k']}: wheels {sorted(wheels)}"
     # One wheel found much bigger or smaller than the other three is a stray piece of the car taken for
@@ -216,8 +220,14 @@ def build(car, car_id: str):
         top = max(top, (p["bbox"][1][1] - ground) * M)
         sk = skin("Tint", p["colormap"], p["texturepack"], p["alpha"])
         items.append(mesh_part(f"Paint_{i}", p["mesh"], 0, size, p["size"], pos, phi, p["doubleSided"], sk))
-    length = zmax - zmin
     track = (abs(wheels["FL"]["x"]) + abs(wheels["FR"]["x"])) / 2
+    if any(w.get("oblique") for w in car["wheels"]):
+        # The box round a car parked at an angle is bigger than the car: its length is read off its
+        # wheelbase instead (a car is about 1.65 wheelbases long, a little more of it behind the axles).
+        wb = wheels["RL"]["z"] - wheels["FL"]["z"]
+        zmin = wheels["FL"]["z"] - 0.30 * wb
+        zmax = wheels["RL"]["z"] + 0.35 * wb
+    length = zmax - zmin
     width = 2 * track + (wheels["FL"]["w"] + wheels["FR"]["w"]) / 2
     zc = (zmax + zmin) / 2
     # the wheels
