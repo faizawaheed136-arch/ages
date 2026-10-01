@@ -46,6 +46,9 @@ local REFILL_SECONDS = 9
 local DRIFT_IN, DRIFT_OUT = 8, 3
 -- The camera: how much wider it opens at top speed, and again on nitro; how quickly it follows.
 local FOV_SPEED, FOV_BOOST, FOV_RATE = 14, 10, 5
+-- How quickly the chase camera swings round behind the car, a second: close enough that a turn is seen
+-- as the world turning, not the car turning in front of it.
+local CHASE_RATE = 9
 -- A drift scores this many points per stud of sideways slide; below MIN_SLIP studs a second
 -- sideways the car is not drifting, just turning.
 local DRIFT_POINTS = 1.6
@@ -302,7 +305,7 @@ function CarDriver.Start(hudModule: any)
 					if flat.Magnitude > 10 * scale and vel:Dot(cf.LookVector) > 0 then
 						target = (target * 0.65 + flat.Unit * 0.35).Unit
 					end
-					chase = (chase:Lerp(target, 1 - math.exp(-5 * dt))).Unit
+					chase = (chase:Lerp(target, 1 - math.exp(-CHASE_RATE * dt))).Unit
 					local pos = cf.Position - chase * (sizeZ * 1.0 + 7 + 4 * share) + Vector3.new(0, sizeY * 0.7 + 3, 0)
 					local aim = cf.Position + Vector3.new(0, sizeY * 0.35, 0) + chase * (sizeZ * 0.35)
 					cam.CFrame = CFrame.lookAt(pos, aim)

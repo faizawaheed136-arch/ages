@@ -51,6 +51,15 @@ local AIR_DENSITY = 1.2
 local REVERSE_FADE, REVERSE_LIMIT = 9, 12
 -- How much of a front wheel's share of the braking a rear wheel is asked for, at the same load.
 local REAR_BRAKE = 0.9
+-- How fast the wheel goes over to what a key asks and back to centre, in lock a second.
+local STEER_IN, STEER_OUT = 7, 11
+-- Direct steering (see the step): the most it will turn the car by, rad/s^2; and the body slip angle, in
+-- radians, it starts to let go at and has let go of altogether, so the car can slide.
+local YAW_ACCEL = 22
+local YAW_SLIDE_FROM, YAW_SLIDE_TO = math.rad(7), math.rad(17)
+-- On the handbrake: how much more turn the wheel asks for, how much more than the tyres' grip it may,
+-- and how much of the assist is kept.
+local YAW_DRIFT_KICK, YAW_DRIFT_CAP, YAW_DRIFT_HOLD = 0.6, 0.4, 0.85
 
 local CarPhysics = {}
 
@@ -174,6 +183,7 @@ export type Rig = {
 	frontZ: number, -- hull-local Z of the front axle
 	peakSlip: number, -- the slip angle a tyre's grip peaks at, radians
 	steerAngle: number,
+	steerIn: number, -- what the driver has on the wheel, -1 to 1, ramped
 	reverse: boolean,
 	gear: number,
 	nextGear: number,
@@ -255,7 +265,8 @@ function CarPhysics.SpecOf(model: Model): Spec
 		number(model, "SteerDegrees", 30),
 		Vector3.new(number(model, "SizeX", 7), number(model, "SizeY", 5), number(model, "SizeZ", 16)),
 		(model:GetAttribute("Drive") :: any) or "RWD",
-		number(model, "WheelRadius", 1.4)
+		number(model, "WheelRadius", 1.4),
+		number(model, "Scale", 1)
 	)
 end
 
@@ -352,6 +363,7 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 		frontZ = frontZ,
 		peakSlip = math.tan(math.pi / (2 * spec.cornerC)) / spec.cornerB,
 		steerAngle = 0,
+		steerIn = 0,
 		reverse = false,
 		gear = 1,
 		nextGear = 1,
@@ -490,7 +502,13 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	-- which is steering assist: turn as hard as you like, the car turns as hard as it can.
 	local lockAngle = math.rad(spec.steerLock)
 	local maxSteer = CarPhysics.MaxSteer(spec, vLong * S)
-	local wanted = math.clamp(controls.steer, -1, 1) * maxSteer
+	-- What the driver has on the wheel. A key is all of the lock at once, a hand is not: it takes a
+	-- seventh of a second to put it on and a tenth to take it off.
+	local inputWanted = math.clamp(controls.steer, -1, 1)
+	local towardCentre = inputWanted == 0 or (math.sign(inputWanted) == math.sign(rig.steerIn) and math.abs(inputWanted) < math.abs(rig.steerIn))
+	local inputRate = if towardCentre then STEER_OUT else STEER_IN
+	rig.steerIn = approach(rig.steerIn, inputWanted, inputRate, inputRate, dt)
+	local wanted = rig.steerIn * maxSteer
 	if vLong > 2 and spec.steerAssist > 0 then
 		local frontPoint = frame:PointToWorldSpace(Vector3.new(0, 0, rig.frontZ))
 		local atFront = vel + angVel:Cross(frontPoint - com)
@@ -499,7 +517,7 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		wanted = math.clamp(wanted, heading - room, heading + room)
 	end
 	local awayFromCentre = math.abs(wanted) > math.abs(rig.steerAngle) and (rig.steerAngle == 0 or math.sign(wanted) == math.sign(rig.steerAngle))
-	local steerRate = math.max(maxSteer, lockAngle * 0.2) / (if awayFromCentre then 0.2 else 0.12)
+	local steerRate = math.max(maxSteer, lockAngle * 0.2) / (if awayFromCentre then 0.07 else 0.05)
 	local steerStep = steerRate * dt
 	if math.abs(wanted - rig.steerAngle) <= steerStep then
 		rig.steerAngle = wanted
@@ -870,6 +888,39 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		body.Force = drag + lift + extra + push
 	end
 
+	-- 7. Direct steering. ----------------------------------------------------------------------
+	-- A tyre turns a car by building a slip angle, which takes a third of a second to be felt; a driving
+	-- game's steering is felt at once. So the yaw rate the wheel asks for -- what a bicycle of this car's
+	-- wheelbase would turn at on the lock the speed allows, and never more than the tyres can hold -- is
+	-- where the car's own yaw is taken, in a tenth of a second or so, and the tyres carry it round on that
+	-- as they always did. It lets go as the car slides, past YAW_SLIDE_TO of body slip or on the handbrake:
+	-- a drift is the driver's to hold and the assist's to leave alone.
+	if spec.yawAssist > 0 and grounded >= 3 then
+		local av = math.abs(vLong)
+		local delta = rig.steerIn * maxSteer
+		local kinematic = -vLong * math.tan(delta) / spec.wheelbase
+		local surface, hits = 0, 0
+		for _, w in wheels do
+			if w.hit then
+				surface += w.surface
+				hits += 1
+			end
+		end
+		local aLat = spec.mu * spec.yawGrip * gripUp * (surface / math.max(hits, 1)) * G_REAL
+		-- The handbrake does not stop the assist, it turns it: the wheel and the handbrake together ask for
+		-- more of a turn than the tyres hold, and the loosened rear lets the car have it -- a drift.
+		local hb = rig.handbrake
+		local cap = aLat * (1 + YAW_DRIFT_CAP * hb) / math.max(av, 3)
+		local yawWanted = math.clamp(kinematic * (1 + YAW_DRIFT_KICK * hb), -cap, cap)
+		local yawNow = angVel:Dot(up)
+		local slipAngle = math.atan2(math.abs(vel:Dot(frame.RightVector)), math.max(math.abs(vel:Dot(fwdHull)), 1))
+		local sliding = 1 - math.clamp((slipAngle - YAW_SLIDE_FROM) / (YAW_SLIDE_TO - YAW_SLIDE_FROM), 0, 1)
+		local assist = spec.yawAssist * (sliding * (1 - hb) + YAW_DRIFT_HOLD * hb)
+		local change = (yawWanted - yawNow) * math.min(1, dt * spec.yawGain) * assist
+		change = math.clamp(change, -YAW_ACCEL * dt, YAW_ACCEL * dt)
+		hull.AssemblyAngularVelocity = angVel + up * change
+	end
+
 	-- Telemetry. -------------------------------------------------------------------------------
 	local accel = (vel - rig.lastVel) / dt
 	rig.lastVel = vel
@@ -881,7 +932,8 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	tele.gear = if rig.reverse then -1 else rig.gear
 	tele.throttle = rig.throttle
 	tele.brake = rig.brake
-	tele.steer = rig.steerAngle
+	-- The wheels are shown where the driver has put them, whatever the tyres were let to do.
+	tele.steer = rig.steerIn * maxSteer
 	tele.abs = anyAbs
 	tele.tc = tcActive
 	tele.sliding = anySliding

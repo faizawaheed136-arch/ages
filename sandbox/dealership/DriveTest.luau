@@ -294,6 +294,104 @@ function DriveTest.Skidpad(id: string, kph: number, steer: number): { [string]: 
 	return out
 end
 
+-- A key's worth of steering at `kph`: the wheel put over at once and held. How soon the car turns (the
+-- time its yaw rate takes to reach half and nine tenths of where it settles), where it settles, whether
+-- it overshoots, and the turning circle that makes.
+function DriveTest.SteerStep(id: string, kph: number, input: number): { [string]: any }
+	local model, rig = DriveTest.Spawn(id)
+	local target = kph / 3.6
+	local samples = drive(rig, 10.5, 0.04, function(t, _, v)
+		local c = hold(target, v)
+		if t > 6 then
+			c.steer = input
+			c.throttle = math.clamp((target - v) * 0.6, -0.3, 1)
+		end
+		return c
+	end, function(_, r)
+		return {
+			yaw = math.round(math.deg(r.hull.AssemblyAngularVelocity:Dot(r.hull.CFrame.UpVector)) * 10) / 10,
+			steerDeg = math.round(math.deg(r.tele.steer) * 10) / 10,
+		}
+	end)
+	local sum, n, peak = 0, 0, 0
+	for _, row in samples do
+		if row.t >= 9.5 then
+			sum += math.abs(row.yaw)
+			n += 1
+		end
+		if row.t >= 6 then
+			peak = math.max(peak, math.abs(row.yaw))
+		end
+	end
+	local final = sum / math.max(n, 1)
+	local t50, t90 = -1, -1
+	for _, row in samples do
+		if row.t >= 6 then
+			if t50 < 0 and math.abs(row.yaw) >= final * 0.5 then
+				t50 = row.t - 6
+			end
+			if t90 < 0 and math.abs(row.yaw) >= final * 0.9 then
+				t90 = row.t - 6
+			end
+		end
+	end
+	local out = {
+		test = "steerstep",
+		id = id,
+		kph = kph,
+		input = input,
+		yawFinal = math.round(final),
+		t50 = math.round(t50 * 100) / 100,
+		t90 = math.round(t90 * 100) / 100,
+		overshootPct = math.round((peak / math.max(final, 0.1) - 1) * 100),
+		radiusMetres = math.round(target / math.max(math.rad(final), 0.01) * 10) / 10,
+		flipped = flipped(rig),
+		samples = samples,
+	}
+	model:Destroy()
+	return out
+end
+
+-- A tap of a steering key at `kph`: `tap` seconds of full lock, then straight. How far the car's heading
+-- has turned a second and a half after (a key is pressed for a moment, and a car should answer a moment).
+function DriveTest.SteerTap(id: string, kph: number, tap: number): { [string]: any }
+	local model, rig = DriveTest.Spawn(id)
+	local target = kph / 3.6
+	local heading0 = 0
+	local function heading(r: Rig): number
+		return math.deg(math.atan2(-r.hull.CFrame.LookVector.X, -r.hull.CFrame.LookVector.Z))
+	end
+	local peakYaw = 0
+	local samples = drive(rig, 7.5 + tap, 0.1, function(t, r, v)
+		local c = hold(target, v)
+		if t > 6 and heading0 == 0 then
+			heading0 = heading(r)
+		end
+		if t > 6 and t < 6 + tap then
+			c.steer = 1
+		end
+		if t > 6 then
+			peakYaw = math.max(peakYaw, math.abs(math.deg(r.hull.AssemblyAngularVelocity:Dot(r.hull.CFrame.UpVector))))
+		end
+		return c
+	end, function(_, r)
+		return { heading = math.round(heading(r) * 10) / 10 }
+	end)
+	local out = {
+		test = "steertap",
+		id = id,
+		kph = kph,
+		tap = tap,
+		-- heading change 1.5 s after the key came up, and the car's peak yaw rate in it.
+		turnedDeg = math.round(math.abs(samples[#samples].heading - heading0) * 10) / 10,
+		peakYaw = math.round(peakYaw),
+		flipped = flipped(rig),
+		samples = samples,
+	}
+	model:Destroy()
+	return out
+end
+
 -- Parked for `seconds`: does it stay where it is, and level.
 function DriveTest.Rest(id: string, seconds: number?): { [string]: any }
 	local model, rig = DriveTest.Spawn(id)
