@@ -129,10 +129,7 @@
         "$path": "src/shared/MeshCar.luau"
       },
       "CarModels": {
-        "$className": "Folder",
-        "GTR": {
-          "$path": "assets/vehicles/GTR.rbxmx"
-        }
+        "$path": "assets/vehicles"
       },
       "ShopClient": {
         "$className": "Folder",

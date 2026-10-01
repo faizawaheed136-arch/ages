@@ -9,7 +9,8 @@
       "CarSpec": { "$path": "src/shared/CarSpec.luau" },
       "MeshCar": { "$path": "src/shared/MeshCar.luau" },
       "CarBody": { "$path": "src/shared/CarBody.luau" },
-      "CarPhysics": { "$path": "src/shared/CarPhysics.luau" }
+      "CarPhysics": { "$path": "src/shared/CarPhysics.luau" },
+      "CarModels": { "$path": "assets/vehicles" }
     },
     "SS": {
       "$className": "Folder",

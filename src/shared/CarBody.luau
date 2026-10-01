@@ -525,7 +525,8 @@ export type Layout = {
 }
 
 function CarBody.Layout(kind: VehicleKind): Layout
-	local spec = CarSpec.Specs[kind.id]
+	-- A modelled car has a spec: the hand-written one, or one derived from its catalog entry.
+	local spec = if kind.model ~= nil then CarSpec.Of(kind) else nil
 	if kind.model ~= nil and spec ~= nil and MeshCar.Available(kind.model) then
 		local layout = MeshCar.Layout(kind, spec)
 		-- A modelled car is never drawn from a style; this only keeps the field honest.
@@ -1283,7 +1284,8 @@ end
 	for a car that is only looked at, Weld for one that drives.
 ]]
 function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?, extras: Look?): Built
-	local spec = CarSpec.Specs[kind.id]
+	-- A modelled car has a spec: the hand-written one, or one derived from its catalog entry.
+	local spec = if kind.model ~= nil then CarSpec.Of(kind) else nil
 	if kind.model ~= nil and spec ~= nil and MeshCar.Available(kind.model) then
 		local built = MeshCar.Build(kind, spec, cframe, paintColor or (if extras then extras.paint else nil), if extras then extras.rims else nil, if extras then extras.glow else nil)
 		built.layout.style = STYLES.gt

@@ -82,6 +82,9 @@ export type Spec = {
 	driftGrip: number, -- the share of its sideways grip a rear tyre keeps with the handbrake held
 	steerSpeed: number, -- the speed, m/s, at which the front wheels have half their lock left
 	steerAssist: number, -- how far past its peak a front tyre is let to slip when the wheel is turned
+	yawAssist: number, -- 0 to 1: how much of the turn the wheel asks for is simply given to the car
+	yawGain: number, -- per second: how quickly the car's yaw is taken to what the wheel asks for
+	yawGrip: number, -- the sideways g, as a multiple of the tyres', the assist will ask for
 	nitroG: number, -- the push the nitro adds, in g
 	cornerB: number, -- how quickly grip builds with slip angle
 	cornerC: number,
@@ -192,6 +195,9 @@ local GTR: Spec = {
 	driftGrip = 0.3,
 	steerSpeed = 38,
 	steerAssist = 1.15,
+	yawAssist = 1,
+	yawGain = 14,
+	yawGrip = 0.8,
 	nitroG = 0.55,
 	cornerB = 14,
 	cornerC = 1.4,
@@ -243,8 +249,11 @@ end
 	reach `top` against the drag a car its shape has, and gears spread so its top gear tops out at
 	`top` -- and the initial pull (`accel`, in studs/s^2) is what the tyres can put down.
 ]]
-function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: number, size: Vector3, drive: string, radiusStuds: number): Spec
-	local S = CarSpec.StudsPerMetre
+function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: number, size: Vector3, drive: string, radiusStuds: number, scale: number?): Spec
+	-- A car drawn larger than life has more studs to the metre; its size, top speed and the rest are in
+	-- those studs.
+	local drawn = scale or 1
+	local S = CarSpec.StudsPerMetreOf(drawn)
 	local volume = size.X * size.Y * size.Z / (S * S * S)
 	local mass = math.clamp(105 * volume, 850, 2600)
 	local vTop = top / S
@@ -277,7 +286,7 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 	local lock = math.clamp(steerDegrees, 22, 38)
 	return {
 		id = id,
-		scale = 1,
+		scale = drawn,
 		massKg = mass,
 		drive = drive,
 		frontBias = 0.4,
@@ -316,6 +325,9 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		driftGrip = 0.32,
 		steerSpeed = 30,
 		steerAssist = 1.15,
+		yawAssist = 1,
+		yawGain = 14,
+		yawGrip = 0.8,
 		nitroG = 0.45,
 		cornerB = 12,
 		cornerC = 1.4,
@@ -334,6 +346,39 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		steerLock = math.clamp(lock + 4, 26, 40),
 		voice = "road",
 	}
+end
+
+local derived: { [string]: Spec } = {}
+
+--[[
+	The spec of a car in content/Vehicles: the hand-written one if it has one (the GT-R), or one made
+	from its numbers. A modelled car that is not hand-written -- the pack of imported cars -- is
+	derived at the scale it is drawn at, on the tyre radius its entry gives.
+]]
+function CarSpec.Of(kind: {
+	id: string,
+	topSpeedStuds: number,
+	acceleration: number,
+	steerDegrees: number,
+	size: Vector3,
+	drivetrain: string?,
+	scale: number?,
+	tyreRadius: number?,
+}): Spec
+	local written = CarSpec.Specs[kind.id]
+	if written then
+		return written
+	end
+	local cached = derived[kind.id]
+	if cached then
+		return cached
+	end
+	local drive = if kind.drivetrain == "FWD" or kind.drivetrain == "RWD" then kind.drivetrain :: string else "AWD"
+	local scale = kind.scale or 1
+	local radiusStuds = (kind.tyreRadius or 0.32) * CarSpec.StudsPerMetreOf(scale)
+	local spec = CarSpec.Derive(kind.id, kind.topSpeedStuds, kind.acceleration, kind.steerDegrees, kind.size, drive, radiusStuds, scale)
+	derived[kind.id] = spec
+	return spec
 end
 
 return CarSpec

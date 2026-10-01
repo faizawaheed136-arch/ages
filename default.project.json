@@ -28,10 +28,7 @@
         "$path": "src/showcase/shared"
       },
       "CarModels": {
-        "$className": "Folder",
-        "GTR": {
-          "$path": "assets/vehicles/GTR.rbxmx"
-        }
+        "$path": "assets/vehicles"
       }
     },
     "Lighting": {

@@ -76,13 +76,29 @@ type Measured = {
 	-- The steering wheel's place, model space, metres: where the driver sits comes from it.
 	wheelX: number,
 	wheelZ: number,
+	-- How high the roof is over the road, metres, if the model says (see the template's attributes).
+	roofY: number?,
 }
+
+-- What a template says about itself, in NumberValues and Vector3Values among its parts (a model file
+-- cannot carry attributes a generator can easily write): the number called `name`, or `fallback`.
+local function attribute(template: Model, name: string, fallback: number): number
+	local child = template:FindFirstChild(name)
+	return if child and child:IsA("NumberValue") then child.Value else fallback
+end
+
+local function vectorOf(template: Model, name: string): Vector3?
+	local child = template:FindFirstChild(name)
+	return if child and child:IsA("Vector3Value") then child.Value else nil
+end
 
 local function measure(name: string, spec: CarSpec.Spec): Measured
 	local template = templateOf(name) :: Model
 	local fl, fr = part(template, "WheelFL_Tyre"), part(template, "WheelFR_Tyre")
 	local rl = part(template, "WheelRL_Tyre")
-	local steering = part(template, "SteeringWheel")
+	-- The GT-R's steering wheel is a part of its own; a car made of a merged mesh has none, and says where
+	-- the wheel would be in WheelX and WheelZ (the numbers inside its model).
+	local steering = template:FindFirstChild("SteeringWheel")
 	local radius = fl.Size.Y / 2
 	local groundY = fl.Position.Y - radius
 	local frontZ, rearZ = fl.Position.Z, rl.Position.Z
@@ -99,8 +115,9 @@ local function measure(name: string, spec: CarSpec.Spec): Measured
 		radius = radius,
 		width = fl.Size.X,
 		halfTrack = (math.abs(fl.Position.X) + math.abs(fr.Position.X)) / 2,
-		wheelX = steering.Position.X,
-		wheelZ = steering.Position.Z,
+		wheelX = if steering and steering:IsA("BasePart") then steering.Position.X else attribute(template, "WheelX", -0.37),
+		wheelZ = if steering and steering:IsA("BasePart") then steering.Position.Z else attribute(template, "WheelZ", 0),
+		roofY = if template:FindFirstChild("RoofY") then attribute(template, "RoofY", 0) else nil,
 	}
 end
 
@@ -163,7 +180,8 @@ function MeshCar.Layout(kind: any, spec: CarSpec.Spec): any
 		seat = Vector3.new(m.wheelX * S * 0.6, SEAT_TOP * k - 0.5 - hullY, (m.wheelZ + 0.6 - m.hullCentre.Z) * S),
 		-- Where a bonnet camera sits, over the middle of the bonnet, and a cockpit camera, at the driver's
 		-- eyes: an avatar's eyes are about three studs over the seat it sits on, whatever the car.
-		camHood = Vector3.new(0, 1.12 * S - hullY, (-1.05 - m.hullCentre.Z) * S),
+		-- HoodY is metres over the road.
+		camHood = Vector3.new(0, attribute(m.template, "HoodY", 1.12) * S - hullY, (attribute(m.template, "HoodZ", -1.05) - m.hullCentre.Z) * S),
 		camCockpit = Vector3.new(m.wheelX * S * 0.6, SEAT_TOP * k + 3.0 - hullY, (m.wheelZ + 0.6 - m.hullCentre.Z) * S - 0.2 * k),
 		springRide = ride,
 		springBump = spec.travelBump * S,
@@ -224,12 +242,13 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 	local wheelRider: { [string]: { BasePart } } = { FL = {}, FR = {}, RL = {}, RR = {} }
 
 	for _, source in m.template:GetChildren() do
-		if not source:IsA("MeshPart") then
+		if not source:IsA("BasePart") then
 			continue
 		end
 		local piece = source:Clone()
 		piece.Size = source.Size * m.S
-		piece.CFrame = cframe * CFrame.new(toHull(m, source.Position))
+		-- A car made of a merged mesh is turned to face -Z as a whole, and its parts keep the turn.
+		piece.CFrame = cframe * CFrame.new(toHull(m, source.Position)) * source.CFrame.Rotation
 		piece.Anchored = false
 		piece.CanCollide = false
 		piece.CanQuery = false
@@ -294,6 +313,26 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 			if name == "SteeringWheel" then
 				built.steeringWheel = piece
 			end
+		end
+	end
+	-- A wheel made of a tyre and a rim alone has no brake disc to steer on: a part with nothing to show,
+	-- at the tyre's centre, stands in as the knuckle that turns with the steering and never spins.
+	for _, corner in { "FL", "FR", "RL", "RR" } do
+		if roots[corner .. "Disc"] == nil then
+			local tyre = roots[corner .. "Tyre"]
+			local knuckle = Instance.new("Part")
+			knuckle.Name = `Wheel{corner}_Knuckle`
+			knuckle.Size = Vector3.new(0.2, 0.2, 0.2)
+			knuckle.CFrame = tyre.CFrame
+			knuckle.Transparency = 1
+			knuckle.Anchored = false
+			knuckle.CanCollide = false
+			knuckle.CanQuery = false
+			knuckle.CanTouch = false
+			knuckle.Massless = true
+			knuckle.CastShadow = false
+			knuckle.Parent = model
+			roots[corner .. "Disc"] = knuckle
 		end
 	end
 	-- The rims and callipers were queued against roots that might not have been cloned yet; fix the
@@ -382,19 +421,20 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		table.insert(built.riders, { bar, on })
 		label(bar, Enum.NormalId.Back, BADGE_NAME, BADGE_DARK, 400)
 	end
-	-- On the boot lid, facing back.
-	roundel(model, cframe * CFrame.new(toHull(m, Vector3.new(0, 0.2486, 2.243))), 0.11 * m.S, hull)
-	-- And in the middle of each wheel, over the cap that had the maker's.
-	for _, corner in { "FL", "FR", "RL", "RR" } do
-		local rim = part(m.template, "Wheel" .. corner .. "_Rim")
-		local side = if string.sub(corner, 2, 2) == "L" then -1 else 1
-		local at = cframe
-			* CFrame.new(toHull(m, Vector3.new(rim.Position.X + side * (rim.Size.X / 2 + 0.004), rim.Position.Y, rim.Position.Z)))
-			* CFrame.Angles(0, side * math.rad(90), 0)
-		roundel(model, at, 0.13 * m.S, roots[corner .. "Tyre"])
-	end
-	-- Across the boot, the trim's name and the model's, where the lettering was.
-	do
+	-- Only the GT-R wears them: it is the one whose model carries a maker's badges to cover.
+	if m.template:FindFirstChild("Badge_Front") then
+		-- On the boot lid, facing back.
+		roundel(model, cframe * CFrame.new(toHull(m, Vector3.new(0, 0.2486, 2.243))), 0.11 * m.S, hull)
+		-- And in the middle of each wheel, over the cap that had the maker's.
+		for _, corner in { "FL", "FR", "RL", "RR" } do
+			local rim = part(m.template, "Wheel" .. corner .. "_Rim")
+			local side = if string.sub(corner, 2, 2) == "L" then -1 else 1
+			local at = cframe
+				* CFrame.new(toHull(m, Vector3.new(rim.Position.X + side * (rim.Size.X / 2 + 0.004), rim.Position.Y, rim.Position.Z)))
+				* CFrame.Angles(0, side * math.rad(90), 0)
+			roundel(model, at, 0.13 * m.S, roots[corner .. "Tyre"])
+		end
+		-- Across the boot, the trim's name and the model's, where the lettering was.
 		-- Set well back of the lid: the surface is further out than the lettering the model had drawn on it.
 		local strip = plate("BadgeText", 0, 0.1346, 2.36, 0.76 * m.S, 0.06 * m.S, Enum.NormalId.Back, nil)
 		strip.Transparency = 0.99
@@ -426,11 +466,15 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		glow.Shadows = false
 		glow.Parent = lamp
 	end
+	-- Where a car's indicators are: the GT-R's, below; another model says in SigFront and SigRear (x is
+	-- half the lamps' spacing).
+	local sigFront = vectorOf(m.template, "SigFront") or Vector3.new(0.705, -0.035, -2.14)
+	local sigRear = vectorOf(m.template, "SigRear") or Vector3.new(0.59, 0.118, 2.228)
 	for _, side in { -1, 1 } do
 		local name = if side < 0 then "left" else "right"
 		-- Across the foot of each headlamp lens and each tail lamp, where the real car's indicators are.
-		signal(name, side * 0.705, -0.035, -2.14, 0.16, 0.018, 0.02)
-		signal(name, side * 0.59, 0.118, 2.228, 0.17, 0.018, 0.02)
+		signal(name, side * sigFront.X, sigFront.Y, sigFront.Z, 0.16, 0.018, 0.02)
+		signal(name, side * sigRear.X, sigRear.Y, sigRear.Z, 0.17, 0.018, 0.02)
 	end
 
 	for index, corner in { "FL", "FR", "RL", "RR" } do
@@ -478,8 +522,10 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 	end
 	local k = spec.scale
 	local hullTopY = layout.hullY + layout.hullSize.Y / 2
-	local roofTop = ROOF_TOP * k
-	collider("CabinHull", Vector3.new(layout.hullSize.X + 0.6 * k, roofTop - hullTopY, 6.6 * k), Vector3.new(0, (roofTop + hullTopY) / 2 - layout.hullY, 0.6 * k))
+	-- The roof, over the road: the model's own height if it says, the GT-R's otherwise.
+	local roofTop = if m.roofY then m.roofY * m.S else ROOF_TOP * k
+	local cabinLength = layout.length * 0.39
+	collider("CabinHull", Vector3.new(layout.hullSize.X + 0.6 * k, roofTop - hullTopY, cabinLength), Vector3.new(0, (roofTop + hullTopY) / 2 - layout.hullY, 0.0356 * layout.length))
 	collider("NoseHull", Vector3.new(layout.width - 0.8 * k, 1.6 * k, 2.0 * k), Vector3.new(0, 1.8 * k - layout.hullY, -(layout.length / 2 - 1.0 * k)))
 	collider("TailHull", Vector3.new(layout.width - 0.8 * k, 1.6 * k, 2.0 * k), Vector3.new(0, 1.8 * k - layout.hullY, layout.length / 2 - 1.0 * k))
 

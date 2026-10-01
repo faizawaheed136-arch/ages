@@ -10,10 +10,7 @@
       "MeshCar": { "$path": "src/shared/MeshCar.luau" },
       "CarBody": { "$path": "src/shared/CarBody.luau" },
       "CarPhysics": { "$path": "src/shared/CarPhysics.luau" },
-      "CarModels": {
-        "$className": "Folder",
-        "GTR": { "$path": "assets/vehicles/GTR.rbxmx" }
-      },
+      "CarModels": { "$path": "assets/vehicles" },
       "ShopClient": {
         "$className": "Folder",
         "CarWheels": { "$path": "src/client/world/CarWheels.luau" },

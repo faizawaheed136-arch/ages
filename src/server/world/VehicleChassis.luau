@@ -332,7 +332,7 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	model:SetAttribute("SpringRide", layout.springRide)
 	model:SetAttribute("SpringBump", layout.springBump)
 	model:SetAttribute("SpringDroop", layout.springDroop)
-	local spec = CarSpec.Specs[kind.id]
+	local spec = if kind.model ~= nil then CarSpec.Of(kind) else CarSpec.Specs[kind.id]
 	model:SetAttribute("Voice", if spec then spec.voice else "road")
 	model:SetAttribute("Scale", if spec then spec.scale else 1)
 	-- Where a bonnet camera and a cockpit camera sit, hull-local.
@@ -373,6 +373,11 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		end
 		for _, lens in built.lenses or {} do
 			lens.Material = if lit then Enum.Material.Neon else lenses[lens]
+			-- A lens that is a stand-in part (a merged-mesh car's lamps are painted into its texture) shows
+			-- only while it is lit.
+			if not lens:IsA("MeshPart") then
+				lens.Transparency = if lit then 0.1 else 1
+			end
 		end
 	end
 	model:GetAttributeChangedSignal("Lights"):Connect(applyLights)
@@ -476,6 +481,9 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 						lamp.Material = if braking then Enum.Material.Neon else glow.material
 						if glow.light then
 							glow.light.Enabled = braking
+						end
+						if not lamp:IsA("MeshPart") then
+							lamp.Transparency = if braking then 0.1 else 1
 						end
 					else
 						lamp.Color = if braking then CarBody.BrakeColor else CarBody.TailColor

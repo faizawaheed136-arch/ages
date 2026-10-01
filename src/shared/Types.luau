@@ -3614,6 +3614,9 @@ export type VehicleKind = {
 	style: string?,
 	-- How many times larger than life a modelled car is drawn (see shared/CarSpec).
 	scale: number?,
+	-- A modelled car's tyre radius, in metres of the real car it is: what CarSpec builds its gearing from
+	-- when there is no hand-written spec for it.
+	tyreRadius: number?,
 	-- "FWD", "RWD", "AWD" or "4WD": printed in the shop, not simulated.
 	drivetrain: string?,
 	seats: number?,
