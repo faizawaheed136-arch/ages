@@ -39,7 +39,6 @@
 -- its roof. See shared/CarPhysics.
 
 local CollectionService = game:GetService("CollectionService")
-local Lighting = game:GetService("Lighting")
 local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -546,7 +545,7 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 				poseDriver(character :: Model, true)
 			end
 			-- At night the lights come on with the driver.
-			local hour = Lighting.ClockTime
+			local hour = game:GetService("Lighting").ClockTime
 			model:SetAttribute("Lights", hour < 6.5 or hour >= 17.5)
 		else
 			model:SetAttribute("Lights", false)
