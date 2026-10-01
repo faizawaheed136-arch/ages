@@ -43,7 +43,8 @@ local CarSpec = require(ReplicatedStorage:WaitForChild("CarSpec"))
 
 type Spec = CarSpec.Spec
 
-local S = CarSpec.StudsPerMetre
+-- Studs to the metre for a car drawn life size; a car drawn larger has its own (spec.scale).
+local S0 = CarSpec.StudsPerMetre
 local G_REAL = CarSpec.Gravity
 local AIR_DENSITY = 1.2
 -- Reverse power fades out from REVERSE_FADE to nothing at REVERSE_LIMIT: 32 to 43 km/h.
@@ -91,8 +92,12 @@ export type Controls = {
 	steer: number,
 	-- 0 to 1: the rear wheels locked.
 	handbrake: number,
-	-- Nitro: extra torque while held.
+	-- Nitro: extra push while held.
 	boost: boolean,
+	-- Manual gearbox: true, or false to give it back to the automatic; nil leaves it as it is.
+	manual: boolean?,
+	-- A gear asked for this step: 1 up, -1 down, 0 none. Only read in manual.
+	shift: number?,
 }
 
 export type Telemetry = {
@@ -112,6 +117,8 @@ export type Telemetry = {
 	shifts: number, -- how many shifts there have been: a count, for a reader that can miss one step
 	boost: number, -- turbo boost, 0 to 1
 	nitro: boolean,
+	manual: boolean,
+	handbrake: number,
 	longG: number,
 	latG: number,
 	-- Per wheel, in wheel order: how hard it is slipping (1 = all of it), how fast it turns, how
@@ -163,6 +170,9 @@ export type Rig = {
 	throttle: number,
 	brake: number,
 	handbrake: number,
+	manual: boolean,
+	frontZ: number, -- hull-local Z of the front axle
+	peakSlip: number, -- the slip angle a tyre's grip peaks at, radians
 	steerAngle: number,
 	reverse: boolean,
 	gear: number,
@@ -261,6 +271,7 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 		return nil
 	end
 	local spec = CarPhysics.SpecOf(model)
+	local S = S0 * spec.scale
 	local radius = number(model, "WheelRadius", spec.tyreRadius * S)
 	local ride = number(model, "SpringRide", 1.2)
 
@@ -337,6 +348,9 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 		throttle = 0,
 		brake = 0,
 		handbrake = 0,
+		manual = false,
+		frontZ = frontZ,
+		peakSlip = math.tan(math.pi / (2 * spec.cornerC)) / spec.cornerB,
 		steerAngle = 0,
 		reverse = false,
 		gear = 1,
@@ -366,6 +380,8 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 			shifts = 0,
 			boost = 0,
 			nitro = false,
+			manual = false,
+			handbrake = 0,
 			longG = 0,
 			latG = 0,
 			slip = table.create(count, 0),
@@ -377,17 +393,16 @@ function CarPhysics.Rig(model: Model, rider: Instance?): Rig?
 end
 
 --[[
-	The most the front wheels turn, in radians, at `speed` (studs/s): all of the lock parked, and
-	less and less as the car goes faster -- to the angle that would, all by itself, pull the most
-	lateral g the tyres have, plus a few degrees for the slip angles a tyre works at. A driver with
-	a keyboard has full lock or none, and a car that could turn sharper than its tyres can grip would
-	spend every corner sliding straight on.
+	The most the front wheels turn, in radians, at `speed` (studs/s): all of the lock parked, and less
+	and less as the car goes faster -- half of it at spec.steerSpeed, a quarter at twice that. What
+	stops a car turning harder than its tyres can hold is not here but in the step: the wheels are
+	only let turn as far as the front tyres' grip peaks (see CarPhysics.Step), so the lock can be as
+	generous as a driving game's and a car still does not spend every corner sliding straight on.
 ]]
 function CarPhysics.MaxSteer(spec: Spec, speed: number): number
-	local v = math.max(math.abs(speed) / S, 2)
-	local limit = spec.mu * G_REAL * 0.9
-	local grip = math.atan(limit * spec.wheelbase / (v * v)) + math.rad(6)
-	return math.clamp(grip, math.rad(4), math.rad(spec.steerLock))
+	local S = S0 * spec.scale
+	local v = math.abs(speed) / S
+	return math.rad(spec.steerLock) / (1 + (v / spec.steerSpeed) ^ 2)
 end
 
 -- The steering a car somebody else is driving shows: the same angle, read off their input.
@@ -398,6 +413,7 @@ end
 -- Engine rpm and gear for a car whose physics this machine does not run: what the gearbox would
 -- choose at `speed` and `throttle`.
 function CarPhysics.EstimateRpm(spec: Spec, speed: number, throttle: number): (number, number)
+	local S = S0 * spec.scale
 	local wheel = math.abs(speed) / S / spec.tyreRadius
 	local upRpm = spec.redlineRpm * 0.55 + (spec.redlineRpm - 300 - spec.redlineRpm * 0.55) * math.clamp(throttle, 0, 1)
 	local gear = 1
@@ -424,6 +440,7 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	-- `dt` is the time the physics covers between this step and the next: RunService.PreSimulation's.
 	dt = math.clamp(dt, 1 / 240, 1 / 12)
 	local spec = rig.spec
+	local S = S0 * spec.scale
 	local wheels = rig.wheels
 	local count = #wheels
 	local G = Workspace.Gravity
@@ -458,16 +475,31 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 			throttleIn = -pedal
 		end
 	end
-	rig.throttle = approach(rig.throttle, throttleIn, 6, 10, dt)
-	rig.brake = approach(rig.brake, brakeIn, 8, 14, dt)
-	rig.handbrake = approach(rig.handbrake, math.clamp(controls.handbrake, 0, 1), 12, 8, dt)
+	-- A foot, not a switch -- but a quick one: the brake is down in a fifth of a second, which is what
+	-- a driving game's brake feels like, and lets go as fast.
+	rig.throttle = approach(rig.throttle, throttleIn, 6, 14, dt)
+	rig.brake = approach(rig.brake, brakeIn, 30, 30, dt)
+	rig.handbrake = approach(rig.handbrake, math.clamp(controls.handbrake, 0, 1), 14, 6, dt)
+	if controls.manual ~= nil then
+		rig.manual = controls.manual
+	end
 
-	-- The front wheels' angle: limited by speed, and only so fast to move.
+	-- The front wheels' angle. A key is full lock or none, so the lock is the speed's (MaxSteer) and
+	-- the wheels move to it fast; and they are only let turn as far as the front tyres can use -- a
+	-- little past where their grip peaks, more with the handbrake held, so a slide can be caught --
+	-- which is steering assist: turn as hard as you like, the car turns as hard as it can.
+	local lockAngle = math.rad(spec.steerLock)
 	local maxSteer = CarPhysics.MaxSteer(spec, vLong * S)
 	local wanted = math.clamp(controls.steer, -1, 1) * maxSteer
-	-- Turning further from straight ahead is slower than coming back to it.
+	if vLong > 2 and spec.steerAssist > 0 then
+		local frontPoint = frame:PointToWorldSpace(Vector3.new(0, 0, rig.frontZ))
+		local atFront = vel + angVel:Cross(frontPoint - com)
+		local heading = math.atan2(atFront:Dot(frame.RightVector) / S, math.max(atFront:Dot(fwdHull) / S, 1))
+		local room = rig.peakSlip * spec.steerAssist * (1 + 1.6 * rig.handbrake)
+		wanted = math.clamp(wanted, heading - room, heading + room)
+	end
 	local awayFromCentre = math.abs(wanted) > math.abs(rig.steerAngle) and (rig.steerAngle == 0 or math.sign(wanted) == math.sign(rig.steerAngle))
-	local steerRate = (if awayFromCentre then 2.8 else 4.5) * maxSteer + 0.3
+	local steerRate = math.max(maxSteer, lockAngle * 0.2) / (if awayFromCentre then 0.2 else 0.12)
 	local steerStep = steerRate * dt
 	if math.abs(wanted - rig.steerAngle) <= steerStep then
 		rig.steerAngle = wanted
@@ -578,6 +610,20 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 			rig.gear = rig.nextGear
 			rig.shiftHold = 0.4
 		end
+	elseif rig.manual then
+		-- Manual: the driver's gear, held until asked for another, to the limiter if need be.
+		local want = controls.shift or 0
+		if want ~= 0 then
+			local target = math.clamp(rig.gear + want, 1, n)
+			-- A downshift that would spin the engine past its limit is refused, as a gearbox's rev
+			-- protection does, not allowed to put the revs through the roof.
+			local over = want < 0 and rpmWheel * gears[target] / gears[rig.gear] > spec.redlineRpm * 1.02
+			if target ~= rig.gear and not over then
+				rig.nextGear = target
+				rig.shiftTimer = spec.shiftTime
+				shifted = true
+			end
+		end
 	else
 		rig.shiftHold = math.max(0, rig.shiftHold - dt)
 		if rig.shiftHold <= 0 and grounded > 0 then
@@ -610,10 +656,8 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		rig.boost += (want - rig.boost) * math.min(1, dt / spec.boostLag)
 		boostMult = spec.boostBase + (1 - spec.boostBase) * rig.boost
 	end
-	local nitro = controls.boost
-	if nitro then
-		boostMult *= 1.4
-	end
+	-- Nitro is a push on the car, not more torque: it is felt at any speed and any gear.
+	local nitro = controls.boost and rig.throttle > 0.2
 	local torque = CarSpec.Torque(spec, rig.rpm) * rig.throttle * boostMult
 	if rig.rpm > spec.limiterRpm and rig.throttle > 0 then
 		torque = 0
@@ -662,7 +706,12 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	for _, w in wheels do
 		ebdSum += w.grip * (if w.front then 1 else REAR_BRAKE)
 	end
-	local handbrakeCap = rig.handbrake * 2.5 * G_REAL * spec.massKg / 4
+	-- The handbrake slows the car and, worth more, lets go of the rear tyres' sideways grip (below);
+	-- it does not lock the wheels and stop the car dead.
+	local handbrakeCap = rig.handbrake * 0.4 * G_REAL * spec.massKg / 2
+	local brakeRatio = spec.muBrake / spec.muLong
+	-- A driving game's tyres hold more the faster they go, which is what lets a car corner at speed.
+	local gripUp = 1 + spec.gripGain * math.min(speedMs / 30, 1)
 	local mw = spec.massKg / 4
 	local anyAbs = false
 	local anySliding = false
@@ -696,9 +745,9 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		local vp = vel + angVel:Cross(w.point - com)
 		local vx = vp:Dot(fw) / S
 		local vy = vp:Dot(rw) / S
-		local muBase = spec.mu * w.surface * (if w.front then spec.muFront else spec.muRear)
+		local drift = if w.front then 1 else 1 - (1 - spec.driftGrip) * rig.handbrake
+		local muBase = spec.mu * w.surface * (if w.front then spec.muFront else spec.muRear) * gripUp * drift
 		local limX = muBase * (spec.muLong / spec.mu) * w.grip
-		local limY = muBase * w.grip
 
 		-- Longitudinal: the drive, the brakes and the rolling resistance.
 		local driveForce = 0
@@ -717,6 +766,11 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 			handbrakeForce = -math.clamp(mw * vx * 0.9 / dt, -handbrakeCap, handbrakeCap)
 		end
 		local rolling = -slowing * spec.rollingResistance * w.grip
+		-- What the tyre can do along its length is more under the brakes than on the throttle.
+		if brakeForce < 0 and vx > 1 then
+			limX *= brakeRatio
+		end
+		local limY = muBase * w.grip
 
 		-- Lateral: a slip angle, through the magic formula, as a share of the grip there is.
 		local alpha = math.atan2(vy, math.abs(vx) + 1)
@@ -762,7 +816,7 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 		-- The wheel itself: it rolls with the road unless the tyre is sliding, and then the drive
 		-- spins it up or the brakes hold it.
 		local roll = vx / (w.radius / S)
-		if sliding or (handbrakeForce ~= 0 and math.abs(handbrakeForce) > limX) then
+		if sliding or (handbrakeForce ~= 0 and math.abs(handbrakeForce) > limX) or (not w.front and rig.handbrake > 0.6) then
 			local inertia = spec.wheelInertia + (if w.driven and engaged then spec.engineInertia * ratio * ratio / math.max(drivenCount, 1) else 0)
 			local driveTorque = driveForce * (w.radius / S)
 			local next = w.omega + (driveTorque - Fx * (w.radius / S)) / inertia * dt
@@ -772,6 +826,10 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 				next = math.max(0, next - drop)
 			else
 				next = math.min(0, next + drop)
+			end
+			-- With the handbrake on the rear wheels are held, and look it.
+			if not w.front and rig.handbrake > 0.6 then
+				next *= math.max(0, 1 - dt * 10)
 			end
 			w.omega = next
 		else
@@ -805,7 +863,11 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 			local along = gravity - n1 * gravity:Dot(n1)
 			extra = -along * mass * (1 - S * G_REAL / G)
 		end
-		body.Force = drag + lift + extra
+		local push = Vector3.zero
+		if nitro and grounded >= 2 then
+			push = unit(fwdHull - up * fwdHull:Dot(up), fwdHull) * (spec.nitroG * G_REAL * spec.massKg * fs)
+		end
+		body.Force = drag + lift + extra + push
 	end
 
 	-- Telemetry. -------------------------------------------------------------------------------
@@ -830,6 +892,8 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	end
 	tele.boost = rig.boost
 	tele.nitro = nitro
+	tele.manual = rig.manual
+	tele.handbrake = rig.handbrake
 	tele.longG = rig.longG
 	tele.latG = rig.latG
 	return tele

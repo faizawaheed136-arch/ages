@@ -1081,7 +1081,7 @@ function DealershipShopUI.RefreshDetail(self: Handle)
 	self.styleButton.BackgroundColor3 = if unsaved then GREEN else PURPLE
 
 	local speed = self.statRows.speed
-	speed.value.Text = `{CarBody.Mph(kind.topSpeedStuds)} MPH`
+	speed.value.Text = `{CarBody.Mph(kind.topSpeedStuds, kind.scale)} MPH`
 	speed.bar.Size = UDim2.fromScale(rating(kind.topSpeedStuds, 60, 140) / 10, 1)
 	local accel = self.statRows.accel
 	local a = rating(kind.acceleration, 8, 20)

@@ -40,6 +40,10 @@ export type HUD = typeof(setmetatable(
 		gear: TextLabel,
 		absLamp: TextLabel,
 		tcLamp: TextLabel,
+		leftLamp: TextLabel,
+		rightLamp: TextLabel,
+		lightsLamp: TextLabel,
+		cameraLabel: TextLabel,
 		nitroFill: Frame,
 		nitroLabel: TextLabel,
 		driftBadge: TextLabel,
@@ -48,6 +52,7 @@ export type HUD = typeof(setmetatable(
 		onBoost: ((boolean) -> ())?,
 		onDrift: ((boolean) -> ())?,
 		onExit: (() -> ())?,
+		onAction: ((string, boolean) -> ())?,
 	},
 	DriveHUD
 ))
@@ -150,11 +155,26 @@ function DriveHUD.new(): HUD
 	local nitroLabel = label(nitro, "Label", UDim2.fromScale(0.5, 0.5), UDim2.fromScale(1, 1), "NITRO", WHITE, 11, Enum.Font.GothamBlack)
 
 	-- The keys.
-	local hint = label(gui, "Keys", UDim2.new(1, -28 - DIAL / 2, 1, -18), UDim2.fromOffset(320, 18), "SHIFT  Nitro     SPACE  Drift     F  Exit", GREY, 13, Enum.Font.GothamBold)
+	local hint = label(gui, "Keys", UDim2.new(1, -28, 1, -18), UDim2.fromOffset(620, 18), "SHIFT Nitro   SPACE Handbrake   E/Q Gears   L Lights   Z/X/C Signals   H Horn   V Camera   F Exit", GREY, 12, Enum.Font.GothamBold)
+	hint.AnchorPoint = Vector2.new(1, 0.5)
+	hint.TextXAlignment = Enum.TextXAlignment.Right
 	hint.TextStrokeTransparency = 0.6
 
+	-- The signals, the lights and the camera, in a row over the dial.
+	local row = Instance.new("Frame")
+	row.Name = "Indicators"
+	row.AnchorPoint = Vector2.new(1, 1)
+	row.Position = UDim2.new(1, -28, 1, -64 - DIAL - 4)
+	row.Size = UDim2.fromOffset(DIAL, 24)
+	row.BackgroundTransparency = 1
+	row.Parent = gui
+	local leftLamp = label(row, "Left", UDim2.fromScale(0.08, 0.5), UDim2.fromOffset(30, 24), "<", UNLIT, 26, Enum.Font.GothamBlack)
+	local lightsLamp = label(row, "Lights", UDim2.fromScale(0.34, 0.5), UDim2.fromOffset(56, 20), "LIGHTS", UNLIT, 12, Enum.Font.GothamBlack)
+	local cameraLabel = label(row, "Camera", UDim2.fromScale(0.68, 0.5), UDim2.fromOffset(70, 20), "CHASE", GREY, 12, Enum.Font.GothamBold)
+	local rightLamp = label(row, "Right", UDim2.fromScale(0.92, 0.5), UDim2.fromOffset(30, 24), ">", UNLIT, 26, Enum.Font.GothamBlack)
+
 	-- The drift score, over the dial.
-	local drift = label(gui, "Drift", UDim2.new(1, -28 - DIAL / 2, 1, -64 - DIAL - 26), UDim2.fromOffset(260, 40), "", DRIFT, 30, Enum.Font.GothamBlack)
+	local drift = label(gui, "Drift", UDim2.new(1, -28 - DIAL / 2, 1, -64 - DIAL - 62), UDim2.fromOffset(260, 40), "", DRIFT, 30, Enum.Font.GothamBlack)
 	drift.TextStrokeTransparency = 0.3
 	drift.TextTransparency = 1
 	drift.TextStrokeColor3 = Color3.fromRGB(40, 20, 0)
@@ -176,6 +196,10 @@ function DriveHUD.new(): HUD
 		gear = gear,
 		absLamp = absLamp,
 		tcLamp = tcLamp,
+		leftLamp = leftLamp,
+		rightLamp = rightLamp,
+		lightsLamp = lightsLamp,
+		cameraLabel = cameraLabel,
 		nitroFill = fill,
 		nitroLabel = nitroLabel,
 		driftBadge = drift,
@@ -184,6 +208,7 @@ function DriveHUD.new(): HUD
 		onBoost = nil,
 		onDrift = nil,
 		onExit = nil,
+		onAction = nil,
 	}, DriveHUD) :: HUD
 
 	local function round(name: string, y: number, text: string, color: Color3): TextButton
@@ -203,8 +228,47 @@ function DriveHUD.new(): HUD
 		return b
 	end
 	local boost = round("Nitro", 0, "NITRO", Color3.fromRGB(30, 110, 200))
-	local slide = round("Drift", 66, "DRIFT", Color3.fromRGB(200, 120, 20))
+	local slide = round("Drift", 66, "BRAKE", Color3.fromRGB(200, 120, 20))
 	local exit = round("Exit", 132, "EXIT", Color3.fromRGB(190, 50, 60))
+	-- A second column, further from the dial.
+	local more = Instance.new("Frame")
+	more.Name = "TouchMore"
+	more.AnchorPoint = Vector2.new(1, 1)
+	more.Position = UDim2.new(1, -28 - DIAL - 16 - 100, 1, -64)
+	more.Size = UDim2.fromOffset(96, DIAL)
+	more.BackgroundTransparency = 1
+	more.Visible = UserInputService.TouchEnabled
+	more.Parent = gui
+	local loose: any = self
+	loose.touchMore = more
+	local function extra(name: string, y: number, text: string, color: Color3, action: string)
+		local b = Instance.new("TextButton")
+		b.Name = name
+		b.AnchorPoint = Vector2.new(0.5, 0)
+		b.Position = UDim2.new(0.5, 0, 0, y)
+		b.Size = UDim2.fromOffset(84, 56)
+		b.BackgroundColor3 = color
+		b.BackgroundTransparency = 0.1
+		b.Text = text
+		b.TextColor3 = WHITE
+		b.TextSize = 14
+		b.Font = Enum.Font.GothamBlack
+		b.Parent = more
+		corner(b, UDim.new(0, 14))
+		b.InputBegan:Connect(function(input: InputObject)
+			if input.UserInputType == Enum.UserInputType.Touch and self.onAction then
+				(self.onAction :: (string, boolean) -> ())(action, true)
+			end
+		end)
+		b.InputEnded:Connect(function(input: InputObject)
+			if input.UserInputType == Enum.UserInputType.Touch and self.onAction then
+				(self.onAction :: (string, boolean) -> ())(action, false)
+			end
+		end)
+	end
+	extra("Camera", 0, "CAM", Color3.fromRGB(70, 80, 110), "camera")
+	extra("Lights", 66, "LIGHTS", Color3.fromRGB(70, 80, 110), "lights")
+	extra("Horn", 132, "HORN", Color3.fromRGB(70, 80, 110), "horn")
 	boost.InputBegan:Connect(function(input: InputObject)
 		if input.UserInputType == Enum.UserInputType.Touch and self.onBoost then
 			(self.onBoost :: (boolean) -> ())(true)
@@ -237,6 +301,26 @@ end
 function DriveHUD.Show(self: HUD, visible: boolean)
 	self.gui.Enabled = visible
 	self.buttons.Visible = UserInputService.TouchEnabled
+	local more = (self :: any).touchMore
+	if more then
+		more.Visible = UserInputService.TouchEnabled
+	end
+end
+
+-- The extra touch buttons (camera, lights, horn): called with the button's name and whether it is down.
+function DriveHUD.OnAction(self: HUD, callback: (string, boolean) -> ())
+	self.onAction = callback
+end
+
+-- The signals, lights, camera and gearbox mode, for the row over the dial.
+function DriveHUD.SetState(self: HUD, state: { lights: boolean, signal: string, camera: string, manual: boolean })
+	local flash = math.floor(os.clock() * 3) % 2 == 0
+	local left = state.signal == "left" or state.signal == "hazard"
+	local right = state.signal == "right" or state.signal == "hazard"
+	self.leftLamp.TextColor3 = if left and flash then DRIFT else UNLIT
+	self.rightLamp.TextColor3 = if right and flash then DRIFT else UNLIT
+	self.lightsLamp.TextColor3 = if state.lights then Color3.fromRGB(120, 230, 255) else UNLIT
+	self.cameraLabel.Text = string.upper(state.camera)
 end
 
 function DriveHUD.OnButtons(self: HUD, onBoost: (boolean) -> (), onDrift: (boolean) -> (), onExit: () -> ())
@@ -273,7 +357,7 @@ function DriveHUD.Set(self: HUD, tele: { [string]: any }, fuel: number, boosting
 		end
 	end
 	local gear = tele.gear
-	self.gear.Text = if gear < 0 then "R" elseif mph < 1 and tele.throttle < 0.05 then "N" else tostring(gear)
+	self.gear.Text = if gear < 0 then "R" elseif mph < 1 and tele.throttle < 0.05 and not tele.manual then "N" else (if tele.manual then "M" else "") .. tostring(gear)
 	self.gear.TextColor3 = if gear < 0 then HIGH else WHITE
 	self.absLamp.TextColor3 = if tele.abs then DRIFT else UNLIT
 	self.tcLamp.TextColor3 = if tele.tc then DRIFT else UNLIT

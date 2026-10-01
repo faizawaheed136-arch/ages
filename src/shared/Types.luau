@@ -3612,6 +3612,8 @@ export type VehicleKind = {
 	-- The body shared/CarBody builds: "sedan", "wagon", "pickup", "suv", "coupe", "gt",
 	-- "roadster" or "supercar".
 	style: string?,
+	-- How many times larger than life a modelled car is drawn (see shared/CarSpec).
+	scale: number?,
 	-- "FWD", "RWD", "AWD" or "4WD": printed in the shop, not simulated.
 	drivetrain: string?,
 	seats: number?,

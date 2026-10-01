@@ -80,6 +80,7 @@ type Car = {
 	radius: number,
 	topSpeed: number,
 	steer: number,
+	scale: number,
 	wheel: { weld: Weld, base: CFrame, axis: Vector3 }?,
 	flames: { ParticleEmitter },
 	boosting: boolean,
@@ -273,6 +274,7 @@ local function read(model: Model): Car?
 		radius = radius,
 		topSpeed = number(model, "TopSpeed", 80),
 		steer = 0,
+		scale = number(model, "Scale", 1),
 		wheel = wheel,
 		flames = flamesFor(model),
 		boosting = false,
@@ -327,8 +329,9 @@ local function animate(car: Car, dt: number)
 			local point = corner.point
 			local vp = velocity + angular:Cross(point - com)
 			local side = math.abs(vp:Dot(right))
-			if side > SLIDE_STUDS and math.abs(speed) > 6 then
-				sliding = math.clamp((side - SLIDE_STUDS) / 12, 0.15, 1)
+			local slide = SLIDE_STUDS * car.scale
+			if side > slide and math.abs(speed) > 6 * car.scale then
+				sliding = math.clamp((side - slide) / (12 * car.scale), 0.15, 1)
 			end
 			if tele then
 				local slip = math.abs(tele.slip[i] or 0)

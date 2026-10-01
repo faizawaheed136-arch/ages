@@ -27,9 +27,6 @@ local CarSpec = require(ReplicatedStorage:WaitForChild("CarSpec"))
 
 local MeshCar = {}
 
-local S = CarSpec.StudsPerMetre
-MeshCar.Scale = S
-
 -- Same hull recipe as CarBody: a box that carries a fifth of the mass, four corner weights the rest,
 -- so the car resists pitching and rolling like a real one.
 local HULL_MASS_PER_STUD2 = 0.7 * 2.8
@@ -66,6 +63,8 @@ end
 type Measured = {
 	template: Model,
 	spec: CarSpec.Spec,
+	-- Studs to the metre for this car, which is drawn spec.scale times life size.
+	S: number,
 	-- Model space, metres.
 	hullCentre: Vector3,
 	groundY: number,
@@ -92,6 +91,7 @@ local function measure(name: string, spec: CarSpec.Spec): Measured
 	return {
 		template = template,
 		spec = spec,
+		S = CarSpec.StudsPerMetreOf(spec.scale),
 		hullCentre = centre,
 		groundY = groundY,
 		frontZ = frontZ,
@@ -106,16 +106,18 @@ end
 
 -- Hull-local studs, from a point in the model's space.
 local function toHull(m: Measured, p: Vector3): Vector3
-	return (p - m.hullCentre) * S
+	return (p - m.hullCentre) * m.S
 end
 
 -- CarBody.Layout's shape, for a modelled car. `kind` supplies the spec through its id.
 function MeshCar.Layout(kind: any, spec: CarSpec.Spec): any
 	local m = measure(kind.model, spec)
+	-- Studs to the metre for this car, and the factor every length below is drawn larger by.
+	local S, k = m.S, spec.scale
 	local sizeZ = kind.size.Z
 	local width = kind.size.X
-	local hullTop = spec.cgHeight * S + 0.4
-	local hullSize = Vector3.new(m.halfTrack * 2 * S - m.width * S - 0.5, hullTop - HULL_BOTTOM, sizeZ - 1.2)
+	local hullTop = spec.cgHeight * S + 0.4 * k
+	local hullSize = Vector3.new(m.halfTrack * 2 * S - m.width * S - 0.5 * k, hullTop - HULL_BOTTOM * k, sizeZ - 1.2 * k)
 	local mass = HULL_MASS_PER_STUD2 * hullSize.X * hullSize.Z
 	local hullY = spec.cgHeight * S
 	local axleFront = (m.frontZ - m.hullCentre.Z) * S
@@ -123,11 +125,11 @@ function MeshCar.Layout(kind: any, spec: CarSpec.Spec): any
 	-- The corner weights are set so the centre of mass falls where the spec says the weight is: a
 	-- front-heavy car has more of it at the front.
 	local comZ = axleFront + (1 - spec.weightFront) * (axleRear - axleFront)
-	local reach = sizeZ / 2 - 1.5
+	local reach = sizeZ / 2 - 1.5 * k
 	local frontShare = math.clamp((1 - comZ / (BALLAST_SHARE * reach)) / 2, 0.2, 0.8)
 	local ballastMass = mass * BALLAST_SHARE / 4
 	local radiusStuds = m.radius * S
-	local ride = spec.travelBump * S + SPRING_MARGIN
+	local ride = spec.travelBump * S + SPRING_MARGIN * k
 	return {
 		style = nil,
 		length = sizeZ,
@@ -143,10 +145,10 @@ function MeshCar.Layout(kind: any, spec: CarSpec.Spec): any
 			ballastMass * 4 * (1 - frontShare) / 2,
 		},
 		ballast = {
-			Vector3.new(-(width / 2 - 0.6), 0, -reach),
-			Vector3.new(width / 2 - 0.6, 0, -reach),
-			Vector3.new(-(width / 2 - 0.6), 0, reach),
-			Vector3.new(width / 2 - 0.6, 0, reach),
+			Vector3.new(-(width / 2 - 0.6 * k), 0, -reach),
+			Vector3.new(width / 2 - 0.6 * k, 0, -reach),
+			Vector3.new(-(width / 2 - 0.6 * k), 0, reach),
+			Vector3.new(width / 2 - 0.6 * k, 0, reach),
 		},
 		hullY = hullY,
 		mountY = radiusStuds + ride - hullY,
@@ -158,7 +160,11 @@ function MeshCar.Layout(kind: any, spec: CarSpec.Spec): any
 		-- The driver sits behind the steering wheel, on its side of the car: the seat's top a thigh's
 		-- height off the road, a little nearer the middle than the wheel so an avatar's shoulders, which
 		-- are wider than a driver's, stay inside the door, and back from the wheel by an arm's reach.
-		seat = Vector3.new(m.wheelX * S * 0.5, SEAT_TOP - 0.5 - hullY, (m.wheelZ + 0.6 - m.hullCentre.Z) * S),
+		seat = Vector3.new(m.wheelX * S * 0.6, SEAT_TOP * k - 0.5 - hullY, (m.wheelZ + 0.6 - m.hullCentre.Z) * S),
+		-- Where a bonnet camera sits, over the middle of the bonnet, and a cockpit camera, at the driver's
+		-- eyes: an avatar's eyes are about three studs over the seat it sits on, whatever the car.
+		camHood = Vector3.new(0, 1.12 * S - hullY, (-1.05 - m.hullCentre.Z) * S),
+		camCockpit = Vector3.new(m.wheelX * S * 0.6, SEAT_TOP * k + 3.0 - hullY, (m.wheelZ + 0.6 - m.hullCentre.Z) * S - 0.2 * k),
 		springRide = ride,
 		springBump = spec.travelBump * S,
 		springDroop = spec.travelDroop * S,
@@ -169,6 +175,11 @@ end
 
 local PAINT_PREFIX = "Paint_"
 local LAMP_PREFIX = "Lamp_"
+-- The parts of the model that carry a real maker's name and logo, left out of the drawing.
+local HIDDEN_BADGES = { Badge_Boot = true, Badge_Rear = true, Badge_Front = true }
+local CHROME = Color3.fromRGB(206, 210, 216)
+local BADGE_DARK = Color3.fromRGB(18, 18, 22)
+local BADGE_NAME = "NISAN"
 
 --[[
 	The car built with its hull's centre at `cframe`, painted `paintColor` (and wearing `rims`' colour
@@ -206,6 +217,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		reverseLights = {},
 		lamps = {},
 		lenses = {},
+		signals = { left = {}, right = {} },
 		mesh = true,
 	}
 	local roots: { [string]: BasePart } = {}
@@ -216,7 +228,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 			continue
 		end
 		local piece = source:Clone()
-		piece.Size = source.Size * S
+		piece.Size = source.Size * m.S
 		piece.CFrame = cframe * CFrame.new(toHull(m, source.Position))
 		piece.Anchored = false
 		piece.CanCollide = false
@@ -225,6 +237,15 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		piece.Massless = true
 		piece.Parent = model
 		local name = source.Name
+		-- The maker's own badges are not drawn: MeshCar.Badges draws this game's, slightly altered.
+		if HIDDEN_BADGES[source.Name] then
+			piece.Transparency = 1
+		end
+		-- Glass is seen through: from the cockpit camera the road has to show past the windscreen.
+		if string.sub(source.Name, 1, 6) == "Glass_" then
+			piece.Transparency = 0.55
+			piece.CastShadow = false
+		end
 		local tint = piece:FindFirstChild("Tint")
 		if string.sub(name, 1, #PAINT_PREFIX) == PAINT_PREFIX and tint and tint:IsA("SurfaceAppearance") then
 			tint.Color = paint
@@ -252,7 +273,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 				local aim = Instance.new("Part")
 				aim.Name = "HeadlightAim"
 				aim.Size = Vector3.new(0.2, 0.2, 0.2)
-				aim.CFrame = piece.CFrame * CFrame.new(0, 0, -(piece.Size.Z / 2 + 0.2))
+				aim.CFrame = piece.CFrame * CFrame.new(0, 0, -(piece.Size.Z / 2 + 0.2 * spec.scale))
 				aim.Transparency = 1
 				aim.Anchored = false
 				aim.CanCollide = false
@@ -284,6 +305,132 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 			local role = string.sub(piece.Name, 9)
 			pair[2] = if role == "Rim" then roots[corner .. "Tyre"] else roots[corner .. "Disc"]
 		end
+	end
+
+	-- This game's badges, where the maker's were: a ring with a bar across it, close to the one a
+	-- grille or a boot lid wears but not the same -- a thicker ring, a bar that breaks it, another spelling.
+	local function plate(name: string, x: number, y: number, z: number, w: number, h: number, facing: Enum.NormalId, on: BasePart?)
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Size = Vector3.new(w, h, 0.01 * m.S) * 1
+		part.CFrame = cframe * CFrame.new(toHull(m, Vector3.new(x, y, z)))
+		part.Transparency = 1
+		part.Anchored = false
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.Massless = true
+		part.CastShadow = false
+		part.Parent = model
+		table.insert(built.riders, { part, on or hull })
+		return part
+	end
+	local function label(part: BasePart, face: Enum.NormalId, text: string, color: Color3, pixels: number)
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = face
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = pixels
+		gui.LightInfluence = 1
+		gui.Parent = part
+		local text_ = Instance.new("TextLabel")
+		text_.Size = UDim2.fromScale(1, 1)
+		text_.BackgroundTransparency = 1
+		text_.Text = text
+		text_.TextColor3 = color
+		text_.TextScaled = true
+		text_.Font = Enum.Font.GothamBold
+		text_.Parent = gui
+	end
+	-- The roundel: a chrome ring, a dark field, a bar across it with the name on it. `axis` turns a
+	-- disc (which a Roblox cylinder lies along X) to face `toward`: 1 for a lid facing back, -1 forward,
+	-- and for a wheel's cap an angle about Z from the wheel's own frame.
+	local function roundel(parent: Model, at: CFrame, diameter: number, on: BasePart)
+		local function disc(name: string, d: number, t: number, color: Color3, material: Enum.Material, depth: number)
+			local part = Instance.new("Part")
+			part.Name = name
+			part.Shape = Enum.PartType.Cylinder
+			part.Size = Vector3.new(t, d, d)
+			part.CFrame = at * CFrame.new(0, 0, depth) * CFrame.Angles(0, math.rad(90), 0)
+			part.Color = color
+			part.Material = material
+			part.Anchored = false
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Massless = true
+			part.CastShadow = false
+			part.Parent = parent
+			table.insert(built.riders, { part, on })
+			return part
+		end
+		disc("BadgeRing", diameter, 0.012 * m.S, CHROME, Enum.Material.Metal, 0)
+		disc("BadgeField", diameter * 0.74, 0.016 * m.S, BADGE_DARK, Enum.Material.SmoothPlastic, 0.003 * m.S)
+		-- The bar, which the ring does not close over: it runs past it on both sides.
+		local bar = Instance.new("Part")
+		bar.Name = "BadgeBar"
+		bar.Size = Vector3.new(diameter * 1.18, diameter * 0.26, 0.012 * m.S)
+		bar.CFrame = at * CFrame.new(0, 0, 0.006 * m.S)
+		bar.Color = CHROME
+		bar.Material = Enum.Material.Metal
+		bar.Anchored = false
+		bar.CanCollide = false
+		bar.CanQuery = false
+		bar.CanTouch = false
+		bar.Massless = true
+		bar.CastShadow = false
+		bar.Parent = parent
+		table.insert(built.riders, { bar, on })
+		label(bar, Enum.NormalId.Back, BADGE_NAME, BADGE_DARK, 400)
+	end
+	-- On the boot lid, facing back.
+	roundel(model, cframe * CFrame.new(toHull(m, Vector3.new(0, 0.2486, 2.243))), 0.11 * m.S, hull)
+	-- And in the middle of each wheel, over the cap that had the maker's.
+	for _, corner in { "FL", "FR", "RL", "RR" } do
+		local rim = part(m.template, "Wheel" .. corner .. "_Rim")
+		local side = if string.sub(corner, 2, 2) == "L" then -1 else 1
+		local at = cframe
+			* CFrame.new(toHull(m, Vector3.new(rim.Position.X + side * (rim.Size.X / 2 + 0.004), rim.Position.Y, rim.Position.Z)))
+			* CFrame.Angles(0, side * math.rad(90), 0)
+		roundel(model, at, 0.13 * m.S, roots[corner .. "Tyre"])
+	end
+	-- Across the boot, the trim's name and the model's, where the lettering was.
+	do
+		-- Set well back of the lid: the surface is further out than the lettering the model had drawn on it.
+		local strip = plate("BadgeText", 0, 0.1346, 2.36, 0.76 * m.S, 0.06 * m.S, Enum.NormalId.Back, nil)
+		strip.Transparency = 0.99
+		label(strip, Enum.NormalId.Back, "NISMA     GT-R", Color3.fromRGB(226, 228, 232), 150)
+	end
+
+	-- The turn signals: a bar of amber at each corner, dark (and so unseen) until one flashes.
+	local function signal(side: string, x: number, y: number, z: number, w: number, h: number, d: number)
+		local lamp = Instance.new("Part")
+		lamp.Name = "Signal"
+		lamp.Size = Vector3.new(w, h, d) * m.S
+		lamp.CFrame = cframe * CFrame.new(toHull(m, Vector3.new(x, y, z)))
+		lamp.Color = Color3.fromRGB(255, 160, 24)
+		lamp.Material = Enum.Material.Neon
+		lamp.Transparency = 1
+		lamp.Anchored = false
+		lamp.CanCollide = false
+		lamp.CanQuery = false
+		lamp.CanTouch = false
+		lamp.Massless = true
+		lamp.CastShadow = false
+		lamp.Parent = model
+		table.insert(built.riders, { lamp, hull })
+		table.insert(built.signals[side], lamp)
+		local glow = Instance.new("PointLight")
+		glow.Color = lamp.Color
+		glow.Brightness = 0.6
+		glow.Range = 5
+		glow.Shadows = false
+		glow.Parent = lamp
+	end
+	for _, side in { -1, 1 } do
+		local name = if side < 0 then "left" else "right"
+		-- Across the foot of each headlamp lens and each tail lamp, where the real car's indicators are.
+		signal(name, side * 0.705, -0.035, -2.14, 0.16, 0.018, 0.02)
+		signal(name, side * 0.59, 0.118, 2.228, 0.17, 0.018, 0.02)
 	end
 
 	for index, corner in { "FL", "FR", "RL", "RR" } do
@@ -329,17 +476,19 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		box.Parent = model
 		table.insert(built.riders, { box, hull })
 	end
+	local k = spec.scale
 	local hullTopY = layout.hullY + layout.hullSize.Y / 2
-	collider("CabinHull", Vector3.new(layout.hullSize.X + 0.6, ROOF_TOP - hullTopY, 6.6), Vector3.new(0, (ROOF_TOP + hullTopY) / 2 - layout.hullY, 0.6))
-	collider("NoseHull", Vector3.new(layout.width - 0.8, 1.6, 2.0), Vector3.new(0, 1.8 - layout.hullY, -(layout.length / 2 - 1.0)))
-	collider("TailHull", Vector3.new(layout.width - 0.8, 1.6, 2.0), Vector3.new(0, 1.8 - layout.hullY, layout.length / 2 - 1.0))
+	local roofTop = ROOF_TOP * k
+	collider("CabinHull", Vector3.new(layout.hullSize.X + 0.6 * k, roofTop - hullTopY, 6.6 * k), Vector3.new(0, (roofTop + hullTopY) / 2 - layout.hullY, 0.6 * k))
+	collider("NoseHull", Vector3.new(layout.width - 0.8 * k, 1.6 * k, 2.0 * k), Vector3.new(0, 1.8 * k - layout.hullY, -(layout.length / 2 - 1.0 * k)))
+	collider("TailHull", Vector3.new(layout.width - 0.8 * k, 1.6 * k, 2.0 * k), Vector3.new(0, 1.8 * k - layout.hullY, layout.length / 2 - 1.0 * k))
 
 	-- Underglow: a bar between the axles under the sills, throwing its colour on the road.
 	if glow then
 		local bar = Instance.new("Part")
 		bar.Name = "Underglow"
-		bar.Size = Vector3.new(layout.width - 2.4, 0.12, (layout.axleRear - layout.axleFront) - 2.5)
-		bar.CFrame = cframe * CFrame.new(0, 0.55 - layout.hullY, (layout.axleFront + layout.axleRear) / 2)
+		bar.Size = Vector3.new(layout.width - 2.4 * k, 0.12 * k, (layout.axleRear - layout.axleFront) - 2.5 * k)
+		bar.CFrame = cframe * CFrame.new(0, 0.55 * k - layout.hullY, (layout.axleFront + layout.axleRear) / 2)
 		bar.Color = glow
 		bar.Material = Enum.Material.Neon
 		bar.CanCollide = false

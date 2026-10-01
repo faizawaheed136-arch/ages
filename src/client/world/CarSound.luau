@@ -50,6 +50,8 @@ local SOUNDS = {
 	shiftUp = "rbxassetid://89099133276738", -- shiftup
 	shiftDown = "rbxassetid://127881754247004", -- downshift
 	start = "rbxassetid://5830481291", -- car engine start
+	horn = "rbxassetid://128046961007479", -- Car horn 14 (a loopable tone)
+	signal = "rbxassetid://103115521237862", -- 2010 Hyundai Santa Fe Turn Signal Low (loopable)
 }
 
 -- How each engine layer is played: its pitch from `speed0` at idle to `speed1` at the redline, and
@@ -79,6 +81,7 @@ type Car = {
 	lastGear: number,
 	vented: number,
 	paused: boolean,
+	scale: number,
 }
 
 local CarSound = {}
@@ -146,6 +149,7 @@ local function build(model: Model): Car?
 		lastGear = 1,
 		vented = 0,
 		paused = false,
+		scale = (model:GetAttribute("Scale") :: number?) or 1,
 	}
 	for _, name in { "idle", "mid", "high" } do
 		car.loops[name] = loop(hull, "Engine_" .. name, SOUNDS[name])
@@ -153,6 +157,8 @@ local function build(model: Model): Car?
 	car.loops.rush = loop(hull, "Rush", SOUNDS.rush)
 	car.loops.wind = loop(hull, "Wind", SOUNDS.rush)
 	car.loops.skid = loop(hull, "Skid", SOUNDS.skid)
+	car.loops.horn = loop(hull, "Horn", SOUNDS.horn)
+	car.loops.signal = loop(hull, "Signal", SOUNDS.signal)
 	return car
 end
 
@@ -270,19 +276,24 @@ local function update(car: Car, dt: number)
 
 	-- Wind and the road: the square of the speed.
 	local wind = car.loops.wind
-	local fast = math.clamp(math.abs(speed) / 80, 0, 1.4)
+	local fast = math.clamp(math.abs(speed) / (80 * car.scale), 0, 1.4)
 	wind.PlaybackSpeed = 0.75 + 0.35 * fast
 	wind.Volume = 0.55 * fast * fast * fade
 
+	-- The horn, while the driver holds it, and the turn signal's click while one is set.
+	car.loops.horn.Volume = if car.model:GetAttribute("Horn") == true then 0.9 * fade else 0
+	local mode = car.model:GetAttribute("Signal")
+	car.loops.signal.Volume = if typeof(mode) == "string" and mode ~= "" then 0.4 * fade else 0
+
 	-- A tyre that slides: from the physics where it is ours, from the motion where it is not.
-	local slide = math.clamp(lateral - 9, 0, 12) / 12
-	if math.abs(speed) < 6 then
+	local slide = math.clamp(lateral / car.scale - 9, 0, 12) / 12
+	if math.abs(speed) < 6 * car.scale then
 		slide = 0
 	end
 	sliding = math.clamp(math.max(sliding :: number, slide), 0, 1)
 	local skid = car.loops.skid
-	skid.PlaybackSpeed = 0.9 + 0.3 * math.clamp(math.abs(speed) / 40, 0, 1) + 0.15 * sliding
-	skid.Volume = 0.85 * sliding * (0.4 + 0.6 * math.clamp(math.abs(speed) / 25, 0, 1)) * fade
+	skid.PlaybackSpeed = 0.9 + 0.3 * math.clamp(math.abs(speed) / (40 * car.scale), 0, 1) + 0.15 * sliding
+	skid.Volume = 0.85 * sliding * (0.4 + 0.6 * math.clamp(math.abs(speed) / (25 * car.scale), 0, 1)) * fade
 end
 
 function CarSound.Start()

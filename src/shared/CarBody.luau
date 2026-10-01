@@ -512,6 +512,9 @@ export type Layout = {
 	wheelWidth: number,
 	-- The driver's seat part's centre, hull-local.
 	seat: Vector3,
+	-- Where the bonnet and cockpit cameras sit, hull-local, for a car that says.
+	camHood: Vector3?,
+	camCockpit: Vector3?,
 	-- The springs, in studs: how long each is at rest, how far it compresses, how far it drops.
 	springRide: number,
 	springBump: number,
@@ -611,6 +614,8 @@ export type Built = {
 	steeringWheel: BasePart?,
 	-- A modelled car's headlamp lenses, which glow when its beams are on.
 	lenses: { BasePart }?,
+	-- And its turn signals, left and right, each dark until it flashes.
+	signals: { left: { BasePart }, right: { BasePart } }?,
 	mesh: boolean?,
 }
 
@@ -1457,9 +1462,10 @@ function CarBody.RestOn(kind: VehicleKind, ground: CFrame): CFrame
 end
 
 -- The headline numbers a showroom prints: from the same fields the chassis drives on.
-function CarBody.Mph(studsPerSecond: number): number
-	-- A stud is 0.28 m (shared/CarSpec), and a metre a second is 2.237 miles an hour.
-	return math.floor(studsPerSecond / CarSpec.StudsPerMetre * 2.23694 + 0.5)
+function CarBody.Mph(studsPerSecond: number, scale: number?): number
+	-- A stud is 0.28 m (shared/CarSpec) for a car drawn life size, and a metre a second is 2.237
+	-- miles an hour.
+	return math.floor(studsPerSecond / CarSpec.StudsPerMetreOf(scale or 1) * 2.23694 + 0.5)
 end
 
 return CarBody

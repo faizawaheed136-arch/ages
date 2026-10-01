@@ -27,8 +27,17 @@ local CarSpec = {}
 CarSpec.StudsPerMetre = 1 / 0.28
 CarSpec.Gravity = 9.81
 
+-- Studs to the metre for a car drawn `scale` times larger than life: a car that is 1.25 times bigger
+-- has a metre of it 1.25 times as many studs long, and everything the physics works out in real units
+-- -- speeds, forces, radii -- is converted with this, not with StudsPerMetre.
+function CarSpec.StudsPerMetreOf(scale: number): number
+	return CarSpec.StudsPerMetre * scale
+end
+
 export type Spec = {
 	id: string,
+	-- How many times larger than life the car is drawn. The numbers below stay the real car's.
+	scale: number,
 	-- Mass and layout.
 	massKg: number,
 	drive: string, -- "FWD", "RWD" or "AWD"
@@ -65,8 +74,15 @@ export type Spec = {
 	mu: number, -- peak sideways grip, as a multiple of the load on the tyre
 	muLong: number, -- peak grip along the tyre: higher, braking and launching, than sideways
 	muSlide: number, -- what is left of it once the tyre lets go
+	muBrake: number, -- peak grip under the brakes: a driving game's brakes, not a road car's
 	muFront: number, -- multipliers on mu, to set the balance of the car
 	muRear: number,
+	-- What the handling adds to the tyres, for a car that is driven with a keyboard.
+	gripGain: number, -- more sideways grip with speed, up to this much more (a share of mu) by 30 m/s
+	driftGrip: number, -- the share of its sideways grip a rear tyre keeps with the handbrake held
+	steerSpeed: number, -- the speed, m/s, at which the front wheels have half their lock left
+	steerAssist: number, -- how far past its peak a front tyre is let to slip when the wheel is turned
+	nitroG: number, -- the push the nitro adds, in g
 	cornerB: number, -- how quickly grip builds with slip angle
 	cornerC: number,
 	wheelInertia: number, -- kg m^2, each
@@ -84,7 +100,7 @@ export type Spec = {
 	travelBump: number, -- m
 	travelDroop: number, -- m
 	-- Steering.
-	steerLock: number, -- degrees at the wheel, parked
+	steerLock: number, -- degrees at the road wheels, parked
 	-- What it sounds like: read by client/world/CarSound.
 	voice: string,
 }
@@ -116,6 +132,9 @@ end
 -- ---------------------------------------------------------------------------------------------
 local GTR: Spec = {
 	id = "gtr",
+	-- Drawn a quarter larger than life, so the avatar at its wheel fits inside it and the car reads as
+	-- big next to the people and the road.
+	scale = 1.25,
 	massKg = 1750,
 	drive = "AWD",
 	frontBias = 0.30,
@@ -123,7 +142,9 @@ local GTR: Spec = {
 	trackFront = 1.59,
 	trackRear = 1.60,
 	tyreRadius = 0.364,
-	cgHeight = 0.52,
+	-- Lower than the real car's 0.52 m: with the grip a driving game gives its tyres, a real centre of
+	-- mass would roll the car over at the first corner.
+	cgHeight = 0.38,
 	weightFront = 0.54,
 	torque = {
 		-- The makers' curve (652 Nm from 3,600 to 5,600 rpm), a little over: a dynamometer reads a
@@ -161,26 +182,32 @@ local GTR: Spec = {
 	cdA = 0.6,
 	liftA = -0.12,
 	rollingResistance = 0.013,
-	mu = 1.08,
-	muLong = 1.30,
-	muSlide = 0.88,
+	mu = 1.6,
+	muLong = 1.5,
+	muBrake = 2.3,
+	muSlide = 0.9,
 	muFront = 0.98,
-	muRear = 1.0,
+	muRear = 1.03,
+	gripGain = 0.5,
+	driftGrip = 0.3,
+	steerSpeed = 38,
+	steerAssist = 1.15,
+	nitroG = 0.55,
 	cornerB = 14,
 	cornerC = 1.4,
 	wheelInertia = 1.1,
-	brakeG = 1.45,
+	brakeG = 3.2,
 	abs = true,
 	tc = true,
-	rideFront = 1.75,
-	rideRear = 1.95,
+	rideFront = 1.5,
+	rideRear = 1.65,
 	zetaBump = 0.55,
 	zetaRebound = 0.85,
 	antiRollFront = 0.65,
 	antiRollRear = 0.45,
 	travelBump = 0.16,
 	travelDroop = 0.14,
-	steerLock = 32,
+	steerLock = 38,
 	voice = "twinturbo",
 }
 
@@ -250,6 +277,7 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 	local lock = math.clamp(steerDegrees, 22, 38)
 	return {
 		id = id,
+		scale = 1,
 		massKg = mass,
 		drive = drive,
 		frontBias = 0.4,
@@ -257,7 +285,7 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		trackFront = size.X / S * 0.8,
 		trackRear = size.X / S * 0.8,
 		tyreRadius = radius,
-		cgHeight = math.clamp(size.Y / S * 0.36, 0.45, 0.8),
+		cgHeight = math.clamp(size.Y / S * 0.28, 0.36, 0.6),
 		weightFront = if drive == "FWD" then 0.6 elseif drive == "RWD" then 0.5 else 0.54,
 		torque = curve,
 		idleRpm = idle,
@@ -278,26 +306,32 @@ function CarSpec.Derive(id: string, top: number, accel: number, steerDegrees: nu
 		cdA = cdA,
 		liftA = 0,
 		rollingResistance = rolling,
-		mu = 1.0,
-		muLong = 1.12,
-		muSlide = 0.85,
-		muFront = 1.0,
-		muRear = 1.0,
+		mu = 1.45,
+		muLong = 1.3,
+		muBrake = 2.3,
+		muSlide = 0.88,
+		muFront = 0.98,
+		muRear = 1.03,
+		gripGain = 0.4,
+		driftGrip = 0.32,
+		steerSpeed = 30,
+		steerAssist = 1.15,
+		nitroG = 0.45,
 		cornerB = 12,
 		cornerC = 1.4,
 		wheelInertia = 1.5,
-		brakeG = 1.1,
+		brakeG = 2.8,
 		abs = true,
 		tc = true,
-		rideFront = 1.3,
-		rideRear = 1.4,
+		rideFront = 1.35,
+		rideRear = 1.45,
 		zetaBump = 0.5,
 		zetaRebound = 0.75,
-		antiRollFront = 0.35,
-		antiRollRear = 0.25,
+		antiRollFront = 0.8,
+		antiRollRear = 0.6,
 		travelBump = 0.16,
 		travelDroop = 0.14,
-		steerLock = lock,
+		steerLock = math.clamp(lock + 4, 26, 40),
 		voice = "road",
 	}
 end

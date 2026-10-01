@@ -39,6 +39,7 @@
 -- its roof. See shared/CarPhysics.
 
 local CollectionService = game:GetService("CollectionService")
+local Lighting = game:GetService("Lighting")
 local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -201,6 +202,106 @@ local function lampLight(lamp: BasePart, color: Color3, brightness: number, rang
 	return light
 end
 
+--[[
+	WHAT THE DRIVER CONTROLS BESIDES THE CAR'S MOTION -- the headlights, the turn signals, the horn --
+	belongs to the server, because everybody in the world sees and hears it. The driver's client
+	(client/world/CarDriver) says what it wants over one RemoteEvent, CarControl, made here if nothing
+	has yet. It is not one of Remotes.luau's: this file is used in places that have no such module (the
+	dealership sandbox), and a remote the car makes for itself cannot go missing in a place that
+	replaces that list. The server takes it only from the player in a car's driver's seat, for that car.
+]]
+local CONTROL_REMOTE = "CarControl"
+local SIGNALS = { [""] = true, left = true, right = true, hazard = true }
+local controlReady = false
+
+local function carOf(player: Player): Model?
+	local character = player.Character
+	local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
+	local seat = if humanoid then humanoid.SeatPart else nil
+	if seat == nil or seat.Name ~= "DriverSeat" then
+		return nil
+	end
+	local model = seat.Parent
+	if model and model:IsA("Model") and CollectionService:HasTag(model, CarPhysics.Tag) then
+		return model
+	end
+	return nil
+end
+
+local function ensureControls()
+	if controlReady then
+		return
+	end
+	controlReady = true
+	local remote = ReplicatedStorage:FindFirstChild(CONTROL_REMOTE)
+	if remote == nil then
+		remote = Instance.new("RemoteEvent")
+		remote.Name = CONTROL_REMOTE
+		remote.Parent = ReplicatedStorage
+	end
+	(remote :: RemoteEvent).OnServerEvent:Connect(function(player: Player, action: any, value: any)
+		local model = carOf(player)
+		if model == nil then
+			return
+		end
+		if action == "lights" and typeof(value) == "boolean" then
+			model:SetAttribute("Lights", value)
+		elseif action == "signal" and typeof(value) == "string" and SIGNALS[value] then
+			model:SetAttribute("Signal", value)
+		elseif action == "horn" and typeof(value) == "boolean" then
+			model:SetAttribute("Horn", value)
+		end
+	end)
+end
+
+-- The driver's hands on the wheel: each arm raised toward it, the elbow a little bent. An avatar's
+-- arms otherwise hang at its sides, which in a car is through the door. The joints are Motor6Ds, or
+-- AnimationConstraints in a place that rigs characters that way; either way it is the joint's own
+-- frame on the torso side that is turned, which an animation (it moves the joint, not its frame)
+-- leaves alone.
+local DRIVER_POSE = {
+	{ "LeftShoulder", CFrame.Angles(math.rad(78), 0, -math.rad(10)) },
+	{ "RightShoulder", CFrame.Angles(math.rad(78), 0, math.rad(10)) },
+	{ "LeftElbow", CFrame.Angles(math.rad(-22), 0, 0) },
+	{ "RightElbow", CFrame.Angles(math.rad(-22), 0, 0) },
+}
+
+local function poseDriver(character: Model?, on: boolean)
+	if character == nil then
+		return
+	end
+	for _, entry in DRIVER_POSE do
+		local name, turn = entry[1] :: string, entry[2] :: CFrame
+		for _, joint in character:GetDescendants() do
+			if joint.Name ~= name then
+				continue
+			end
+			local target: Instance? = nil
+			local property = "C0"
+			if joint:IsA("Motor6D") then
+				target = joint
+			elseif joint:IsA("AnimationConstraint") and joint.Attachment0 then
+				target = joint.Attachment0
+				property = "CFrame"
+			end
+			if target then
+				local home = target:GetAttribute("CarPoseHome")
+				if on then
+					if typeof(home) ~= "CFrame" then
+						home = (target :: any)[property]
+						target:SetAttribute("CarPoseHome", home)
+					end
+					(target :: any)[property] = (home :: CFrame) * turn
+				elseif typeof(home) == "CFrame" then
+					(target :: any)[property] = home
+					target:SetAttribute("CarPoseHome", nil)
+				end
+			end
+			break
+		end
+	end
+end
+
 -- Builds a car standing with its hull's centre at `cframe`, painted `paint` if given, wearing
 -- `look`'s rims and underglow. It settles on its springs once the caller parents the model.
 function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?, look: CarBody.Look?): Chassis
@@ -234,7 +335,16 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	model:SetAttribute("SpringDroop", layout.springDroop)
 	local spec = CarSpec.Specs[kind.id]
 	model:SetAttribute("Voice", if spec then spec.voice else "road")
+	model:SetAttribute("Scale", if spec then spec.scale else 1)
+	-- Where a bonnet camera and a cockpit camera sit, hull-local.
+	model:SetAttribute("CamCockpit", (layout :: any).camCockpit or (layout.seat + Vector3.new(0, 2.6, -0.4)))
+	model:SetAttribute("CamHood", (layout :: any).camHood or Vector3.new(0, layout.hullY * 0.4, -layout.length * 0.3))
+	-- The driver's switches: the headlights, the turn signal ("", "left", "right", "hazard"), the horn.
+	model:SetAttribute("Lights", false)
+	model:SetAttribute("Signal", "")
+	model:SetAttribute("Horn", false)
 	CollectionService:AddTag(model, CarPhysics.Tag)
+	ensureControls()
 
 	local beams: { SpotLight } = {}
 	for _, aim in built.headlights do
@@ -255,6 +365,40 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	local lenses: { [BasePart]: Enum.Material } = {}
 	for _, lens in built.lenses or {} do
 		lenses[lens] = lens.Material
+	end
+	-- The headlights are lit when the driver has switched them on, and somebody is driving.
+	local function applyLights()
+		local lit = seat.Occupant ~= nil and model:GetAttribute("Lights") == true
+		for _, beam in beams do
+			beam.Enabled = lit
+		end
+		for _, lens in built.lenses or {} do
+			lens.Material = if lit then Enum.Material.Neon else lenses[lens]
+		end
+	end
+	model:GetAttributeChangedSignal("Lights"):Connect(applyLights)
+
+	-- The turn signals flash on and off together, a third of a second each, for as long as one is set.
+	local signals = (built :: any).signals
+	if signals and (#signals.left > 0 or #signals.right > 0) then
+		task.spawn(function()
+			local shown = false
+			while task.wait(0.34) do
+				if model.Parent == nil then
+					break
+				end
+				local mode = model:GetAttribute("Signal")
+				local wantLeft = mode == "left" or mode == "hazard"
+				local wantRight = mode == "right" or mode == "hazard"
+				shown = not shown
+				for _, lamp in signals.left do
+					lamp.Transparency = if wantLeft and shown then 0 else 1
+				end
+				for _, lamp in signals.right do
+					lamp.Transparency = if wantRight and shown then 0 else 1
+				end
+			end
+		end)
 	end
 
 	-- Lamps that light up rather than change colour: a modelled car's.
@@ -375,7 +519,8 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 	prompt.Triggered:Connect(function(player: Player)
 		local character = player.Character
 		local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
-		if humanoid then
+		-- Not from a seat already: E is a gear key in a car, and must not climb into the next one.
+		if humanoid and humanoid.SeatPart == nil then
 			seatDriver(humanoid)
 		end
 	end)
@@ -391,12 +536,6 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 		else
 			chassis:SetNetworkOwner(nil)
 		end
-		for _, beam in beams do
-			beam.Enabled = occupant ~= nil
-		end
-		for _, lens in built.lenses or {} do
-			lens.Material = if occupant ~= nil then Enum.Material.Neon else lenses[lens]
-		end
 		prompt.Enabled = occupant == nil
 		if occupant ~= nil then
 			-- Seated by a touch or anything else: still out of the body's collisions.
@@ -404,8 +543,16 @@ function VehicleChassis.Build(kind: VehicleKind, cframe: CFrame, paint: Color3?,
 			local character = occupant.Parent
 			if character then
 				setGroup(character, DRIVER_GROUP)
+				poseDriver(character :: Model, true)
 			end
+			-- At night the lights come on with the driver.
+			local hour = Lighting.ClockTime
+			model:SetAttribute("Lights", hour < 6.5 or hour >= 17.5)
 		else
+			model:SetAttribute("Lights", false)
+			model:SetAttribute("Signal", "")
+			model:SetAttribute("Horn", false)
+			poseDriver(if driver then (driver.Parent :: Model?) else nil, false)
 			-- Getting out: set down beside the driver's door, then solid again.
 			local leaving = driver
 			driver = nil

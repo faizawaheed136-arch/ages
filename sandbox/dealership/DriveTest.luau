@@ -22,6 +22,9 @@ local Vehicles = require(ServerStorage:WaitForChild("Vehicles"))
 local VehicleChassis = require(ServerStorage:WaitForChild("VehicleChassis"))
 
 local S = CarSpec.StudsPerMetre
+-- How many times larger than life the car under test is drawn, set by Spawn: every stud below is
+-- 0.28 / K metres.
+local K = 1
 local ORIGIN = Vector3.new(20000, 0, 0)
 
 local DriveTest = {}
@@ -83,6 +86,7 @@ function DriveTest.Spawn(id: string, at: Vector3?, yaw: number?): (Model, Rig)
 	end
 	local rig = CarPhysics.Rig(chassis.model)
 	assert(rig, "no rig")
+	K = rig.spec.scale
 	-- Settle on the springs, parked, as a car standing in the world is.
 	for _ = 1, 90 do
 		local dt = RunService.PreSimulation:Wait()
@@ -92,7 +96,7 @@ function DriveTest.Spawn(id: string, at: Vector3?, yaw: number?): (Model, Rig)
 end
 
 local function speedOf(rig: Rig): number
-	return rig.hull.AssemblyLinearVelocity:Dot(rig.hull.CFrame.LookVector) / S
+	return rig.hull.AssemblyLinearVelocity:Dot(rig.hull.CFrame.LookVector) / (S * K)
 end
 
 -- Runs `control` every step for `seconds`, sampling every `every` seconds. `control` gets
@@ -177,7 +181,7 @@ function DriveTest.Accel(id: string, seconds: number?, every: number?): { [strin
 	end, function(_, r)
 		local tele = r.tele
 		return {
-			dist = math.round((r.hull.Position - start).Magnitude * 0.28),
+			dist = math.round((r.hull.Position - start).Magnitude * 0.28 / K),
 			tcCut = math.round(r.tcCut * 100) / 100,
 			slipF = math.round(tele.slip[1] * 100) / 100,
 			slipR = math.round(tele.slip[3] * 100) / 100,
@@ -186,7 +190,7 @@ function DriveTest.Accel(id: string, seconds: number?, every: number?): { [strin
 			loadR = math.round(tele.load[3]),
 		}
 	end)
-	dist = (rig.hull.Position - start).Magnitude * 0.28
+	dist = (rig.hull.Position - start).Magnitude * 0.28 / K
 	model:Destroy()
 	return { test = "accel", id = id, reach_kph = marks, topKph = math.round(top), metres = math.round(dist), samples = samples }
 end
@@ -224,8 +228,8 @@ function DriveTest.Brake(id: string, from: number, steerWhileBraking: number?): 
 		peakG = math.max(peakG, -r.tele.longG)
 		if v < 0.3 then
 			stopT = t - tDown
-			stopD = (r.hull.Position - pDown).Magnitude * 0.28
-			stopDCmd = (r.hull.Position - pCmd).Magnitude * 0.28
+			stopD = (r.hull.Position - pDown).Magnitude * 0.28 / K
+			stopDCmd = (r.hull.Position - pCmd).Magnitude * 0.28 / K
 			return nil
 		end
 		return { throttle = -1, steer = steerWhileBraking or 0, handbrake = 0, boost = false }
@@ -346,13 +350,14 @@ function DriveTest.Slope(id: string, degrees: number, handbrake: boolean): { [st
 	end
 	local rig = CarPhysics.Rig(chassis.model)
 	assert(rig)
+	K = rig.spec.scale
 	local p0 = rig.hull.Position
 	local samples = drive(rig, 10, 2, function()
 		return { throttle = 0, steer = 0, handbrake = if handbrake then 1 else 0, boost = false }
 	end, function(_, r)
-		return { slid = math.round((r.hull.Position - p0).Magnitude * 0.28 * 100) / 100 }
+		return { slid = math.round((r.hull.Position - p0).Magnitude * 0.28 / K * 100) / 100 }
 	end)
-	local moved = (rig.hull.Position - p0).Magnitude * 0.28
+	local moved = (rig.hull.Position - p0).Magnitude * 0.28 / K
 	ramp:Destroy()
 	chassis.model:Destroy()
 	return { test = "slope", id = id, degrees = degrees, handbrake = handbrake, movedMetres = math.round(moved * 100) / 100, samples = samples }
@@ -420,7 +425,7 @@ function DriveTest.LaneChange(id: string, kph: number, input: number): { [string
 		return c
 	end, function(_, r)
 		return {
-			x = math.round((r.hull.Position.X - startX) * 0.28 * 10) / 10,
+			x = math.round((r.hull.Position.X - startX) * 0.28 / K * 10) / 10,
 			heading = math.round(math.deg(math.atan2(-r.hull.CFrame.LookVector.X, -r.hull.CFrame.LookVector.Z)) * 10) / 10,
 		}
 	end)
@@ -467,6 +472,36 @@ function DriveTest.Handbrake(id: string, kph: number): { [string]: any }
 		return { slipAngle = math.round(slipAngle(r) * 10) / 10, yaw = math.round(math.deg(r.hull.AssemblyAngularVelocity.Y)) }
 	end)
 	local out = { test = "handbrake", id = id, kph = kph, peakSlideAngle = math.round(peakSlide), flipped = flipped(rig), samples = samples }
+	model:Destroy()
+	return out
+end
+
+-- A drift as a player does it: up to `kph`, then into the turn with the wheel held over, a tap of the
+-- handbrake (`tap` seconds), and the throttle down; the wheel stays where it is. Logs the slide angle
+-- and speed so one can see whether it settles into a slide or spins out.
+function DriveTest.Drift(id: string, kph: number, tap: number, steer: number): { [string]: any }
+	local model, rig = DriveTest.Spawn(id)
+	local target = kph / 3.6
+	local peak, spun = 0, false
+	local function slipAngle(r: Rig): number
+		local vel = r.hull.AssemblyLinearVelocity
+		return math.deg(math.atan2(vel:Dot(r.hull.CFrame.RightVector), math.max(math.abs(vel:Dot(r.hull.CFrame.LookVector)), 1)))
+	end
+	local samples = drive(rig, 14, 0.5, function(t, r, v)
+		local u = t - 6
+		if u < 0 then
+			return hold(target, v)
+		end
+		local c: Controls = { throttle = if u < tap then 0.4 else 1, steer = steer, handbrake = if u < tap then 1 else 0, boost = false }
+		peak = math.max(peak, math.abs(slipAngle(r)))
+		if math.abs(slipAngle(r)) > 120 then
+			spun = true
+		end
+		return c
+	end, function(_, r)
+		return { slip = math.round(slipAngle(r)), yaw = math.round(math.deg(r.hull.AssemblyAngularVelocity.Y)) }
+	end)
+	local out = { test = "drift", id = id, kph = kph, tap = tap, peakSlide = math.round(peak), spunOut = spun, flipped = flipped(rig), samples = samples }
 	model:Destroy()
 	return out
 end
