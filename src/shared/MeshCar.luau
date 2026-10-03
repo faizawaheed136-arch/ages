@@ -219,7 +219,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 	hull.CanCollide = true
 	hull.TopSurface = Enum.SurfaceType.Smooth
 	hull.BottomSurface = Enum.SurfaceType.Smooth
-	hull.CustomPhysicalProperties = PhysicalProperties.new(layout.hullDensity, 0.3, 0.5)
+	hull.CustomPhysicalProperties = CarSpec.Bodywork(layout.hullDensity)
 	hull.Parent = model
 	model.PrimaryPart = hull
 
@@ -520,6 +520,7 @@ function MeshCar.Build(kind: any, spec: CarSpec.Spec, cframe: CFrame, paintColor
 		box.CanCollide = true
 		box.CanTouch = false
 		box.Massless = true
+		box.CustomPhysicalProperties = CarSpec.Bodywork(0.7)
 		box.Parent = model
 		table.insert(built.riders, { box, hull })
 	end

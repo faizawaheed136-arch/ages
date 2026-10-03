@@ -392,6 +392,126 @@ function DriveTest.SteerTap(id: string, kph: number, tap: number): { [string]: a
 	return out
 end
 
+-- Flat out into a solid wall, head on or at `angle` degrees, at `kph`: does it stop, spin, flip, bounce
+-- back or stick to the wall? Reports speed in and out, how far it was turned, and what is left running
+-- at the end (a car pinned to a wall with the throttle held should not shake itself apart).
+function DriveTest.Wall(id: string, kph: number, angle: number): { [string]: any }
+	local g = ground()
+	local wall = Instance.new("Part")
+	wall.Name = "Wall"
+	wall.Anchored = true
+	wall.Size = Vector3.new(900, 30, 8)
+	wall.Position = ORIGIN + Vector3.new(0, 15, -420)
+	wall.Parent = g
+	local model, rig = DriveTest.Spawn(id, nil, math.rad(angle))
+	local target = kph / 3.6
+	local vIn, tHit, hit = 0, 0, false
+	local peakUp, airborne, maxSpin = 1, 0, 0
+	local startHeading = math.atan2(-rig.hull.CFrame.LookVector.X, -rig.hull.CFrame.LookVector.Z)
+	local lastV = 0
+	local samples = drive(rig, 25, 0.5, function(t, r, v)
+		if not hit then
+			vIn = math.max(vIn, v)
+			if v < lastV - 3 and vIn > 5 then
+				hit = true
+				tHit = t
+			end
+		end
+		lastV = v
+		if hit then
+			peakUp = math.min(peakUp, r.hull.CFrame.UpVector.Y)
+			maxSpin = math.max(maxSpin, math.abs(math.deg(r.hull.AssemblyAngularVelocity.Magnitude)))
+			if r.tele.grounded == 0 then
+				airborne += 1
+			end
+		end
+		return hold(target, v)
+	end, function(_, r)
+		return { z = math.round((r.hull.Position.Z - ORIGIN.Z) * 0.28 / K * 10) / 10, up = math.round(r.hull.CFrame.UpVector.Y * 100) / 100 }
+	end)
+	local last = samples[#samples]
+	local heading = math.atan2(-rig.hull.CFrame.LookVector.X, -rig.hull.CFrame.LookVector.Z)
+	local out = {
+		test = "wall",
+		id = id,
+		kph = kph,
+		angle = angle,
+		speedInKph = math.round(vIn * 3.6),
+		hitAt = math.round(tHit * 100) / 100,
+		turnedDeg = math.round(math.deg(heading - startHeading) * 10) / 10,
+		minUp = math.round(peakUp * 100) / 100,
+		maxSpinDegS = math.round(maxSpin),
+		airborneSteps = airborne,
+		finalKph = last.kph,
+		finalZ = last.z,
+		wallZ = math.round(-420 * 0.28 / K * 10) / 10,
+		flipped = flipped(rig),
+		samples = samples,
+	}
+	wall:Destroy()
+	model:Destroy()
+	return out
+end
+
+-- A ramp of `degrees`, 30 studs long, taken at `kph`: how long it flies, how it lands, whether it flips or
+-- bounces more than once.
+function DriveTest.Ramp(id: string, kph: number, degrees: number): { [string]: any }
+	local g = ground()
+	local ramp = Instance.new("Part")
+	ramp.Name = "Jump"
+	ramp.Anchored = true
+	ramp.Material = Enum.Material.Asphalt
+	ramp.Size = Vector3.new(40, 2, 30)
+	local rad = math.rad(degrees)
+	-- the top face's low edge sits on the road at z = -300 and rises toward -Z
+	ramp.CFrame = CFrame.new(ORIGIN + Vector3.new(0, 0, -300 - 15 * math.cos(rad))) * CFrame.Angles(rad, 0, 0) * CFrame.new(0, -1, 0)
+	ramp.Parent = g
+	local model, rig = DriveTest.Spawn(id)
+	local target = kph / 3.6
+	local airSteps, flights, inAir = 0, 0, false
+	local maxHeight, landUp, landPitch, landRoll = 0, 1, 0, 0
+	local y0 = rig.hull.Position.Y
+	local samples = drive(rig, 14, 0.25, function(t, r, v)
+		if r.hull.Position.Z < ORIGIN.Z - 290 then
+			local a = r.tele.grounded == 0
+			if a then
+				airSteps += 1
+			end
+			if a and not inAir then
+				flights += 1
+			end
+			if not a and inAir then
+				landUp = math.min(landUp, r.hull.CFrame.UpVector.Y)
+				landPitch = math.max(landPitch, math.abs(math.deg(math.asin(math.clamp(r.hull.CFrame.LookVector.Y, -1, 1)))))
+				landRoll = math.max(landRoll, math.abs(math.deg(math.asin(math.clamp(r.hull.CFrame.RightVector.Y, -1, 1)))))
+			end
+			inAir = a
+			maxHeight = math.max(maxHeight, (r.hull.Position.Y - y0) * 0.28 / K)
+		end
+		if r.hull.Position.Z < ORIGIN.Z - 520 then
+			return { throttle = 0, steer = 0, handbrake = 0, boost = false }
+		end
+		return hold(target, v)
+	end)
+	local out = {
+		test = "ramp",
+		id = id,
+		kph = kph,
+		degrees = degrees,
+		airSteps = airSteps,
+		flights = flights,
+		peakHeightM = math.round(maxHeight * 10) / 10,
+		landMinUp = math.round(landUp * 100) / 100,
+		landPitchDeg = math.round(landPitch),
+		landRollDeg = math.round(landRoll),
+		flipped = flipped(rig),
+		samples = samples,
+	}
+	ramp:Destroy()
+	model:Destroy()
+	return out
+end
+
 -- Parked for `seconds`: does it stay where it is, and level.
 function DriveTest.Rest(id: string, seconds: number?): { [string]: any }
 	local model, rig = DriveTest.Spawn(id)

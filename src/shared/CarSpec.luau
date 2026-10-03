@@ -27,6 +27,14 @@ local CarSpec = {}
 CarSpec.StudsPerMetre = 1 / 0.28
 CarSpec.Gravity = 9.81
 
+-- A car's bodywork against what it hits. A default part (elasticity 0.5) sent a car off a wall at half the
+-- speed it arrived at; a car crumples more than it rebounds. The elasticity weight is high so that the car's
+-- elasticity, not the wall's, is the one that counts. `density` is the part's own (a massless collider's
+-- does not matter).
+function CarSpec.Bodywork(density: number): PhysicalProperties
+	return PhysicalProperties.new(density, 0.3, 0.1, 1, 100)
+end
+
 -- Studs to the metre for a car drawn `scale` times larger than life: a car that is 1.25 times bigger
 -- has a metre of it 1.25 times as many studs long, and everything the physics works out in real units
 -- -- speeds, forces, radii -- is converted with this, not with StudsPerMetre.

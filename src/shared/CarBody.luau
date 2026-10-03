@@ -1304,7 +1304,7 @@ function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?, e
 	hull.CanCollide = true
 	hull.TopSurface = Enum.SurfaceType.Smooth
 	hull.BottomSurface = Enum.SurfaceType.Smooth
-	hull.CustomPhysicalProperties = PhysicalProperties.new(layout.hullDensity, 0.3, 0.5)
+	hull.CustomPhysicalProperties = CarSpec.Bodywork(layout.hullDensity)
 	hull.Parent = model
 	model.PrimaryPart = hull
 
@@ -1395,6 +1395,7 @@ function CarBody.Build(kind: VehicleKind, cframe: CFrame, paintColor: Color3?, e
 		collider.CanCollide = true
 		collider.CanTouch = false
 		collider.Massless = true
+		collider.CustomPhysicalProperties = CarSpec.Bodywork(0.7)
 		collider.Parent = model
 		table.insert(built.riders, { collider, hull })
 	end

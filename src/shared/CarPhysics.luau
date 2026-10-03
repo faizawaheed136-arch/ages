@@ -49,6 +49,11 @@ local G_REAL = CarSpec.Gravity
 local AIR_DENSITY = 1.2
 -- Reverse power fades out from REVERSE_FADE to nothing at REVERSE_LIMIT: 32 to 43 km/h.
 local REVERSE_FADE, REVERSE_LIMIT = 9, 12
+-- Engine braking works against the way the car is going and fades out as it slows to ENGINE_BRAKE_FADE
+-- m/s, or it would push a car at rest backwards. Below HOLD_SPEED m/s, with a foot on neither pedal, the
+-- brakes take HOLD_BRAKE of their power and the car stays where it stopped, on a hill too.
+local ENGINE_BRAKE_FADE = 1.5
+local HOLD_SPEED, HOLD_BRAKE = 1, 0.3
 -- How much of a front wheel's share of the braking a rear wheel is asked for, at the same load.
 local REAR_BRAKE = 0.9
 -- How fast the wheel goes over to what a key asks and back to centre, in lock a second.
@@ -492,6 +497,9 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 			throttleIn = -pedal
 		end
 	end
+	if throttleIn == 0 and brakeIn == 0 and math.abs(vLong) < HOLD_SPEED then
+		brakeIn = HOLD_BRAKE
+	end
 	-- A foot, not a switch -- but a quick one: the brake is down in a fifth of a second, which is what
 	-- a driving game's brake feels like, and lets go as fast.
 	rig.throttle = approach(rig.throttle, throttleIn, 6, 14, dt)
@@ -690,8 +698,6 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	if rig.rpm > spec.limiterRpm and rig.throttle > 0 then
 		torque = 0
 	end
-	-- Closing the throttle drags the engine against the road: engine braking.
-	torque -= spec.engineBrake * (0.3 + 0.7 * rig.rpm / spec.redlineRpm) * (1 - rig.throttle)
 	if not engaged then
 		torque = 0
 	end
@@ -699,7 +705,12 @@ function CarPhysics.Step(rig: Rig, dt: number, controls: Controls): Telemetry
 	if rig.reverse then
 		torque *= math.clamp((REVERSE_LIMIT - (-vLong)) / (REVERSE_LIMIT - REVERSE_FADE), 0, 1)
 	end
-	local wheelTorque = torque * ratio * spec.driveEff * (if rig.reverse then -1 else 1)
+	-- Closing the throttle drags the engine against the road: engine braking, against the car's motion
+	-- whichever gear it is in.
+	local drag = if engaged then spec.engineBrake * (0.3 + 0.7 * rig.rpm / spec.redlineRpm) * (1 - rig.throttle) else 0
+	local wheelTorque = (torque * (if rig.reverse then -1 else 1) - drag * math.clamp(vLong / ENGINE_BRAKE_FADE, -1, 1))
+		* ratio
+		* spec.driveEff
 
 	-- Traction control: if a driven wheel spins well past the road, take some drive away.
 	local maxSpin = 0

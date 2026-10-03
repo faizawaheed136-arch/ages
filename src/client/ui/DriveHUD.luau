@@ -235,7 +235,7 @@ function DriveHUD.new(): HUD
 	more.Name = "TouchMore"
 	more.AnchorPoint = Vector2.new(1, 1)
 	more.Position = UDim2.new(1, -28 - DIAL - 16 - 100, 1, -64)
-	more.Size = UDim2.fromOffset(96, DIAL)
+	more.Size = UDim2.fromOffset(96, DIAL + 66)
 	more.BackgroundTransparency = 1
 	more.Visible = UserInputService.TouchEnabled
 	more.Parent = gui
@@ -266,9 +266,10 @@ function DriveHUD.new(): HUD
 			end
 		end)
 	end
-	extra("Camera", 0, "CAM", Color3.fromRGB(70, 80, 110), "camera")
-	extra("Lights", 66, "LIGHTS", Color3.fromRGB(70, 80, 110), "lights")
-	extra("Horn", 132, "HORN", Color3.fromRGB(70, 80, 110), "horn")
+	extra("Flip", 0, "FLIP", Color3.fromRGB(60, 120, 90), "flip")
+	extra("Camera", 66, "CAM", Color3.fromRGB(70, 80, 110), "camera")
+	extra("Lights", 132, "LIGHTS", Color3.fromRGB(70, 80, 110), "lights")
+	extra("Horn", 198, "HORN", Color3.fromRGB(70, 80, 110), "horn")
 	boost.InputBegan:Connect(function(input: InputObject)
 		if input.UserInputType == Enum.UserInputType.Touch and self.onBoost then
 			(self.onBoost :: (boolean) -> ())(true)
